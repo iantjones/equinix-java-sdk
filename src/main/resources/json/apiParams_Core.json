@@ -1,0 +1,21 @@
+{
+  "coreConfig": {
+    "hostName": "https://api.equinix.com",
+    "sandboxHostName": "https://sandboxapi.equinix.com",
+    "playgroundHostName": "https://playgroundapi.equinix.com"
+  },
+  "functionalAreas": {
+    "Authentication": {
+      "uriFormat": "/oauth2/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "OAuth": {
+        "serviceEndpoints": {
+          "Authenticate": {
+            "httpMethod": "POST",
+            "requestUri": "token"
+          }
+        }
+      }
+    }
+  }
+}

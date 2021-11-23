@@ -1,0 +1,304 @@
+{
+  "functionalAreas": {
+    "NetworkEdge": {
+      "uriFormat": "/ne/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Metros": {
+        "rootUri": "metros",
+        "serviceEndpoints": {
+          "ListMetros": {
+            "httpMethod": "GET"
+          }
+        }
+      },
+      "PublicKeys": {
+        "rootUri": "publicKeys",
+        "serviceEndpoints": {
+          "ListPublicKeys": {
+            "httpMethod": "GET"
+          },
+          "GetPublicKey": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreatePublicKey": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "Accounts": {
+        "rootUri": "accounts",
+        "serviceEndpoints": {
+          "ListAccounts": {
+            "httpMethod": "GET",
+            "requestUri": "{$metroCode}"
+          },
+          "GetOrderSummary": {
+            "httpMethod": "GET",
+            "requestUri": "orderSummaries",
+            "overrideRootUri": true
+          }
+        }
+      },
+      "Agreements": {
+        "rootUri": "agreements",
+        "serviceEndpoints": {
+          "GetAgreementStatus": {
+            "httpMethod": "GET",
+            "requestUri": "accounts"
+          },
+          "CreateAgreement": {
+            "httpMethod": "POST",
+            "requestUri": "accounts"
+          },
+          "GetVendorTerms": {
+            "httpMethod": "GET",
+            "requestUri": "vendors"
+          },
+          "GetOrderTerms": {
+            "httpMethod": "GET",
+            "requestUri": "orders"
+          }
+        }
+      },
+      "Devices": {
+        "rootUri": "devices",
+        "serviceEndpoints": {
+          "ListDeviceTypes": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "deviceTypes"
+          },
+          "ListDevices": {
+            "httpMethod": "GET"
+          },
+          "GetDevice": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "GetNetworkInterfaces": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/interfaces"
+          },
+          "CreateDevice": {
+            "name": "CreateDevice",
+            "httpMethod": "POST"
+          },
+          "DeleteDevice": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "UpdateDevice": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "UpdateDeviceDraft": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "UpdateAdditionalBandwidth": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}/additionalBandwidths"
+          },
+          "PingDevice": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/ping"
+          },
+          "RestoreBackup": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}/restore"
+          },
+          "PostLicense": {
+            "httpMethod": "POST",
+            "requestUri": "licenseFiles"
+          },
+          "PostLicenseToDevice": {
+            "httpMethod": "POST",
+            "requestUri": "licenseFiles/{$uuid}"
+          },
+          "UpdateLicenseToken": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}/licenseTokens"
+          },
+          "GetPricing": {
+            "httpMethod": "GET",
+            "requestUri": "prices",
+            "overrideRootUri": true
+          }
+        }
+      },
+      "Pricing": {
+        "rootUri": "prices",
+        "serviceEndpoints": {
+          "GetPricing": {
+            "httpMethod": "GET"
+          }
+        }
+      },
+      "DeviceLinks": {
+        "rootUri": "links",
+        "serviceEndpoints": {
+          "ListDeviceLinks": {
+            "httpMethod": "GET"
+          },
+          "GetDeviceLink": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateDeviceLink": {
+              "httpMethod": "POST"
+          },
+          "UpdateDeviceLink": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteDeviceLink": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "BGPPeering": {
+        "rootUri": "bgp",
+        "serviceEndpoints": {
+          "ListBGP": {
+            "httpMethod": "GET"
+          },
+          "GetBGP": {
+            "httpMethod": "GET",
+            "requestUri": "{$bgpPeeringUuid}"
+          },
+          "CreateBGP": {
+            "httpMethod": "POST"
+          },
+          "UpdateBGP": {
+            "httpMethod": "PUT",
+            "requestUri": "{$bgpPeeringUuid}"
+          }
+        }
+      },
+      "VPNs": {
+        "rootUri": "vpn",
+        "serviceEndpoints": {
+          "ListVPNs": {
+            "httpMethod": "GET"
+          },
+          "GetVPN": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateVPN": {
+            "httpMethod": "POST"
+          },
+          "UpdateVPN": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteVPN": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "ACLTemplates": {
+        "rootUri": "aclTemplates",
+        "serviceEndpoints": {
+          "ListACLTemplates": {
+            "httpMethod": "GET"
+          },
+          "GetACLTemplate": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateACLTemplate": {
+            "httpMethod": "POST"
+          },
+          "UpdateACLTemplate": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteACLTemplate": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "DNS": {
+        "rootUri": "dnsLookup",
+        "serviceEndpoints": {
+          "DNSLookup": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "SSHUsers": {
+        "rootUri": "sshUsers",
+        "serviceEndpoints": {
+          "ListSSHUsers": {
+            "httpMethod": "GET"
+          },
+          "GetSSHUser": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "GetSSHUsernameAvailability": {
+            "httpMethod": "GET",
+            "requestUri": "availability"
+          },
+          "CreateSSHUser": {
+            "httpMethod": "POST"
+          },
+          "SSHUserAddDevice": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/devices/{$deviceUuid}"
+          },
+          "UpdateSSHUserPassword": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteSSHUser": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}/devices/{$deviceUuid}"
+          }
+        }
+      },
+      "Backups": {
+        "rootUri": "deviceBackups",
+        "serviceEndpoints": {
+          "ListBackups": {
+            "httpMethod": "GET"
+          },
+          "GetBackup": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateBackup": {
+            "httpMethod": "POST"
+          },
+          "RestoreBackup": {
+            "httpMethod": "PATCH",
+            "requestUri": "devices/{$deviceUuid}/restore",
+            "overrideRootUri": true
+          },
+          "UpdateBackup": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteBackup": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "GetRestoreAnalysis": {
+            "httpMethod": "GET",
+            "requestUri": "devices/{$deviceUuid}/restoreAnalysis",
+            "overrideRootUri": true
+          },
+          "DownloadBackup": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/download"
+          }
+        }
+      }
+    }
+  }
+}

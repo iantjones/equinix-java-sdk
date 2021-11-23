@@ -1,0 +1,105 @@
+{
+  "functionalAreas": {
+    "ECX": {
+      "uriFormat": "ecx/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 3,
+      "Connections": {
+        "rootUri": "l2/connections",
+        "serviceEndpoints": {
+          "GetPricing": {
+            "httpMethod": "GET",
+            "requestUri": "prices"
+          }
+        }
+      }
+    },
+    "Fabric": {
+      "uriFormat": "fabric/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 4,
+      "Metros": {
+        "rootUri": "metros",
+        "serviceEndpoints": {
+          "GetMetros": {
+            "httpMethod": "GET"
+          },
+          "GetMetro": {
+            "httpMethod": "GET",
+            "requestUri": "{$metroCode}"
+          }
+        }
+      },
+      "Services": {
+        "rootUri": "serviceProfiles",
+        "serviceEndpoints": {
+          "ListServices": {
+            "httpMethod": "GET",
+            "requestUri": "services"
+          },
+          "GetService": {
+            "httpMethod": "GET",
+            "requestUri": "services/{$uuid}"
+          },
+          "ListServiceProfiles": {
+            "httpMethod": "GET"
+          },
+          "GetServiceProfile": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Ports": {
+        "rootUri": "ports",
+        "serviceEndpoints": {
+          "GetPorts": {
+            "httpMethod": "GET"
+          },
+          "GetPort": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "GetStatistics": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/stats"
+          }
+        }
+      },
+      "Connections": {
+        "rootUri": "connections",
+        "serviceEndpoints": {
+          "GetConnections": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetConnection": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionUuid}"
+          },
+          "GetStatistics": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/stats"
+          }
+        }
+      },
+      "ServiceTokens": {
+        "rootUri": "serviceTokens",
+        "serviceEndpoints": {
+          "GetServiceTokens": {
+            "httpMethod": "GET"
+          },
+          "GetServiceToken": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostServiceToken": {
+            "httpMethod": "POST"
+          },
+          "DeleteServiceToken": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "functionalAreas": {
+    "IBXSmartView": {
+      "uriFormat": "smartview/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 2,
+      "Environmental": {
+        "rootUri": "environmental",
+        "serviceEndpoints": {
+          "ListSensorReadings": {
+            "httpMethod": "GET",
+            "requestUri": "ibxs/{$ibx}/sensors/readings"
+          },
+          "GetSensorReading": {
+            "httpMethod": "GET",
+            "requestUri": "ibxs/{$ibx}/sensors/{$sensorId}/readings"
+          }
+        }
+      }
+    }
+  }
+}

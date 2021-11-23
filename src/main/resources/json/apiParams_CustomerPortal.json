@@ -1,0 +1,48 @@
+{
+  "functionalAreas": {
+    "CustomerPortal": {
+      "uriFormat": "v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 2,
+      "Invoices": {
+        "rootUri": "invoices",
+        "serviceEndpoints": {
+          "ListInvoiceSummaries": {
+            "httpMethod": "GET"
+          },
+          "ListInvoiceDetails": {
+            "httpMethod": "GET",
+            "requestUri": "details"
+          }
+        }
+      },
+      "Resellers": {
+        "rootUri": "resellers",
+        "serviceEndpoints": {
+          "ListResellers": {
+            "httpMethod": "GET"
+          },
+          "ListResellerCustomers": {
+            "httpMethod": "GET",
+            "requestUri": "{$accountNumber}/customers"
+          },
+          "GetResellerCustomer": {
+            "httpMethod": "GET",
+            "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}"
+          },
+          "CreateResellerCustomer": {
+            "httpMethod": "POST",
+            "requestUri": "{$accountNumber}/customers"
+          },
+          "UpdateResellerCustomer": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}"
+          },
+          "RemoveResellerCustomer": {
+            "httpMethod": "POST",
+            "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}/remove"
+          }
+        }
+      }
+    }
+  }
+}
