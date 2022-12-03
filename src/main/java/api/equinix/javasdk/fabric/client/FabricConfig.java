@@ -16,20 +16,8 @@
 
 package api.equinix.javasdk.fabric.client;
 
-import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
-import api.equinix.javasdk.fabric.client.internal.MetroClient;
-import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
-import api.equinix.javasdk.fabric.client.internal.PortClient;
-import api.equinix.javasdk.fabric.client.internal.ServiceProfileClient;
-import api.equinix.javasdk.fabric.client.internal.ServiceTokenClient;
-import api.equinix.javasdk.fabric.client.internal.ServiceClient;
-import api.equinix.javasdk.fabric.model.Connection;
-import api.equinix.javasdk.fabric.model.Metro;
-import api.equinix.javasdk.fabric.model.Port;
-import api.equinix.javasdk.fabric.model.PortStatistic;
-import api.equinix.javasdk.fabric.model.Service;
-import api.equinix.javasdk.fabric.model.ServiceProfile;
-import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.fabric.client.internal.*;
+import api.equinix.javasdk.fabric.model.*;
 
 /**
  * <p>FabricConfig interface.</p>
@@ -74,12 +62,7 @@ public interface FabricConfig {
      */
     ConnectionClient<Connection> getConnectionsClient();
 
-    /**
-     * <p>getServicesClient.</p>
-     *
-     * @return a {@link ServiceClient} object.
-     */
-    ServiceClient<Service> getServicesClient();
+    PricingClient<Pricing> getPricingClient();
 
     /**
      * <p>getServiceProfilesClient.</p>
@@ -87,4 +70,6 @@ public interface FabricConfig {
      * @return a {@link ServiceProfileClient} object.
      */
     ServiceProfileClient<ServiceProfile> getServiceProfilesClient();
+
+    FabricGatewayClient<FabricGateway> getFabricGatewaysClient();
 }

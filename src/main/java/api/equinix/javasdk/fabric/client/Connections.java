@@ -18,8 +18,14 @@ package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Side;
-import api.equinix.javasdk.fabric.model.ConnectionPricing;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 
 import java.time.LocalDateTime;
 
@@ -30,6 +36,20 @@ import java.time.LocalDateTime;
  * @version $Id: $Id
  */
 public interface Connections {
+
+    PaginatedFilteredList<Connection> search();
+
+    PaginatedFilteredList<Connection> search(FilterPropertyList filter);
+
+    PaginatedFilteredList<Connection> search(SortPropertyList sort);
+
+    PaginatedFilteredList<Connection> search(FilterPropertyList filter, SortPropertyList sort);
+
+    Connection getByUuid(String uuid);
+
+    ConnectionOperator.ConnectionBuilder define(ConnectionType connectionType);
+
+    ConnectionOperator.BatchConnectionBuilder startBatch();
 
     /**
      * <p>getStatistics.</p>
@@ -51,23 +71,4 @@ public interface Connections {
      * @return a {@link api.equinix.javasdk.fabric.model.ConnectionStatistic} object.
      */
     ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
-
-    /**
-     * <p>getPricing.</p>
-     *
-     * @param portUuid a {@link java.lang.String} object.
-     * @param destinationMetro a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.ConnectionPricing} object.
-     */
-    ConnectionPricing getPricing(String portUuid, MetroCode destinationMetro);
-
-    /**
-     * <p>getPricing.</p>
-     *
-     * @param portUuid a {@link java.lang.String} object.
-     * @param destinationMetro a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @param requestBuilder a {@link api.equinix.javasdk.fabric.client.RequestBuilder.ConnectionPricing} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.ConnectionPricing} object.
-     */
-    ConnectionPricing getPricing(String portUuid, MetroCode destinationMetro, RequestBuilder.ConnectionPricing requestBuilder);
 }

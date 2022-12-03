@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.customerportal.client.Invoices;
-import api.equinix.javasdk.customerportal.client.implementation.InvoicesImpl;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 
@@ -39,9 +38,11 @@ public final class Fabric extends EquinixClient implements Service {
 
     private Connections connections;
 
-    private Services services;
+    private Prices prices;
 
     private ServiceProfiles serviceProfiles;
+
+    private FabricGateways fabricGateways;
 
     final private FabricConfig fabricConfig;
 
@@ -117,16 +118,11 @@ public final class Fabric extends EquinixClient implements Service {
         return connections;
     }
 
-    /**
-     * <p>services.</p>
-     *
-     * @return a {@link Services} object.
-     */
-    public Services services() {
-        if (this.services == null) {
-            this.services = new ServicesImpl(this.fabricConfig.getServicesClient(), this);
+    public Prices prices() {
+        if (this.prices == null) {
+            this.prices = new PricesImpl(this.fabricConfig.getPricingClient(), this);
         }
-        return services;
+        return prices;
     }
 
     /**
@@ -139,5 +135,12 @@ public final class Fabric extends EquinixClient implements Service {
             this.serviceProfiles = new ServiceProfilesImpl(this.fabricConfig.getServiceProfilesClient(), this);
         }
         return serviceProfiles;
+    }
+
+    public FabricGateways fabricGateways() {
+        if (this.fabricGateways == null) {
+            this.fabricGateways = new FabricGatewaysImpl(this.fabricConfig.getFabricGatewaysClient(), this);
+        }
+        return fabricGateways;
     }
 }

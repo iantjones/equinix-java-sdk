@@ -18,7 +18,10 @@ package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
 
 /**
@@ -27,7 +30,7 @@ import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
  * @author ianjones
  * @version $Id: $Id
  */
-public interface ServiceProfileClient<T>  extends Pageable<T> {
+public interface ServiceProfileClient<T> extends PageablePost<T> {
 
     /**
      * <p>listServiceProfiles.</p>
@@ -35,6 +38,8 @@ public interface ServiceProfileClient<T>  extends Pageable<T> {
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     Page<ServiceProfile, ServiceProfileJson> list();
+
+    Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     /**
      * <p>getServiceProfileByUuid.</p>

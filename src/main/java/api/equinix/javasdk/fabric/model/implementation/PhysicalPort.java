@@ -45,9 +45,12 @@ public class PhysicalPort {
     @JsonProperty("tether")
     private Tether tether;
 
+    @JsonProperty("demarcationPoint")
+    private DemarcationPoint demarcationPoint;
+
     @JsonProperty("settings")
     private PhysicalPortSettings settings;
 
     @JsonProperty("operation")
-    private Operation operation;
+    private PortOperation portOperation;
 }

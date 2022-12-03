@@ -19,15 +19,15 @@ package api.equinix.javasdk.fabric.model.implementation;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-/**
- * <p>BasicPort class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Getter
-public class BasicPort {
+public class BasicPort extends MinimalPort {
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("redundancy")
+    private Redundancy redundancy;
 }

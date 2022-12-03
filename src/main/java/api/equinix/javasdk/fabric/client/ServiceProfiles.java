@@ -16,29 +16,27 @@
 
 package api.equinix.javasdk.fabric.client;
 
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileOperator;
 
-/**
- * <p>ServiceProfiles interface.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 public interface ServiceProfiles {
 
-    /**
-     * <p>listServiceProfiles.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     PaginatedList<ServiceProfile> list();
 
-    /**
-     * <p>getServiceProfileByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.ServiceProfile} object.
-     */
+    PaginatedFilteredList<ServiceProfile> search();
+
+    PaginatedFilteredList<ServiceProfile> search(FilterPropertyList filter);
+
+    PaginatedFilteredList<ServiceProfile> search(SortPropertyList sort);
+
+    PaginatedFilteredList<ServiceProfile> search(FilterPropertyList filter, SortPropertyList sort);
+
     ServiceProfile getByUuid(String uuid);
+
+    ServiceProfileOperator.ServiceProfileBuilder define(ServiceProfileType serviceProfileType);
 }

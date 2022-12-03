@@ -30,12 +30,14 @@ class FabricTest {
         fabric.authenticate();
 
         PaginatedList<Port> ports = fabric.ports().list();
+
         for(Port port : ports) {
             if(port.getEncapsulation().getType() == EncapsulationType.DOT1Q) {
                 portUuid = port.getUuid();
                 break;
             }
         }
+
         Assertions.assertNotNull(portUuid);
     }
 
@@ -92,17 +94,11 @@ class FabricTest {
         }
     }
 
-    @Test
-    void connections() {
-        ConnectionPricing pricing = fabric.connections().getPricing(portUuid, MetroCode.LA);
-        Assertions.assertNotNull(pricing.getPriceList());
-    }
-
-    @Test
-    void services() {
-        PaginatedList<Service> services = fabric.services().listServices();
-        Assertions.assertTrue(services.size() > 0);
-    }
+//    @Test
+//    void connections() {
+//        Pricing pricing = fabric.connections().getPricing(portUuid, MetroCode.LA);
+//        Assertions.assertNotNull(pricing.getPriceList());
+//    }
 
     @Test
     void serviceProfiles() {

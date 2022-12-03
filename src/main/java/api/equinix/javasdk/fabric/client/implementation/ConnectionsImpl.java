@@ -19,16 +19,26 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Side;
 import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.Connection;
-import api.equinix.javasdk.fabric.model.ConnectionPricing;
+import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
-import api.equinix.javasdk.fabric.model.json.ConnectionPricingJson;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionJson;
+import api.equinix.javasdk.fabric.model.json.PricingJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson;
-import api.equinix.javasdk.fabric.model.wrappers.ConnectionPricingWrapper;
+import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
+import api.equinix.javasdk.fabric.model.wrappers.PricingWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionStatisticWrapper;
+import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 
 import java.time.LocalDateTime;
 
@@ -55,6 +65,37 @@ public class ConnectionsImpl implements Connections {
         this.serviceClient = serviceClient;
     }
 
+    public PaginatedFilteredList<Connection> search() {
+        return search(Filter.filter().empty());
+    }
+
+    public PaginatedFilteredList<Connection> search(FilterPropertyList filter) {
+        return search(filter, null);
+    }
+
+    public PaginatedFilteredList<Connection> search(SortPropertyList sort) {
+        return search(null, sort);
+    }
+
+    public PaginatedFilteredList<Connection> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<Connection, ConnectionJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<Connection> connectionList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ConnectionWrapper::new);
+        return new PaginatedFilteredList<>(connectionList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public Connection getByUuid(String uuid) {
+        ConnectionJson connectionJson = serviceClient.getByUuid(uuid);
+        return new ConnectionWrapper(connectionJson, this.serviceClient);
+    }
+
+    public ConnectionOperator.ConnectionBuilder define(ConnectionType connectionType) {
+        return new ConnectionOperator(this.serviceClient).create(connectionType);
+    }
+
+    public ConnectionOperator.BatchConnectionBuilder startBatch() {
+        return new ConnectionOperator(this.serviceClient).batch();
+    }
+
     /** {@inheritDoc} */
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
@@ -66,19 +107,5 @@ public class ConnectionsImpl implements Connections {
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return getStatistics(uuid, startDateTime, endDateTime, Side.A_Side);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ConnectionPricing getPricing(String portUuid, MetroCode destinationMetro) {
-        ConnectionPricingJson connectionPricingJson = this.serviceClient.getPricing(portUuid, destinationMetro, null);
-        return new ConnectionPricingWrapper(connectionPricingJson, this.serviceClient);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ConnectionPricing getPricing(String portUuid, MetroCode destinationMetro, RequestBuilder.ConnectionPricing requestBuilder) {
-        ConnectionPricingJson connectionPricingJson = this.serviceClient.getPricing(portUuid, destinationMetro, requestBuilder);
-        return new ConnectionPricingWrapper(connectionPricingJson, this.serviceClient);
     }
 }

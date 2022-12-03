@@ -44,19 +44,22 @@ public class AccessPointMetadata {
     @JsonProperty("redundantProfileId")
     private String redundantProfileUuid;
 
-    @JsonProperty("connection_editable")
+    @JsonProperty("connectionEditable")
     private Boolean connectionEditable;
 
-    @JsonProperty("limit_auth_key_conn")
+    @JsonProperty("limitAuthKeyConn")
     private Boolean limitAuthKeyConn;
 
-    @JsonProperty("is_release_vlan")
-    private Boolean isReleaseVlan;
+    @JsonProperty("variableBilling")
+    private Boolean variableBilling;
 
-    @JsonProperty("eqx_managed_port")
+    @JsonProperty("releaseVlan")
+    private Boolean releaseVlan;
+
+    @JsonProperty("eqxManagedPort")
     private Boolean eqxManagedPort;
 
-    @JsonProperty("connection_name_editable")
+    @JsonProperty("connectionNameEditable")
     private Boolean connectionNameEditable;
 
     @JsonProperty("allowSecondaryLocation")
@@ -71,12 +74,12 @@ public class AccessPointMetadata {
     @JsonProperty("vlanRangeMinValue")
     private Integer vlanRangeMinValue;
 
-    @JsonProperty("port_assignment_strategy")
+    @JsonProperty("portAssignmentStrategy")
     private PortAssignmentStrategy portAssignmentStrategy;
 
-    @JsonProperty("max_qinq")
-    private Integer qinqMax;
+    @JsonProperty("maxQinq")
+    private Integer maxQinq;
 
-    @JsonProperty("max_dot1q")
-    private Integer dot1qMax;
+    @JsonProperty("maxDot1q")
+    private Integer maxDot1q;
 }

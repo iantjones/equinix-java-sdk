@@ -25,6 +25,9 @@ import api.equinix.javasdk.core.model.APIParam;
  * @version $Id: $Id
  */
 public enum ConnectionStatus implements APIParam {
+    AVAILABLE,
+    FAILED,
+    NOT_AVAILABLE,
     PROVISIONED,
     PENDING_APPROVAL,
     PROVISIONING,
@@ -48,5 +51,6 @@ public enum ConnectionStatus implements APIParam {
     DEPROVISIONING,
     NOT_DEPROVISIONED,
     AUTO_APPROVAL_FAILED,
-    PENDING_BGP_PEERING
+    PENDING_BGP_PEERING,
+    DELETING;
 }

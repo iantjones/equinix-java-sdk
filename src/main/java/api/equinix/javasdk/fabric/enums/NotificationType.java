@@ -23,6 +23,7 @@ package api.equinix.javasdk.fabric.enums;
  * @version $Id: $Id
  */
 public enum NotificationType {
+    ALL,
     NOTIFICATION,
     BANDWIDTH_ALERT,
     CONNECTION_APPROVAL,

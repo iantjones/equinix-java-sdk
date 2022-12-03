@@ -16,6 +16,15 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.core.enums.ConnectionState;
+import api.equinix.javasdk.core.model.KeyValuePair;
+import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.Direction;
+import api.equinix.javasdk.fabric.model.implementation.*;
+
+import java.util.List;
+
 /**
  * <p>Connection interface.</p>
  *
@@ -24,10 +33,49 @@ package api.equinix.javasdk.fabric.model;
  */
 public interface Connection {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
+
+    ConnectionType getType();
+
+    String getHref();
+
+    String getName();
+
+    ConnectionState getState();
+
+    Order getOrder();
+
+    ConnectionOperation getOperation();
+
+    List<Notification> getNotifications();
+
+    Account getAccount();
+
+    ChangeLog getChangeLog();
+
+    Integer getBandwidth();
+
+    Redundancy getRedundancy();
+
+    Boolean getIsRemote();
+
+    Direction getDirection();
+
+    ConnectionSide getASide();
+
+    ConnectionSide getZSide();
+
+    List<KeyValuePair> getAdditionalInfo();
+
+    Change getChange();
+
+    void performOperation(ConnectionOperationType connectionOperation, String description, Object bodyObject);
+
+    void performOperation(ConnectionOperationType connectionOperation, String description);
+
+    void performOperation(ConnectionOperationType connectionOperation);
+
+    Boolean delete();
+
+    void refresh();
 }

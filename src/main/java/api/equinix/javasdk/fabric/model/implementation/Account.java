@@ -37,6 +37,9 @@ public class Account extends BasicAccount {
     @JsonProperty("accountName")
     private String accountName;
 
+    @JsonProperty("ucmId")
+    private String ucmId;
+
     @JsonProperty("globalCustId")
     private String globalCustId;
 

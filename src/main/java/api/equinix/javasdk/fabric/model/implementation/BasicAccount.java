@@ -32,4 +32,8 @@ public class BasicAccount {
 
     @JsonProperty("orgId")
     private Integer orgId;
+
+    @JsonProperty("accountNumber")
+    private Integer accountNumber;
+
 }

@@ -27,10 +27,7 @@ import lombok.Getter;
  * @version $Id: $Id
  */
 @Getter
-public class Location extends BasicLocation {
-
-    @JsonProperty("href")
-    private String href;
+public class Location extends MinimalLocation {
 
     @JsonProperty("ibx")
     private String ibx;

@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.enums.MetroType;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
+import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 
 import java.util.List;
 
@@ -65,6 +66,8 @@ public interface Metro {
      * @return a {@link api.equinix.javasdk.core.enums.Region} object.
      */
     Region getRegion();
+
+    GeoCoordinate geoCoordinates();
 
     /**
      * <p>getConnectedMetros.</p>

@@ -19,13 +19,7 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
 import api.equinix.javasdk.fabric.client.FabricConfig;
-import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
-import api.equinix.javasdk.fabric.client.internal.implementation.MetroClientImpl;
-import api.equinix.javasdk.fabric.client.internal.implementation.PortStatisticClientImpl;
-import api.equinix.javasdk.fabric.client.internal.implementation.PortClientImpl;
-import api.equinix.javasdk.fabric.client.internal.implementation.ServiceProfileClientImpl;
-import api.equinix.javasdk.fabric.client.internal.implementation.ServiceTokenClientImpl;
-import api.equinix.javasdk.fabric.client.internal.implementation.ServiceClientImpl;
+import api.equinix.javasdk.fabric.client.internal.implementation.*;
 import lombok.Getter;
 
 /**
@@ -45,11 +39,13 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final PortStatisticClientImpl portStatisticsClient;
 
+    private final PricingClientImpl pricingClient;
+
     private final ConnectionClientImpl connectionsClient;
 
-    private final ServiceClientImpl servicesClient;
-
     private final ServiceProfileClientImpl serviceProfilesClient;
+
+    private final FabricGatewayClientImpl fabricGatewaysClient;
 
     /**
      * <p>Constructor for FabricConfigImpl.</p>
@@ -63,7 +59,8 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.portsClient = new PortClientImpl(this);
         this.portStatisticsClient = new PortStatisticClientImpl(this);
         this.connectionsClient = new ConnectionClientImpl(this);
-        this.servicesClient = new ServiceClientImpl(this);
+        this.pricingClient = new PricingClientImpl(this);
         this.serviceProfilesClient = new ServiceProfileClientImpl(this);
+        this.fabricGatewaysClient = new FabricGatewayClientImpl(this);
     }
 }

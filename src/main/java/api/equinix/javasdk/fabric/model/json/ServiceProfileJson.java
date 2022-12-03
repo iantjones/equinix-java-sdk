@@ -20,10 +20,8 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.ServiceProfileState;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
-import api.equinix.javasdk.fabric.model.implementation.Account;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Notification;
-import api.equinix.javasdk.fabric.model.implementation.ServiceProfileConfig;
+import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
+import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,22 +29,12 @@ import lombok.Getter;
 
 import java.util.List;
 
-/**
- * <p>ServiceProfileJson class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Getter
 public final class ServiceProfileJson implements Serializable {
 
-    public static TypeReference<Page<ServiceProfile, ServiceProfileJson>> pagedTypeRef() {
-        return new TypeReference<>() {};
-    }
-
-    public static TypeReference<ServiceProfileJson> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
+    @Getter static TypeReference<Page<ServiceProfile, ServiceProfileJson>> pagedTypeRef = new TypeReference<>() {};
+    @Getter static TypeReference<List<ServiceProfileJson>> listTypeRef = new TypeReference<>() {};
+    @Getter static TypeReference<ServiceProfileJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;
@@ -60,6 +48,9 @@ public final class ServiceProfileJson implements Serializable {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("href")
+    private String href;
+
     @JsonProperty("description")
     private String description;
 
@@ -69,12 +60,33 @@ public final class ServiceProfileJson implements Serializable {
     @JsonProperty("notifications")
     private List<Notification> notifications;
 
-    @JsonProperty("config")
-    private ServiceProfileConfig config;
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("visibility")
+    private ServiceProfileVisibility visibility;
+
+    @JsonProperty("metros")
+    private List<ServiceProfileMetro> metros;
+
+    @JsonProperty("marketingInfo")
+    private MarketingInfo marketingInfo;
+
+    @JsonProperty("selfProfile")
+    private Boolean selfProfile;
+
+    @JsonProperty("accessPointTypeConfigs")
+    private List<AccessPointTypeConfig> accessPointTypeConfigs;
+
+    @JsonProperty("ports")
+    private List<AccessPointTypeConfigPort> ports;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
 
-    @JsonProperty("account")
-    private Account account;
+    @JsonProperty("customFields")
+    private List<CustomField> customFields;
+
+    @JsonProperty("allowedEmails")
+    private List<String> allowedEmails;
 }

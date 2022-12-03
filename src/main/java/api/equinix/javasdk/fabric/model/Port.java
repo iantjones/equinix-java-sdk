@@ -18,15 +18,7 @@ package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.core.enums.PortType;
 import api.equinix.javasdk.fabric.enums.PortState;
-import api.equinix.javasdk.fabric.model.implementation.Account;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Device;
-import api.equinix.javasdk.fabric.model.implementation.Encapsulation;
-import api.equinix.javasdk.fabric.model.implementation.LinkAggregationGroup;
-import api.equinix.javasdk.fabric.model.implementation.Location;
-import api.equinix.javasdk.fabric.model.implementation.Operation;
-import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
-import api.equinix.javasdk.fabric.model.implementation.PortSettings;
+import api.equinix.javasdk.fabric.model.implementation.*;
 
 import java.util.List;
 
@@ -36,7 +28,7 @@ import java.util.List;
  * @author ianjones
  * @version $Id: $Id
  */
-public interface Port {
+public interface Port extends AccessPointable {
 
     /**
      * <p>getUuid.</p>
@@ -146,9 +138,9 @@ public interface Port {
     /**
      * <p>getOperation.</p>
      *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.Operation} object.
+     * @return a {@link PortOperation} object.
      */
-    Operation getOperation();
+    PortOperation getOperation();
 
     /**
      * <p>getAccount.</p>
@@ -156,6 +148,8 @@ public interface Port {
      * @return a {@link api.equinix.javasdk.fabric.model.implementation.Account} object.
      */
     Account getAccount();
+
+    String getProjectId();
 
     /**
      * <p>getChangeLog.</p>

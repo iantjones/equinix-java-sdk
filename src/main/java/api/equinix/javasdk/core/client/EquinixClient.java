@@ -147,7 +147,7 @@ public class EquinixClient {
      * @return a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
-    public <T> EquinixResponse<T> invoke(EquinixRequest<T> equinixRequest) throws EquinixClientException {
+    public <T> EquinixResponse<T> invoke(EquinixRequest<T> equinixRequest) {
 
         EquinixResponse<T> equinixResponse;
         Utils.addRequestParams(equinixRequest);

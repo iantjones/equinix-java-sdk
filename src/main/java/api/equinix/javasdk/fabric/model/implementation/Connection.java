@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.ConnectionType;
-import api.equinix.javasdk.core.enums.Side;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -35,9 +34,6 @@ public class Connection {
     @JsonProperty("type")
     private ConnectionType type;
 
-    @JsonProperty("issuerSide")
-    private Side issuerSide;
-
     @JsonProperty("allowRemoteConnection")
     private Boolean allowRemoteConnection;
 
@@ -51,8 +47,8 @@ public class Connection {
     private List<Integer> supportedBandwidths;
 
     @JsonProperty("aSide")
-    private ConnectionConfig aSide;
+    private ServiceTokenConnectionSide aSide;
 
     @JsonProperty("zSide")
-    private ConnectionConfig zSide;
+    private ServiceTokenConnectionSide zSide;
 }

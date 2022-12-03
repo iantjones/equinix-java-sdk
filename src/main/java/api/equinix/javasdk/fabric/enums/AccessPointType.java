@@ -23,13 +23,8 @@ package api.equinix.javasdk.fabric.enums;
  * @version $Id: $Id
  */
 public enum AccessPointType {
-    VG,
-    SUBNET,
-    VD,
-    CX_PORT,
     COLO,
-    IGW,
-    L2_SP,
-    L3_SP,
-    SP;
+    SP,
+    VD,
+    CX_PORT;
 }

@@ -25,6 +25,7 @@ package api.equinix.javasdk.fabric.enums;
 public enum LinkProtocolType {
     UNTAGGED,
     DOT1Q,
-    QINQ,
-    EVPN_VXLAN;
+    QINQ;
+
+    //EVPN_VXLAN;
 }

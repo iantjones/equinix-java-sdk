@@ -23,12 +23,6 @@ import lombok.Getter;
 
 import java.util.List;
 
-/**
- * <p>LinkProtocolConfig class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Getter
 public class LinkProtocolConfig {
 
@@ -38,9 +32,12 @@ public class LinkProtocolConfig {
     @JsonProperty("encapsulationStrategy")
     private EncapsulationStrategy encapsulationStrategy;
 
-    @JsonProperty("enableAutoGenerateServiceKey")
-    private Boolean enableAutoGenerateServiceKey;
-
+    @JsonProperty("reuseVlanSTag")
+    private Boolean reuseVlanSTag;
+//
+//    @JsonProperty("enableAutoGenerateServiceKey")
+//    private Boolean enableAutoGenerateServiceKey;
+//
     @JsonProperty("vlanCTagLabel")
     private String vlanCTagLabel;
 

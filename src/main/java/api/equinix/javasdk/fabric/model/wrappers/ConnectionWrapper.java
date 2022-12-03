@@ -16,11 +16,22 @@
 
 package api.equinix.javasdk.fabric.model.wrappers;
 
+import api.equinix.javasdk.core.enums.ConnectionState;
 import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.core.model.ResourceImpl;
+import api.equinix.javasdk.core.http.response.PageablePost;
+import api.equinix.javasdk.core.model.KeyValuePair;
+import api.equinix.javasdk.core.model.ResourcePostImpl;
+import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
+
+import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * <p>ConnectionWrapper class.</p>
@@ -28,7 +39,7 @@ import lombok.Getter;
  * @author ianjones
  * @version $Id: $Id
  */
-public class ConnectionWrapper extends ResourceImpl<Connection> implements Connection {
+public class ConnectionWrapper extends ResourcePostImpl<Connection> implements Connection {
 
     private ConnectionJson jsonObject;
     @Getter
@@ -45,12 +56,96 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getUuid() {
-        return this.jsonObject.getUuid();
+        return  this.jsonObject.getUuid();
+    }
+
+    public ConnectionType getType() {
+        return  this.jsonObject.getType();
+    }
+
+    public String getHref() {
+        return  this.jsonObject.getHref();
+    }
+
+    public String getName() {
+        return  this.jsonObject.getName();
+    }
+
+    public ConnectionState getState() {
+        return  this.jsonObject.getState();
+    }
+
+    public Order getOrder() {
+        return this.jsonObject.getOrder();
+    }
+
+    public ConnectionOperation getOperation() {
+        return  this.jsonObject.getOperation();
+    }
+
+    public List<Notification> getNotifications() {
+        return  this.jsonObject.getNotifications();
+    }
+
+    public Account getAccount() {
+        return  this.jsonObject.getAccount();
+    }
+
+    public ChangeLog getChangeLog() {
+        return  this.jsonObject.getChangeLog();
+    }
+
+    public Integer getBandwidth() {
+        return  this.jsonObject.getBandwidth();
+    }
+
+    public Redundancy getRedundancy() {
+        return  this.jsonObject.getRedundancy();
+    }
+
+    public Boolean getIsRemote() {
+        return  this.jsonObject.getIsRemote();
+    }
+
+    public Direction getDirection() {
+        return  this.jsonObject.getDirection();
+    }
+
+    public ConnectionSide getASide() {
+        return  this.jsonObject.getASide();
+    }
+
+    public ConnectionSide getZSide() {
+        return  this.jsonObject.getZSide();
+    }
+
+    public List<KeyValuePair> getAdditionalInfo() {
+        return  this.jsonObject.getAdditionalInfo();
+    }
+
+    public Change getChange() {
+        return this.jsonObject.getChange();
+    }
+
+    public void performOperation(ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
+        this.jsonObject = ((ConnectionClientImpl)this.serviceClient).performOperation(this.getUuid(), connectionOperationType, description, bodyObject);
+    }
+
+    public void performOperation(ConnectionOperationType connectionOperation, String description) {
+        performOperation(connectionOperation, description, null);
+    }
+
+    public void performOperation(ConnectionOperationType connectionOperation) {
+        performOperation(connectionOperation, null, null);
+    }
+
+    public Boolean delete() {
+        this.jsonObject = ((ConnectionClientImpl)this.serviceClient).delete(this.getUuid());
+        return true;
+    }
+
+    public void refresh() {
+        this.jsonObject = ((ConnectionClientImpl)this.serviceClient).refresh(this.getUuid());
     }
 }

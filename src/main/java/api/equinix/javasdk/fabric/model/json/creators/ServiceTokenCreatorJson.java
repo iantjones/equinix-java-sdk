@@ -16,31 +16,19 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.Side;
 import api.equinix.javasdk.fabric.enums.*;
-import api.equinix.javasdk.fabric.model.ServiceToken;
-import api.equinix.javasdk.fabric.model.implementation.*;
-import api.equinix.javasdk.fabric.model.serializers.LinkProtocolTypeSerializer;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
-/**
- * <p>ServiceTokenJson class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Setter(AccessLevel.PRIVATE)
 public class ServiceTokenCreatorJson {
-
-    @Getter static TypeReference<Page<ServiceToken, ServiceTokenCreatorJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<List<ServiceTokenCreatorJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ServiceTokenCreatorJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("type")
     private ServiceTokenType type;
@@ -118,7 +106,6 @@ public class ServiceTokenCreatorJson {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class LinkProtocol {
 
-        //@JsonSerialize(using = LinkProtocolTypeSerializer.class)
         @JsonProperty("type")
         private LinkProtocolType type;
 

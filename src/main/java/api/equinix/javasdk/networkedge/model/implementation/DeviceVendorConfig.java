@@ -48,7 +48,10 @@ public class DeviceVendorConfig {
     
     @JsonProperty("remoteId")
     private String remoteId;
-    
+
+    @JsonProperty("hostNamePrefix")
+    private String hostNamePrefix;
+
     @JsonProperty("controller1")
     private String controller1;
     

@@ -16,19 +16,12 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.MetroCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-/**
- * <p>BasicLocation class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Getter
-public class BasicLocation {
+public class BasicLocation extends MinimalLocation {
 
-    @JsonProperty("metroCode")
-    private MetroCode metroCode;
+    @JsonProperty("href")
+    private String href;
 }

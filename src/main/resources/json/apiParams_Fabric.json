@@ -1,18 +1,5 @@
 {
   "functionalAreas": {
-    "ECX": {
-      "uriFormat": "ecx/v{$version}/{$rootUri}/{$requestUri}",
-      "defaultVersion": 3,
-      "Connections": {
-        "rootUri": "l2/connections",
-        "serviceEndpoints": {
-          "GetPricing": {
-            "httpMethod": "GET",
-            "requestUri": "prices"
-          }
-        }
-      }
-    },
     "Fabric": {
       "uriFormat": "fabric/v{$version}/{$rootUri}/{$requestUri}",
       "defaultVersion": 4,
@@ -28,22 +15,34 @@
           }
         }
       },
-      "Services": {
+      "Pricing": {
+        "rootUri": "prices",
+        "serviceEndpoints": {
+          "GetPricing": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "ServiceProfiles": {
         "rootUri": "serviceProfiles",
         "serviceEndpoints": {
-          "ListServices": {
-            "httpMethod": "GET",
-            "requestUri": "services"
-          },
-          "GetService": {
-            "httpMethod": "GET",
-            "requestUri": "services/{$uuid}"
-          },
           "ListServiceProfiles": {
             "httpMethod": "GET"
           },
+          "SearchServiceProfiles": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "PostServiceProfile": {
+            "httpMethod": "POST"
+          },
           "GetServiceProfile": {
             "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteServiceProfile": {
+            "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
           }
         }
@@ -67,13 +66,28 @@
       "Connections": {
         "rootUri": "connections",
         "serviceEndpoints": {
-          "GetConnections": {
+          "SearchConnections": {
             "httpMethod": "POST",
             "requestUri": "search"
           },
           "GetConnection": {
             "httpMethod": "GET",
-            "requestUri": "{$connectionUuid}"
+            "requestUri": "{$uuid}"
+          },
+          "PostConnection": {
+            "httpMethod": "POST"
+          },
+          "PostBulkConnections": {
+            "httpMethod": "POST",
+            "requestUri": "bulk"
+          },
+          "DeleteConnection": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "ManageConnection": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/actions"
           },
           "GetStatistics": {
             "httpMethod": "GET",
@@ -95,6 +109,26 @@
             "httpMethod": "POST"
           },
           "DeleteServiceToken": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },      
+      "FabricGateways": {
+        "rootUri": "gateways",
+        "serviceEndpoints": {
+          "SearchFabricGateways": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetFabricGateway": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostFabricGateway": {
+            "httpMethod": "POST"
+          },
+          "DeleteFabricGateway": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
           }

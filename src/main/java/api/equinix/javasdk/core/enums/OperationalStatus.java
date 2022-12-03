@@ -24,5 +24,6 @@ package api.equinix.javasdk.core.enums;
  */
 public enum OperationalStatus {
     UP,
-    DOWN
+    DOWN,
+    PARTIAL
 }

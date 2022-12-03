@@ -24,7 +24,7 @@ import api.equinix.javasdk.core.model.APIParam;
  * @author ianjones
  * @version $Id: $Id
  */
-public enum Side implements APIParam {
+public enum Side {
     A_Side,
     Z_Side
 }

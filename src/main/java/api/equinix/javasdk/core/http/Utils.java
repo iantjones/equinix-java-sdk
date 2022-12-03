@@ -18,14 +18,8 @@ package api.equinix.javasdk.core.http;
 
 import api.equinix.javasdk.core.client.EquinixClient;
 import api.equinix.javasdk.core.exception.EquinixClientException;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.ListRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.request.SingletonRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.http.request.*;
+import api.equinix.javasdk.core.http.response.*;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.model.APIParam;
 import api.equinix.javasdk.core.model.OptionalRequestBuilder;
@@ -92,9 +86,18 @@ public class Utils {
         EquinixRequest<T> equinixRequest = null;
 
         switch (requestType) {
-            case PAGINATED: equinixRequest = new PaginatedRequest<>();
-            case LIST: equinixRequest = new ListRequest<>();
-            case SINGLE:  equinixRequest = new SingletonRequest<>();
+            case PAGINATED:
+                equinixRequest = new PaginatedRequest<>();
+                break;
+            case PAGINATED_POST:
+                equinixRequest = new PaginatedPostRequest<>();
+                break;
+            case LIST:
+                equinixRequest = new ListRequest<>();
+                break;
+            case SINGLE:
+                equinixRequest = new SingletonRequest<>();
+                break;
         }
 
         if(pathParams != null) {
@@ -353,6 +356,13 @@ public class Utils {
                 .collect(Collectors.toCollection(PaginatedList::new));
     }
 
+    public static <T, S> PaginatedFilteredList<T> mapPaginatedFilteredList(ArrayList<S> paginatedList, PageablePost<T> serviceClient,
+                                                                           BiFunction<? super S, ? super PageablePost<T>, ? extends T> objectMapper){
+        return paginatedList.stream()
+                .map(jsonObject -> objectMapper.apply(jsonObject, serviceClient))
+                .collect(Collectors.toCollection(PaginatedFilteredList::new));
+    }
+
     /**
      * <p>mapList.</p>
      *
@@ -497,6 +507,15 @@ public class Utils {
     public static <S, T> S handleSingletonResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         try {
             return Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+        }
+        catch (Exception ioe) {
+            throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);
+        }
+    }
+
+    public static <S, T> S unpackOriginalPost(EquinixRequest<T> equinixRequest, TypeReference<?> typeReference) throws EquinixClientException  {
+        try {
+            return Constants.objectMapper.readValue(equinixRequest.getContent(), typeReference);
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);

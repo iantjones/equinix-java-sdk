@@ -22,24 +22,9 @@ import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.networkedge.enums.DeviceCategory;
-import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
-import api.equinix.javasdk.networkedge.enums.DeviceStatus;
-import api.equinix.javasdk.networkedge.enums.IPAssignment;
-import api.equinix.javasdk.networkedge.enums.LicenseStatus;
-import api.equinix.javasdk.networkedge.enums.LicenseType;
-import api.equinix.javasdk.networkedge.enums.NetworkScope;
-import api.equinix.javasdk.networkedge.enums.RedundancyType;
-import api.equinix.javasdk.networkedge.enums.Vendor;
+import api.equinix.javasdk.networkedge.enums.*;
 import api.equinix.javasdk.networkedge.model.Device;
-import api.equinix.javasdk.networkedge.model.implementation.ClusterDetail;
-import api.equinix.javasdk.networkedge.model.implementation.Contact;
-import api.equinix.javasdk.networkedge.model.implementation.DeviceCore;
-import api.equinix.javasdk.networkedge.model.implementation.DeviceVendorConfig;
-import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
-import api.equinix.javasdk.networkedge.model.implementation.SupportDetail;
-import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
-import api.equinix.javasdk.networkedge.model.implementation.UserPublicKey;
+import api.equinix.javasdk.networkedge.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -66,8 +51,14 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("uuid")
     private String uuid;
 
+    @JsonProperty("serviceId")
+    private String serviceId;
+
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("podName")
+    private String podName;
 
     @JsonProperty("ipType")
     private IPAssignment ipType;
@@ -98,6 +89,12 @@ public class DeviceJson extends Lifecycle {
 
     @JsonProperty("isSubCustomerDevice")
     private Boolean isSubCustomerDevice;
+
+    @JsonProperty("supportServicesEnabled")
+    private Boolean supportServicesEnabled;
+
+    @JsonProperty("supportServicesNotification")
+    private List<String> supportServicesNotification;
 
     @JsonProperty("metroCode")
     private MetroCode metroCode;
@@ -264,4 +261,41 @@ public class DeviceJson extends Lifecycle {
 
     @JsonProperty("diverseFromDeviceName")
     private String diverseFromDeviceName;
+
+    @JsonProperty("sshInterfaceId")
+    private String sshInterfaceId;
+
+    @JsonProperty("versionChangeStatus")
+    private VersionChangeStatus versionChangeStatus;
+
+    @JsonProperty("etf")
+    private Etf etf;
+
+    @JsonProperty("versionLastUpgradedBy")
+    private String versionLastUpgradedBy;
+
+    @JsonProperty("versionLastUpgradedDate")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime versionLastUpgradedDate;
+
+    @JsonProperty("createdBy")
+    private String createdBy;
+
+    @JsonProperty("createdDate")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdDate;
+
+    @JsonProperty("lastUpdatedBy")
+    private String lastUpdatedBy;
+
+    @JsonProperty("lastUpdatedDate")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime lastUpdatedDate;
+
+    @JsonProperty("deletedBy")
+    private String deletedBy;
+
+    @JsonProperty("deletedDate")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime deletedDate;
 }

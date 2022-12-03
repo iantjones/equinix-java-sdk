@@ -23,9 +23,14 @@ package api.equinix.javasdk.fabric.enums;
  * @version $Id: $Id
  */
 public enum ConnectionType {
-    VG_VC,
-    L2_VC,
-    L3_VC,
+    EVPL_VC,
     EPL_VC,
-    EVPL_VC;
+    ACCESS_EPL_VC,
+    IP_VC;
+
+//    VG_VC,
+//    EVPL_VC,
+//    EPL_VC,
+//    EC_VC,
+//    GW_VC;
 }

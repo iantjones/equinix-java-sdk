@@ -16,12 +16,19 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
+import api.equinix.javasdk.core.enums.ConnectionState;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.core.model.Serializable;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * <p>ConnectionJson class.</p>
@@ -32,24 +39,61 @@ import lombok.Getter;
 @Getter
 public final class ConnectionJson implements Serializable {
 
-    /**
-     * <p>pagedTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<Page<Connection, ConnectionJson>> pagedTypeRef() {
-        return new TypeReference<>() {};
-    }
-
-    /**
-     * <p>singleTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<ConnectionJson> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
-
+    @Getter static TypeReference<Page<Connection, ConnectionJson>> pagedTypeRef = new TypeReference<>() {};
+    @Getter static TypeReference<List<ConnectionJson>> listTypeRef = new TypeReference<>() {};
+    @Getter static TypeReference<ConnectionJson> singleTypeRef = new TypeReference<>() {};
+    
     @JsonProperty("uuid")
     private String uuid;
+
+    @JsonProperty("type")
+    private ConnectionType type;
+
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("state")
+    private ConnectionState state;
+
+    @JsonProperty("order")
+    private Order order;
+
+    @JsonProperty("operation")
+    private ConnectionOperation operation;
+
+    @JsonProperty("notifications")
+    private List<Notification> notifications;
+
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("changeLog")
+    private ChangeLog changeLog;
+
+    @JsonProperty("bandwidth")
+    private Integer bandwidth;
+
+    @JsonProperty("redundancy")
+    private Redundancy redundancy;
+
+    @JsonProperty("isRemote")
+    private Boolean isRemote;
+
+    @JsonProperty("direction")
+    private Direction direction;
+
+    @JsonProperty("aSide")
+    private ConnectionSide aSide;
+
+    @JsonProperty("zSide")
+    private ConnectionSide zSide;
+
+    @JsonProperty("additionalInfo")
+    private List<KeyValuePair> additionalInfo;
+
+    @JsonProperty("change")
+    private Change change;
 }

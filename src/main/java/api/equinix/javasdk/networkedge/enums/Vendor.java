@@ -33,7 +33,8 @@ public enum Vendor {
     VERSA_NETWORKS("VERSA Networks"),
     VMWWARE("VMWare"),
     SILVER_PEAK("Silver Peak"),
-    CHECK_POINT("Check Point");
+    CHECK_POINT("Check Point"),
+    ARUBA("Aruba");
 
     private final String formatted;
 

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.core.http.request;
 
+import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.util.ModelUtils;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PaginatedRequest<T> extends EquinixRequest<T> {
     protected Integer pageNumber = 0;
-    protected Integer pageSize = 10;
+    protected Integer pageSize = Constants.PAGE_LIMIT;
 
     /**
      * <p>nextPage.</p>

@@ -16,31 +16,21 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.fabric.model.json.MetroJson;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * <p>ServiceProfileMetro class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Getter
-public class ServiceProfileMetro extends MetroJson {
+public class ServiceProfileMetro extends BasicMetro {
 
     @JsonProperty("displayName")
     private String displayName;
-
-    @JsonProperty("ibxs")
-    private List<String> ibxs;
 
     @JsonProperty("inTrail")
     private Boolean inTrail;
 
     @JsonProperty("sellerRegions")
-    Map<String, String> sellerRegions;
+    private Map<String, String> sellerRegions;
 }

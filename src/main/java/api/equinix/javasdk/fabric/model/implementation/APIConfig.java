@@ -31,6 +31,9 @@ public class APIConfig {
     @JsonProperty("apiAvailable")
     private Boolean apiAvailable;
 
+    @JsonProperty("integrationId")
+    private String integrationId;
+
     @JsonProperty("bandwidthFromApi")
     private Boolean bandwidthFromApi;
 
@@ -45,7 +48,4 @@ public class APIConfig {
 
     @JsonProperty("overSubscriptionLimit")
     private Integer overSubscriptionLimit;
-
-    @JsonProperty("integrationId")
-    private String integrationId;
 }

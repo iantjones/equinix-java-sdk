@@ -61,7 +61,7 @@ public class PaginatedList<T> extends ArrayList<T> {
 
     private PaginatedList<T> fetchNextPage() {
         ((PaginatedRequest<T>)equinixRequest).nextPage();
-        return this.pageableClient.nextPage((PaginatedRequest<T>)equinixRequest);
+        return (PaginatedList<T>) this.pageableClient.nextPage((PaginatedRequest<T>)equinixRequest);
     }
 
     private void loadNextPage() {

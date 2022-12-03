@@ -90,12 +90,14 @@ public class EquinixHttpClient {
 
         singleRequestParams.newApacheRequest(requestFactory, equinixRequest);
 
+        logger.info(equinixRequest.getHttpMethod() + " " + singleRequestParams.apacheRequest.getURI());
+
         try {
             if(this.outputRequestJson) {
                 if(equinixRequest.getContent() != null) {
                     String requestJson = new BufferedReader(
                             new InputStreamReader(equinixRequest.getContent(), StandardCharsets.UTF_8)).lines()
-                            .collect(Collectors.joining("\n"));
+                            .collect(Collectors.joining());
                     logger.info(requestJson);
                 }
             }
@@ -105,7 +107,7 @@ public class EquinixHttpClient {
             EquinixResponse<T> equinixResponse = new EquinixResponse<>(equinixRequest, singleRequestParams.apacheRequest, singleRequestParams.apacheResponse);
             equinixResponse.setEquinixRequest(equinixRequest);
 
-            logger.info(equinixRequest.getHttpMethod() + " " + singleRequestParams.apacheRequest.getURI() + " - Status: " + equinixResponse.getStatusCode() + " " + equinixResponse.getStatusText());
+            logger.info("Status: " + equinixResponse.getStatusCode() + " " + equinixResponse.getStatusText());
 
             if(singleRequestParams.apacheResponse.getEntity() != null) {
                 equinixResponse.setEntity(singleRequestParams.apacheResponse.getEntity());
@@ -154,8 +156,7 @@ public class EquinixHttpClient {
      * @return a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
-    public <T> EquinixResponse<T> executeHelper(final EquinixRequest<T> equinixRequest)
-            throws EquinixClientException {
+    public <T> EquinixResponse<T> executeHelper(final EquinixRequest<T> equinixRequest) throws EquinixClientException {
         final SingleRequestParams execOneParams = new SingleRequestParams();
         return executeSingleRequest(equinixRequest, execOneParams);
     }

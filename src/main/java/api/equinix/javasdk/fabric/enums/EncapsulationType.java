@@ -24,5 +24,6 @@ package api.equinix.javasdk.fabric.enums;
  */
 public enum EncapsulationType {
     QINQ,
-    DOT1Q;
+    DOT1Q,
+    UNTAGGEDEPL;
 }

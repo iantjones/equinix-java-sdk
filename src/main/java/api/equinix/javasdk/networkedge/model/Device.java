@@ -41,6 +41,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceUpdaterJson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>Device interface.</p>
@@ -56,6 +57,10 @@ public interface Device {
      * @return a {@link java.lang.String} object.
      */
     String getUuid();
+
+    String getServiceId();
+
+    String getPodName();
 
     /**
      * <p>getName.</p>
@@ -133,6 +138,10 @@ public interface Device {
      * @return a {@link java.lang.Boolean} object.
      */
     Boolean getIsSubCustomerDevice();
+
+    Boolean getSupportServicesEnabled();
+
+    List<String> getSupportServicesNotification();
 
     /**
      * <p>getMetroCode.</p>

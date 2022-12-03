@@ -24,6 +24,7 @@ package api.equinix.javasdk.core.enums;
  */
 public enum RequestType {
     PAGINATED,
+    PAGINATED_POST,
     LIST,
     SINGLE
 }

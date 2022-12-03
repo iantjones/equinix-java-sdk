@@ -48,6 +48,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>DeviceWrapper class.</p>
@@ -79,6 +80,14 @@ public class DeviceWrapper extends ResourceImpl<Device> implements Device {
      */
     public String getUuid() {
         return this.json.getUuid();
+    }
+
+    public String getServiceId() {
+        return this.json.getServiceId();
+    }
+
+    public String getPodName() {
+        return this.json.getPodName();
     }
 
     /**
@@ -169,6 +178,14 @@ public class DeviceWrapper extends ResourceImpl<Device> implements Device {
      */
     public Boolean getSiblingCustOrgFlag() {
         return this.json.getSiblingCustOrgFlag();
+    }
+
+    public Boolean getSupportServicesEnabled() {
+        return this.json.getSupportServicesEnabled();
+    }
+
+    public List<String> getSupportServicesNotification() {
+        return this.json.getSupportServicesNotification();
     }
 
     /**

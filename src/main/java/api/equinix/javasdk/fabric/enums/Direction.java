@@ -23,6 +23,9 @@ package api.equinix.javasdk.fabric.enums;
  * @version $Id: $Id
  */
 public enum Direction {
+    INTERNAL,
     INBOUND,
-    OUTBOUND;
+    INCOMING,
+    OUTBOUND,
+    OUTGOING;
 }

@@ -24,6 +24,7 @@ import api.equinix.javasdk.fabric.client.internal.implementation.MetroClientImpl
 import api.equinix.javasdk.fabric.enums.MetroType;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.Metro;
+import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.fabric.model.json.MetroJson;
 import lombok.Getter;
 
@@ -95,6 +96,10 @@ public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
      */
     public Region getRegion() {
         return this.jsonObject.getRegion();
+    }
+
+    public GeoCoordinate geoCoordinates() {
+        return this.jsonObject.getGeoCoordinates();
     }
 
     /**

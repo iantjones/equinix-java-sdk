@@ -21,8 +21,10 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.MetroType;
+import api.equinix.javasdk.fabric.model.implementation.BasicMetro;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.Metro;
+import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -36,40 +38,23 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
-public class MetroJson implements Serializable {
+public class MetroJson extends BasicMetro implements Serializable {
 
-    /**
-     * <p>pagedTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
     public static TypeReference<Page<Metro, MetroJson>> pagedTypeRef() {
         return new TypeReference<>() {};
     }
-
-    /**
-     * <p>singleTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
     public static TypeReference<MetroJson> singleTypeRef() {
         return new TypeReference<>() {};
     }
 
-    @JsonProperty("code")
-    private MetroCode code;
-
     @JsonProperty("type")
     private MetroType type;
 
-    @JsonProperty("name")
-    private String name;
-
-    @JsonProperty("href")
-    private String href;
-
     @JsonProperty("region")
     private Region region;
+
+    @JsonProperty("geoCoordinates")
+    private GeoCoordinate geoCoordinates;
 
     @JsonProperty("connectedMetros")
     private List<ConnectedMetro> connectedMetros;

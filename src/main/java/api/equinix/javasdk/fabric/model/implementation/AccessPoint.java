@@ -16,27 +16,61 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.core.enums.Side;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
+import api.equinix.javasdk.fabric.enums.PeeringType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/**
- * <p>AccessPoint class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
+@Getter
+@NoArgsConstructor
 public class AccessPoint {
-
-    @JsonProperty("uuid")
-    private String uuid;
-
-    @JsonProperty("location")
-    private BasicLocation location;
 
     @JsonProperty("type")
     private AccessPointType type;
 
-    @JsonProperty("config")
-    private BasicAccessPointConfig config;
+    @Getter(AccessLevel.NONE)
+    @JsonProperty("interface")
+    private Interface apInterface;
 
+    //TODO This is a very messy/dirty solution - needs thought and to be re-worked.
+    public SimpleAccessPoint.SideWrapper simpleClone(Side accessPointSide) {
+        return SimpleAccessPoint.simpleClone(this, accessPointSide);
+    }
+
+    public Interface getInterface() {
+        return apInterface;
+    }
+
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("location")
+    private Location location;
+
+    @JsonProperty("port")
+    private BasicPort port;
+
+    @JsonProperty("profile")
+    private Profile profile;
+
+    @JsonProperty("linkProtocol")
+    private LinkProtocol linkProtocol;
+
+    @JsonProperty("virtualDevice")
+    private BasicVirtualDevice virtualDevice;
+
+    @JsonProperty("sellerRegion")
+    private String sellerRegion;
+
+    @JsonProperty("authenticationKey")
+    private String authenticationKey;
+
+    @JsonProperty("providerConnectionId")
+    private String providerConnectionId;
+
+    @JsonProperty("peeringType")
+    private PeeringType peeringType;
 }

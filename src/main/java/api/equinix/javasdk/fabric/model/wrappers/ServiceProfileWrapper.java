@@ -17,27 +17,21 @@
 package api.equinix.javasdk.fabric.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.core.model.ResourceImpl;
+import api.equinix.javasdk.core.model.ResourcePostImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ServiceProfileClientImpl;
+import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileState;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
-import api.equinix.javasdk.fabric.model.implementation.Account;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Notification;
-import api.equinix.javasdk.fabric.model.implementation.ServiceProfileConfig;
+import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.*;
+import api.equinix.javasdk.fabric.model.json.MetroJson;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
 import lombok.Getter;
 
 import java.util.List;
 
-/**
- * <p>ServiceProfileWrapper class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
-public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implements ServiceProfile {
+public class ServiceProfileWrapper extends ResourcePostImpl<ServiceProfile> implements ServiceProfile {
 
     private ServiceProfileJson jsonObject;
     @Getter
@@ -60,7 +54,7 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link java.lang.String} object.
      */
     public String getUuid() {
-        return  this.jsonObject.getUuid();
+        return this.jsonObject.getUuid();
     }
 
     /**
@@ -69,7 +63,12 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link api.equinix.javasdk.fabric.enums.ServiceProfileState} object.
      */
     public ServiceProfileState getState() {
-        return  this.jsonObject.getState();
+        return this.jsonObject.getState();
+    }
+
+    @Override
+    public String getHref() {
+        return this.jsonObject.getHref();
     }
 
     /**
@@ -78,7 +77,7 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link java.util.List} object.
      */
     public List<String> getTags() {
-        return  this.jsonObject.getTags();
+        return this.jsonObject.getTags();
     }
 
     /**
@@ -87,7 +86,7 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link java.lang.String} object.
      */
     public String getName() {
-        return  this.jsonObject.getName();
+        return this.jsonObject.getName();
     }
 
     /**
@@ -96,7 +95,12 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link java.lang.String} object.
      */
     public String getDescription() {
-        return  this.jsonObject.getDescription();
+        return this.jsonObject.getDescription();
+    }
+
+    @Override
+    public ServiceProfileVisibility getVisibility() {
+        return this.jsonObject.getVisibility();
     }
 
     /**
@@ -105,7 +109,7 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link api.equinix.javasdk.fabric.enums.ServiceProfileType} object.
      */
     public ServiceProfileType getType() {
-        return  this.jsonObject.getType();
+        return this.jsonObject.getType();
     }
 
     /**
@@ -114,16 +118,27 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link java.util.List} object.
      */
     public List<Notification> getNotifications() {
-        return  this.jsonObject.getNotifications();
+        return this.jsonObject.getNotifications();
     }
 
-    /**
-     * <p>getConfig.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ServiceProfileConfig} object.
-     */
-    public ServiceProfileConfig getConfig() {
-        return  this.jsonObject.getConfig();
+    @Override
+    public List<AccessPointTypeConfig> getAccessPointTypeConfigs() {
+        return this.jsonObject.getAccessPointTypeConfigs();
+    }
+
+    @Override
+    public List<ServiceProfileMetro> metros() {
+        return this.jsonObject.getMetros();
+    }
+
+    @Override
+    public MarketingInfo getMarketingInfo() {
+        return this.jsonObject.getMarketingInfo();
+    }
+
+    @Override
+    public Boolean getSelfProfile() {
+        return this.jsonObject.getSelfProfile();
     }
 
     /**
@@ -132,7 +147,7 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link api.equinix.javasdk.fabric.model.implementation.ChangeLog} object.
      */
     public ChangeLog getChangeLog() {
-        return  this.jsonObject.getChangeLog();
+        return this.jsonObject.getChangeLog();
     }
 
     /**
@@ -141,16 +156,27 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
      * @return a {@link api.equinix.javasdk.fabric.model.implementation.Account} object.
      */
     public Account getAccount() {
-        return  this.jsonObject.getAccount();
+        return this.jsonObject.getAccount();
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.ServiceProfile} object.
-     */
-    public ServiceProfile refresh() {
+    public List<CustomField> getCustomFields() {
+        return this.jsonObject.getCustomFields();
+    }
+
+    public List<String> getAllowedEmails() {
+        return this.jsonObject.getAllowedEmails();
+    }
+
+    public Boolean delete() {
+        this.jsonObject = ((ServiceProfileClientImpl)this.serviceClient).delete(this.getUuid());
+        return true;
+    }
+
+    public void refresh() {
         this.jsonObject = ((ServiceProfileClientImpl)serviceClient).refresh(this.getUuid());
-        return this;
+    }
+
+    public SimpleAccessPoint accessPoint() {
+        return SimpleAccessPoint.define(AccessPointType.SP).port(this.getUuid()).create();
     }
 }

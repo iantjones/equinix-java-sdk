@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -52,6 +53,10 @@ public class Constants {
     /** Constant <code>URL_ENCODER</code> */
     public static final BitSet URL_ENCODER = new BitSet(256);
 
+    public static final Integer PAGE_LIMIT = 2000;
+    public static final Integer PAGE_OFFSET = 0;
+    public static final Integer PAGE_TOTAL = 0;
+
     /** Constant <code>BANDWIDTH_CONVERSION_FACTOR</code> */
     public static final Integer BANDWIDTH_CONVERSION_FACTOR = 1000;
 
@@ -75,6 +80,7 @@ public class Constants {
     public static ObjectMapper objectMapper = new ObjectMapper()
             .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
             .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
             .enable(MapperFeature.USE_STD_BEAN_NAMING)
             .registerModule(new Jdk8Module())
             .registerModule(module)
@@ -86,7 +92,7 @@ public class Constants {
     public static final DateTimeFormatter queryParamFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     /** Constant <code>DATE_TIME_FORMAT</code> */
-    public static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd['T'][' ']HH:mm:ss[.SSS][.SS][.S][X]");
+    public static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd['T'][' ']HH:mm:ss[.SSSSSS][.SSS][.SS][.S][X]");
     /** Constant <code>COMMENCE_BILLING</code> */
     public static final DateTimeFormatter COMMENCE_BILLING = DateTimeFormatter.ofPattern("EEE LLL dd yyyy HH:mm:ss zzz");
     /** Constant <code>COMMENCE_BILLING_SHORT</code> */

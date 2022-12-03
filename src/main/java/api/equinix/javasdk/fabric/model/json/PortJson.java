@@ -26,7 +26,7 @@ import api.equinix.javasdk.fabric.model.implementation.Device;
 import api.equinix.javasdk.fabric.model.implementation.Encapsulation;
 import api.equinix.javasdk.fabric.model.implementation.LinkAggregationGroup;
 import api.equinix.javasdk.fabric.model.implementation.Location;
-import api.equinix.javasdk.fabric.model.implementation.Operation;
+import api.equinix.javasdk.fabric.model.implementation.PortOperation;
 
 import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
 import api.equinix.javasdk.fabric.model.implementation.PortSettings;
@@ -111,11 +111,14 @@ public final class PortJson implements Serializable {
     List<PhysicalPort> physicalPorts;
 
     @JsonProperty("operation")
-    private Operation operation;
+    private PortOperation portOperation;
 
     @JsonProperty("account")
     private Account account;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
+
+    @JsonProperty("projectId")
+    private String projectId;
 }

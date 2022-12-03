@@ -18,88 +18,49 @@ package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.ServiceProfileState;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
-import api.equinix.javasdk.fabric.model.implementation.Account;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Notification;
-import api.equinix.javasdk.fabric.model.implementation.ServiceProfileConfig;
+import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
+import api.equinix.javasdk.fabric.model.implementation.*;
+import api.equinix.javasdk.fabric.model.json.MetroJson;
 
 import java.util.List;
 
-/**
- * <p>ServiceProfile interface.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
-public interface ServiceProfile {
+public interface ServiceProfile extends AccessPointable {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getState.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ServiceProfileState} object.
-     */
     ServiceProfileState getState();
 
-    /**
-     * <p>getTags.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
+    String getHref();
+
+    Account getAccount();
+
     List<String> getTags();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getDescription.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getDescription();
 
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ServiceProfileType} object.
-     */
+    ServiceProfileVisibility getVisibility();
+
     ServiceProfileType getType();
 
-    /**
-     * <p>getNotifications.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<Notification> getNotifications();
 
-    /**
-     * <p>getConfig.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ServiceProfileConfig} object.
-     */
-    ServiceProfileConfig getConfig();
+    List<AccessPointTypeConfig> getAccessPointTypeConfigs();
 
-    /**
-     * <p>getChangeLog.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ChangeLog} object.
-     */
+    List<ServiceProfileMetro> metros();
+
+    MarketingInfo getMarketingInfo();
+
+    Boolean getSelfProfile();
+
     ChangeLog getChangeLog();
 
-    /**
-     * <p>getAccount.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.Account} object.
-     */
-    Account getAccount();
+    List<CustomField> getCustomFields();
+
+    List<String> getAllowedEmails();
+
+    Boolean delete();
+
+    void refresh();
 }

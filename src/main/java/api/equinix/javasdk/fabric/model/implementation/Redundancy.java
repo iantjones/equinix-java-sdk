@@ -18,7 +18,9 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * <p>Redundancy class.</p>
@@ -27,10 +29,12 @@ import lombok.Getter;
  * @version $Id: $Id
  */
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Redundancy {
 
     @JsonProperty("group")
-    private Integer group;
+    private String group;
 
     @JsonProperty("priority")
     private RedundancyPriority priority;

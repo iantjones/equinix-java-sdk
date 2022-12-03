@@ -25,5 +25,11 @@ import api.equinix.javasdk.core.model.APIParam;
  * @version $Id: $Id
  */
 public enum ConnectionState implements APIParam {
-    NOT_AVAILABLE
+    ACTIVE,
+    PENDING,
+    NOT_AVAILABLE,
+    DEPROVISIONED,
+    DEPROVISIONING,
+    PROVISIONED,
+    FAILED;
 }

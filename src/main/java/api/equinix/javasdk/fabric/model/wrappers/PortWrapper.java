@@ -20,16 +20,9 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.PortType;
 import api.equinix.javasdk.fabric.client.internal.implementation.PortClientImpl;
+import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.PortState;
-import api.equinix.javasdk.fabric.model.implementation.Account;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Device;
-import api.equinix.javasdk.fabric.model.implementation.Encapsulation;
-import api.equinix.javasdk.fabric.model.implementation.LinkAggregationGroup;
-import api.equinix.javasdk.fabric.model.implementation.Location;
-import api.equinix.javasdk.fabric.model.implementation.Operation;
-import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
-import api.equinix.javasdk.fabric.model.implementation.PortSettings;
+import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.json.PortJson;
 import lombok.Getter;
@@ -197,10 +190,10 @@ public class PortWrapper extends ResourceImpl<Port> implements Port {
     /**
      * <p>getOperation.</p>
      *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.Operation} object.
+     * @return a {@link PortOperation} object.
      */
-    public Operation getOperation() {
-        return this.jsonObject.getOperation();
+    public PortOperation getOperation() {
+        return this.jsonObject.getPortOperation();
     }
 
     /**
@@ -210,6 +203,10 @@ public class PortWrapper extends ResourceImpl<Port> implements Port {
      */
     public Account getAccount() {
         return this.jsonObject.getAccount();
+    }
+
+    public String getProjectId() {
+        return this.jsonObject.getProjectId();
     }
 
     /**
@@ -229,5 +226,9 @@ public class PortWrapper extends ResourceImpl<Port> implements Port {
     public Port refresh() {
         this.jsonObject = ((PortClientImpl)this.serviceClient).refresh(this.getUuid());
         return this;
+    }
+
+    public SimpleAccessPoint accessPoint() {
+        return SimpleAccessPoint.define(AccessPointType.COLO).port(this.getUuid()).create();
     }
 }

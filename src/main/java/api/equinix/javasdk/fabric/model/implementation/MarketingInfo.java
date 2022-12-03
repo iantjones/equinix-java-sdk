@@ -17,21 +17,22 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * <p>MarketingInfo class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class MarketingInfo {
 
     @JsonProperty("promotion")
     private Boolean promotion;
+
+    @JsonProperty("logo")
+    private String logo;
 
     @JsonProperty("processSteps")
     private List<ProcessStep> processSteps;

@@ -17,7 +17,9 @@
 package api.equinix.javasdk.fabric.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
+import api.equinix.javasdk.core.model.ResourcePostImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.ConnectionStat;
@@ -32,11 +34,11 @@ import lombok.Getter;
  * @author ianjones
  * @version $Id: $Id
  */
-public class ConnectionStatisticWrapper extends ResourceImpl<Connection> implements ConnectionStatistic {
+public class ConnectionStatisticWrapper extends ResourcePostImpl<Connection> implements ConnectionStatistic {
 
     private ConnectionStatisticJson jsonObject;
     @Getter
-    private final Pageable<Connection> serviceClient;
+    private final PageablePost<Connection> serviceClient;
 
     /**
      * <p>Constructor for ConnectionStatisticWrapper.</p>
@@ -44,7 +46,7 @@ public class ConnectionStatisticWrapper extends ResourceImpl<Connection> impleme
      * @param connectionStatisticJson a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
      * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
      */
-    public ConnectionStatisticWrapper(ConnectionStatisticJson connectionStatisticJson, Pageable<Connection> serviceClient) {
+    public ConnectionStatisticWrapper(ConnectionStatisticJson connectionStatisticJson, PageablePost<Connection> serviceClient) {
         this.jsonObject = connectionStatisticJson;
         this.serviceClient = serviceClient;
     }
