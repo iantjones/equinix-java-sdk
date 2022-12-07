@@ -125,11 +125,6 @@ public final class Fabric extends EquinixClient implements Service {
         return prices;
     }
 
-    /**
-     * <p>serviceProfiles.</p>
-     *
-     * @return a {@link ServiceProfiles} object.
-     */
     public ServiceProfiles serviceProfiles() {
         if (this.serviceProfiles == null) {
             this.serviceProfiles = new ServiceProfilesImpl(this.fabricConfig.getServiceProfilesClient(), this);
@@ -139,7 +134,7 @@ public final class Fabric extends EquinixClient implements Service {
 
     public FabricGateways fabricGateways() {
         if (this.fabricGateways == null) {
-            this.fabricGateways = new FabricGatewaysImpl(this.fabricConfig.getFabricGatewaysClient(), this);
+            this.fabricGateways = new FabricGatewaysImpl(this.fabricConfig.getFabricGatewaysClient(), this.fabricConfig.getGatewayPackageClient(), this);
         }
         return fabricGateways;
     }

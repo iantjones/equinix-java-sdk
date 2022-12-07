@@ -14,16 +14,17 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.fabric.model.implementation;
+package api.equinix.javasdk.fabric.client.internal;
 
-import api.equinix.javasdk.fabric.enums.FabricGatewayPackageCode;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.model.GatewayPackage;
+import api.equinix.javasdk.fabric.model.json.GatewayPackageJson;
 
-@Getter
-public class GatewayPackage {
+public interface GatewayPackageClient<T> extends Pageable<T> {
 
-    @JsonProperty("code")
-    private FabricGatewayPackageCode code;
+    Page<GatewayPackage, GatewayPackageJson> list();
+
+    GatewayPackageJson getByPackageCode(GatewayPackageCode gatewayPackageCode);
 }

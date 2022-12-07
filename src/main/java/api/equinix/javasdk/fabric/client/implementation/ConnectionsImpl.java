@@ -54,12 +54,6 @@ public class ConnectionsImpl implements Connections {
 
     private final ConnectionClient<Connection> serviceClient;
 
-    /**
-     * <p>Constructor for ConnectionsImpl.</p>
-     *
-     * @param serviceClient a {@link ConnectionClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.Fabric} object.
-     */
     public ConnectionsImpl(ConnectionClient<Connection> serviceClient, Fabric serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;

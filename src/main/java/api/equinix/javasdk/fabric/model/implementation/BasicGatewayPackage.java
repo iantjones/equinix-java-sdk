@@ -16,15 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
-public class PricingGateway {
+public class BasicGatewayPackage {
 
-    @JsonProperty("package")
-    private BasicGatewayPackage gatewayPackage;
-
-    @JsonProperty("location")
-    MinimalLocation location;
+    @JsonProperty("code")
+    private GatewayPackageCode code;
 }

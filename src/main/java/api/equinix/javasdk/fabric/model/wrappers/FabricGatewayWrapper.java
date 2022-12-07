@@ -19,9 +19,10 @@ package api.equinix.javasdk.fabric.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.FabricGatewayClientImpl;
-import api.equinix.javasdk.fabric.enums.FabricGatewayState;
-import api.equinix.javasdk.fabric.enums.FabricGatewayType;
+import api.equinix.javasdk.fabric.enums.GatewayState;
+import api.equinix.javasdk.fabric.enums.GatewayType;
 import api.equinix.javasdk.fabric.model.FabricGateway;
+import api.equinix.javasdk.fabric.model.GatewayPackage;
 import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.json.FabricGatewayJson;
@@ -44,7 +45,7 @@ public class FabricGatewayWrapper extends ResourceImpl<FabricGateway> implements
         return this.jsonObject.getUuid();
     }
 
-    public FabricGatewayType getType() {
+    public GatewayType getType() {
         return this.jsonObject.getType();
     }
 
@@ -52,7 +53,7 @@ public class FabricGatewayWrapper extends ResourceImpl<FabricGateway> implements
         return this.jsonObject.getHref();
     }
 
-    public FabricGatewayState getState() {
+    public GatewayState getState() {
         return this.jsonObject.getState();
     }
 
@@ -60,7 +61,7 @@ public class FabricGatewayWrapper extends ResourceImpl<FabricGateway> implements
         return this.jsonObject.getLocation();
     }
 
-    public FabricGatewayPackage getGatewayPackage() {
+    public BasicGatewayPackage getGatewayPackage() {
         return this.jsonObject.getGatewayPackage();
     }
 

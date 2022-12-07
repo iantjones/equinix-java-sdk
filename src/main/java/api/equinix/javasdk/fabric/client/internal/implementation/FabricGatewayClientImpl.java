@@ -29,15 +29,12 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.FabricGatewayClient;
+import api.equinix.javasdk.fabric.model.*;
 import api.equinix.javasdk.fabric.model.FabricGateway;
-import api.equinix.javasdk.fabric.model.FabricGateway;
-import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.*;
 import api.equinix.javasdk.fabric.model.json.FabricGatewayJson;
-import api.equinix.javasdk.fabric.model.json.FabricGatewayJson;
-import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
-import api.equinix.javasdk.fabric.model.wrappers.FabricGatewayWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.FabricGatewayWrapper;
 
 import java.util.Map;
@@ -47,13 +44,6 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
     public FabricGatewayClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "FabricGateways");
     }
-
-//
-//    public Page<FabricGateway, FabricGatewayJson> list() {
-//        EquinixRequest<FabricGateway> equinixRequest = this.buildRequest("GetFabricGateways", RequestType.PAGINATED, FabricGatewayJson.getPagedTypeRef());
-//        EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
-//        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-//    }
 
     public Page<FabricGateway, FabricGatewayJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<FabricGateway> equinixRequest = this.buildRequest("SearchFabricGateways", RequestType.PAGINATED_POST, FabricGatewayJson.getPagedTypeRef());
@@ -83,12 +73,20 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
         EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
+
+//
+//    /** {@inheritDoc} */
+//    public ServiceTokenJson getByUuid(String uuid) {
+//        Map<String, String> pParams = Map.of("uuid", uuid);
+//        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequestWithPathParams("GetServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.getSingleTypeRef());
+//        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
+//        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+//    }
     
     public FabricGatewayJson refresh(String uuid) {
         return this.getByUuid(uuid);
     }
-    
-    @Override
+
     public PaginatedList<FabricGateway> nextPage(PaginatedRequest<FabricGateway> equinixRequest) {
         EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
         Page<FabricGateway, FabricGatewayJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);

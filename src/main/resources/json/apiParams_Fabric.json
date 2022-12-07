@@ -131,6 +131,16 @@
           "DeleteFabricGateway": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
+          },
+          "GetGatewayPackages": {
+            "httpMethod": "GET",
+            "requestUri": "gatewayPackages",
+            "overrideRootUri": true
+          },
+          "GetGatewayPackage": {
+            "httpMethod": "GET",
+            "requestUri": "gatewayPackages/{$gatewayPackageCode}",
+            "overrideRootUri": true
           }
         }
       }

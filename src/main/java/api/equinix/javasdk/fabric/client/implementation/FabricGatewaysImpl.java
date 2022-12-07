@@ -23,15 +23,17 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.FabricGateways;
 import api.equinix.javasdk.fabric.client.internal.FabricGatewayClient;
-import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.client.internal.GatewayPackageClient;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.model.FabricGateway;
+import api.equinix.javasdk.fabric.model.GatewayPackage;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
-import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.FabricGatewayJson;
-import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
+import api.equinix.javasdk.fabric.model.json.GatewayPackageJson;
 import api.equinix.javasdk.fabric.model.wrappers.FabricGatewayWrapper;
+import api.equinix.javasdk.fabric.model.wrappers.GatewayPackageWrapper;
 
 public class FabricGatewaysImpl implements FabricGateways {
 
@@ -39,17 +41,13 @@ public class FabricGatewaysImpl implements FabricGateways {
 
     private final FabricGatewayClient<FabricGateway> serviceClient;
 
-    public FabricGatewaysImpl(FabricGatewayClient<FabricGateway> serviceClient, Fabric serviceManager) {
+    private final GatewayPackageClient<GatewayPackage> gatewayPackageServiceClient;
+
+    public FabricGatewaysImpl(FabricGatewayClient<FabricGateway> serviceClient, GatewayPackageClient<GatewayPackage> gatewayPackageServiceClient, Fabric serviceManager) {
         this.serviceManager = serviceManager;
+        this.gatewayPackageServiceClient = gatewayPackageServiceClient;
         this.serviceClient = serviceClient;
     }
-
-//
-//    public PaginatedList<FabricGateway> list() {
-//        Page<FabricGateway, FabricGatewayJson> responsePage = this.serviceClient.list();
-//        PaginatedList<FabricGateway> FabricGatewayList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, FabricGatewayWrapper::new);
-//        return new PaginatedList<>(FabricGatewayList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
-//    }
 
     public PaginatedFilteredList<FabricGateway> search() {
         return search(Filter.filter().empty());
@@ -72,6 +70,17 @@ public class FabricGatewaysImpl implements FabricGateways {
     public FabricGateway getByUuid(String uuid) {
         FabricGatewayJson FabricGatewayJson = this.serviceClient.getByUuid(uuid);
         return new FabricGatewayWrapper(FabricGatewayJson, this.serviceClient);
+    }
+    
+    public PaginatedList<GatewayPackage> gatewayPackages() {
+        Page<GatewayPackage, GatewayPackageJson> responsePage = this.gatewayPackageServiceClient.list();
+        PaginatedList<GatewayPackage> GatewayPackageList = Utils.mapPaginatedList(responsePage.getItems(), this.gatewayPackageServiceClient, GatewayPackageWrapper::new);
+        return new PaginatedList<>(GatewayPackageList, this.gatewayPackageServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public GatewayPackage gatewayPackageByCode(GatewayPackageCode gatewayPackageCode) {
+        GatewayPackageJson GatewayPackageJson = this.gatewayPackageServiceClient.getByPackageCode(gatewayPackageCode);
+        return new GatewayPackageWrapper(GatewayPackageJson, this.gatewayPackageServiceClient);
     }
 
 //    public FabricGatewayOperator.FabricGatewayBuilder define(Side issuerSide) {

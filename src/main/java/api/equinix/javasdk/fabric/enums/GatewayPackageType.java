@@ -14,17 +14,8 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.fabric.model.implementation;
+package api.equinix.javasdk.fabric.enums;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-
-@Getter
-public class PricingGateway {
-
-    @JsonProperty("package")
-    private BasicGatewayPackage gatewayPackage;
-
-    @JsonProperty("location")
-    MinimalLocation location;
+public enum GatewayPackageType {
+    GATEWAY_PACKAGE
 }

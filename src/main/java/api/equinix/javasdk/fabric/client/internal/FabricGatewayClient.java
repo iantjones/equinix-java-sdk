@@ -19,9 +19,11 @@ package api.equinix.javasdk.fabric.client.internal;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.FabricGateway;
+import api.equinix.javasdk.fabric.model.GatewayPackage;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.FabricGatewayJson;
+import api.equinix.javasdk.fabric.model.json.GatewayPackageJson;
 
 public interface FabricGatewayClient<T> extends PageablePost<T> {
 

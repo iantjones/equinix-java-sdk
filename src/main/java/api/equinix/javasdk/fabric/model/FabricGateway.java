@@ -16,10 +16,9 @@
 
 package api.equinix.javasdk.fabric.model;
 
-import api.equinix.javasdk.fabric.enums.FabricGatewayState;
-import api.equinix.javasdk.fabric.enums.FabricGatewayType;
+import api.equinix.javasdk.fabric.enums.GatewayState;
+import api.equinix.javasdk.fabric.enums.GatewayType;
 import api.equinix.javasdk.fabric.model.implementation.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
@@ -27,15 +26,15 @@ public interface FabricGateway {
 
      String getUuid();
 
-     FabricGatewayType getType();
+     GatewayType getType();
 
      String getHref();
 
-     FabricGatewayState getState();
+     GatewayState getState();
 
      MinimalLocation getLocation();
 
-     FabricGatewayPackage getGatewayPackage();
+     BasicGatewayPackage getGatewayPackage();
 
      Order getOrder();
 

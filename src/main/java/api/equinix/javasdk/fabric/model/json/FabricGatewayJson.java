@@ -39,19 +39,19 @@ public class FabricGatewayJson implements Serializable {
     private String uuid;
 
     @JsonProperty("type")
-    private FabricGatewayType type;
+    private GatewayType type;
 
     @JsonProperty("href")
     private String href;
 
     @JsonProperty("state")
-    private FabricGatewayState state;
+    private GatewayState state;
+
+    @JsonProperty("gatewayPackage")
+    private BasicGatewayPackage gatewayPackage;
 
     @JsonProperty("location")
     private MinimalLocation location;
-
-    @JsonProperty("package")
-    private FabricGatewayPackage gatewayPackage;
 
     @JsonProperty("order")
     private Order order;

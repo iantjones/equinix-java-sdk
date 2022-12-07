@@ -16,15 +16,16 @@
 
 package api.equinix.javasdk.fabric.client;
 
+import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.model.FabricGateway;
+import api.equinix.javasdk.fabric.model.GatewayPackage;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 
-
 public interface FabricGateways {
-
-//    PaginatedList<FabricGateway> list();
 
     PaginatedFilteredList<FabricGateway> search();
 
@@ -35,6 +36,10 @@ public interface FabricGateways {
     PaginatedFilteredList<FabricGateway> search(FilterPropertyList filter, SortPropertyList sort);
 
     FabricGateway getByUuid(String uuid);
+
+    PaginatedList<GatewayPackage> gatewayPackages();
+
+    GatewayPackage gatewayPackageByCode(GatewayPackageCode gatewayPackageCode);
 
 //    ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide);
 }

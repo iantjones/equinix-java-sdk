@@ -14,15 +14,8 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.fabric.model.implementation;
+package api.equinix.javasdk.fabric.enums;
 
-import api.equinix.javasdk.fabric.enums.FabricGatewayPackageCode;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-
-@Getter
-public class FabricGatewayPackage {
-
-    @JsonProperty("code")
-    private FabricGatewayPackageCode code;
+public enum GatewayState {
+    PROVISIONED;
 }

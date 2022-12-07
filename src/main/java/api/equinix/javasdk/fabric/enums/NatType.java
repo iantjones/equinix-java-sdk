@@ -16,6 +16,6 @@
 
 package api.equinix.javasdk.fabric.enums;
 
-public enum FabricGatewayState {
-    PROVISIONED;
+public enum NatType {
+    STATIC_NAT
 }

@@ -1,5 +1,5 @@
 package api.equinix.javasdk.fabric.enums;
 
-public enum FabricGatewayType {
+public enum GatewayType {
     XF_GATEWAY
 }

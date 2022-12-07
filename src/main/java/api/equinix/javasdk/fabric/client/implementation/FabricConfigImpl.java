@@ -47,6 +47,8 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final FabricGatewayClientImpl fabricGatewaysClient;
 
+    private final GatewayPackageClientImpl gatewayPackageClient;
+
     /**
      * <p>Constructor for FabricConfigImpl.</p>
      *
@@ -62,5 +64,6 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.pricingClient = new PricingClientImpl(this);
         this.serviceProfilesClient = new ServiceProfileClientImpl(this);
         this.fabricGatewaysClient = new FabricGatewayClientImpl(this);
+        this.gatewayPackageClient = new GatewayPackageClientImpl(this);
     }
 }
