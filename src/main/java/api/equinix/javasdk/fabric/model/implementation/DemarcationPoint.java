@@ -22,6 +22,27 @@ import lombok.Getter;
 @Getter
 public class DemarcationPoint {
 
+    @JsonProperty("cabinetUniqueSpaceId")
+    private String cabinetUniqueSpaceId;
+
+    @JsonProperty("cageUniqueSpaceId")
+    private String cageUniqueSpaceId;
+
+    @JsonProperty("connectorType")
+    private String connectorType;
+
+    @JsonProperty("ibx")
+    private String ibx;
+
+    @JsonProperty("portReservationId")
+    private String portReservationId;
+
+    @JsonProperty("portGroup")
+    private String portGroup;
+
+    @JsonProperty("correlationId")
+    private String correlationId;
+
     @JsonProperty("patchPanelName")
     private String patchPanelName;
 
@@ -31,6 +52,6 @@ public class DemarcationPoint {
     @JsonProperty("patchPanelPortB")
     private String patchPanelPortB;
 
-    @JsonProperty("ibx")
-    private String ibx;
+    @JsonProperty("patchPanel")
+    private String patchPanel;
 }

@@ -35,6 +35,9 @@ public class Location extends MinimalLocation {
     @JsonProperty("metroName")
     private String metroName;
 
+    @JsonProperty("href")
+    private String href;
+
     @JsonProperty("region")
     private Region region;
 }

@@ -20,16 +20,8 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.PortType;
 import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.PortState;
-import api.equinix.javasdk.fabric.model.implementation.Account;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Device;
-import api.equinix.javasdk.fabric.model.implementation.Encapsulation;
-import api.equinix.javasdk.fabric.model.implementation.LinkAggregationGroup;
-import api.equinix.javasdk.fabric.model.implementation.Location;
-import api.equinix.javasdk.fabric.model.implementation.PortOperation;
+import api.equinix.javasdk.fabric.model.implementation.*;
 
-import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
-import api.equinix.javasdk.fabric.model.implementation.PortSettings;
 import api.equinix.javasdk.fabric.model.Port;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -109,6 +101,12 @@ public final class PortJson implements Serializable {
 
     @JsonProperty("physicalPorts")
     List<PhysicalPort> physicalPorts;
+
+    @JsonProperty("redundancy")
+    Redundancy redundancy;
+
+    @JsonProperty("lagEnabled")
+    Boolean lagEnabled;
 
     @JsonProperty("operation")
     private PortOperation portOperation;

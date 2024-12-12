@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.PackageType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -30,6 +31,9 @@ public class PhysicalPortSettings {
 
     @JsonProperty("sharedPortType")
     private String sharedPortType;
+
+    @JsonProperty("packageType")
+    private PackageType packageType;
 
     @JsonProperty("sharedPortProduct")
     private String sharedPortProduct;

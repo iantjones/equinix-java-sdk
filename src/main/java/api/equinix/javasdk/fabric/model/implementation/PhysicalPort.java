@@ -33,6 +33,9 @@ public class PhysicalPort {
     @JsonProperty("id")
     private Integer id;
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("type")
     private PortType type;
 

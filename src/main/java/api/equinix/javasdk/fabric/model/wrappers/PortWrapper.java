@@ -187,6 +187,14 @@ public class PortWrapper extends ResourceImpl<Port> implements Port {
         return this.jsonObject.getPhysicalPorts();
     }
 
+    public Redundancy getRedundancy() {
+        return this.jsonObject.getRedundancy();
+    }
+
+    public Boolean getLagEnabled() {
+        return this.jsonObject.getLagEnabled();
+    }
+
     /**
      * <p>getOperation.</p>
      *

@@ -14,30 +14,8 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.fabric.model.implementation;
+package api.equinix.javasdk.fabric.enums;
 
-import api.equinix.javasdk.fabric.enums.PackageType;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-
-/**
- * <p>PortSettings class.</p>
- *
- * @author ianjones
- * @version $Id: $Id
- */
-@Getter
-public class PortSettings {
-
-    @JsonProperty("buyout")
-    private Boolean buyout;
-
-    @JsonProperty("placeVcOrderPermission")
-    private Boolean placeVcOrderPermission;
-
-    @JsonProperty("viewPortPermission")
-    private Boolean viewPortPermission;
-
-    @JsonProperty("packageType")
-    private PackageType packageType;
+public enum PackageType {
+    STANDARD;
 }

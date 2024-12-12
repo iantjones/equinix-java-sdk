@@ -135,12 +135,16 @@ public interface Port extends AccessPointable {
      */
     List<PhysicalPort> getPhysicalPorts();
 
+    Redundancy getRedundancy();
+
     /**
      * <p>getOperation.</p>
      *
      * @return a {@link PortOperation} object.
      */
     PortOperation getOperation();
+
+    Boolean getLagEnabled();
 
     /**
      * <p>getAccount.</p>
