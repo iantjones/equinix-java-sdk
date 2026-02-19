@@ -244,30 +244,32 @@ Connection conn = fabric.connections()
 Implement `CloudProviderConnectionAdapter<T>` for any cloud provider not covered by the built-in adapters:
 
 ```java
-public class SalesforceAdapter implements CloudProviderConnectionAdapter<SalesforceCircuit> {
+public class IbmDirectLinkAdapter implements CloudProviderConnectionAdapter<Void> {
 
-    private final SalesforceCircuit circuit;
+    private final String serviceKey;
+    private final String region;
     private final String profileUuid;
 
-    public SalesforceAdapter(SalesforceCircuit circuit, String profileUuid) {
-        this.circuit = circuit;
+    public IbmDirectLinkAdapter(String serviceKey, String region, String profileUuid) {
+        this.serviceKey = serviceKey;
+        this.region = region;
         this.profileUuid = profileUuid;
     }
 
     @Override public String getServiceProfileUuid()  { return profileUuid; }
-    @Override public String getAuthenticationKey()   { return circuit.getApiKey(); }
-    @Override public String getSellerRegion()        { return circuit.getRegion(); }
-    @Override public SalesforceCircuit getSource()   { return circuit; }
-    @Override public CloudProviderType getProviderType() { return CloudProviderType.OTHER; }
+    @Override public String getAuthenticationKey()   { return serviceKey; }
+    @Override public String getSellerRegion()        { return region; }
+    @Override public Void getSource()                { return null; }
+    @Override public CloudProviderType getProviderType() { return CloudProviderType.IBM_CLOUD; }
 }
 
 // Use exactly like the built-in adapters
 Connection conn = fabric.connections()
     .define(ConnectionType.EVPL_VC)
-    .name("Salesforce-Connection")
+    .name("IBM-DirectLink")
     .bandwidth(50)
     .aSideAccessPointPort(portUuid, LinkProtocol.dot1q().vlanTag(500).create())
-    .zSideCloudProvider(new SalesforceAdapter(circuit, profileUuid),
+    .zSideCloudProvider(new IbmDirectLinkAdapter(serviceKey, "us-south", profileUuid),
                         LinkProtocol.dot1q().vlanTag(500).create())
     .notification("ops@example.com")
     .create();
