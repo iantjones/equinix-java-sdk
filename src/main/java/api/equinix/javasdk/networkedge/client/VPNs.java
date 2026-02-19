@@ -21,7 +21,8 @@ import api.equinix.javasdk.networkedge.model.VPN;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
 
 /**
- * <p>VPNs interface.</p>
+ * Client interface for managing VPN configurations on Network Edge devices. Provides
+ * operations to list, retrieve, and create site-to-site VPN connections.
  *
  * @author ianjones
  * @version $Id: $Id

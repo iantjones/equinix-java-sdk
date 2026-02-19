@@ -73,6 +73,14 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
+    public ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson) {
+        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.getSingleTypeRef());
+        equinixRequest.addSingleQueryParameter("dryRun", "true");
+        Utils.serializeJson(equinixRequest, connectionCreatorJson);
+        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
+        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+    }
+
     public ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
         ManageConnection connOp = new ManageConnection(connectionOperationType, description, bodyObject);
         EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("ManageConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.getSingleTypeRef());

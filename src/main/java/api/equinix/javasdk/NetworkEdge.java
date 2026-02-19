@@ -40,10 +40,43 @@ import api.equinix.javasdk.networkedge.client.implementation.SetupImpl;
 import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
 
 /**
- * The primary entry point for accessing Network Edge APIs in the Java SDK.
+ * The primary entry point for accessing the Equinix Network Edge APIs.
+ *
+ * <p>Network Edge provides virtual network devices deployed at Equinix data centers,
+ * enabling customers to run network functions (routers, firewalls, SD-WAN) without
+ * physical hardware. This class offers typed access to all Network Edge resources
+ * including virtual devices, SSH users, ACL templates, VPN connections, BGP peerings,
+ * device links, public keys, and backups.</p>
+ *
+ * <p>All resource accessors use lazy initialization — internal clients are created on first access
+ * and reused for subsequent calls.</p>
+ *
+ * <h3>Quick Start</h3>
+ * <pre>{@code
+ * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
+ * NetworkEdge networkEdge = new NetworkEdge(credentials);
+ *
+ * // List all virtual devices
+ * PaginatedList<Device> devices = networkEdge.devices().list();
+ *
+ * // Create a virtual device with the fluent builder
+ * Device device = networkEdge.devices()
+ *     .define("my-router")
+ *     .withAccountNumber(accountNumber)
+ *     .inMetro(MetroCode.SV)
+ *     .withDeviceType("CSR1000V")
+ *     .create();
+ *
+ * // Manage SSH users and ACL templates
+ * PaginatedList<SSHUser> sshUsers = networkEdge.sshUsers().list();
+ * PaginatedList<ACLTemplate> templates = networkEdge.aclTemplates().list();
+ * }</pre>
  *
  * @author ianjones
  * @version $Id: $Id
+ * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
+ * @see api.equinix.javasdk.networkedge.client.Devices
+ * @see api.equinix.javasdk.networkedge.client.SSHUsers
  */
 public final class NetworkEdge extends EquinixClient implements Service {
 
@@ -60,19 +93,20 @@ public final class NetworkEdge extends EquinixClient implements Service {
     final private NetworkEdgeConfig networkEdgeConfig;
 
     /**
-     * <p>Constructor for NetworkEdge.</p>
+     * Creates a new Network Edge client using the provided credentials.
+     * Authentication occurs automatically on the first API call.
      *
-     * @param equinixCredentials a {@link api.equinix.javasdk.core.auth.EquinixCredentials} object.
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
      */
     public NetworkEdge(EquinixCredentials equinixCredentials) {
         this(equinixCredentials, false);
     }
 
     /**
-     * <p>Constructor for NetworkEdge.</p>
+     * Creates a new Network Edge client with optional sandbox mode.
      *
-     * @param equinixCredentials a {@link api.equinix.javasdk.core.auth.EquinixCredentials} object.
-     * @param isSandBoxed a boolean.
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public NetworkEdge(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
         super(equinixCredentials, isSandBoxed);
@@ -84,10 +118,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>setup.</p>
+     * Returns the client for Network Edge setup and provisioning operations.
+     * Provides access to account settings, metro availability, DNS configuration,
+     * license agreements, and pricing for virtual network devices.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.Setup}
-     * the entry point for accessing setup related operations such as agreements and pricing.
+     * @return the {@link Setup} client for managing setup-related resources
      */
     public Setup setup() {
         if (this.setup == null) {
@@ -99,10 +134,12 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>devices.</p>
+     * Returns the client for managing virtual network devices and device types.
+     * Devices are virtual appliances (routers, firewalls, SD-WAN) running at Equinix
+     * data centers. Supports creation via fluent builders, lifecycle management,
+     * and querying available device types.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.Devices}
-     * the entry point for accessing device related operations such as create, update, and restore.
+     * @return the {@link Devices} client for CRUD operations on virtual devices
      */
     public Devices devices() {
         if (this.devices == null) {
@@ -113,10 +150,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>publicKeys.</p>
+     * Returns the client for managing SSH public keys.
+     * Public keys are uploaded and associated with virtual devices for
+     * secure SSH access without password-based authentication.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.PublicKeys}
-     * the entry point for accessing public key related operations.
+     * @return the {@link PublicKeys} client for managing SSH public keys
      */
     public PublicKeys publicKeys() {
         if (this.publicKeys == null) {
@@ -126,10 +164,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>deviceLinks.</p>
+     * Returns the client for managing device links between virtual network devices.
+     * Device links create logical connections between devices, enabling multi-device
+     * topologies and high-availability configurations.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.DeviceLinks}
-     * the entry point for accessing device link related operations.
+     * @return the {@link DeviceLinks} client for creating and managing device links
      */
     public DeviceLinks deviceLinks() {
         if (this.deviceLinks == null) {
@@ -139,10 +178,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>sshUsers.</p>
+     * Returns the client for managing SSH user accounts on virtual devices.
+     * SSH users define the credentials used to access virtual devices for
+     * configuration and management via SSH.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.SSHUsers}
-     * the entry point for accessing ssh user related operations.
+     * @return the {@link SSHUsers} client for managing SSH user accounts
      */
     public SSHUsers sshUsers() {
         if (this.sshUsers == null) {
@@ -152,10 +192,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>aclTemplates.</p>
+     * Returns the client for managing Access Control List (ACL) templates.
+     * ACL templates define network access rules that can be applied to
+     * virtual devices to control inbound and outbound traffic.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.ACLTemplates}
-     * the entry point for accessing acl template related operations.
+     * @return the {@link ACLTemplates} client for CRUD operations on ACL templates
      */
     public ACLTemplates aclTemplates() {
         if (this.aclTemplates == null) {
@@ -165,10 +206,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>vpns.</p>
+     * Returns the client for managing VPN connections on virtual devices.
+     * VPNs establish secure, encrypted tunnels between virtual devices
+     * and remote network endpoints.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.VPNs}
-     * the entry point for accessing vpn related operations.
+     * @return the {@link VPNs} client for creating and managing VPN connections
      */
     public VPNs vpns() {
         if (this.vpns == null) {
@@ -178,10 +220,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>bgpPeerings.</p>
+     * Returns the client for managing BGP peering sessions on virtual devices.
+     * BGP peerings enable dynamic route exchange between virtual devices
+     * and neighboring routers for network reachability.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.BGPPeerings}
-     * the entry point for accessing bgp peering related operations.
+     * @return the {@link BGPPeerings} client for configuring BGP peering sessions
      */
     public BGPPeerings bgpPeerings() {
         if (this.bgpPeerings == null) {
@@ -191,10 +234,11 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
-     * <p>backups.</p>
+     * Returns the client for managing device configuration backups.
+     * Backups capture the running configuration of virtual devices,
+     * enabling point-in-time recovery and configuration rollback.
      *
-     * @return {@link api.equinix.javasdk.networkedge.client.Backups}
-     * the entry point for accessing backup related operations.
+     * @return the {@link Backups} client for managing device backups
      */
     public Backups backups() {
         if (this.backups == null) {

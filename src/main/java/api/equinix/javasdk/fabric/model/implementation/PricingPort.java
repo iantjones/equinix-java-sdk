@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.PortType;
+import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.PortServiceType;
 import com.fasterxml.jackson.annotation.JsonProperty;

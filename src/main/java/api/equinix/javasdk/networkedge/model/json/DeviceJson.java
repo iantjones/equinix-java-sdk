@@ -277,25 +277,4 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("versionLastUpgradedDate")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime versionLastUpgradedDate;
-
-    @JsonProperty("createdBy")
-    private String createdBy;
-
-    @JsonProperty("createdDate")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime createdDate;
-
-    @JsonProperty("lastUpdatedBy")
-    private String lastUpdatedBy;
-
-    @JsonProperty("lastUpdatedDate")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime lastUpdatedDate;
-
-    @JsonProperty("deletedBy")
-    private String deletedBy;
-
-    @JsonProperty("deletedDate")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime deletedDate;
 }

@@ -1,0 +1,25 @@
+{
+  "functionalAreas": {
+    "Messaging": {
+      "uriFormat": "messaging/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Subscriptions": {
+        "rootUri": "subscriptions",
+        "serviceEndpoints": {
+          "ListSubscriptions": { "httpMethod": "GET" },
+          "GetSubscription": { "httpMethod": "GET", "requestUri": "{$uuid}" },
+          "CreateSubscription": { "httpMethod": "POST" },
+          "UpdateSubscription": { "httpMethod": "PUT", "requestUri": "{$uuid}" },
+          "DeleteSubscription": { "httpMethod": "DELETE", "requestUri": "{$uuid}" }
+        }
+      },
+      "Events": {
+        "rootUri": "events",
+        "serviceEndpoints": {
+          "ListEvents": { "httpMethod": "GET" },
+          "GetEvent": { "httpMethod": "GET", "requestUri": "{$uuid}" }
+        }
+      }
+    }
+  }
+}

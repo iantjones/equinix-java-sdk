@@ -19,18 +19,13 @@ package api.equinix.javasdk.networkedge.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.BackupClientImpl;
-import api.equinix.javasdk.networkedge.enums.BackupRequestType;
-import api.equinix.javasdk.networkedge.enums.BackupStatus;
-import api.equinix.javasdk.networkedge.enums.BackupType;
 import api.equinix.javasdk.networkedge.model.Backup;
 import api.equinix.javasdk.networkedge.model.Device;
-import api.equinix.javasdk.networkedge.model.implementation.DeviceRestore;
 import api.equinix.javasdk.networkedge.model.json.BackupJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupUpdaterJson;
 import lombok.Getter;
-
-import java.util.List;
+import lombok.experimental.Delegate;
 
 /**
  * <p>BackupWrapper class.</p>
@@ -40,6 +35,7 @@ import java.util.List;
  */
 public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
 
+    @Delegate
     private BackupJson json;
 
     @Getter
@@ -54,87 +50,6 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
     public BackupWrapper(BackupJson deviceLinkJson, Pageable<Backup> serviceClient) {
         this.json = deviceLinkJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return  this.json.getUuid();
-    }
-
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getName() {
-        return  this.json.getName();
-    }
-
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BackupType} object.
-     */
-    public BackupType getType() {
-        return  this.json.getType();
-    }
-
-    /**
-     * <p>getStatus.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BackupStatus} object.
-     */
-    public BackupStatus getStatus() {
-        return  this.json.getStatus();
-    }
-
-    /**
-     * <p>getRequestType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BackupRequestType} object.
-     */
-    public BackupRequestType getRequestType() {
-        return  this.json.getRequestType();
-    }
-
-    /**
-     * <p>getDownloadUrl.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getDownloadUrl() {
-        return  this.json.getDownloadUrl();
-    }
-
-    /**
-     * <p>getVersion.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getVersion() {
-        return  this.json.getVersion();
-    }
-
-    /**
-     * <p>getDeleteAllowed.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean getDeleteAllowed() {
-        return  this.json.getDeleteAllowed();
-    }
-
-    /**
-     * <p>getRestores.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<DeviceRestore> getRestores() {
-        return  this.json.getRestores();
     }
 
     /** {@inheritDoc} */

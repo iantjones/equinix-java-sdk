@@ -65,7 +65,7 @@ public class EquinixResponse<T> {
         this.setStatusText(httpResponse.getStatusLine().getReasonPhrase());
 
         for (Header header : httpResponse.getAllHeaders()) {
-            httpResponse.addHeader(header.getName(), header.getValue());
+            this.headers.put(header.getName(), header.getValue());
         }
     }
 }

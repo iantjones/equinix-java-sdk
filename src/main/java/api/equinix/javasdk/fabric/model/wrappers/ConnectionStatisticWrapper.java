@@ -16,17 +16,14 @@
 
 package api.equinix.javasdk.fabric.model.wrappers;
 
-import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.core.model.ResourcePostImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
-import api.equinix.javasdk.fabric.enums.ConnectionType;
-import api.equinix.javasdk.fabric.model.implementation.ConnectionStat;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
 import api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 /**
  * <p>ConnectionStatisticWrapper class.</p>
@@ -34,8 +31,9 @@ import lombok.Getter;
  * @author ianjones
  * @version $Id: $Id
  */
-public class ConnectionStatisticWrapper extends ResourcePostImpl<Connection> implements ConnectionStatistic {
+public class ConnectionStatisticWrapper extends ResourceImpl<Connection> implements ConnectionStatistic {
 
+    @Delegate(excludes = ConnectionStatisticMutability.class)
     private ConnectionStatisticJson jsonObject;
     @Getter
     private final PageablePost<Connection> serviceClient;
@@ -52,42 +50,6 @@ public class ConnectionStatisticWrapper extends ResourcePostImpl<Connection> imp
     }
 
     /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return this.jsonObject.getUuid();
-    }
-
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ConnectionType} object.
-     */
-    public ConnectionType getType() {
-        return this.jsonObject.getType();
-    }
-
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getName() {
-        return this.jsonObject.getName();
-    }
-
-    /**
-     * <p>getStats.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ConnectionStat} object.
-     */
-    public ConnectionStat getStats() {
-        return this.jsonObject.getStats();
-    }
-
-    /**
      * <p>refresh.</p>
      *
      * @return a {@link api.equinix.javasdk.fabric.model.ConnectionStatistic} object.
@@ -96,5 +58,9 @@ public class ConnectionStatisticWrapper extends ResourcePostImpl<Connection> imp
         this.jsonObject = ((ConnectionClientImpl)this.serviceClient).refreshStatistics(this.getUuid(),
                 this.getStats().getStartDateTime(), this.getStats().getEndDateTime(), this.getStats().getViewPoint());
         return this;
+    }
+
+    private interface ConnectionStatisticMutability {
+        ConnectionStatistic refresh();
     }
 }

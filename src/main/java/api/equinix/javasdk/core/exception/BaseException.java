@@ -17,10 +17,13 @@
 package api.equinix.javasdk.core.exception;
 
 /**
- * <p>BaseException class.</p>
+ * Root exception class for all Equinix SDK exceptions.
+ * Extends {@link RuntimeException} so that SDK exceptions are unchecked.
  *
  * @author ianjones
  * @version $Id: $Id
+ * @see EquinixClientException
+ * @see EquinixServiceException
  */
 public class BaseException extends RuntimeException {
     private static final long serialVersionUID = 1L;

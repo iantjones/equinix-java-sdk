@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.ChargeFrequency;
+import api.equinix.javasdk.fabric.enums.ChargeFrequency;
 import api.equinix.javasdk.networkedge.enums.ChargeType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

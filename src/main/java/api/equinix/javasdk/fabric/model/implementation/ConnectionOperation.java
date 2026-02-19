@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.ConnectionStatus;
+import api.equinix.javasdk.fabric.enums.ConnectionStatus;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;

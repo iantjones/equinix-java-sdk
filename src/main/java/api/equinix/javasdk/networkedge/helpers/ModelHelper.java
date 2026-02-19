@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * @author ianjones
  * @version $Id: $Id
  */
-public class ModelHelper extends api.equinix.javasdk.core.helpers.ModelHelper {
+public class ModelHelper {
 
     /**
      * <p>findDeviceByCreator.</p>

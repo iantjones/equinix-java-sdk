@@ -42,6 +42,323 @@
             "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}/remove"
           }
         }
+      },
+      "CrossConnects": {
+        "rootUri": "crossConnects",
+        "serviceEndpoints": {
+          "ListCrossConnects": {
+            "httpMethod": "GET"
+          },
+          "GetCrossConnect": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateCrossConnect": {
+            "httpMethod": "POST"
+          },
+          "UpdateCrossConnect": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteCrossConnect": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Orders": {
+        "rootUri": "orders",
+        "serviceEndpoints": {
+          "ListOrders": {
+            "httpMethod": "GET"
+          },
+          "GetOrder": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateOrder": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "Shipments": {
+        "rootUri": "shipments",
+        "serviceEndpoints": {
+          "ListShipments": {
+            "httpMethod": "GET"
+          },
+          "GetShipment": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateShipment": {
+            "httpMethod": "POST"
+          },
+          "UpdateShipment": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "CancelShipment": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "SmartHands": {
+        "rootUri": "smartHands",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListSmartHands": {
+            "httpMethod": "GET"
+          },
+          "GetSmartHands": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateSmartHands": {
+            "httpMethod": "POST"
+          },
+          "UpdateSmartHands": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "WorkVisits": {
+        "rootUri": "workVisits",
+        "serviceEndpoints": {
+          "ListWorkVisits": {
+            "httpMethod": "GET"
+          },
+          "GetWorkVisit": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateWorkVisit": {
+            "httpMethod": "POST"
+          },
+          "UpdateWorkVisit": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "CancelWorkVisit": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "TroubleTickets": {
+        "rootUri": "tickets",
+        "serviceEndpoints": {
+          "ListTroubleTickets": {
+            "httpMethod": "GET"
+          },
+          "GetTroubleTicket": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateTroubleTicket": {
+            "httpMethod": "POST"
+          },
+          "UpdateTroubleTicket": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Notifications": {
+        "rootUri": "notifications",
+        "serviceEndpoints": {
+          "ListNotifications": {
+            "httpMethod": "GET"
+          },
+          "GetNotification": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Assets": {
+        "rootUri": "assets",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListAssets": {
+            "httpMethod": "GET"
+          },
+          "GetAsset": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "SupportCases": {
+        "rootUri": "support/cases",
+        "serviceEndpoints": {
+          "ListSupportCases": {
+            "httpMethod": "GET"
+          },
+          "GetSupportCase": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateSupportCase": {
+            "httpMethod": "POST"
+          },
+          "UpdateSupportCase": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Quotes": {
+        "rootUri": "quotes",
+        "serviceEndpoints": {
+          "ListQuotes": {
+            "httpMethod": "GET"
+          },
+          "GetQuote": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateQuote": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "SupportPlans": {
+        "rootUri": "support/plans",
+        "serviceEndpoints": {
+          "ListSupportPlans": {
+            "httpMethod": "GET"
+          },
+          "GetSupportPlan": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "OrderHistory": {
+        "rootUri": "orders/history",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListOrderHistory": {
+            "httpMethod": "GET"
+          },
+          "GetOrderHistoryItem": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Lookup": {
+        "rootUri": "lookup",
+        "serviceEndpoints": {
+          "ListLocations": {
+            "httpMethod": "GET",
+            "requestUri": "locations"
+          },
+          "GetLocation": {
+            "httpMethod": "GET",
+            "requestUri": "locations/{$uuid}"
+          },
+          "ListPatchPanels": {
+            "httpMethod": "GET",
+            "requestUri": "patchPanels"
+          }
+        }
+      },
+      "Attachments": {
+        "rootUri": "attachments",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListAttachments": {
+            "httpMethod": "GET"
+          },
+          "GetAttachment": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "UploadAttachment": {
+            "httpMethod": "POST"
+          },
+          "DeleteAttachment": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Reports": {
+        "rootUri": "reports",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListReports": {
+            "httpMethod": "GET"
+          },
+          "GetReport": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "DigitalLOA": {
+        "rootUri": "digitalLoa",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListDigitalLOAs": {
+            "httpMethod": "GET"
+          },
+          "GetDigitalLOA": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateDigitalLOA": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "SecureCabinets": {
+        "rootUri": "secureCabinets",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListSecureCabinets": {
+            "httpMethod": "GET"
+          },
+          "GetSecureCabinet": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "CreateSecureCabinet": {
+            "httpMethod": "POST"
+          },
+          "UpdateSecureCabinet": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "UnifiedNotifications": {
+        "rootUri": "notifications/unified",
+        "serviceEndpoints": {
+          "ListUnifiedNotifications": {
+            "httpMethod": "GET"
+          },
+          "GetUnifiedNotification": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "BillingCredits": {
+        "rootUri": "billing/credits",
+        "serviceEndpoints": {
+          "ListBillingCredits": {
+            "httpMethod": "GET"
+          },
+          "GetBillingCredit": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
       }
     }
   }

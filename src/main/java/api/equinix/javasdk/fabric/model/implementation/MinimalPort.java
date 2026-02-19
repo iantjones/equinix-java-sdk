@@ -16,16 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import api.equinix.javasdk.core.model.ResourceRef;
 import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor
 @NoArgsConstructor
-public class MinimalPort {
+public class MinimalPort extends ResourceRef {
 
-    @JsonProperty("uuid")
-    private String uuid;
+    public MinimalPort(String uuid) {
+        super(uuid);
+    }
 }

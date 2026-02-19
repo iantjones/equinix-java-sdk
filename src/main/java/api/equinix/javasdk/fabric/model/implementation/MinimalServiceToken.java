@@ -16,16 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import api.equinix.javasdk.core.model.ResourceRef;
 import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor
 @NoArgsConstructor
-public class MinimalServiceToken {
-    
-    @JsonProperty("uuid")
-    private String uuid;
+public class MinimalServiceToken extends ResourceRef {
+
+    public MinimalServiceToken(String uuid) {
+        super(uuid);
+    }
 }

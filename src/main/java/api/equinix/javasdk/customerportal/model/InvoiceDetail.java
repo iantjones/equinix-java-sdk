@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.model.deserializers.LocalDateDeserializer;
 import api.equinix.javasdk.customerportal.enums.ActivityType;
 import api.equinix.javasdk.customerportal.enums.Frequency;
 import api.equinix.javasdk.customerportal.enums.TransactionType;
+import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.customerportal.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -97,5 +98,5 @@ public interface InvoiceDetail {
 
     String getLegacyOrderId();
 
-    List<AdditionalInfo> getAdditionalInfo();
+    List<KeyValuePair> getAdditionalInfo();
 }

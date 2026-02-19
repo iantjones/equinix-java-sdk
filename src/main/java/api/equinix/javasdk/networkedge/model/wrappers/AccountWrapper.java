@@ -18,12 +18,10 @@ package api.equinix.javasdk.networkedge.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.model.Account;
 import api.equinix.javasdk.networkedge.model.json.AccountJson;
 import lombok.Getter;
-
-import java.util.ArrayList;
+import lombok.experimental.Delegate;
 
 /**
  * <p>AccountWrapper class.</p>
@@ -33,6 +31,7 @@ import java.util.ArrayList;
  */
 public class AccountWrapper extends ResourceImpl<Account> implements Account {
 
+    @Delegate
     private AccountJson jsonObject;
     @Getter
     private final Pageable<Account> serviceClient;
@@ -46,95 +45,5 @@ public class AccountWrapper extends ResourceImpl<Account> implements Account {
     public AccountWrapper(AccountJson accountJson, Pageable<Account> serviceClient) {
         this.jsonObject = accountJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getAccountName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getAccountName() {
-        return  this.jsonObject.getAccountName();
-    }
-
-    /**
-     * <p>getAccountNumber.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getAccountNumber() {
-        return  this.jsonObject.getAccountNumber();
-    }
-
-    /**
-     * <p>getAccountUcmId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getAccountUcmId() {
-        return  this.jsonObject.getAccountUcmId();
-    }
-
-    /**
-     * <p>getAccountStatus.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getAccountStatus() {
-        return  this.jsonObject.getAccountStatus();
-    }
-
-    /**
-     * <p>getPortalOrgId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getPortalOrgId() {
-        return  this.jsonObject.getPortalOrgId();
-    }
-
-    /**
-     * <p>getPortalOrgName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getPortalOrgName() {
-        return  this.jsonObject.getPortalOrgName();
-    }
-
-    /**
-     * <p>getReferenceId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getReferenceId() {
-        return  this.jsonObject.getReferenceId();
-    }
-
-    /**
-     * <p>getMetros.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
-    public ArrayList<MetroCode> getMetros() {
-        return  this.jsonObject.getMetros();
-    }
-
-    /**
-     * <p>getSiblingCustOrgFlag.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean getSiblingCustOrgFlag() {
-        return  this.jsonObject.getSiblingCustOrgFlag();
-    }
-
-    /**
-     * <p>getCreditHold.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean getCreditHold() {
-        return  this.jsonObject.getCreditHold();
     }
 }

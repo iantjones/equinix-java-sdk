@@ -57,4 +57,17 @@ public class Lifecycle {
     @JsonProperty("lastUpdatedDate")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime lastUpdatedDate;
+
+    @JsonProperty("deletedBy")
+    private String deletedBy;
+
+    @JsonProperty("deletedByFullName")
+    private String deletedByFullName;
+
+    @JsonProperty("deletedByEmail")
+    private String deletedByEmail;
+
+    @JsonProperty("deletedDate")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime deletedDate;
 }

@@ -16,8 +16,8 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.ChangeStatus;
-import api.equinix.javasdk.core.enums.ChangeType;
+import api.equinix.javasdk.fabric.enums.ChangeStatus;
+import api.equinix.javasdk.fabric.enums.ChangeType;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

@@ -1,0 +1,12 @@
+{
+  "ibx": "SV5",
+  "cageId": "SV5:01:001100",
+  "cabinetId": "SV5:01:001100:0101",
+  "phase": "A",
+  "currentAmps": 12.5,
+  "apparentPower": 2.75,
+  "activePower": 2.50,
+  "voltage": 220.0,
+  "timestamp": "2024-01-15T14:30:00Z",
+  "status": "OK"
+}

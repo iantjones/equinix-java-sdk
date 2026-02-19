@@ -16,16 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import api.equinix.javasdk.core.model.ResourceRef;
 import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor
 @NoArgsConstructor
-public class MinimalProfile {
-    
-    @JsonProperty("uuid")
-    private String uuid;
+public class MinimalProfile extends ResourceRef {
+
+    public MinimalProfile(String uuid) {
+        super(uuid);
+    }
 }

@@ -22,7 +22,8 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
 
 /**
- * <p>ServiceTokens interface.</p>
+ * Client interface for managing Equinix Fabric service tokens. Service tokens allow third
+ * parties to create connections to your assets without requiring direct account access.
  *
  * @author ianjones
  * @version $Id: $Id
@@ -30,25 +31,26 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
 public interface ServiceTokens {
 
     /**
-     * <p>list.</p>
+     * Lists all service tokens accessible to the current account.
      *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @return a paginated list of service tokens
      */
     PaginatedList<ServiceToken> list();
 
     /**
-     * <p>getByUuid.</p>
+     * Retrieves a single service token by its unique identifier.
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.ServiceToken} object.
+     * @param uuid the unique identifier of the service token
+     * @return the service token matching the given UUID
      */
     ServiceToken getByUuid(String uuid);
 
     /**
-     * <p>define.</p>
+     * Begins the fluent builder for creating a new service token.
+     * Call methods on the returned builder to configure the token, then call {@code create()}.
      *
-     * @param issuerSide a {@link api.equinix.javasdk.core.enums.Side} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator.ServiceTokenBuilder} object.
+     * @param issuerSide the side (A-side or Z-side) issuing the service token
+     * @return a builder for configuring the new service token
      */
     ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide);
 }

@@ -15,6 +15,151 @@
             "requestUri": "ibxs/{$ibx}/sensors/{$sensorId}/readings"
           }
         }
+      },
+      "Power": {
+        "rootUri": "power",
+        "serviceEndpoints": {
+          "ListPowerReadings": {
+            "httpMethod": "GET",
+            "requestUri": "ibxs/{$ibx}/readings"
+          },
+          "GetPowerReading": {
+            "httpMethod": "GET",
+            "requestUri": "ibxs/{$ibx}/cabinets/{$cabinetId}/readings"
+          }
+        }
+      },
+      "StreamingSubscriptions": {
+        "rootUri": "streaming",
+        "serviceEndpoints": {
+          "ListSubscriptions": {
+            "httpMethod": "GET",
+            "requestUri": "subscriptions"
+          },
+          "GetSubscription": {
+            "httpMethod": "GET",
+            "requestUri": "subscriptions/{$uuid}"
+          },
+          "CreateSubscription": {
+            "httpMethod": "POST",
+            "requestUri": "subscriptions"
+          },
+          "UpdateSubscription": {
+            "httpMethod": "PUT",
+            "requestUri": "subscriptions/{$uuid}"
+          },
+          "DeleteSubscription": {
+            "httpMethod": "DELETE",
+            "requestUri": "subscriptions/{$uuid}"
+          },
+          "GetSubscriptionData": {
+            "httpMethod": "GET",
+            "requestUri": "subscriptionData/{$subscriptionId}"
+          },
+          "GetCertificate": {
+            "httpMethod": "GET",
+            "requestUri": "subscriptions/certificate"
+          }
+        }
+      },
+      "SystemAlerts": {
+        "rootUri": "systemAlerts",
+        "serviceEndpoints": {
+          "SearchAlertsGet": {
+            "httpMethod": "GET",
+            "requestUri": "search"
+          },
+          "SearchAlertsPost": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "Hierarchy": {
+        "defaultVersion": 1,
+        "rootUri": "hierarchy",
+        "serviceEndpoints": {
+          "GetLocationHierarchy": {
+            "httpMethod": "GET",
+            "requestUri": "location"
+          },
+          "GetPowerHierarchy": {
+            "httpMethod": "GET",
+            "requestUri": "power"
+          }
+        }
+      },
+      "Assets": {
+        "defaultVersion": 1,
+        "rootUri": "asset",
+        "serviceEndpoints": {
+          "ListAssets": {
+            "httpMethod": "GET",
+            "requestUri": "list"
+          },
+          "GetAssetDetails": {
+            "httpMethod": "GET",
+            "requestUri": "details"
+          },
+          "PostAssetDetails": {
+            "httpMethod": "POST",
+            "requestUri": "details"
+          },
+          "SearchAssets": {
+            "httpMethod": "GET",
+            "requestUri": "search"
+          },
+          "GetAffectedAssets": {
+            "httpMethod": "GET",
+            "requestUri": "tagpoint/affected-assets"
+          },
+          "GetCurrentTagPoint": {
+            "httpMethod": "GET",
+            "requestUri": "tagpoint/current"
+          },
+          "PostCurrentTagPoints": {
+            "httpMethod": "POST",
+            "requestUri": "tagpoint/current"
+          }
+        }
+      },
+      "LegacyEnvironmental": {
+        "defaultVersion": 1,
+        "overrideUriFormat": "environment/v{$version}/{$requestUri}",
+        "rootUri": "",
+        "serviceEndpoints": {
+          "GetCurrentEnvironment": {
+            "httpMethod": "GET",
+            "requestUri": "current"
+          },
+          "ListCurrentEnvironment": {
+            "httpMethod": "GET",
+            "requestUri": "listCurrent"
+          },
+          "GetTrendingEnvironment": {
+            "httpMethod": "GET",
+            "requestUri": "trending"
+          }
+        }
+      },
+      "LegacyPower": {
+        "defaultVersion": 1,
+        "overrideUriFormat": "power/v{$version}/{$requestUri}",
+        "rootUri": "",
+        "serviceEndpoints": {
+          "GetCurrentPower": {
+            "httpMethod": "GET",
+            "requestUri": "current"
+          },
+          "PostCurrentPower": {
+            "httpMethod": "POST",
+            "requestUri": "current"
+          },
+          "GetTrendingPower": {
+            "httpMethod": "GET",
+            "requestUri": "trending"
+          }
+        }
       }
     }
   }

@@ -1,0 +1,77 @@
+{
+  "uuid": "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+  "name": "testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154",
+  "type": "XF_PORT",
+  "state": "ACTIVE",
+  "bandwidth": 10000,
+  "usedBandwidth": 2500,
+  "availableBandwidth": 7500,
+  "lagEnabled": false,
+  "encapsulation": {
+    "type": "DOT1Q",
+    "tagProtocolId": "0x8100"
+  },
+  "settings": {
+    "buyout": false,
+    "packageType": "STANDARD"
+  },
+  "lag": {
+    "enabled": false,
+    "id": null
+  },
+  "location": {
+    "metroCode": "SV",
+    "region": "AMER",
+    "ibx": "SV5"
+  },
+  "device": {
+    "name": "dev-abc-123",
+    "redundancy": {
+      "group": "m167f685-41b0-1b07-6de0-3a7c54b08b8f",
+      "priority": "PRIMARY"
+    }
+  },
+  "physicalPorts": [
+    {
+      "id": 12345,
+      "state": "ACTIVE",
+      "type": "XF_PHYSICAL_PORT",
+      "tether": {
+        "crossConnectId": "CC-12345",
+        "cabinetNumber": "SV5:01:001100",
+        "patchPanelName": "PP-01",
+        "patchPanelPortA": "A-12",
+        "patchPanelPortB": "B-12",
+        "systemName": "sys-001"
+      },
+      "demarcationPoint": {
+        "cabinetUniqueSpaceId": "SV5:01:001100:0101",
+        "cageUniqueSpaceId": "SV5:01:001100"
+      }
+    }
+  ],
+  "redundancy": {
+    "group": "m167f685-41b0-1b07-6de0-3a7c54b08b8f",
+    "priority": "PRIMARY"
+  },
+  "operation": {
+    "operationalStatus": "UP",
+    "connectionCount": 5
+  },
+  "account": {
+    "accountNumber": 123456,
+    "accountName": "Test Account",
+    "orgId": 100100
+  },
+  "changeLog": {
+    "createdBy": "testuser",
+    "createdByFullName": "Test User",
+    "createdByEmail": "testuser@example.com",
+    "createdDateTime": "2023-06-01T08:00:00Z",
+    "updatedBy": "testuser",
+    "updatedByFullName": "Test User",
+    "updatedByEmail": "testuser@example.com",
+    "updatedDateTime": "2024-01-10T14:30:00Z"
+  },
+  "projectId": "proj-abc-123"
+}

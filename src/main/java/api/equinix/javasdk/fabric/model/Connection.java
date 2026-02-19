@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model;
 
-import api.equinix.javasdk.core.enums.ConnectionState;
+import api.equinix.javasdk.fabric.enums.ConnectionState;
 import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.enums.ConnectionType;

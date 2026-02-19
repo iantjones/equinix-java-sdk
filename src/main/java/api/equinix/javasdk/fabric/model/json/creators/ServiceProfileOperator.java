@@ -16,13 +16,14 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
-import api.equinix.javasdk.core.enums.PortType;
+import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.core.http.response.PageablePost;
-import api.equinix.javasdk.core.model.ResourcePostImpl;
+import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ServiceProfileClientImpl;
 import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
+import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
@@ -34,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class ServiceProfileOperator extends ResourcePostImpl<ServiceProfile> {
+public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
     @Getter
     private final PageablePost<ServiceProfile> serviceClient;
@@ -131,6 +132,10 @@ public class ServiceProfileOperator extends ResourcePostImpl<ServiceProfile> {
             }
 
             return this;
+        }
+
+        public ServiceProfileBuilder port(Port port, PortType portType) {
+            return port(port.getUuid(), portType);
         }
 
         public ServiceProfileBuilder accessPointTypeConfig(AccessPointTypeConfig accessPointTypeConfig) {

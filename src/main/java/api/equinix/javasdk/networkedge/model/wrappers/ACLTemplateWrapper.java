@@ -20,13 +20,11 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.ACLTemplateClientImpl;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
-import api.equinix.javasdk.networkedge.model.implementation.InboundRule;
 import api.equinix.javasdk.networkedge.model.json.ACLTemplateJson;
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJson;
 import lombok.Getter;
-
-import java.util.List;
+import lombok.experimental.Delegate;
 
 /**
  * <p>ACLTemplateWrapper class.</p>
@@ -36,6 +34,7 @@ import java.util.List;
  */
 public class ACLTemplateWrapper extends ResourceImpl<ACLTemplate> implements ACLTemplate {
 
+    @Delegate
     private ACLTemplateJson json;
     @Getter
     private final Pageable<ACLTemplate> serviceClient;
@@ -49,42 +48,6 @@ public class ACLTemplateWrapper extends ResourceImpl<ACLTemplate> implements ACL
     public ACLTemplateWrapper(ACLTemplateJson sshUserJson, Pageable<ACLTemplate> serviceClient) {
         this.json = sshUserJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return  this.json.getUuid();
-    }
-
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getName() {
-        return  this.json.getName();
-    }
-
-    /**
-     * <p>getDescription.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getDescription() {
-        return  this.json.getDescription();
-    }
-
-    /**
-     * <p>getInboundRules.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<InboundRule> getInboundRules() {
-        return  this.json.getInboundRules();
     }
 
     /**

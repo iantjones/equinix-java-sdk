@@ -19,18 +19,10 @@ package api.equinix.javasdk.fabric.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ServiceTokenClientImpl;
-import api.equinix.javasdk.fabric.enums.ServiceTokenState;
-import api.equinix.javasdk.fabric.enums.ServiceTokenType;
-import api.equinix.javasdk.fabric.model.implementation.BasicAccount;
-import api.equinix.javasdk.fabric.model.implementation.Notification;
-import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
-import api.equinix.javasdk.fabric.model.implementation.Connection;
 import api.equinix.javasdk.fabric.model.ServiceToken;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.experimental.Delegate;
 
 /**
  * <p>ServiceTokenWrapper class.</p>
@@ -40,6 +32,7 @@ import java.util.List;
  */
 public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements ServiceToken {
 
+    @Delegate(excludes = ServiceTokenMutability.class)
     private ServiceTokenJson jsonObject;
     @Getter
     private final Pageable<ServiceToken> serviceClient;
@@ -53,96 +46,6 @@ public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements S
     public ServiceTokenWrapper(ServiceTokenJson serviceTokenJson, Pageable<ServiceToken> serviceClient) {
         this.jsonObject = serviceTokenJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return this.jsonObject.getUuid();
-    }
-
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ServiceTokenType} object.
-     */
-    public ServiceTokenType getType() {
-        return this.jsonObject.getType();
-    }
-
-    /**
-     * <p>getHref.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getHref() {
-        return this.jsonObject.getHref();
-    }
-
-    /**
-     * <p>getState.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ServiceTokenState} object.
-     */
-    public ServiceTokenState getState() {
-        return this.jsonObject.getState();
-    }
-
-    /**
-     * <p>getExpiry.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getExpiry() {
-        return this.jsonObject.getExpiry();
-    }
-
-    /**
-     * <p>getExpirationDateTime.</p>
-     *
-     * @return a {@link java.time.LocalDateTime} object.
-     */
-    public LocalDateTime getExpirationDateTime() {
-        return this.jsonObject.getExpirationDateTime();
-    }
-
-    /**
-     * <p>getConnection.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.Connection} object.
-     */
-    public Connection getConnection() {
-        return this.jsonObject.getConnection();
-    }
-
-    /**
-     * <p>getNotifications.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<Notification> getNotifications() {
-        return this.jsonObject.getNotifications();
-    }
-
-    /**
-     * <p>getAccount.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.BasicAccount} object.
-     */
-    public BasicAccount getAccount() {
-        return this.jsonObject.getAccount();
-    }
-
-    /**
-     * <p>getChangeLog.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ChangeLog} object.
-     */
-    public ChangeLog getChangeLog() {
-        return this.jsonObject.getChangeLog();
     }
 
     /**
@@ -160,5 +63,10 @@ public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements S
      */
     public void refresh() {
         this.jsonObject = ((ServiceTokenClientImpl)this.serviceClient).refresh(this.getUuid());
+    }
+
+    private interface ServiceTokenMutability {
+        Boolean delete();
+        void refresh();
     }
 }

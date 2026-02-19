@@ -19,12 +19,13 @@ package api.equinix.javasdk.ibxsmartview.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
-import api.equinix.javasdk.ibxsmartview.model.implementation.Reading;
 import api.equinix.javasdk.ibxsmartview.model.json.SensorReadingJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 public class SensorReadingWrapper extends ResourceImpl<SensorReading> implements SensorReading {
 
+    @Delegate
     private SensorReadingJson json;
     @Getter
     private final Pageable<SensorReading> serviceClient;
@@ -32,25 +33,5 @@ public class SensorReadingWrapper extends ResourceImpl<SensorReading> implements
     public SensorReadingWrapper(SensorReadingJson sensorReadingJson, Pageable<SensorReading> serviceClient) {
         this.json = sensorReadingJson;
         this.serviceClient = serviceClient;
-    }
-
-    public String getSensorId() {
-        return this.json.getSensorId();
-    }
-
-    public String getZoneId() {
-        return this.json.getZoneId();
-    }
-
-    public String getIbx() {
-        return this.json.getIbx();
-    }
-
-    public Reading getHumidity() {
-        return this.json.getHumidity();
-    }
-
-    public Reading getTemperature() {
-        return this.json.getTemperature();
     }
 }

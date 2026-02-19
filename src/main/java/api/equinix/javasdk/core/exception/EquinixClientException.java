@@ -17,10 +17,15 @@
 package api.equinix.javasdk.core.exception;
 
 /**
- * <p>EquinixClientException class.</p>
+ * Thrown for client-side errors such as request building failures, serialization errors,
+ * or network connectivity issues. This is the base class for all Equinix SDK exceptions
+ * that are not directly caused by an API response.
+ *
+ * <p>For errors returned by the Equinix API, see {@link EquinixServiceException} and its subclasses.</p>
  *
  * @author ianjones
  * @version $Id: $Id
+ * @see EquinixServiceException
  */
 public class EquinixClientException extends BaseException {
     private static final long serialVersionUID = 1L;

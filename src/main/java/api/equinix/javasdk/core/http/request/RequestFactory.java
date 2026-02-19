@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.Map.Entry;
 
 import api.equinix.javasdk.core.enums.HttpMethod;
-import api.equinix.javasdk.core.exception.ClientException;
+import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.util.ApacheUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.*;
@@ -52,10 +52,6 @@ public class RequestFactory {
 
         encodedParams = ApacheUtils.encodeParameters(request);
 
-        boolean requestHasNoPayload = request.getContent() != null;
-        boolean requestIsPost = request.getHttpMethod() == HttpMethod.POST;
-        boolean putParamsInUri = !requestIsPost || requestHasNoPayload;
-
         if (encodedParams != null) {
             uri += "?" + encodedParams;
         }
@@ -80,7 +76,7 @@ public class RequestFactory {
                 break;
             case PATCH: httpRequestBase = wrapEntity(request, new HttpPatch(uri), encodedParams);
                 break;
-            default: throw new ClientException("Unknown HTTP method name: " + request.getHttpMethod());
+            default: throw new EquinixClientException("Unknown HTTP method name: " + request.getHttpMethod());
         }
 
         return httpRequestBase;

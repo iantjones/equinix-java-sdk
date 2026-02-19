@@ -22,9 +22,9 @@ import api.equinix.javasdk.networkedge.enums.ServiceType;
 import api.equinix.javasdk.networkedge.model.Backup;
 import api.equinix.javasdk.networkedge.model.RestoreFeasibility;
 import api.equinix.javasdk.networkedge.model.implementation.BackupService;
-import api.equinix.javasdk.networkedge.model.json.BackupJson;
 import api.equinix.javasdk.networkedge.model.json.RestoreFeasibilityJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +37,7 @@ import java.util.Map;
  */
 public class RestoreFeasibilityWrapper extends ResourceImpl<Backup> implements RestoreFeasibility {
 
+    @Delegate(excludes = RestoreFeasibilityMutability.class)
     private RestoreFeasibilityJson json;
     @Getter
     private final Pageable<Backup> serviceClient;
@@ -53,15 +54,6 @@ public class RestoreFeasibilityWrapper extends ResourceImpl<Backup> implements R
     }
 
     /**
-     * <p>getDeviceBackup.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     */
-    public BackupJson getDeviceBackup() {
-        return  this.json.getDeviceBackup();
-    }
-
-    /**
      * <p>getServices.</p>
      *
      * @return a {@link java.util.Map} object.
@@ -70,21 +62,7 @@ public class RestoreFeasibilityWrapper extends ResourceImpl<Backup> implements R
         return null;
     }
 
-    /**
-     * <p>getRestoreAllowedAfterDeleteOrEdit.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean getRestoreAllowedAfterDeleteOrEdit() {
-        return  this.json.getRestoreAllowedAfterDeleteOrEdit();
-    }
-
-    /**
-     * <p>getRestoreAllowed.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean getRestoreAllowed() {
-        return  this.json.getRestoreAllowed();
+    private interface RestoreFeasibilityMutability {
+        Map<ServiceType, List<BackupService>> getServices();
     }
 }

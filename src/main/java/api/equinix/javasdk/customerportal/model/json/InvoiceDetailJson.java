@@ -22,6 +22,7 @@ import api.equinix.javasdk.customerportal.enums.ActivityType;
 import api.equinix.javasdk.customerportal.enums.Frequency;
 import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
+import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.customerportal.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -138,5 +139,5 @@ public class InvoiceDetailJson {
     private String legacyOrderId;
 
     @JsonProperty("additionalInfo")
-    private List<AdditionalInfo> additionalInfo;
+    private List<KeyValuePair> additionalInfo;
 }

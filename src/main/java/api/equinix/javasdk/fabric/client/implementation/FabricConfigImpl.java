@@ -49,6 +49,34 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final GatewayPackageClientImpl gatewayPackageClient;
 
+    private final CloudRouterClientImpl cloudRoutersClient;
+
+    private final CloudRouterPackageClientImpl cloudRouterPackagesClient;
+
+    private final RoutingProtocolClientImpl routingProtocolsClient;
+
+    private final RouteFilterClientImpl routeFiltersClient;
+
+    private final RouteFilterRuleClientImpl routeFilterRulesClient;
+
+    private final RouteAggregationClientImpl routeAggregationsClient;
+
+    private final RouteAggregationRuleClientImpl routeAggregationRulesClient;
+
+    private final NetworkClientImpl networksClient;
+
+    private final StreamClientImpl streamsClient;
+
+    private final StreamSubscriptionClientImpl streamSubscriptionsClient;
+
+    private final PrecisionTimeClientImpl precisionTimesClient;
+
+    private final CloudEventClientImpl cloudEventsClient;
+
+    private final MarketplaceSubscriptionClientImpl marketplaceSubscriptionsClient;
+
+    private final HealthClientImpl healthClient;
+
     /**
      * <p>Constructor for FabricConfigImpl.</p>
      *
@@ -65,5 +93,19 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.serviceProfilesClient = new ServiceProfileClientImpl(this);
         this.fabricGatewaysClient = new FabricGatewayClientImpl(this);
         this.gatewayPackageClient = new GatewayPackageClientImpl(this);
+        this.cloudRoutersClient = new CloudRouterClientImpl(this);
+        this.cloudRouterPackagesClient = new CloudRouterPackageClientImpl(this);
+        this.routingProtocolsClient = new RoutingProtocolClientImpl(this);
+        this.routeFiltersClient = new RouteFilterClientImpl(this);
+        this.routeFilterRulesClient = new RouteFilterRuleClientImpl(this);
+        this.routeAggregationsClient = new RouteAggregationClientImpl(this);
+        this.routeAggregationRulesClient = new RouteAggregationRuleClientImpl(this);
+        this.networksClient = new NetworkClientImpl(this);
+        this.streamsClient = new StreamClientImpl(this);
+        this.streamSubscriptionsClient = new StreamSubscriptionClientImpl(this);
+        this.precisionTimesClient = new PrecisionTimeClientImpl(this);
+        this.cloudEventsClient = new CloudEventClientImpl(this);
+        this.marketplaceSubscriptionsClient = new MarketplaceSubscriptionClientImpl(this);
+        this.healthClient = new HealthClientImpl(this);
     }
 }

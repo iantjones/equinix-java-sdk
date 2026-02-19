@@ -17,18 +17,15 @@
 package api.equinix.javasdk.fabric.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.core.http.response.PageablePost;
-import api.equinix.javasdk.core.model.ResourcePostImpl;
-import api.equinix.javasdk.fabric.enums.PriceType;
+import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.model.Pricing;
-import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.json.PricingJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
-import java.util.ArrayList;
+public class PricingWrapper extends ResourceImpl<Pricing> implements Pricing {
 
-public class PricingWrapper extends ResourcePostImpl<Pricing> implements Pricing {
-
+    @Delegate
     private PricingJson jsonObject;
     @Getter
     private final Pageable<Pricing> serviceClient;
@@ -36,50 +33,6 @@ public class PricingWrapper extends ResourcePostImpl<Pricing> implements Pricing
     public PricingWrapper(PricingJson pricingJson, Pageable<Pricing> serviceClient) {
         this.jsonObject = pricingJson;
         this.serviceClient = serviceClient;
-    }
-
-    public PriceType getType() {
-        return this.jsonObject.getType();
-    }
-
-    public String getCurrency() {
-        return this.jsonObject.getCurrency();
-    }
-
-    public String getCode() {
-        return this.jsonObject.getCode();
-    }
-
-    public String getName() {
-        return this.jsonObject.getName();
-    }
-
-    public String getDescription() {
-        return this.jsonObject.getDescription();
-    }
-
-    public Account getAccount() {
-        return this.jsonObject.getAccount();
-    }
-
-    public ArrayList<Charge> getCharges() {
-        return this.jsonObject.getCharges();
-    }
-
-    public PricingConnection getConnection() {
-        return this.jsonObject.getConnection();
-    }
-
-    public PricingPort getPort() {
-        return this.jsonObject.getPort();
-    }
-
-    public PricingGateway getGateway() {
-        return this.jsonObject.getGateway();
-    }
-
-    public PricingIPBlock getIpBlock() {
-        return this.jsonObject.getIpBlock();
     }
 
 //

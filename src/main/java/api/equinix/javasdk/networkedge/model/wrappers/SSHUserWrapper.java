@@ -20,13 +20,10 @@ import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.SSHUserClientImpl;
-import api.equinix.javasdk.networkedge.enums.SSHUserAction;
 import api.equinix.javasdk.networkedge.model.SSHUser;
 import api.equinix.javasdk.networkedge.model.json.SSHUserJson;
 import lombok.Getter;
-
-import java.util.List;
-import java.util.Map;
+import lombok.experimental.Delegate;
 
 /**
  * <p>SSHUserWrapper class.</p>
@@ -36,6 +33,7 @@ import java.util.Map;
  */
 public class SSHUserWrapper extends ResourceImpl<SSHUser> implements SSHUser {
 
+    @Delegate
     private SSHUserJson jsonObject;
     @Getter
     private final Pageable<SSHUser> serviceClient;
@@ -49,51 +47,6 @@ public class SSHUserWrapper extends ResourceImpl<SSHUser> implements SSHUser {
     public SSHUserWrapper(SSHUserJson sshUserJson, Pageable<SSHUser> serviceClient) {
         this.jsonObject = sshUserJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return this.jsonObject.getUuid();
-    }
-
-    /**
-     * <p>getUsername.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUsername() {
-        return this.jsonObject.getUsername();
-    }
-
-    /**
-     * <p>getDeviceUuids.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<String> getDeviceUuids() {
-        return this.jsonObject.getDeviceUuids();
-    }
-
-    /**
-     * <p>getMetroStatusMap.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
-    public Map<String, SSHUserJson.Status> getMetroStatusMap() {
-        return this.jsonObject.getMetroStatusMap();
-    }
-
-    /**
-     * <p>getAction.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.SSHUserAction} object.
-     */
-    public SSHUserAction getAction() {
-        return this.jsonObject.getAction();
     }
 
     /** {@inheritDoc} */

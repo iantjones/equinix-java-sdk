@@ -25,7 +25,8 @@ import api.equinix.javasdk.fabric.model.PortStatistic;
 import java.time.LocalDateTime;
 
 /**
- * <p>Ports interface.</p>
+ * Client interface for managing Equinix Fabric ports. Provides operations for listing,
+ * retrieving, and monitoring port bandwidth statistics.
  *
  * @author ianjones
  * @version $Id: $Id
@@ -33,46 +34,46 @@ import java.time.LocalDateTime;
 public interface Ports {
 
     /**
-     * <p>list.</p>
+     * Lists all ports accessible to the current account.
      *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @return a paginated list of ports
      */
     PaginatedList<Port> list();
 
     /**
-     * <p>getByUuid.</p>
+     * Retrieves a single port by its unique identifier.
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.Port} object.
+     * @param uuid the unique identifier of the port
+     * @return the port matching the given UUID
      */
     Port getByUuid(String uuid);
 
     /**
-     * <p>getStatistics.</p>
+     * Retrieves bandwidth statistics for a port over the specified time range.
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.PortStatistic} object.
+     * @param uuid the unique identifier of the port
+     * @param startDateTime the start of the statistics time range
+     * @param endDateTime the end of the statistics time range
+     * @return the port statistics for the specified time range
      */
     PortStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     /**
-     * <p>getTopStatistics.</p>
+     * Retrieves top port statistics ranked by bandwidth usage for the specified duration.
      *
-     * @param duration a {@link api.equinix.javasdk.fabric.enums.StatisticDuration} object.
-     * @param sortable a {@link api.equinix.javasdk.core.model.Sortable} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @param duration the time duration to aggregate statistics over
+     * @param sortable the sort configuration for ranking results
+     * @return a paginated list of top port statistics
      */
     PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable);
 
     /**
-     * <p>getTopStatistics.</p>
+     * Retrieves top port statistics ranked by bandwidth usage with additional request options.
      *
-     * @param duration a {@link api.equinix.javasdk.fabric.enums.StatisticDuration} object.
-     * @param sortable a {@link api.equinix.javasdk.core.model.Sortable} object.
-     * @param requestBuilder a {@link api.equinix.javasdk.fabric.client.RequestBuilder.TopPortStatistics} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @param duration the time duration to aggregate statistics over
+     * @param sortable the sort configuration for ranking results
+     * @param requestBuilder additional request parameters for filtering top statistics
+     * @return a paginated list of top port statistics
      */
     PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder);
 }

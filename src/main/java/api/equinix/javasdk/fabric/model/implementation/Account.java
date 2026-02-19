@@ -31,9 +31,6 @@ public class Account extends BasicAccount {
     @JsonProperty("globalOrgId")
     private String globalOrgId;
 
-    @JsonProperty("accountNumber")
-    private Integer accountNumber;
-
     @JsonProperty("accountName")
     private String accountName;
 

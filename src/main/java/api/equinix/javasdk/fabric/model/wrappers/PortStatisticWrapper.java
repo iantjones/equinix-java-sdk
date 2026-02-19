@@ -18,12 +18,11 @@ package api.equinix.javasdk.fabric.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.core.enums.PortType;
 import api.equinix.javasdk.fabric.client.internal.implementation.PortStatisticClientImpl;
 import api.equinix.javasdk.fabric.model.PortStatistic;
-import api.equinix.javasdk.fabric.model.implementation.PortStat;
 import api.equinix.javasdk.fabric.model.json.PortStatisticJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 /**
  * <p>PortStatisticWrapper class.</p>
@@ -33,6 +32,7 @@ import lombok.Getter;
  */
 public class PortStatisticWrapper extends ResourceImpl<PortStatistic> implements PortStatistic {
 
+    @Delegate(excludes = PortStatisticMutability.class)
     private PortStatisticJson jsonObject;
     @Getter
     private final Pageable<PortStatistic> serviceClient;
@@ -49,51 +49,6 @@ public class PortStatisticWrapper extends ResourceImpl<PortStatistic> implements
     }
 
     /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return this.jsonObject.getUuid();
-    }
-
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.PortType} object.
-     */
-    public PortType getType() {
-        return this.jsonObject.getType();
-    }
-
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getName() {
-        return this.jsonObject.getName();
-    }
-
-    /**
-     * <p>getBandwidth.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getBandwidth() {
-        return this.jsonObject.getBandwidth();
-    }
-
-    /**
-     * <p>getStats.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.PortStat} object.
-     */
-    public PortStat getStats() {
-        return this.jsonObject.getStats();
-    }
-
-    /**
      * <p>refresh.</p>
      *
      * @return a {@link api.equinix.javasdk.fabric.model.PortStatistic} object.
@@ -102,5 +57,9 @@ public class PortStatisticWrapper extends ResourceImpl<PortStatistic> implements
         this.jsonObject = ((PortStatisticClientImpl)this.serviceClient).refreshStatistics(this.getUuid(),
                 this.getStats().getStartDateTime(), this.getStats().getEndDateTime());
         return this;
+    }
+
+    private interface PortStatisticMutability {
+        PortStatistic refresh();
     }
 }

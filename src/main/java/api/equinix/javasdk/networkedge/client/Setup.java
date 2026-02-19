@@ -30,7 +30,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Setup interface.</p>
+ * Client interface for Network Edge setup and configuration operations. Provides access to
+ * account listings, metro availability, DNS lookups, agreement management, vendor terms,
+ * order terms, and pricing information.
  *
  * @author ianjones
  * @version $Id: $Id
@@ -125,5 +127,11 @@ public interface Setup {
      */
     Pricing getPricing(String deviceUuid);
 
+    /**
+     * Gets the order summary document based on the parameters provided.
+     *
+     * @param requestBuilder the desired query parameters.
+     * @return the order summary as a byte array.
+     */
     byte[] getOrderSummary(RequestBuilder.OrderSummary requestBuilder);
 }

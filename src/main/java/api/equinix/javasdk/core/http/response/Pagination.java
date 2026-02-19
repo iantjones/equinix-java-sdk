@@ -21,10 +21,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>Pagination class.</p>
+ * Pagination metadata returned by Equinix API list operations.
+ *
+ * <p>Contains offset-based pagination information including the current offset,
+ * page size (limit), total result count, and links to previous/next pages.
+ * Provides convenience methods for computing page numbers and detecting
+ * first/last pages.</p>
  *
  * @author ianjones
  * @version $Id: $Id
+ * @see PaginatedList
  */
 @Getter
 @Setter(AccessLevel.PRIVATE)
@@ -41,36 +47,36 @@ public class Pagination {
     private String next;
 
     /**
-     * <p>getPageNumber.</p>
+     * Returns the zero-based page number computed from the current offset and limit.
      *
-     * @return a int.
+     * @return the current page number (0-indexed)
      */
     public int getPageNumber() {
         return getOffset() / getLimit();
     }
 
     /**
-     * <p>getPageSize.</p>
+     * Returns the page size (number of results per page), which equals the limit.
      *
-     * @return a int.
+     * @return the number of results per page
      */
     public int getPageSize() {
         return getLimit();
     }
 
     /**
-     * <p>getIsFirstPage.</p>
+     * Returns {@code true} if the current page is the first page of results.
      *
-     * @return a {@link java.lang.Boolean} object.
+     * @return {@code true} if this is page 0
      */
     public Boolean getIsFirstPage() {
         return getPageNumber() == 0;
     }
 
     /**
-     * <p>getIsLastPage.</p>
+     * Returns {@code true} if the current page is the last page of results.
      *
-     * @return a {@link java.lang.Boolean} object.
+     * @return {@code true} if there are no more pages after this one
      */
     public Boolean getIsLastPage() {
         return (getPageNumber() + 1) * getLimit() >= getTotal();

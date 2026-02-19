@@ -81,6 +81,16 @@ public class ServiceTokenClientImpl extends PageableBase implements ServiceToken
     }
 
     /** {@inheritDoc} */
+    public ServiceTokenJson dryRunCreate(ServiceTokenCreatorJson serviceTokenCreatorJson) {
+        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequest("PostServiceToken", RequestType.SINGLE, ServiceTokenJson.getSingleTypeRef());
+        equinixRequest.addSingleQueryParameter("dryRun", "true");
+        equinixRequest.setFilters(new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter));
+        Utils.serializeJson(equinixRequest, serviceTokenCreatorJson);
+        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
+        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+    }
+
+    /** {@inheritDoc} */
     public ServiceTokenJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         EquinixRequest<ServiceToken> equinixRequest = this.buildRequestWithPathParams("DeleteServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.getSingleTypeRef());

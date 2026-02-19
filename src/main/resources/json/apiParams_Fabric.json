@@ -143,6 +143,302 @@
             "overrideRootUri": true
           }
         }
+      },
+      "CloudRouters": {
+        "rootUri": "routers",
+        "serviceEndpoints": {
+          "SearchCloudRouters": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetCloudRouter": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostCloudRouter": {
+            "httpMethod": "POST"
+          },
+          "UpdateCloudRouter": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteCloudRouter": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "PostCloudRouterAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/actions"
+          },
+          "GetCloudRouterPackages": {
+            "httpMethod": "GET",
+            "requestUri": "routerPackages",
+            "overrideRootUri": true
+          },
+          "GetCloudRouterPackage": {
+            "httpMethod": "GET",
+            "requestUri": "routerPackages/{$routerPackageCode}",
+            "overrideRootUri": true
+          }
+        }
+      },
+      "RoutingProtocols": {
+        "rootUri": "connections",
+        "serviceEndpoints": {
+          "GetRoutingProtocols": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routingProtocols"
+          },
+          "GetRoutingProtocol": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}"
+          },
+          "PostRoutingProtocol": {
+            "httpMethod": "POST",
+            "requestUri": "{$connectionId}/routingProtocols"
+          },
+          "UpdateRoutingProtocol": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}"
+          },
+          "DeleteRoutingProtocol": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}"
+          },
+          "GetBGPActions": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/actions"
+          },
+          "PostBGPAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/actions"
+          },
+          "ValidateSubnet": {
+            "httpMethod": "POST",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/validate"
+          }
+        }
+      },
+      "RouteFilters": {
+        "rootUri": "routeFilters",
+        "serviceEndpoints": {
+          "SearchRouteFilters": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetRouteFilter": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostRouteFilter": {
+            "httpMethod": "POST"
+          },
+          "UpdateRouteFilter": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteRouteFilter": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "RouteFilterRules": {
+        "rootUri": "routeFilters",
+        "serviceEndpoints": {
+          "GetRouteFilterRules": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeFilterId}/routeFilterRules"
+          },
+          "GetRouteFilterRule": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}"
+          },
+          "PostRouteFilterRule": {
+            "httpMethod": "POST",
+            "requestUri": "{$routeFilterId}/routeFilterRules"
+          },
+          "UpdateRouteFilterRule": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}"
+          },
+          "DeleteRouteFilterRule": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}"
+          }
+        }
+      },
+      "RouteAggregations": {
+        "rootUri": "routeAggregations",
+        "serviceEndpoints": {
+          "SearchRouteAggregations": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetRouteAggregation": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostRouteAggregation": {
+            "httpMethod": "POST"
+          },
+          "UpdateRouteAggregation": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteRouteAggregation": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "RouteAggregationRules": {
+        "rootUri": "routeAggregations",
+        "serviceEndpoints": {
+          "GetRouteAggregationRules": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules"
+          },
+          "GetRouteAggregationRule": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}"
+          },
+          "PostRouteAggregationRule": {
+            "httpMethod": "POST",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules"
+          },
+          "UpdateRouteAggregationRule": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}"
+          },
+          "DeleteRouteAggregationRule": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}"
+          }
+        }
+      },
+      "Networks": {
+        "rootUri": "networks",
+        "serviceEndpoints": {
+          "SearchNetworks": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetNetwork": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostNetwork": {
+            "httpMethod": "POST"
+          },
+          "UpdateNetwork": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteNetwork": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Streams": {
+        "rootUri": "streams",
+        "serviceEndpoints": {
+          "GetStreams": {
+            "httpMethod": "GET"
+          },
+          "GetStream": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostStream": {
+            "httpMethod": "POST"
+          },
+          "UpdateStream": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteStream": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "StreamSubscriptions": {
+        "rootUri": "streams",
+        "serviceEndpoints": {
+          "GetStreamSubscriptions": {
+            "httpMethod": "GET",
+            "requestUri": "{$streamId}/streamSubscriptions"
+          },
+          "GetStreamSubscription": {
+            "httpMethod": "GET",
+            "requestUri": "{$streamId}/streamSubscriptions/{$uuid}"
+          },
+          "PostStreamSubscription": {
+            "httpMethod": "POST",
+            "requestUri": "{$streamId}/streamSubscriptions"
+          },
+          "UpdateStreamSubscription": {
+            "httpMethod": "PUT",
+            "requestUri": "{$streamId}/streamSubscriptions/{$uuid}"
+          },
+          "DeleteStreamSubscription": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$streamId}/streamSubscriptions/{$uuid}"
+          }
+        }
+      },
+      "PrecisionTime": {
+        "rootUri": "timeServices",
+        "serviceEndpoints": {
+          "GetTimeServices": {
+            "httpMethod": "GET"
+          },
+          "GetTimeService": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostTimeService": {
+            "httpMethod": "POST"
+          },
+          "UpdateTimeService": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteTimeService": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "CloudEvents": {
+        "rootUri": "cloudevents",
+        "serviceEndpoints": {
+          "GetCloudEvents": {
+            "httpMethod": "GET"
+          }
+        }
+      },
+      "MarketplaceSubscriptions": {
+        "rootUri": "marketplaceSubscriptions",
+        "serviceEndpoints": {
+          "GetMarketplaceSubscriptions": {
+            "httpMethod": "GET"
+          },
+          "GetMarketplaceSubscription": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Health": {
+        "rootUri": "health",
+        "serviceEndpoints": {
+          "GetHealth": {
+            "httpMethod": "GET"
+          }
+        }
       }
     }
   }

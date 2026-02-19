@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.BackupClientImpl;
 import api.equinix.javasdk.networkedge.model.Backup;
+import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.json.BackupJson;
 import api.equinix.javasdk.networkedge.model.wrappers.BackupWrapper;
 import lombok.AccessLevel;
@@ -57,6 +58,10 @@ public class BackupOperator extends ResourceImpl<Backup> {
      */
     public BackupBuilder create(String deviceUuid, String backupName) {
         return new BackupBuilder(deviceUuid, backupName);
+    }
+
+    public BackupBuilder create(Device device, String backupName) {
+        return create(device.getUuid(), backupName);
     }
 
     /**

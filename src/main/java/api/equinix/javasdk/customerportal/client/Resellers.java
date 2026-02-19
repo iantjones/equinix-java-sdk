@@ -21,13 +21,43 @@ import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.json.creators.ResellerCustomerOperator;
 
+/**
+ * Client interface for managing reseller relationships in the Equinix Customer Portal.
+ * Provides operations to list reseller accounts, manage reseller customers, and create
+ * new customer associations under a reseller account.
+ */
 public interface Resellers {
 
+    /**
+     * Lists all reseller accounts for the current user.
+     *
+     * @return a paginated list of reseller accounts
+     */
     PaginatedList<Reseller> list();
 
+    /**
+     * Lists all customers under the specified reseller account.
+     *
+     * @param accountNUmber the reseller account number
+     * @return a paginated list of reseller customers
+     */
     PaginatedList<ResellerCustomer> listCustomers(String accountNUmber);
 
+    /**
+     * Retrieves a specific reseller customer by the reseller and customer account numbers.
+     *
+     * @param accountNumber the reseller account number
+     * @param customerAccountNumber the customer account number
+     * @return the matching reseller customer
+     */
     ResellerCustomer getResellerCustomer(String accountNumber, String customerAccountNumber);
 
+    /**
+     * Returns a builder for defining a new reseller customer association.
+     *
+     * @param accountNumber the reseller account number
+     * @param customerName the name of the new customer
+     * @return a new ResellerCustomerBuilder instance
+     */
     ResellerCustomerOperator.ResellerCustomerBuilder define(String accountNumber, String customerName);
 }

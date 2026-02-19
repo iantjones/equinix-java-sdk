@@ -1,0 +1,27 @@
+{
+  "subscriptionId": "sub-12345-abcde",
+  "name": "My Environment Subscription",
+  "description": "Subscription for environmental data streaming",
+  "status": "ACTIVE",
+  "channel": {
+    "channelType": "WEBHOOK",
+    "channelDetails": {
+      "endpoint": "https://webhook.example.com/events",
+      "contentType": "application/json"
+    }
+  },
+  "messages": [
+    {
+      "messageType": "ENVIRONMENTAL",
+      "accountNumbers": ["123456", "789012"],
+      "ibxs": ["SV5", "DC6"]
+    },
+    {
+      "messageType": "POWER",
+      "accountNumbers": ["123456"],
+      "ibxs": ["SV5"]
+    }
+  ],
+  "createdDate": "2024-01-10T08:00:00Z",
+  "updatedDate": "2024-01-15T12:00:00Z"
+}

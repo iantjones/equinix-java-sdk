@@ -17,9 +17,7 @@
 package api.equinix.javasdk.core.http;
 
 import api.equinix.javasdk.core.enums.Protocol;
-import api.equinix.javasdk.core.exception.EquinixClientException;
-import api.equinix.javasdk.core.exception.EquinixServiceException;
-import api.equinix.javasdk.core.exception.ExceptionDetail;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.RequestFactory;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
@@ -35,6 +33,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.io.EmptyInputStream;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -48,7 +47,7 @@ import java.util.stream.Collectors;
  * @author ianjones
  * @version $Id: $Id
  */
-public class EquinixHttpClient {
+public class EquinixHttpClient implements Closeable {
 
     private static final Logger logger = Logger.getLogger(EquinixHttpClient.class.getName());
 
@@ -61,7 +60,6 @@ public class EquinixHttpClient {
      * <p>Constructor for EquinixHttpClient.</p>
      */
     public EquinixHttpClient() {
-        setOutputRequestJson(true);
         httpClient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setCookieSpec(CookieSpecs.STANDARD).build()).build();
@@ -115,17 +113,43 @@ public class EquinixHttpClient {
             }
 
             if(!isRequestSuccessful(singleRequestParams.apacheResponse)) {
-                EquinixServiceException ese = new EquinixServiceException("Error returned by Equinix API.");
+                EquinixServiceException ese = createServiceException(equinixResponse.getStatusCode());
                 ese.setStatusCode(equinixResponse.getStatusCode());
                 ese.setPath(singleRequestParams.apacheRequest.getURI().toString());
 
-                TypeReference<ArrayList<ExceptionDetail>> typeReference = new TypeReference<>(){};
+                if(equinixResponse.getContent() != null && !(equinixResponse.getContent() instanceof EmptyInputStream)) {
+                    try {
+                        String errorBody = new BufferedReader(
+                                new InputStreamReader(equinixResponse.getContent(), StandardCharsets.UTF_8)).lines()
+                                .collect(Collectors.joining("\n"));
 
-                ArrayList<ExceptionDetail> exceptionDetails;
-
-                if(!(equinixResponse.getContent() instanceof EmptyInputStream)) {
-                    exceptionDetails = Constants.objectMapper.readValue(equinixResponse.getContent(), typeReference);
-                    ese.setExceptionDetails(exceptionDetails);
+                        if(errorBody != null && !errorBody.isBlank()) {
+                            try {
+                                ArrayList<ExceptionDetail> exceptionDetails = Constants.objectMapper.readValue(
+                                        errorBody, new TypeReference<ArrayList<ExceptionDetail>>(){});
+                                ese.setExceptionDetails(exceptionDetails);
+                            }
+                            catch (Exception arrayEx) {
+                                try {
+                                    ExceptionDetail singleDetail = Constants.objectMapper.readValue(
+                                            errorBody, new TypeReference<ExceptionDetail>(){});
+                                    ArrayList<ExceptionDetail> details = new ArrayList<>();
+                                    details.add(singleDetail);
+                                    ese.setExceptionDetails(details);
+                                }
+                                catch (Exception singleEx) {
+                                    ExceptionDetail rawDetail = new ExceptionDetail();
+                                    ArrayList<ExceptionDetail> details = new ArrayList<>();
+                                    details.add(rawDetail);
+                                    ese.setExceptionDetails(details);
+                                    logger.warning("Could not parse error response body: " + errorBody);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception bodyEx) {
+                        logger.warning("Could not read error response body: " + bodyEx.getMessage());
+                    }
                 }
 
                 throw ese;
@@ -161,6 +185,26 @@ public class EquinixHttpClient {
         return executeSingleRequest(equinixRequest, execOneParams);
     }
 
+    private EquinixServiceException createServiceException(int statusCode) {
+        switch (statusCode) {
+            case 401:
+                return new EquinixAuthenticationException("Authentication failed (HTTP 401).");
+            case 403:
+                return new EquinixAuthorizationException("Authorization denied (HTTP 403).");
+            case 404:
+                return new EquinixNotFoundException("Resource not found (HTTP 404).");
+            case 409:
+                return new EquinixConflictException("Resource conflict (HTTP 409).");
+            case 429:
+                return new EquinixRateLimitException("Rate limit exceeded (HTTP 429).");
+            default:
+                if (statusCode >= 500) {
+                    return new EquinixServerException("Server error (HTTP " + statusCode + ").");
+                }
+                return new EquinixServiceException("Error returned by Equinix API (HTTP " + statusCode + ").");
+        }
+    }
+
     private boolean isRequestSuccessful(HttpResponse response) {
         int status = response.getStatusLine().getStatusCode();
         return (status / 100 == HttpStatus.SC_OK / 100);
@@ -173,5 +217,10 @@ public class EquinixHttpClient {
      */
     public Protocol getProtocol() {
         return protocol;
+    }
+
+    @Override
+    public void close() throws IOException {
+        httpClient.close();
     }
 }

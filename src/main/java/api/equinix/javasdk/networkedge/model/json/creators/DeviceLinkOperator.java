@@ -22,6 +22,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.internal.implementation.DeviceLinkClientImpl;
+import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceLink;
 import api.equinix.javasdk.networkedge.model.json.DeviceLinkJson;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceLinkWrapper;
@@ -96,6 +97,10 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             return this;
         }
 
+        public DeviceLinkBuilder forDevice(Device device, Integer asn, Integer interfaceId) {
+            return forDevice(device.getUuid(), asn, interfaceId);
+        }
+
         public DeviceLinkBuilder withLink(Integer accountNumber, Integer throughput, BandwidthUnit throughputUnit, MetroCode sourceMetroCode, MetroCode destinationMetroCode) {
             if(this.links == null) {
                 this.links = new ArrayList<>();
@@ -141,6 +146,10 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             return this;
         }
 
+        public DeviceLinkOperator.DeviceLinkUpdater addDevice(Device device, Integer asn, Integer interfaceId) {
+            return addDevice(device.getUuid(), asn, interfaceId);
+        }
+
         public DeviceLinkOperator.DeviceLinkUpdater addLink(Integer accountNumber, Integer throughput, BandwidthUnit throughputUnit, MetroCode sourceMetroCode, MetroCode destinationMetroCode) {
             List<DeviceLinkUpdaterJson.Link> links = updaterJson.getLinks();
             if(links == null) {
@@ -162,6 +171,10 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
                     linkDevices.stream().filter(Predicate.not(linkDevice -> linkDevice.getDeviceUuid().equals(deviceUuid) && linkDevice.getAsn().equals(asn)
                             && linkDevice.getInterfaceId().equals(interfaceId))).collect(Collectors.toList()));
             return this;
+        }
+
+        public DeviceLinkOperator.DeviceLinkUpdater removeDevice(Device device, Integer asn, Integer interfaceId) {
+            return removeDevice(device.getUuid(), asn, interfaceId);
         }
 
         public DeviceLinkOperator.DeviceLinkUpdater removeLink(Integer accountNumber, Integer throughput, BandwidthUnit throughputUnit, MetroCode sourceMetroCode, MetroCode destinationMetroCode) {

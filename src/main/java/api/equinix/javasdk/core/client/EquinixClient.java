@@ -18,6 +18,7 @@ package api.equinix.javasdk.core.client;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
+import api.equinix.javasdk.core.exception.EquinixAuthenticationException;
 import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.EquinixHttpClient;
 import api.equinix.javasdk.core.http.Utils;
@@ -37,6 +38,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.client.utils.URIUtils;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -50,7 +52,7 @@ import java.util.Map.Entry;
  * @author ianjones
  * @version $Id: $Id
  */
-public class EquinixClient {
+public class EquinixClient implements Closeable {
 
     @Getter
     final private EquinixStaticCredentialsProvider equinixCredentialsProvider;
@@ -172,14 +174,6 @@ public class EquinixClient {
         return equinixResponse;
     }
 
-    private void assertHttps() {
-        URI endpoint = this.endPoint;
-        String scheme = endpoint == null ? null : endpoint.getScheme();
-        if (!Protocol.HTTPS.toString().equalsIgnoreCase(scheme)) {
-            throw new IllegalArgumentException("HTTPS must always be used with Equinix APIs.");
-        }
-    }
-
     /**
      * <p>isSandBoxed.</p>
      *
@@ -196,9 +190,18 @@ public class EquinixClient {
     private <T> void setStandardHeaders(EquinixRequest<T> equinixRequest){
         Map<String, String> standardHeaders = new HashMap<>();
         if(oAuthToken != null) {
+            if(!oAuthToken.validSession()) {
+                throw new EquinixAuthenticationException(
+                        "OAuth token has expired. Call authenticate() to obtain a new token.");
+            }
             standardHeaders.put("authorization", "Bearer " + oAuthToken.getSessionToken());
         }
         standardHeaders.put("content-type", "application/json");
         equinixRequest.setHeaders(standardHeaders);
+    }
+
+    @Override
+    public void close() throws IOException {
+        equinixHttpClient.close();
     }
 }

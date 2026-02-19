@@ -72,110 +72,103 @@ public class ClientBase {
         return this.getConfigClient().getEquinixClient().invoke(equinixRequest);
     }
 
+    // -----------------------------------------------------------------------
+    // Fluent request builder
+    // -----------------------------------------------------------------------
+
     /**
-     * <p>buildRequestWithPathParams.</p>
+     * Creates a fluent request builder for the given service endpoint.
      *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param pathParams a {@link java.util.Map} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
+     * <pre>{@code
+     * EquinixRequest<Connection> request = this.newRequest("GetConnection")
+     *     .withType(RequestType.SINGLE)
+     *     .withPathParams(Map.of("uuid", uuid))
+     *     .withTypeRef(ConnectionJson.getSingleTypeRef())
+     *     .build();
+     * }</pre>
+     *
+     * @param serviceEndpoint the service endpoint name from the apiParams JSON
+     * @return a new {@link EquinixRequestBuilder}
      */
+    protected EquinixRequestBuilder newRequest(String serviceEndpoint) {
+        return new EquinixRequestBuilder(serviceEndpoint);
+    }
+
+    /**
+     * Fluent builder for constructing {@link EquinixRequest} instances.
+     * Replaces the multiple overloaded buildRequest methods with a single,
+     * readable builder chain.
+     */
+    protected class EquinixRequestBuilder {
+        private final String serviceEndpoint;
+        private RequestType requestType;
+        private Map<String, String> pathParams;
+        private Map<String, List<String>> queryParams;
+        private TypeReference<?> typeRef;
+
+        private EquinixRequestBuilder(String serviceEndpoint) {
+            this.serviceEndpoint = serviceEndpoint;
+        }
+
+        public EquinixRequestBuilder withType(RequestType requestType) {
+            this.requestType = requestType;
+            return this;
+        }
+
+        public EquinixRequestBuilder withPathParams(Map<String, String> pathParams) {
+            this.pathParams = pathParams;
+            return this;
+        }
+
+        public EquinixRequestBuilder withQueryParams(Map<String, List<String>> queryParams) {
+            this.queryParams = queryParams;
+            return this;
+        }
+
+        public EquinixRequestBuilder withTypeRef(TypeReference<?> typeRef) {
+            this.typeRef = typeRef;
+            return this;
+        }
+
+        public <T> EquinixRequest<T> build() {
+            return Utils.buildRequest(functionalArea, requestParent,
+                    serviceEndpoint, requestType, configClient.getEquinixClient(),
+                    pathParams, queryParams, typeRef);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Legacy convenience methods (delegate to the core buildRequest)
+    // -----------------------------------------------------------------------
+
     protected  <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams) {
         return buildRequest(serviceEndpoint, requestType, pathParams, null, null);
     }
 
-    /**
-     * <p>buildRequestWithQueryParams.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param queryParams a {@link java.util.Map} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType, Map<String, List<String>> queryParams) {
         return buildRequest(serviceEndpoint, requestType, null, queryParams, null);
     }
 
-    /**
-     * <p>buildRequest.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param pathParams a {@link java.util.Map} object.
-     * @param queryParams a {@link java.util.Map} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams, Map<String, List<String>> queryParams) {
         return buildRequest(serviceEndpoint, requestType, pathParams, queryParams, null);
     }
 
-    /**
-     * <p>buildRequest.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param typeRef a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, TypeReference<?> typeRef) {
         return buildRequest(serviceEndpoint, requestType, null, null, typeRef);
     }
 
-    /**
-     * <p>buildRequest.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType) {
         return buildRequest(serviceEndpoint, requestType, null, null, null);
     }
 
-    /**
-     * <p>buildRequestWithPathParams.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param pathParams a {@link java.util.Map} object.
-     * @param typeRef a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams, TypeReference<?> typeRef) {
         return buildRequest(serviceEndpoint, requestType, pathParams, null, typeRef);
     }
 
-    /**
-     * <p>buildRequestWithQueryParams.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param queryParams a {@link java.util.Map} object.
-     * @param typeRef a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType, Map<String, List<String>> queryParams, TypeReference<?> typeRef) {
         return buildRequest(serviceEndpoint, requestType, null, queryParams, typeRef);
     }
 
-    /**
-     * <p>buildRequest.</p>
-     *
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param pathParams a {@link java.util.Map} object.
-     * @param queryParams a {@link java.util.Map} object.
-     * @param typeRef a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType,
                                                   Map<String, String> pathParams, Map<String, List<String>> queryParams,
                                                   TypeReference<?> typeRef) {
