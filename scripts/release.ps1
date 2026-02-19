@@ -9,7 +9,10 @@
     3. Builds the SDK JARs (compiled, sources, javadoc)
     4. Creates a Git tag
     5. Creates a GitHub Release with attached JARs
-    6. Optionally deploys to Maven Central via Sonatype OSSRH
+    6. Optionally deploys to Maven Central via Sonatype Central Portal
+
+    IMPORTANT: Commit and push all changes to Git BEFORE running this script.
+    The script does NOT commit or push on your behalf.
 
 .PARAMETER Version
     The release version (e.g., "1.1.0"). If not provided, reads from pom.xml.
@@ -24,7 +27,7 @@
     Skip creating the GitHub release. Default: false.
 
 .PARAMETER DeployMavenCentral
-    Deploy to Maven Central via Sonatype OSSRH. Default: false.
+    Deploy to Maven Central via Sonatype Central Portal. Default: false.
 
 .PARAMETER DryRun
     Show what would be done without executing. Default: false.
@@ -35,7 +38,7 @@
 
 .EXAMPLE
     # Build, create GitHub release, AND deploy to Maven Central
-    .\scripts\release.ps1 -Version "1.1.0" -DeployMavenCentral -GpgKeyId "ABCD1234"
+    .\scripts\release.ps1 -Version "1.1.0" -DeployMavenCentral -GpgKeyId "BCD92FFA"
 
 .EXAMPLE
     # Preview what would happen without doing anything
@@ -198,7 +201,9 @@ try {
     # Check for uncommitted changes
     $gitStatus = & git status --porcelain 2>&1
     if ($gitStatus) {
-        Write-Warning "Working directory has uncommitted changes:"
+        Write-Fail "Working directory has uncommitted changes."
+        Write-Host "  Please commit and push all changes before running this script." -ForegroundColor Red
+        Write-Host "" -ForegroundColor Red
         Write-Host $gitStatus -ForegroundColor Yellow
         $proceed = Read-Host "  Continue anyway? (y/N)"
         if ($proceed -ne "y" -and $proceed -ne "Y") {
@@ -212,10 +217,10 @@ try {
     }
 
     # ============================================================================
-    # Step 3: Update POM Version (remove -SNAPSHOT)
+    # Step 3: Update POM Version (remove -SNAPSHOT if needed)
     # ============================================================================
 
-    Write-Step "Updating POM Version"
+    Write-Step "Checking POM Version"
 
     [xml]$pom = Get-Content "$ProjectRoot\pom.xml"
     $currentVersion = $pom.project.version
@@ -224,9 +229,14 @@ try {
         Write-Host "  Updating version: $currentVersion -> $Version" -ForegroundColor White
         if (-not $DryRun) {
             & mvn versions:set "-DnewVersion=$Version" -q 2>&1 | Out-Null
-            # Clean up backup files created by versions plugin
             & mvn versions:commit -q 2>&1 | Out-Null
             Write-Success "POM version updated to $Version"
+            Write-Warning "POM was updated. You should commit this change before proceeding."
+            $proceed = Read-Host "  Continue? (y/N)"
+            if ($proceed -ne "y" -and $proceed -ne "Y") {
+                Write-Host "  Aborted. Commit the POM change and re-run." -ForegroundColor Red
+                exit 0
+            }
         } else {
             Write-Host "  [DRY RUN] Would update POM version to $Version" -ForegroundColor Magenta
         }
@@ -291,15 +301,12 @@ try {
     Write-Step "Creating Git Tag"
 
     if (-not $DryRun) {
-        & git add pom.xml
-        & git commit -m "Release $Version" --allow-empty
         & git tag -a $TagName -m "Release $Version"
         Write-Success "Created tag: $TagName"
 
         Write-Host "  Pushing tag to remote..." -ForegroundColor White
         & git push origin $TagName
-        & git push
-        Write-Success "Pushed tag and commits to remote"
+        Write-Success "Pushed tag to remote"
     } else {
         Write-Host "  [DRY RUN] Would create and push tag: $TagName" -ForegroundColor Magenta
     }
@@ -370,21 +377,29 @@ try {
     if ($DeployMavenCentral) {
         Write-Step "Deploying to Maven Central"
 
-        Write-Host "  This will deploy to Sonatype OSSRH staging repository." -ForegroundColor White
-        Write-Host "  Ensure ~/.m2/settings.xml has your OSSRH credentials." -ForegroundColor White
+        Write-Host "  Publishing via Sonatype Central Portal." -ForegroundColor White
+        Write-Host "  Ensure ~/.m2/settings.xml has your Central Portal token." -ForegroundColor White
+        Write-Host "  A GPG passphrase popup may appear - enter your passphrase." -ForegroundColor White
 
         if (-not $DryRun) {
             & mvn clean deploy -DskipTests "-Dgpg.keyname=$GpgKeyId"
             if ($LASTEXITCODE -eq 0) {
-                Write-Success "Deployed to Sonatype OSSRH staging"
+                Write-Success "Published to Maven Central!"
                 Write-Host ""
-                Write-Host "  Next steps:" -ForegroundColor Yellow
-                Write-Host "  1. Log in to https://s01.oss.sonatype.org/" -ForegroundColor Yellow
-                Write-Host "  2. Find your staging repository under 'Staging Repositories'" -ForegroundColor Yellow
-                Write-Host "  3. Select it -> Close -> Release" -ForegroundColor Yellow
-                Write-Host "  4. Artifacts appear on Maven Central within ~30 minutes" -ForegroundColor Yellow
+                Write-Host "  Artifacts will be available on Maven Central within ~30 minutes:" -ForegroundColor Green
+                Write-Host "  https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java/$Version" -ForegroundColor Green
+                Write-Host ""
+                Write-Host "  Maven dependency:" -ForegroundColor Green
+                Write-Host "  <dependency>" -ForegroundColor White
+                Write-Host "      <groupId>com.eqixiac.equinix</groupId>" -ForegroundColor White
+                Write-Host "      <artifactId>equinix-sdk-java</artifactId>" -ForegroundColor White
+                Write-Host "      <version>$Version</version>" -ForegroundColor White
+                Write-Host "  </dependency>" -ForegroundColor White
             } else {
-                Write-Fail "Maven Central deployment failed. Check your OSSRH credentials and GPG key."
+                Write-Fail "Maven Central deployment failed."
+                Write-Host "  Check your Central Portal token in ~/.m2/settings.xml" -ForegroundColor Red
+                Write-Host "  Check your GPG key: gpg --list-keys" -ForegroundColor Red
+                Write-Host "  View deployment status: https://central.sonatype.com/publishing" -ForegroundColor Yellow
             }
         } else {
             Write-Host "  [DRY RUN] Would run: mvn clean deploy -DskipTests -Dgpg.keyname=$GpgKeyId" -ForegroundColor Magenta
@@ -392,12 +407,15 @@ try {
     }
 
     # ============================================================================
+    # Done
+    # ============================================================================
+
+    # ============================================================================
     # Step 9: Prepare Next Development Version
     # ============================================================================
 
     Write-Step "Preparing Next Development Version"
 
-    # Increment patch version for next SNAPSHOT
     $versionParts = $Version.Split(".")
     if ($versionParts.Length -ge 3) {
         $versionParts[2] = [string]([int]$versionParts[2] + 1)
@@ -418,7 +436,7 @@ try {
         & git push
         Write-Success "POM updated to $nextVersion and pushed"
     } else {
-        Write-Host "  [DRY RUN] Would update POM to $nextVersion" -ForegroundColor Magenta
+        Write-Host "  [DRY RUN] Would update POM to $nextVersion, commit, and push" -ForegroundColor Magenta
     }
 
     # ============================================================================
@@ -435,6 +453,7 @@ try {
     }
     if ($DeployMavenCentral) {
         Write-Host "  Maven:      com.eqixiac.equinix:equinix-sdk-java:$Version" -ForegroundColor Green
+        Write-Host "  Portal:     https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java" -ForegroundColor Green
     }
     Write-Host ""
 

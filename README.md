@@ -25,7 +25,7 @@
 <dependency>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
@@ -544,37 +544,63 @@ mvn javadoc:javadoc
 
 ## Publishing to Maven Central
 
-The SDK is configured for publishing to Maven Central via Sonatype OSSRH.
+The SDK is published to Maven Central via the [Sonatype Central Portal](https://central.sonatype.com).
 
 ### Prerequisites
 
-1. **Sonatype OSSRH account**: Register at [Sonatype JIRA](https://issues.sonatype.org/)
-2. **GPG key**: Generate a GPG key pair for artifact signing
-3. **Maven settings**: Configure `~/.m2/settings.xml`:
+1. **Sonatype Central Portal account**: Register at [central.sonatype.com](https://central.sonatype.com)
+2. **User token**: Generate a user token from your Central Portal account (Account → Generate User Token)
+3. **GPG key**: Generate a GPG key pair for artifact signing (`gpg --full-generate-key`)
+4. **Maven settings**: Configure `~/.m2/settings.xml`:
 
 ```xml
 <settings>
     <servers>
         <server>
-            <id>ossrh</id>
-            <username>YOUR_SONATYPE_USERNAME</username>
-            <password>YOUR_SONATYPE_PASSWORD</password>
+            <id>central</id>
+            <username>YOUR_TOKEN_USERNAME</username>
+            <password>YOUR_TOKEN_PASSWORD</password>
         </server>
     </servers>
+    <profiles>
+        <profile>
+            <id>gpg</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <gpg.executable>/path/to/gpg</gpg.executable>
+            </properties>
+        </profile>
+    </profiles>
 </settings>
 ```
 
 ### Deploy
 
 ```bash
-# Deploy snapshot
-mvn clean deploy -DskipTests -Dgpg.keyname=YOUR_GPG_KEY_ID
-
-# Deploy release (after updating version in pom.xml)
+# Deploy release to Maven Central (auto-publishes after validation)
 mvn clean deploy -DskipTests -Dgpg.keyname=YOUR_GPG_KEY_ID
 ```
 
-After deploying, log in to [Sonatype Nexus](https://s01.oss.sonatype.org/) to close and release the staging repository.
+The `central-publishing-maven-plugin` handles bundling, uploading, and publishing automatically. Artifacts typically appear on Maven Central within 30 minutes of a successful deploy.
+
+### Release Script
+
+A PowerShell release script is included for the full workflow (test, build, tag, GitHub release, Maven Central deploy):
+
+```powershell
+# Full release with Maven Central deploy
+.\scripts\release.ps1 -Version "1.2.0" -GpgKeyId "YOUR_KEY_ID" -DeployMavenCentral
+
+# GitHub release only (no Maven Central)
+.\scripts\release.ps1 -Version "1.2.0"
+
+# Preview without executing
+.\scripts\release.ps1 -Version "1.2.0" -DryRun
+```
+
+> **Note:** You must commit and push your changes to Git before running the release script.
 
 ### GitHub Releases
 
@@ -608,7 +634,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation.
 ### Dependencies
 - Jackson 2.17.2 (JSON serialization)
 - Apache HttpClient 4.5.14 (HTTP communication)
-- Lombok 1.18.34 (compile-time code generation)
+- Lombok 1.18.42 (compile-time code generation)
 
 ## License
 
