@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/Java-14%2B-orange.svg)](https://openjdk.java.net/)
+[![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 
 > A comprehensive Java SDK for the Equinix Platform APIs, providing typed access to Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, and Messaging services.
 
@@ -530,6 +531,10 @@ mvn test -Pintegration \
     -Dauth.secret=YOUR_CLIENT_SECRET \
     -DskipCreateUpdateOperations=false
 ```
+
+## API Reference
+
+Full Javadoc documentation is available at **[iantjones.github.io/equinix-java-sdk](https://iantjones.github.io/equinix-java-sdk/)**.
 
 ## Building
 
