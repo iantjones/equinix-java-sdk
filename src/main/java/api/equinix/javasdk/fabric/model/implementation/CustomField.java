@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.DataType;
+import api.equinix.javasdk.fabric.enums.DataType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 

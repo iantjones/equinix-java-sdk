@@ -19,13 +19,12 @@ package api.equinix.javasdk.networkedge.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.BGPPeeringClientImpl;
-import api.equinix.javasdk.networkedge.enums.BGPState;
-import api.equinix.javasdk.networkedge.enums.BGPStatus;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
 import api.equinix.javasdk.networkedge.model.json.BGPPeeringJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringUpdaterJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 /**
  * <p>BGPPeeringWrapper class.</p>
@@ -35,6 +34,7 @@ import lombok.Getter;
  */
 public class BGPPeeringWrapper extends ResourceImpl<BGPPeering> implements BGPPeering {
 
+    @Delegate
     private BGPPeeringJson json;
     @Getter
     private final Pageable<BGPPeering> serviceClient;
@@ -48,105 +48,6 @@ public class BGPPeeringWrapper extends ResourceImpl<BGPPeering> implements BGPPe
     public BGPPeeringWrapper(BGPPeeringJson sshUserJson, Pageable<BGPPeering> serviceClient) {
         this.json = sshUserJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return  this.json.getUuid();
-    }
-
-    /**
-     * <p>getConnectionUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getConnectionUuid() {
-        return  this.json.getConnectionUuid();
-    }
-
-    /**
-     * <p>getConnectionName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getConnectionName() {
-        return  this.json.getConnectionName();
-    }
-
-    /**
-     * <p>getVirtualDeviceUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getVirtualDeviceUuid() {
-        return  this.json.getVirtualDeviceUuid();
-    }
-
-    /**
-     * <p>getLocalIpAddress.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getLocalIpAddress() {
-        return  this.json.getLocalIpAddress();
-    }
-
-    /**
-     * <p>getRemoteIpAddress.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getRemoteIpAddress() {
-        return  this.json.getRemoteIpAddress();
-    }
-
-    /**
-     * <p>getLocalAsn.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getLocalAsn() {
-        return  this.json.getLocalAsn();
-    }
-
-    /**
-     * <p>getRemoteAsn.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getRemoteAsn() {
-        return  this.json.getRemoteAsn();
-    }
-
-    /**
-     * <p>getAuthenticationKey.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getAuthenticationKey() {
-        return  this.json.getAuthenticationKey();
-    }
-
-    /**
-     * <p>getProvisioningStatus.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BGPStatus} object.
-     */
-    public BGPStatus getProvisioningStatus() {
-        return  this.json.getProvisioningStatus();
-    }
-
-    /**
-     * <p>getState.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BGPState} object.
-     */
-    public BGPState getState() {
-        return  this.json.getState();
     }
 
     /**

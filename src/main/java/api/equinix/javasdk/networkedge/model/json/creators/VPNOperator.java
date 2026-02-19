@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.internal.implementation.VPNClientImpl;
+import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.VPN;
 import api.equinix.javasdk.networkedge.model.json.VPNJson;
 import api.equinix.javasdk.networkedge.model.wrappers.VPNWrapper;
@@ -96,6 +97,10 @@ public class VPNOperator extends ResourceImpl<VPN> {
          public VPNBuilder onDeviceUuid(String deviceUuid) {
             this.virtualDeviceUuid = deviceUuid;
             return this;
+        }
+
+         public VPNBuilder onDevice(Device device) {
+            return onDeviceUuid(device.getUuid());
         }
 
          public VPNBuilder withPeerIp(String peerIp) {

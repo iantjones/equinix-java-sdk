@@ -20,7 +20,17 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 
+/**
+ * Client interface for querying Equinix Fabric pricing information. Provides access to
+ * pricing details for connections, ports, and other Fabric resources.
+ */
 public interface Prices {
 
+    /**
+     * Lists pricing information matching the specified filter criteria.
+     *
+     * @param filter the filter criteria to narrow pricing results (e.g., by connection type or metro)
+     * @return a paginated, filtered list of pricing entries
+     */
     PaginatedFilteredList<Pricing> list(FilterPropertyList filter);
 }

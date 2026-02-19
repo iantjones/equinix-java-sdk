@@ -47,6 +47,8 @@ public interface ConnectionClient<T> extends PageablePost<T> {
 
     ConnectionJson create(ConnectionCreatorJson connectionCreatorJson);
 
+    ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson);
+
     ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject);
 
     List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList);

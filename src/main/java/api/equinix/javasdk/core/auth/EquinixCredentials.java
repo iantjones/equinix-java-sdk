@@ -17,22 +17,27 @@
 package api.equinix.javasdk.core.auth;
 
 /**
- * <p>EquinixCredentials interface.</p>
+ * Represents credentials for authenticating with the Equinix Platform APIs.
+ *
+ * <p>Implementations of this interface provide the OAuth2 client credentials
+ * (Client ID and Client Secret) required for API authentication. The SDK uses
+ * these credentials to obtain and manage OAuth2 access tokens automatically.</p>
  *
  * @author ianjones
  * @version $Id: $Id
+ * @see BasicEquinixCredentials
  */
 public interface EquinixCredentials {
     /**
-     * <p>getAccessKey.</p>
+     * Returns the OAuth2 Client ID (access key) for API authentication.
      *
-     * @return a {@link java.lang.String} object.
+     * @return the client ID string
      */
     String getAccessKey();
     /**
-     * <p>getSecretKey.</p>
+     * Returns the OAuth2 Client Secret (secret key) for API authentication.
      *
-     * @return a {@link java.lang.String} object.
+     * @return the client secret string
      */
     String getSecretKey();
 }

@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.core.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.net.InetAddress;
 
 /**
@@ -24,47 +27,13 @@ import java.net.InetAddress;
  * @author ianjones
  * @version $Id: $Id
  */
+@Getter
+@Setter
 public class IPAddress {
 
-    InetAddress ipAddress;
+    private InetAddress ipAddress;
 
-    Integer subnet;
-
-    /**
-     * <p>Getter for the field <code>ipAddress</code>.</p>
-     *
-     * @return a {@link java.net.InetAddress} object.
-     */
-    public InetAddress getIpAddress() {
-        return ipAddress;
-    }
-
-    /**
-     * <p>Setter for the field <code>ipAddress</code>.</p>
-     *
-     * @param ipAddress a {@link java.net.InetAddress} object.
-     */
-    public void setIpAddress(InetAddress ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    /**
-     * <p>Getter for the field <code>subnet</code>.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getSubnet() {
-        return subnet;
-    }
-
-    /**
-     * <p>Setter for the field <code>subnet</code>.</p>
-     *
-     * @param subnet a {@link java.lang.Integer} object.
-     */
-    public void setSubnet(Integer subnet) {
-        this.subnet = subnet;
-    }
+    private Integer subnet;
 
     /**
      * <p>getHostAddress.</p>

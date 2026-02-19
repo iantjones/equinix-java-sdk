@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model;
 
-import api.equinix.javasdk.core.enums.PortType;
+import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.model.implementation.PortStat;
 
 /**
@@ -37,7 +37,7 @@ public interface PortStatistic {
     /**
      * <p>getType.</p>
      *
-     * @return a {@link api.equinix.javasdk.core.enums.PortType} object.
+     * @return a {@link api.equinix.javasdk.fabric.enums.PortType} object.
      */
     PortType getType();
 

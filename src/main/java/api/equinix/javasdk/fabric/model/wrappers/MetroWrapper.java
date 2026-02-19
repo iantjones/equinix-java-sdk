@@ -18,17 +18,12 @@ package api.equinix.javasdk.fabric.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.client.internal.implementation.MetroClientImpl;
-import api.equinix.javasdk.fabric.enums.MetroType;
-import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.fabric.model.json.MetroJson;
 import lombok.Getter;
-
-import java.util.List;
+import lombok.experimental.Delegate;
 
 /**
  * <p>MetroWrapper class.</p>
@@ -38,6 +33,7 @@ import java.util.List;
  */
 public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
 
+    @Delegate(excludes = MetroMutability.class)
     private MetroJson jsonObject;
     @Getter
     private final Pageable<Metro> serviceClient;
@@ -53,62 +49,8 @@ public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>getCode.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     */
-    public MetroCode getCode() {
-        return this.jsonObject.getCode();
-    }
-
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.MetroType} object.
-     */
-    public MetroType getType() {
-        return this.jsonObject.getType();
-    }
-
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getName() {
-        return this.jsonObject.getName();
-    }
-
-    /**
-     * <p>getHref.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getHref() {
-        return this.jsonObject.getHref();
-    }
-
-    /**
-     * <p>getRegion.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.Region} object.
-     */
-    public Region getRegion() {
-        return this.jsonObject.getRegion();
-    }
-
     public GeoCoordinate geoCoordinates() {
         return this.jsonObject.getGeoCoordinates();
-    }
-
-    /**
-     * <p>getConnectedMetros.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<ConnectedMetro> getConnectedMetros() {
-        return this.jsonObject.getConnectedMetros();
     }
 
     /**
@@ -119,5 +61,10 @@ public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
     public Metro refresh() {
         this.jsonObject = ((MetroClientImpl)serviceClient).refresh(this.getCode());
         return this;
+    }
+
+    private interface MetroMutability {
+        GeoCoordinate getGeoCoordinates();
+        Metro refresh();
     }
 }

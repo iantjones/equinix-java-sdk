@@ -27,7 +27,9 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator;
 import java.util.List;
 
 /**
- * <p>Devices interface.</p>
+ * Client interface for managing Network Edge virtual devices. Provides operations
+ * to list, retrieve, and create devices, as well as manage device types, network
+ * interfaces, and license files.
  *
  * @author ianjones
  * @version $Id: $Id

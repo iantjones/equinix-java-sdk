@@ -22,6 +22,7 @@ import api.equinix.javasdk.networkedge.client.internal.implementation.PublicKeyC
 import api.equinix.javasdk.networkedge.model.PublicKey;
 import api.equinix.javasdk.networkedge.model.json.PublicKeyJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 /**
  * <p>PublicKeyWrapper class.</p>
@@ -31,6 +32,7 @@ import lombok.Getter;
  */
 public class PublicKeyWrapper extends ResourceImpl<PublicKey> implements PublicKey {
 
+    @Delegate
     private PublicKeyJson jsonObject;
     @Getter
     private final Pageable<PublicKey> serviceClient;
@@ -44,42 +46,6 @@ public class PublicKeyWrapper extends ResourceImpl<PublicKey> implements PublicK
     public PublicKeyWrapper(PublicKeyJson publicKeyJson, Pageable<PublicKey> serviceClient) {
         this.jsonObject = publicKeyJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return  this.jsonObject.getUuid();
-    }
-
-    /**
-     * <p>getKeyName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getKeyName() {
-        return  this.jsonObject.getKeyName();
-    }
-
-    /**
-     * <p>getKeyValue.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getKeyValue() {
-        return  this.jsonObject.getKeyValue();
-    }
-
-    /**
-     * <p>getCustOrgId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getCustOrgId() {
-        return  this.jsonObject.getCustOrgId();
     }
 
     /**

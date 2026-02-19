@@ -19,19 +19,12 @@ package api.equinix.javasdk.networkedge.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.DeviceLinkClientImpl;
-import api.equinix.javasdk.networkedge.enums.DeviceLinkStatus;
-import api.equinix.javasdk.networkedge.enums.Source;
 import api.equinix.javasdk.networkedge.model.DeviceLink;
-import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator;
-import api.equinix.javasdk.networkedge.model.implementation.DeviceLinkSupportDetail;
-import api.equinix.javasdk.networkedge.model.implementation.Link;
-import api.equinix.javasdk.networkedge.model.implementation.LinkDevice;
 import api.equinix.javasdk.networkedge.model.json.DeviceLinkJson;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkUpdaterJson;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.experimental.Delegate;
 
 /**
  * <p>DeviceLinkWrapper class.</p>
@@ -41,6 +34,7 @@ import java.util.List;
  */
 public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements DeviceLink {
 
+    @Delegate
     private DeviceLinkJson json;
 
     @Getter
@@ -55,114 +49,6 @@ public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements Devic
     public DeviceLinkWrapper(DeviceLinkJson deviceLinkJson, Pageable<DeviceLink> serviceClient) {
         this.json = deviceLinkJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return  this.json.getUuid();
-    }
-
-    /**
-     * <p>getSource.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.Source} object.
-     */
-    public Source getSource() {
-        return  this.json.getSource();
-    }
-
-    /**
-     * <p>getGroupName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getGroupName() {
-        return  this.json.getGroupName();
-    }
-
-    /**
-     * <p>getSubnet.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getSubnet() {
-        return  this.json.getSubnet();
-    }
-
-    /**
-     * <p>getStatus.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.DeviceLinkStatus} object.
-     */
-    public DeviceLinkStatus getStatus() {
-        return  this.json.getStatus();
-    }
-
-    /**
-     * <p>getLinks.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<Link> getLinks() {
-        return  this.json.getLinks();
-    }
-
-    /**
-     * <p>getLinkDevices.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<LinkDevice> getLinkDevices() {
-        return  this.json.getLinkDevices();
-    }
-
-    /**
-     * <p>getSupportDetails.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
-    public List<DeviceLinkSupportDetail> getSupportDetails() {
-        return  this.json.getSupportDetails();
-    }
-
-    /**
-     * <p>getCreatedBy.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getCreatedBy() {
-        return  this.json.getCreatedBy();
-    }
-
-    /**
-     * <p>getCreatedDate.</p>
-     *
-     * @return a {@link java.time.LocalDateTime} object.
-     */
-    public LocalDateTime getCreatedDate() {
-        return  this.json.getCreatedDate();
-    }
-
-    /**
-     * <p>getLastUpdatedBy.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getLastUpdatedBy() {
-        return  this.json.getLastUpdatedBy();
-    }
-
-    /**
-     * <p>getLastUpdatedDate.</p>
-     *
-     * @return a {@link java.time.LocalDateTime} object.
-     */
-    public LocalDateTime getLastUpdatedDate() {
-        return  this.json.getLastUpdatedDate();
     }
 
     /**
@@ -188,7 +74,7 @@ public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements Devic
     public Boolean delete() {
         return ((DeviceLinkClientImpl)this.serviceClient).delete(this.getUuid());
     }
-    
+
     /**
      * <p>refresh.</p>
      *

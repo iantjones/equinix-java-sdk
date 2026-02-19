@@ -71,7 +71,7 @@ public class ExceptionDetail {
     private BigInteger timestamp;
 
     @JsonProperty("additionalInfo")
-    private ArrayList<ExceptionAdditionalInfo> additionalInfo;
+    private ArrayList<ExceptionAdditionalInfo> additionalInfo = new ArrayList<>();
 
     @JsonProperty("errorMessageKey")
     private String errorMessageKey;

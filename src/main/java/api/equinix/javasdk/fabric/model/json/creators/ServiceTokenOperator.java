@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.Side;
 import api.equinix.javasdk.fabric.client.internal.implementation.ServiceTokenClientImpl;
 import api.equinix.javasdk.fabric.enums.*;
+import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.ServiceToken;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
@@ -81,6 +82,7 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
         private Integer vLanSTag;
 
         private List<String> emails;
+        private boolean dryRun;
 
         protected ServiceTokenBuilder(Side issuerSide) {
             this.issuerSide = issuerSide;
@@ -126,6 +128,10 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
             return this;
         }
 
+        public ServiceTokenOperator.ServiceTokenBuilder onPort(Port port) {
+            return onPortUuid(port.getUuid());
+        }
+
         public ServiceTokenOperator.ServiceTokenBuilder usingProtocolDot1q(Integer vLanTag) {
             this.linkProtocolType = LinkProtocolType.DOT1Q;
             this.vLanTag = vLanTag;
@@ -148,9 +154,17 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
             return this;
         }
 
+        public ServiceTokenOperator.ServiceTokenBuilder dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
         public ServiceToken create() {
             ServiceTokenCreatorJson serviceTokenCreatorJson = new ServiceTokenCreatorJson(this);
-            ServiceTokenJson serviceTokenJson = ((ServiceTokenClientImpl)ServiceTokenOperator.this.getServiceClient()).create(serviceTokenCreatorJson);
+            ServiceTokenClientImpl clientImpl = (ServiceTokenClientImpl) ServiceTokenOperator.this.getServiceClient();
+            ServiceTokenJson serviceTokenJson = dryRun
+                    ? clientImpl.dryRunCreate(serviceTokenCreatorJson)
+                    : clientImpl.create(serviceTokenCreatorJson);
             return new ServiceTokenWrapper(serviceTokenJson, ServiceTokenOperator.this.getServiceClient());
         }
     }

@@ -30,45 +30,88 @@ import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 import java.time.LocalDateTime;
 
 /**
- * <p>Connections interface.</p>
+ * Client interface for managing Equinix Fabric connections. Provides operations for searching,
+ * retrieving, creating, and monitoring connections between Fabric endpoints.
  *
  * @author ianjones
  * @version $Id: $Id
  */
 public interface Connections {
 
+    /**
+     * Searches for connections using default filter and sort criteria.
+     *
+     * @return a paginated, filtered list of matching connections
+     */
     PaginatedFilteredList<Connection> search();
 
+    /**
+     * Searches for connections matching the specified filter criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @return a paginated, filtered list of matching connections
+     */
     PaginatedFilteredList<Connection> search(FilterPropertyList filter);
 
+    /**
+     * Searches for connections with the specified sort order.
+     *
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching connections
+     */
     PaginatedFilteredList<Connection> search(SortPropertyList sort);
 
+    /**
+     * Searches for connections matching the specified filter and sort criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching connections
+     */
     PaginatedFilteredList<Connection> search(FilterPropertyList filter, SortPropertyList sort);
 
+    /**
+     * Retrieves a single connection by its unique identifier.
+     *
+     * @param uuid the unique identifier of the connection
+     * @return the connection matching the given UUID
+     */
     Connection getByUuid(String uuid);
 
+    /**
+     * Begins the fluent builder for creating a new connection.
+     * Call methods on the returned builder to configure the connection, then call {@code create()}.
+     *
+     * @param connectionType the type of connection to create
+     * @return a builder for configuring the new connection
+     */
     ConnectionOperator.ConnectionBuilder define(ConnectionType connectionType);
 
+    /**
+     * Begins a batch builder for creating multiple connections in a single request.
+     *
+     * @return a batch builder for configuring multiple connections
+     */
     ConnectionOperator.BatchConnectionBuilder startBatch();
 
     /**
-     * <p>getStatistics.</p>
+     * Retrieves bandwidth statistics for a connection over the specified time range, viewed from a specific side.
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @param viewPoint a {@link api.equinix.javasdk.core.enums.Side} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.ConnectionStatistic} object.
+     * @param uuid the unique identifier of the connection
+     * @param startDateTime the start of the statistics time range
+     * @param endDateTime the end of the statistics time range
+     * @param viewPoint the side (A-side or Z-side) from which to view the statistics
+     * @return the connection statistics for the specified time range and viewpoint
      */
     ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
 
     /**
-     * <p>getStatistics.</p>
+     * Retrieves bandwidth statistics for a connection over the specified time range.
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.ConnectionStatistic} object.
+     * @param uuid the unique identifier of the connection
+     * @param startDateTime the start of the statistics time range
+     * @param endDateTime the end of the statistics time range
+     * @return the connection statistics for the specified time range
      */
     ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

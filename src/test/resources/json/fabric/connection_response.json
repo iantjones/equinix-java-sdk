@@ -1,0 +1,78 @@
+{
+  "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+  "name": "My-EVPL-Connection",
+  "type": "EVPL_VC",
+  "bandwidth": 1000,
+  "state": "ACTIVE",
+  "direction": "OUTGOING",
+  "isRemote": false,
+  "aSide": {
+    "accessPoint": {
+      "type": "COLO",
+      "port": {
+        "uuid": "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+        "name": "testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154"
+      },
+      "linkProtocol": {
+        "type": "DOT1Q",
+        "vlanTag": 1001
+      },
+      "location": {
+        "metroCode": "SV",
+        "region": "AMER"
+      }
+    }
+  },
+  "zSide": {
+    "accessPoint": {
+      "type": "SP",
+      "profile": {
+        "uuid": "20d32a80-0d61-4333-bc03-4b2d446794a0",
+        "name": "AWS Direct Connect",
+        "type": "L2_PROFILE"
+      },
+      "linkProtocol": {
+        "type": "DOT1Q",
+        "vlanTag": 1002
+      },
+      "location": {
+        "metroCode": "SV",
+        "region": "AMER"
+      },
+      "sellerRegion": "us-west-1",
+      "authenticationKey": "xxxx-xxxx-xxxx"
+    }
+  },
+  "operation": {
+    "providerStatus": "AVAILABLE",
+    "equinixStatus": "PROVISIONED"
+  },
+  "changeLog": {
+    "createdBy": "testuser",
+    "createdByFullName": "Test User",
+    "createdByEmail": "testuser@example.com",
+    "createdDateTime": "2024-01-15T10:30:00Z",
+    "updatedBy": "testuser",
+    "updatedByFullName": "Test User",
+    "updatedByEmail": "testuser@example.com",
+    "updatedDateTime": "2024-01-15T11:00:00Z"
+  },
+  "redundancy": {
+    "group": "m167f685-41b0-1b07-6de0-3a7c54b08b8f",
+    "priority": "PRIMARY"
+  },
+  "notifications": [
+    {
+      "type": "ALL",
+      "emails": ["testuser@example.com"]
+    }
+  ],
+  "account": {
+    "accountNumber": 123456,
+    "accountName": "Test Account",
+    "orgId": 100100
+  },
+  "order": {
+    "purchaseOrderNumber": "PO-12345"
+  }
+}

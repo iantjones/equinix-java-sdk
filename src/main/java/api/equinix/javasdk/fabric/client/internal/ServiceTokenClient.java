@@ -54,6 +54,14 @@ public interface ServiceTokenClient<T> extends Pageable<T> {
     ServiceTokenJson create(ServiceTokenCreatorJson serviceTokenCreatorJson);
 
     /**
+     * <p>dryRunCreate.</p>
+     *
+     * @param serviceTokenCreatorJson a {@link api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson} object.
+     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
+     */
+    ServiceTokenJson dryRunCreate(ServiceTokenCreatorJson serviceTokenCreatorJson);
+
+    /**
      * <p>delete.</p>
      *
      * @param uuid a {@link java.lang.String} object.

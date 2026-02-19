@@ -24,7 +24,8 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupOperator;
 
 /**
- * <p>Backups interface.</p>
+ * Client interface for managing device backups on Network Edge. Provides operations to
+ * list, retrieve, download, and create device backups, as well as check restore feasibility.
  *
  * @author ianjones
  * @version $Id: $Id

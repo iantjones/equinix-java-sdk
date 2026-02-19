@@ -1,0 +1,34 @@
+{
+  "uuid": "a]b7f685-41b0-1b07-6de0-3a7c54b08b8f",
+  "type": "VC_TOKEN",
+  "href": "https://api.equinix.com/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f",
+  "state": "ACTIVE",
+  "expiry": 30,
+  "expirationDateTime": "2024-03-15T10:30:00Z",
+  "connection": {
+    "type": "EVPL_VC",
+    "allowRemoteConnection": true,
+    "allowCustomBandwidth": true,
+    "bandwidthLimit": 500
+  },
+  "notifications": [
+    {
+      "type": "ALL",
+      "emails": ["admin@example.com", "ops@example.com"]
+    }
+  ],
+  "account": {
+    "accountNumber": 123456,
+    "orgId": 100100
+  },
+  "changeLog": {
+    "createdBy": "tokenCreator",
+    "createdByFullName": "Token Creator",
+    "createdByEmail": "token@example.com",
+    "createdDateTime": "2024-02-15T10:30:00Z",
+    "updatedBy": "tokenCreator",
+    "updatedByFullName": "Token Creator",
+    "updatedByEmail": "token@example.com",
+    "updatedDateTime": "2024-02-15T10:30:00Z"
+  }
+}

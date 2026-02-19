@@ -25,20 +25,65 @@ import api.equinix.javasdk.fabric.model.GatewayPackage;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 
+/**
+ * Client interface for managing Equinix Fabric Gateways. Gateways provide virtual routing
+ * and network functions for connecting to cloud providers and other networks.
+ */
 public interface FabricGateways {
 
+    /**
+     * Searches for fabric gateways using default filter and sort criteria.
+     *
+     * @return a paginated, filtered list of matching gateways
+     */
     PaginatedFilteredList<FabricGateway> search();
 
+    /**
+     * Searches for fabric gateways matching the specified filter criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @return a paginated, filtered list of matching gateways
+     */
     PaginatedFilteredList<FabricGateway> search(FilterPropertyList filter);
 
+    /**
+     * Searches for fabric gateways with the specified sort order.
+     *
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching gateways
+     */
     PaginatedFilteredList<FabricGateway> search(SortPropertyList sort);
 
+    /**
+     * Searches for fabric gateways matching the specified filter and sort criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching gateways
+     */
     PaginatedFilteredList<FabricGateway> search(FilterPropertyList filter, SortPropertyList sort);
 
+    /**
+     * Retrieves a single fabric gateway by its unique identifier.
+     *
+     * @param uuid the unique identifier of the gateway
+     * @return the fabric gateway matching the given UUID
+     */
     FabricGateway getByUuid(String uuid);
 
+    /**
+     * Lists all available gateway packages.
+     *
+     * @return a paginated list of gateway packages
+     */
     PaginatedList<GatewayPackage> gatewayPackages();
 
+    /**
+     * Retrieves a specific gateway package by its package code.
+     *
+     * @param gatewayPackageCode the code identifying the gateway package
+     * @return the gateway package matching the given code
+     */
     GatewayPackage gatewayPackageByCode(GatewayPackageCode gatewayPackageCode);
 
 //    ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide);

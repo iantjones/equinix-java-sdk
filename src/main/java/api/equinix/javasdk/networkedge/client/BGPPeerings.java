@@ -24,7 +24,8 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator;
 
 /**
- * <p>BGPPeerings interface.</p>
+ * Client interface for managing BGP peering sessions on Network Edge devices. Provides
+ * operations to list, retrieve, and create BGP peering configurations for dynamic routing.
  *
  * @author ianjones
  * @version $Id: $Id

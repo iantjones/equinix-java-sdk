@@ -59,7 +59,7 @@ public class OAuthToken {
     private String refreshToken;
 
     @JsonProperty("refresh_token_timeout")
-    private String refreshTokenTimeout;
+    private Integer refreshTokenTimeout;
 
     @JsonIgnore
     private LocalDateTime sessionStart = LocalDateTime.now();

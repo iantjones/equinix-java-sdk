@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.BGPPeeringClientImpl;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
 import api.equinix.javasdk.networkedge.model.json.BGPPeeringJson;
 import api.equinix.javasdk.networkedge.model.wrappers.BGPPeeringWrapper;
@@ -82,6 +83,10 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
          public BGPPeeringBuilder forConnection(String connectionUuid) {
             this.connectionUuid = connectionUuid;
             return this;
+        }
+
+         public BGPPeeringBuilder forConnection(Connection connection) {
+            return forConnection(connection.getUuid());
         }
 
          public BGPPeeringBuilder withLocalIpAddress(String localIpAddress) {

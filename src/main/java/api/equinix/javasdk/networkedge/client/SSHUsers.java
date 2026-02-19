@@ -23,7 +23,8 @@ import api.equinix.javasdk.networkedge.model.json.creators.SSHUserOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
 
 /**
- * <p>SSHUsers interface.</p>
+ * Client interface for managing SSH users on Network Edge devices. Provides operations
+ * to list, retrieve, and create SSH users, as well as check username availability.
  *
  * @author ianjones
  * @version $Id: $Id

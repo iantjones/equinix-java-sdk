@@ -43,6 +43,7 @@ import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -302,7 +303,7 @@ public class Utils {
                 return requestBuilder.getQueryParameters();
             }
         }
-        return null;
+        return Collections.emptyMap();
     }
 
     /**
@@ -398,6 +399,14 @@ public class Utils {
         String uriFormat = functionalArea.path("uriFormat").textValue();
         int defaultVersion = functionalArea.path("defaultVersion").intValue();
 
+        if (requestParent.has("defaultVersion")) {
+            defaultVersion = requestParent.path("defaultVersion").intValue();
+        }
+
+        if (requestParent.has("overrideUriFormat")) {
+            uriFormat = requestParent.path("overrideUriFormat").textValue();
+        }
+
         String rootUri = requestParent.path("rootUri").textValue();
         String httpMethod = requestEndpoint.path("httpMethod").textValue();
         String requestUri = requestEndpoint.path("requestUri").textValue();
@@ -463,9 +472,10 @@ public class Utils {
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
+    @SuppressWarnings("unchecked")
     public static <T, S> Page<T, S> handlePaginatedListResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException {
         try {
-            Page<T, S> responsePage = Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            Page<T, S> responsePage = (Page<T, S>) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
             responsePage.setAssociatedRequest(equinixRequest);
             responsePage.setAssociatedResponse(equinixResponse);
             return responsePage;
@@ -485,9 +495,10 @@ public class Utils {
      * @return a {@link java.util.List} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
+    @SuppressWarnings("unchecked")
     public static <T, S> List<S> handleListResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         try {
-            return Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            return (List<S>) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);
@@ -504,18 +515,20 @@ public class Utils {
      * @return a S object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
+    @SuppressWarnings("unchecked")
     public static <S, T> S handleSingletonResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         try {
-            return Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            return (S) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <S, T> S unpackOriginalPost(EquinixRequest<T> equinixRequest, TypeReference<?> typeReference) throws EquinixClientException  {
         try {
-            return Constants.objectMapper.readValue(equinixRequest.getContent(), typeReference);
+            return (S) Constants.objectMapper.readValue(equinixRequest.getContent(), typeReference);
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);
@@ -594,9 +607,10 @@ public class Utils {
      * @return a {@link java.util.HashMap} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
+    @SuppressWarnings("unchecked")
     public static <T> HashMap<String, String> handleMapResponse(EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse) throws EquinixClientException  {
         try {
-            return Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            return (HashMap<String, String>) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION);

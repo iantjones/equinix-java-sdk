@@ -20,6 +20,10 @@ import api.equinix.javasdk.core.enums.Side;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.InterfaceType;
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
+import api.equinix.javasdk.fabric.enums.PeeringType;
+import api.equinix.javasdk.fabric.model.Port;
+import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -48,6 +52,15 @@ public class SimpleAccessPoint {
     @JsonProperty("interface")
     private Interface deviceInterface;
 
+    @JsonProperty("sellerRegion")
+    private String sellerRegion;
+
+    @JsonProperty("authenticationKey")
+    private String authenticationKey;
+
+    @JsonProperty("peeringType")
+    private PeeringType peeringType;
+
     protected SimpleAccessPoint(AccessPointBuilder accessPointBuilder) {
         this.type = accessPointBuilder.type;
         this.port = accessPointBuilder.port;
@@ -55,6 +68,9 @@ public class SimpleAccessPoint {
         this.virtualDevice = accessPointBuilder.virtualDevice;
         this.linkProtocol = accessPointBuilder.linkProtocol;
         this.deviceInterface = accessPointBuilder.deviceInterface;
+        this.sellerRegion = accessPointBuilder.sellerRegion;
+        this.authenticationKey = accessPointBuilder.authenticationKey;
+        this.peeringType = accessPointBuilder.peeringType;
     }
 
     public SimpleAccessPoint setLinkProtocol(LinkProtocol linkProtocol) {
@@ -97,6 +113,12 @@ public class SimpleAccessPoint {
 
         private Interface deviceInterface;
 
+        private String sellerRegion;
+
+        private String authenticationKey;
+
+        private PeeringType peeringType;
+
         protected AccessPointBuilder(AccessPointType type) {
             this.type = type;
         }
@@ -115,9 +137,17 @@ public class SimpleAccessPoint {
             return this;
         }
 
+        public AccessPointBuilder port(Port port) {
+            return port(port.getUuid());
+        }
+
         public AccessPointBuilder serviceProfile(String serviceProfileUuid) {
             this.profile = new MinimalProfile(serviceProfileUuid);
             return this;
+        }
+
+        public AccessPointBuilder serviceProfile(ServiceProfile serviceProfile) {
+            return serviceProfile(serviceProfile.getUuid());
         }
 
         public AccessPointBuilder virtualDevice(String virtualDeviceUuid) {
@@ -142,6 +172,43 @@ public class SimpleAccessPoint {
 
         public AccessPointBuilder deviceInterface(InterfaceType interfaceType, Integer interfaceId) {
             this.deviceInterface = new Interface(interfaceId, interfaceType);
+            return this;
+        }
+
+        public AccessPointBuilder sellerRegion(String sellerRegion) {
+            this.sellerRegion = sellerRegion;
+            return this;
+        }
+
+        public AccessPointBuilder authenticationKey(String authenticationKey) {
+            this.authenticationKey = authenticationKey;
+            return this;
+        }
+
+        public AccessPointBuilder peeringType(PeeringType peeringType) {
+            this.peeringType = peeringType;
+            return this;
+        }
+
+        /**
+         * Configures this access point using a {@link CloudProviderConnectionAdapter}.
+         *
+         * <p>Extracts the service profile UUID, authentication key, seller region, and
+         * optional peering type from the adapter and applies them to this access point builder.</p>
+         *
+         * @param adapter the cloud provider adapter to extract connection parameters from
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder fromCloudProvider(CloudProviderConnectionAdapter<?> adapter) {
+            this.profile = new MinimalProfile(adapter.getServiceProfileUuid());
+            this.authenticationKey = adapter.getAuthenticationKey();
+            this.sellerRegion = adapter.getSellerRegion();
+            if (adapter.getPreferredPeeringType() != null) {
+                this.peeringType = adapter.getPreferredPeeringType();
+            }
+            if (adapter.getPreferredLinkProtocol() != null) {
+                this.linkProtocol = adapter.getPreferredLinkProtocol();
+            }
             return this;
         }
 

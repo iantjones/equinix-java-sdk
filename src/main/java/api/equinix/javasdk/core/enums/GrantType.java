@@ -24,8 +24,7 @@ package api.equinix.javasdk.core.enums;
  */
 public enum GrantType {
 
-    CLIENT_CREDENTIALS("client_credentials"),
-    PASSWORD_CREDENTIALS("password");
+    CLIENT_CREDENTIALS("client_credentials");
 
     private final String grantType;
 

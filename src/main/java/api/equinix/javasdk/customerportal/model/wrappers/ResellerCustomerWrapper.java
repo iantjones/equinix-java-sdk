@@ -19,15 +19,16 @@ package api.equinix.javasdk.customerportal.model.wrappers;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.ResellerCustomerClientImpl;
-import api.equinix.javasdk.customerportal.enums.AccountStatus;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.json.ResellerCustomerJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ResellerCustomerOperator;
 import api.equinix.javasdk.customerportal.model.json.creators.ResellerCustomerUpdaterJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 public class ResellerCustomerWrapper extends ResourceImpl<ResellerCustomer> implements ResellerCustomer {
 
+    @Delegate(excludes = ResellerCustomerMutability.class)
     private ResellerCustomerJson json;
     @Getter
     private final Pageable<ResellerCustomer> serviceClient;
@@ -37,30 +38,14 @@ public class ResellerCustomerWrapper extends ResourceImpl<ResellerCustomer> impl
         this.serviceClient = serviceClient;
     }
 
-    public String getCustomerAccountNumber() {
-        return this.json.getCustomerAccountNumber();
-    }
-
-    public String getCustomerAccountName() {
-        return this.json.getCustomerAccountName();
-    }
-
-    public AccountStatus getStatus() {
-        return this.json.getStatus();
-    }
-
-    public String getAccountNumber() {
-        return this.json.getAccountNumber();
-    }
-    
     public ResellerCustomerOperator.ResellerCustomerUpdater update(String accountNumber) {
         return new ResellerCustomerOperator(this.serviceClient).update(accountNumber, this.json);
     }
-    
+
     public Boolean save(String accountNumber, String customerAccountNumber, ResellerCustomerUpdaterJson updaterJson) {
         return ((ResellerCustomerClientImpl)this.serviceClient).update(accountNumber, customerAccountNumber, updaterJson);
     }
-    
+
     public Boolean delete(String accountNumber, String reason) {
         return ((ResellerCustomerClientImpl)this.serviceClient).remove(accountNumber, this.getCustomerAccountNumber(), reason);
     }
@@ -68,5 +53,12 @@ public class ResellerCustomerWrapper extends ResourceImpl<ResellerCustomer> impl
     public Boolean refresh(String accountNumber, String customerAccountNumber) {
         this.json = ((ResellerCustomerClientImpl)this.serviceClient).getResellerCustomer(accountNumber, customerAccountNumber);
         return true;
+    }
+
+    private interface ResellerCustomerMutability {
+        ResellerCustomerOperator.ResellerCustomerUpdater update(String accountNumber);
+        Boolean save(String accountNumber, String customerAccountNumber, ResellerCustomerUpdaterJson updaterJson);
+        Boolean delete(String accountNumber, String reason);
+        Boolean refresh(String accountNumber, String customerAccountNumber);
     }
 }

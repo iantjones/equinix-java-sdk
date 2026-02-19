@@ -22,11 +22,13 @@ import api.equinix.javasdk.customerportal.enums.AccountType;
 import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.json.ResellerJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 import java.util.List;
 
 public class ResellerWrapper extends ResourceImpl<Reseller> implements Reseller {
 
+    @Delegate
     private ResellerJson json;
     @Getter
     private final Pageable<Reseller> serviceClient;

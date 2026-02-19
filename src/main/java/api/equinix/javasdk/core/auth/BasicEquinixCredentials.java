@@ -20,7 +20,17 @@ import api.equinix.javasdk.core.enums.GrantType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * <p>BasicEquinixCredentials class.</p>
+ * Standard implementation of {@link EquinixCredentials} using OAuth2 client credentials.
+ *
+ * <p>This is the primary way to authenticate with Equinix Platform APIs. Provide your
+ * Client ID and Client Secret obtained from the
+ * <a href="https://developer.equinix.com/">Equinix Developer Portal</a>.</p>
+ *
+ * <h3>Usage</h3>
+ * <pre>{@code
+ * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
+ * Fabric fabric = new Fabric(credentials);
+ * }</pre>
  *
  * @author ianjones
  * @version $Id: $Id
@@ -37,10 +47,10 @@ public class BasicEquinixCredentials implements EquinixCredentials {
     private final String grantType;
 
     /**
-     * <p>Constructor for BasicEquinixCredentials.</p>
+     * Creates credentials using the given OAuth2 Client ID and Client Secret.
      *
-     * @param accessKey a {@link java.lang.String} object.
-     * @param secretKey a {@link java.lang.String} object.
+     * @param accessKey the OAuth2 Client ID from the Equinix Developer Portal
+     * @param secretKey the OAuth2 Client Secret from the Equinix Developer Portal
      */
     public BasicEquinixCredentials(String accessKey, String secretKey) {
         this.accessKey = accessKey;
@@ -61,9 +71,9 @@ public class BasicEquinixCredentials implements EquinixCredentials {
     }
 
     /**
-     * <p>Getter for the field <code>grantType</code>.</p>
+     * Returns the OAuth2 grant type. Always returns {@code "client_credentials"}.
      *
-     * @return a {@link java.lang.String} object.
+     * @return the grant type string
      */
     public String getGrantType() {
         return grantType;

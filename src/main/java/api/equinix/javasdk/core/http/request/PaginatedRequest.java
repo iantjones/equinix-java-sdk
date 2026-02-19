@@ -48,10 +48,4 @@ public class PaginatedRequest<T> extends EquinixRequest<T> {
         replaceQueryParameter("limit", ModelUtils.process(this.pageSize.toString()));
     }
 
-    /**
-     * <p>setUniquePagination.</p>
-     */
-    public void setUniquePagination() {
-        setPagination();
-    }
 }

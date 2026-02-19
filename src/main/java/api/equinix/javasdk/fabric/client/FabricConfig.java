@@ -74,4 +74,32 @@ public interface FabricConfig {
     FabricGatewayClient<FabricGateway> getFabricGatewaysClient();
 
     GatewayPackageClient<GatewayPackage> getGatewayPackageClient();
+
+    CloudRouterClient<CloudRouter> getCloudRoutersClient();
+
+    CloudRouterPackageClient<CloudRouterPackage> getCloudRouterPackagesClient();
+
+    RoutingProtocolClient<RoutingProtocol> getRoutingProtocolsClient();
+
+    RouteFilterClient<RouteFilter> getRouteFiltersClient();
+
+    RouteFilterRuleClient<RouteFilterRule> getRouteFilterRulesClient();
+
+    RouteAggregationClient<RouteAggregation> getRouteAggregationsClient();
+
+    RouteAggregationRuleClient<RouteAggregationRule> getRouteAggregationRulesClient();
+
+    NetworkClient<Network> getNetworksClient();
+
+    StreamClient<Stream> getStreamsClient();
+
+    StreamSubscriptionClient<StreamSubscription> getStreamSubscriptionsClient();
+
+    PrecisionTimeClient<PrecisionTime> getPrecisionTimesClient();
+
+    CloudEventClient<CloudEvent> getCloudEventsClient();
+
+    MarketplaceSubscriptionClient<MarketplaceSubscription> getMarketplaceSubscriptionsClient();
+
+    HealthClient<HealthStatus> getHealthClient();
 }

@@ -24,7 +24,9 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator;
 
 /**
- * <p>DeviceLinks interface.</p>
+ * Client interface for managing device link groups on Network Edge. Provides operations
+ * to list, retrieve, and create device links that establish connectivity between
+ * virtual devices across metros.
  *
  * @author ianjones
  * @version $Id: $Id

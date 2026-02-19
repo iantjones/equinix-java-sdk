@@ -25,7 +25,9 @@ import api.equinix.javasdk.networkedge.model.json.creators.PublicKeyOperator;
 import java.util.List;
 
 /**
- * <p>PublicKeys interface.</p>
+ * Client interface for managing SSH public keys on Network Edge. Provides operations
+ * to list, retrieve, and create public keys used for secure authentication to
+ * virtual devices.
  *
  * @author ianjones
  * @version $Id: $Id

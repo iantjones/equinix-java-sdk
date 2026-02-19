@@ -22,7 +22,8 @@ import api.equinix.javasdk.fabric.enums.MetroPresence;
 import api.equinix.javasdk.fabric.model.Metro;
 
 /**
- * <p>Metros interface.</p>
+ * Client interface for querying Equinix Fabric metro locations. Metros represent
+ * geographic data center regions where Fabric resources can be provisioned.
  *
  * @author ianjones
  * @version $Id: $Id
@@ -30,25 +31,25 @@ import api.equinix.javasdk.fabric.model.Metro;
 public interface Metros {
 
     /**
-     * <p>list.</p>
+     * Lists all available Equinix metro locations.
      *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @return a paginated list of metros
      */
     PaginatedList<Metro> list();
 
     /**
-     * <p>list.</p>
+     * Lists metro locations filtered by the specified presence type.
      *
-     * @param presence a {@link api.equinix.javasdk.fabric.enums.MetroPresence} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @param presence the presence type to filter metros by (e.g., available for connections)
+     * @return a paginated list of metros matching the presence filter
      */
     PaginatedList<Metro> list(MetroPresence presence);
 
     /**
-     * <p>getByMetroCode.</p>
+     * Retrieves a single metro by its metro code.
      *
-     * @param metroCode a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.Metro} object.
+     * @param metroCode the code identifying the metro location (e.g., SV, DC, AM)
+     * @return the metro matching the given code
      */
     Metro getByMetroCode(MetroCode metroCode);
 }

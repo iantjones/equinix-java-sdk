@@ -17,14 +17,16 @@
 package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.core.http.response.PageablePost;
-import api.equinix.javasdk.core.model.ResourcePostImpl;
+import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
 import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.implementation.*;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import lombok.AccessLevel;
@@ -35,7 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class ConnectionOperator extends ResourcePostImpl<Connection> {
+public class ConnectionOperator extends ResourceImpl<Connection> {
 
     @Getter
     private final PageablePost<Connection> serviceClient;
@@ -65,7 +67,8 @@ public class ConnectionOperator extends ResourcePostImpl<Connection> {
         private MinimalServiceToken aSideServiceToken;
         private MinimalServiceToken zSideServiceToken;
         private List<Notification> notifications = Collections.singletonList(new Notification(NotificationType.ALL, new ArrayList<>()));
-        
+        private boolean dryRun;
+
         protected ConnectionBuilder(ConnectionType type) {
             this.type = type;
         }
@@ -144,6 +147,10 @@ public class ConnectionOperator extends ResourcePostImpl<Connection> {
             return this;
         }
 
+        public ConnectionBuilder aSideAccessPoint(CloudRouter cloudRouter, LinkProtocol linkProtocol, InterfaceType interfaceType, Integer interfaceId) {
+            return aSideAccessPoint(cloudRouter.getUuid(), linkProtocol, interfaceType, interfaceId);
+        }
+
         public ConnectionBuilder zSideServiceToken(String serviceTokenUuid) {
             this.zSideServiceToken = new MinimalServiceToken(serviceTokenUuid);
             return this;
@@ -193,6 +200,88 @@ public class ConnectionOperator extends ResourcePostImpl<Connection> {
             return this;
         }
 
+        public ConnectionBuilder zSideAccessPoint(CloudRouter cloudRouter, LinkProtocol linkProtocol, InterfaceType interfaceType, Integer interfaceId) {
+            return zSideAccessPoint(cloudRouter.getUuid(), linkProtocol, interfaceType, interfaceId);
+        }
+
+        /**
+         * Configures the Z-side access point using a cloud provider adapter.
+         *
+         * <p>This is the primary method for creating connections to cloud providers like
+         * AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect, and Oracle FastConnect.
+         * The adapter extracts the service profile UUID, authentication key, seller region,
+         * and optional peering type from the cloud provider SDK object.</p>
+         *
+         * <p>A link protocol must be specified separately (cloud providers typically require DOT1Q).</p>
+         *
+         * <pre>{@code
+         * AwsDirectConnectAdapter<?> adapter = AwsDirectConnectAdapter.of(
+         *     "123456789012", "us-east-1", "equinix-aws-profile-uuid");
+         *
+         * Connection conn = fabric.connections()
+         *     .define(ConnectionType.EVPL_VC)
+         *     .name("AWS-Connection")
+         *     .bandwidth(100)
+         *     .aSideAccessPointPort(portUuid, LinkProtocol.dot1q().vlanTag(1000).create())
+         *     .zSideCloudProvider(adapter, LinkProtocol.dot1q().vlanTag(1000).create())
+         *     .notification("ops@example.com")
+         *     .create();
+         * }</pre>
+         *
+         * @param adapter      the cloud provider adapter containing connection parameters
+         * @param linkProtocol the link protocol (typically DOT1Q with a VLAN tag)
+         * @return this builder for chaining
+         * @see CloudProviderConnectionAdapter
+         */
+        public ConnectionBuilder zSideCloudProvider(CloudProviderConnectionAdapter<?> adapter, LinkProtocol linkProtocol) {
+            this.zSideAccessPoint = SimpleAccessPoint.define(AccessPointType.SP)
+                    .fromCloudProvider(adapter)
+                    .linkProtocol(linkProtocol)
+                    .create();
+            return this;
+        }
+
+        /**
+         * Configures the Z-side access point using a cloud provider adapter with its preferred link protocol.
+         *
+         * <p>Uses the adapter's {@link CloudProviderConnectionAdapter#getPreferredLinkProtocol()} if available.
+         * If the adapter does not specify a preferred link protocol, the access point will be created
+         * without one and the API may reject the request.</p>
+         *
+         * @param adapter the cloud provider adapter containing connection parameters
+         * @return this builder for chaining
+         * @see #zSideCloudProvider(CloudProviderConnectionAdapter, LinkProtocol)
+         */
+        public ConnectionBuilder zSideCloudProvider(CloudProviderConnectionAdapter<?> adapter) {
+            SimpleAccessPoint.AccessPointBuilder apBuilder = SimpleAccessPoint.define(AccessPointType.SP)
+                    .fromCloudProvider(adapter);
+            this.zSideAccessPoint = apBuilder.create();
+            return this;
+        }
+
+        /**
+         * Configures the A-side access point using a cloud provider adapter.
+         *
+         * <p>While cloud providers are typically configured on the Z-side, this method is provided
+         * for scenarios where the cloud provider connection serves as the A-side access point.</p>
+         *
+         * @param adapter      the cloud provider adapter containing connection parameters
+         * @param linkProtocol the link protocol
+         * @return this builder for chaining
+         */
+        public ConnectionBuilder aSideCloudProvider(CloudProviderConnectionAdapter<?> adapter, LinkProtocol linkProtocol) {
+            this.aSideAccessPoint = SimpleAccessPoint.define(AccessPointType.SP)
+                    .fromCloudProvider(adapter)
+                    .linkProtocol(linkProtocol)
+                    .create();
+            return this;
+        }
+
+        public ConnectionBuilder dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
          public ConnectionBuilder notification(NotificationType type, String emailAddress) {
             if(notifications.stream().noneMatch(o -> o.getType().equals(type))) {
                 notifications.add(new Notification(type, Collections.singletonList(emailAddress)));
@@ -220,7 +309,10 @@ public class ConnectionOperator extends ResourcePostImpl<Connection> {
 
         public Connection create() {
             ConnectionCreatorJson connectionCreatorJson = new ConnectionCreatorJson(this);
-            ConnectionJson connectionJson = ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).create(connectionCreatorJson);
+            ConnectionClientImpl clientImpl = (ConnectionClientImpl) ConnectionOperator.this.getServiceClient();
+            ConnectionJson connectionJson = dryRun
+                    ? clientImpl.dryRunCreate(connectionCreatorJson)
+                    : clientImpl.create(connectionCreatorJson);
             return new ConnectionWrapper(connectionJson, ConnectionOperator.this.getServiceClient());
         }
     }

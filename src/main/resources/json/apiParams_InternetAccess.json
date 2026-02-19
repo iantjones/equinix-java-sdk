@@ -1,0 +1,34 @@
+{
+  "functionalAreas": {
+    "InternetAccess": {
+      "uriFormat": "internetAccess/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Services": {
+        "rootUri": "services",
+        "serviceEndpoints": {
+          "ListServices": { "httpMethod": "GET" },
+          "GetService": { "httpMethod": "GET", "requestUri": "{$uuid}" },
+          "CreateService": { "httpMethod": "POST" },
+          "UpdateService": { "httpMethod": "PUT", "requestUri": "{$uuid}" },
+          "DeleteService": { "httpMethod": "DELETE", "requestUri": "{$uuid}" }
+        }
+      },
+      "Ports": {
+        "rootUri": "ports",
+        "serviceEndpoints": {
+          "ListPorts": { "httpMethod": "GET" },
+          "GetPort": { "httpMethod": "GET", "requestUri": "{$uuid}" }
+        }
+      },
+      "RoutingConfigs": {
+        "rootUri": "routingConfigs",
+        "serviceEndpoints": {
+          "ListRoutingConfigs": { "httpMethod": "GET" },
+          "GetRoutingConfig": { "httpMethod": "GET", "requestUri": "{$uuid}" },
+          "CreateRoutingConfig": { "httpMethod": "POST" },
+          "UpdateRoutingConfig": { "httpMethod": "PUT", "requestUri": "{$uuid}" }
+        }
+      }
+    }
+  }
+}

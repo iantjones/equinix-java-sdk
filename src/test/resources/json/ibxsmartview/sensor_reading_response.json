@@ -1,0 +1,13 @@
+{
+  "sensorId": "SENSOR-SV5-001",
+  "zoneId": "ZONE-A",
+  "ibx": "SV5",
+  "temperature": {
+    "value": 22.5,
+    "unit": "CELSIUS"
+  },
+  "humidity": {
+    "value": 45.0,
+    "unit": "PERCENT"
+  }
+}

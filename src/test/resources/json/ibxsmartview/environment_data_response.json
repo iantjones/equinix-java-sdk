@@ -1,0 +1,10 @@
+{
+  "ibx": "SV5",
+  "levelType": "CAGE",
+  "levelValue": "SV5:01:001100",
+  "temperature": 21.8,
+  "humidity": 42.3,
+  "dewPoint": 8.5,
+  "sensorId": "ENV-SV5-002",
+  "timestamp": "2024-01-15T14:30:00Z"
+}

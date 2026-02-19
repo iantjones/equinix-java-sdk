@@ -24,7 +24,32 @@ import java.util.ArrayList;
 import java.util.Map;
 
 /**
- * <p>EquinixServiceException class.</p>
+ * Thrown when the Equinix API returns an error HTTP response.
+ *
+ * <p>This is the base class for all API error exceptions. It carries the HTTP status code,
+ * response headers, request path, and structured error details from the API response body.
+ * Specific HTTP status codes are mapped to typed subclasses:</p>
+ *
+ * <table>
+ *   <tr><th>HTTP Status</th><th>Exception Class</th></tr>
+ *   <tr><td>401 Unauthorized</td><td>{@link EquinixAuthenticationException}</td></tr>
+ *   <tr><td>403 Forbidden</td><td>{@link EquinixAuthorizationException}</td></tr>
+ *   <tr><td>404 Not Found</td><td>{@link EquinixNotFoundException}</td></tr>
+ *   <tr><td>409 Conflict</td><td>{@link EquinixConflictException}</td></tr>
+ *   <tr><td>429 Too Many Requests</td><td>{@link EquinixRateLimitException}</td></tr>
+ *   <tr><td>5xx Server Error</td><td>{@link EquinixServerException}</td></tr>
+ * </table>
+ *
+ * <h3>Error Handling</h3>
+ * <pre>{@code
+ * try {
+ *     Connection conn = fabric.connections().getByUuid("uuid");
+ * } catch (EquinixNotFoundException e) {
+ *     System.err.println("Not found: " + e.getStatusCode());
+ * } catch (EquinixServiceException e) {
+ *     System.err.println("API error: " + e.getMessage());
+ * }
+ * }</pre>
  *
  * @author ianjones
  * @version $Id: $Id

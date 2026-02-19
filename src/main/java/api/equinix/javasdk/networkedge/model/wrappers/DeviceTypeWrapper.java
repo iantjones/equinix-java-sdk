@@ -18,16 +18,10 @@ package api.equinix.javasdk.networkedge.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.networkedge.enums.DeviceCategory;
-import api.equinix.javasdk.networkedge.enums.Vendor;
-import api.equinix.javasdk.networkedge.model.json.MetroJson;
-import api.equinix.javasdk.networkedge.model.implementation.DeviceManagementTypes;
-import api.equinix.javasdk.networkedge.model.implementation.SoftwarePackage;
 import api.equinix.javasdk.networkedge.model.DeviceType;
 import api.equinix.javasdk.networkedge.model.json.DeviceTypeJson;
 import lombok.Getter;
-
-import java.util.ArrayList;
+import lombok.experimental.Delegate;
 
 /**
  * <p>DeviceTypeWrapper class.</p>
@@ -37,6 +31,7 @@ import java.util.ArrayList;
  */
 public class DeviceTypeWrapper extends ResourceImpl<DeviceType> implements DeviceType {
 
+    @Delegate
     private final DeviceTypeJson jsonObject;
     @Getter
     private final Pageable<DeviceType> serviceClient;
@@ -50,113 +45,5 @@ public class DeviceTypeWrapper extends ResourceImpl<DeviceType> implements Devic
     public DeviceTypeWrapper(DeviceTypeJson deviceTypeJson, Pageable<DeviceType> serviceClient) {
         this.jsonObject = deviceTypeJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getDeviceTypeCode.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getDeviceTypeCode() {
-        return jsonObject.getDeviceTypeCode();
-    }
-
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getName() {
-        return jsonObject.getName();
-    }
-
-    /**
-     * <p>getDescription.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getDescription() {
-        return jsonObject.getDescription();
-    }
-
-    /**
-     * <p>getVendor.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.Vendor} object.
-     */
-    public Vendor getVendor() {
-        return jsonObject.getVendor();
-    }
-
-    /**
-     * <p>getCategory.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.DeviceCategory} object.
-     */
-    public DeviceCategory getCategory() {
-        return jsonObject.getCategory();
-    }
-
-    /**
-     * <p>getMaxInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getMaxInterfaceCount() {
-        return jsonObject.getMaxInterfaceCount();
-    }
-
-    /**
-     * <p>getDefaultInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getDefaultInterfaceCount() {
-        return jsonObject.getDefaultInterfaceCount();
-    }
-
-    /**
-     * <p>getClusterMaxInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getClusterMaxInterfaceCount() {
-        return jsonObject.getClusterMaxInterfaceCount();
-    }
-
-    /**
-     * <p>getClusterDefaultInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getClusterDefaultInterfaceCount() {
-        return jsonObject.getClusterDefaultInterfaceCount();
-    }
-
-    /**
-     * <p>getAvailableMetros.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
-    public ArrayList<MetroJson> getAvailableMetros() {
-        return jsonObject.getAvailableMetros();
-    }
-
-    /**
-     * <p>getSoftwarePackages.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
-    public ArrayList<SoftwarePackage> getSoftwarePackages() {
-        return jsonObject.getSoftwarePackages();
-    }
-
-    /**
-     * <p>getDeviceManagementTypes.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceManagementTypes} object.
-     */
-    public DeviceManagementTypes getDeviceManagementTypes() {
-        return jsonObject.getDeviceManagementTypes();
     }
 }

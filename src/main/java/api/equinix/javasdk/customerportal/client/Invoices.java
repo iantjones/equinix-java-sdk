@@ -20,13 +20,40 @@ import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 
+/**
+ * Client interface for accessing invoice data in the Equinix Customer Portal.
+ * Provides operations to retrieve invoice summaries and line-item details,
+ * with optional filtering by date range, account number, and transaction ID.
+ */
 public interface Invoices {
 
+    /**
+     * Lists all invoice summaries for the current account.
+     *
+     * @return a paginated list of invoice summaries
+     */
     PaginatedList<InvoiceSummary> summaries();
 
+    /**
+     * Lists invoice summaries matching the specified filter criteria.
+     *
+     * @param requestBuilder the query parameters for filtering invoices
+     * @return a paginated list of matching invoice summaries
+     */
     PaginatedList<InvoiceSummary> summaries(RequestBuilder.Invoice requestBuilder);
 
+    /**
+     * Lists all invoice details for the current account.
+     *
+     * @return a paginated list of invoice details
+     */
     PaginatedList<InvoiceDetail> details();
 
+    /**
+     * Lists invoice details matching the specified filter criteria.
+     *
+     * @param requestBuilder the query parameters for filtering invoices
+     * @return a paginated list of matching invoice details
+     */
     PaginatedList<InvoiceDetail> details(RequestBuilder.Invoice requestBuilder);
 }

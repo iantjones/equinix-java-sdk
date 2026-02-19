@@ -26,6 +26,7 @@ import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.enums.SSHUserAction;
+import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceVendorConfig;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
@@ -75,6 +76,10 @@ public class DeviceOperator extends ResourceImpl<Device> {
      */
     public DeviceBuilderSecondary createRedundantDevice(String secondaryDeviceName, String primaryDeviceUuid) {
         return new DeviceBuilderSecondary(secondaryDeviceName, primaryDeviceUuid);
+    }
+
+    public DeviceBuilderSecondary createRedundantDevice(String secondaryDeviceName, Device primaryDevice) {
+        return createRedundantDevice(secondaryDeviceName, primaryDevice.getUuid());
     }
 
     /**
@@ -205,6 +210,14 @@ public class DeviceOperator extends ResourceImpl<Device> {
             return this;
         }
 
+        public DeviceBuilder withPrimaryDevice(Device primaryDevice) {
+            return withPrimaryDeviceUuid(primaryDevice.getUuid());
+        }
+
+        public DeviceBuilder withDiverseFromDevice(Device diverseFromDevice) {
+            return withDiverseFromDeviceUuid(diverseFromDevice.getUuid());
+        }
+
         public DeviceBuilder withLicenseFileId(String licenseFileId) {
             this.licenseFileId = licenseFileId;
             return this;
@@ -228,6 +241,10 @@ public class DeviceOperator extends ResourceImpl<Device> {
         public DeviceBuilder withAclTemplateUuid(String aclTemplateUuid) {
             this.aclTemplateUuid = aclTemplateUuid;
             return this;
+        }
+
+        public DeviceBuilder withAclTemplate(ACLTemplate aclTemplate) {
+            return withAclTemplateUuid(aclTemplate.getUuid());
         }
 
         public DeviceBuilder withSiteId(String siteId) {
@@ -392,6 +409,10 @@ public class DeviceOperator extends ResourceImpl<Device> {
         public DeviceBuilderSecondary withAclTemplateUuid(String aclTemplateUuid) {
             this.aclTemplateUuid = aclTemplateUuid;
             return this;
+        }
+
+        public DeviceBuilderSecondary withAclTemplate(ACLTemplate aclTemplate) {
+            return withAclTemplateUuid(aclTemplate.getUuid());
         }
 
         public DeviceBuilderSecondary withSiteId(String siteId) {

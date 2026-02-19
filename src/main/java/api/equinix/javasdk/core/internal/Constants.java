@@ -77,7 +77,7 @@ public class Constants {
             .addDeserializer(MetroCode.class, new MetroCodeDeserializer());
 
     /** Constant <code>objectMapper</code> */
-    public static ObjectMapper objectMapper = new ObjectMapper()
+    public static final ObjectMapper objectMapper = new ObjectMapper()
             .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
             .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)

@@ -22,6 +22,6 @@ package api.equinix.javasdk.customerportal.helpers;
  * @author ianjones
  * @version $Id: $Id
  */
-public class ModelHelper extends api.equinix.javasdk.core.helpers.ModelHelper {
+public class ModelHelper {
 
 }

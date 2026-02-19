@@ -24,7 +24,9 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
 
 /**
- * <p>ACLTemplates interface.</p>
+ * Client interface for managing Access Control List (ACL) templates on Network Edge devices.
+ * Provides operations to list, retrieve, and create ACL templates that define inbound and
+ * outbound traffic rules.
  *
  * @author ianjones
  * @version $Id: $Id

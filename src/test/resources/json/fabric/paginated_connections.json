@@ -1,0 +1,93 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+      "name": "Connection-One",
+      "type": "EVPL_VC",
+      "bandwidth": 1000,
+      "state": "ACTIVE",
+      "aSide": {
+        "accessPoint": {
+          "type": "COLO",
+          "port": {
+            "uuid": "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+            "name": "Port-A",
+            "type": "XF_PORT"
+          },
+          "linkProtocol": {
+            "type": "DOT1Q",
+            "vlanTag": 1001
+          }
+        }
+      },
+      "zSide": {
+        "accessPoint": {
+          "type": "SP",
+          "profile": {
+            "uuid": "20d32a80-0d61-4333-bc03-4b2d446794a0",
+            "name": "AWS Direct Connect",
+            "type": "L2_PROFILE"
+          },
+          "linkProtocol": {
+            "type": "DOT1Q",
+            "vlanTag": 1002
+          }
+        }
+      },
+      "notifications": [
+        {
+          "type": "ALL",
+          "emails": ["user1@example.com"]
+        }
+      ]
+    },
+    {
+      "uuid": "b4c8ee06-g57e-5c2e-b265-3f96d507fb96",
+      "name": "Connection-Two",
+      "type": "EPL_VC",
+      "bandwidth": 5000,
+      "state": "PROVISIONED",
+      "aSide": {
+        "accessPoint": {
+          "type": "COLO",
+          "port": {
+            "uuid": "d892f9dc-6dd0-dd01-9df1-417b6d11b5ff",
+            "name": "Port-B",
+            "type": "XF_PORT"
+          },
+          "linkProtocol": {
+            "type": "DOT1Q",
+            "vlanTag": 2001
+          }
+        }
+      },
+      "zSide": {
+        "accessPoint": {
+          "type": "COLO",
+          "port": {
+            "uuid": "e903g0ed-7ee1-ee12-0eg2-528c7e22c6gg",
+            "name": "Port-C",
+            "type": "XF_PORT"
+          },
+          "linkProtocol": {
+            "type": "DOT1Q",
+            "vlanTag": 2002
+          }
+        }
+      },
+      "notifications": [
+        {
+          "type": "ALL",
+          "emails": ["user2@example.com"]
+        }
+      ]
+    }
+  ]
+}

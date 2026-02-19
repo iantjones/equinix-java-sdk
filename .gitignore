@@ -33,3 +33,14 @@ hs_err_pid*
 target/
 settings.xml
 Testing.java
+
+# Sensitive files
+.env
+*.key
+*.pem
+*.p12
+*.jks
+credentials.*
+
+# Claude Code
+.claude/

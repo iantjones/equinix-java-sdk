@@ -24,6 +24,7 @@ import api.equinix.javasdk.networkedge.model.json.VPNJson;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNUpdaterJson;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 
 /**
  * <p>VPNWrapper class.</p>
@@ -33,6 +34,7 @@ import lombok.Getter;
  */
 public class VPNWrapper extends ResourceImpl<VPN> implements VPN {
 
+    @Delegate
     private VPNJson json;
     @Getter
     private final Pageable<VPN> serviceClient;
@@ -46,123 +48,6 @@ public class VPNWrapper extends ResourceImpl<VPN> implements VPN {
     public VPNWrapper(VPNJson sshUserJson, Pageable<VPN> serviceClient) {
         this.json = sshUserJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>getSecondary.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.VPN} object.
-     */
-    public VPN getSecondary() {
-        return  this.json.getSecondary();
-    }
-
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getUuid() {
-        return  this.json.getUuid();
-    }
-
-    /**
-     * <p>getSiteName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getSiteName() {
-        return  this.json.getSiteName();
-    }
-
-    /**
-     * <p>getVirtualDeviceUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getVirtualDeviceUuid() {
-        return  this.json.getVirtualDeviceUuid();
-    }
-
-    /**
-     * <p>getConfigName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getConfigName() {
-        return  this.json.getConfigName();
-    }
-
-    /**
-     * <p>getPeerIp.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getPeerIp() {
-        return  this.json.getPeerIp();
-    }
-
-    /**
-     * <p>getPeerSharedKey.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getPeerSharedKey() {
-        return  this.json.getPeerSharedKey();
-    }
-
-    /**
-     * <p>getRemoteAsn.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getRemoteAsn() {
-        return  this.json.getRemoteAsn();
-    }
-
-    /**
-     * <p>getRemoteIpAddress.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getRemoteIpAddress() {
-        return  this.json.getRemoteIpAddress();
-    }
-
-    /**
-     * <p>getPassword.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getPassword() {
-        return  this.json.getPassword();
-    }
-
-    /**
-     * <p>getLocalAsn.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
-    public Integer getLocalAsn() {
-        return  this.json.getLocalAsn();
-    }
-
-    /**
-     * <p>getProjectId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getProjectId() {
-        return  this.json.getProjectId();
-    }
-
-    /**
-     * <p>getTunnelIp.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    public String getTunnelIp() {
-        return  this.json.getTunnelIp();
     }
 
     /**

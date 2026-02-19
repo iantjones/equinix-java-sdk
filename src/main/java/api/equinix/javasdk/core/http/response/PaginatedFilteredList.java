@@ -27,10 +27,20 @@ import lombok.Setter;
 import java.util.ArrayList;
 
 /**
- * <p>PaginatedList class.</p>
+ * A paginated, filtered list of resources returned by Equinix API search operations.
  *
+ * <p>Similar to {@link PaginatedList} but used for POST-based search endpoints that accept
+ * filter and sort criteria in the request body. Returned by {@code search()} methods
+ * on resource clients such as {@code fabric.connections().search()}.</p>
+ *
+ * <p>Provides the same pagination capabilities as {@link PaginatedList}: check for
+ * additional pages, load the next page, or eagerly load all pages.</p>
+ *
+ * @param <T> the type of resource in the list
  * @author ianjones
  * @version $Id: $Id
+ * @see PaginatedList
+ * @see Pagination
  */
 @Getter
 @Setter
@@ -75,16 +85,17 @@ public class PaginatedFilteredList<T> extends ArrayList<T> {
     }
 
     /**
-     * <p>hasNextPage.</p>
+     * Returns {@code true} if there are more pages of results available from the API.
      *
-     * @return a boolean.
+     * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
         return !this.pagination.getIsLastPage();
     }
 
     /**
-     * <p>next.</p>
+     * Loads the next page of results from the API and appends them to this list.
+     * Does nothing if there are no more pages.
      */
     public void next() {
         if (hasNextPage()) {
@@ -93,9 +104,9 @@ public class PaginatedFilteredList<T> extends ArrayList<T> {
     }
 
     /**
-     * <p>loadAll.</p>
+     * Eagerly loads all remaining pages from the API, appending all results to this list.
      *
-     * @return a {@link PaginatedFilteredList} object.
+     * @return this list, now containing all resources across all pages
      */
     public PaginatedFilteredList<T> loadAll() {
         while (hasNextPage()) {

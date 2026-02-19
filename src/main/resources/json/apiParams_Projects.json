@@ -1,0 +1,18 @@
+{
+  "functionalAreas": {
+    "Projects": {
+      "uriFormat": "projects/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 2,
+      "Projects": {
+        "rootUri": "projects",
+        "serviceEndpoints": {
+          "ListProjects": { "httpMethod": "GET" },
+          "GetProject": { "httpMethod": "GET", "requestUri": "{$uuid}" },
+          "CreateProject": { "httpMethod": "POST" },
+          "UpdateProject": { "httpMethod": "PUT", "requestUri": "{$uuid}" },
+          "DeleteProject": { "httpMethod": "DELETE", "requestUri": "{$uuid}" }
+        }
+      }
+    }
+  }
+}

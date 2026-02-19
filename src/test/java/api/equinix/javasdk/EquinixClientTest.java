@@ -3,8 +3,10 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("integration")
 public class EquinixClientTest {
 
     static EquinixClient equinixClient;

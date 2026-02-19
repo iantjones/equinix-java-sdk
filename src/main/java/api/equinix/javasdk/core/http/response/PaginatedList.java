@@ -25,10 +25,34 @@ import lombok.Setter;
 import java.util.ArrayList;
 
 /**
- * <p>PaginatedList class.</p>
+ * A paginated list of resources returned by Equinix API list operations.
  *
+ * <p>Extends {@link ArrayList} with pagination metadata and automatic page loading.
+ * All SDK list operations return this type (or {@code PaginatedFilteredList} for search operations).
+ * Provides methods to check for additional pages, load the next page, or eagerly load all pages.</p>
+ *
+ * <h3>Usage</h3>
+ * <pre>{@code
+ * PaginatedList<Port> ports = fabric.ports().list();
+ *
+ * // Access pagination metadata
+ * Pagination pagination = ports.getPagination();
+ * int total = pagination.getTotal();
+ * boolean isLast = pagination.getIsLastPage();
+ *
+ * // Load additional pages
+ * while (ports.hasNextPage()) {
+ *     ports.next();
+ * }
+ *
+ * // Or load all pages at once
+ * ports.loadAll();
+ * }</pre>
+ *
+ * @param <T> the type of resource in the list
  * @author ianjones
  * @version $Id: $Id
+ * @see Pagination
  */
 @Getter
 @Setter
@@ -73,16 +97,18 @@ public class PaginatedList<T> extends ArrayList<T> {
     }
 
     /**
-     * <p>hasNextPage.</p>
+     * Returns {@code true} if there are more pages of results available from the API.
      *
-     * @return a boolean.
+     * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
         return !this.pagination.getIsLastPage();
     }
 
     /**
-     * <p>next.</p>
+     * Loads the next page of results from the API and appends them to this list.
+     * Does nothing if there are no more pages. After calling this method,
+     * the pagination metadata is updated to reflect the newly loaded page.
      */
     public void next() {
         if (hasNextPage()) {
@@ -91,9 +117,11 @@ public class PaginatedList<T> extends ArrayList<T> {
     }
 
     /**
-     * <p>loadAll.</p>
+     * Eagerly loads all remaining pages from the API, appending all results to this list.
+     * After calling this method, the list contains all available resources and
+     * {@link #hasNextPage()} will return {@code false}.
      *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
+     * @return this list, now containing all resources across all pages
      */
     public PaginatedList<T> loadAll() {
         while (hasNextPage()) {
