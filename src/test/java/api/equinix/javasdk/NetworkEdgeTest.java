@@ -25,6 +25,7 @@ class NetworkEdgeTest {
     static NetworkEdge networkEdge;
     static Boolean skipCreateUpdateOperations;
 
+    static Integer testAccountNumber;
     static LocalDateTime endDateTime = LocalDateTime.now();
     static LocalDateTime startDateTime = endDateTime.minusDays(1);
 
@@ -33,6 +34,8 @@ class NetworkEdgeTest {
         skipCreateUpdateOperations = Boolean.valueOf(System.getProperty("skipCreateUpdateOperations"));
         String accessKey = System.getProperty("accessKey");
         String secretKey = System.getProperty("secretKey");
+        String accountNum = System.getProperty("testAccountNumber");
+        testAccountNumber = accountNum != null ? Integer.parseInt(accountNum) : 100000;
         networkEdge = new NetworkEdge(new BasicEquinixCredentials(accessKey, secretKey));
         networkEdge.authenticate();
     }
@@ -42,7 +45,7 @@ class NetworkEdgeTest {
         try {
             byte[] orderSummary = networkEdge.setup().getOrderSummary(
                     RequestBuilder.orderSummary()
-                            .withAccountNumber(606828)
+                            .withAccountNumber(testAccountNumber)
                             .withMetro(MetroCode.SV)
                             .withVendorPackage("CSR1000V")
                             .withLicenseType(LicenseType.SUB)
