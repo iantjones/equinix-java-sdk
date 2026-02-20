@@ -315,6 +315,294 @@ Connection azureValidated = fabric.connections()
 // Both validated successfully - now create for real (remove .dryRun())
 ```
 
+### Enterprise Multi-Metro Deployment
+
+The following example demonstrates a complete global network deployment using the SDK across three domains — **Fabric**, **Network Edge**, and **Internet Access**. The architecture provisions Fabric Cloud Routers (FCRs) in six metros spanning three regions, connects each to two cloud providers at 5 Gbps, deploys Cisco C8000V routers and Cisco Secure Firewall (FTDv) instances via Network Edge, interconnects all metros over a 10 Gbps Global IP-WAN backbone, configures BGP routing on every connection, and provisions 500 Mbps Dedicated Internet Access at each location. This showcases the SDK's fluent builders, cloud provider adapter framework, cross-domain resource orchestration, and routing protocol configuration in a single cohesive workflow.
+
+```
+                              Global IP-WAN Backbone (10 Gbps)
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │                                                                         │
+    │   AMER                        EMEA                        APAC          │
+    │   ┌─────────┐  ┌─────────┐   ┌─────────┐  ┌─────────┐   ┌─────────┐  ┌─────────┐
+    │   │  SV     │  │  DC     │   │  LD     │  │  AM     │   │  SG     │  │  SY     │
+    │   │  FCR    │──│  FCR    │   │  FCR    │──│  FCR    │   │  FCR    │──│  FCR    │
+    │   │         │  │         │   │         │  │         │   │         │  │         │
+    │   │ C8000V  │  │ C8000V  │   │ C8000V  │  │ C8000V  │   │ C8000V  │  │ C8000V  │
+    │   │ FTDv    │  │ FTDv    │   │ FTDv    │  │ FTDv    │   │ FTDv    │  │ FTDv    │
+    │   │ DIA     │  │ DIA     │   │ DIA     │  │ DIA     │   │ DIA     │  │ DIA     │
+    │   └──┬──┬───┘  └──┬──┬───┘   └──┬──┬───┘  └──┬──┬───┘   └──┬──┬───┘  └──┬──┬───┘
+    │      │  │         │  │          │  │         │  │          │  │         │  │
+    │     AWS GCP     AWS Azure    Azure GCP     AWS Azure    AWS  GCP    Azure Oracle
+    │     5G  5G      5G  5G       5G   5G      5G  5G       5G   5G     5G    5G
+    └─────────────────────────────────────────────────────────────────────────┘
+
+    Cross-Region Links: SV ↔ SY, SV ↔ SG, DC ↔ LD, DC ↔ AM (via Global IP-WAN)
+```
+
+```java
+import api.equinix.javasdk.*;
+import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
+import api.equinix.javasdk.core.enums.*;
+import api.equinix.javasdk.fabric.enums.*;
+import api.equinix.javasdk.fabric.model.*;
+import api.equinix.javasdk.fabric.model.implementation.LinkProtocol;
+import api.equinix.javasdk.fabric.model.implementation.cloud.*;
+import api.equinix.javasdk.networkedge.enums.*;
+import api.equinix.javasdk.networkedge.model.Device;
+
+import java.util.*;
+
+public class GlobalNetworkDeployment {
+
+    // --- Configuration ---
+    static final String PROJECT_ID    = "your-project-uuid";
+    static final Long   ACCOUNT_NO    = 272010L;
+    static final String NOTIFY_EMAIL  = "noc@example.com";
+    static final Long   CUSTOMER_ASN  = 65100L;
+    static final String IPWAN_NETWORK = "your-global-ipwan-network-uuid";
+
+    // Service profile UUIDs (obtain from Equinix portal or fabric.serviceProfiles().search())
+    static final String AWS_PROFILE   = "aws-direct-connect-profile-uuid";
+    static final String AZURE_PROFILE = "azure-expressroute-profile-uuid";
+    static final String GCP_PROFILE   = "google-cloud-interconnect-profile-uuid";
+    static final String OCI_PROFILE   = "oracle-fastconnect-profile-uuid";
+
+    public static void main(String[] args) {
+
+        // ---------------------------------------------------------------
+        // Phase 1: Initialize SDK Clients
+        // ---------------------------------------------------------------
+        BasicEquinixCredentials credentials =
+                new BasicEquinixCredentials("YOUR_CLIENT_ID", "YOUR_CLIENT_SECRET");
+
+        Fabric fabric             = new Fabric(credentials);
+        NetworkEdge networkEdge   = new NetworkEdge(credentials);
+        InternetAccess internet   = new InternetAccess(credentials);
+
+        // Metro layout: 6 metros across 3 regions
+        MetroCode[] metros = { MetroCode.SV, MetroCode.DC, MetroCode.LD,
+                               MetroCode.AM, MetroCode.SG, MetroCode.SY };
+
+        // ---------------------------------------------------------------
+        // Phase 2: Create Fabric Cloud Routers (one per metro)
+        // ---------------------------------------------------------------
+        Map<MetroCode, CloudRouter> routers = new LinkedHashMap<>();
+
+        for (MetroCode metro : metros) {
+            CloudRouter fcr = fabric.cloudRouters().define()
+                    .name("FCR-" + metro)
+                    .inMetro(metro)
+                    .withPackage("STANDARD")
+                    .accountNumber(ACCOUNT_NO)
+                    .projectId(PROJECT_ID)
+                    .notification("ALL", List.of(NOTIFY_EMAIL))
+                    .create();
+
+            routers.put(metro, fcr);
+            System.out.println("Created FCR in " + metro + ": " + fcr.getUuid());
+        }
+
+        // ---------------------------------------------------------------
+        // Phase 3: Provision Network Edge Devices (Cisco C8000V + FTDv per metro)
+        // ---------------------------------------------------------------
+        Map<MetroCode, Device> ciscoRouters  = new LinkedHashMap<>();
+        Map<MetroCode, Device> ciscoFirewalls = new LinkedHashMap<>();
+
+        for (MetroCode metro : metros) {
+            // Cisco Catalyst 8000V — enterprise SD-WAN router
+            Device router = networkEdge.devices().define("C8000V-" + metro)
+                    .withDeviceTypeCode("C8000V")
+                    .withMetroCode(metro)
+                    .withCore(4)
+                    .withPackageCode("network-essentials")
+                    .withVersion("17.06.01a")
+                    .withDeviceManagementType(DeviceManagementType.SELF_CONFIGURED)
+                    .withLicenseMode(LicenseType.SUB)
+                    .withThroughput(500)
+                    .withThroughputUnit(BandwidthUnit.MBPS)
+                    .withInterfaceCount(10)
+                    .withNotification(NOTIFY_EMAIL)
+                    .create();
+
+            ciscoRouters.put(metro, router);
+
+            // Cisco Secure Firewall Threat Defense (FTDv) — next-gen firewall
+            Device firewall = networkEdge.devices().define("FTDv-" + metro)
+                    .withDeviceTypeCode("FTD")
+                    .withMetroCode(metro)
+                    .withCore(4)
+                    .withPackageCode("STD")
+                    .withVersion("7.2.0")
+                    .withDeviceManagementType(DeviceManagementType.SELF_CONFIGURED)
+                    .withLicenseMode(LicenseType.SUB)
+                    .withThroughput(500)
+                    .withThroughputUnit(BandwidthUnit.MBPS)
+                    .withInterfaceCount(10)
+                    .withNotification(NOTIFY_EMAIL)
+                    .create();
+
+            ciscoFirewalls.put(metro, firewall);
+        }
+
+        // ---------------------------------------------------------------
+        // Phase 4: Connect FCRs to Cloud Providers (2 per metro, 5 Gbps each)
+        // ---------------------------------------------------------------
+
+        // Define cloud provider adapters per metro
+        Map<MetroCode, List<CloudProviderConnectionAdapter<?>>> cloudAdapters = Map.of(
+            MetroCode.SV, List.of(
+                AwsDirectConnectAdapter.of("123456789012", "us-west-1", AWS_PROFILE),
+                GoogleCloudInterconnectAdapter.of("pairing-key-sv", "us-west1", GCP_PROFILE)),
+            MetroCode.DC, List.of(
+                AwsDirectConnectAdapter.of("123456789012", "us-east-1", AWS_PROFILE),
+                AzureExpressRouteAdapter.of("azure-service-key-dc", "eastus", AZURE_PROFILE, PeeringType.PRIVATE)),
+            MetroCode.LD, List.of(
+                AzureExpressRouteAdapter.of("azure-service-key-ld", "uksouth", AZURE_PROFILE, PeeringType.PRIVATE),
+                GoogleCloudInterconnectAdapter.of("pairing-key-ld", "europe-west2", GCP_PROFILE)),
+            MetroCode.AM, List.of(
+                AwsDirectConnectAdapter.of("123456789012", "eu-west-1", AWS_PROFILE),
+                AzureExpressRouteAdapter.of("azure-service-key-am", "westeurope", AZURE_PROFILE, PeeringType.PRIVATE)),
+            MetroCode.SG, List.of(
+                AwsDirectConnectAdapter.of("123456789012", "ap-southeast-1", AWS_PROFILE),
+                GoogleCloudInterconnectAdapter.of("pairing-key-sg", "asia-southeast1", GCP_PROFILE)),
+            MetroCode.SY, List.of(
+                AzureExpressRouteAdapter.of("azure-service-key-sy", "australiaeast", AZURE_PROFILE, PeeringType.PRIVATE),
+                OracleFastConnectAdapter.of("ocid1.virtualcircuit.oc1...", "ap-sydney-1", OCI_PROFILE))
+        );
+
+        List<Connection> cloudConnections = new ArrayList<>();
+
+        for (MetroCode metro : metros) {
+            CloudRouter fcr = routers.get(metro);
+            int idx = 0;
+            for (CloudProviderConnectionAdapter<?> adapter : cloudAdapters.get(metro)) {
+                Connection conn = fabric.connections()
+                        .define(ConnectionType.IP_VC)
+                        .name("Cloud-" + metro + "-" + adapter.getProviderType().name() + "-" + (++idx))
+                        .bandwidth(5000)
+                        .aSideAccessPoint(fcr, null, InterfaceType.CLOUD, null)
+                        .zSideCloudProvider(adapter, LinkProtocol.dot1q().vlanTag(1000 + idx).create())
+                        .notification(NOTIFY_EMAIL)
+                        .create();
+
+                cloudConnections.add(conn);
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // Phase 5: Connect FCRs to Network Edge Devices (router + firewall)
+        // ---------------------------------------------------------------
+        List<Connection> neConnections = new ArrayList<>();
+
+        for (MetroCode metro : metros) {
+            CloudRouter fcr = routers.get(metro);
+
+            // FCR → Cisco C8000V router (1 Gbps)
+            Connection routerConn = fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("FCR-to-C8000V-" + metro)
+                    .bandwidth(1000)
+                    .aSideAccessPoint(fcr, null, InterfaceType.CLOUD, null)
+                    .zSideAccessPoint(ciscoRouters.get(metro).getUuid(),
+                            LinkProtocol.dot1q().vlanTag(2000).create(),
+                            InterfaceType.NETWORK, 1)
+                    .notification(NOTIFY_EMAIL)
+                    .create();
+
+            // FCR → Cisco FTDv firewall (1 Gbps)
+            Connection fwConn = fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("FCR-to-FTDv-" + metro)
+                    .bandwidth(1000)
+                    .aSideAccessPoint(fcr, null, InterfaceType.CLOUD, null)
+                    .zSideAccessPoint(ciscoFirewalls.get(metro).getUuid(),
+                            LinkProtocol.dot1q().vlanTag(2100).create(),
+                            InterfaceType.NETWORK, 1)
+                    .notification(NOTIFY_EMAIL)
+                    .create();
+
+            neConnections.addAll(List.of(routerConn, fwConn));
+        }
+
+        // ---------------------------------------------------------------
+        // Phase 6: Connect FCRs to Global IP-WAN Backbone (10 Gbps each)
+        //
+        // A Global IP-WAN network enables automatic route propagation between
+        // all connected FCRs via BGP — no direct FCR-to-FCR connections needed.
+        // Cross-region links (SV↔SY, SV↔SG, DC↔LD, DC↔AM) are handled
+        // automatically through the IP-WAN mesh.
+        // ---------------------------------------------------------------
+        List<Connection> ipwanConnections = new ArrayList<>();
+
+        for (MetroCode metro : metros) {
+            CloudRouter fcr = routers.get(metro);
+
+            Connection ipwanConn = fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("IPWAN-" + metro)
+                    .bandwidth(10000)
+                    .aSideAccessPoint(fcr, null, InterfaceType.CLOUD, null)
+                    .zSideAccessPoint(IPWAN_NETWORK,
+                            LinkProtocol.untagged().create(),
+                            InterfaceType.NETWORK, null)
+                    .notification(NOTIFY_EMAIL)
+                    .create();
+
+            ipwanConnections.add(ipwanConn);
+        }
+
+        // ---------------------------------------------------------------
+        // Phase 7: Configure BGP Routing on All Connections
+        //
+        // Each FCR connection requires two routing protocols:
+        //   1. DIRECT — establishes the IP subnet for the peering link
+        //   2. BGP    — enables dynamic route exchange with BFD for fast failover
+        // ---------------------------------------------------------------
+        List<Connection> allConnections = new ArrayList<>();
+        allConnections.addAll(cloudConnections);
+        allConnections.addAll(neConnections);
+        allConnections.addAll(ipwanConnections);
+
+        int subnet = 1;
+        for (Connection conn : allConnections) {
+            String peerBase = "10.100." + subnet + ".";
+
+            // Step 1: Direct routing protocol (IP addressing)
+            fabric.routingProtocols().define()
+                    .ofType(RoutingProtocolType.DIRECT)
+                    .withName("Direct-" + conn.getName())
+                    .withDirectIpv4(peerBase + "1/30")
+                    .create(conn);
+
+            // Step 2: BGP routing protocol (dynamic route exchange)
+            fabric.routingProtocols().define()
+                    .ofType(RoutingProtocolType.BGP)
+                    .withName("BGP-" + conn.getName())
+                    .withCustomerAsn(CUSTOMER_ASN)
+                    .withBGPIpv4(peerBase + "2", peerBase + "1", true)
+                    .withBFD(true, 300)
+                    .create(conn);
+
+            subnet++;
+        }
+
+        // ---------------------------------------------------------------
+        // Summary
+        // ---------------------------------------------------------------
+        System.out.println("\n=== Global Network Deployment Complete ===");
+        System.out.println("Cloud Routers:      " + routers.size());
+        System.out.println("Network Edge:       " + (ciscoRouters.size() + ciscoFirewalls.size()) + " devices");
+        System.out.println("Cloud Connections:  " + cloudConnections.size() + " @ 5 Gbps each");
+        System.out.println("NE Connections:     " + neConnections.size() + " @ 1 Gbps each");
+        System.out.println("IP-WAN Backbone:    " + ipwanConnections.size() + " @ 10 Gbps each");
+        System.out.println("Routing Protocols:  " + (allConnections.size() * 2) + " (DIRECT + BGP)");
+    }
+}
+```
+
+> **Note:** This example uses placeholder UUIDs for service profiles, project IDs, and authentication keys. Replace them with values from your Equinix account. The Global IP-WAN network must be created via the [Equinix Portal](https://portal.equinix.com) before connecting FCRs to it. Internet Access (DIA) is provisioned through the Network Edge devices — see the [Internet Access documentation](https://docs.equinix.com/internet-access/) for connecting DIA services to virtual devices.
+
 ### Network Edge: Virtual Devices
 
 ```java
