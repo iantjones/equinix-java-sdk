@@ -21,6 +21,9 @@ import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 import api.equinix.javasdk.fabric.model.HealthStatus;
+import api.equinix.javasdk.fabric.optimizer.MetroOptimizer;
+import api.equinix.javasdk.fabric.optimizer.model.OptimizationResult;
+import api.equinix.javasdk.fabric.optimizer.wizard.DeploymentWizard;
 
 /**
  * The primary entry point for accessing the Equinix Fabric APIs.
@@ -401,6 +404,56 @@ public final class Fabric extends EquinixClient implements Service {
             this.marketplaceSubscriptions = new MarketplaceSubscriptionsImpl(this.fabricConfig.getMarketplaceSubscriptionsClient(), this);
         }
         return marketplaceSubscriptions;
+    }
+
+    /**
+     * Begins a metro optimization session. Returns a fluent builder for defining
+     * workforce locations, provider requirements, workloads, and constraints, then
+     * computes optimal Equinix metro placements with ranked recommendations.
+     *
+     * <pre>{@code
+     * OptimizationResult result = fabric.optimizeMetros()
+     *     .addSite("NYC HQ").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
+     *     .requireProvider(CloudProviderType.AWS).done()
+     *     .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
+     *     .strategy(OptimizationStrategy.BALANCED)
+     *     .optimize();
+     *
+     * System.out.println(result.toMarkdown());
+     * }</pre>
+     *
+     * @return a {@link MetroOptimizer.Builder} for configuring the optimization request
+     */
+    public MetroOptimizer.Builder optimizeMetros() {
+        return MetroOptimizer.builder(this);
+    }
+
+    /**
+     * Creates a Deployment Wizard from a completed optimization result. The wizard
+     * generates an executable deployment plan with Cloud Routers, provider connections,
+     * inter-metro backbone links, and routing protocol configurations — all with
+     * bandwidth sizing that drives accurate pricing.
+     *
+     * <pre>{@code
+     * DeploymentPlan plan = fabric.deploymentWizard(optimizationResult)
+     *     .routerPackage("STANDARD")
+     *     .routerNamePrefix("FCR")
+     *     .backboneBandwidthMbps(10_000)
+     *     .backboneTopology(BackboneTopology.FULL_MESH)
+     *     .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
+     *     .customerAsn(65100L)
+     *     .withBFD(true, 300)
+     *     .plan();
+     *
+     * System.out.println(plan.toMarkdown());
+     * DeploymentOutcome outcome = plan.execute();
+     * }</pre>
+     *
+     * @param optimizationResult the completed optimization result to convert into a deployment plan
+     * @return a {@link DeploymentWizard.Builder} for configuring the deployment plan
+     */
+    public DeploymentWizard.Builder deploymentWizard(OptimizationResult optimizationResult) {
+        return DeploymentWizard.builder(this, optimizationResult);
     }
 
     /**

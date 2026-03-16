@@ -20,6 +20,8 @@
 - **Jackson-based** JSON serialization with full type safety
 - **Comprehensive exception hierarchy** mapping HTTP status codes to typed exceptions
 - **Real-time streaming** support via IBX SmartView subscriptions (AWS IoT, Azure Event Hub, Webhook, REST)
+- **Metro Optimizer** — intelligent placement engine that recommends optimal Equinix metros based on workforce locations, provider requirements, workload types, and business constraints with latency-aware scoring, risk assessment, and cost estimation
+- **Deployment Wizard** — transforms optimization results into executable deployment plans with Cloud Routers, provider connections, inter-metro backbone links, routing protocols, bandwidth sizing, and pricing
 
 ## Quick Start
 
@@ -50,7 +52,7 @@ Fabric fabric = new Fabric(credentials);
 
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
-| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health |
+| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health, **Metro Optimizer**, **Deployment Wizard** |
 | **Network Edge** | `new NetworkEdge(creds)` | 10 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
 | **Customer Portal** | `new CustomerPortal(creds)` | 21 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Assets, Reports |
 | **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Readings, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
@@ -314,6 +316,339 @@ Connection azureValidated = fabric.connections()
 
 // Both validated successfully - now create for real (remove .dryRun())
 ```
+
+### Fabric: Metro Optimizer — Intelligent Placement Engine
+
+The Metro Optimizer is an analytical engine built into the SDK that recommends optimal Equinix metro placements for your infrastructure. Given your workforce locations, cloud provider requirements, workload characteristics, and business constraints, it computes a ranked set of metro recommendations with latency matrices, deployment topologies, risk assessments, and cost estimates.
+
+The optimizer uses live Fabric API data — inter-metro latency from `Metro.connectedMetros`, provider availability from `ServiceProfile.metros()`, and pricing from the Prices API — combined with a multi-dimensional scoring algorithm across five weighted categories: latency, provider coverage, cost, redundancy, and compliance.
+
+#### Defining the Optimization
+
+```java
+import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
+import api.equinix.javasdk.fabric.optimizer.enums.*;
+import api.equinix.javasdk.fabric.optimizer.model.*;
+
+Fabric fabric = new Fabric(credentials);
+
+OptimizationResult result = fabric.optimizeMetros()
+
+    // ── Sites: where your people and operations are ──
+    .addSite("New York HQ")
+        .nearestMetro(MetroCode.NY)
+        .role(SiteRole.HEADQUARTERS)
+        .headcount(500)
+        .done()
+    .addSite("London Office")
+        .nearestMetro(MetroCode.LD)
+        .role(SiteRole.EMPLOYEE_HUB)
+        .headcount(200)
+        .done()
+    .addSite("Singapore Office")
+        .coordinates(1.3521, 103.8198)      // lat/lng when metro code isn't known
+        .role(SiteRole.PRIMARY_MARKET)
+        .headcount(150)
+        .done()
+    .addSite("Frankfurt Data Center")
+        .nearestMetro(MetroCode.FR)
+        .role(SiteRole.DATA_CENTER)
+        .headcount(25)
+        .done()
+
+    // ── Providers: what you need to connect to ──
+    .requireProvider(CloudProviderType.AWS)
+        .sellerRegions("us-east-1", "eu-west-1")
+        .done()
+    .requireProvider(CloudProviderType.AZURE)
+        .done()
+    .preferProvider("Zoom Video Communications")    // match by service profile name
+        .done()
+    .preferProvider(CloudProviderType.GOOGLE_CLOUD)
+        .done()
+
+    // ── Workloads: what you're running and where it matters ──
+    .addWorkload("ML Training Pipeline")
+        .type(WorkloadType.AI_ML_TRAINING)          // pre-built profile: high power, liquid cooling
+        .bandwidthMbps(10_000)
+        .requiresHighPowerDensity()
+        .dependsOn(CloudProviderType.AWS)
+        .done()
+    .addWorkload("Global Video Conferencing")
+        .type(WorkloadType.REALTIME_COLLABORATION)  // pre-built: latency-critical, proximity-weighted
+        .latencySensitivity(LatencySensitivity.CRITICAL)
+        .bandwidthMbps(1_000)
+        .done()
+    .addWorkload("Customer API Platform")
+        .type(WorkloadType.TRANSACTIONAL)
+        .bandwidthMbps(2_000)
+        .maxLatencyToleranceMs(25.0)                // per-workload latency ceiling
+        .dependsOn(CloudProviderType.AZURE)
+        .done()
+    .addWorkload("Disaster Recovery")
+        .type(WorkloadType.DISASTER_RECOVERY)       // pre-built: cost-optimized, relaxed latency
+        .bandwidthMbps(500)
+        .dependsOn(CloudProviderType.AZURE)
+        .done()
+    .addWorkload("Genomics Analysis")
+        .type(WorkloadType.CUSTOM)                  // fully custom workload profile
+        .profile(WorkloadProfile.builder()
+            .defaultLatencySensitivity(LatencySensitivity.MEDIUM)
+            .requiresHighPowerDensity(true)
+            .requiresLiquidCooling(true)
+            .maxLatencyToleranceMs(50.0)
+            .minBandwidthMbps(5000.0)
+            .build())
+        .dependsOn(CloudProviderType.AWS)
+        .done()
+
+    // ── Constraints: business and compliance boundaries ──
+    .constraints()
+        .monthlyBudget(50_000, 150_000)             // USD range
+        .redundancy(RedundancyTier.MULTI_REGION)    // metros across 2+ regions
+        .compliance(ComplianceZone.EU_GDPR)         // at least one EU metro
+        .maxLatencyMs(100)                          // global latency ceiling
+        .excludeMetro(MetroCode.MX)                 // exclude specific metros
+        .maxMetros(5)
+        .done()
+
+    // ── Strategy and scoring tuning ──
+    .strategy(OptimizationStrategy.BALANCED)
+    .scoringWeights(ScoringWeights.builder()
+        .latencyWeight(0.35)                        // increase latency importance
+        .costWeight(0.15)                           // decrease cost importance
+        .latencyExcellentMs(8.0)                    // tighter latency grading curve
+        .build())
+
+    // ── Execute ──
+    .optimize();
+```
+
+#### Working with Results
+
+```java
+// ── Quick summary ──
+System.out.println(result.toSummary());
+// Output:
+// Recommended primary metro: Ashburn (DC) with a score of 87.3/100.
+// Additional metros: Amsterdam (AM), Silicon Valley (SV), Singapore (SG).
+// Estimated monthly cost: $8,750.00 USD.
+// Computed in 1243ms.
+
+// ── Primary recommendation ──
+MetroRecommendation primary = result.primaryMetro();
+System.out.println(primary.getMetroCode());           // DC
+System.out.println(primary.getScore().getComposite()); // 87.3
+System.out.println(primary.getReasons());
+// [Excellent average latency of 12.4ms to user sites,
+//  All 4 required/preferred providers available,
+//  Located in AMER region]
+
+// ── Score breakdown ──
+MetroScore score = primary.getScore();
+System.out.println("Latency:    " + score.latencyScore());      // 91.2
+System.out.println("Providers:  " + score.providerScore());     // 100.0
+System.out.println("Cost:       " + score.costScore());         // 80.0
+System.out.println("Redundancy: " + score.redundancyScore());   // 90.0
+System.out.println("Compliance: " + score.complianceScore());   // 100.0
+
+// ── Latency matrix (ASCII table) ──
+System.out.println(result.getLatencyMatrix().toTableString());
+// Metro |  New York HQ | London Office | Singapore Office | Frankfurt DC
+// ------+--------------+---------------+------------------+-------------
+// DC    |         8.2  |        73.4   |           198.5* |        89.1
+// AM    |        73.1  |        10.2   |           162.3* |        7.8
+// SV    |        61.5  |       138.7*  |           172.1* |       152.3*
+// SG    |       230.1* |       171.2*  |             1.4  |       163.8*
+//
+// * = estimated (no direct latency data available)
+
+// ── Deployment topology ──
+DeploymentTopology topology = result.getTopology();
+System.out.println(topology.summary());
+// Deployment Topology:
+//   DC:
+//     - Customer API Platform (All required providers available)
+//     - Global Video Conferencing (Lowest weighted latency to user sites (12.4ms avg))
+//   SV:
+//     - ML Training Pipeline (All required providers available)
+//     - Genomics Analysis (All required providers available)
+//   AM:
+//     - Disaster Recovery (Placed in EMEA for geographic diversity from primary)
+//   SG:
+//     - (edge presence for APAC workforce)
+
+// ── Risk assessment ──
+RiskAssessment risks = result.getRiskAssessment();
+System.out.println("Resiliency: " + risks.getResiliencyScore() + "/100");
+for (RiskFinding finding : risks.getFindings()) {
+    System.out.println("[" + finding.getSeverity() + "] " + finding.getDescription());
+    if (finding.getRecommendation() != null) {
+        System.out.println("  → " + finding.getRecommendation());
+    }
+}
+// [MEDIUM] SG has worst-case latency of 230.1ms which exceeds the 100ms threshold
+//   → Consider adding a metro closer to the affected site
+// [MEDIUM] Amazon Web Services is only available in 1 of 4 recommended metros
+//   → Consider selecting metros where Amazon Web Services has broader presence
+
+// ── Cost estimate ──
+CostEstimate cost = result.getCostEstimate();
+System.out.println("Monthly: $" + cost.getMonthlyTotal() + " " + cost.getCurrency());
+System.out.println("Setup:   $" + cost.getSetupTotal());
+System.out.println("Budget:  " + (cost.isWithinBudget() ? "WITHIN" : "OVER"));
+for (MetroCostBreakdown metro : cost.getPerMetro()) {
+    System.out.println("  " + metro.getMetroCode() + ": $" + metro.getMonthlyRecurring() + "/mo");
+}
+
+// ── Full markdown report (for architecture review docs) ──
+String report = result.toMarkdown();
+Files.writeString(Path.of("metro-optimization-report.md"), report);
+
+// ── JSON export (for programmatic consumption) ──
+String json = result.toJson();
+```
+
+#### Optimization Strategies
+
+The optimizer supports five pre-built strategies that set default scoring weights, plus full customization via `ScoringWeights`:
+
+| Strategy | Latency | Providers | Cost | Redundancy | Compliance | Best For |
+|----------|--------:|----------:|-----:|-----------:|-----------:|----------|
+| `BALANCED` | 30% | 25% | 20% | 15% | 10% | General-purpose planning |
+| `LATENCY_FIRST` | 50% | 20% | 10% | 10% | 10% | Real-time apps, trading |
+| `COST_FIRST` | 15% | 15% | 45% | 15% | 10% | Budget-constrained |
+| `REDUNDANCY_FIRST` | 20% | 15% | 15% | 40% | 10% | Mission-critical infra |
+| `PROVIDER_COVERAGE_FIRST` | 20% | 45% | 15% | 10% | 10% | Multi-cloud strategies |
+
+What-if scenario comparisons:
+
+```java
+// Compare strategies by running the same request with different strategies
+OptimizationResult balanced = fabric.optimizeMetros()
+    .addSite("NYC").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
+    .requireProvider(CloudProviderType.AWS).done()
+    .strategy(OptimizationStrategy.BALANCED).optimize();
+
+OptimizationResult latencyFirst = fabric.optimizeMetros()
+    .addSite("NYC").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
+    .requireProvider(CloudProviderType.AWS).done()
+    .strategy(OptimizationStrategy.LATENCY_FIRST).optimize();
+
+System.out.println("Balanced:      " + balanced.primaryMetro().getMetroCode());
+System.out.println("Latency-first: " + latencyFirst.primaryMetro().getMetroCode());
+```
+
+#### Built-in Workload Types
+
+Each workload type carries a default infrastructure profile that drives placement decisions. Use `WorkloadType.CUSTOM` with a `WorkloadProfile` for workloads not covered by the built-in types.
+
+| Workload Type | Latency Sensitivity | High Power | Liquid Cooling | Proximity-Weighted |
+|---------------|:-------------------:|:----------:|:--------------:|:------------------:|
+| `AI_ML_TRAINING` | Medium | Yes | Yes | No |
+| `AI_ML_INFERENCE` | High | Yes | No | No |
+| `REALTIME_COLLABORATION` | Critical | No | No | Yes |
+| `TRANSACTIONAL` | High | No | No | No |
+| `DISASTER_RECOVERY` | Low | No | No | No |
+| `COLD_BACKUP` | Low | No | No | No |
+| `GENERAL_COMPUTE` | Medium | No | No | No |
+| `EDGE_COMPUTE` | Critical | No | No | Yes |
+| `BIG_DATA_ANALYTICS` | Medium | Yes | No | No |
+
+### Fabric: Deployment Wizard — From Optimization to Execution
+
+The Deployment Wizard takes a completed `OptimizationResult` and generates an executable deployment plan — Cloud Routers in each recommended metro, connections to cloud providers, inter-metro Fabric backbone links, and routing protocol configurations. Bandwidth sizing is a core component that drives accurate pricing across the entire plan.
+
+#### Generate a Deployment Plan
+
+```java
+// Start with a completed optimization
+OptimizationResult result = fabric.optimizeMetros()
+    .addSite("NYC HQ").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
+    .requireProvider(CloudProviderType.AWS).sellerRegions("us-east-1").done()
+    .requireProvider(CloudProviderType.AZURE).done()
+    .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000)
+        .dependsOn(CloudProviderType.AWS).done()
+    .addWorkload("DR Backup").type(WorkloadType.DISASTER_RECOVERY).bandwidthMbps(500)
+        .dependsOn(CloudProviderType.AZURE).done()
+    .constraints().redundancy(RedundancyTier.MULTI_METRO).maxMetros(3).done()
+    .strategy(OptimizationStrategy.BALANCED)
+    .optimize();
+
+// Configure and generate the deployment plan
+DeploymentPlan plan = fabric.deploymentWizard(result)
+    .routerPackage("STANDARD")                           // Cloud Router package
+    .routerNamePrefix("FCR")                             // Router naming: FCR-DC, FCR-SV, etc.
+    .providerConnectionType(ConnectionType.EVPL_VC)      // Connection type for providers
+    .backboneBandwidthMbps(10_000)                       // Inter-metro backbone bandwidth
+    .backboneTopology(BackboneTopology.FULL_MESH)        // Full mesh between all metros
+    .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)   // Size connections per workload
+    .customerAsn(65100L)                                 // BGP customer ASN
+    .withBFD(true, 300)                                  // BFD enabled, 300ms interval
+    .accountNumber(272010L)                              // Billing account
+    .projectId("your-project-uuid")                      // Project grouping
+    .notifications("noc@example.com")                    // Provisioning alerts
+    .plan();
+```
+
+#### Review the Plan
+
+```java
+// Full markdown report with bandwidth and pricing tables
+System.out.println(plan.toMarkdown());
+
+// Quick summary
+System.out.println(plan.toSummary());
+// → "Deployment Plan: 3 Cloud Router(s), 4 provider connection(s), 3 backbone link(s),
+//    14 routing protocol(s). Total resources: 24. Estimated monthly cost: $25,400 USD."
+
+// Inspect individual components
+plan.getCloudRouters().forEach(cr ->
+    System.out.println(cr.getName() + " in " + cr.getMetroCode()));
+
+plan.getProviderConnections().forEach(conn ->
+    System.out.println(conn.getName() + ": " + conn.getBandwidthMbps() + " Mbps → "
+        + conn.getZSideProviderLabel()));
+
+plan.getBackboneLinks().forEach(link ->
+    System.out.println(link.getMetroA() + " ↔ " + link.getMetroZ()
+        + ": " + link.getBandwidthMbps() + " Mbps"));
+```
+
+#### Validate and Execute
+
+```java
+// Dry-run validation against Fabric API
+DeploymentPlan validated = plan.dryRun();
+if (!validated.isValid()) {
+    validated.getValidationErrors().forEach(System.err::println);
+}
+
+// Execute — creates all resources in order:
+// 1. Cloud Routers  2. Provider Connections  3. Backbone Links  4. Routing Protocols
+DeploymentOutcome outcome = plan.execute();
+
+System.out.println(outcome.toMarkdown());
+// Shows provisioned resource UUIDs, statuses, and any errors
+```
+
+#### Backbone Topology Options
+
+| Topology | Links (N metros) | Description |
+|----------|:-----------------:|-------------|
+| `FULL_MESH` | N*(N-1)/2 | Every metro pair connected directly. Maximum redundancy. |
+| `HUB_SPOKE` | N-1 | Primary metro connects to all others. Cost-effective. |
+| `RING` | N | Metros connected in a ring. Balanced cost and redundancy. |
+
+#### Bandwidth Sizing Strategies
+
+| Strategy | Description |
+|----------|-------------|
+| `PER_WORKLOAD` | Each provider connection sized to the sum of dependent workload bandwidths. Most accurate for pricing. |
+| `AGGREGATED` | All connections at a metro sized to total metro bandwidth. Simpler provisioning. |
+| `CUSTOM` | User supplies explicit bandwidth values via `customBandwidthMap()`. |
 
 ### Enterprise Multi-Metro Deployment
 
@@ -833,6 +1168,8 @@ Browse Javadocs by domain:
 - [Customer Portal](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
 - [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/ibxsmartview/package-summary.html) — Environmental Sensors, Power, Streaming
 - [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
+- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/package-summary.html) — Intelligent metro placement engine
+- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
 
 ## Building
 
