@@ -22,6 +22,7 @@
 - **Real-time streaming** support via IBX SmartView subscriptions (AWS IoT, Azure Event Hub, Webhook, REST)
 - **Metro Optimizer** — intelligent placement engine that recommends optimal Equinix metros based on workforce locations, provider requirements, workload types, and business constraints with latency-aware scoring, risk assessment, and cost estimation
 - **Deployment Wizard** — transforms optimization results into executable deployment plans with Cloud Routers, provider connections, inter-metro backbone links, routing protocols, bandwidth sizing, and pricing
+- **Peering Intelligence** — interconnection analysis engine combining PeeringDB IX peering data with Equinix Fabric connectivity to produce ASN presence matrices, resiliency assessments, blast radius analysis, geographic diversity scoring, and mutual peering opportunity discovery across 47 Equinix Internet Exchanges globally
 
 ## Quick Start
 
@@ -52,7 +53,7 @@ Fabric fabric = new Fabric(credentials);
 
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
-| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health, **Metro Optimizer**, **Deployment Wizard** |
+| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health, **Metro Optimizer**, **Deployment Wizard**, **Peering Intelligence** |
 | **Network Edge** | `new NetworkEdge(creds)` | 10 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
 | **Customer Portal** | `new CustomerPortal(creds)` | 21 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Assets, Reports |
 | **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Readings, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
@@ -650,6 +651,150 @@ System.out.println(outcome.toMarkdown());
 | `AGGREGATED` | All connections at a metro sized to total metro bandwidth. Simpler provisioning. |
 | `CUSTOM` | User supplies explicit bandwidth values via `customBandwidthMap()`. |
 
+### Fabric: Peering Intelligence — Interconnection Analysis Engine
+
+Peering Intelligence combines [PeeringDB](https://www.peeringdb.com/) IX peering data with Equinix Fabric connectivity to produce unified presence matrices, resiliency assessments, and peering opportunity discovery — all scoped to Equinix IXes and facilities. Users provide their own PeeringDB API key for authenticated access.
+
+#### Presence Matrix — Which ASNs Are Where?
+
+```java
+// Build a presence matrix for target ASNs across all Equinix metros
+PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-api-key")
+    .addAsn(16509, "AWS")
+    .addAsn(8075, "Microsoft")
+    .addAsn(15169, "Google")
+    .addAsn(13335, "Cloudflare")
+    .analyze();
+
+// ASCII matrix: rows = ASNs, columns = Equinix metros
+System.out.println(result.presenceMatrix().toTableString());
+// Network           AM    AT    CH    DA    DC    FR    HK    LA  ...
+// -----------------------------------------------------------------------
+// AWS                IX    IX    IX    IX    IX    IX    IX    IX  ...
+// Microsoft          IX   --     IX    IX    IX    IX    IX   --   ...
+// Google             IX    IX    IX    IX    IX    IX    IX    IX  ...
+// Cloudflare         IX   --     IX    IX    IX    IX    IX    IX  ...
+
+// Detailed matrix with port capacity and route server indicators
+System.out.println(result.presenceMatrix().toDetailedTableString());
+// Network         AM          CH          DA          DC          FR     ...
+// --------------------------------------------------------------------------
+// AWS        IX:100G*    IX:10G*     IX:10G*    IX:100G*    IX:100G*    ...
+// Microsoft  IX:10G      IX:10G*     IX:10G     IX:100G*    IX:10G      ...
+//   (* = route server participant)
+```
+
+#### Metro-Centric View — Who Can I Peer With Here?
+
+```java
+// Which ASNs are available at Ashburn?
+MetroPresenceReport dcReport = result.metroReport(MetroCode.DC);
+System.out.println("ASNs with IX peering at DC: " + dcReport.withIxPeering().size());
+System.out.println("Total IX capacity: " + dcReport.totalIxCapacityMbps() / 1000 + " Gbps");
+
+// Find metros where ALL target ASNs are present
+List<MetroCode> fullCoverage = result.presenceMatrix()
+    .metrosWithAllAsns(List.of(16509L, 8075L, 15169L));
+System.out.println("Metros with all 3 providers: " + fullCoverage);
+```
+
+#### Network Profiles — Peering Policy & Feasibility
+
+```java
+// Examine network metadata from PeeringDB
+NetworkPresence aws = result.networkPresence(16509);
+System.out.println("AWS peering policy: " + aws.getPeeringPolicy());      // OPEN
+System.out.println("AWS network type: " + aws.getNetworkType());           // CONTENT
+System.out.println("AWS IX metros: " + aws.ixMetroCount());                // 25+
+System.out.println("AWS total IX capacity: " + aws.getTotalIxCapacityMbps() / 1000 + " Gbps");
+System.out.println("AWS uses route servers: " + aws.isRouteServerParticipant()); // true
+System.out.println("AWS supports BFD: " + aws.isBfdSupported());           // true
+```
+
+#### Resiliency Analysis — Blast Radius & Failover Paths
+
+```java
+// Full analysis with customer context
+PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-api-key")
+    .addAsn(16509, "AWS")
+    .addAsn(8075, "Microsoft")
+    .addAsn(13335, "Cloudflare")
+    .customerMetros(MetroCode.DC, MetroCode.DA, MetroCode.SG)
+    .includeResiliency(true)
+    .analyze();
+
+// What happens if Ashburn goes dark?
+BlastRadiusReport dcBlast = result.resiliency().blastRadiusFor(MetroCode.DC);
+System.out.println("Impact: " + (int)(dcBlast.getImpactRatio() * 100) + "% of connectivity");
+System.out.println("Lost IX peering: " + dcBlast.getLostIxPeeringLabels());
+System.out.println("Lost IX capacity: " + dcBlast.getLostIxCapacityMbps() / 1000 + " Gbps");
+System.out.println("Severity: " + dcBlast.getSeverity());
+
+// Where can I failover AWS peering?
+List<FailoverPath> awsFailovers = result.resiliency().failoverPathsForAsn(16509);
+for (FailoverPath fp : awsFailovers) {
+    System.out.println(fp.getFailoverMetro() + ": " + fp.getIxCapacityMbps() / 1000 + "G"
+        + " (diversity: " + fp.getDiversity().getRating() + ")"
+        + " — " + fp.getRecommendation());
+}
+
+// Correlated failure detection
+for (CorrelatedFailure cf : result.resiliency().criticalCorrelations()) {
+    System.out.println("[" + cf.getSeverity() + "] " + cf.getFailureDomain()
+        + ": " + cf.getRecommendation());
+}
+
+// Overall resiliency score
+System.out.println("Resiliency: " + result.resiliency().getOverallRating()
+    + " (" + (int)(result.resiliency().getOverallScore() * 100) + "%)");
+```
+
+#### Mutual Peering Opportunity Discovery
+
+```java
+// Discover where you and a target ASN are both at the same Equinix IX
+PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-api-key")
+    .addAsn(16509, "AWS")
+    .addAsn(13335, "Cloudflare")
+    .customerAsn(65100L)  // your ASN
+    .analyze();
+
+for (PeeringOpportunity opp : result.getPeeringOpportunities()) {
+    System.out.println(opp.getTargetLabel() + " at " + opp.getMetro()
+        + " (" + opp.getIxName() + ")"
+        + " — " + opp.getComplexity()
+        + " [feasibility: " + (int)(opp.getFeasibility() * 100) + "%]");
+    // "AWS at DC (Equinix Ashburn) — Automatic [feasibility: 100%]"
+    // "Cloudflare at DC (Equinix Ashburn) — Simple [feasibility: 100%]"
+}
+```
+
+#### Full Markdown Report
+
+```java
+// Generate a comprehensive report with all sections
+System.out.println(result.toMarkdown());
+// Outputs: Presence Matrix, Network Profiles, Resiliency Assessment,
+//          Correlated Failures, Peering Opportunities, Unified Connectivity Views
+```
+
+#### Data Flow
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌────────────────────────┐
+│  PeeringDB   │────▶│  PeeringIntelligence │────▶│ PeeringIntelligenceResult │
+│  /api/org/2  │     │     Engine        │     │                        │
+│  /api/netixlan│     │  (8-phase pipeline) │     │  .presenceMatrix()     │
+│  /api/netfac │     │                  │     │  .resiliency()         │
+│  /api/net    │     │                  │     │  .unifiedView(asn)     │
+└─────────────┘     │                  │     │  .peeringOpportunities()│
+                    │                  │     │  .toMarkdown()         │
+┌─────────────┐     │                  │     └────────────────────────┘
+│ Equinix Fabric│────▶│                  │
+│ Service Profiles│   └──────────────────┘
+└─────────────┘
+```
+
 ### Enterprise Multi-Metro Deployment
 
 The following example demonstrates a complete global network deployment using the SDK across three domains — **Fabric**, **Network Edge**, and **Internet Access**. The architecture provisions Fabric Cloud Routers (FCRs) in six metros spanning three regions, connects each to two cloud providers at 5 Gbps, deploys Cisco C8000V routers and Cisco Secure Firewall (FTDv) instances via Network Edge, interconnects all metros over a 10 Gbps Global IP-WAN backbone, configures BGP routing on every connection, and provisions 500 Mbps Dedicated Internet Access at each location. This showcases the SDK's fluent builders, cloud provider adapter framework, cross-domain resource orchestration, and routing protocol configuration in a single cohesive workflow.
@@ -1170,6 +1315,7 @@ Browse Javadocs by domain:
 - [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
 - [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/package-summary.html) — Intelligent metro placement engine
 - [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
+- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
 
 ## Building
 
