@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "id": 10001,
+      "ix_id": 1,
+      "name": "Equinix Ashburn",
+      "ixlan_id": 1,
+      "notes": "",
+      "speed": 100000,
+      "asn": 16509,
+      "ipaddr4": "206.126.236.20",
+      "ipaddr6": "2001:504:0:2::16509:1",
+      "is_rs_peer": true,
+      "bfd_support": true,
+      "operational": true,
+      "status": "ok"
+    },
+    {
+      "id": 10002,
+      "ix_id": 2,
+      "name": "Equinix Chicago",
+      "ixlan_id": 2,
+      "notes": "",
+      "speed": 40000,
+      "asn": 16509,
+      "ipaddr4": "206.126.237.30",
+      "ipaddr6": "2001:504:0:3::16509:1",
+      "is_rs_peer": false,
+      "bfd_support": true,
+      "operational": true,
+      "status": "ok"
+    },
+    {
+      "id": 10003,
+      "ix_id": 3,
+      "name": "Equinix Dallas",
+      "ixlan_id": 3,
+      "notes": "",
+      "speed": 10000,
+      "asn": 16509,
+      "ipaddr4": "206.126.238.40",
+      "ipaddr6": null,
+      "is_rs_peer": false,
+      "bfd_support": false,
+      "operational": true,
+      "status": "ok"
+    }
+  ]
+}
