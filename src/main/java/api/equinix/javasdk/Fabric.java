@@ -24,6 +24,7 @@ import api.equinix.javasdk.fabric.model.HealthStatus;
 import api.equinix.javasdk.fabric.optimizer.MetroOptimizer;
 import api.equinix.javasdk.fabric.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.fabric.optimizer.wizard.DeploymentWizard;
+import api.equinix.javasdk.fabric.peering.PeeringIntelligence;
 
 /**
  * The primary entry point for accessing the Equinix Fabric APIs.
@@ -454,6 +455,45 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public DeploymentWizard.Builder deploymentWizard(OptimizationResult optimizationResult) {
         return DeploymentWizard.builder(this, optimizationResult);
+    }
+
+    /**
+     * Begins a Peering Intelligence analysis session with PeeringDB API key authentication.
+     * Returns a fluent builder for specifying target ASNs, customer metro locations,
+     * and analysis options, then queries PeeringDB and Equinix Fabric to produce
+     * presence matrices, resiliency assessments, and peering opportunity discovery.
+     *
+     * <pre>{@code
+     * PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-api-key")
+     *     .addAsn(16509, "AWS")
+     *     .addAsn(8075, "Microsoft")
+     *     .addAsn(15169, "Google")
+     *     .customerMetros(MetroCode.DC, MetroCode.DA, MetroCode.SG)
+     *     .customerAsn(65100L)
+     *     .includeResiliency(true)
+     *     .analyze();
+     *
+     * System.out.println(result.presenceMatrix().toTableString());
+     * System.out.println(result.toMarkdown());
+     * }</pre>
+     *
+     * @param peeringDbApiKey the PeeringDB API key for authenticated access
+     * @return a {@link PeeringIntelligence.Builder} for configuring the analysis
+     * @see <a href="https://docs.peeringdb.com/howto/api_keys/">PeeringDB API Keys</a>
+     */
+    public PeeringIntelligence.Builder peeringIntelligence(String peeringDbApiKey) {
+        return PeeringIntelligence.builder(this, peeringDbApiKey);
+    }
+
+    /**
+     * Begins a Peering Intelligence analysis session with anonymous PeeringDB access.
+     * Anonymous access is rate-limited to approximately 20 requests per minute.
+     *
+     * @return a {@link PeeringIntelligence.Builder} for configuring the analysis
+     * @see #peeringIntelligence(String)
+     */
+    public PeeringIntelligence.Builder peeringIntelligence() {
+        return PeeringIntelligence.builder(this);
     }
 
     /**
