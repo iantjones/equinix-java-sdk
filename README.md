@@ -32,7 +32,7 @@
 <dependency>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
