@@ -28,9 +28,7 @@ import java.util.List;
 @Getter
 public final class MarketplaceSubscriptionJson implements MarketplaceSubscription {
 
-    @Getter static TypeReference<Page<MarketplaceSubscription, MarketplaceSubscriptionJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<MarketplaceSubscriptionJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<MarketplaceSubscriptionJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

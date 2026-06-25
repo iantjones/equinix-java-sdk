@@ -30,7 +30,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TagPointDataJson implements TagPointData {
 
-    @Getter static TypeReference<TagPointDataJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<TagPointDataJson>> listTypeRef = new TypeReference<>() {};
 
     @JsonProperty("tagPointUid")

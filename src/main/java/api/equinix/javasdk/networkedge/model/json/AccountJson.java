@@ -35,7 +35,6 @@ import java.util.List;
 public class AccountJson {
 
     @Getter static TypeReference<AccountJson.NestedList> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<AccountJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Getter

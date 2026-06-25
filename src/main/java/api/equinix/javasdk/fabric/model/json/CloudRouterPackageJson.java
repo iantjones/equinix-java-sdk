@@ -29,9 +29,7 @@ import java.util.List;
 @Getter
 public final class CloudRouterPackageJson implements CloudRouterPackage {
 
-    @Getter static TypeReference<Page<CloudRouterPackage, CloudRouterPackageJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CloudRouterPackageJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<CloudRouterPackageJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("code")
     private CloudRouterPackageCode code;

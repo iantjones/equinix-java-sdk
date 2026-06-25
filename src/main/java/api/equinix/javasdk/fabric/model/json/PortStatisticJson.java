@@ -33,21 +33,7 @@ import lombok.Getter;
 @Getter
 public class PortStatisticJson {
 
-    /**
-     * <p>pagedTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<Page<PortStatistic, PortStatisticJson>> pagedTypeRef() { return new TypeReference<>() {}; }
 
-    /**
-     * <p>singleTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<PortStatisticJson> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
 
     @JsonProperty("uuid")
     private String uuid;

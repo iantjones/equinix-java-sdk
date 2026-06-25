@@ -39,8 +39,6 @@ import java.util.List;
 @Getter
 public class BackupJson extends Lifecycle {
 
-    @Getter static TypeReference<Page<Backup, BackupJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<BackupJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<UUIDResult> createTypeRef = new TypeReference<>() {};
 
     @JsonProperty(value = "uuid")

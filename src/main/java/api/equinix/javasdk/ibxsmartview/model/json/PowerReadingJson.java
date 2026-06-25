@@ -29,8 +29,6 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PowerReadingJson implements PowerReading {
 
-    @Getter static TypeReference<Page<PowerReading, PowerReadingJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<PowerReadingJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("ibx")
     private String ibx;

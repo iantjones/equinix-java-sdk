@@ -41,8 +41,6 @@ import java.util.List;
 @Getter
 public class DeviceLinkJson extends Lifecycle {
 
-    @Getter static TypeReference<Page<DeviceLink, DeviceLinkJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<DeviceLinkJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<UUIDResult> createTypeRef = new TypeReference<>() {};
 
     @JsonAlias("id")

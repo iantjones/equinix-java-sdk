@@ -30,9 +30,7 @@ import java.util.List;
 @Getter
 public final class CloudRouterJson {
 
-    @Getter static TypeReference<Page<CloudRouter, CloudRouterJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CloudRouterJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<CloudRouterJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

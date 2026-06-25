@@ -37,7 +37,6 @@ import java.util.List;
 @Getter
 public class InvoiceSummaryJson {
 
-    @Getter static TypeReference<Page<InvoiceSummary, InvoiceSummaryJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("transactionId")
     private String transactionId;

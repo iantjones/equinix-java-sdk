@@ -31,9 +31,7 @@ import java.util.List;
 @Getter
 public final class ServiceProfileJson {
 
-    @Getter static TypeReference<Page<ServiceProfile, ServiceProfileJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ServiceProfileJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ServiceProfileJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

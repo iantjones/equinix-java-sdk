@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class LookupLocationJson implements LookupLocation {
 
-    @Getter static TypeReference<Page<LookupLocation, LookupLocationJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<LookupLocationJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<LookupLocationJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

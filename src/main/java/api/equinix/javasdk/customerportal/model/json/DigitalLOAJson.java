@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class DigitalLOAJson {
 
-    @Getter static TypeReference<Page<DigitalLOA, DigitalLOAJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<DigitalLOAJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<DigitalLOAJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

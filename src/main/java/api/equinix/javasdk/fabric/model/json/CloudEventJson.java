@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class CloudEventJson implements CloudEvent {
 
-    @Getter static TypeReference<Page<CloudEvent, CloudEventJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CloudEventJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<CloudEventJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

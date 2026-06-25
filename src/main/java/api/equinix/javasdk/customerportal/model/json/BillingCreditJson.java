@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class BillingCreditJson implements BillingCredit {
 
-    @Getter static TypeReference<Page<BillingCredit, BillingCreditJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<BillingCreditJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<BillingCreditJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -29,9 +29,7 @@ import java.util.List;
 @Getter
 public class OrderJson {
 
-    @Getter static TypeReference<Page<Order, OrderJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<OrderJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<OrderJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

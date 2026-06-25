@@ -28,9 +28,7 @@ import java.util.List;
 @Getter
 public class QuoteJson {
 
-    @Getter static TypeReference<Page<Quote, QuoteJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<QuoteJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<QuoteJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

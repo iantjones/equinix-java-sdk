@@ -32,9 +32,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RoutingConfigJson {
 
-    @Getter static TypeReference<Page<RoutingConfig, RoutingConfigJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RoutingConfigJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<RoutingConfigJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -33,9 +33,7 @@ import java.util.List;
 @Getter
 public class PublicKeyJson {
 
-    @Getter static TypeReference<Page<PublicKey, PublicKeyJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<PublicKeyJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<PublicKeyJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

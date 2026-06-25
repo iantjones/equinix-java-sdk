@@ -30,7 +30,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TrendingPowerDataJson implements TrendingPowerData {
 
-    @Getter static TypeReference<TrendingPowerDataJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("ibx")
     private String ibx;

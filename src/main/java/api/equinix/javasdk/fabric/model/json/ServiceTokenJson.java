@@ -42,9 +42,7 @@ import java.util.List;
 @Getter
 public class ServiceTokenJson {
 
-    @Getter static TypeReference<Page<ServiceToken, ServiceTokenJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ServiceTokenJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ServiceTokenJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

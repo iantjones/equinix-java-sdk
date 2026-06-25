@@ -32,9 +32,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectJson {
 
-    @Getter static TypeReference<Page<Project, ProjectJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ProjectJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ProjectJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

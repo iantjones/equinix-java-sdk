@@ -14,8 +14,6 @@ import java.util.List;
 @Getter
 public class ResellerCustomerJson {
 
-    @Getter static TypeReference<Page<ResellerCustomer, ResellerCustomerJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ResellerCustomerJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("customerAccountNumber")
     private String customerAccountNumber;

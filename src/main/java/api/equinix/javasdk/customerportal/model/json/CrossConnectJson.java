@@ -30,9 +30,7 @@ import java.util.List;
 @Getter
 public class CrossConnectJson {
 
-    @Getter static TypeReference<Page<CrossConnect, CrossConnectJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CrossConnectJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<CrossConnectJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

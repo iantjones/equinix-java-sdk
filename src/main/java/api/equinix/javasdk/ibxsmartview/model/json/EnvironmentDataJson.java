@@ -30,7 +30,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EnvironmentDataJson implements EnvironmentData {
 
-    @Getter static TypeReference<EnvironmentDataJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<EnvironmentDataJson>> listTypeRef = new TypeReference<>() {};
 
     @JsonProperty("temperature")

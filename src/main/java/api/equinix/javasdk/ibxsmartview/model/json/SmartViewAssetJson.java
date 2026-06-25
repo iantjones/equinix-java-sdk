@@ -29,8 +29,6 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SmartViewAssetJson implements SmartViewAsset {
 
-    @Getter static TypeReference<Page<SmartViewAsset, SmartViewAssetJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SmartViewAssetJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("assetId")
     private String assetId;

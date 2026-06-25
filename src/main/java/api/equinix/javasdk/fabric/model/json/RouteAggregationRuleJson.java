@@ -30,9 +30,7 @@ import java.util.List;
 @Getter
 public class RouteAggregationRuleJson {
 
-    @Getter static TypeReference<Page<RouteAggregationRule, RouteAggregationRuleJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RouteAggregationRuleJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<RouteAggregationRuleJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

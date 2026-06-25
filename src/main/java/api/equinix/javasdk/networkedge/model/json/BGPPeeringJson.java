@@ -35,8 +35,6 @@ import lombok.Getter;
 @Getter
 public class BGPPeeringJson extends Lifecycle {
 
-    @Getter static TypeReference<Page<BGPPeering, BGPPeeringJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<BGPPeeringJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<UUIDResult> createTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")

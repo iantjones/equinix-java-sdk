@@ -30,9 +30,7 @@ import java.util.List;
 @Getter
 public class RoutingProtocolJson {
 
-    @Getter static TypeReference<Page<RoutingProtocol, RoutingProtocolJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RoutingProtocolJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<RoutingProtocolJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -13,7 +13,6 @@ import java.util.List;
 @Getter
 public class ResellerJson {
 
-    @Getter static TypeReference<Page<Reseller, ResellerJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("accountNumber")
     private String accountNumber;

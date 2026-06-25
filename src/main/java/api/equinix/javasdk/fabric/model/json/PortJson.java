@@ -38,23 +38,7 @@ import java.util.List;
 @Getter
 public final class PortJson {
 
-    /**
-     * <p>pagedTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<Page<Port, PortJson>> pagedTypeRef() {
-        return new TypeReference<>() {};
-    }
 
-    /**
-     * <p>singleTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<PortJson> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
 
     @JsonProperty("uuid")
     private String uuid;

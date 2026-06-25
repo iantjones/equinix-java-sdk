@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class OrderHistoryItemJson implements OrderHistoryItem {
 
-    @Getter static TypeReference<Page<OrderHistoryItem, OrderHistoryItemJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<OrderHistoryItemJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<OrderHistoryItemJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

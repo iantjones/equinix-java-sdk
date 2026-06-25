@@ -32,8 +32,6 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SystemAlertJson implements SystemAlert {
 
-    @Getter static TypeReference<Page<SystemAlert, SystemAlertJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SystemAlertJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("alertUid")
     private String alertUid;

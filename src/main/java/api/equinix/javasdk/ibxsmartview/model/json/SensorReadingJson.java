@@ -26,8 +26,6 @@ import lombok.Getter;
 @Getter
 public class SensorReadingJson {
 
-    @Getter static TypeReference<Page<SensorReading, SensorReadingJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SensorReadingJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("sensorId")
     private String sensorId;

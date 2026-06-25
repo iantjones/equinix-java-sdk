@@ -30,9 +30,7 @@ import java.util.List;
 @Getter
 public class FabricGatewayJson {
 
-    @Getter static TypeReference<Page<FabricGateway, FabricGatewayJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<FabricGatewayJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<FabricGatewayJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

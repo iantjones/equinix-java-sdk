@@ -31,7 +31,6 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LocationHierarchyJson implements LocationHierarchy {
 
-    @Getter static TypeReference<LocationHierarchyJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("ibx")
     private String ibx;

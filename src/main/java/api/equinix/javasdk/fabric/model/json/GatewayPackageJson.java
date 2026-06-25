@@ -31,9 +31,7 @@ import java.util.List;
 @Getter
 public class GatewayPackageJson {
 
-    @Getter static TypeReference<Page<GatewayPackage, GatewayPackageJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<GatewayPackageJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<GatewayPackageJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("code")
     private GatewayPackageCode code;

@@ -43,9 +43,7 @@ import java.util.List;
 @Getter
 public class DeviceJson extends Lifecycle {
 
-    @Getter static TypeReference<Page<Device, DeviceJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<DeviceJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<DeviceJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<UUIDResult> createTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
