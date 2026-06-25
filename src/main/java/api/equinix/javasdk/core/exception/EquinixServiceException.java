@@ -28,6 +28,9 @@ import java.util.Map;
  *
  * <p>This is the base class for all API error exceptions. It carries the HTTP status code,
  * response headers, request path, and structured error details from the API response body.
+ * It is a <em>sibling</em> of {@link EquinixClientException} — both extend {@link BaseException} —
+ * so catching {@code EquinixClientException} (client/SDK/network errors) does not also catch
+ * API errors, and vice versa. Catch {@link BaseException} to handle either.
  * Specific HTTP status codes are mapped to typed subclasses:</p>
  *
  * <table>
@@ -56,7 +59,7 @@ import java.util.Map;
  */
 @Getter
 @Setter
-public class EquinixServiceException extends EquinixClientException {
+public class EquinixServiceException extends BaseException {
 
     private ArrayList<ExceptionDetail> exceptionDetails = new ArrayList<>();
     private Integer statusCode;

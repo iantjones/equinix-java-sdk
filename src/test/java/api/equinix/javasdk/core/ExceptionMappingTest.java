@@ -32,17 +32,20 @@ class ExceptionMappingTest {
     }
 
     @Test
-    void exceptionHierarchy_serviceException_extendsClientException() {
+    void exceptionHierarchy_serviceException_isSiblingOfClientException() {
         EquinixServiceException ex = new EquinixServiceException("test");
-        assertInstanceOf(EquinixClientException.class, ex);
         assertInstanceOf(BaseException.class, ex);
+        // Service (API) errors must NOT be a kind of client (SDK/network) error —
+        // they are siblings under BaseException so catch blocks don't conflate them.
+        assertFalse(EquinixClientException.class.isInstance(ex));
     }
 
     @Test
     void exceptionHierarchy_authenticationException_extendsServiceException() {
         EquinixAuthenticationException ex = new EquinixAuthenticationException("Unauthorized");
         assertInstanceOf(EquinixServiceException.class, ex);
-        assertInstanceOf(EquinixClientException.class, ex);
+        assertInstanceOf(BaseException.class, ex);
+        assertFalse(EquinixClientException.class.isInstance(ex));
     }
 
     @Test
