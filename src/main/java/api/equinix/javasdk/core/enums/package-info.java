@@ -17,8 +17,7 @@
 /**
  * Shared enumerations used across multiple domains within the Equinix Java SDK.
  * Includes {@link api.equinix.javasdk.core.enums.MetroCode} for Equinix metro
- * locations, {@link api.equinix.javasdk.core.enums.Side} for A-side/Z-side
- * designation, {@link api.equinix.javasdk.core.enums.Region} for geographic regions,
+ * locations, {@link api.equinix.javasdk.core.enums.Region} for geographic regions,
  * {@link api.equinix.javasdk.core.enums.BandwidthUnit} for bandwidth measurements,
  * and other cross-cutting enumerations such as
  * {@link api.equinix.javasdk.core.enums.HttpMethod},

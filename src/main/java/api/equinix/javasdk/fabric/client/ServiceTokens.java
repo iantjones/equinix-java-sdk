@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client;
 
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.ServiceToken;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;

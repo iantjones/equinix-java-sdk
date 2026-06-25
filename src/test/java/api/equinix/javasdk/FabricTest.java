@@ -2,7 +2,7 @@ package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.*;

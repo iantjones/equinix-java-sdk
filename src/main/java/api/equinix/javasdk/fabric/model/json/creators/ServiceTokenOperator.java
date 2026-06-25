@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.client.internal.implementation.ServiceTokenClientImpl;
 import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.Port;
@@ -53,7 +53,7 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
     /**
      * <p>create.</p>
      *
-     * @param issuerSide a {@link api.equinix.javasdk.core.enums.Side} object.
+     * @param issuerSide a {@link api.equinix.javasdk.fabric.enums.Side} object.
      * @return a {@link api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator.ServiceTokenBuilder} object.
      */
     public ServiceTokenBuilder create(Side issuerSide) {

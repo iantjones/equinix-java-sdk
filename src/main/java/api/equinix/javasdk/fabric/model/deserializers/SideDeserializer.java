@@ -14,9 +14,9 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.core.model.deserializers;
+package api.equinix.javasdk.fabric.model.deserializers;
 
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonProperty;

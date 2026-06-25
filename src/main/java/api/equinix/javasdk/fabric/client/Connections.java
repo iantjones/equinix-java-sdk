@@ -17,7 +17,7 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.Connection;

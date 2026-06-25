@@ -3,7 +3,7 @@ package api.equinix.javasdk.scenarios;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.IntegrationTestBase;
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.exception.EquinixNotFoundException;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
