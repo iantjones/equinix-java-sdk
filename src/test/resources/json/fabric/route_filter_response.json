@@ -1,0 +1,37 @@
+{
+  "uuid": "e5f6a7b8-c9d0-1234-efab-456789012cde",
+  "href": "https://api.equinix.com/fabric/v4/routeFilters/e5f6a7b8-c9d0-1234-efab-456789012cde",
+  "name": "Production-IPv4-Prefix-Filter",
+  "type": "BGP_IPv4_PREFIX_FILTER",
+  "state": "PROVISIONED",
+  "description": "IPv4 prefix filter for production BGP peering sessions",
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-04-12T07:45:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-10-18T15:00:00.000Z",
+    "deletedBy": null,
+    "deletedByFullName": null,
+    "deletedByEmail": null,
+    "deletedDateTime": null
+  },
+  "change": {
+    "uuid": "a9b8c7d6-e5f4-3210-abcd-fedcba987654",
+    "type": "CONNECTION_UPDATE",
+    "status": "COMPLETED",
+    "data": null,
+    "information": "Added new prefix rules for expanded network range",
+    "createdDateTime": "2024-10-18T15:00:00.000Z",
+    "updatedDateTime": "2024-10-18T15:01:00.000Z"
+  },
+  "rulesCount": 24,
+  "notMatchedRuleAction": "DENY",
+  "connectionsCount": 3
+}

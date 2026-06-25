@@ -2,6 +2,8 @@ package api.equinix.javasdk.fabric.optimizer.wizard;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
+import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
+import api.equinix.javasdk.fabric.mcp.bridge.McpConnectionBridge;
 import api.equinix.javasdk.fabric.optimizer.model.*;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BandwidthStrategy;
@@ -52,6 +54,9 @@ final class DeploymentWizardEngine {
 
         // Phase 2: Plan Provider Connections
         List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result);
+
+        // Phase 2b: MCP Validation (optional)
+        mcpValidateConnections(config.getMcpBridge(), providerConnections, validationErrors);
 
         // Phase 3: Plan Backbone Links
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros);
@@ -457,5 +462,40 @@ final class DeploymentWizardEngine {
 
     private static String sanitizeName(String input) {
         return input.replaceAll("[^a-zA-Z0-9_-]", "-").toLowerCase();
+    }
+
+    /**
+     * Validates planned connections against the MCP server if available.
+     * Any validation failures are added as warnings to the validation errors list.
+     */
+    private static void mcpValidateConnections(McpBridge mcpBridge,
+                                                List<PlannedConnection> connections,
+                                                List<String> validationErrors) {
+        if (mcpBridge == null || connections == null || connections.isEmpty()) {
+            return;
+        }
+
+        try {
+            for (PlannedConnection conn : connections) {
+                try {
+                    Map<String, Object> spec = new HashMap<>();
+                    spec.put("type", conn.getConnectionType() != null ? conn.getConnectionType().toString() : "EVPL_VC");
+                    spec.put("name", conn.getName());
+                    spec.put("bandwidth", conn.getBandwidthMbps());
+
+                    McpConnectionBridge.McpConnectionValidation validation =
+                            mcpBridge.connections().validateConnection(spec);
+
+                    if (!validation.isValid()) {
+                        validationErrors.add("MCP validation warning for '" + conn.getName()
+                                + "': " + validation.getMessage());
+                    }
+                } catch (Exception e) {
+                    // Individual connection validation failures should not block the plan
+                }
+            }
+        } catch (Exception e) {
+            // MCP validation is optional; continue without it
+        }
     }
 }

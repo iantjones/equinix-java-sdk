@@ -1,0 +1,50 @@
+{
+  "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "href": "https://api.equinix.com/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "My-Cloud-Router-Primary",
+  "type": "CLOUD_ROUTER",
+  "state": "PROVISIONED",
+  "location": {
+    "metroCode": "SV"
+  },
+  "package": {
+    "code": "PREMIUM"
+  },
+  "order": {
+    "purchaseOrderNumber": "PO-2024-198234",
+    "billingTier": "Up to 1 Gbps"
+  },
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "account": {
+    "orgId": 91831,
+    "accountNumber": 270129
+  },
+  "notifications": [
+    {
+      "type": "ALL",
+      "emails": [
+        "network-ops@example.com",
+        "cloud-team@example.com"
+      ]
+    }
+  ],
+  "bgpIpv4RoutesCount": 156,
+  "bgpIpv6RoutesCount": 42,
+  "connectionCount": 5,
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-06-15T09:30:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-09-20T14:45:00.000Z",
+    "deletedBy": null,
+    "deletedByFullName": null,
+    "deletedByEmail": null,
+    "deletedDateTime": null
+  }
+}

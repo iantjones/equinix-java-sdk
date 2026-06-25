@@ -1,0 +1,21 @@
+{
+  "uuid": "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+  "href": "/v1/shipments/f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102",
+  "shipmentId": "SHIP-2024-0005647",
+  "type": "INBOUND",
+  "status": "IN_TRANSIT",
+  "carrierType": "FEDEX",
+  "trackingNumber": "794644790132",
+  "ibxCode": "SV5",
+  "accountNumber": "128745",
+  "description": "Dell PowerEdge R760 servers (qty 4) for cabinet C-14 expansion",
+  "senderName": "Lisa Wong",
+  "senderCompany": "Dell Technologies",
+  "senderAddress": "1 Dell Way, Round Rock, TX 78682",
+  "recipientName": "David Park",
+  "recipientCompany": "Acme Cloud Services Inc.",
+  "numberOfBoxes": 4,
+  "estimatedArrivalDate": "2024-11-18T12:00:00.000Z",
+  "createdDate": "2024-11-13T15:20:00.000Z",
+  "lastUpdatedDate": "2024-11-15T08:42:11.000Z"
+}

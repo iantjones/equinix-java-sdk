@@ -5,6 +5,46 @@ All notable changes to the Equinix Java SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-25
+
+### Added - MCP Bridge Module
+- **MCP Client** (`fabric.mcp`): JSON-RPC 2.0 client for Equinix MCP servers with OAuth2 token management, automatic retry with backoff, and error mapping to the SDK exception hierarchy
+- **McpBridge**: High-level facade with typed sub-bridges for metros, connections, Cloud Routers, and observability
+- **McpMetroBridge**: Typed `McpMetro` objects from `get_metro` and `list_metro` MCP tools
+- **McpConnectionBridge**: Typed `McpConnectionValidation` and `McpConnection` from connection validation and search tools
+- **McpCloudRouterBridge**: Typed `McpCloudRouter` objects with router package lookup and diagnostic commands
+- **McpObservabilityBridge**: Typed `McpMetrics` and `McpStream` objects for live telemetry access
+- **McpClientConfig**: Configurable endpoints, timeouts, and retry policy with sensible defaults
+- **McpTokenManager**: Standalone OAuth2 token lifecycle with 5-minute pre-expiry refresh
+- **McpException**: MCP-specific exception extending `EquinixClientException` with JSON-RPC error codes
+- **Fabric.mcp()**: Lazy-initialized accessor for the MCP bridge, following the existing pattern
+- **Fabric.mcp(McpClientConfig)**: Overload accepting custom MCP configuration
+
+### Added - MCP Integration with Existing Modules
+- **MetroOptimizer.Builder.withMcpEnrichment(McpBridge)**: Optional real-time metro data enrichment via MCP during optimization
+- **DeploymentWizard.Builder.withMcpValidation(McpBridge)**: Optional connection validation via MCP before deployment planning
+- **PeeringIntelligence.Builder.withMcpEnrichment(McpBridge)**: Optional live connection state enrichment for peering analysis
+- All MCP integrations are fully optional with graceful fallback when MCP is unavailable
+
+### Added - Comprehensive Test Suite
+- WireMock-based unit tests for all 7 API domains (Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, Messaging)
+- MCP Bridge WireMock tests covering initialization, tool listing, typed bridge responses, and error handling
+- Core infrastructure tests: OAuth2 authentication, resiliency patterns, error mapping
+- JSON fixtures for all test scenarios (`src/test/resources/json/`)
+- Test profiles: `mvn test -Pwiremock` for API simulation tests, `mvn test -Pintegration` for live tests
+
+### Changed
+- Upgraded Java source/target from 14 to 21
+- Updated README with MCP Bridge documentation, WireMock test instructions, and Java 21 badge
+
+## [1.2.0] - 2026-03-15
+
+### Added
+- Metro Optimizer — intelligent placement engine with 12-phase scoring pipeline
+- Deployment Wizard — optimization-to-execution deployment planning
+- Peering Intelligence — PeeringDB integration with presence matrices and resiliency analysis
+- Cloud Provider SDK Interoperability adapters (AWS, Azure, GCP, Oracle)
+
 ## [1.1.0] - 2026-02-19
 
 ### Added - New Domains

@@ -1,0 +1,26 @@
+{
+  "uuid": "d4e5f6a7-b8c9-0123-defa-345678901bcd",
+  "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd",
+  "name": "Production-Telemetry-Stream",
+  "type": "TELEMETRY_STREAM",
+  "state": "PROVISIONED",
+  "description": "Primary telemetry stream for production network monitoring and alerting",
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-05-20T13:00:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-11-01T09:15:00.000Z",
+    "deletedBy": null,
+    "deletedByFullName": null,
+    "deletedByEmail": null,
+    "deletedDateTime": null
+  },
+  "enabled": true
+}

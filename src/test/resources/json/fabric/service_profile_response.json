@@ -1,0 +1,78 @@
+{
+  "uuid": "f6a7b8c9-d0e1-2345-fabc-567890123def",
+  "state": "ACTIVE",
+  "tags": ["cloud", "aws", "production"],
+  "name": "AWS Direct Connect - Production",
+  "href": "https://api.equinix.com/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def",
+  "description": "AWS Direct Connect service profile for production workloads with low-latency connectivity",
+  "type": "L2_PROFILE",
+  "notifications": [
+    {
+      "type": "ALL",
+      "emails": [
+        "cloud-ops@example.com",
+        "noc@example.com"
+      ]
+    },
+    {
+      "type": "CONNECTION_APPROVAL",
+      "emails": [
+        "approvals@example.com"
+      ]
+    }
+  ],
+  "account": {
+    "orgId": 91831,
+    "accountNumber": 270129,
+    "globalOrgId": "0016u00000RmRBfAAN",
+    "accountName": "Example Corp",
+    "ucmId": "12345678",
+    "globalCustId": "GC-00012345",
+    "organizationName": "Example Corp Inc.",
+    "globalOrganizationName": "Example Corp Global"
+  },
+  "visibility": "PUBLIC",
+  "metros": [
+    {
+      "code": "SV",
+      "href": "https://api.equinix.com/fabric/v4/metros/SV",
+      "name": "Silicon Valley",
+      "ibxs": ["SV1", "SV5"],
+      "displayName": "Silicon Valley (SV)",
+      "inTrail": true,
+      "sellerRegions": {
+        "us-west-1": "US West (N. California)"
+      }
+    },
+    {
+      "code": "DC",
+      "href": "https://api.equinix.com/fabric/v4/metros/DC",
+      "name": "Ashburn",
+      "ibxs": ["DC2", "DC6"],
+      "displayName": "Ashburn (DC)",
+      "inTrail": true,
+      "sellerRegions": {
+        "us-east-1": "US East (N. Virginia)"
+      }
+    }
+  ],
+  "selfProfile": false,
+  "changeLog": {
+    "createdBy": "user9012",
+    "createdByFullName": "Alice Johnson",
+    "createdByEmail": "alice.johnson@example.com",
+    "createdDateTime": "2024-01-20T10:00:00.000Z",
+    "updatedBy": "user3456",
+    "updatedByFullName": "Bob Williams",
+    "updatedByEmail": "bob.williams@example.com",
+    "updatedDateTime": "2024-11-10T08:30:00.000Z",
+    "deletedBy": null,
+    "deletedByFullName": null,
+    "deletedByEmail": null,
+    "deletedDateTime": null
+  },
+  "allowedEmails": [
+    "partner-onboard@example.com",
+    "network-team@example.com"
+  ]
+}

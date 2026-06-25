@@ -21,6 +21,9 @@ import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 import api.equinix.javasdk.fabric.model.HealthStatus;
+import api.equinix.javasdk.fabric.mcp.McpClient;
+import api.equinix.javasdk.fabric.mcp.McpClientConfig;
+import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.optimizer.MetroOptimizer;
 import api.equinix.javasdk.fabric.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.fabric.optimizer.wizard.DeploymentWizard;
@@ -117,6 +120,8 @@ public final class Fabric extends EquinixClient implements Service {
     private MarketplaceSubscriptions marketplaceSubscriptions;
 
     private HealthStatus healthStatus;
+
+    private McpBridge mcpBridge;
 
     final private FabricConfig fabricConfig;
 
@@ -494,6 +499,54 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public PeeringIntelligence.Builder peeringIntelligence() {
         return PeeringIntelligence.builder(this);
+    }
+
+    /**
+     * Returns the MCP (Model Context Protocol) bridge for interacting with Equinix MCP servers.
+     *
+     * <p>The MCP bridge provides access to the Equinix Fabric MCP server's tools via the
+     * JSON-RPC 2.0 protocol (metro lookup, connection search/validation, cloud-router and
+     * observability helpers; the exact set is discovered at runtime via {@code listTools()}),
+     * enabling real-time validation, enrichment, and observability for the SDK's optimization
+     * and deployment modules. The MCP client is automatically initialized on first access.</p>
+     *
+     * <pre>{@code
+     * McpBridge mcp = fabric.mcp();
+     *
+     * // List available metros via MCP
+     * List<McpMetroBridge.McpMetro> metros = mcp.metros().listMetros();
+     *
+     * // Validate a connection before deployment
+     * McpConnectionBridge.McpConnectionValidation result =
+     *     mcp.connections().validateConnection(connectionSpec);
+     * }</pre>
+     *
+     * @return the {@link McpBridge} for MCP server interactions
+     */
+    public McpBridge mcp() {
+        if (this.mcpBridge == null) {
+            McpClient mcpClient = new McpClient(
+                    this.equinixClient.getEquinixCredentialsProvider().getCredentials());
+            mcpClient.initialize();
+            this.mcpBridge = new McpBridge(mcpClient);
+        }
+        return mcpBridge;
+    }
+
+    /**
+     * Returns the MCP bridge with custom configuration.
+     *
+     * @param config the MCP client configuration (endpoint URLs, timeouts, etc.)
+     * @return the {@link McpBridge} for MCP server interactions
+     */
+    public McpBridge mcp(McpClientConfig config) {
+        if (this.mcpBridge == null) {
+            McpClient mcpClient = new McpClient(
+                    this.equinixClient.getEquinixCredentialsProvider().getCredentials(), config);
+            mcpClient.initialize();
+            this.mcpBridge = new McpBridge(mcpClient);
+        }
+        return mcpBridge;
     }
 
     /**

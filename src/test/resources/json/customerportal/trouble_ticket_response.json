@@ -1,0 +1,18 @@
+{
+  "uuid": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "href": "/v1/troubleTickets/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+  "ticketNumber": "TT-2024-0034891",
+  "category": "CONNECTIVITY",
+  "status": "OPEN",
+  "priority": "HIGH",
+  "subject": "Intermittent packet loss on cross-connect XC-1042",
+  "description": "Experiencing intermittent packet loss averaging 2.5% on cross-connect XC-1042 between cage SV5:01:000ABC and SV5:01:000DEF since 2024-11-10 03:00 UTC.",
+  "ibxCode": "SV5",
+  "accountNumber": "128745",
+  "requestorName": "Robert Chen",
+  "requestorEmail": "robert.chen@acmecloudservices.com",
+  "assigneeName": "Maria Garcia",
+  "createdDate": "2024-11-10T10:15:30.000Z",
+  "lastUpdatedDate": "2024-11-12T14:22:18.000Z",
+  "resolvedDate": null
+}

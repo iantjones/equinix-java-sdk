@@ -1,0 +1,7 @@
+{
+  "uuid": "d6e7f809-1021-4324-3546-576879900112",
+  "type": "CONNECTION_STATUS",
+  "timestamp": "2024-11-14T22:15:47.000Z",
+  "payload": "{\"connectionUuid\":\"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d\",\"previousState\":\"PROVISIONING\",\"currentState\":\"ACTIVE\",\"bandwidth\":10000}",
+  "source": "fabric-connection-service"
+}

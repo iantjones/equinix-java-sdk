@@ -1,0 +1,12 @@
+{
+  "uuid": "c5d6e7f8-0910-4213-2435-465768799001",
+  "name": "SV5-Infra-Alerts-Webhook",
+  "type": "WEBHOOK",
+  "status": "ACTIVE",
+  "eventTypes": [
+    "CONNECTION_STATE_CHANGE",
+    "PORT_STATUS_CHANGE",
+    "MAINTENANCE_NOTIFICATION",
+    "TICKET_STATUS_UPDATE"
+  ]
+}

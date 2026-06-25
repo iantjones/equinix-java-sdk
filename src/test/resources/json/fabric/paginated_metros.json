@@ -1,0 +1,57 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "code": "SV",
+      "href": "https://api.equinix.com/fabric/v4/metros/SV",
+      "name": "Silicon Valley",
+      "ibxs": ["SV1", "SV2", "SV5", "SV8", "SV10"],
+      "type": "METRO",
+      "region": "AMER",
+      "geoCoordinates": {
+        "latitude": 37.3382,
+        "longitude": -121.8863
+      },
+      "connectedMetros": [
+        {
+          "code": "LA",
+          "href": "https://api.equinix.com/fabric/v4/metros/LA",
+          "avgLatency": 8.52
+        },
+        {
+          "code": "DC",
+          "href": "https://api.equinix.com/fabric/v4/metros/DC",
+          "avgLatency": 62.17
+        }
+      ]
+    },
+    {
+      "code": "DC",
+      "href": "https://api.equinix.com/fabric/v4/metros/DC",
+      "name": "Ashburn",
+      "ibxs": ["DC1", "DC2", "DC3", "DC4", "DC5", "DC6", "DC10", "DC11", "DC12", "DC15"],
+      "type": "METRO",
+      "region": "AMER",
+      "geoCoordinates": {
+        "latitude": 39.0438,
+        "longitude": -77.4874
+      },
+      "connectedMetros": [
+        {
+          "code": "NY",
+          "href": "https://api.equinix.com/fabric/v4/metros/NY",
+          "avgLatency": 5.23
+        },
+        {
+          "code": "SV",
+          "href": "https://api.equinix.com/fabric/v4/metros/SV",
+          "avgLatency": 62.17
+        }
+      ]
+    }
+  ]
+}
