@@ -19,6 +19,7 @@ package api.equinix.javasdk.core.http.request;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.enums.HttpMethod;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import lombok.*;
@@ -57,6 +58,12 @@ public abstract class EquinixRequest<T> implements Request<T> {
     private String serviceEndpoint;
 
     private TypeReference<?> typeReference;
+    /**
+     * Response type derived at runtime from the resource's JSON class (via Jackson's
+     * {@code TypeFactory}); used in preference to {@link #typeReference} when set, so resource
+     * clients need not hand-declare a {@code TypeReference} per operation.
+     */
+    private JavaType javaType;
     private FilterProvider filters;
 
     protected Map<String, List<String>> queryParameters = new HashMap<>();

@@ -175,4 +175,20 @@ public class ClientBase {
         return Utils.buildRequest(this.functionalArea, this.requestParent,
                 serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, queryParams, typeRef);
     }
+
+    // -----------------------------------------------------------------------
+    // Derived-type variants: response type is inferred from the resource's JSON
+    // class (no hand-declared TypeReference needed). See Utils.deriveResponseType.
+    // -----------------------------------------------------------------------
+
+    protected <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, Class<?> jsonClass) {
+        return Utils.buildRequest(this.functionalArea, this.requestParent,
+                serviceEndpoint, requestType, this.configClient.getEquinixClient(), null, null, jsonClass);
+    }
+
+    protected <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType,
+                                                               Map<String, String> pathParams, Class<?> jsonClass) {
+        return Utils.buildRequest(this.functionalArea, this.requestParent,
+                serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, null, jsonClass);
+    }
 }

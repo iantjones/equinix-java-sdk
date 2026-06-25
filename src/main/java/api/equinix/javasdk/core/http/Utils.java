@@ -25,6 +25,7 @@ import api.equinix.javasdk.core.model.APIParam;
 import api.equinix.javasdk.core.model.OptionalRequestBuilder;
 import api.equinix.javasdk.core.enums.HttpMethod;
 import api.equinix.javasdk.core.enums.RequestType;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -119,6 +120,57 @@ public class Utils {
         equinixRequest.setEquinixCredentialsProvider(equinixClient.getEquinixCredentialsProvider());
 
         return equinixRequest;
+    }
+
+    /**
+     * Builds a request whose response type is <em>derived</em> from the resource's JSON class
+     * (via {@link #deriveResponseType}) rather than a hand-declared {@code TypeReference}.
+     *
+     * @param jsonClass the resource's JSON model class (e.g. {@code ServiceProfileJson.class})
+     */
+    public static <T> EquinixRequest<T> buildRequest(String functionalArea, String requestParent,
+                                                     String serviceEndpoint, RequestType requestType,
+                                                     EquinixClient equinixClient, Map<String, String> pathParams,
+                                                     Map<String, List<String>> queryParams, Class<?> jsonClass) {
+        EquinixRequest<T> equinixRequest = buildRequest(functionalArea, requestParent, serviceEndpoint,
+                requestType, equinixClient, pathParams, queryParams, (TypeReference<?>) null);
+        equinixRequest.setJavaType(deriveResponseType(requestType, jsonClass));
+        return equinixRequest;
+    }
+
+    /**
+     * Derives the Jackson response {@link JavaType} for an operation from its {@link RequestType}
+     * and the resource's JSON class, so each JSON model no longer needs hand-declared
+     * {@code paged/list/single} {@code TypeReference} fields.
+     *
+     * @param requestType the operation's request type
+     * @param jsonClass the resource's JSON model class
+     * @return the JavaType to deserialize the response into
+     */
+    public static JavaType deriveResponseType(RequestType requestType, Class<?> jsonClass) {
+        var typeFactory = Constants.objectMapper.getTypeFactory();
+        switch (requestType) {
+            case PAGINATED:
+            case PAGINATED_POST:
+                return typeFactory.constructParametricType(Page.class, Object.class, jsonClass);
+            case LIST:
+                return typeFactory.constructCollectionType(ArrayList.class, jsonClass);
+            case SINGLE:
+            default:
+                return typeFactory.constructType(jsonClass);
+        }
+    }
+
+    /**
+     * Deserializes a response body using the request's derived {@link JavaType} when present,
+     * otherwise its hand-declared {@code TypeReference} (back-compat for not-yet-migrated clients).
+     */
+    @SuppressWarnings("unchecked")
+    private static <X> X readResponseBody(EquinixResponse<?> equinixResponse, EquinixRequest<?> equinixRequest)
+            throws java.io.IOException {
+        return equinixRequest.getJavaType() != null
+                ? (X) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getJavaType())
+                : (X) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
     }
 
     /**
@@ -510,7 +562,7 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <T, S> Page<T, S> handlePaginatedListResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException {
         try {
-            Page<T, S> responsePage = (Page<T, S>) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            Page<T, S> responsePage = readResponseBody(equinixResponse, equinixRequest);
             responsePage.setAssociatedRequest(equinixRequest);
             responsePage.setAssociatedResponse(equinixResponse);
             return responsePage;
@@ -533,7 +585,7 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <T, S> List<S> handleListResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         try {
-            return (List<S>) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            return readResponseBody(equinixResponse, equinixRequest);
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);
@@ -553,7 +605,7 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <S, T> S handleSingletonResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         try {
-            return (S) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            return readResponseBody(equinixResponse, equinixRequest);
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);
@@ -645,7 +697,7 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <T> HashMap<String, String> handleMapResponse(EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse) throws EquinixClientException  {
         try {
-            return (HashMap<String, String>) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
+            return readResponseBody(equinixResponse, equinixRequest);
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION);
