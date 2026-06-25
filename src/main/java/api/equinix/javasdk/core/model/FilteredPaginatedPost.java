@@ -16,17 +16,24 @@
 
 package api.equinix.javasdk.core.model;
 
-import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Generic request body for paginated, filtered POST search endpoints (filter only, no sort).
+ *
+ * <p>Parameterized over the filter type ({@code F}) so core carries no dependency on any
+ * domain's concrete filter model.</p>
+ *
+ * @param <F> the domain filter payload type
+ */
 @Getter
 @Setter
-public class FilteredPaginatedPost {
+public class FilteredPaginatedPost<F> {
 
-    private FilterPropertyList filter;
+    private F filter;
 
-    public FilteredPaginatedPost(FilterPropertyList filter) {
+    public FilteredPaginatedPost(F filter) {
         this.filter = filter;
     }
 }

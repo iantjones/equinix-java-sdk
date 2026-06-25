@@ -47,7 +47,7 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
 
     public Page<FabricGateway, FabricGatewayJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<FabricGateway> equinixRequest = this.buildRequest("SearchFabricGateways", RequestType.PAGINATED_POST, FabricGatewayJson.getPagedTypeRef());
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost(filter, sort));
+        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

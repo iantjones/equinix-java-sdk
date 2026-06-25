@@ -46,7 +46,7 @@ public class CloudRouterClientImpl extends PageableBase implements CloudRouterCl
 
     public Page<CloudRouter, CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<CloudRouter> equinixRequest = this.buildRequest("SearchCloudRouters", RequestType.PAGINATED_POST, CloudRouterJson.getPagedTypeRef());
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost(filter, sort));
+        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

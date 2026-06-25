@@ -18,22 +18,31 @@ package api.equinix.javasdk.core.model;
 
 import api.equinix.javasdk.core.http.request.Pagination;
 import api.equinix.javasdk.core.internal.Constants;
-import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
-import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Generic request body for paginated, filtered, sorted POST search endpoints.
+ *
+ * <p>Holds a domain-specific filter and sort payload plus core pagination state.
+ * Parameterized over the filter ({@code F}) and sort ({@code S}) types so that core
+ * carries no dependency on any domain's concrete filter/sort model (for example Fabric's
+ * {@code FilterPropertyList}/{@code SortPropertyList}).</p>
+ *
+ * @param <F> the domain filter payload type
+ * @param <S> the domain sort payload type
+ */
 @Getter
 @Setter
-public class FilteredSortedPaginatedPost {
+public class FilteredSortedPaginatedPost<F, S> {
 
-    private FilterPropertyList filter;
+    private F filter;
 
-    private SortPropertyList sort;
+    private S sort;
 
     private Pagination pagination = new Pagination(Constants.PAGE_OFFSET, Constants.PAGE_LIMIT);
 
-    public FilteredSortedPaginatedPost(FilterPropertyList filter, SortPropertyList sort) {
+    public FilteredSortedPaginatedPost(F filter, S sort) {
         this.filter = filter;
         this.sort = sort;
     }

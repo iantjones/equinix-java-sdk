@@ -72,7 +72,7 @@ public class PaginatedFilteredList<T> extends ArrayList<T> {
     }
 
     private PaginatedFilteredList<T> fetchNextPage() {
-        ((FilteredSortedPaginatedPost)((PaginatedPostRequest<T>)equinixRequest).getObjectToSerialize()).getPagination().nextPage();
+        ((FilteredSortedPaginatedPost<?, ?>)((PaginatedPostRequest<T>)equinixRequest).getObjectToSerialize()).getPagination().nextPage();
         return (PaginatedFilteredList<T>) this.pageableClient.nextPage((PaginatedPostRequest<T>)equinixRequest);
     }
 

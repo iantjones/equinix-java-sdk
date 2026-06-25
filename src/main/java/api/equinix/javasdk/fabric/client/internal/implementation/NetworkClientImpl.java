@@ -46,7 +46,7 @@ public class NetworkClientImpl extends PageableBase implements NetworkClient<Net
 
     public Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<Network> equinixRequest = this.buildRequest("SearchNetworks", RequestType.PAGINATED_POST, NetworkJson.getPagedTypeRef());
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost(filter, sort));
+        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
