@@ -39,14 +39,14 @@ public class PowerClientImpl extends PageableBase implements PowerClient<PowerRe
 
     public Page<PowerReading, PowerReadingJson> list(String ibx) {
         Map<String, String> pParams = Map.of("ibx", ibx);
-        EquinixRequest<PowerReading> equinixRequest = this.buildRequestWithPathParams("ListPowerReadings", RequestType.PAGINATED, pParams, PowerReadingJson.getPagedTypeRef());
+        EquinixRequest<PowerReading> equinixRequest = this.buildRequestWithPathParams("ListPowerReadings", RequestType.PAGINATED, pParams, PowerReadingJson.class);
         EquinixResponse<PowerReading> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public PowerReadingJson getPowerReading(String ibx, String cabinetId) {
         Map<String, String> pParams = Map.of("ibx", ibx, "cabinetId", cabinetId);
-        EquinixRequest<PowerReading> equinixRequest = this.buildRequestWithPathParams("GetPowerReading", RequestType.SINGLE, pParams, PowerReadingJson.getSingleTypeRef());
+        EquinixRequest<PowerReading> equinixRequest = this.buildRequestWithPathParams("GetPowerReading", RequestType.SINGLE, pParams, PowerReadingJson.class);
         EquinixResponse<PowerReading> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

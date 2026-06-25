@@ -43,20 +43,20 @@ public class StreamingSubscriptionClientImpl extends PageableBase implements Str
     }
 
     public List<StreamingSubscriptionJson> list() {
-        EquinixRequest<StreamingSubscription> equinixRequest = this.buildRequest("ListSubscriptions", RequestType.LIST, StreamingSubscriptionJson.getListTypeRef());
+        EquinixRequest<StreamingSubscription> equinixRequest = this.buildRequest("ListSubscriptions", RequestType.LIST, StreamingSubscriptionJson.class);
         EquinixResponse<StreamingSubscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleListResponse(equinixResponse, equinixRequest);
     }
 
     public StreamingSubscriptionJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.class);
         EquinixResponse<StreamingSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public StreamingSubscriptionJson create(StreamingSubscriptionCreatorJson creatorJson) {
-        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequest("CreateSubscription", RequestType.SINGLE, StreamingSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequest("CreateSubscription", RequestType.SINGLE, StreamingSubscriptionJson.class);
         Utils.serializeJson(equinixRequest, creatorJson);
         EquinixResponse<StreamingSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -64,7 +64,7 @@ public class StreamingSubscriptionClientImpl extends PageableBase implements Str
 
     public StreamingSubscriptionJson update(String uuid, StreamingSubscriptionCreatorJson creatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("UpdateSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("UpdateSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.class);
         Utils.serializeJson(equinixRequest, creatorJson);
         EquinixResponse<StreamingSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -72,7 +72,7 @@ public class StreamingSubscriptionClientImpl extends PageableBase implements Str
 
     public StreamingSubscriptionJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamingSubscription> equinixRequest = this.buildRequestWithPathParams("DeleteSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamingSubscription> equinixRequest = this.buildRequestWithPathParams("DeleteSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.class);
         EquinixResponse<StreamingSubscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -83,14 +83,14 @@ public class StreamingSubscriptionClientImpl extends PageableBase implements Str
 
     public SubscriptionDataJson getSubscriptionData(String subscriptionId) {
         Map<String, String> pParams = Map.of("subscriptionId", subscriptionId);
-        EquinixRequest<SubscriptionDataJson> equinixRequest = this.buildRequestWithPathParams("GetSubscriptionData", RequestType.SINGLE, pParams, SubscriptionDataJson.getSingleTypeRef());
+        EquinixRequest<SubscriptionDataJson> equinixRequest = this.buildRequestWithPathParams("GetSubscriptionData", RequestType.SINGLE, pParams, SubscriptionDataJson.class);
         EquinixResponse<SubscriptionDataJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public SubscriptionCertificateJson getCertificate(String channelType) {
         Map<String, List<String>> qParams = Map.of("channelType", List.of(channelType));
-        EquinixRequest<SubscriptionCertificateJson> equinixRequest = this.buildRequestWithQueryParams("GetCertificate", RequestType.SINGLE, qParams, SubscriptionCertificateJson.getSingleTypeRef());
+        EquinixRequest<SubscriptionCertificateJson> equinixRequest = this.buildRequestWithQueryParams("GetCertificate", RequestType.SINGLE, qParams, SubscriptionCertificateJson.class);
         EquinixResponse<SubscriptionCertificateJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

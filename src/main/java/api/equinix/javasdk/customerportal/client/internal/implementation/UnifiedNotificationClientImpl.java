@@ -38,14 +38,14 @@ public class UnifiedNotificationClientImpl extends PageableBase implements Unifi
     }
 
     public Page<UnifiedNotification, UnifiedNotificationJson> list() {
-        EquinixRequest<UnifiedNotification> equinixRequest = this.buildRequest("ListUnifiedNotifications", RequestType.PAGINATED, UnifiedNotificationJson.getPagedTypeRef());
+        EquinixRequest<UnifiedNotification> equinixRequest = this.buildRequest("ListUnifiedNotifications", RequestType.PAGINATED, UnifiedNotificationJson.class);
         EquinixResponse<UnifiedNotification> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public UnifiedNotificationJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<UnifiedNotificationJson> equinixRequest = this.buildRequestWithPathParams("GetUnifiedNotification", RequestType.SINGLE, pParams, UnifiedNotificationJson.getSingleTypeRef());
+        EquinixRequest<UnifiedNotificationJson> equinixRequest = this.buildRequestWithPathParams("GetUnifiedNotification", RequestType.SINGLE, pParams, UnifiedNotificationJson.class);
         EquinixResponse<UnifiedNotificationJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

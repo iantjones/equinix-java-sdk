@@ -38,14 +38,14 @@ public class ReportClientImpl extends PageableBase implements ReportClient<Repor
     }
 
     public Page<Report, ReportJson> list() {
-        EquinixRequest<Report> equinixRequest = this.buildRequest("ListReports", RequestType.PAGINATED, ReportJson.getPagedTypeRef());
+        EquinixRequest<Report> equinixRequest = this.buildRequest("ListReports", RequestType.PAGINATED, ReportJson.class);
         EquinixResponse<Report> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public ReportJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ReportJson> equinixRequest = this.buildRequestWithPathParams("GetReport", RequestType.SINGLE, pParams, ReportJson.getSingleTypeRef());
+        EquinixRequest<ReportJson> equinixRequest = this.buildRequestWithPathParams("GetReport", RequestType.SINGLE, pParams, ReportJson.class);
         EquinixResponse<ReportJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

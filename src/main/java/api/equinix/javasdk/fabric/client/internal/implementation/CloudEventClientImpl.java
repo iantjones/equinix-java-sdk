@@ -36,7 +36,7 @@ public class CloudEventClientImpl extends PageableBase implements CloudEventClie
     }
 
     public Page<CloudEvent, CloudEventJson> list() {
-        EquinixRequest<CloudEvent> equinixRequest = this.buildRequest("ListCloudEvents", RequestType.PAGINATED, CloudEventJson.getPagedTypeRef());
+        EquinixRequest<CloudEvent> equinixRequest = this.buildRequest("ListCloudEvents", RequestType.PAGINATED, CloudEventJson.class);
         EquinixResponse<CloudEvent> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

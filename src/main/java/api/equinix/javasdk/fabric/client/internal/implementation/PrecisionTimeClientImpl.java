@@ -40,20 +40,20 @@ public class PrecisionTimeClientImpl extends PageableBase implements PrecisionTi
     }
 
     public Page<PrecisionTime, PrecisionTimeJson> list() {
-        EquinixRequest<PrecisionTime> equinixRequest = this.buildRequest("ListPrecisionTime", RequestType.PAGINATED, PrecisionTimeJson.getPagedTypeRef());
+        EquinixRequest<PrecisionTime> equinixRequest = this.buildRequest("ListPrecisionTime", RequestType.PAGINATED, PrecisionTimeJson.class);
         EquinixResponse<PrecisionTime> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public PrecisionTimeJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequestWithPathParams("GetPrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.getSingleTypeRef());
+        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequestWithPathParams("GetPrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.class);
         EquinixResponse<PrecisionTimeJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public PrecisionTimeJson create(PrecisionTimeCreatorJson precisionTimeCreatorJson) {
-        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequest("PostPrecisionTime", RequestType.SINGLE, PrecisionTimeJson.getSingleTypeRef());
+        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequest("PostPrecisionTime", RequestType.SINGLE, PrecisionTimeJson.class);
         Utils.serializeJson(equinixRequest, precisionTimeCreatorJson);
         EquinixResponse<PrecisionTimeJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class PrecisionTimeClientImpl extends PageableBase implements PrecisionTi
 
     public PrecisionTimeJson update(String uuid, PrecisionTimeCreatorJson precisionTimeCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequestWithPathParams("PutPrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.getSingleTypeRef());
+        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequestWithPathParams("PutPrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.class);
         Utils.serializeJson(equinixRequest, precisionTimeCreatorJson);
         EquinixResponse<PrecisionTimeJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class PrecisionTimeClientImpl extends PageableBase implements PrecisionTi
 
     public PrecisionTimeJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PrecisionTime> equinixRequest = this.buildRequestWithPathParams("DeletePrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.getSingleTypeRef());
+        EquinixRequest<PrecisionTime> equinixRequest = this.buildRequestWithPathParams("DeletePrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.class);
         EquinixResponse<PrecisionTime> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

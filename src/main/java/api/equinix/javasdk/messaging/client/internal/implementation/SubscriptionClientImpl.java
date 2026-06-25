@@ -40,20 +40,20 @@ public class SubscriptionClientImpl extends PageableBase implements Subscription
     }
 
     public Page<Subscription, SubscriptionJson> list() {
-        EquinixRequest<Subscription> equinixRequest = this.buildRequest("ListSubscriptions", RequestType.PAGINATED, SubscriptionJson.getPagedTypeRef());
+        EquinixRequest<Subscription> equinixRequest = this.buildRequest("ListSubscriptions", RequestType.PAGINATED, SubscriptionJson.class);
         EquinixResponse<Subscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public SubscriptionJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetSubscription", RequestType.SINGLE, pParams, SubscriptionJson.getSingleTypeRef());
+        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetSubscription", RequestType.SINGLE, pParams, SubscriptionJson.class);
         EquinixResponse<SubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public SubscriptionJson create(SubscriptionCreatorJson subscriptionCreatorJson) {
-        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequest("CreateSubscription", RequestType.SINGLE, SubscriptionJson.getSingleTypeRef());
+        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequest("CreateSubscription", RequestType.SINGLE, SubscriptionJson.class);
         Utils.serializeJson(equinixRequest, subscriptionCreatorJson);
         EquinixResponse<SubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class SubscriptionClientImpl extends PageableBase implements Subscription
 
     public SubscriptionJson update(String uuid, SubscriptionCreatorJson subscriptionCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequestWithPathParams("UpdateSubscription", RequestType.SINGLE, pParams, SubscriptionJson.getSingleTypeRef());
+        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequestWithPathParams("UpdateSubscription", RequestType.SINGLE, pParams, SubscriptionJson.class);
         Utils.serializeJson(equinixRequest, subscriptionCreatorJson);
         EquinixResponse<SubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class SubscriptionClientImpl extends PageableBase implements Subscription
 
     public SubscriptionJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Subscription> equinixRequest = this.buildRequestWithPathParams("DeleteSubscription", RequestType.SINGLE, pParams, SubscriptionJson.getSingleTypeRef());
+        EquinixRequest<Subscription> equinixRequest = this.buildRequestWithPathParams("DeleteSubscription", RequestType.SINGLE, pParams, SubscriptionJson.class);
         EquinixResponse<Subscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

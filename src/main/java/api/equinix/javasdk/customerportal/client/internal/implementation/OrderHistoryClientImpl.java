@@ -38,14 +38,14 @@ public class OrderHistoryClientImpl extends PageableBase implements OrderHistory
     }
 
     public Page<OrderHistoryItem, OrderHistoryItemJson> list() {
-        EquinixRequest<OrderHistoryItem> equinixRequest = this.buildRequest("ListOrderHistory", RequestType.PAGINATED, OrderHistoryItemJson.getPagedTypeRef());
+        EquinixRequest<OrderHistoryItem> equinixRequest = this.buildRequest("ListOrderHistory", RequestType.PAGINATED, OrderHistoryItemJson.class);
         EquinixResponse<OrderHistoryItem> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public OrderHistoryItemJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<OrderHistoryItemJson> equinixRequest = this.buildRequestWithPathParams("GetOrderHistoryItem", RequestType.SINGLE, pParams, OrderHistoryItemJson.getSingleTypeRef());
+        EquinixRequest<OrderHistoryItemJson> equinixRequest = this.buildRequestWithPathParams("GetOrderHistoryItem", RequestType.SINGLE, pParams, OrderHistoryItemJson.class);
         EquinixResponse<OrderHistoryItemJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

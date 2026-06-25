@@ -38,14 +38,14 @@ public class BillingCreditClientImpl extends PageableBase implements BillingCred
     }
 
     public Page<BillingCredit, BillingCreditJson> list() {
-        EquinixRequest<BillingCredit> equinixRequest = this.buildRequest("ListBillingCredits", RequestType.PAGINATED, BillingCreditJson.getPagedTypeRef());
+        EquinixRequest<BillingCredit> equinixRequest = this.buildRequest("ListBillingCredits", RequestType.PAGINATED, BillingCreditJson.class);
         EquinixResponse<BillingCredit> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public BillingCreditJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BillingCreditJson> equinixRequest = this.buildRequestWithPathParams("GetBillingCredit", RequestType.SINGLE, pParams, BillingCreditJson.getSingleTypeRef());
+        EquinixRequest<BillingCreditJson> equinixRequest = this.buildRequestWithPathParams("GetBillingCredit", RequestType.SINGLE, pParams, BillingCreditJson.class);
         EquinixResponse<BillingCreditJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

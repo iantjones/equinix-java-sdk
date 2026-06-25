@@ -37,7 +37,7 @@ public class ResellerClientImpl extends PageableBase implements ResellerClient<R
     }
 
     public Page<Reseller, ResellerJson> list() {
-        EquinixRequest<Reseller> equinixRequest = this.buildRequest("ListResellers", RequestType.PAGINATED, ResellerJson.getPagedTypeRef());
+        EquinixRequest<Reseller> equinixRequest = this.buildRequest("ListResellers", RequestType.PAGINATED, ResellerJson.class);
         EquinixResponse<Reseller> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

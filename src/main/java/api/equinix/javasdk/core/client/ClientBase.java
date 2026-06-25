@@ -142,15 +142,15 @@ public class ClientBase {
     // -----------------------------------------------------------------------
 
     protected  <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams) {
-        return buildRequest(serviceEndpoint, requestType, pathParams, null, null);
+        return buildRequest(serviceEndpoint, requestType, pathParams, null, (TypeReference<?>) null);
     }
 
     protected  <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType, Map<String, List<String>> queryParams) {
-        return buildRequest(serviceEndpoint, requestType, null, queryParams, null);
+        return buildRequest(serviceEndpoint, requestType, null, queryParams, (TypeReference<?>) null);
     }
 
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams, Map<String, List<String>> queryParams) {
-        return buildRequest(serviceEndpoint, requestType, pathParams, queryParams, null);
+        return buildRequest(serviceEndpoint, requestType, pathParams, queryParams, (TypeReference<?>) null);
     }
 
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, TypeReference<?> typeRef) {
@@ -158,7 +158,7 @@ public class ClientBase {
     }
 
     protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType) {
-        return buildRequest(serviceEndpoint, requestType, null, null, null);
+        return buildRequest(serviceEndpoint, requestType, null, null, (TypeReference<?>) null);
     }
 
     protected  <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams, TypeReference<?> typeRef) {
@@ -190,5 +190,18 @@ public class ClientBase {
                                                                Map<String, String> pathParams, Class<?> jsonClass) {
         return Utils.buildRequest(this.functionalArea, this.requestParent,
                 serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, null, jsonClass);
+    }
+
+    protected <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType,
+                                                                Map<String, List<String>> queryParams, Class<?> jsonClass) {
+        return Utils.buildRequest(this.functionalArea, this.requestParent,
+                serviceEndpoint, requestType, this.configClient.getEquinixClient(), null, queryParams, jsonClass);
+    }
+
+    protected <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType,
+                                                 Map<String, String> pathParams, Map<String, List<String>> queryParams,
+                                                 Class<?> jsonClass) {
+        return Utils.buildRequest(this.functionalArea, this.requestParent,
+                serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, queryParams, jsonClass);
     }
 }

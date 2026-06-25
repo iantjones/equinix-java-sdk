@@ -46,13 +46,13 @@ public class SystemAlertClientImpl extends PageableBase implements SystemAlertCl
                 "offset", List.of(String.valueOf(offset)),
                 "limit", List.of(String.valueOf(limit))
         );
-        EquinixRequest<SystemAlert> equinixRequest = this.buildRequestWithQueryParams("SearchAlertsGet", RequestType.PAGINATED, qParams, SystemAlertJson.getPagedTypeRef());
+        EquinixRequest<SystemAlert> equinixRequest = this.buildRequestWithQueryParams("SearchAlertsGet", RequestType.PAGINATED, qParams, SystemAlertJson.class);
         EquinixResponse<SystemAlert> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public Page<SystemAlert, SystemAlertJson> searchPost(Object filterBody) {
-        EquinixRequest<SystemAlert> equinixRequest = this.buildRequest("SearchAlertsPost", RequestType.PAGINATED_POST, SystemAlertJson.getPagedTypeRef());
+        EquinixRequest<SystemAlert> equinixRequest = this.buildRequest("SearchAlertsPost", RequestType.PAGINATED_POST, SystemAlertJson.class);
         Utils.serializeJson(equinixRequest, filterBody);
         EquinixResponse<SystemAlert> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);

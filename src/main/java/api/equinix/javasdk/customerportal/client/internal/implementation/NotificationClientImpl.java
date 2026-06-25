@@ -38,14 +38,14 @@ public class NotificationClientImpl extends PageableBase implements Notification
     }
 
     public Page<Notification, NotificationJson> list() {
-        EquinixRequest<Notification> equinixRequest = this.buildRequest("ListNotifications", RequestType.PAGINATED, NotificationJson.getPagedTypeRef());
+        EquinixRequest<Notification> equinixRequest = this.buildRequest("ListNotifications", RequestType.PAGINATED, NotificationJson.class);
         EquinixResponse<Notification> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public NotificationJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<NotificationJson> equinixRequest = this.buildRequestWithPathParams("GetNotification", RequestType.SINGLE, pParams, NotificationJson.getSingleTypeRef());
+        EquinixRequest<NotificationJson> equinixRequest = this.buildRequestWithPathParams("GetNotification", RequestType.SINGLE, pParams, NotificationJson.class);
         EquinixResponse<NotificationJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

@@ -68,7 +68,7 @@ public class DeviceClientImpl extends PageableBase implements DeviceClient<Devic
     public Page<Device, DeviceJson> list(RequestBuilder.Device requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
 
-        EquinixRequest<Device> equinixRequest = this.buildRequest("ListDevices", RequestType.PAGINATED, null, qParams, DeviceJson.getPagedTypeRef());
+        EquinixRequest<Device> equinixRequest = this.buildRequest("ListDevices", RequestType.PAGINATED, null, qParams, DeviceJson.class);
         EquinixResponse<Device> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -77,7 +77,7 @@ public class DeviceClientImpl extends PageableBase implements DeviceClient<Devic
     public DeviceJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
 
-        EquinixRequest<DeviceJson> equinixRequest = this.buildRequestWithPathParams("GetDevice", RequestType.SINGLE, pParams, DeviceJson.getSingleTypeRef());
+        EquinixRequest<DeviceJson> equinixRequest = this.buildRequestWithPathParams("GetDevice", RequestType.SINGLE, pParams, DeviceJson.class);
         EquinixResponse<DeviceJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -86,7 +86,7 @@ public class DeviceClientImpl extends PageableBase implements DeviceClient<Devic
     public List<NetworkInterface> listInterfaces(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
 
-        EquinixRequest<NetworkInterface> equinixRequest = this.buildRequestWithPathParams("GetNetworkInterfaces", RequestType.LIST, pParams, NetworkInterface.getListTypeRef());
+        EquinixRequest<NetworkInterface> equinixRequest = this.buildRequestWithPathParams("GetNetworkInterfaces", RequestType.LIST, pParams, NetworkInterface.class);
         EquinixResponse<NetworkInterface> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleListResponse(equinixResponse, equinixRequest);
     }
@@ -167,7 +167,7 @@ public class DeviceClientImpl extends PageableBase implements DeviceClient<Devic
      */
     public Pricing getPricing(String deviceUuid) {
         Map<String, List<String>> qParams = Utils.singleParamMap("virtualDeviceUuid", deviceUuid);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.getSingleTypeRef());
+        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.class);
         EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

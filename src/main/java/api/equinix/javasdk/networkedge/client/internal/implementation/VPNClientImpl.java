@@ -61,7 +61,7 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
      */
     public Page<VPN, VPNJson> list(RequestBuilder.VPN requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<VPN> equinixRequest = this.buildRequest("ListVPNs", RequestType.PAGINATED, null, qParams, VPNJson.getPagedTypeRef());
+        EquinixRequest<VPN> equinixRequest = this.buildRequest("ListVPNs", RequestType.PAGINATED, null, qParams, VPNJson.class);
         EquinixResponse<VPN> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -69,14 +69,14 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
     /** {@inheritDoc} */
     public VPNJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithPathParams("GetVPN", RequestType.SINGLE, pParams, VPNJson.getSingleTypeRef());
+        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithPathParams("GetVPN", RequestType.SINGLE, pParams, VPNJson.class);
         EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     /** {@inheritDoc} */
     public VPNJson create(VPNCreatorJson vpnCreatorJson) {
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequest("CreateVPN", RequestType.SINGLE, VPNJson.getSingleTypeRef());
+        EquinixRequest<VPNJson> equinixRequest = this.buildRequest("CreateVPN", RequestType.SINGLE, VPNJson.class);
         Utils.serializeJson(equinixRequest, vpnCreatorJson);
         EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
         String aclTemplateUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
@@ -86,7 +86,7 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
     /** {@inheritDoc} */
     public VPNJson update(String uuid, VPNUpdaterJson vpnUpdaterJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithPathParams("UpdateVPN", RequestType.SINGLE, pParams, VPNJson.getSingleTypeRef());
+        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithPathParams("UpdateVPN", RequestType.SINGLE, pParams, VPNJson.class);
         Utils.serializeJson(equinixRequest, vpnUpdaterJson);
         EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
         return getByUuid(uuid);
@@ -95,7 +95,7 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<VPN> equinixRequest = this.buildRequestWithPathParams("DeleteVPN", RequestType.SINGLE, pParams, VPNJson.getSingleTypeRef());
+        EquinixRequest<VPN> equinixRequest = this.buildRequestWithPathParams("DeleteVPN", RequestType.SINGLE, pParams, VPNJson.class);
         EquinixResponse<VPN> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }

@@ -35,7 +35,7 @@ public class HealthClientImpl extends PageableBase implements HealthClient<Healt
     }
 
     public HealthStatusJson getHealth() {
-        EquinixRequest<HealthStatus> equinixRequest = this.buildRequest("GetHealth", RequestType.SINGLE, HealthStatusJson.getSingleTypeRef());
+        EquinixRequest<HealthStatus> equinixRequest = this.buildRequest("GetHealth", RequestType.SINGLE, HealthStatusJson.class);
         EquinixResponse<HealthStatus> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

@@ -45,7 +45,7 @@ public class RouteFilterClientImpl extends PageableBase implements RouteFilterCl
     }
 
     public Page<RouteFilter, RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<RouteFilter> equinixRequest = this.buildRequest("SearchRouteFilters", RequestType.PAGINATED_POST, RouteFilterJson.getPagedTypeRef());
+        EquinixRequest<RouteFilter> equinixRequest = this.buildRequest("SearchRouteFilters", RequestType.PAGINATED_POST, RouteFilterJson.class);
         Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
@@ -53,13 +53,13 @@ public class RouteFilterClientImpl extends PageableBase implements RouteFilterCl
 
     public RouteFilterJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteFilterJson> equinixRequest = this.buildRequestWithPathParams("GetRouteFilter", RequestType.SINGLE, pParams, RouteFilterJson.getSingleTypeRef());
+        EquinixRequest<RouteFilterJson> equinixRequest = this.buildRequestWithPathParams("GetRouteFilter", RequestType.SINGLE, pParams, RouteFilterJson.class);
         EquinixResponse<RouteFilterJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public RouteFilterJson create(RouteFilterCreatorJson routeFilterCreatorJson) {
-        EquinixRequest<RouteFilterJson> equinixRequest = this.buildRequest("PostRouteFilter", RequestType.SINGLE, RouteFilterJson.getSingleTypeRef());
+        EquinixRequest<RouteFilterJson> equinixRequest = this.buildRequest("PostRouteFilter", RequestType.SINGLE, RouteFilterJson.class);
         Utils.serializeJson(equinixRequest, routeFilterCreatorJson);
         EquinixResponse<RouteFilterJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -67,7 +67,7 @@ public class RouteFilterClientImpl extends PageableBase implements RouteFilterCl
 
     public RouteFilterJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteFilter> equinixRequest = this.buildRequestWithPathParams("DeleteRouteFilter", RequestType.SINGLE, pParams, RouteFilterJson.getSingleTypeRef());
+        EquinixRequest<RouteFilter> equinixRequest = this.buildRequestWithPathParams("DeleteRouteFilter", RequestType.SINGLE, pParams, RouteFilterJson.class);
         EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

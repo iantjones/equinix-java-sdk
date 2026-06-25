@@ -41,21 +41,21 @@ public class RouteAggregationRuleClientImpl extends PageableBase implements Rout
 
     public Page<RouteAggregationRule, RouteAggregationRuleJson> list(String routeAggregationId) {
         Map<String, String> pParams = Map.of("routeAggregationId", routeAggregationId);
-        EquinixRequest<RouteAggregationRule> equinixRequest = this.buildRequestWithPathParams("GetRouteAggregationRules", RequestType.PAGINATED, pParams, RouteAggregationRuleJson.getPagedTypeRef());
+        EquinixRequest<RouteAggregationRule> equinixRequest = this.buildRequestWithPathParams("GetRouteAggregationRules", RequestType.PAGINATED, pParams, RouteAggregationRuleJson.class);
         EquinixResponse<RouteAggregationRule> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public RouteAggregationRuleJson getByUuid(String routeAggregationId, String uuid) {
         Map<String, String> pParams = Map.of("routeAggregationId", routeAggregationId, "uuid", uuid);
-        EquinixRequest<RouteAggregationRuleJson> equinixRequest = this.buildRequestWithPathParams("GetRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationRuleJson> equinixRequest = this.buildRequestWithPathParams("GetRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.class);
         EquinixResponse<RouteAggregationRuleJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public RouteAggregationRuleJson create(String routeAggregationId, RouteAggregationRuleCreatorJson routeAggregationRuleCreatorJson) {
         Map<String, String> pParams = Map.of("routeAggregationId", routeAggregationId);
-        EquinixRequest<RouteAggregationRuleJson> equinixRequest = this.buildRequestWithPathParams("PostRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationRuleJson> equinixRequest = this.buildRequestWithPathParams("PostRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.class);
         Utils.serializeJson(equinixRequest, routeAggregationRuleCreatorJson);
         EquinixResponse<RouteAggregationRuleJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -63,7 +63,7 @@ public class RouteAggregationRuleClientImpl extends PageableBase implements Rout
 
     public RouteAggregationRuleJson update(String routeAggregationId, String uuid, Object updates) {
         Map<String, String> pParams = Map.of("routeAggregationId", routeAggregationId, "uuid", uuid);
-        EquinixRequest<RouteAggregationRuleJson> equinixRequest = this.buildRequestWithPathParams("PatchRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationRuleJson> equinixRequest = this.buildRequestWithPathParams("PatchRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.class);
         Utils.serializeJson(equinixRequest, updates);
         EquinixResponse<RouteAggregationRuleJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -71,7 +71,7 @@ public class RouteAggregationRuleClientImpl extends PageableBase implements Rout
 
     public RouteAggregationRuleJson delete(String routeAggregationId, String uuid) {
         Map<String, String> pParams = Map.of("routeAggregationId", routeAggregationId, "uuid", uuid);
-        EquinixRequest<RouteAggregationRule> equinixRequest = this.buildRequestWithPathParams("DeleteRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationRule> equinixRequest = this.buildRequestWithPathParams("DeleteRouteAggregationRule", RequestType.SINGLE, pParams, RouteAggregationRuleJson.class);
         EquinixResponse<RouteAggregationRule> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

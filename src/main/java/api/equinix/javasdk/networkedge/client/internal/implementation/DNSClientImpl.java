@@ -51,7 +51,7 @@ public class DNSClientImpl extends PageableBase implements DNSClient<DNSLookup> 
      * <p>dnsLookup.</p>
      */
     public Map<String, DNSLookup> dnsLookup(RequestBuilder.DNSLookup requestBuilder) {
-        EquinixRequest<DNSLookup> equinixRequest = this.buildRequest("DNSLookup", RequestType.SINGLE, DNSLookup.getSingleTypeRef());
+        EquinixRequest<DNSLookup> equinixRequest = this.buildRequest("DNSLookup", RequestType.SINGLE, DNSLookup.class);
         Utils.serializeJson(equinixRequest, requestBuilder.build().getDnsLookupRequest());
         EquinixResponse<DNSLookup> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

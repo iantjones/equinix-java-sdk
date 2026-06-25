@@ -40,20 +40,20 @@ public class TroubleTicketClientImpl extends PageableBase implements TroubleTick
     }
 
     public Page<TroubleTicket, TroubleTicketJson> list() {
-        EquinixRequest<TroubleTicket> equinixRequest = this.buildRequest("ListTroubleTickets", RequestType.PAGINATED, TroubleTicketJson.getPagedTypeRef());
+        EquinixRequest<TroubleTicket> equinixRequest = this.buildRequest("ListTroubleTickets", RequestType.PAGINATED, TroubleTicketJson.class);
         EquinixResponse<TroubleTicket> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public TroubleTicketJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequestWithPathParams("GetTroubleTicket", RequestType.SINGLE, pParams, TroubleTicketJson.getSingleTypeRef());
+        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequestWithPathParams("GetTroubleTicket", RequestType.SINGLE, pParams, TroubleTicketJson.class);
         EquinixResponse<TroubleTicketJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public TroubleTicketJson create(TroubleTicketCreatorJson troubleTicketCreatorJson) {
-        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequest("PostTroubleTicket", RequestType.SINGLE, TroubleTicketJson.getSingleTypeRef());
+        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequest("PostTroubleTicket", RequestType.SINGLE, TroubleTicketJson.class);
         Utils.serializeJson(equinixRequest, troubleTicketCreatorJson);
         EquinixResponse<TroubleTicketJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class TroubleTicketClientImpl extends PageableBase implements TroubleTick
 
     public TroubleTicketJson update(String uuid, TroubleTicketCreatorJson troubleTicketCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequestWithPathParams("UpdateTroubleTicket", RequestType.SINGLE, pParams, TroubleTicketJson.getSingleTypeRef());
+        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequestWithPathParams("UpdateTroubleTicket", RequestType.SINGLE, pParams, TroubleTicketJson.class);
         Utils.serializeJson(equinixRequest, troubleTicketCreatorJson);
         EquinixResponse<TroubleTicketJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

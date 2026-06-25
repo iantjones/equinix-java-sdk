@@ -40,20 +40,20 @@ public class SmartHandsClientImpl extends PageableBase implements SmartHandsClie
     }
 
     public Page<SmartHands, SmartHandsJson> list() {
-        EquinixRequest<SmartHands> equinixRequest = this.buildRequest("ListSmartHands", RequestType.PAGINATED, SmartHandsJson.getPagedTypeRef());
+        EquinixRequest<SmartHands> equinixRequest = this.buildRequest("ListSmartHands", RequestType.PAGINATED, SmartHandsJson.class);
         EquinixResponse<SmartHands> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public SmartHandsJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SmartHandsJson> equinixRequest = this.buildRequestWithPathParams("GetSmartHands", RequestType.SINGLE, pParams, SmartHandsJson.getSingleTypeRef());
+        EquinixRequest<SmartHandsJson> equinixRequest = this.buildRequestWithPathParams("GetSmartHands", RequestType.SINGLE, pParams, SmartHandsJson.class);
         EquinixResponse<SmartHandsJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public SmartHandsJson create(SmartHandsCreatorJson smartHandsCreatorJson) {
-        EquinixRequest<SmartHandsJson> equinixRequest = this.buildRequest("CreateSmartHands", RequestType.SINGLE, SmartHandsJson.getSingleTypeRef());
+        EquinixRequest<SmartHandsJson> equinixRequest = this.buildRequest("CreateSmartHands", RequestType.SINGLE, SmartHandsJson.class);
         Utils.serializeJson(equinixRequest, smartHandsCreatorJson);
         EquinixResponse<SmartHandsJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class SmartHandsClientImpl extends PageableBase implements SmartHandsClie
 
     public SmartHandsJson update(String uuid, SmartHandsCreatorJson smartHandsCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SmartHandsJson> equinixRequest = this.buildRequestWithPathParams("UpdateSmartHands", RequestType.SINGLE, pParams, SmartHandsJson.getSingleTypeRef());
+        EquinixRequest<SmartHandsJson> equinixRequest = this.buildRequestWithPathParams("UpdateSmartHands", RequestType.SINGLE, pParams, SmartHandsJson.class);
         Utils.serializeJson(equinixRequest, smartHandsCreatorJson);
         EquinixResponse<SmartHandsJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

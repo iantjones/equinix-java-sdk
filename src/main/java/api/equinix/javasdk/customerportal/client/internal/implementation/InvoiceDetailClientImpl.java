@@ -42,7 +42,7 @@ public class InvoiceDetailClientImpl extends PageableBase implements InvoiceDeta
 
     public Page<InvoiceDetail, InvoiceDetailJson> list(RequestBuilder.Invoice requestBuilder) {
         Map<String, List<String>> qParams = Utils.processRequestBuilder(requestBuilder);
-        EquinixRequest<InvoiceDetail> equinixRequest = this.buildRequestWithQueryParams("ListInvoiceDetails", RequestType.PAGINATED, qParams, InvoiceDetailJson.getPagedTypeRef());
+        EquinixRequest<InvoiceDetail> equinixRequest = this.buildRequestWithQueryParams("ListInvoiceDetails", RequestType.PAGINATED, qParams, InvoiceDetailJson.class);
         EquinixResponse<InvoiceDetail> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

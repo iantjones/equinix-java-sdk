@@ -41,7 +41,7 @@ public class PricingClientImpl extends PageableBase implements PricingClient<Pri
     }
 
     public Page<Pricing, PricingJson> list(FilterPropertyList filter) {
-        EquinixRequest<Pricing> equinixRequest = this.buildRequest("GetPricing", RequestType.PAGINATED_POST, PricingJson.getPagedTypeRef());
+        EquinixRequest<Pricing> equinixRequest = this.buildRequest("GetPricing", RequestType.PAGINATED_POST, PricingJson.class);
         Utils.serializeJson(equinixRequest, new FilteredPaginatedPost<>(filter));
         EquinixResponse<Pricing> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);

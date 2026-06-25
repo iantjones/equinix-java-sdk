@@ -61,7 +61,7 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
      */
     public Page<BGPPeering, BGPPeeringJson> list(RequestBuilder.BGP requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<BGPPeering> equinixRequest = this.buildRequest("ListBGP", RequestType.PAGINATED, null, qParams, BGPPeeringJson.getPagedTypeRef());
+        EquinixRequest<BGPPeering> equinixRequest = this.buildRequest("ListBGP", RequestType.PAGINATED, null, qParams, BGPPeeringJson.class);
         EquinixResponse<BGPPeering> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -69,14 +69,14 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
     /** {@inheritDoc} */
     public BGPPeeringJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequestWithPathParams("GetBGP", RequestType.SINGLE, pParams, BGPPeeringJson.getSingleTypeRef());
+        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequestWithPathParams("GetBGP", RequestType.SINGLE, pParams, BGPPeeringJson.class);
         EquinixResponse<BGPPeeringJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     /** {@inheritDoc} */
     public BGPPeeringJson create(BGPPeeringCreatorJson bgpPeeringCreatorJson) {
-        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequest("CreateBGP", RequestType.SINGLE, BGPPeeringJson.getSingleTypeRef());
+        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequest("CreateBGP", RequestType.SINGLE, BGPPeeringJson.class);
         Utils.serializeJson(equinixRequest, bgpPeeringCreatorJson);
         EquinixResponse<BGPPeeringJson> equinixResponse = this.invoke(equinixRequest);
         String aclTemplateUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
@@ -86,7 +86,7 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
     /** {@inheritDoc} */
     public BGPPeeringJson update(String uuid, BGPPeeringUpdaterJson bgpPeeringUpdaterJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequestWithPathParams("UpdateBGP", RequestType.SINGLE, pParams, BGPPeeringJson.getSingleTypeRef());
+        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequestWithPathParams("UpdateBGP", RequestType.SINGLE, pParams, BGPPeeringJson.class);
         Utils.serializeJson(equinixRequest, bgpPeeringUpdaterJson);
         EquinixResponse<BGPPeeringJson> equinixResponse = this.invoke(equinixRequest);
         return getByUuid(uuid);
@@ -95,7 +95,7 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BGPPeering> equinixRequest = this.buildRequestWithPathParams("DeleteBGP", RequestType.SINGLE, pParams, BGPPeeringJson.getSingleTypeRef());
+        EquinixRequest<BGPPeering> equinixRequest = this.buildRequestWithPathParams("DeleteBGP", RequestType.SINGLE, pParams, BGPPeeringJson.class);
         EquinixResponse<BGPPeering> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }

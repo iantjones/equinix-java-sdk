@@ -45,7 +45,7 @@ public class CloudRouterClientImpl extends PageableBase implements CloudRouterCl
     }
 
     public Page<CloudRouter, CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<CloudRouter> equinixRequest = this.buildRequest("SearchCloudRouters", RequestType.PAGINATED_POST, CloudRouterJson.getPagedTypeRef());
+        EquinixRequest<CloudRouter> equinixRequest = this.buildRequest("SearchCloudRouters", RequestType.PAGINATED_POST, CloudRouterJson.class);
         Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
@@ -53,13 +53,13 @@ public class CloudRouterClientImpl extends PageableBase implements CloudRouterCl
 
     public CloudRouterJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CloudRouterJson> equinixRequest = this.buildRequestWithPathParams("GetCloudRouter", RequestType.SINGLE, pParams, CloudRouterJson.getSingleTypeRef());
+        EquinixRequest<CloudRouterJson> equinixRequest = this.buildRequestWithPathParams("GetCloudRouter", RequestType.SINGLE, pParams, CloudRouterJson.class);
         EquinixResponse<CloudRouterJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public CloudRouterJson create(CloudRouterCreatorJson cloudRouterCreatorJson) {
-        EquinixRequest<CloudRouterJson> equinixRequest = this.buildRequest("PostCloudRouter", RequestType.SINGLE, CloudRouterJson.getSingleTypeRef());
+        EquinixRequest<CloudRouterJson> equinixRequest = this.buildRequest("PostCloudRouter", RequestType.SINGLE, CloudRouterJson.class);
         Utils.serializeJson(equinixRequest, cloudRouterCreatorJson);
         EquinixResponse<CloudRouterJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -67,7 +67,7 @@ public class CloudRouterClientImpl extends PageableBase implements CloudRouterCl
 
     public CloudRouterJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CloudRouter> equinixRequest = this.buildRequestWithPathParams("DeleteCloudRouter", RequestType.SINGLE, pParams, CloudRouterJson.getSingleTypeRef());
+        EquinixRequest<CloudRouter> equinixRequest = this.buildRequestWithPathParams("DeleteCloudRouter", RequestType.SINGLE, pParams, CloudRouterJson.class);
         EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

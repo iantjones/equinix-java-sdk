@@ -40,20 +40,20 @@ public class ShipmentClientImpl extends PageableBase implements ShipmentClient<S
     }
 
     public Page<Shipment, ShipmentJson> list() {
-        EquinixRequest<Shipment> equinixRequest = this.buildRequest("ListShipments", RequestType.PAGINATED, ShipmentJson.getPagedTypeRef());
+        EquinixRequest<Shipment> equinixRequest = this.buildRequest("ListShipments", RequestType.PAGINATED, ShipmentJson.class);
         EquinixResponse<Shipment> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public ShipmentJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("GetShipment", RequestType.SINGLE, pParams, ShipmentJson.getSingleTypeRef());
+        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("GetShipment", RequestType.SINGLE, pParams, ShipmentJson.class);
         EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public ShipmentJson create(ShipmentCreatorJson shipmentCreatorJson) {
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequest("CreateShipment", RequestType.SINGLE, ShipmentJson.getSingleTypeRef());
+        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequest("CreateShipment", RequestType.SINGLE, ShipmentJson.class);
         Utils.serializeJson(equinixRequest, shipmentCreatorJson);
         EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class ShipmentClientImpl extends PageableBase implements ShipmentClient<S
 
     public ShipmentJson update(String uuid, ShipmentCreatorJson shipmentCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("UpdateShipment", RequestType.SINGLE, pParams, ShipmentJson.getSingleTypeRef());
+        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("UpdateShipment", RequestType.SINGLE, pParams, ShipmentJson.class);
         Utils.serializeJson(equinixRequest, shipmentCreatorJson);
         EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class ShipmentClientImpl extends PageableBase implements ShipmentClient<S
 
     public ShipmentJson cancel(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("CancelShipment", RequestType.SINGLE, pParams, ShipmentJson.getSingleTypeRef());
+        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("CancelShipment", RequestType.SINGLE, pParams, ShipmentJson.class);
         EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

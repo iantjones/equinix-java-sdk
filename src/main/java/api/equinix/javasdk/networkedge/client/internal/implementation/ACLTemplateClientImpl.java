@@ -56,7 +56,7 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
     /** {@inheritDoc} */
     public Page<ACLTemplate, ACLTemplateJson> list(String accountUcmId) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<ACLTemplate> equinixRequest = this.buildRequest("ListACLTemplates", RequestType.PAGINATED, null, qParams, ACLTemplateJson.getPagedTypeRef());
+        EquinixRequest<ACLTemplate> equinixRequest = this.buildRequest("ListACLTemplates", RequestType.PAGINATED, null, qParams, ACLTemplateJson.class);
         EquinixResponse<ACLTemplate> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -65,7 +65,7 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
     public ACLTemplateJson getByUuid(String uuid, String accountUcmId) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("GetACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.getSingleTypeRef());
+        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("GetACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.class);
         EquinixResponse<ACLTemplateJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -73,7 +73,7 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
     /** {@inheritDoc} */
     public ACLTemplateJson create(ACLTemplateCreatorJson aclTemplateCreatorJson) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , aclTemplateCreatorJson.getAccountUcmId());
-        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("CreateACLTemplate", RequestType.SINGLE, null, qParams, ACLTemplateJson.getSingleTypeRef());
+        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("CreateACLTemplate", RequestType.SINGLE, null, qParams, ACLTemplateJson.class);
         Utils.serializeJson(equinixRequest, aclTemplateCreatorJson);
         EquinixResponse<ACLTemplateJson> equinixResponse = this.invoke(equinixRequest);
         String aclTemplateUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
@@ -84,7 +84,7 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
     public ACLTemplateJson update(String uuid, ACLTemplateUpdaterJson aclTemplateUpdaterJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , aclTemplateUpdaterJson.getAccountUcmId());
-        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("UpdateACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.getSingleTypeRef());
+        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("UpdateACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.class);
         Utils.serializeJson(equinixRequest, aclTemplateUpdaterJson);
         EquinixResponse<ACLTemplateJson> equinixResponse = this.invoke(equinixRequest);
         return getByUuid(uuid, aclTemplateUpdaterJson.getAccountUcmId());
@@ -94,7 +94,7 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
     public Boolean delete(String uuid, String accountUcmId) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<ACLTemplate> equinixRequest = this.buildRequest("DeleteACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.getSingleTypeRef());
+        EquinixRequest<ACLTemplate> equinixRequest = this.buildRequest("DeleteACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.class);
         EquinixResponse<ACLTemplate> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }

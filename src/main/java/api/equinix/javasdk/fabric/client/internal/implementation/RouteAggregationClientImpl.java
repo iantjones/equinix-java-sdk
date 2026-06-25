@@ -40,20 +40,20 @@ public class RouteAggregationClientImpl extends PageableBase implements RouteAgg
     }
 
     public Page<RouteAggregation, RouteAggregationJson> list() {
-        EquinixRequest<RouteAggregation> equinixRequest = this.buildRequest("GetRouteAggregations", RequestType.PAGINATED, RouteAggregationJson.getPagedTypeRef());
+        EquinixRequest<RouteAggregation> equinixRequest = this.buildRequest("GetRouteAggregations", RequestType.PAGINATED, RouteAggregationJson.class);
         EquinixResponse<RouteAggregation> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public RouteAggregationJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteAggregationJson> equinixRequest = this.buildRequestWithPathParams("GetRouteAggregation", RequestType.SINGLE, pParams, RouteAggregationJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationJson> equinixRequest = this.buildRequestWithPathParams("GetRouteAggregation", RequestType.SINGLE, pParams, RouteAggregationJson.class);
         EquinixResponse<RouteAggregationJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public RouteAggregationJson create(RouteAggregationCreatorJson routeAggregationCreatorJson) {
-        EquinixRequest<RouteAggregationJson> equinixRequest = this.buildRequest("PostRouteAggregation", RequestType.SINGLE, RouteAggregationJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationJson> equinixRequest = this.buildRequest("PostRouteAggregation", RequestType.SINGLE, RouteAggregationJson.class);
         Utils.serializeJson(equinixRequest, routeAggregationCreatorJson);
         EquinixResponse<RouteAggregationJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class RouteAggregationClientImpl extends PageableBase implements RouteAgg
 
     public RouteAggregationJson update(String uuid, Object updates) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteAggregationJson> equinixRequest = this.buildRequestWithPathParams("PatchRouteAggregation", RequestType.SINGLE, pParams, RouteAggregationJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregationJson> equinixRequest = this.buildRequestWithPathParams("PatchRouteAggregation", RequestType.SINGLE, pParams, RouteAggregationJson.class);
         Utils.serializeJson(equinixRequest, updates);
         EquinixResponse<RouteAggregationJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class RouteAggregationClientImpl extends PageableBase implements RouteAgg
 
     public RouteAggregationJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteAggregation> equinixRequest = this.buildRequestWithPathParams("DeleteRouteAggregation", RequestType.SINGLE, pParams, RouteAggregationJson.getSingleTypeRef());
+        EquinixRequest<RouteAggregation> equinixRequest = this.buildRequestWithPathParams("DeleteRouteAggregation", RequestType.SINGLE, pParams, RouteAggregationJson.class);
         EquinixResponse<RouteAggregation> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

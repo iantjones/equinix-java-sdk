@@ -38,14 +38,14 @@ public class SupportPlanClientImpl extends PageableBase implements SupportPlanCl
     }
 
     public Page<SupportPlan, SupportPlanJson> list() {
-        EquinixRequest<SupportPlan> equinixRequest = this.buildRequest("ListSupportPlans", RequestType.PAGINATED, SupportPlanJson.getPagedTypeRef());
+        EquinixRequest<SupportPlan> equinixRequest = this.buildRequest("ListSupportPlans", RequestType.PAGINATED, SupportPlanJson.class);
         EquinixResponse<SupportPlan> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public SupportPlanJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SupportPlanJson> equinixRequest = this.buildRequestWithPathParams("GetSupportPlan", RequestType.SINGLE, pParams, SupportPlanJson.getSingleTypeRef());
+        EquinixRequest<SupportPlanJson> equinixRequest = this.buildRequestWithPathParams("GetSupportPlan", RequestType.SINGLE, pParams, SupportPlanJson.class);
         EquinixResponse<SupportPlanJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

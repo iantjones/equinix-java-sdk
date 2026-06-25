@@ -40,20 +40,20 @@ public class DigitalLOAClientImpl extends PageableBase implements DigitalLOAClie
     }
 
     public Page<DigitalLOA, DigitalLOAJson> list() {
-        EquinixRequest<DigitalLOA> equinixRequest = this.buildRequest("ListDigitalLOAs", RequestType.PAGINATED, DigitalLOAJson.getPagedTypeRef());
+        EquinixRequest<DigitalLOA> equinixRequest = this.buildRequest("ListDigitalLOAs", RequestType.PAGINATED, DigitalLOAJson.class);
         EquinixResponse<DigitalLOA> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public DigitalLOAJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<DigitalLOAJson> equinixRequest = this.buildRequestWithPathParams("GetDigitalLOA", RequestType.SINGLE, pParams, DigitalLOAJson.getSingleTypeRef());
+        EquinixRequest<DigitalLOAJson> equinixRequest = this.buildRequestWithPathParams("GetDigitalLOA", RequestType.SINGLE, pParams, DigitalLOAJson.class);
         EquinixResponse<DigitalLOAJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public DigitalLOAJson create(DigitalLOACreatorJson digitalLOACreatorJson) {
-        EquinixRequest<DigitalLOAJson> equinixRequest = this.buildRequest("CreateDigitalLOA", RequestType.SINGLE, DigitalLOAJson.getSingleTypeRef());
+        EquinixRequest<DigitalLOAJson> equinixRequest = this.buildRequest("CreateDigitalLOA", RequestType.SINGLE, DigitalLOAJson.class);
         Utils.serializeJson(equinixRequest, digitalLOACreatorJson);
         EquinixResponse<DigitalLOAJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

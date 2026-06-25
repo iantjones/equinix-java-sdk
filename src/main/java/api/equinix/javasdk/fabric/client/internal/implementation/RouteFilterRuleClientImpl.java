@@ -41,21 +41,21 @@ public class RouteFilterRuleClientImpl extends PageableBase implements RouteFilt
 
     public Page<RouteFilterRule, RouteFilterRuleJson> list(String routeFilterId) {
         Map<String, String> pParams = Map.of("routeFilterId", routeFilterId);
-        EquinixRequest<RouteFilterRule> equinixRequest = this.buildRequestWithPathParams("ListRouteFilterRules", RequestType.PAGINATED, pParams, RouteFilterRuleJson.getPagedTypeRef());
+        EquinixRequest<RouteFilterRule> equinixRequest = this.buildRequestWithPathParams("ListRouteFilterRules", RequestType.PAGINATED, pParams, RouteFilterRuleJson.class);
         EquinixResponse<RouteFilterRule> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public RouteFilterRuleJson getByUuid(String routeFilterId, String uuid) {
         Map<String, String> pParams = Map.of("routeFilterId", routeFilterId, "uuid", uuid);
-        EquinixRequest<RouteFilterRuleJson> equinixRequest = this.buildRequestWithPathParams("GetRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteFilterRuleJson> equinixRequest = this.buildRequestWithPathParams("GetRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.class);
         EquinixResponse<RouteFilterRuleJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public RouteFilterRuleJson create(String routeFilterId, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson) {
         Map<String, String> pParams = Map.of("routeFilterId", routeFilterId);
-        EquinixRequest<RouteFilterRuleJson> equinixRequest = this.buildRequestWithPathParams("PostRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteFilterRuleJson> equinixRequest = this.buildRequestWithPathParams("PostRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.class);
         Utils.serializeJson(equinixRequest, routeFilterRuleCreatorJson);
         EquinixResponse<RouteFilterRuleJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -63,7 +63,7 @@ public class RouteFilterRuleClientImpl extends PageableBase implements RouteFilt
 
     public RouteFilterRuleJson delete(String routeFilterId, String uuid) {
         Map<String, String> pParams = Map.of("routeFilterId", routeFilterId, "uuid", uuid);
-        EquinixRequest<RouteFilterRule> equinixRequest = this.buildRequestWithPathParams("DeleteRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.getSingleTypeRef());
+        EquinixRequest<RouteFilterRule> equinixRequest = this.buildRequestWithPathParams("DeleteRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.class);
         EquinixResponse<RouteFilterRule> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

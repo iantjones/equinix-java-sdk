@@ -38,14 +38,14 @@ public class MarketplaceSubscriptionClientImpl extends PageableBase implements M
     }
 
     public Page<MarketplaceSubscription, MarketplaceSubscriptionJson> list() {
-        EquinixRequest<MarketplaceSubscription> equinixRequest = this.buildRequest("GetMarketplaceSubscriptions", RequestType.PAGINATED, MarketplaceSubscriptionJson.getPagedTypeRef());
+        EquinixRequest<MarketplaceSubscription> equinixRequest = this.buildRequest("GetMarketplaceSubscriptions", RequestType.PAGINATED, MarketplaceSubscriptionJson.class);
         EquinixResponse<MarketplaceSubscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public MarketplaceSubscriptionJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<MarketplaceSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetMarketplaceSubscription", RequestType.SINGLE, pParams, MarketplaceSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<MarketplaceSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetMarketplaceSubscription", RequestType.SINGLE, pParams, MarketplaceSubscriptionJson.class);
         EquinixResponse<MarketplaceSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

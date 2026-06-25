@@ -38,14 +38,14 @@ public class AssetClientImpl extends PageableBase implements AssetClient<Asset> 
     }
 
     public Page<Asset, AssetJson> list() {
-        EquinixRequest<Asset> equinixRequest = this.buildRequest("ListAssets", RequestType.PAGINATED, AssetJson.getPagedTypeRef());
+        EquinixRequest<Asset> equinixRequest = this.buildRequest("ListAssets", RequestType.PAGINATED, AssetJson.class);
         EquinixResponse<Asset> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public AssetJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<AssetJson> equinixRequest = this.buildRequestWithPathParams("GetAsset", RequestType.SINGLE, pParams, AssetJson.getSingleTypeRef());
+        EquinixRequest<AssetJson> equinixRequest = this.buildRequestWithPathParams("GetAsset", RequestType.SINGLE, pParams, AssetJson.class);
         EquinixResponse<AssetJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

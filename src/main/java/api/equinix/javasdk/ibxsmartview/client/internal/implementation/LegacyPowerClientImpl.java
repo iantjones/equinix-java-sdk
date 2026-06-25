@@ -45,13 +45,13 @@ public class LegacyPowerClientImpl extends PageableBase implements LegacyPowerCl
         Utils.addAdditionalValue(qParams, "levelType", levelType);
         Utils.addAdditionalValue(qParams, "levelValue", levelValue);
 
-        EquinixRequest<PowerData> equinixRequest = this.buildRequestWithQueryParams("GetCurrentPower", RequestType.SINGLE, qParams, PowerDataJson.getSingleTypeRef());
+        EquinixRequest<PowerData> equinixRequest = this.buildRequestWithQueryParams("GetCurrentPower", RequestType.SINGLE, qParams, PowerDataJson.class);
         EquinixResponse<PowerData> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public List<PowerDataJson> postCurrent(Object requestBody) {
-        EquinixRequest<PowerData> equinixRequest = this.buildRequest("PostCurrentPower", RequestType.LIST, PowerDataJson.getListTypeRef());
+        EquinixRequest<PowerData> equinixRequest = this.buildRequest("PostCurrentPower", RequestType.LIST, PowerDataJson.class);
         Utils.serializeJson(equinixRequest, requestBody);
         EquinixResponse<PowerData> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleListResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class LegacyPowerClientImpl extends PageableBase implements LegacyPowerCl
         Utils.addAdditionalValue(qParams, "fromDate", fromDate);
         Utils.addAdditionalValue(qParams, "toDate", toDate);
 
-        EquinixRequest<TrendingPowerData> equinixRequest = this.buildRequestWithQueryParams("GetTrendingPower", RequestType.SINGLE, qParams, TrendingPowerDataJson.getSingleTypeRef());
+        EquinixRequest<TrendingPowerData> equinixRequest = this.buildRequestWithQueryParams("GetTrendingPower", RequestType.SINGLE, qParams, TrendingPowerDataJson.class);
         EquinixResponse<TrendingPowerData> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

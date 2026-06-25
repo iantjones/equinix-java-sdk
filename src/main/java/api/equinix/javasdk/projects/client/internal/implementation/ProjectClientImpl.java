@@ -40,20 +40,20 @@ public class ProjectClientImpl extends PageableBase implements ProjectClient<Pro
     }
 
     public Page<Project, ProjectJson> list() {
-        EquinixRequest<Project> equinixRequest = this.buildRequest("ListProjects", RequestType.PAGINATED, ProjectJson.getPagedTypeRef());
+        EquinixRequest<Project> equinixRequest = this.buildRequest("ListProjects", RequestType.PAGINATED, ProjectJson.class);
         EquinixResponse<Project> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public ProjectJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ProjectJson> equinixRequest = this.buildRequestWithPathParams("GetProject", RequestType.SINGLE, pParams, ProjectJson.getSingleTypeRef());
+        EquinixRequest<ProjectJson> equinixRequest = this.buildRequestWithPathParams("GetProject", RequestType.SINGLE, pParams, ProjectJson.class);
         EquinixResponse<ProjectJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public ProjectJson create(ProjectCreatorJson projectCreatorJson) {
-        EquinixRequest<ProjectJson> equinixRequest = this.buildRequest("CreateProject", RequestType.SINGLE, ProjectJson.getSingleTypeRef());
+        EquinixRequest<ProjectJson> equinixRequest = this.buildRequest("CreateProject", RequestType.SINGLE, ProjectJson.class);
         Utils.serializeJson(equinixRequest, projectCreatorJson);
         EquinixResponse<ProjectJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class ProjectClientImpl extends PageableBase implements ProjectClient<Pro
 
     public ProjectJson update(String uuid, ProjectCreatorJson projectCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ProjectJson> equinixRequest = this.buildRequestWithPathParams("UpdateProject", RequestType.SINGLE, pParams, ProjectJson.getSingleTypeRef());
+        EquinixRequest<ProjectJson> equinixRequest = this.buildRequestWithPathParams("UpdateProject", RequestType.SINGLE, pParams, ProjectJson.class);
         Utils.serializeJson(equinixRequest, projectCreatorJson);
         EquinixResponse<ProjectJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class ProjectClientImpl extends PageableBase implements ProjectClient<Pro
 
     public ProjectJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Project> equinixRequest = this.buildRequestWithPathParams("DeleteProject", RequestType.SINGLE, pParams, ProjectJson.getSingleTypeRef());
+        EquinixRequest<Project> equinixRequest = this.buildRequestWithPathParams("DeleteProject", RequestType.SINGLE, pParams, ProjectJson.class);
         EquinixResponse<Project> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

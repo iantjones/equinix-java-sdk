@@ -40,20 +40,20 @@ public class CrossConnectClientImpl extends PageableBase implements CrossConnect
     }
 
     public Page<CrossConnect, CrossConnectJson> list() {
-        EquinixRequest<CrossConnect> equinixRequest = this.buildRequest("ListCrossConnects", RequestType.PAGINATED, CrossConnectJson.getPagedTypeRef());
+        EquinixRequest<CrossConnect> equinixRequest = this.buildRequest("ListCrossConnects", RequestType.PAGINATED, CrossConnectJson.class);
         EquinixResponse<CrossConnect> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public CrossConnectJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequestWithPathParams("GetCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.getSingleTypeRef());
+        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequestWithPathParams("GetCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.class);
         EquinixResponse<CrossConnectJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public CrossConnectJson create(CrossConnectCreatorJson crossConnectCreatorJson) {
-        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequest("CreateCrossConnect", RequestType.SINGLE, CrossConnectJson.getSingleTypeRef());
+        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequest("CreateCrossConnect", RequestType.SINGLE, CrossConnectJson.class);
         Utils.serializeJson(equinixRequest, crossConnectCreatorJson);
         EquinixResponse<CrossConnectJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class CrossConnectClientImpl extends PageableBase implements CrossConnect
 
     public CrossConnectJson update(String uuid, CrossConnectCreatorJson crossConnectCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequestWithPathParams("UpdateCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.getSingleTypeRef());
+        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequestWithPathParams("UpdateCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.class);
         Utils.serializeJson(equinixRequest, crossConnectCreatorJson);
         EquinixResponse<CrossConnectJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class CrossConnectClientImpl extends PageableBase implements CrossConnect
 
     public CrossConnectJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CrossConnect> equinixRequest = this.buildRequestWithPathParams("DeleteCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.getSingleTypeRef());
+        EquinixRequest<CrossConnect> equinixRequest = this.buildRequestWithPathParams("DeleteCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.class);
         EquinixResponse<CrossConnect> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
