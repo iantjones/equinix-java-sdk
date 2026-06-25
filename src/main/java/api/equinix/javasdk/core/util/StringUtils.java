@@ -16,8 +16,6 @@
 
 package api.equinix.javasdk.core.util;
 
-import api.equinix.javasdk.core.enums.Side;
-
 import java.util.Locale;
 
 /**
@@ -61,15 +59,5 @@ public class StringUtils {
             return str;
         }
         return str.toLowerCase(LOCALE_ENGLISH);
-    }
-
-    /**
-     * <p>sideToViewPoint.</p>
-     *
-     * @param side a {@link api.equinix.javasdk.core.enums.Side} object.
-     * @return a {@link java.lang.String} object.
-     */
-    public static String sideToViewPoint(Side side) {
-        return side != null ? side.toString().replace("A_Side", "aSide").replace("Z_Side", "zSide") : null;
     }
 }

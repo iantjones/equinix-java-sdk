@@ -16,15 +16,24 @@
 
 package api.equinix.javasdk.core.enums;
 
-import api.equinix.javasdk.core.model.APIParam;
-
 /**
- * <p>Side class.</p>
+ * The two endpoints ("sides") of an interconnection: the originating A-side and the
+ * destination Z-side.
  *
  * @author ianjones
  * @version $Id: $Id
  */
 public enum Side {
     A_Side,
-    Z_Side
+    Z_Side;
+
+    /**
+     * Returns this side in the Equinix API "viewPoint" wire form ({@code aSide}/{@code zSide}),
+     * e.g. for connection-statistics queries.
+     *
+     * @return {@code "aSide"} for {@link #A_Side}, {@code "zSide"} for {@link #Z_Side}
+     */
+    public String toViewPoint() {
+        return this == A_Side ? "aSide" : "zSide";
+    }
 }

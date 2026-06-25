@@ -28,7 +28,6 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
-import api.equinix.javasdk.core.util.StringUtils;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
@@ -101,7 +100,7 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
         Map<String, List<String>> qParams = Map.of(
                 "startDateTime", Utils.singleParamList(Utils.dateTimeForQuery(startDateTime)),
                 "endDateTime", Utils.singleParamList(Utils.dateTimeForQuery(endDateTime)),
-                "viewPoint", Utils.singleParamList(StringUtils.sideToViewPoint(viewPoint))
+                "viewPoint", Utils.singleParamList(viewPoint.toViewPoint())
         );
 
         EquinixRequest<ConnectionStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, Map.of("uuid", uuid), qParams, ConnectionStatisticJson.getSingleTypeRef());
