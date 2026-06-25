@@ -19,7 +19,6 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.fabric.enums.ConnectionState;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.KeyValuePair;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.model.Connection;
@@ -37,7 +36,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
-public final class ConnectionJson implements Serializable {
+public final class ConnectionJson {
 
     @Getter static TypeReference<Page<Connection, ConnectionJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ConnectionJson>> listTypeRef = new TypeReference<>() {};

@@ -17,7 +17,6 @@
 package api.equinix.javasdk.projects.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.projects.enums.ProjectStatus;
 import api.equinix.javasdk.projects.model.Project;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -31,7 +30,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProjectJson implements Serializable {
+public class ProjectJson {
 
     @Getter static TypeReference<Page<Project, ProjectJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ProjectJson>> listTypeRef = new TypeReference<>() {};

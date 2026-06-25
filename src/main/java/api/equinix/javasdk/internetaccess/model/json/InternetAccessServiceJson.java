@@ -17,7 +17,6 @@
 package api.equinix.javasdk.internetaccess.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceState;
 import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceType;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
@@ -32,7 +31,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternetAccessServiceJson implements Serializable {
+public class InternetAccessServiceJson {
 
     @Getter static TypeReference<Page<InternetAccessService, InternetAccessServiceJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<InternetAccessServiceJson>> listTypeRef = new TypeReference<>() {};

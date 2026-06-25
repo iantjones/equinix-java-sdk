@@ -16,14 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.model.HealthStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 @Getter
-public class HealthStatusJson implements Serializable, HealthStatus {
+public class HealthStatusJson implements HealthStatus {
 
     @Getter static TypeReference<HealthStatusJson> singleTypeRef = new TypeReference<>() {};
 

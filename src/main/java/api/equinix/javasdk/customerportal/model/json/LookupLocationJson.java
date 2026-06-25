@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,7 +25,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class LookupLocationJson implements Serializable, LookupLocation {
+public class LookupLocationJson implements LookupLocation {
 
     @Getter static TypeReference<Page<LookupLocation, LookupLocationJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<LookupLocationJson>> listTypeRef = new TypeReference<>() {};

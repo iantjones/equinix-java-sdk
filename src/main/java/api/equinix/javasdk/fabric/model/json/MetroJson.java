@@ -19,7 +19,6 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.MetroType;
 import api.equinix.javasdk.fabric.model.implementation.BasicMetro;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
@@ -38,7 +37,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
-public class MetroJson extends BasicMetro implements Serializable {
+public class MetroJson extends BasicMetro {
 
     public static TypeReference<Page<Metro, MetroJson>> pagedTypeRef() {
         return new TypeReference<>() {};

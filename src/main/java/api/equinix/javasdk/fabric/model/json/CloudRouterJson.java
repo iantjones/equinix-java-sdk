@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.Project;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public final class CloudRouterJson implements Serializable {
+public final class CloudRouterJson {
 
     @Getter static TypeReference<Page<CloudRouter, CloudRouterJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CloudRouterJson>> listTypeRef = new TypeReference<>() {};

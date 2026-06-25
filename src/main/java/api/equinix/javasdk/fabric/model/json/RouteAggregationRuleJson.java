@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.RouteAggregationRuleState;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class RouteAggregationRuleJson implements Serializable {
+public class RouteAggregationRuleJson {
 
     @Getter static TypeReference<Page<RouteAggregationRule, RouteAggregationRuleJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RouteAggregationRuleJson>> listTypeRef = new TypeReference<>() {};

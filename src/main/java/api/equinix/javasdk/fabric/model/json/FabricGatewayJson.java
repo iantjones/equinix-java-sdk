@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.FabricGateway;
 import api.equinix.javasdk.fabric.model.Project;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class FabricGatewayJson implements Serializable {
+public class FabricGatewayJson {
 
     @Getter static TypeReference<Page<FabricGateway, FabricGatewayJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<FabricGatewayJson>> listTypeRef = new TypeReference<>() {};

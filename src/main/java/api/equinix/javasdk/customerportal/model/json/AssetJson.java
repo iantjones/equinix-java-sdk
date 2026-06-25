@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.AssetType;
 import api.equinix.javasdk.customerportal.model.Asset;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class AssetJson implements Serializable, Asset {
+public class AssetJson implements Asset {
 
     @Getter static TypeReference<Page<Asset, AssetJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<AssetJson>> listTypeRef = new TypeReference<>() {};

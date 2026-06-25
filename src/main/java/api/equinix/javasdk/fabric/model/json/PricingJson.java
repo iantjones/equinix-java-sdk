@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.PriceType;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.implementation.*;
@@ -28,7 +27,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 
 @Getter
-public class PricingJson implements Serializable {
+public class PricingJson {
 
     @Getter static TypeReference<PricingJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<Page<Pricing, PricingJson>> pagedTypeRef = new TypeReference<>() {};

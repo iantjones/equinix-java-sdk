@@ -57,10 +57,4 @@ public class EquinixStaticCredentialsProvider extends BasicCredentialsProvider {
     public void setCredentials(AuthScope authScope, EquinixCredentials credentials) {
         this.credentials = credentials;
     }
-
-    /**
-     * <p>refresh.</p>
-     */
-    public void refresh() {
-    }
 }

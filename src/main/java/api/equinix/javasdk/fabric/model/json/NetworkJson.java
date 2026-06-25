@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.NetworkScope;
 import api.equinix.javasdk.fabric.enums.NetworkState;
 import api.equinix.javasdk.fabric.enums.NetworkType;
@@ -33,7 +32,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class NetworkJson implements Serializable {
+public class NetworkJson {
 
     @Getter static TypeReference<Page<Network, NetworkJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<NetworkJson>> listTypeRef = new TypeReference<>() {};

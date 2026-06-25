@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
 import api.equinix.javasdk.ibxsmartview.model.implementation.SubscriptionMessage;
@@ -27,7 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class StreamingSubscriptionJson implements Serializable {
+public class StreamingSubscriptionJson {
 
     @Getter static TypeReference<List<StreamingSubscriptionJson>> listTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<StreamingSubscriptionJson> singleTypeRef = new TypeReference<>() {};

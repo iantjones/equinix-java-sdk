@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.ServiceProfileState;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
@@ -30,7 +29,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public final class ServiceProfileJson implements Serializable {
+public final class ServiceProfileJson {
 
     @Getter static TypeReference<Page<ServiceProfile, ServiceProfileJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ServiceProfileJson>> listTypeRef = new TypeReference<>() {};

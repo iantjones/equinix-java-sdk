@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.WorkVisitStatus;
 import api.equinix.javasdk.customerportal.model.WorkVisit;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class WorkVisitJson implements Serializable {
+public class WorkVisitJson {
 
     @Getter static TypeReference<Page<WorkVisit, WorkVisitJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<WorkVisitJson>> listTypeRef = new TypeReference<>() {};

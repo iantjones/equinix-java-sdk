@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.StreamState;
 import api.equinix.javasdk.fabric.enums.StreamType;
 import api.equinix.javasdk.fabric.model.Project;
@@ -30,7 +29,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class StreamJson implements Serializable {
+public class StreamJson {
 
     @Getter static TypeReference<Page<Stream, StreamJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<StreamJson>> listTypeRef = new TypeReference<>() {};

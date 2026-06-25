@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,7 +25,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class OrderHistoryItemJson implements Serializable, OrderHistoryItem {
+public class OrderHistoryItemJson implements OrderHistoryItem {
 
     @Getter static TypeReference<Page<OrderHistoryItem, OrderHistoryItemJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<OrderHistoryItemJson>> listTypeRef = new TypeReference<>() {};

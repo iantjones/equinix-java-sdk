@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.ibxsmartview.model.PowerHierarchy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +29,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PowerHierarchyJson implements PowerHierarchy, Serializable {
+public class PowerHierarchyJson implements PowerHierarchy {
 
     @Getter static TypeReference<PowerHierarchyJson> singleTypeRef = new TypeReference<>() {};
 

@@ -17,7 +17,6 @@
 package api.equinix.javasdk.messaging.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.messaging.enums.EventType;
 import api.equinix.javasdk.messaging.model.Event;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -29,7 +28,7 @@ import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EventJson implements Serializable, Event {
+public class EventJson implements Event {
 
     @Getter static TypeReference<Page<Event, EventJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<EventJson>> listTypeRef = new TypeReference<>() {};

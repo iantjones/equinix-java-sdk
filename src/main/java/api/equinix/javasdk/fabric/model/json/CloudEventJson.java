@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.model.CloudEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,7 +25,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class CloudEventJson implements Serializable, CloudEvent {
+public class CloudEventJson implements CloudEvent {
 
     @Getter static TypeReference<Page<CloudEvent, CloudEventJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CloudEventJson>> listTypeRef = new TypeReference<>() {};

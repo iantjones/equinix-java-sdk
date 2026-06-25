@@ -17,7 +17,6 @@
 package api.equinix.javasdk.internetaccess.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.internetaccess.model.InternetAccessPort;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +27,7 @@ import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternetAccessPortJson implements Serializable, InternetAccessPort {
+public class InternetAccessPortJson implements InternetAccessPort {
 
     @Getter static TypeReference<Page<InternetAccessPort, InternetAccessPortJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<InternetAccessPortJson>> listTypeRef = new TypeReference<>() {};

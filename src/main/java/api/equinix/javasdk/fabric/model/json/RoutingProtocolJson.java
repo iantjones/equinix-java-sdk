@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolState;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class RoutingProtocolJson implements Serializable {
+public class RoutingProtocolJson {
 
     @Getter static TypeReference<Page<RoutingProtocol, RoutingProtocolJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RoutingProtocolJson>> listTypeRef = new TypeReference<>() {};

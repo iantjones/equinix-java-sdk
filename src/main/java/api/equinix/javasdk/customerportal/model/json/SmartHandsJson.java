@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.SmartHandsStatus;
 import api.equinix.javasdk.customerportal.enums.SmartHandsType;
 import api.equinix.javasdk.customerportal.model.SmartHands;
@@ -28,7 +27,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class SmartHandsJson implements Serializable {
+public class SmartHandsJson {
 
     @Getter static TypeReference<Page<SmartHands, SmartHandsJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SmartHandsJson>> listTypeRef = new TypeReference<>() {};

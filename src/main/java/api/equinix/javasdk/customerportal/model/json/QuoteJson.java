@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.QuoteStatus;
 import api.equinix.javasdk.customerportal.model.Quote;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class QuoteJson implements Serializable {
+public class QuoteJson {
 
     @Getter static TypeReference<Page<Quote, QuoteJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<QuoteJson>> listTypeRef = new TypeReference<>() {};
