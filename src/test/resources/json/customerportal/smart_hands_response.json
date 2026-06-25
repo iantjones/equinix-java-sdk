@@ -1,0 +1,17 @@
+{
+  "uuid": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091",
+  "href": "/v1/smartHands/e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091",
+  "requestId": "SH-2024-0008923",
+  "type": "STANDARD",
+  "status": "IN_PROGRESS",
+  "ibxCode": "SV5",
+  "accountNumber": "128745",
+  "summary": "Install Cat6A patch cables in cabinet C-14",
+  "description": "Install 12x Cat6A patch cables from patch panel PP-A-1042 ports 1-12 to ToR switch ports Eth1/1-1/12 in cabinet C-14. Label both ends per standard naming convention.",
+  "requestorName": "Robert Chen",
+  "requestorEmail": "robert.chen@acmecloudservices.com",
+  "scheduleStartDate": "2024-11-14T10:00:00.000Z",
+  "scheduleEndDate": "2024-11-14T14:00:00.000Z",
+  "createdDate": "2024-11-11T09:45:00.000Z",
+  "lastUpdatedDate": "2024-11-14T10:30:22.000Z"
+}

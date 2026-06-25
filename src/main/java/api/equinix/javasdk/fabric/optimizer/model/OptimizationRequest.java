@@ -1,5 +1,6 @@
 package api.equinix.javasdk.fabric.optimizer.model;
 
+import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.optimizer.enums.OptimizationStrategy;
 import lombok.Builder;
 import lombok.Value;
@@ -32,4 +33,7 @@ public class OptimizationRequest {
 
     /** Optional user-overridable scoring weights and latency thresholds. */
     ScoringWeights scoringWeights;
+
+    /** Optional MCP bridge for real-time data enrichment. Null when MCP is not configured. */
+    McpBridge mcpBridge;
 }

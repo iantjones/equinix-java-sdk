@@ -2,6 +2,7 @@ package api.equinix.javasdk.fabric.optimizer.wizard;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BandwidthStrategy;
@@ -92,6 +93,9 @@ public final class DeploymentWizard {
         private Long accountNumber;
         private String projectId;
         private List<String> notificationEmails = new ArrayList<>();
+
+        // MCP validation
+        private McpBridge mcpBridge;
 
         Builder(Fabric fabric, OptimizationResult optimizationResult) {
             this.fabric = fabric;
@@ -265,6 +269,21 @@ public final class DeploymentWizard {
             return this;
         }
 
+        // ── MCP Validation ──
+
+        /**
+         * Enables MCP-based validation for the deployment plan.
+         * When set, the wizard will use the Equinix MCP server to validate
+         * connection configurations before including them in the plan.
+         *
+         * @param mcpBridge the MCP bridge instance (typically from {@code fabric.mcp()})
+         * @return this builder for method chaining
+         */
+        public Builder withMcpValidation(McpBridge mcpBridge) {
+            this.mcpBridge = mcpBridge;
+            return this;
+        }
+
         // ── Build ──
 
         /**
@@ -296,5 +315,6 @@ public final class DeploymentWizard {
         Long getAccountNumber() { return accountNumber; }
         String getProjectId() { return projectId; }
         List<String> getNotificationEmails() { return notificationEmails; }
+        McpBridge getMcpBridge() { return mcpBridge; }
     }
 }

@@ -1,7 +1,7 @@
 # Equinix Java SDK
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Java](https://img.shields.io/badge/Java-14%2B-orange.svg)](https://openjdk.java.net/)
+[![Java](https://img.shields.io/badge/Java-21%2B-orange.svg)](https://openjdk.java.net/)
 [![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.eqixiac.equinix/equinix-sdk-java.svg)](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)
 
@@ -23,6 +23,7 @@
 - **Metro Optimizer** — intelligent placement engine that recommends optimal Equinix metros based on workforce locations, provider requirements, workload types, and business constraints with latency-aware scoring, risk assessment, and cost estimation
 - **Deployment Wizard** — transforms optimization results into executable deployment plans with Cloud Routers, provider connections, inter-metro backbone links, routing protocols, bandwidth sizing, and pricing
 - **Peering Intelligence** — interconnection analysis engine combining PeeringDB IX peering data with Equinix Fabric connectivity to produce ASN presence matrices, resiliency assessments, blast radius analysis, geographic diversity scoring, and mutual peering opportunity discovery across 47 Equinix Internet Exchanges globally
+- **MCP Bridge** — Java client for the Equinix MCP (Model Context Protocol) servers, providing programmatic access to the Fabric MCP server's tools (discovered at runtime via `listTools()`) over JSON-RPC 2.0 with typed response models, OAuth2 token management, and optional enrichment/validation hooks for the Metro Optimizer, Deployment Wizard, and Peering Intelligence modules
 
 ## Quick Start
 
@@ -32,7 +33,7 @@
 <dependency>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -53,7 +54,7 @@ Fabric fabric = new Fabric(credentials);
 
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
-| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health, **Metro Optimizer**, **Deployment Wizard**, **Peering Intelligence** |
+| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health, **Metro Optimizer**, **Deployment Wizard**, **Peering Intelligence**, **MCP Bridge** |
 | **Network Edge** | `new NetworkEdge(creds)` | 10 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
 | **Customer Portal** | `new CustomerPortal(creds)` | 21 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Assets, Reports |
 | **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Readings, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
@@ -795,6 +796,146 @@ System.out.println(result.toMarkdown());
 └─────────────┘
 ```
 
+### Fabric: MCP Bridge — Real-Time Validation & Enrichment
+
+The MCP (Model Context Protocol) Bridge connects the SDK to the [Equinix MCP servers](https://docs.equinix.com/equinix-api/mcp-servers/overview/), providing programmatic access to 60+ Fabric tools via JSON-RPC 2.0. This enables real-time infrastructure validation, live metro data enrichment, and observability metrics — all with typed Java response models.
+
+> **Note:** The Equinix MCP server is currently in Private Beta. Contact `fabric-intelligence-support@equinix.com` or your Equinix account representative for access.
+
+#### Direct MCP Access
+
+```java
+Fabric fabric = new Fabric(credentials);
+
+// Access the MCP Bridge (auto-initializes on first call)
+McpBridge mcp = fabric.mcp();
+
+// List all available MCP tools
+Map<String, McpToolDefinition> tools = mcp.availableTools();
+System.out.println("Available tools: " + tools.size());
+
+// Query metro data via MCP
+List<McpMetroBridge.McpMetro> metros = mcp.metros().listMetros();
+for (McpMetroBridge.McpMetro metro : metros) {
+    System.out.println(metro.getCode() + " - " + metro.getName()
+        + " (" + metro.getRegion() + ", " + metro.getConnectedMetroCount() + " connected)");
+}
+
+// Get details for a specific metro
+McpMetroBridge.McpMetro sv = mcp.metros().getMetro("SV");
+System.out.println(sv.getName() + " in " + sv.getCountry());
+```
+
+#### Connection Validation
+
+```java
+// Validate a connection configuration before creation
+McpConnectionBridge.McpConnectionValidation result =
+    mcp.connections().validateConnection(Map.of(
+        "type", "EVPL_VC",
+        "name", "My-AWS-Connection",
+        "bandwidth", 1000
+    ));
+
+System.out.println("Valid: " + result.isValid());      // true
+System.out.println("Message: " + result.getMessage());  // "Connection configuration is valid"
+
+// Search existing connections
+List<McpConnectionBridge.McpConnection> connections =
+    mcp.connections().searchConnections(Map.of("state", "ACTIVE"));
+```
+
+#### Observability & Metrics
+
+```java
+// Get live metrics for a connection
+McpObservabilityBridge.McpMetrics metrics = mcp.observability().getMetrics(
+    "connection", connectionUuid, "bandwidth",
+    "2026-03-01T00:00:00Z", "2026-03-25T00:00:00Z");
+
+System.out.println("Avg bandwidth: " + metrics.getAvg() + " Mbps");
+System.out.println("Peak: " + metrics.getMax() + " Mbps");
+
+// List observability streams
+List<McpObservabilityBridge.McpStream> streams = mcp.observability().listStreams();
+
+// Search cloud events
+JsonNode events = mcp.observability().searchCloudEvents(Map.of(
+    "resourceType", "connection",
+    "severity", "WARNING"
+));
+```
+
+#### MCP-Enriched Optimization
+
+The Metro Optimizer, Deployment Wizard, and Peering Intelligence modules each accept an optional MCP bridge for real-time enrichment. When MCP is unavailable, they fall back to standard API data with no code changes.
+
+```java
+// Metro Optimizer with MCP enrichment
+OptimizationResult result = fabric.optimizeMetros()
+    .withMcpEnrichment(fabric.mcp())  // enrich with live MCP data
+    .addSite("NYC HQ").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
+    .requireProvider(CloudProviderType.AWS).sellerRegions("us-east-1").done()
+    .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
+    .constraints().monthlyBudget(50_000, 100_000).redundancy(RedundancyTier.MULTI_METRO).done()
+    .strategy(OptimizationStrategy.BALANCED)
+    .optimize();
+
+// Deployment Wizard with MCP validation
+DeploymentPlan plan = fabric.deploymentWizard(result)
+    .withMcpValidation(fabric.mcp())  // validate connections via MCP
+    .routerPackage("STANDARD")
+    .routerNamePrefix("FCR")
+    .backboneTopology(BackboneTopology.FULL_MESH)
+    .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
+    .customerAsn(65100L)
+    .plan();
+
+// Peering Intelligence with MCP enrichment
+PeeringIntelligenceResult peeringResult = fabric.peeringIntelligence("your-peeringdb-api-key")
+    .withMcpEnrichment(fabric.mcp())  // enrich with live connection data
+    .addAsn(16509, "AWS")
+    .addAsn(8075, "Microsoft")
+    .customerMetros(MetroCode.DC, MetroCode.DA)
+    .includeResiliency(true)
+    .analyze();
+```
+
+#### Custom MCP Configuration
+
+```java
+// Use custom endpoints, timeouts, or retry policy
+McpClientConfig config = McpClientConfig.builder()
+    .fabricEndpoint("https://mcp.equinix.com/fabric")
+    .peeringInsightsEndpoint("https://mcp.equinix.com/peeringInsights")
+    .connectTimeoutMs(15_000)
+    .readTimeoutMs(60_000)
+    .maxRetries(3)
+    .build();
+
+McpBridge mcp = fabric.mcp(config);
+```
+
+#### Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌──────────────────────┐
+│  Your Code       │────▶│    McpBridge      │────▶│ Equinix MCP Server   │
+│                  │     │                  │     │ mcp.equinix.com      │
+│  fabric.mcp()    │     │  .metros()       │     │                      │
+│  .optimizeMetros │     │  .connections()  │     │  60+ Fabric tools    │
+│  .deploymentWiz  │     │  .cloudRouters() │     │  JSON-RPC 2.0        │
+│  .peeringIntel   │     │  .observability()│     │  OAuth2 Bearer auth  │
+└─────────────────┘     └────────┬─────────┘     └──────────────────────┘
+                                 │
+                        ┌────────▼─────────┐
+                        │    McpClient      │
+                        │  JSON-RPC 2.0     │
+                        │  Token management │
+                        │  Retry + errors   │
+                        └──────────────────┘
+```
+
 ### Enterprise Multi-Metro Deployment
 
 The following example demonstrates a complete global network deployment using the SDK across three domains — **Fabric**, **Network Edge**, and **Internet Access**. The architecture provisions Fabric Cloud Routers (FCRs) in six metros spanning three regions, connects each to two cloud providers at 5 Gbps, deploys Cisco C8000V routers and Cisco Secure Firewall (FTDv) instances via Network Edge, interconnects all metros over a 10 Gbps Global IP-WAN backbone, configures BGP routing on every connection, and provisions 500 Mbps Dedicated Internet Access at each location. This showcases the SDK's fluent builders, cloud provider adapter framework, cross-domain resource orchestration, and routing protocol configuration in a single cohesive workflow.
@@ -1286,7 +1427,13 @@ int total = pagination.getTotal();
 ```bash
 mvn test
 ```
-Unit tests validate JSON deserialization, pagination logic, exception mapping, and builder patterns using Mockito and WireMock.
+Unit tests validate JSON deserialization, pagination logic, exception mapping, and builder patterns using Mockito.
+
+### WireMock Tests (No Credentials Required)
+```bash
+mvn test -Pwiremock
+```
+WireMock tests run a local HTTP server to simulate Equinix API responses, testing full request/response cycles for Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, Messaging, and MCP Bridge without requiring live API credentials. Coverage includes CRUD operations, pagination, error handling, OAuth2 token management, JSON-RPC protocol, and typed bridge responses.
 
 ### Integration Tests (Credentials Required)
 ```bash
@@ -1316,6 +1463,7 @@ Browse Javadocs by domain:
 - [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/package-summary.html) — Intelligent metro placement engine
 - [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
 - [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
+- [MCP Bridge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/mcp/package-summary.html) — JSON-RPC 2.0 client for Equinix MCP servers
 
 ## Building
 
@@ -1330,72 +1478,14 @@ mvn clean package -DskipTests
 mvn javadoc:javadoc
 ```
 
-## Publishing to Maven Central
+## Releases
 
-The SDK is published to Maven Central via the [Sonatype Central Portal](https://central.sonatype.com).
-
-### Prerequisites
-
-1. **Sonatype Central Portal account**: Register at [central.sonatype.com](https://central.sonatype.com)
-2. **User token**: Generate a user token from your Central Portal account (Account → Generate User Token)
-3. **GPG key**: Generate a GPG key pair for artifact signing (`gpg --full-generate-key`)
-4. **Maven settings**: Configure `~/.m2/settings.xml`:
-
-```xml
-<settings>
-    <servers>
-        <server>
-            <id>central</id>
-            <username>YOUR_TOKEN_USERNAME</username>
-            <password>YOUR_TOKEN_PASSWORD</password>
-        </server>
-    </servers>
-    <profiles>
-        <profile>
-            <id>gpg</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <gpg.executable>/path/to/gpg</gpg.executable>
-            </properties>
-        </profile>
-    </profiles>
-</settings>
-```
-
-### Deploy
-
-```bash
-# Deploy release to Maven Central (auto-publishes after validation)
-mvn clean deploy -DskipTests -Dgpg.keyname=YOUR_GPG_KEY_ID
-```
-
-The `central-publishing-maven-plugin` handles bundling, uploading, and publishing automatically. Artifacts typically appear on Maven Central within 30 minutes of a successful deploy.
-
-### Release Script
-
-A PowerShell release script is included for the full workflow (test, build, tag, GitHub release, Maven Central deploy):
-
-```powershell
-# Full release with Maven Central deploy
-.\scripts\release.ps1 -Version "1.2.0" -GpgKeyId "YOUR_KEY_ID" -DeployMavenCentral
-
-# GitHub release only (no Maven Central)
-.\scripts\release.ps1 -Version "1.2.0"
-
-# Preview without executing
-.\scripts\release.ps1 -Version "1.2.0" -DryRun
-```
-
-> **Note:** You must commit and push your changes to Git before running the release script.
-
-### GitHub Releases
-
-Pre-built JARs are also available as [GitHub Releases](https://github.com/iantjones/equinix-java-sdk/releases). Each release includes:
+Pre-built JARs are available as [GitHub Releases](https://github.com/iantjones/equinix-java-sdk/releases). Each release includes:
 - `equinix-sdk-java-X.Y.jar` - Compiled SDK
 - `equinix-sdk-java-X.Y-sources.jar` - Source code
 - `equinix-sdk-java-X.Y-javadoc.jar` - Javadoc documentation
+
+The SDK is also published to [Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java).
 
 ## Architecture
 
@@ -1416,7 +1506,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation.
 
 ## Requirements
 
-- **Java 14** or later
+- **Java 21** or later
 - **Maven 3.6+** for building
 
 ### Dependencies

@@ -1,0 +1,8 @@
+{
+  "uuid": "a7b8c9d0-e1f2-4a3b-4c5d-6e7f80910213",
+  "type": "MAINTENANCE",
+  "category": "MAINTENANCE",
+  "message": "Scheduled power maintenance in SV5 on 2024-12-20 from 02:00-06:00 UTC. Redundant power feeds will remain active. No customer impact expected.",
+  "timestamp": "2024-11-12T18:00:00.000Z",
+  "read": false
+}

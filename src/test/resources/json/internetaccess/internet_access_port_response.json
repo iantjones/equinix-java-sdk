@@ -1,0 +1,8 @@
+{
+  "uuid": "f2a3b4c5-d6e7-4f80-9102-132435465768",
+  "name": "SV5-IA-Port-Eth10G-01",
+  "type": "PHYSICAL",
+  "speed": "10G",
+  "status": "ACTIVE",
+  "ibx": "SV5"
+}

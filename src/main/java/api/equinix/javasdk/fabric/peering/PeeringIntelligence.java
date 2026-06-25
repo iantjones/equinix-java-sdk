@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.peering;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.peering.client.PeeringDbClient;
 import api.equinix.javasdk.fabric.peering.model.PeeringIntelligenceResult;
 import api.equinix.javasdk.fabric.peering.model.PeeringRequest;
@@ -115,6 +116,7 @@ public class PeeringIntelligence {
         private boolean includePolicies = true;
         private boolean includeFabricConnections;
         private boolean includeResiliency;
+        private McpBridge mcpBridge;
 
         Builder(Fabric fabric, String peeringDbApiKey) {
             this.fabric = fabric;
@@ -248,6 +250,19 @@ public class PeeringIntelligence {
         }
 
         /**
+         * Enables MCP-based enrichment for the peering intelligence analysis.
+         * When set, the engine will use the Equinix MCP server to supplement
+         * the analysis with real-time connection state and observability data.
+         *
+         * @param mcpBridge the MCP bridge instance (typically from {@code fabric.mcp()})
+         * @return this builder
+         */
+        public Builder withMcpEnrichment(McpBridge mcpBridge) {
+            this.mcpBridge = mcpBridge;
+            return this;
+        }
+
+        /**
          * Enables all analysis features (capacity, policies, Fabric, resiliency).
          *
          * @return this builder
@@ -284,6 +299,7 @@ public class PeeringIntelligence {
                     .includePolicies(includePolicies)
                     .includeFabricConnections(includeFabricConnections)
                     .includeResiliency(includeResiliency)
+                    .mcpBridge(mcpBridge)
                     .build();
 
             PeeringDbClient peeringDbClient = peeringDbApiKey != null

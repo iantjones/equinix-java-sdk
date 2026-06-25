@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.optimizer;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
+import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.fabric.optimizer.enums.*;
 import api.equinix.javasdk.fabric.optimizer.model.*;
@@ -62,6 +63,7 @@ public final class MetroOptimizer {
         private OptimizationConstraints constraints;
         private OptimizationStrategy strategy = OptimizationStrategy.BALANCED;
         private ScoringWeights scoringWeights;
+        private McpBridge mcpBridge;
 
         Builder(Fabric fabric) {
             this.fabric = fabric;
@@ -204,6 +206,24 @@ public final class MetroOptimizer {
             return this;
         }
 
+        // ── MCP Enrichment ──
+
+        /**
+         * Enables MCP-based real-time data enrichment for the optimization pipeline.
+         * When set, the optimizer will query the Equinix MCP server for live metro data
+         * and observability metrics to supplement the standard Fabric API data.
+         *
+         * <p>MCP enrichment is entirely optional. If not set or if MCP calls fail,
+         * the optimizer falls back to its standard data sources.</p>
+         *
+         * @param mcpBridge the MCP bridge instance (typically from {@code fabric.mcp()})
+         * @return this builder for method chaining
+         */
+        public Builder withMcpEnrichment(McpBridge mcpBridge) {
+            this.mcpBridge = mcpBridge;
+            return this;
+        }
+
         // ── Execute ──
 
         /**
@@ -225,6 +245,7 @@ public final class MetroOptimizer {
                     .constraints(constraints != null ? constraints : OptimizationConstraints.builder().build())
                     .strategy(strategy)
                     .scoringWeights(scoringWeights != null ? scoringWeights : ScoringWeights.defaults())
+                    .mcpBridge(mcpBridge)
                     .build();
 
             return MetroOptimizerEngine.execute(request, fabric);

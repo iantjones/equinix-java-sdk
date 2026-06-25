@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"valid\":true,\"message\":\"Connection configuration is valid\"}"
+      }
+    ],
+    "isError": false
+  }
+}

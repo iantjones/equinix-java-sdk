@@ -1,0 +1,8 @@
+{
+  "access_token": "test-token-abc123",
+  "token_timeout": 3600,
+  "token_type": "bearer",
+  "user_name": "test-user",
+  "refresh_token": "test-refresh-token",
+  "refresh_token_timeout": 7200
+}

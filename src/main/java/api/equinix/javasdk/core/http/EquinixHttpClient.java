@@ -30,6 +30,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.io.EmptyInputStream;
 
 import java.io.BufferedReader;
@@ -51,6 +52,17 @@ public class EquinixHttpClient implements Closeable {
 
     private static final Logger logger = Logger.getLogger(EquinixHttpClient.class.getName());
 
+    /** Maximum time (ms) to wait for a connection to be established. */
+    private static final int DEFAULT_CONNECT_TIMEOUT_MS = 10_000;
+    /** Maximum time (ms) to wait for data between packets once connected. */
+    private static final int DEFAULT_SOCKET_TIMEOUT_MS = 60_000;
+    /** Maximum time (ms) to wait for a connection lease from the pool. */
+    private static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 5_000;
+    /** Maximum total pooled connections across all routes. */
+    private static final int DEFAULT_MAX_TOTAL_CONNECTIONS = 50;
+    /** Maximum pooled connections per route (the Equinix API host). */
+    private static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 20;
+
     private final CloseableHttpClient httpClient;
     private final RequestFactory requestFactory = new RequestFactory();
     private final Protocol protocol = Protocol.HTTPS;
@@ -58,11 +70,30 @@ public class EquinixHttpClient implements Closeable {
 
     /**
      * <p>Constructor for EquinixHttpClient.</p>
+     *
+     * <p>Builds a connection-pooled, timeout-bounded HTTP client. Without explicit
+     * timeouts a stalled server can block a calling thread indefinitely; without a
+     * pooled connection manager every concurrent call would open (and leak) its own
+     * socket. The pool and timeouts below are sensible defaults for typical SDK use.</p>
      */
     public EquinixHttpClient() {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(DEFAULT_MAX_TOTAL_CONNECTIONS);
+        connectionManager.setDefaultMaxPerRoute(DEFAULT_MAX_CONNECTIONS_PER_ROUTE);
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setCookieSpec(CookieSpecs.STANDARD)
+                .setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MS)
+                .setSocketTimeout(DEFAULT_SOCKET_TIMEOUT_MS)
+                .setConnectionRequestTimeout(DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS)
+                .build();
+
+        // Connection manager is owned by this client (not shared), so httpClient.close()
+        // also shuts the pool down — see close().
         httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(RequestConfig.custom()
-                        .setCookieSpec(CookieSpecs.STANDARD).build()).build();
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     /**

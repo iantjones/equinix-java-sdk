@@ -1,0 +1,10 @@
+{
+  "uuid": "c9d0e1f2-a3b4-4c5d-6e7f-809102132435",
+  "subject": "Request for additional power capacity in cabinet C-14",
+  "description": "Requesting upgrade from 10kW to 15kW power allocation for cabinet C-14 in cage SV5:01:000ABC to support new server deployment.",
+  "status": "OPEN",
+  "priority": "MEDIUM",
+  "caseNumber": "CS-2024-0042156",
+  "createdDate": "2024-11-09T13:00:00.000Z",
+  "updatedDate": "2024-11-11T10:25:33.000Z"
+}

@@ -1,0 +1,48 @@
+{
+  "transactionId": "INV-2024-00198734",
+  "transactionType": "INVOICE",
+  "transactionDate": "2024-11-15",
+  "customerDetails": {
+    "accountNumber": "128745",
+    "accountName": "Acme Cloud Services Inc.",
+    "legalEntity": "Acme Cloud Services Inc.",
+    "countryCode": "US",
+    "address": {
+      "streetAddress": "100 Technology Drive",
+      "city": "San Jose",
+      "state": "CA",
+      "zipCode": "95134",
+      "country": "US"
+    },
+    "region": "AMER"
+  },
+  "billingPurchaseOrder": "PO-2024-005123",
+  "billingCycle": "MONTHLY",
+  "billingContacts": {
+    "name": "Jane Smith",
+    "email": "billing@acmecloudservices.com",
+    "phone": "+1-408-555-0142"
+  },
+  "paymentDueDate": "2024-12-15",
+  "paymentTerms": "NET_30",
+  "currencyCode": "USD",
+  "totalRecurringAmount": 12450.00,
+  "totalNonRecurringAmount": 3500.00,
+  "totalAmount": 15950.00,
+  "totalAdjustment": -250.00,
+  "vatNumber": "US-EIN-82-1234567",
+  "paymentInstructions": {
+    "bankName": "JPMorgan Chase",
+    "accountName": "Equinix Inc.",
+    "routingNumber": "021000021",
+    "accountNumber": "************7890",
+    "swiftCode": "CHASUS33"
+  },
+  "taxInfo": [
+    {
+      "taxType": "STATE_TAX",
+      "taxRate": 8.25,
+      "taxAmount": 1315.88
+    }
+  ]
+}

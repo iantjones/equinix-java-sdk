@@ -1,0 +1,9 @@
+{
+  "uuid": "e1f2a3b4-c5d6-4e7f-8091-021324354657",
+  "name": "SV5-DIA-Primary-1G",
+  "type": "DEDICATED",
+  "status": "ACTIVE",
+  "bandwidth": 1000,
+  "ibx": "SV5",
+  "state": "ACTIVE"
+}
