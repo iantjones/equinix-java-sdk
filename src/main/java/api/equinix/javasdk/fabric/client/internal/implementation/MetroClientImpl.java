@@ -68,7 +68,7 @@ public class MetroClientImpl extends PageableBase implements MetroClient<Metro> 
             qParams = Map.of("presence", Utils.singleParamList(metroPresence));
         }
 
-        EquinixRequest<Metro> equinixRequest = this.buildRequest("GetMetros", RequestType.PAGINATED, null, qParams, MetroJson.pagedTypeRef());
+        EquinixRequest<Metro> equinixRequest = this.buildRequest("GetMetros", RequestType.PAGINATED, null, qParams, MetroJson.class);
         EquinixResponse<Metro> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -76,7 +76,7 @@ public class MetroClientImpl extends PageableBase implements MetroClient<Metro> 
     /** {@inheritDoc} */
     public MetroJson getByMetroCode(MetroCode metroCode) {
         Map<String, String> pParams = Map.of("metroCode", metroCode.toString());
-        EquinixRequest<Metro> equinixRequest = this.buildRequestWithPathParams("GetMetro", RequestType.SINGLE, pParams, MetroJson.singleTypeRef());
+        EquinixRequest<Metro> equinixRequest = this.buildRequestWithPathParams("GetMetro", RequestType.SINGLE, pParams, MetroJson.class);
         EquinixResponse<Metro> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
