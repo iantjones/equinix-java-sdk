@@ -46,7 +46,7 @@ public class RouteFilterClientImpl extends PageableBase implements RouteFilterCl
 
     public Page<RouteFilter, RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<RouteFilter> equinixRequest = this.buildRequest("SearchRouteFilters", RequestType.PAGINATED_POST, RouteFilterJson.getPagedTypeRef());
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost(filter, sort));
+        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

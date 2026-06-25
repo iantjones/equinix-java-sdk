@@ -55,7 +55,7 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
 
     public Page<Connection, ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<Connection> equinixRequest = this.buildRequest("SearchConnections", RequestType.PAGINATED_POST, ConnectionJson.getPagedTypeRef());
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost(filter, sort));
+        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

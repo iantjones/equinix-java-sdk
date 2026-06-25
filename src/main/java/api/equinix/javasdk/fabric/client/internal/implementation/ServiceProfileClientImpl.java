@@ -26,7 +26,6 @@ import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.model.FilteredPaginatedPost;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ServiceProfileClient;
@@ -66,7 +65,7 @@ public class ServiceProfileClientImpl extends PageableBase implements ServicePro
 
     public Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("SearchServiceProfiles", RequestType.PAGINATED_POST, ServiceProfileJson.getPagedTypeRef());
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost(filter, sort));
+        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
