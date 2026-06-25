@@ -17,7 +17,6 @@
 package api.equinix.javasdk.internetaccess.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.internetaccess.enums.RoutingConfigType;
 import api.equinix.javasdk.internetaccess.model.RoutingConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -31,7 +30,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RoutingConfigJson implements Serializable {
+public class RoutingConfigJson {
 
     @Getter static TypeReference<Page<RoutingConfig, RoutingConfigJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RoutingConfigJson>> listTypeRef = new TypeReference<>() {};

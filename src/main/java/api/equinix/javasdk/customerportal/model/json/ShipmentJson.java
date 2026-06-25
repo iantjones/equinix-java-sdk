@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.CarrierType;
 import api.equinix.javasdk.customerportal.enums.ShipmentStatus;
 import api.equinix.javasdk.customerportal.enums.ShipmentType;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class ShipmentJson implements Serializable {
+public class ShipmentJson {
 
     @Getter static TypeReference<Page<Shipment, ShipmentJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ShipmentJson>> listTypeRef = new TypeReference<>() {};

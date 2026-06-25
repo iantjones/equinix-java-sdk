@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionState;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public final class MarketplaceSubscriptionJson implements Serializable, MarketplaceSubscription {
+public final class MarketplaceSubscriptionJson implements MarketplaceSubscription {
 
     @Getter static TypeReference<Page<MarketplaceSubscription, MarketplaceSubscriptionJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<MarketplaceSubscriptionJson>> listTypeRef = new TypeReference<>() {};

@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.ibxsmartview.model.AssetDetail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +29,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AssetDetailJson implements AssetDetail, Serializable {
+public class AssetDetailJson implements AssetDetail {
 
     @Getter static TypeReference<AssetDetailJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<AssetDetailJson>> listTypeRef = new TypeReference<>() {};

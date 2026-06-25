@@ -18,7 +18,6 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.PortType;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.PortState;
 import api.equinix.javasdk.fabric.model.implementation.*;
 
@@ -37,7 +36,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
-public final class PortJson implements Serializable {
+public final class PortJson {
 
     /**
      * <p>pagedTypeRef.</p>

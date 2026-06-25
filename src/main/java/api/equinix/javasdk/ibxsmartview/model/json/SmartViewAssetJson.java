@@ -17,7 +17,6 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SmartViewAssetJson implements SmartViewAsset, Serializable {
+public class SmartViewAssetJson implements SmartViewAsset {
 
     @Getter static TypeReference<Page<SmartViewAsset, SmartViewAssetJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<SmartViewAssetJson> singleTypeRef = new TypeReference<>() {};

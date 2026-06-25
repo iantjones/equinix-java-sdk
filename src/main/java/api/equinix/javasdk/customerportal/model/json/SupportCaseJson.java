@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.CasePriority;
 import api.equinix.javasdk.customerportal.enums.CaseStatus;
 import api.equinix.javasdk.customerportal.model.SupportCase;
@@ -28,7 +27,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class SupportCaseJson implements Serializable {
+public class SupportCaseJson {
 
     @Getter static TypeReference<Page<SupportCase, SupportCaseJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SupportCaseJson>> listTypeRef = new TypeReference<>() {};

@@ -17,7 +17,6 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertConfiguration;
@@ -31,7 +30,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SystemAlertJson implements SystemAlert, Serializable {
+public class SystemAlertJson implements SystemAlert {
 
     @Getter static TypeReference<Page<SystemAlert, SystemAlertJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<SystemAlertJson> singleTypeRef = new TypeReference<>() {};

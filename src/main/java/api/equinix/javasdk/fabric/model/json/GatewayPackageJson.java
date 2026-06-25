@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.enums.GatewayPackageType;
 import api.equinix.javasdk.fabric.enums.NatType;
@@ -30,7 +29,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class GatewayPackageJson implements Serializable {
+public class GatewayPackageJson {
 
     @Getter static TypeReference<Page<GatewayPackage, GatewayPackageJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<GatewayPackageJson>> listTypeRef = new TypeReference<>() {};

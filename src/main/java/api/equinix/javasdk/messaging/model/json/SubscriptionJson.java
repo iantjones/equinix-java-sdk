@@ -17,7 +17,6 @@
 package api.equinix.javasdk.messaging.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.messaging.enums.SubscriptionStatus;
 import api.equinix.javasdk.messaging.enums.SubscriptionType;
 import api.equinix.javasdk.messaging.model.Subscription;
@@ -32,7 +31,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SubscriptionJson implements Serializable {
+public class SubscriptionJson {
 
     @Getter static TypeReference<Page<Subscription, SubscriptionJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SubscriptionJson>> listTypeRef = new TypeReference<>() {};

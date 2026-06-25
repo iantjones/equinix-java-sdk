@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.RouteFilterAction;
 import api.equinix.javasdk.fabric.enums.RouteFilterRuleState;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
@@ -30,7 +29,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class RouteFilterRuleJson implements Serializable {
+public class RouteFilterRuleJson {
 
     @Getter static TypeReference<Page<RouteFilterRule, RouteFilterRuleJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RouteFilterRuleJson>> listTypeRef = new TypeReference<>() {};

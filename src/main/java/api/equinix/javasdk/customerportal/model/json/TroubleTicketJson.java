@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.TicketCategory;
 import api.equinix.javasdk.customerportal.enums.TicketPriority;
 import api.equinix.javasdk.customerportal.enums.TicketStatus;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class TroubleTicketJson implements Serializable {
+public class TroubleTicketJson {
 
     @Getter static TypeReference<Page<TroubleTicket, TroubleTicketJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<TroubleTicketJson>> listTypeRef = new TypeReference<>() {};

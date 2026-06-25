@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,7 +28,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EnvironmentDataJson implements EnvironmentData, Serializable {
+public class EnvironmentDataJson implements EnvironmentData {
 
     @Getter static TypeReference<EnvironmentDataJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<EnvironmentDataJson>> listTypeRef = new TypeReference<>() {};

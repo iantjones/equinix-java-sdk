@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeState;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
@@ -31,7 +30,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class PrecisionTimeJson implements Serializable {
+public class PrecisionTimeJson {
 
     @Getter static TypeReference<Page<PrecisionTime, PrecisionTimeJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<PrecisionTimeJson>> listTypeRef = new TypeReference<>() {};

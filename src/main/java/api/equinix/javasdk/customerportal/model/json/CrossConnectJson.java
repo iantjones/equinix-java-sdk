@@ -17,7 +17,6 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Serializable;
 import api.equinix.javasdk.customerportal.enums.CrossConnectStatus;
 import api.equinix.javasdk.customerportal.enums.CrossConnectType;
 import api.equinix.javasdk.customerportal.enums.MediaType;
@@ -29,7 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class CrossConnectJson implements Serializable {
+public class CrossConnectJson {
 
     @Getter static TypeReference<Page<CrossConnect, CrossConnectJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<CrossConnectJson>> listTypeRef = new TypeReference<>() {};
