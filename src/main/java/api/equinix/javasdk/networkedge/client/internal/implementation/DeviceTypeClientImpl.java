@@ -53,7 +53,7 @@ public class DeviceTypeClientImpl extends PageableBase implements DeviceTypeClie
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     public Page<DeviceType, DeviceTypeJson> list() {
-        EquinixRequest<DeviceType> equinixRequest = this.buildRequest("ListDeviceTypes", RequestType.PAGINATED, DeviceTypeJson.pagedTypeRef());
+        EquinixRequest<DeviceType> equinixRequest = this.buildRequest("ListDeviceTypes", RequestType.PAGINATED, DeviceTypeJson.class);
         EquinixResponse<DeviceType> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

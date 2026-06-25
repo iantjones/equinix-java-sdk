@@ -46,7 +46,7 @@ public class CoreClientImpl extends ClientBase implements CoreClient {
      * @return a {@link api.equinix.javasdk.core.model.OAuthToken} object.
      */
     public OAuthToken authenticate() {
-        EquinixRequest<OAuthToken> equinixRequest = this.buildRequest("Authenticate", RequestType.SINGLE, OAuthToken.singleTypeRef());
+        EquinixRequest<OAuthToken> equinixRequest = this.buildRequest("Authenticate", RequestType.SINGLE, OAuthToken.class);
         Utils.serializeJson(equinixRequest, getConfigClient().getEquinixClient().getEquinixCredentialsProvider().getCredentials());
         EquinixResponse<OAuthToken> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

@@ -62,7 +62,7 @@ public class PortStatisticClientImpl extends PageableBase implements PortStatist
         );
         Map<String, String> pParams = Map.of("uuid", uuid);
 
-        EquinixRequest<PortStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, pParams, qParams, PortStatisticJson.singleTypeRef());
+        EquinixRequest<PortStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, pParams, qParams, PortStatisticJson.class);
         EquinixResponse<PortStatistic> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -77,7 +77,7 @@ public class PortStatisticClientImpl extends PageableBase implements PortStatist
         Utils.addAdditionalValue(qParams, "sort", sortable);
         Utils.addAdditionalValue(qParams, "duration", duration);
 
-        EquinixRequest<PortStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.PAGINATED, null, qParams, PortStatisticJson.pagedTypeRef());
+        EquinixRequest<PortStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.PAGINATED, null, qParams, PortStatisticJson.class);
         EquinixResponse<PortStatistic> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

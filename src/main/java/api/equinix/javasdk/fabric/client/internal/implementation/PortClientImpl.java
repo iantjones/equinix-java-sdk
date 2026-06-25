@@ -55,7 +55,7 @@ public class PortClientImpl extends PageableBase implements PortClient<Port> {
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     public Page<Port, PortJson> list() {
-        EquinixRequest<Port> equinixRequest = this.buildRequest("GetPorts", RequestType.PAGINATED, PortJson.pagedTypeRef());
+        EquinixRequest<Port> equinixRequest = this.buildRequest("GetPorts", RequestType.PAGINATED, PortJson.class);
         EquinixResponse<Port> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -63,7 +63,7 @@ public class PortClientImpl extends PageableBase implements PortClient<Port> {
     /** {@inheritDoc} */
     public PortJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Port> equinixRequest = this.buildRequestWithPathParams("GetPort", RequestType.SINGLE, pParams, PortJson.singleTypeRef());
+        EquinixRequest<Port> equinixRequest = this.buildRequestWithPathParams("GetPort", RequestType.SINGLE, pParams, PortJson.class);
         EquinixResponse<Port> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
