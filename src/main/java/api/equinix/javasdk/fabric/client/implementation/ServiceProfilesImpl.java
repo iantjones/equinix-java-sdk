@@ -64,9 +64,7 @@ public class ServiceProfilesImpl implements ServiceProfiles {
     }
 
     public PaginatedList<ServiceProfile> list() {
-        Page<ServiceProfile, ServiceProfileJson> responsePage = this.serviceClient.list();
-        PaginatedList<ServiceProfile> serviceProfileList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, ServiceProfileWrapper::new);
-        return new PaginatedList<ServiceProfile>(serviceProfileList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return Utils.toPaginatedList(this.serviceClient.list(), this.serviceClient, ServiceProfileWrapper::new);
     }
 
     public PaginatedFilteredList<ServiceProfile> search() {
@@ -82,9 +80,7 @@ public class ServiceProfilesImpl implements ServiceProfiles {
     }
 
     public PaginatedFilteredList<ServiceProfile> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<ServiceProfile, ServiceProfileJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<ServiceProfile> ServiceProfileList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ServiceProfileWrapper::new);
-        return new PaginatedFilteredList<>(ServiceProfileList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return Utils.toPaginatedFilteredList(serviceClient.search(filter, sort), this.serviceClient, ServiceProfileWrapper::new);
     }
 
     public ServiceProfile getByUuid(String uuid) {

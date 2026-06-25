@@ -365,6 +365,41 @@ public class Utils {
     }
 
     /**
+     * Builds a fully-populated {@link PaginatedList} from a deserialized {@link Page} in one step:
+     * maps each JSON item to its model wrapper and attaches the page's request/response/pagination
+     * for lazy paging. Replaces the repeated map-then-reconstruct boilerplate in resource clients.
+     *
+     * @param page the deserialized page (carries items + associated request/response + pagination)
+     * @param serviceClient the paging client used to fetch subsequent pages
+     * @param objectMapper maps a JSON item to its model wrapper
+     * @param <T> the model type
+     * @param <S> the JSON type
+     * @return a paginated list ready for {@code next()}/{@code loadAll()}
+     */
+    public static <T, S> PaginatedList<T> toPaginatedList(Page<T, S> page, Pageable<T> serviceClient,
+                                                          BiFunction<? super S, ? super Pageable<T>, ? extends T> objectMapper) {
+        return new PaginatedList<>(mapPaginatedList(page.getItems(), serviceClient, objectMapper),
+                serviceClient, page.getAssociatedRequest(), page.getAssociatedResponse(), page.getPagination());
+    }
+
+    /**
+     * Builds a fully-populated {@link PaginatedFilteredList} from a deserialized {@link Page} in one step
+     * (the POST-search counterpart to {@link #toPaginatedList}).
+     *
+     * @param page the deserialized page
+     * @param serviceClient the paging client used to fetch subsequent pages
+     * @param objectMapper maps a JSON item to its model wrapper
+     * @param <T> the model type
+     * @param <S> the JSON type
+     * @return a paginated, filtered list ready for {@code next()}/{@code loadAll()}
+     */
+    public static <T, S> PaginatedFilteredList<T> toPaginatedFilteredList(Page<T, S> page, PageablePost<T> serviceClient,
+                                                                          BiFunction<? super S, ? super PageablePost<T>, ? extends T> objectMapper) {
+        return new PaginatedFilteredList<>(mapPaginatedFilteredList(page.getItems(), serviceClient, objectMapper),
+                serviceClient, page.getAssociatedRequest(), page.getAssociatedResponse(), page.getPagination());
+    }
+
+    /**
      * <p>mapList.</p>
      *
      * @param itemList a {@link java.util.List} object.

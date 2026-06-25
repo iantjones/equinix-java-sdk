@@ -98,15 +98,13 @@ public class ServiceProfileClientImpl extends PageableBase implements ServicePro
     public PaginatedList<ServiceProfile> nextPage(PaginatedRequest<ServiceProfile> equinixRequest) {
         EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
         Page<ServiceProfile, ServiceProfileJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<ServiceProfile> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ServiceProfileWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return Utils.toPaginatedList(nextPage, this, ServiceProfileWrapper::new);
     }
 
     public PaginatedFilteredList<ServiceProfile> nextPage(PaginatedPostRequest<ServiceProfile> equinixRequest) {
         Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
         EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
         Page<ServiceProfile, ServiceProfileJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedFilteredList<ServiceProfile> newPaginatedFilteredList = Utils.mapPaginatedFilteredList(nextPage.getItems(), this, ServiceProfileWrapper::new);
-        return new PaginatedFilteredList<>(newPaginatedFilteredList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return Utils.toPaginatedFilteredList(nextPage, this, ServiceProfileWrapper::new);
     }
 }
