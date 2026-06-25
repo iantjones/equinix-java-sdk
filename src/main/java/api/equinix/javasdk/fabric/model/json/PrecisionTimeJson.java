@@ -32,9 +32,7 @@ import java.util.List;
 @Getter
 public class PrecisionTimeJson {
 
-    @Getter static TypeReference<Page<PrecisionTime, PrecisionTimeJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<PrecisionTimeJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<PrecisionTimeJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

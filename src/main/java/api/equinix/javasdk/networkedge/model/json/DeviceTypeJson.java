@@ -36,23 +36,7 @@ import java.util.ArrayList;
 @Getter
 public class DeviceTypeJson {
 
-    /**
-     * <p>pagedTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<Page<DeviceJson, DeviceTypeJson>> pagedTypeRef() {
-        return new TypeReference<>() {};
-    }
 
-    /**
-     * <p>singleTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<DeviceTypeJson> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
 
     @JsonProperty("deviceTypeCode")
     private String deviceTypeCode;

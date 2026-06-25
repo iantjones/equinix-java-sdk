@@ -27,7 +27,6 @@ import java.util.Map;
 @Getter
 public class SubscriptionDataJson implements SubscriptionData {
 
-    @Getter static TypeReference<SubscriptionDataJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("subscriptionId")
     private String subscriptionId;

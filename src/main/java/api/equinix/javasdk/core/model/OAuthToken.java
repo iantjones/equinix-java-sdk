@@ -34,14 +34,6 @@ import java.time.LocalDateTime;
 @Setter
 public class OAuthToken {
 
-    /**
-     * <p>singleTypeRef.</p>
-     *
-     * @return a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     */
-    public static TypeReference<OAuthToken> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
 
     @JsonProperty("access_token")
     private String sessionToken;

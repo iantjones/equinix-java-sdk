@@ -31,9 +31,7 @@ import java.util.List;
 @Getter
 public class RouteFilterRuleJson {
 
-    @Getter static TypeReference<Page<RouteFilterRule, RouteFilterRuleJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<RouteFilterRuleJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<RouteFilterRuleJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -30,7 +30,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TrendingEnvironmentDataJson implements TrendingEnvironmentData {
 
-    @Getter static TypeReference<TrendingEnvironmentDataJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("ibx")
     private String ibx;

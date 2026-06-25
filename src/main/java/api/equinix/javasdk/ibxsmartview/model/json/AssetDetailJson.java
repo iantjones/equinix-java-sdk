@@ -31,7 +31,6 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AssetDetailJson implements AssetDetail {
 
-    @Getter static TypeReference<AssetDetailJson> singleTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<AssetDetailJson>> listTypeRef = new TypeReference<>() {};
 
     @JsonProperty("assetId")

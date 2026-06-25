@@ -39,12 +39,6 @@ import java.util.List;
 @Getter
 public class MetroJson extends BasicMetro {
 
-    public static TypeReference<Page<Metro, MetroJson>> pagedTypeRef() {
-        return new TypeReference<>() {};
-    }
-    public static TypeReference<MetroJson> singleTypeRef() {
-        return new TypeReference<>() {};
-    }
 
     @JsonProperty("type")
     private MetroType type;

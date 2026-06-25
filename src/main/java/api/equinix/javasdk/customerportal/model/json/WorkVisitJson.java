@@ -28,9 +28,7 @@ import java.util.List;
 @Getter
 public class WorkVisitJson {
 
-    @Getter static TypeReference<Page<WorkVisit, WorkVisitJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<WorkVisitJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<WorkVisitJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

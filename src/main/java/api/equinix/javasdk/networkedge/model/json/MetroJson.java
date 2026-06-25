@@ -37,9 +37,7 @@ import java.util.List;
 @Getter
 public class MetroJson {
 
-    @Getter static TypeReference<Page<Metro, MetroJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<MetroJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<MetroJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("metroCode")
     private MetroCode metroCode;

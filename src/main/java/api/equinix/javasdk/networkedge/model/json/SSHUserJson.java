@@ -38,9 +38,7 @@ import java.util.Map;
 @Getter
 public class SSHUserJson {
 
-    @Getter static TypeReference<Page<SSHUser, SSHUserJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SSHUserJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SSHUserJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

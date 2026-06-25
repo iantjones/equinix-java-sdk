@@ -31,7 +31,6 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PowerHierarchyJson implements PowerHierarchy {
 
-    @Getter static TypeReference<PowerHierarchyJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("ibx")
     private String ibx;

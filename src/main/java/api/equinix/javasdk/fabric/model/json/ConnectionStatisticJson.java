@@ -36,9 +36,7 @@ import java.util.List;
 @Getter
 public class ConnectionStatisticJson {
 
-    @Getter static TypeReference<Page<ConnectionStatistic, ConnectionStatisticJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ConnectionStatisticJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ConnectionStatisticJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

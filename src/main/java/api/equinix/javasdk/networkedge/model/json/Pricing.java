@@ -30,7 +30,6 @@ import lombok.Getter;
 @Getter
 public class Pricing {
 
-    @Getter static TypeReference<Pricing> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("termLength")
     private Integer termLength;

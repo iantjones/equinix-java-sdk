@@ -35,8 +35,6 @@ import lombok.Getter;
 @Getter
 public class VPNJson extends Lifecycle {
 
-    @Getter static TypeReference<Page<VPN, VPNJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<VPNJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("secondary")
     private VPN secondary;

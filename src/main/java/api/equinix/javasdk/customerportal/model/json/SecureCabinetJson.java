@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class SecureCabinetJson {
 
-    @Getter static TypeReference<Page<SecureCabinet, SecureCabinetJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SecureCabinetJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SecureCabinetJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

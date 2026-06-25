@@ -28,9 +28,7 @@ import java.util.List;
 @Getter
 public class NotificationJson implements Notification {
 
-    @Getter static TypeReference<Page<Notification, NotificationJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<NotificationJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<NotificationJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -33,9 +33,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InternetAccessServiceJson {
 
-    @Getter static TypeReference<Page<InternetAccessService, InternetAccessServiceJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<InternetAccessServiceJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<InternetAccessServiceJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

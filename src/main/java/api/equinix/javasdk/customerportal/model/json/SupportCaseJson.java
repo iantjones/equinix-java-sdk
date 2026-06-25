@@ -29,9 +29,7 @@ import java.util.List;
 @Getter
 public class SupportCaseJson {
 
-    @Getter static TypeReference<Page<SupportCase, SupportCaseJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SupportCaseJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SupportCaseJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

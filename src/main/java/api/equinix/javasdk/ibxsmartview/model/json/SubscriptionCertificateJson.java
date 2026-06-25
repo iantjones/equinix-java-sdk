@@ -24,7 +24,6 @@ import lombok.Getter;
 @Getter
 public class SubscriptionCertificateJson implements SubscriptionCertificate {
 
-    @Getter static TypeReference<SubscriptionCertificateJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("certificate")
     private String certificate;

@@ -37,8 +37,6 @@ import java.util.List;
 @Getter
 public class ACLTemplateJson extends Lifecycle {
 
-    @Getter static TypeReference<Page<ACLTemplate, ACLTemplateJson>> pagedTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ACLTemplateJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

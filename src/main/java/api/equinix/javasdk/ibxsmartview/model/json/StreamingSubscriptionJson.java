@@ -29,7 +29,6 @@ import java.util.List;
 public class StreamingSubscriptionJson {
 
     @Getter static TypeReference<List<StreamingSubscriptionJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<StreamingSubscriptionJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("subscriptionId")
     private String subscriptionId;

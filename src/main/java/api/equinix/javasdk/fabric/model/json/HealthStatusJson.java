@@ -24,7 +24,6 @@ import lombok.Getter;
 @Getter
 public class HealthStatusJson implements HealthStatus {
 
-    @Getter static TypeReference<HealthStatusJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("status")
     private String status;

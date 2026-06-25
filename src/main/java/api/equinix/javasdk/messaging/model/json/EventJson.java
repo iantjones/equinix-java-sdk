@@ -30,9 +30,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EventJson implements Event {
 
-    @Getter static TypeReference<Page<Event, EventJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<EventJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<EventJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

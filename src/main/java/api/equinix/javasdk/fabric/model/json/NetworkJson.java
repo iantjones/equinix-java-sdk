@@ -34,9 +34,7 @@ import java.util.List;
 @Getter
 public class NetworkJson {
 
-    @Getter static TypeReference<Page<Network, NetworkJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<NetworkJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<NetworkJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

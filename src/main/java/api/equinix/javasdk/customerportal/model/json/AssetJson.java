@@ -28,9 +28,7 @@ import java.util.List;
 @Getter
 public class AssetJson implements Asset {
 
-    @Getter static TypeReference<Page<Asset, AssetJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<AssetJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<AssetJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

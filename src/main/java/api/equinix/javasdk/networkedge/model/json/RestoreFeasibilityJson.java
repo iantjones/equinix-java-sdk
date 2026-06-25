@@ -42,7 +42,6 @@ import java.util.Map;
 @Getter
 public class RestoreFeasibilityJson {
 
-    @Getter static TypeReference<RestoreFeasibilityJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("deviceBackup")
     private BackupJson deviceBackup;

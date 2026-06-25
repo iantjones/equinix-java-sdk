@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class AttachmentJson {
 
-    @Getter static TypeReference<Page<Attachment, AttachmentJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<AttachmentJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<AttachmentJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class ReportJson implements Report {
 
-    @Getter static TypeReference<Page<Report, ReportJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ReportJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ReportJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

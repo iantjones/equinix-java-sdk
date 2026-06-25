@@ -31,9 +31,7 @@ import java.util.List;
 @Getter
 public class StreamJson {
 
-    @Getter static TypeReference<Page<Stream, StreamJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<StreamJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<StreamJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

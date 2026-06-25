@@ -29,9 +29,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InternetAccessPortJson implements InternetAccessPort {
 
-    @Getter static TypeReference<Page<InternetAccessPort, InternetAccessPortJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<InternetAccessPortJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<InternetAccessPortJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -29,8 +29,6 @@ import java.util.ArrayList;
 @Getter
 public class PricingJson {
 
-    @Getter static TypeReference<PricingJson> singleTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<Page<Pricing, PricingJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("type")
     private PriceType type;

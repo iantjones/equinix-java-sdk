@@ -27,9 +27,7 @@ import java.util.List;
 @Getter
 public class UnifiedNotificationJson implements UnifiedNotification {
 
-    @Getter static TypeReference<Page<UnifiedNotification, UnifiedNotificationJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<UnifiedNotificationJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<UnifiedNotificationJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

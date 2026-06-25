@@ -30,9 +30,7 @@ import java.util.List;
 @Getter
 public class ShipmentJson {
 
-    @Getter static TypeReference<Page<Shipment, ShipmentJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<ShipmentJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<ShipmentJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

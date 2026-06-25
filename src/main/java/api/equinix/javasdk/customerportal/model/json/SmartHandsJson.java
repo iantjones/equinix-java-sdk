@@ -29,9 +29,7 @@ import java.util.List;
 @Getter
 public class SmartHandsJson {
 
-    @Getter static TypeReference<Page<SmartHands, SmartHandsJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SmartHandsJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SmartHandsJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

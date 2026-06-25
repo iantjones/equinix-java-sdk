@@ -33,9 +33,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SubscriptionJson {
 
-    @Getter static TypeReference<Page<Subscription, SubscriptionJson>> pagedTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<List<SubscriptionJson>> listTypeRef = new TypeReference<>() {};
-    @Getter static TypeReference<SubscriptionJson> singleTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;
