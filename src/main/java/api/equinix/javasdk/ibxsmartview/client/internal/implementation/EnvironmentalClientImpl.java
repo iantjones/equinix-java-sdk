@@ -40,14 +40,14 @@ public class EnvironmentalClientImpl extends PageableBase implements Environment
 
     public Page<SensorReading, SensorReadingJson> list(String ibx) {
         Map<String, String> pParams = Map.of("ibx", ibx);
-        EquinixRequest<SensorReading> equinixRequest = this.buildRequestWithPathParams("ListSensorReadings", RequestType.PAGINATED, pParams, SensorReadingJson.getPagedTypeRef());
+        EquinixRequest<SensorReading> equinixRequest = this.buildRequestWithPathParams("ListSensorReadings", RequestType.PAGINATED, pParams, SensorReadingJson.class);
         EquinixResponse<SensorReading> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public SensorReadingJson getSensorReading(String ibx, String sensorId) {
         Map<String, String> pParams = Map.of("ibx", ibx, "sensorId", sensorId);
-        EquinixRequest<SensorReading> equinixRequest = this.buildRequestWithPathParams("GetSensorReading", RequestType.SINGLE, pParams, SensorReadingJson.getSingleTypeRef());
+        EquinixRequest<SensorReading> equinixRequest = this.buildRequestWithPathParams("GetSensorReading", RequestType.SINGLE, pParams, SensorReadingJson.class);
         EquinixResponse<SensorReading> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

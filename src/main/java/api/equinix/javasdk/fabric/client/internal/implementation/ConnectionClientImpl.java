@@ -53,27 +53,27 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
     }
 
     public Page<Connection, ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("SearchConnections", RequestType.PAGINATED_POST, ConnectionJson.getPagedTypeRef());
+        EquinixRequest<Connection> equinixRequest = this.buildRequest("SearchConnections", RequestType.PAGINATED_POST, ConnectionJson.class);
         Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public ConnectionJson getByUuid(String uuid) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("GetConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.getSingleTypeRef());
+        EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("GetConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.class);
         EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public ConnectionJson create(ConnectionCreatorJson connectionCreatorJson) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.getSingleTypeRef());
+        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.class);
         Utils.serializeJson(equinixRequest, connectionCreatorJson);
         EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.getSingleTypeRef());
+        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.class);
         equinixRequest.addSingleQueryParameter("dryRun", "true");
         Utils.serializeJson(equinixRequest, connectionCreatorJson);
         EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
@@ -82,7 +82,7 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
 
     public ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
         ManageConnection connOp = new ManageConnection(connectionOperationType, description, bodyObject);
-        EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("ManageConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.getSingleTypeRef());
+        EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("ManageConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.class);
         Utils.serializeJson(equinixRequest, connOp);
         EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -103,7 +103,7 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
                 "viewPoint", Utils.singleParamList(viewPoint.toViewPoint())
         );
 
-        EquinixRequest<ConnectionStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, Map.of("uuid", uuid), qParams, ConnectionStatisticJson.getSingleTypeRef());
+        EquinixRequest<ConnectionStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, Map.of("uuid", uuid), qParams, ConnectionStatisticJson.class);
         EquinixResponse<ConnectionStatistic> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -113,7 +113,7 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
     }
 
     public ConnectionJson delete(String uuid) {
-        EquinixRequest<ServiceToken> equinixRequest = this.buildRequestWithPathParams("DeleteConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.getSingleTypeRef());
+        EquinixRequest<ServiceToken> equinixRequest = this.buildRequestWithPathParams("DeleteConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.class);
         EquinixResponse<ServiceToken> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

@@ -42,14 +42,14 @@ public class ResellerCustomerClientImpl extends PageableBase implements Reseller
 
     public Page<ResellerCustomer, ResellerCustomerJson> list(String accountNumber) {
         Map<String, String> pParams = Map.of("accountNumber", accountNumber);
-        EquinixRequest<ResellerCustomer> equinixRequest = this.buildRequestWithPathParams("ListResellerCustomers", RequestType.PAGINATED, pParams, ResellerCustomerJson.getPagedTypeRef());
+        EquinixRequest<ResellerCustomer> equinixRequest = this.buildRequestWithPathParams("ListResellerCustomers", RequestType.PAGINATED, pParams, ResellerCustomerJson.class);
         EquinixResponse<ResellerCustomer> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public ResellerCustomerJson getResellerCustomer(String accountNumber, String customerAccountNumber) {
         Map<String, String> pParams = Map.of("accountNumber", accountNumber, "customerAccountNumber", customerAccountNumber);
-        EquinixRequest<ResellerCustomer> equinixRequest = this.buildRequestWithPathParams("GetResellerCustomer", RequestType.SINGLE, pParams, ResellerCustomerJson.getSingleTypeRef());
+        EquinixRequest<ResellerCustomer> equinixRequest = this.buildRequestWithPathParams("GetResellerCustomer", RequestType.SINGLE, pParams, ResellerCustomerJson.class);
         EquinixResponse<ResellerCustomer> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

@@ -39,14 +39,14 @@ public class CloudRouterPackageClientImpl extends PageableBase implements CloudR
     }
 
     public Page<CloudRouterPackage, CloudRouterPackageJson> list() {
-        EquinixRequest<CloudRouterPackage> equinixRequest = this.buildRequest("GetCloudRouterPackages", RequestType.PAGINATED, CloudRouterPackageJson.getPagedTypeRef());
+        EquinixRequest<CloudRouterPackage> equinixRequest = this.buildRequest("GetCloudRouterPackages", RequestType.PAGINATED, CloudRouterPackageJson.class);
         EquinixResponse<CloudRouterPackage> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public CloudRouterPackageJson getByPackageCode(CloudRouterPackageCode packageCode) {
         Map<String, String> pParams = Map.of("routerPackageCode", packageCode.toString());
-        EquinixRequest<CloudRouterPackage> equinixRequest = this.buildRequestWithPathParams("GetCloudRouterPackage", RequestType.SINGLE, pParams, CloudRouterPackageJson.getSingleTypeRef());
+        EquinixRequest<CloudRouterPackage> equinixRequest = this.buildRequestWithPathParams("GetCloudRouterPackage", RequestType.SINGLE, pParams, CloudRouterPackageJson.class);
         EquinixResponse<CloudRouterPackage> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

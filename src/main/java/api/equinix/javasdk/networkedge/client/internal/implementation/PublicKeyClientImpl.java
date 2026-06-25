@@ -55,7 +55,7 @@ public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient
     /** {@inheritDoc} */
     public List<PublicKeyJson> list(String accountUcmId) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<PublicKey> equinixRequest = this.buildRequest("ListPublicKeys", RequestType.LIST, null, qParams, PublicKeyJson.getListTypeRef());
+        EquinixRequest<PublicKey> equinixRequest = this.buildRequest("ListPublicKeys", RequestType.LIST, null, qParams, PublicKeyJson.class);
         EquinixResponse<PublicKey> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleListResponse(equinixResponse, equinixRequest);
     }
@@ -63,14 +63,14 @@ public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient
     /** {@inheritDoc} */
     public PublicKeyJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PublicKeyJson> equinixRequest = this.buildRequestWithPathParams("GetPublicKey", RequestType.SINGLE, pParams, PublicKeyJson.getSingleTypeRef());
+        EquinixRequest<PublicKeyJson> equinixRequest = this.buildRequestWithPathParams("GetPublicKey", RequestType.SINGLE, pParams, PublicKeyJson.class);
         EquinixResponse<PublicKeyJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
     
     /** {@inheritDoc} */
     public PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson) {
-        EquinixRequest<PublicKeyJson> equinixRequest = this.buildRequest("CreatePublicKey", RequestType.SINGLE, PublicKeyJson.getSingleTypeRef());
+        EquinixRequest<PublicKeyJson> equinixRequest = this.buildRequest("CreatePublicKey", RequestType.SINGLE, PublicKeyJson.class);
         Utils.serializeJson(equinixRequest, publicKeyCreatorJson);
         EquinixResponse<PublicKeyJson> equinixResponse = this.invoke(equinixRequest);
         String publicKeyUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
@@ -80,7 +80,7 @@ public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PublicKey> equinixRequest = this.buildRequestWithPathParams("DeletePublicKey", RequestType.SINGLE, pParams, PublicKeyJson.getSingleTypeRef());
+        EquinixRequest<PublicKey> equinixRequest = this.buildRequestWithPathParams("DeletePublicKey", RequestType.SINGLE, pParams, PublicKeyJson.class);
         EquinixResponse<PublicKey> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }

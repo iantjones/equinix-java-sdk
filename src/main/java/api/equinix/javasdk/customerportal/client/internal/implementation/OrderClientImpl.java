@@ -40,20 +40,20 @@ public class OrderClientImpl extends PageableBase implements OrderClient<Order> 
     }
 
     public Page<Order, OrderJson> list() {
-        EquinixRequest<Order> equinixRequest = this.buildRequest("ListOrders", RequestType.PAGINATED, OrderJson.getPagedTypeRef());
+        EquinixRequest<Order> equinixRequest = this.buildRequest("ListOrders", RequestType.PAGINATED, OrderJson.class);
         EquinixResponse<Order> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public OrderJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<OrderJson> equinixRequest = this.buildRequestWithPathParams("GetOrder", RequestType.SINGLE, pParams, OrderJson.getSingleTypeRef());
+        EquinixRequest<OrderJson> equinixRequest = this.buildRequestWithPathParams("GetOrder", RequestType.SINGLE, pParams, OrderJson.class);
         EquinixResponse<OrderJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public OrderJson create(OrderCreatorJson orderCreatorJson) {
-        EquinixRequest<OrderJson> equinixRequest = this.buildRequest("CreateOrder", RequestType.SINGLE, OrderJson.getSingleTypeRef());
+        EquinixRequest<OrderJson> equinixRequest = this.buildRequest("CreateOrder", RequestType.SINGLE, OrderJson.class);
         Utils.serializeJson(equinixRequest, orderCreatorJson);
         EquinixResponse<OrderJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

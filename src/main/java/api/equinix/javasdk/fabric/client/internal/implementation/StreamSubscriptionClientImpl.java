@@ -41,21 +41,21 @@ public class StreamSubscriptionClientImpl extends PageableBase implements Stream
 
     public Page<StreamSubscription, StreamSubscriptionJson> list(String streamId) {
         Map<String, String> pParams = Map.of("streamId", streamId);
-        EquinixRequest<StreamSubscription> equinixRequest = this.buildRequestWithPathParams("ListStreamSubscriptions", RequestType.PAGINATED, pParams, StreamSubscriptionJson.getPagedTypeRef());
+        EquinixRequest<StreamSubscription> equinixRequest = this.buildRequestWithPathParams("ListStreamSubscriptions", RequestType.PAGINATED, pParams, StreamSubscriptionJson.class);
         EquinixResponse<StreamSubscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public StreamSubscriptionJson getByUuid(String streamId, String uuid) {
         Map<String, String> pParams = Map.of("streamId", streamId, "uuid", uuid);
-        EquinixRequest<StreamSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.class);
         EquinixResponse<StreamSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public StreamSubscriptionJson create(String streamId, StreamSubscriptionCreatorJson streamSubscriptionCreatorJson) {
         Map<String, String> pParams = Map.of("streamId", streamId);
-        EquinixRequest<StreamSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("PostStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("PostStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.class);
         Utils.serializeJson(equinixRequest, streamSubscriptionCreatorJson);
         EquinixResponse<StreamSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -63,7 +63,7 @@ public class StreamSubscriptionClientImpl extends PageableBase implements Stream
 
     public StreamSubscriptionJson update(String streamId, String uuid, StreamSubscriptionCreatorJson streamSubscriptionCreatorJson) {
         Map<String, String> pParams = Map.of("streamId", streamId, "uuid", uuid);
-        EquinixRequest<StreamSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("PutStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("PutStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.class);
         Utils.serializeJson(equinixRequest, streamSubscriptionCreatorJson);
         EquinixResponse<StreamSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -71,7 +71,7 @@ public class StreamSubscriptionClientImpl extends PageableBase implements Stream
 
     public StreamSubscriptionJson delete(String streamId, String uuid) {
         Map<String, String> pParams = Map.of("streamId", streamId, "uuid", uuid);
-        EquinixRequest<StreamSubscription> equinixRequest = this.buildRequestWithPathParams("DeleteStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.getSingleTypeRef());
+        EquinixRequest<StreamSubscription> equinixRequest = this.buildRequestWithPathParams("DeleteStreamSubscription", RequestType.SINGLE, pParams, StreamSubscriptionJson.class);
         EquinixResponse<StreamSubscription> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

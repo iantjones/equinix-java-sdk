@@ -60,7 +60,7 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
      */
     public Page<SSHUser, SSHUserJson> list(RequestBuilder.SSHUser requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequest("ListSSHUsers", RequestType.PAGINATED, null, qParams, SSHUserJson.getPagedTypeRef());
+        EquinixRequest<SSHUser> equinixRequest = this.buildRequest("ListSSHUsers", RequestType.PAGINATED, null, qParams, SSHUserJson.class);
         EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -68,14 +68,14 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
     /** {@inheritDoc} */
     public SSHUserJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SSHUserJson> equinixRequest = this.buildRequestWithPathParams("GetSSHUser", RequestType.SINGLE, pParams, SSHUserJson.getSingleTypeRef());
+        EquinixRequest<SSHUserJson> equinixRequest = this.buildRequestWithPathParams("GetSSHUser", RequestType.SINGLE, pParams, SSHUserJson.class);
         EquinixResponse<SSHUserJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     /** {@inheritDoc} */
     public SSHUserJson create(SSHUserCreatorJson sshUserCreatorJson) {
-        EquinixRequest<SSHUserJson> equinixRequest = this.buildRequest("CreateSSHUser", RequestType.SINGLE, SSHUserJson.getSingleTypeRef());
+        EquinixRequest<SSHUserJson> equinixRequest = this.buildRequest("CreateSSHUser", RequestType.SINGLE, SSHUserJson.class);
         Utils.serializeJson(equinixRequest, sshUserCreatorJson);
         EquinixResponse<SSHUserJson> equinixResponse = this.invoke(equinixRequest);
         UUIDResult uuidResult = Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -85,7 +85,7 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
     /** {@inheritDoc} */
     public Boolean deleteDevice(String uuid, String deviceUuid) {
         Map<String, String> pParams = Map.of("uuid", uuid, "deviceUuid", deviceUuid);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("DeleteSSHUser", RequestType.SINGLE, pParams, SSHUserJson.getSingleTypeRef());
+        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("DeleteSSHUser", RequestType.SINGLE, pParams, SSHUserJson.class);
         EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }
@@ -93,7 +93,7 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
     /** {@inheritDoc} */
     public Boolean addDevice(String uuid, String deviceUuid) {
         Map<String, String> pParams = Map.of("uuid", uuid, "deviceUuid", deviceUuid);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("SSHUserAddDevice", RequestType.SINGLE, pParams, SSHUserJson.getSingleTypeRef());
+        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("SSHUserAddDevice", RequestType.SINGLE, pParams, SSHUserJson.class);
         EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }
@@ -102,7 +102,7 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
     public Boolean updatePassword(String uuid, String newPassword) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, String> payload = Map.of("password", newPassword);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("UpdateSSHUserPassword", RequestType.SINGLE, pParams, SSHUserJson.getSingleTypeRef());
+        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("UpdateSSHUserPassword", RequestType.SINGLE, pParams, SSHUserJson.class);
         Utils.serializeJson(equinixRequest, payload);
         EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
@@ -111,7 +111,7 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
     /** {@inheritDoc} */
     public Boolean checkUsernameAvailability(String username) {
         Map<String, List<String>> qParams = Map.of("username", Utils.singleParamList(username));
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequest("GetSSHUsernameAvailability", RequestType.SINGLE, null, qParams, SSHUserJson.getSingleTypeRef());
+        EquinixRequest<SSHUser> equinixRequest = this.buildRequest("GetSSHUsernameAvailability", RequestType.SINGLE, null, qParams, SSHUserJson.class);
         EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }

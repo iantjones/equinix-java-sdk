@@ -64,7 +64,7 @@ public class BackupClientImpl extends PageableBase implements BackupClient<Backu
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         qParams.put("virtualDeviceUuid", Utils.singleParamList(deviceUuid));
         
-        EquinixRequest<Backup> equinixRequest = this.buildRequest("ListBackups", RequestType.PAGINATED, null, qParams, BackupJson.getPagedTypeRef());
+        EquinixRequest<Backup> equinixRequest = this.buildRequest("ListBackups", RequestType.PAGINATED, null, qParams, BackupJson.class);
         EquinixResponse<Backup> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -72,7 +72,7 @@ public class BackupClientImpl extends PageableBase implements BackupClient<Backu
     /** {@inheritDoc} */
     public BackupJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequestWithPathParams("GetBackup", RequestType.SINGLE, pParams, BackupJson.getSingleTypeRef());
+        EquinixRequest<BackupJson> equinixRequest = this.buildRequestWithPathParams("GetBackup", RequestType.SINGLE, pParams, BackupJson.class);
         EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -81,7 +81,7 @@ public class BackupClientImpl extends PageableBase implements BackupClient<Backu
     public RestoreFeasibilityJson checkRestoreFeasibility(String uuid, String deviceUuid) {
         Map<String, List<String>> qParams = Map.of("backupUuid", Utils.singleParamList(uuid));
         Map<String, String> pParams = Map.of("deviceUuid", deviceUuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequest("GetRestoreAnalysis", RequestType.SINGLE, pParams, qParams, RestoreFeasibilityJson.getSingleTypeRef());
+        EquinixRequest<BackupJson> equinixRequest = this.buildRequest("GetRestoreAnalysis", RequestType.SINGLE, pParams, qParams, RestoreFeasibilityJson.class);
         EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

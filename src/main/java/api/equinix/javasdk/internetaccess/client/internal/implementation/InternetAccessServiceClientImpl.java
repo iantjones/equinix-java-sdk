@@ -40,20 +40,20 @@ public class InternetAccessServiceClientImpl extends PageableBase implements Int
     }
 
     public Page<InternetAccessService, InternetAccessServiceJson> list() {
-        EquinixRequest<InternetAccessService> equinixRequest = this.buildRequest("ListServices", RequestType.PAGINATED, InternetAccessServiceJson.getPagedTypeRef());
+        EquinixRequest<InternetAccessService> equinixRequest = this.buildRequest("ListServices", RequestType.PAGINATED, InternetAccessServiceJson.class);
         EquinixResponse<InternetAccessService> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public InternetAccessServiceJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<InternetAccessServiceJson> equinixRequest = this.buildRequestWithPathParams("GetService", RequestType.SINGLE, pParams, InternetAccessServiceJson.getSingleTypeRef());
+        EquinixRequest<InternetAccessServiceJson> equinixRequest = this.buildRequestWithPathParams("GetService", RequestType.SINGLE, pParams, InternetAccessServiceJson.class);
         EquinixResponse<InternetAccessServiceJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public InternetAccessServiceJson create(InternetAccessServiceCreatorJson internetAccessServiceCreatorJson) {
-        EquinixRequest<InternetAccessServiceJson> equinixRequest = this.buildRequest("CreateService", RequestType.SINGLE, InternetAccessServiceJson.getSingleTypeRef());
+        EquinixRequest<InternetAccessServiceJson> equinixRequest = this.buildRequest("CreateService", RequestType.SINGLE, InternetAccessServiceJson.class);
         Utils.serializeJson(equinixRequest, internetAccessServiceCreatorJson);
         EquinixResponse<InternetAccessServiceJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class InternetAccessServiceClientImpl extends PageableBase implements Int
 
     public InternetAccessServiceJson update(String uuid, InternetAccessServiceCreatorJson internetAccessServiceCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<InternetAccessServiceJson> equinixRequest = this.buildRequestWithPathParams("UpdateService", RequestType.SINGLE, pParams, InternetAccessServiceJson.getSingleTypeRef());
+        EquinixRequest<InternetAccessServiceJson> equinixRequest = this.buildRequestWithPathParams("UpdateService", RequestType.SINGLE, pParams, InternetAccessServiceJson.class);
         Utils.serializeJson(equinixRequest, internetAccessServiceCreatorJson);
         EquinixResponse<InternetAccessServiceJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class InternetAccessServiceClientImpl extends PageableBase implements Int
 
     public InternetAccessServiceJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<InternetAccessService> equinixRequest = this.buildRequestWithPathParams("DeleteService", RequestType.SINGLE, pParams, InternetAccessServiceJson.getSingleTypeRef());
+        EquinixRequest<InternetAccessService> equinixRequest = this.buildRequestWithPathParams("DeleteService", RequestType.SINGLE, pParams, InternetAccessServiceJson.class);
         EquinixResponse<InternetAccessService> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

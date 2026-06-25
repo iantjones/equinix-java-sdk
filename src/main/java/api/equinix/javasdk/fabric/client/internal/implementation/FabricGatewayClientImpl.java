@@ -46,7 +46,7 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
     }
 
     public Page<FabricGateway, FabricGatewayJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<FabricGateway> equinixRequest = this.buildRequest("SearchFabricGateways", RequestType.PAGINATED_POST, FabricGatewayJson.getPagedTypeRef());
+        EquinixRequest<FabricGateway> equinixRequest = this.buildRequest("SearchFabricGateways", RequestType.PAGINATED_POST, FabricGatewayJson.class);
         Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
@@ -54,13 +54,13 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
     
     public FabricGatewayJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<FabricGatewayJson> equinixRequest = this.buildRequestWithPathParams("GetFabricGateway", RequestType.SINGLE, pParams, FabricGatewayJson.getSingleTypeRef());
+        EquinixRequest<FabricGatewayJson> equinixRequest = this.buildRequestWithPathParams("GetFabricGateway", RequestType.SINGLE, pParams, FabricGatewayJson.class);
         EquinixResponse<FabricGatewayJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
     
 //    public FabricGatewayJson create(FabricGatewayCreatorJson FabricGatewayCreatorJson) {
-//        EquinixRequest<FabricGatewayJson> equinixRequest = this.buildRequest("PostFabricGateway", RequestType.SINGLE, FabricGatewayJson.getSingleTypeRef());
+//        EquinixRequest<FabricGatewayJson> equinixRequest = this.buildRequest("PostFabricGateway", RequestType.SINGLE, FabricGatewayJson.class);
 //        equinixRequest.setFilters(new SimpleFilterProvider().addFilter("createFabricGatewayFilter", SerializationFilters.createFabricGatewayFilter));
 //        Utils.serializeJson(equinixRequest, FabricGatewayCreatorJson);
 //        EquinixResponse<FabricGatewayJson> equinixResponse = this.invoke(equinixRequest);
@@ -69,7 +69,7 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
     
     public FabricGatewayJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<FabricGateway> equinixRequest = this.buildRequestWithPathParams("DeleteFabricGateway", RequestType.SINGLE, pParams, FabricGatewayJson.getSingleTypeRef());
+        EquinixRequest<FabricGateway> equinixRequest = this.buildRequestWithPathParams("DeleteFabricGateway", RequestType.SINGLE, pParams, FabricGatewayJson.class);
         EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -78,7 +78,7 @@ public class FabricGatewayClientImpl extends PageableBase implements FabricGatew
 //    /** {@inheritDoc} */
 //    public ServiceTokenJson getByUuid(String uuid) {
 //        Map<String, String> pParams = Map.of("uuid", uuid);
-//        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequestWithPathParams("GetServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.getSingleTypeRef());
+//        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequestWithPathParams("GetServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.class);
 //        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
 //        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
 //    }

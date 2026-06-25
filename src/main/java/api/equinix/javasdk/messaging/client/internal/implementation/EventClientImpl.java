@@ -38,14 +38,14 @@ public class EventClientImpl extends PageableBase implements EventClient<Event> 
     }
 
     public Page<Event, EventJson> list() {
-        EquinixRequest<Event> equinixRequest = this.buildRequest("ListEvents", RequestType.PAGINATED, EventJson.getPagedTypeRef());
+        EquinixRequest<Event> equinixRequest = this.buildRequest("ListEvents", RequestType.PAGINATED, EventJson.class);
         EquinixResponse<Event> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public EventJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<EventJson> equinixRequest = this.buildRequestWithPathParams("GetEvent", RequestType.SINGLE, pParams, EventJson.getSingleTypeRef());
+        EquinixRequest<EventJson> equinixRequest = this.buildRequestWithPathParams("GetEvent", RequestType.SINGLE, pParams, EventJson.class);
         EquinixResponse<EventJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

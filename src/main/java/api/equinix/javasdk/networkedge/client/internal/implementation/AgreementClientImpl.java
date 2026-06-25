@@ -51,7 +51,7 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
     /** {@inheritDoc} */
     public AgreementStatus getAgreementStatus(String accountNumber) {
         Map<String, List<String>> qParams = Utils.singleParamMap("account_number", accountNumber);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetAgreementStatus", RequestType.SINGLE, qParams, AgreementStatus.getSingleTypeRef());
+        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetAgreementStatus", RequestType.SINGLE, qParams, AgreementStatus.class);
         EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -61,7 +61,7 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
         Map<String, String> requestBody = Utils.concatStringMaps(Utils.singlePropertyBody("accountNumber", accountNumber),
                                                                     Utils.singlePropertyBody("apttusId", termsVersionId));
 
-        EquinixRequest<AgreementStatus> equinixRequest = this.buildRequest("GetVPN", RequestType.SINGLE, AgreementStatus.getSingleTypeRef());
+        EquinixRequest<AgreementStatus> equinixRequest = this.buildRequest("GetVPN", RequestType.SINGLE, AgreementStatus.class);
         Utils.serializeJson(equinixRequest, requestBody);
         EquinixResponse<AgreementStatus> equinixResponse = this.invoke(equinixRequest);
         return getAgreementStatus(accountNumber);

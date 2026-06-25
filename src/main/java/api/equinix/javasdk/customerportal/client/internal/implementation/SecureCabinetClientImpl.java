@@ -40,20 +40,20 @@ public class SecureCabinetClientImpl extends PageableBase implements SecureCabin
     }
 
     public Page<SecureCabinet, SecureCabinetJson> list() {
-        EquinixRequest<SecureCabinet> equinixRequest = this.buildRequest("ListSecureCabinets", RequestType.PAGINATED, SecureCabinetJson.getPagedTypeRef());
+        EquinixRequest<SecureCabinet> equinixRequest = this.buildRequest("ListSecureCabinets", RequestType.PAGINATED, SecureCabinetJson.class);
         EquinixResponse<SecureCabinet> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public SecureCabinetJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SecureCabinetJson> equinixRequest = this.buildRequestWithPathParams("GetSecureCabinet", RequestType.SINGLE, pParams, SecureCabinetJson.getSingleTypeRef());
+        EquinixRequest<SecureCabinetJson> equinixRequest = this.buildRequestWithPathParams("GetSecureCabinet", RequestType.SINGLE, pParams, SecureCabinetJson.class);
         EquinixResponse<SecureCabinetJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public SecureCabinetJson create(SecureCabinetCreatorJson secureCabinetCreatorJson) {
-        EquinixRequest<SecureCabinetJson> equinixRequest = this.buildRequest("CreateSecureCabinet", RequestType.SINGLE, SecureCabinetJson.getSingleTypeRef());
+        EquinixRequest<SecureCabinetJson> equinixRequest = this.buildRequest("CreateSecureCabinet", RequestType.SINGLE, SecureCabinetJson.class);
         Utils.serializeJson(equinixRequest, secureCabinetCreatorJson);
         EquinixResponse<SecureCabinetJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class SecureCabinetClientImpl extends PageableBase implements SecureCabin
 
     public SecureCabinetJson update(String uuid, SecureCabinetCreatorJson secureCabinetCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SecureCabinetJson> equinixRequest = this.buildRequestWithPathParams("UpdateSecureCabinet", RequestType.SINGLE, pParams, SecureCabinetJson.getSingleTypeRef());
+        EquinixRequest<SecureCabinetJson> equinixRequest = this.buildRequestWithPathParams("UpdateSecureCabinet", RequestType.SINGLE, pParams, SecureCabinetJson.class);
         Utils.serializeJson(equinixRequest, secureCabinetCreatorJson);
         EquinixResponse<SecureCabinetJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

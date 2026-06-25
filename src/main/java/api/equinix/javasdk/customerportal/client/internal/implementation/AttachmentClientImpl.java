@@ -40,20 +40,20 @@ public class AttachmentClientImpl extends PageableBase implements AttachmentClie
     }
 
     public Page<Attachment, AttachmentJson> list() {
-        EquinixRequest<Attachment> equinixRequest = this.buildRequest("ListAttachments", RequestType.PAGINATED, AttachmentJson.getPagedTypeRef());
+        EquinixRequest<Attachment> equinixRequest = this.buildRequest("ListAttachments", RequestType.PAGINATED, AttachmentJson.class);
         EquinixResponse<Attachment> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public AttachmentJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<AttachmentJson> equinixRequest = this.buildRequestWithPathParams("GetAttachment", RequestType.SINGLE, pParams, AttachmentJson.getSingleTypeRef());
+        EquinixRequest<AttachmentJson> equinixRequest = this.buildRequestWithPathParams("GetAttachment", RequestType.SINGLE, pParams, AttachmentJson.class);
         EquinixResponse<AttachmentJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public AttachmentJson create(AttachmentCreatorJson attachmentCreatorJson) {
-        EquinixRequest<AttachmentJson> equinixRequest = this.buildRequest("UploadAttachment", RequestType.SINGLE, AttachmentJson.getSingleTypeRef());
+        EquinixRequest<AttachmentJson> equinixRequest = this.buildRequest("UploadAttachment", RequestType.SINGLE, AttachmentJson.class);
         Utils.serializeJson(equinixRequest, attachmentCreatorJson);
         EquinixResponse<AttachmentJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class AttachmentClientImpl extends PageableBase implements AttachmentClie
 
     public AttachmentJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Attachment> equinixRequest = this.buildRequestWithPathParams("DeleteAttachment", RequestType.SINGLE, pParams, AttachmentJson.getSingleTypeRef());
+        EquinixRequest<Attachment> equinixRequest = this.buildRequestWithPathParams("DeleteAttachment", RequestType.SINGLE, pParams, AttachmentJson.class);
         EquinixResponse<Attachment> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

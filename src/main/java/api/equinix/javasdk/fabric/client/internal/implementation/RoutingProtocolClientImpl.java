@@ -41,21 +41,21 @@ public class RoutingProtocolClientImpl extends PageableBase implements RoutingPr
 
     public Page<RoutingProtocol, RoutingProtocolJson> list(String connectionId) {
         Map<String, String> pParams = Map.of("connectionId", connectionId);
-        EquinixRequest<RoutingProtocol> equinixRequest = this.buildRequestWithPathParams("GetRoutingProtocols", RequestType.PAGINATED, pParams, RoutingProtocolJson.getPagedTypeRef());
+        EquinixRequest<RoutingProtocol> equinixRequest = this.buildRequestWithPathParams("GetRoutingProtocols", RequestType.PAGINATED, pParams, RoutingProtocolJson.class);
         EquinixResponse<RoutingProtocol> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public RoutingProtocolJson getByUuid(String connectionId, String uuid) {
         Map<String, String> pParams = Map.of("connectionId", connectionId, "uuid", uuid);
-        EquinixRequest<RoutingProtocolJson> equinixRequest = this.buildRequestWithPathParams("GetRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.getSingleTypeRef());
+        EquinixRequest<RoutingProtocolJson> equinixRequest = this.buildRequestWithPathParams("GetRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.class);
         EquinixResponse<RoutingProtocolJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public RoutingProtocolJson create(String connectionId, RoutingProtocolCreatorJson routingProtocolCreatorJson) {
         Map<String, String> pParams = Map.of("connectionId", connectionId);
-        EquinixRequest<RoutingProtocolJson> equinixRequest = this.buildRequestWithPathParams("PostRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.getSingleTypeRef());
+        EquinixRequest<RoutingProtocolJson> equinixRequest = this.buildRequestWithPathParams("PostRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.class);
         Utils.serializeJson(equinixRequest, routingProtocolCreatorJson);
         EquinixResponse<RoutingProtocolJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -63,7 +63,7 @@ public class RoutingProtocolClientImpl extends PageableBase implements RoutingPr
 
     public RoutingProtocolJson update(String connectionId, String uuid, Object updates) {
         Map<String, String> pParams = Map.of("connectionId", connectionId, "uuid", uuid);
-        EquinixRequest<RoutingProtocolJson> equinixRequest = this.buildRequestWithPathParams("PatchRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.getSingleTypeRef());
+        EquinixRequest<RoutingProtocolJson> equinixRequest = this.buildRequestWithPathParams("PatchRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.class);
         Utils.serializeJson(equinixRequest, updates);
         EquinixResponse<RoutingProtocolJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -71,7 +71,7 @@ public class RoutingProtocolClientImpl extends PageableBase implements RoutingPr
 
     public RoutingProtocolJson delete(String connectionId, String uuid) {
         Map<String, String> pParams = Map.of("connectionId", connectionId, "uuid", uuid);
-        EquinixRequest<RoutingProtocol> equinixRequest = this.buildRequestWithPathParams("DeleteRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.getSingleTypeRef());
+        EquinixRequest<RoutingProtocol> equinixRequest = this.buildRequestWithPathParams("DeleteRoutingProtocol", RequestType.SINGLE, pParams, RoutingProtocolJson.class);
         EquinixResponse<RoutingProtocol> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

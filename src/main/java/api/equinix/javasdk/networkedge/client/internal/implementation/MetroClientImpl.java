@@ -54,7 +54,7 @@ public class MetroClientImpl extends PageableBase implements MetroClient<Metro> 
     /** {@inheritDoc} */
     public Page<Metro, MetroJson> list(Region region) {
         Map<String, List<String>> qParams = Utils.singleParamMap("region" , region);
-        EquinixRequest<Metro> equinixRequest = this.buildRequest("ListMetros", RequestType.PAGINATED, null, qParams, MetroJson.getPagedTypeRef());
+        EquinixRequest<Metro> equinixRequest = this.buildRequest("ListMetros", RequestType.PAGINATED, null, qParams, MetroJson.class);
         EquinixResponse<Metro> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

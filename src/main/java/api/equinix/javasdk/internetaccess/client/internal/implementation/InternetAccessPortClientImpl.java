@@ -38,14 +38,14 @@ public class InternetAccessPortClientImpl extends PageableBase implements Intern
     }
 
     public Page<InternetAccessPort, InternetAccessPortJson> list() {
-        EquinixRequest<InternetAccessPort> equinixRequest = this.buildRequest("ListPorts", RequestType.PAGINATED, InternetAccessPortJson.getPagedTypeRef());
+        EquinixRequest<InternetAccessPort> equinixRequest = this.buildRequest("ListPorts", RequestType.PAGINATED, InternetAccessPortJson.class);
         EquinixResponse<InternetAccessPort> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public InternetAccessPortJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<InternetAccessPortJson> equinixRequest = this.buildRequestWithPathParams("GetPort", RequestType.SINGLE, pParams, InternetAccessPortJson.getSingleTypeRef());
+        EquinixRequest<InternetAccessPortJson> equinixRequest = this.buildRequestWithPathParams("GetPort", RequestType.SINGLE, pParams, InternetAccessPortJson.class);
         EquinixResponse<InternetAccessPortJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

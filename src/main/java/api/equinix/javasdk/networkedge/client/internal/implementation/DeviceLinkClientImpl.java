@@ -61,7 +61,7 @@ public class DeviceLinkClientImpl extends PageableBase implements DeviceLinkClie
      */
     public Page<DeviceLink, DeviceLinkJson> list(RequestBuilder.DeviceLink requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<DeviceLink> equinixRequest = this.buildRequest("ListDeviceLinks", RequestType.PAGINATED, null, qParams, DeviceLinkJson.getPagedTypeRef());
+        EquinixRequest<DeviceLink> equinixRequest = this.buildRequest("ListDeviceLinks", RequestType.PAGINATED, null, qParams, DeviceLinkJson.class);
         EquinixResponse<DeviceLink> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
@@ -69,7 +69,7 @@ public class DeviceLinkClientImpl extends PageableBase implements DeviceLinkClie
     /** {@inheritDoc} */
     public DeviceLinkJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<DeviceLinkJson> equinixRequest = this.buildRequestWithPathParams("GetDeviceLink", RequestType.SINGLE, pParams, DeviceLinkJson.getSingleTypeRef());
+        EquinixRequest<DeviceLinkJson> equinixRequest = this.buildRequestWithPathParams("GetDeviceLink", RequestType.SINGLE, pParams, DeviceLinkJson.class);
         EquinixResponse<DeviceLinkJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -101,7 +101,7 @@ public class DeviceLinkClientImpl extends PageableBase implements DeviceLinkClie
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<DeviceLink> equinixRequest = this.buildRequestWithPathParams("DeleteDeviceLink", RequestType.SINGLE, pParams, DeviceLinkJson.getSingleTypeRef());
+        EquinixRequest<DeviceLink> equinixRequest = this.buildRequestWithPathParams("DeleteDeviceLink", RequestType.SINGLE, pParams, DeviceLinkJson.class);
         EquinixResponse<DeviceLink> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
     }

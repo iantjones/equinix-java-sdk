@@ -55,7 +55,7 @@ public class PricingClientImpl extends ClientBase implements PricingClient {
     public Pricing getPricing(RequestBuilder.Pricing requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
 
-        EquinixRequest<Pricing> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.getSingleTypeRef());
+        EquinixRequest<Pricing> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.class);
         EquinixResponse<Pricing> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -69,7 +69,7 @@ public class PricingClientImpl extends ClientBase implements PricingClient {
     public Pricing getPricing(String deviceUuid) {
         Map<String, List<String>> qParams = Utils.singleParamMap("virtualDeviceUuid", deviceUuid);
 
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.getSingleTypeRef());
+        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.class);
         EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

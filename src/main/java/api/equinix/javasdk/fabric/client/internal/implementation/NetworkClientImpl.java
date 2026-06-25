@@ -45,7 +45,7 @@ public class NetworkClientImpl extends PageableBase implements NetworkClient<Net
     }
 
     public Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<Network> equinixRequest = this.buildRequest("SearchNetworks", RequestType.PAGINATED_POST, NetworkJson.getPagedTypeRef());
+        EquinixRequest<Network> equinixRequest = this.buildRequest("SearchNetworks", RequestType.PAGINATED_POST, NetworkJson.class);
         Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
@@ -53,13 +53,13 @@ public class NetworkClientImpl extends PageableBase implements NetworkClient<Net
 
     public NetworkJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<NetworkJson> equinixRequest = this.buildRequestWithPathParams("GetNetwork", RequestType.SINGLE, pParams, NetworkJson.getSingleTypeRef());
+        EquinixRequest<NetworkJson> equinixRequest = this.buildRequestWithPathParams("GetNetwork", RequestType.SINGLE, pParams, NetworkJson.class);
         EquinixResponse<NetworkJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public NetworkJson create(NetworkCreatorJson networkCreatorJson) {
-        EquinixRequest<NetworkJson> equinixRequest = this.buildRequest("PostNetwork", RequestType.SINGLE, NetworkJson.getSingleTypeRef());
+        EquinixRequest<NetworkJson> equinixRequest = this.buildRequest("PostNetwork", RequestType.SINGLE, NetworkJson.class);
         Utils.serializeJson(equinixRequest, networkCreatorJson);
         EquinixResponse<NetworkJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -67,7 +67,7 @@ public class NetworkClientImpl extends PageableBase implements NetworkClient<Net
 
     public NetworkJson update(String uuid, NetworkCreatorJson networkCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<NetworkJson> equinixRequest = this.buildRequestWithPathParams("UpdateNetwork", RequestType.SINGLE, pParams, NetworkJson.getSingleTypeRef());
+        EquinixRequest<NetworkJson> equinixRequest = this.buildRequestWithPathParams("UpdateNetwork", RequestType.SINGLE, pParams, NetworkJson.class);
         Utils.serializeJson(equinixRequest, networkCreatorJson);
         EquinixResponse<NetworkJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -75,7 +75,7 @@ public class NetworkClientImpl extends PageableBase implements NetworkClient<Net
 
     public NetworkJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Network> equinixRequest = this.buildRequestWithPathParams("DeleteNetwork", RequestType.SINGLE, pParams, NetworkJson.getSingleTypeRef());
+        EquinixRequest<Network> equinixRequest = this.buildRequestWithPathParams("DeleteNetwork", RequestType.SINGLE, pParams, NetworkJson.class);
         EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

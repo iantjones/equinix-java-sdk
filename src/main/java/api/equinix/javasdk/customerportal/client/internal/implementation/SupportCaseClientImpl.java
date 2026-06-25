@@ -40,20 +40,20 @@ public class SupportCaseClientImpl extends PageableBase implements SupportCaseCl
     }
 
     public Page<SupportCase, SupportCaseJson> list() {
-        EquinixRequest<SupportCase> equinixRequest = this.buildRequest("ListSupportCases", RequestType.PAGINATED, SupportCaseJson.getPagedTypeRef());
+        EquinixRequest<SupportCase> equinixRequest = this.buildRequest("ListSupportCases", RequestType.PAGINATED, SupportCaseJson.class);
         EquinixResponse<SupportCase> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public SupportCaseJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SupportCaseJson> equinixRequest = this.buildRequestWithPathParams("GetSupportCase", RequestType.SINGLE, pParams, SupportCaseJson.getSingleTypeRef());
+        EquinixRequest<SupportCaseJson> equinixRequest = this.buildRequestWithPathParams("GetSupportCase", RequestType.SINGLE, pParams, SupportCaseJson.class);
         EquinixResponse<SupportCaseJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public SupportCaseJson create(SupportCaseCreatorJson supportCaseCreatorJson) {
-        EquinixRequest<SupportCaseJson> equinixRequest = this.buildRequest("CreateSupportCase", RequestType.SINGLE, SupportCaseJson.getSingleTypeRef());
+        EquinixRequest<SupportCaseJson> equinixRequest = this.buildRequest("CreateSupportCase", RequestType.SINGLE, SupportCaseJson.class);
         Utils.serializeJson(equinixRequest, supportCaseCreatorJson);
         EquinixResponse<SupportCaseJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class SupportCaseClientImpl extends PageableBase implements SupportCaseCl
 
     public SupportCaseJson update(String uuid, SupportCaseCreatorJson supportCaseCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SupportCaseJson> equinixRequest = this.buildRequestWithPathParams("UpdateSupportCase", RequestType.SINGLE, pParams, SupportCaseJson.getSingleTypeRef());
+        EquinixRequest<SupportCaseJson> equinixRequest = this.buildRequestWithPathParams("UpdateSupportCase", RequestType.SINGLE, pParams, SupportCaseJson.class);
         Utils.serializeJson(equinixRequest, supportCaseCreatorJson);
         EquinixResponse<SupportCaseJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class SupportCaseClientImpl extends PageableBase implements SupportCaseCl
 
     public SupportCaseJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SupportCase> equinixRequest = this.buildRequestWithPathParams("UpdateSupportCase", RequestType.SINGLE, pParams, SupportCaseJson.getSingleTypeRef());
+        EquinixRequest<SupportCase> equinixRequest = this.buildRequestWithPathParams("UpdateSupportCase", RequestType.SINGLE, pParams, SupportCaseJson.class);
         EquinixResponse<SupportCase> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

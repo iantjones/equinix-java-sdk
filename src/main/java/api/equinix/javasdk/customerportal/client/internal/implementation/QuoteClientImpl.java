@@ -40,20 +40,20 @@ public class QuoteClientImpl extends PageableBase implements QuoteClient<Quote> 
     }
 
     public Page<Quote, QuoteJson> list() {
-        EquinixRequest<Quote> equinixRequest = this.buildRequest("ListQuotes", RequestType.PAGINATED, QuoteJson.getPagedTypeRef());
+        EquinixRequest<Quote> equinixRequest = this.buildRequest("ListQuotes", RequestType.PAGINATED, QuoteJson.class);
         EquinixResponse<Quote> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public QuoteJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<QuoteJson> equinixRequest = this.buildRequestWithPathParams("GetQuote", RequestType.SINGLE, pParams, QuoteJson.getSingleTypeRef());
+        EquinixRequest<QuoteJson> equinixRequest = this.buildRequestWithPathParams("GetQuote", RequestType.SINGLE, pParams, QuoteJson.class);
         EquinixResponse<QuoteJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public QuoteJson create(QuoteCreatorJson quoteCreatorJson) {
-        EquinixRequest<QuoteJson> equinixRequest = this.buildRequest("CreateQuote", RequestType.SINGLE, QuoteJson.getSingleTypeRef());
+        EquinixRequest<QuoteJson> equinixRequest = this.buildRequest("CreateQuote", RequestType.SINGLE, QuoteJson.class);
         Utils.serializeJson(equinixRequest, quoteCreatorJson);
         EquinixResponse<QuoteJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);

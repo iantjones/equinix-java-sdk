@@ -40,14 +40,14 @@ public class GatewayPackageClientImpl extends PageableBase implements GatewayPac
     }
 
     public Page<GatewayPackage, GatewayPackageJson> list() {
-        EquinixRequest<GatewayPackage> equinixRequest = this.buildRequest("GetGatewayPackages", RequestType.PAGINATED, GatewayPackageJson.getPagedTypeRef());
+        EquinixRequest<GatewayPackage> equinixRequest = this.buildRequest("GetGatewayPackages", RequestType.PAGINATED, GatewayPackageJson.class);
         EquinixResponse<GatewayPackage> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public GatewayPackageJson getByPackageCode(GatewayPackageCode gatewayPackageCode) {
         Map<String, String> pParams = Map.of("gatewayPackageCode", gatewayPackageCode.toString());
-        EquinixRequest<GatewayPackage> equinixRequest = this.buildRequestWithPathParams("GetGatewayPackage", RequestType.SINGLE, pParams, GatewayPackageJson.getSingleTypeRef());
+        EquinixRequest<GatewayPackage> equinixRequest = this.buildRequestWithPathParams("GetGatewayPackage", RequestType.SINGLE, pParams, GatewayPackageJson.class);
         EquinixResponse<GatewayPackage> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

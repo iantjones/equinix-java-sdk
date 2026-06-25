@@ -56,7 +56,7 @@ public class AccountClientImpl extends PageableBase implements AccountClient<Acc
     /** {@inheritDoc} */
     public List<AccountJson> list(MetroCode metroCode) {
         Map<String, String> pParams = Map.of("metroCode", metroCode.toString());
-        EquinixRequest<Account> equinixRequest = this.buildRequestWithPathParams("ListAccounts", RequestType.LIST, pParams, AccountJson.getListTypeRef());
+        EquinixRequest<Account> equinixRequest = this.buildRequestWithPathParams("ListAccounts", RequestType.LIST, pParams, AccountJson.class);
         EquinixResponse<Account> equinixResponse = this.invoke(equinixRequest);
         AccountJson.NestedList nestedList = Utils.handleSingletonResponse(equinixResponse, equinixRequest);
         return nestedList.getAccounts();

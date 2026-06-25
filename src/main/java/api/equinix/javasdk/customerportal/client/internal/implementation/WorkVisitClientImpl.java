@@ -40,20 +40,20 @@ public class WorkVisitClientImpl extends PageableBase implements WorkVisitClient
     }
 
     public Page<WorkVisit, WorkVisitJson> list() {
-        EquinixRequest<WorkVisit> equinixRequest = this.buildRequest("ListWorkVisits", RequestType.PAGINATED, WorkVisitJson.getPagedTypeRef());
+        EquinixRequest<WorkVisit> equinixRequest = this.buildRequest("ListWorkVisits", RequestType.PAGINATED, WorkVisitJson.class);
         EquinixResponse<WorkVisit> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public WorkVisitJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("GetWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.getSingleTypeRef());
+        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("GetWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.class);
         EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public WorkVisitJson create(WorkVisitCreatorJson workVisitCreatorJson) {
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequest("PostWorkVisit", RequestType.SINGLE, WorkVisitJson.getSingleTypeRef());
+        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequest("PostWorkVisit", RequestType.SINGLE, WorkVisitJson.class);
         Utils.serializeJson(equinixRequest, workVisitCreatorJson);
         EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class WorkVisitClientImpl extends PageableBase implements WorkVisitClient
 
     public WorkVisitJson update(String uuid, WorkVisitCreatorJson workVisitCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("UpdateWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.getSingleTypeRef());
+        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("UpdateWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.class);
         Utils.serializeJson(equinixRequest, workVisitCreatorJson);
         EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class WorkVisitClientImpl extends PageableBase implements WorkVisitClient
 
     public WorkVisitJson cancel(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("CancelWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.getSingleTypeRef());
+        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("CancelWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.class);
         EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

@@ -40,20 +40,20 @@ public class StreamClientImpl extends PageableBase implements StreamClient<Strea
     }
 
     public Page<Stream, StreamJson> list() {
-        EquinixRequest<Stream> equinixRequest = this.buildRequest("ListStreams", RequestType.PAGINATED, StreamJson.getPagedTypeRef());
+        EquinixRequest<Stream> equinixRequest = this.buildRequest("ListStreams", RequestType.PAGINATED, StreamJson.class);
         EquinixResponse<Stream> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public StreamJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamJson> equinixRequest = this.buildRequestWithPathParams("GetStream", RequestType.SINGLE, pParams, StreamJson.getSingleTypeRef());
+        EquinixRequest<StreamJson> equinixRequest = this.buildRequestWithPathParams("GetStream", RequestType.SINGLE, pParams, StreamJson.class);
         EquinixResponse<StreamJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public StreamJson create(StreamCreatorJson streamCreatorJson) {
-        EquinixRequest<StreamJson> equinixRequest = this.buildRequest("PostStream", RequestType.SINGLE, StreamJson.getSingleTypeRef());
+        EquinixRequest<StreamJson> equinixRequest = this.buildRequest("PostStream", RequestType.SINGLE, StreamJson.class);
         Utils.serializeJson(equinixRequest, streamCreatorJson);
         EquinixResponse<StreamJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class StreamClientImpl extends PageableBase implements StreamClient<Strea
 
     public StreamJson update(String uuid, StreamCreatorJson streamCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamJson> equinixRequest = this.buildRequestWithPathParams("PutStream", RequestType.SINGLE, pParams, StreamJson.getSingleTypeRef());
+        EquinixRequest<StreamJson> equinixRequest = this.buildRequestWithPathParams("PutStream", RequestType.SINGLE, pParams, StreamJson.class);
         Utils.serializeJson(equinixRequest, streamCreatorJson);
         EquinixResponse<StreamJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -69,7 +69,7 @@ public class StreamClientImpl extends PageableBase implements StreamClient<Strea
 
     public StreamJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Stream> equinixRequest = this.buildRequestWithPathParams("DeleteStream", RequestType.SINGLE, pParams, StreamJson.getSingleTypeRef());
+        EquinixRequest<Stream> equinixRequest = this.buildRequestWithPathParams("DeleteStream", RequestType.SINGLE, pParams, StreamJson.class);
         EquinixResponse<Stream> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

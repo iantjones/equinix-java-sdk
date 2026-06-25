@@ -45,7 +45,7 @@ public class LegacyEnvironmentalClientImpl extends PageableBase implements Legac
         Utils.addAdditionalValue(qParams, "levelType", levelType);
         Utils.addAdditionalValue(qParams, "levelValue", levelValue);
 
-        EquinixRequest<EnvironmentData> equinixRequest = this.buildRequestWithQueryParams("GetCurrentEnvironment", RequestType.SINGLE, qParams, EnvironmentDataJson.getSingleTypeRef());
+        EquinixRequest<EnvironmentData> equinixRequest = this.buildRequestWithQueryParams("GetCurrentEnvironment", RequestType.SINGLE, qParams, EnvironmentDataJson.class);
         EquinixResponse<EnvironmentData> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -56,7 +56,7 @@ public class LegacyEnvironmentalClientImpl extends PageableBase implements Legac
         Utils.addAdditionalValue(qParams, "ibx", ibx);
         Utils.addAdditionalValue(qParams, "levelType", levelType);
 
-        EquinixRequest<EnvironmentData> equinixRequest = this.buildRequestWithQueryParams("ListCurrentEnvironment", RequestType.LIST, qParams, EnvironmentDataJson.getListTypeRef());
+        EquinixRequest<EnvironmentData> equinixRequest = this.buildRequestWithQueryParams("ListCurrentEnvironment", RequestType.LIST, qParams, EnvironmentDataJson.class);
         EquinixResponse<EnvironmentData> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleListResponse(equinixResponse, equinixRequest);
     }
@@ -74,7 +74,7 @@ public class LegacyEnvironmentalClientImpl extends PageableBase implements Legac
         Utils.addAdditionalValue(qParams, "fromDate", fromDate);
         Utils.addAdditionalValue(qParams, "toDate", toDate);
 
-        EquinixRequest<TrendingEnvironmentData> equinixRequest = this.buildRequestWithQueryParams("GetTrendingEnvironment", RequestType.SINGLE, qParams, TrendingEnvironmentDataJson.getSingleTypeRef());
+        EquinixRequest<TrendingEnvironmentData> equinixRequest = this.buildRequestWithQueryParams("GetTrendingEnvironment", RequestType.SINGLE, qParams, TrendingEnvironmentDataJson.class);
         EquinixResponse<TrendingEnvironmentData> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

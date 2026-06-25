@@ -43,7 +43,7 @@ public class HierarchyClientImpl extends PageableBase implements HierarchyClient
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        EquinixRequest<LocationHierarchy> equinixRequest = this.buildRequestWithQueryParams("GetLocationHierarchy", RequestType.SINGLE, qParams, LocationHierarchyJson.getSingleTypeRef());
+        EquinixRequest<LocationHierarchy> equinixRequest = this.buildRequestWithQueryParams("GetLocationHierarchy", RequestType.SINGLE, qParams, LocationHierarchyJson.class);
         EquinixResponse<LocationHierarchy> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
@@ -53,7 +53,7 @@ public class HierarchyClientImpl extends PageableBase implements HierarchyClient
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        EquinixRequest<LocationHierarchy> equinixRequest = this.buildRequestWithQueryParams("GetPowerHierarchy", RequestType.SINGLE, qParams, PowerHierarchyJson.getSingleTypeRef());
+        EquinixRequest<LocationHierarchy> equinixRequest = this.buildRequestWithQueryParams("GetPowerHierarchy", RequestType.SINGLE, qParams, PowerHierarchyJson.class);
         EquinixResponse<LocationHierarchy> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }

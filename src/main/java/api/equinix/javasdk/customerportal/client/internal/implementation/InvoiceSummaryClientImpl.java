@@ -44,7 +44,7 @@ public class InvoiceSummaryClientImpl extends PageableBase implements InvoiceSum
 
     public Page<InvoiceSummary, InvoiceSummaryJson> list(RequestBuilder.Invoice requestBuilder) {
         Map<String, List<String>> qParams = Utils.processRequestBuilder(requestBuilder);
-        EquinixRequest<InvoiceSummary> equinixRequest = this.buildRequestWithQueryParams("ListInvoiceSummaries", RequestType.PAGINATED, qParams, InvoiceSummaryJson.getPagedTypeRef());
+        EquinixRequest<InvoiceSummary> equinixRequest = this.buildRequestWithQueryParams("ListInvoiceSummaries", RequestType.PAGINATED, qParams, InvoiceSummaryJson.class);
         EquinixResponse<InvoiceSummary> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }

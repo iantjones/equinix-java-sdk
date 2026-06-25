@@ -40,20 +40,20 @@ public class RoutingConfigClientImpl extends PageableBase implements RoutingConf
     }
 
     public Page<RoutingConfig, RoutingConfigJson> list() {
-        EquinixRequest<RoutingConfig> equinixRequest = this.buildRequest("ListRoutingConfigs", RequestType.PAGINATED, RoutingConfigJson.getPagedTypeRef());
+        EquinixRequest<RoutingConfig> equinixRequest = this.buildRequest("ListRoutingConfigs", RequestType.PAGINATED, RoutingConfigJson.class);
         EquinixResponse<RoutingConfig> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public RoutingConfigJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequestWithPathParams("GetRoutingConfig", RequestType.SINGLE, pParams, RoutingConfigJson.getSingleTypeRef());
+        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequestWithPathParams("GetRoutingConfig", RequestType.SINGLE, pParams, RoutingConfigJson.class);
         EquinixResponse<RoutingConfigJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public RoutingConfigJson create(RoutingConfigCreatorJson routingConfigCreatorJson) {
-        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequest("CreateRoutingConfig", RequestType.SINGLE, RoutingConfigJson.getSingleTypeRef());
+        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequest("CreateRoutingConfig", RequestType.SINGLE, RoutingConfigJson.class);
         Utils.serializeJson(equinixRequest, routingConfigCreatorJson);
         EquinixResponse<RoutingConfigJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -61,7 +61,7 @@ public class RoutingConfigClientImpl extends PageableBase implements RoutingConf
 
     public RoutingConfigJson update(String uuid, RoutingConfigCreatorJson routingConfigCreatorJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequestWithPathParams("UpdateRoutingConfig", RequestType.SINGLE, pParams, RoutingConfigJson.getSingleTypeRef());
+        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequestWithPathParams("UpdateRoutingConfig", RequestType.SINGLE, pParams, RoutingConfigJson.class);
         Utils.serializeJson(equinixRequest, routingConfigCreatorJson);
         EquinixResponse<RoutingConfigJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
