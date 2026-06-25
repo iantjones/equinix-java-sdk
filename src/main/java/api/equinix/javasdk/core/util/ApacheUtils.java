@@ -19,6 +19,9 @@ package api.equinix.javasdk.core.util;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.Protocol;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.net.URI;
 import java.net.URISyntaxException;
