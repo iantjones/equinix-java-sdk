@@ -58,13 +58,13 @@ public class ServiceProfileClientImpl extends PageableBase implements ServicePro
     }
 
     public Page<ServiceProfile, ServiceProfileJson> list() {
-        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("ListServiceProfiles", RequestType.PAGINATED, ServiceProfileJson.getPagedTypeRef());
+        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("ListServiceProfiles", RequestType.PAGINATED, ServiceProfileJson.class);
         EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
     }
 
     public Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("SearchServiceProfiles", RequestType.PAGINATED_POST, ServiceProfileJson.getPagedTypeRef());
+        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("SearchServiceProfiles", RequestType.PAGINATED_POST, ServiceProfileJson.class);
         Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
         EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
         return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
@@ -72,13 +72,13 @@ public class ServiceProfileClientImpl extends PageableBase implements ServicePro
 
     public ServiceProfileJson getByUuid(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ServiceProfileJson> equinixRequest = this.buildRequestWithPathParams("GetServiceProfile", RequestType.SINGLE, pParams, ServiceProfileJson.getSingleTypeRef());
+        EquinixRequest<ServiceProfileJson> equinixRequest = this.buildRequestWithPathParams("GetServiceProfile", RequestType.SINGLE, pParams, ServiceProfileJson.class);
         EquinixResponse<ServiceProfileJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
     public ServiceProfileJson create(ServiceProfileCreatorJson serviceProfileCreatorJson) {
-        EquinixRequest<ServiceProfileJson> equinixRequest = this.buildRequest("PostServiceProfile", RequestType.SINGLE, ServiceProfileJson.getSingleTypeRef());
+        EquinixRequest<ServiceProfileJson> equinixRequest = this.buildRequest("PostServiceProfile", RequestType.SINGLE, ServiceProfileJson.class);
         Utils.serializeJson(equinixRequest, serviceProfileCreatorJson);
         EquinixResponse<ServiceProfileJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
@@ -86,7 +86,7 @@ public class ServiceProfileClientImpl extends PageableBase implements ServicePro
 
     public ServiceProfileJson delete(String uuid) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequestWithPathParams("DeleteServiceProfile", RequestType.SINGLE, pParams, ServiceProfileJson.getSingleTypeRef());
+        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequestWithPathParams("DeleteServiceProfile", RequestType.SINGLE, pParams, ServiceProfileJson.class);
         EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
