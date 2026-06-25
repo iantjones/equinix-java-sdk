@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
@@ -59,7 +59,7 @@ public interface ConnectionClient<T> extends PageablePost<T> {
      * @param uuid a {@link java.lang.String} object.
      * @param startDateTime a {@link java.time.LocalDateTime} object.
      * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @param viewPoint a {@link api.equinix.javasdk.core.enums.Side} object.
+     * @param viewPoint a {@link api.equinix.javasdk.fabric.enums.Side} object.
      * @return a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
      */
     ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
@@ -70,7 +70,7 @@ public interface ConnectionClient<T> extends PageablePost<T> {
      * @param uuid a {@link java.lang.String} object.
      * @param startDateTime a {@link java.time.LocalDateTime} object.
      * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @param viewPoint a {@link api.equinix.javasdk.core.enums.Side} object.
+     * @param viewPoint a {@link api.equinix.javasdk.fabric.enums.Side} object.
      * @return a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
      */
     ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);

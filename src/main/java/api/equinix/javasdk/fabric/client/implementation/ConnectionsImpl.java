@@ -17,7 +17,7 @@
 package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;

@@ -14,7 +14,7 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.core.enums;
+package api.equinix.javasdk.fabric.enums;
 
 /**
  * The two endpoints ("sides") of an interconnection: the originating A-side and the

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
-import api.equinix.javasdk.core.enums.Side;
+import api.equinix.javasdk.fabric.enums.Side;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;

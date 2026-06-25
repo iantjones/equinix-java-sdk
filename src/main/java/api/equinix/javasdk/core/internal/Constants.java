@@ -20,7 +20,6 @@ import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.core.model.deserializers.*;
-import api.equinix.javasdk.core.enums.Side;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -35,6 +34,7 @@ import java.nio.charset.Charset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.BitSet;
+import java.util.ServiceLoader;
 import java.util.regex.Pattern;
 
 /**
@@ -70,23 +70,37 @@ public class Constants {
     public static final ObjectMapper JSON_CONVERTOR = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final SimpleModule module = new SimpleModule()
-//            .addDeserializer(EncapsulationType.class, new EncapsulationDeserializer())
             .addDeserializer(BandwidthUnit.class, new BandwidthDeserializer())
-            .addDeserializer(Side.class, new SideDeserializer())
             .addDeserializer(OperationalStatus.class, new OperationalStatusDeserializer())
             .addDeserializer(MetroCode.class, new MetroCodeDeserializer());
 
     /** Constant <code>objectMapper</code> */
-    public static final ObjectMapper objectMapper = new ObjectMapper()
-            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
-            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            .enable(MapperFeature.USE_STD_BEAN_NAMING)
-            .registerModule(new Jdk8Module())
-            .registerModule(module)
-            .setFilterProvider(new SimpleFilterProvider()
-                    .addFilter("lifecycleDetailFilter", LIFECYCLE_DETAIL_FILTER))
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    public static final ObjectMapper objectMapper = buildObjectMapper();
+
+    /**
+     * Builds the shared {@link ObjectMapper}, registering the core module plus any
+     * domain-contributed modules discovered via the {@link JacksonModuleProvider} SPI
+     * (so core carries no dependency on domain-specific (de)serializers).
+     */
+    private static ObjectMapper buildObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper()
+                .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
+                .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+                .enable(MapperFeature.USE_STD_BEAN_NAMING)
+                .registerModule(new Jdk8Module())
+                .registerModule(module)
+                .setFilterProvider(new SimpleFilterProvider()
+                        .addFilter("lifecycleDetailFilter", LIFECYCLE_DETAIL_FILTER))
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        for (JacksonModuleProvider provider : ServiceLoader.load(
+                JacksonModuleProvider.class, Constants.class.getClassLoader())) {
+            mapper.registerModule(provider.getModule());
+        }
+
+        return mapper;
+    }
 
     /** Constant <code>queryParamFormatter</code> */
     public static final DateTimeFormatter queryParamFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
