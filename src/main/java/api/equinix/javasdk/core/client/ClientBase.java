@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.internal.Constants;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
@@ -317,5 +318,29 @@ public class ClientBase {
             Utils.serializeJson(request, body);
         }
         return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** POST a body under path + query parameters and deserialize a response of an explicit {@link TypeReference}. */
+    protected <R> R postForType(String serviceEndpoint, Map<String, String> pathParams,
+                                Map<String, List<String>> queryParams, Object body, TypeReference<?> typeReference) {
+        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, typeReference);
+        if (body != null) {
+            Utils.serializeJson(request, body);
+        }
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /**
+     * POST a body, then return the created resource's uuid parsed from the response {@code Location}
+     * header (for endpoints that return {@code 201 Location: .../{uuid}} rather than a body). Pair
+     * with {@code getByUuid(...)} to return the created resource.
+     */
+    protected String createReturningLocationUuid(String serviceEndpoint, Map<String, String> pathParams,
+                                                 Map<String, List<String>> queryParams, Object body) {
+        EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, Object.class);
+        if (body != null) {
+            Utils.serializeJson(request, body);
+        }
+        return Utils.extractFromHeader(invoke(request), "Location", Constants.UUID_PATTERN);
     }
 }
