@@ -45,19 +45,17 @@ public class BackupServiceDetailDeserializer extends JsonDeserializer<GenericDat
 
         ServiceType backupServiceDetail = ((BackupServiceDetail) jsonParser.getCurrentValue()).getServiceName();
 
-        Class<?> objectClass = null;
-
         if (jsonNode != null && backupServiceDetail != null) {
-            switch (backupServiceDetail) {
-                case L3_CONNECTION: objectClass = RestoreFeasibilityJson.Connection.class;
-                case L2_CONNECTION: objectClass = RestoreFeasibilityJson.Connection.class;
-                case BYOC: objectClass = RestoreFeasibilityJson.Connection.class;
-                case VPN: objectClass = RestoreFeasibilityJson.VPN.class;
-                case BGP: objectClass = RestoreFeasibilityJson.BGPPeering.class;
-                case ACL: objectClass = RestoreFeasibilityJson.ACLTemplate.class;
-                case LICENSE: objectClass = RestoreFeasibilityJson.License.class;
-                case DEVICE_LINKING: objectClass = RestoreFeasibilityJson.DeviceLink.class;
-            }
+            // Arrow switch: the original statement switch had no break statements, so every service
+            // type fell through to DEVICE_LINKING and deserialized as DeviceLink regardless of type.
+            Class<?> objectClass = switch (backupServiceDetail) {
+                case L3_CONNECTION, L2_CONNECTION, BYOC -> RestoreFeasibilityJson.Connection.class;
+                case VPN -> RestoreFeasibilityJson.VPN.class;
+                case BGP -> RestoreFeasibilityJson.BGPPeering.class;
+                case ACL -> RestoreFeasibilityJson.ACLTemplate.class;
+                case LICENSE -> RestoreFeasibilityJson.License.class;
+                case DEVICE_LINKING -> RestoreFeasibilityJson.DeviceLink.class;
+            };
 
             return (GenericDataObject<?>) mapper.readValue(jsonNode.toString(), objectClass);
         }
