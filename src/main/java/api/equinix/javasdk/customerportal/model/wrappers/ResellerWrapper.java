@@ -18,13 +18,10 @@ package api.equinix.javasdk.customerportal.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.customerportal.enums.AccountType;
 import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.json.ResellerJson;
 import lombok.Getter;
 import lombok.experimental.Delegate;
-
-import java.util.List;
 
 public class ResellerWrapper extends ResourceImpl<Reseller> implements Reseller {
 
@@ -36,21 +33,5 @@ public class ResellerWrapper extends ResourceImpl<Reseller> implements Reseller 
     public ResellerWrapper(ResellerJson resellerJson, Pageable<Reseller> serviceClient) {
         this.json = resellerJson;
         this.serviceClient = serviceClient;
-    }
-
-    public String getAccountNumber() {
-        return null;
-    }
-
-    public String getAccountName() {
-        return null;
-    }
-
-    public AccountType getAccountType() {
-        return null;
-    }
-
-    public List<String> getIbxs() {
-        return null;
     }
 }

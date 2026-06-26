@@ -32,7 +32,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -102,11 +101,11 @@ public class NetworkOperator extends ResourceImpl<Network> {
 
         public NetworkOperator.NetworkBuilder notification(NotificationType type, String emailAddress) {
             if(this.notifications == null) {
-                this.notifications = Collections.singletonList(new Notification(type, Collections.singletonList(emailAddress)));
+                this.notifications = new ArrayList<>(List.of(new Notification(type, new ArrayList<>(List.of(emailAddress)))));
             }
             else {
                 if (notifications.stream().noneMatch(o -> o.getType().equals(type))) {
-                    notifications.add(new Notification(type, Collections.singletonList(emailAddress)));
+                    notifications.add(new Notification(type, new ArrayList<>(List.of(emailAddress))));
                 } else {
                     Objects.requireNonNull(notifications.stream().filter(o -> o.getType().equals(type)).findFirst().orElse(null)).addEmail(emailAddress);
                 }
