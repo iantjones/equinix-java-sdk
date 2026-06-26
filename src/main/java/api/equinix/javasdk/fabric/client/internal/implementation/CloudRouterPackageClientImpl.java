@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.CloudRouterPackageClient;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
@@ -32,29 +26,29 @@ import api.equinix.javasdk.fabric.model.json.CloudRouterPackageJson;
 
 import java.util.Map;
 
-public class CloudRouterPackageClientImpl extends PageableBase implements CloudRouterPackageClient<CloudRouterPackage> {
+/**
+ * Internal client for Fabric Cloud Router packages (read-only). The JSON model implements the
+ * public interface directly, so {@link #wrap(CloudRouterPackageJson)} is the identity.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
+public class CloudRouterPackageClientImpl extends ResourceClientBase<CloudRouterPackage, CloudRouterPackageJson> implements CloudRouterPackageClient<CloudRouterPackage> {
 
     public CloudRouterPackageClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "CloudRouters");
+        super(configClient, "Fabric", "CloudRouters", CloudRouterPackageJson.class);
+    }
+
+    @Override
+    protected CloudRouterPackage wrap(CloudRouterPackageJson json) {
+        return json;
     }
 
     public Page<CloudRouterPackage, CloudRouterPackageJson> list() {
-        EquinixRequest<CloudRouterPackage> equinixRequest = this.buildRequest("GetCloudRouterPackages", RequestType.PAGINATED, CloudRouterPackageJson.class);
-        EquinixResponse<CloudRouterPackage> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("GetCloudRouterPackages");
     }
 
     public CloudRouterPackageJson getByPackageCode(CloudRouterPackageCode packageCode) {
-        Map<String, String> pParams = Map.of("routerPackageCode", packageCode.toString());
-        EquinixRequest<CloudRouterPackage> equinixRequest = this.buildRequestWithPathParams("GetCloudRouterPackage", RequestType.SINGLE, pParams, CloudRouterPackageJson.class);
-        EquinixResponse<CloudRouterPackage> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<CloudRouterPackage> nextPage(PaginatedRequest<CloudRouterPackage> equinixRequest) {
-        EquinixResponse<CloudRouterPackage> equinixResponse = this.invoke(equinixRequest);
-        Page<CloudRouterPackage, CloudRouterPackageJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<CloudRouterPackage> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetCloudRouterPackage", Map.of("routerPackageCode", packageCode.toString()));
     }
 }

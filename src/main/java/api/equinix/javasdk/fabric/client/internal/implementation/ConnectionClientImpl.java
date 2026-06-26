@@ -16,24 +16,19 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
-import api.equinix.javasdk.fabric.model.ServiceToken;
 import api.equinix.javasdk.fabric.model.implementation.ManageConnection;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -46,31 +41,45 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-public class ConnectionClientImpl extends PageableBase implements ConnectionClient<Connection> {
+/**
+ * Internal client for Fabric Connections. Standard CRUD + paging come from {@link ResourceClientBase};
+ * the Connection-specific operations (dry-run, actions, bulk, statistics) remain bespoke below.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
+public class ConnectionClientImpl extends ResourceClientBase<Connection, ConnectionJson> implements ConnectionClient<Connection> {
 
     public ConnectionClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "Connections");
+        super(configClient, "Fabric", "Connections", ConnectionJson.class);
+    }
+
+    @Override
+    protected Connection wrap(ConnectionJson json) {
+        return new ConnectionWrapper(json, this);
     }
 
     public Page<Connection, ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("SearchConnections", RequestType.PAGINATED_POST, ConnectionJson.class);
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return searchPage("SearchConnections", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public ConnectionJson getByUuid(String uuid) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("GetConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.class);
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetConnection", uuid);
     }
 
     public ConnectionJson create(ConnectionCreatorJson connectionCreatorJson) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.class);
-        Utils.serializeJson(equinixRequest, connectionCreatorJson);
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostConnection", connectionCreatorJson);
     }
+
+    public ConnectionJson delete(String uuid) {
+        return deleteOne("DeleteConnection", uuid);
+    }
+
+    public ConnectionJson refresh(String uuid) {
+        return getByUuid(uuid);
+    }
+
+    // ---- Connection-specific operations (not part of the standard CRUD base) ----
 
     public ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson) {
         EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.class);
@@ -95,7 +104,6 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
-    /** {@inheritDoc} */
     public ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
         Map<String, List<String>> qParams = Map.of(
                 "startDateTime", Utils.singleParamList(Utils.dateTimeForQuery(startDateTime)),
@@ -110,31 +118,5 @@ public class ConnectionClientImpl extends PageableBase implements ConnectionClie
 
     public ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
         return this.getStatistics(uuid, startDateTime, endDateTime, viewPoint);
-    }
-
-    public ConnectionJson delete(String uuid) {
-        EquinixRequest<ServiceToken> equinixRequest = this.buildRequestWithPathParams("DeleteConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.class);
-        EquinixResponse<ServiceToken> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public ConnectionJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    @Override
-    public PaginatedList<Connection> nextPage(PaginatedRequest<Connection> equinixRequest) {
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        Page<Connection, ConnectionJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Connection> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ConnectionWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
-    }
-
-    public PaginatedFilteredList<Connection> nextPage(PaginatedPostRequest<Connection> equinixRequest) {
-        Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        Page<Connection, ConnectionJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedFilteredList<Connection> newPaginatedFilteredList = Utils.mapPaginatedFilteredList(nextPage.getItems(), this, ConnectionWrapper::new);
-        return new PaginatedFilteredList<>(newPaginatedFilteredList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }
