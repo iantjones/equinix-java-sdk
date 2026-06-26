@@ -61,6 +61,74 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("sends an RFC 6902 JSON Patch with json-patch content-type")
+        void savePatchesName() {
+            stubSingleton(wireMock, "/fabric/v4/networks/.*",
+                    "/json/fabric/network_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/networks/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json"))));
+
+            Network network = fabric.networks().getByUuid("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+            Network updated = network.update().name("New-Name").save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/networks/c3d4e5f6-a7b8-9012-cdef-234567890abc"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"New-Name\"}]")));
+        }
+
+        @Test
+        @DisplayName("accumulates multiple field changes into one patch document")
+        void saveMultipleFields() {
+            stubSingleton(wireMock, "/fabric/v4/networks/.*",
+                    "/json/fabric/network_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/networks/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json"))));
+
+            Network network = fabric.networks().getByUuid("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+            network.update()
+                    .name("Renamed")
+                    .patch(api.equinix.javasdk.core.http.request.PatchOperation.replace("/scope", "GLOBAL"))
+                    .save();
+
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/networks/.*"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed\"},"
+                                    + "{\"op\":\"replace\",\"path\":\"/scope\",\"value\":\"GLOBAL\"}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            stubSingleton(wireMock, "/fabric/v4/networks/.*",
+                    "/json/fabric/network_response.json");
+
+            Network network = fabric.networks().getByUuid("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+            assertThrows(IllegalStateException.class, () -> network.update().save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/networks/.*")));
+        }
+
+        @Test
+        @DisplayName("404 on update throws EquinixNotFoundException")
+        void updateNotFound() {
+            stubSingleton(wireMock, "/fabric/v4/networks/.*",
+                    "/json/fabric/network_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/networks/.*"))
+                    .willReturn(aResponse().withStatus(404)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Network not found\"}]")));
+
+            Network network = fabric.networks().getByUuid("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+            assertThrows(EquinixNotFoundException.class, () -> network.update().name("x").save());
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

@@ -377,15 +377,18 @@ public class Utils {
      */
     public static <T> void serializeJson(EquinixRequest<T> equinixRequest, Object objectToSerialize) {
         equinixRequest.setObjectToSerialize(objectToSerialize);
-        equinixRequest.setHttpEntity(serializeJson(equinixRequest.getObjectToSerialize(), equinixRequest.getFilters()));
+        equinixRequest.setHttpEntity(serializeJson(equinixRequest.getObjectToSerialize(), equinixRequest.getFilters(), equinixRequest.getContentType()));
     }
 
-    private static StringEntity serializeJson(Object content, FilterProvider filterProvider) {
+    private static StringEntity serializeJson(Object content, FilterProvider filterProvider, String contentType) {
+        ContentType entityContentType = (contentType != null)
+                ? ContentType.create(contentType, java.nio.charset.StandardCharsets.UTF_8)
+                : ContentType.APPLICATION_JSON;
         try {
             if (filterProvider != null) {
-                return new StringEntity(Constants.objectMapper.writer(filterProvider).writeValueAsString(content), ContentType.APPLICATION_JSON);
+                return new StringEntity(Constants.objectMapper.writer(filterProvider).writeValueAsString(content), entityContentType);
             } else {
-                return new StringEntity(Constants.objectMapper.writeValueAsString(content), ContentType.APPLICATION_JSON);
+                return new StringEntity(Constants.objectMapper.writeValueAsString(content), entityContentType);
             }
         } catch (JsonProcessingException jpe) {
             throw new EquinixClientException(Constants.JSON_SERIALIZE_EXCEPTION, jpe);

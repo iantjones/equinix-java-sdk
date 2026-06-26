@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.NetworkClientImpl;
@@ -63,6 +64,16 @@ public class NetworkOperator extends ResourceImpl<Network> {
      */
     public NetworkBuilder create(NetworkType type) {
         return new NetworkBuilder(type);
+    }
+
+    /**
+     * <p>Begins a fluent update of an existing network, identified by uuid.</p>
+     *
+     * @param uuid the uuid of the network to update
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.NetworkOperator.NetworkUpdater} object.
+     */
+    public NetworkUpdater update(String uuid) {
+        return new NetworkUpdater(uuid);
     }
 
     @Getter(AccessLevel.PACKAGE)
@@ -121,6 +132,69 @@ public class NetworkOperator extends ResourceImpl<Network> {
         public Network create() {
             NetworkCreatorJson networkCreatorJson = new NetworkCreatorJson(this);
             NetworkJson networkJson = ((NetworkClientImpl) NetworkOperator.this.getServiceClient()).create(networkCreatorJson);
+            return new NetworkWrapper(networkJson, NetworkOperator.this.getServiceClient());
+        }
+    }
+
+    /**
+     * Fluent builder for updating an existing network via RFC&nbsp;6902 JSON Patch. Each setter records
+     * a {@code replace} operation; {@link #save()} sends the accumulated operations as a single
+     * {@code PATCH} with content-type {@code application/json-patch+json} and returns the refreshed model.
+     *
+     * <pre>{@code network.update().name("New-Name").save();}</pre>
+     */
+    public class NetworkUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected NetworkUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        /**
+         * Replaces the network name.
+         *
+         * @param name the new name
+         * @return this updater
+         */
+        public NetworkUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        /**
+         * Replaces the notification configuration.
+         *
+         * @param notifications the new notification list
+         * @return this updater
+         */
+        public NetworkUpdater notifications(List<Notification> notifications) {
+            operations.add(PatchOperation.replace("/notifications", notifications));
+            return this;
+        }
+
+        /**
+         * Adds an arbitrary JSON Patch operation, for paths not covered by the typed setters above.
+         *
+         * @param operation the patch operation
+         * @return this updater
+         */
+        public NetworkUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        /**
+         * Applies the accumulated changes and returns the network refreshed from the server's response.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.Network}
+         */
+        public Network save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            NetworkJson networkJson = ((NetworkClientImpl) NetworkOperator.this.getServiceClient()).update(uuid, operations);
             return new NetworkWrapper(networkJson, NetworkOperator.this.getServiceClient());
         }
     }

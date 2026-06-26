@@ -57,6 +57,13 @@ public abstract class EquinixRequest<T> implements Request<T> {
     private String requestParent;
     private String serviceEndpoint;
 
+    /**
+     * Body content-type for this request. Defaults to {@code application/json}; resource clients
+     * set it to {@code application/json-patch+json} for RFC&nbsp;6902 JSON Patch updates. Drives both
+     * the {@code Content-Type} header and the serialized entity's content type.
+     */
+    private String contentType = "application/json";
+
     private TypeReference<?> typeReference;
     /**
      * Response type derived at runtime from the resource's JSON class (via Jackson's

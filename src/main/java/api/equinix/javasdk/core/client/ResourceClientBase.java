@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -124,6 +125,18 @@ public abstract class ResourceClientBase<M, J> extends PageableBase implements P
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
+    /**
+     * PATCH a resource by uuid with an RFC&nbsp;6902 JSON Patch operations array, sent with
+     * content-type {@code application/json-patch+json}. The endpoint's HTTP method (PATCH) comes
+     * from {@code apiParams}; the returned JSON is the server's updated resource.
+     */
+    protected J patchOne(String serviceEndpoint, String uuid, List<PatchOperation> operations) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
+        request.setContentType(PatchOperation.CONTENT_TYPE);
+        Utils.serializeJson(request, operations);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
     // ---- specialized operation helpers (filtered create, dry-run, bulk, secondary response types) ----
 
     /** POST a creator body applying a Jackson serialization filter. */
@@ -185,6 +198,14 @@ public abstract class ResourceClientBase<M, J> extends PageableBase implements P
     /** DELETE a resource identified by arbitrary path parameters. */
     protected J deleteOne(String serviceEndpoint, Map<String, String> pathParams) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** PATCH a resource identified by arbitrary path parameters with a JSON Patch operations array. */
+    protected J patchOne(String serviceEndpoint, Map<String, String> pathParams, List<PatchOperation> operations) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
+        request.setContentType(PatchOperation.CONTENT_TYPE);
+        Utils.serializeJson(request, operations);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 

@@ -266,7 +266,8 @@ public class EquinixClient implements Closeable {
                 standardHeaders.put("authorization", "Bearer " + sessionToken);
             }
         }
-        standardHeaders.put("content-type", "application/json");
+        String contentType = equinixRequest.getContentType();
+        standardHeaders.put("content-type", contentType != null ? contentType : "application/json");
         equinixRequest.setHeaders(standardHeaders);
     }
 
