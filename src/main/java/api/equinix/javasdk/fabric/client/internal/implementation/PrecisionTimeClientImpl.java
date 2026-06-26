@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PrecisionTimeClient;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
@@ -31,57 +25,38 @@ import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
 
-import java.util.Map;
-
-public class PrecisionTimeClientImpl extends PageableBase implements PrecisionTimeClient<PrecisionTime> {
+public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, PrecisionTimeJson> implements PrecisionTimeClient<PrecisionTime> {
 
     public PrecisionTimeClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "PrecisionTime");
+        super(configClient, "Fabric", "PrecisionTime", PrecisionTimeJson.class);
+    }
+
+    @Override
+    protected PrecisionTime wrap(PrecisionTimeJson json) {
+        return new PrecisionTimeWrapper(json, this);
     }
 
     public Page<PrecisionTime, PrecisionTimeJson> list() {
-        EquinixRequest<PrecisionTime> equinixRequest = this.buildRequest("ListPrecisionTime", RequestType.PAGINATED, PrecisionTimeJson.class);
-        EquinixResponse<PrecisionTime> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListPrecisionTime");
     }
 
     public PrecisionTimeJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequestWithPathParams("GetPrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.class);
-        EquinixResponse<PrecisionTimeJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetPrecisionTime", uuid);
     }
 
     public PrecisionTimeJson create(PrecisionTimeCreatorJson precisionTimeCreatorJson) {
-        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequest("PostPrecisionTime", RequestType.SINGLE, PrecisionTimeJson.class);
-        Utils.serializeJson(equinixRequest, precisionTimeCreatorJson);
-        EquinixResponse<PrecisionTimeJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostPrecisionTime", precisionTimeCreatorJson);
     }
 
     public PrecisionTimeJson update(String uuid, PrecisionTimeCreatorJson precisionTimeCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PrecisionTimeJson> equinixRequest = this.buildRequestWithPathParams("PutPrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.class);
-        Utils.serializeJson(equinixRequest, precisionTimeCreatorJson);
-        EquinixResponse<PrecisionTimeJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("PutPrecisionTime", uuid, precisionTimeCreatorJson);
     }
 
     public PrecisionTimeJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PrecisionTime> equinixRequest = this.buildRequestWithPathParams("DeletePrecisionTime", RequestType.SINGLE, pParams, PrecisionTimeJson.class);
-        EquinixResponse<PrecisionTime> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeletePrecisionTime", uuid);
     }
 
     public PrecisionTimeJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<PrecisionTime> nextPage(PaginatedRequest<PrecisionTime> equinixRequest) {
-        EquinixResponse<PrecisionTime> equinixResponse = this.invoke(equinixRequest);
-        Page<PrecisionTime, PrecisionTimeJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<PrecisionTime> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, PrecisionTimeWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }

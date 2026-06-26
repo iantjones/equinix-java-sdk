@@ -122,6 +122,40 @@ public abstract class ResourceClientBase<M, J> extends PageableBase implements P
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
+    // ---- path-parameter variants (for sub-resources nested under a parent id, or code-keyed gets) ----
+
+    /** GET a paginated collection scoped by path parameters (e.g. a parent id). */
+    protected Page<M, J> listPagePath(String serviceEndpoint, Map<String, String> pathParams) {
+        EquinixRequest<M> request = buildRequestWithPathParams(serviceEndpoint, RequestType.PAGINATED, pathParams, jsonClass);
+        return Utils.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    /** GET a single resource identified by arbitrary path parameters. */
+    protected J getOne(String serviceEndpoint, Map<String, String> pathParams) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** POST a creator body under arbitrary path parameters (e.g. create a child of a parent id). */
+    protected J postOne(String serviceEndpoint, Map<String, String> pathParams, Object body) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
+        Utils.serializeJson(request, body);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** PUT/PATCH a body to update a resource identified by arbitrary path parameters. */
+    protected J updateOne(String serviceEndpoint, Map<String, String> pathParams, Object body) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
+        Utils.serializeJson(request, body);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** DELETE a resource identified by arbitrary path parameters. */
+    protected J deleteOne(String serviceEndpoint, Map<String, String> pathParams) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
     // ---- paging (provided once for all resources) ----
 
     /** {@inheritDoc} */
