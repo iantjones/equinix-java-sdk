@@ -1,0 +1,37 @@
+{
+  "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "type": "XF_GATEWAY",
+  "href": "https://api.equinix.com/fabric/v4/gateways/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "state": "PROVISIONED",
+  "gatewayPackage": {
+    "code": "ADVANCED"
+  },
+  "location": {
+    "metroCode": "SV"
+  },
+  "account": {
+    "orgId": 91831,
+    "accountNumber": 270129
+  },
+  "notifications": [
+    {
+      "type": "ALL",
+      "emails": [
+        "network-ops@example.com"
+      ]
+    }
+  ],
+  "bgpIpv4RoutesCount": 12,
+  "bgpIpv6RoutesCount": 4,
+  "connectionCount": 3,
+  "changeLog": {
+    "createdBy": "user9012",
+    "createdByFullName": "Alice Johnson",
+    "createdByEmail": "alice.johnson@example.com",
+    "createdDateTime": "2024-02-01T10:00:00.000Z",
+    "updatedBy": "user3456",
+    "updatedByFullName": "Bob Williams",
+    "updatedByEmail": "bob.williams@example.com",
+    "updatedDateTime": "2024-11-12T08:30:00.000Z"
+  }
+}

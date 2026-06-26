@@ -1,0 +1,14 @@
+{
+  "uuid": "acl-1111-2222-3333-444455556666",
+  "name": "test-acl-template",
+  "description": "Test ACL template for WireMock",
+  "inboundRules": [
+    {
+      "subnet": "10.0.0.0/24",
+      "protocol": "TCP",
+      "srcPort": "any",
+      "dstPort": "22",
+      "description": "Allow SSH"
+    }
+  ]
+}

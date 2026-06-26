@@ -1,0 +1,13 @@
+{
+  "uuid": "c3d4e5f6-a7b8-9012-cdef-34567890abcd",
+  "username": "test-ssh-user",
+  "deviceUuids": [
+    "aaaa1111-bbbb-2222-cccc-3333dddd4444"
+  ],
+  "metroStatusMap": {
+    "SV": {
+      "status": "ACTIVE"
+    }
+  },
+  "action": "CREATE"
+}

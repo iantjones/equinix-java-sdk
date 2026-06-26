@@ -1,0 +1,11 @@
+{
+  "uuid": "bkp-1111-2222-3333-444455556666",
+  "name": "test-backup",
+  "type": "CONFIG",
+  "status": "COMPLETED",
+  "requestType": "MANUAL",
+  "downloadUrl": "https://example.com/backups/test-backup",
+  "version": "1.0",
+  "deleteAllowed": true,
+  "restores": []
+}
