@@ -1,7 +1,7 @@
-package api.equinix.javasdk.fabric.mcp.bridge;
+package api.equinix.javasdk.mcp.bridge;
 
-import api.equinix.javasdk.fabric.mcp.McpClient;
-import api.equinix.javasdk.fabric.mcp.model.McpToolDefinition;
+import api.equinix.javasdk.mcp.McpClient;
+import api.equinix.javasdk.mcp.model.McpToolDefinition;
 
 import java.util.Map;
 

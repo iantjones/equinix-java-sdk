@@ -3,7 +3,7 @@ package api.equinix.javasdk.fabric.optimizer;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
+import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.fabric.optimizer.enums.*;
 import api.equinix.javasdk.fabric.optimizer.model.*;

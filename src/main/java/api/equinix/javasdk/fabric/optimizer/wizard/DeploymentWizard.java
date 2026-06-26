@@ -2,7 +2,7 @@ package api.equinix.javasdk.fabric.optimizer.wizard;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
-import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
+import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BandwidthStrategy;

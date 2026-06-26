@@ -1,7 +1,7 @@
-package api.equinix.javasdk.fabric.mcp;
+package api.equinix.javasdk.mcp;
 
 import api.equinix.javasdk.core.exception.EquinixClientException;
-import api.equinix.javasdk.fabric.mcp.model.McpJsonRpcResponse;
+import api.equinix.javasdk.mcp.model.McpJsonRpcResponse;
 import lombok.Getter;
 
 /**
