@@ -16,16 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.CloudRouterClient;
@@ -36,58 +28,34 @@ import api.equinix.javasdk.fabric.model.json.CloudRouterJson;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
 
-import java.util.Map;
-
-public class CloudRouterClientImpl extends PageableBase implements CloudRouterClient<CloudRouter> {
+public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, CloudRouterJson> implements CloudRouterClient<CloudRouter> {
 
     public CloudRouterClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "CloudRouters");
+        super(configClient, "Fabric", "CloudRouters", CloudRouterJson.class);
+    }
+
+    @Override
+    protected CloudRouter wrap(CloudRouterJson json) {
+        return new CloudRouterWrapper(json, this);
     }
 
     public Page<CloudRouter, CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<CloudRouter> equinixRequest = this.buildRequest("SearchCloudRouters", RequestType.PAGINATED_POST, CloudRouterJson.class);
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
-        EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return searchPage("SearchCloudRouters", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public CloudRouterJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CloudRouterJson> equinixRequest = this.buildRequestWithPathParams("GetCloudRouter", RequestType.SINGLE, pParams, CloudRouterJson.class);
-        EquinixResponse<CloudRouterJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetCloudRouter", uuid);
     }
 
     public CloudRouterJson create(CloudRouterCreatorJson cloudRouterCreatorJson) {
-        EquinixRequest<CloudRouterJson> equinixRequest = this.buildRequest("PostCloudRouter", RequestType.SINGLE, CloudRouterJson.class);
-        Utils.serializeJson(equinixRequest, cloudRouterCreatorJson);
-        EquinixResponse<CloudRouterJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostCloudRouter", cloudRouterCreatorJson);
     }
 
     public CloudRouterJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CloudRouter> equinixRequest = this.buildRequestWithPathParams("DeleteCloudRouter", RequestType.SINGLE, pParams, CloudRouterJson.class);
-        EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteCloudRouter", uuid);
     }
 
     public CloudRouterJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<CloudRouter> nextPage(PaginatedRequest<CloudRouter> equinixRequest) {
-        EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
-        Page<CloudRouter, CloudRouterJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<CloudRouter> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, CloudRouterWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
-    }
-
-    public PaginatedFilteredList<CloudRouter> nextPage(PaginatedPostRequest<CloudRouter> equinixRequest) {
-        Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
-        EquinixResponse<CloudRouter> equinixResponse = this.invoke(equinixRequest);
-        Page<CloudRouter, CloudRouterJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedFilteredList<CloudRouter> newPaginatedFilteredList = Utils.mapPaginatedFilteredList(nextPage.getItems(), this, CloudRouterWrapper::new);
-        return new PaginatedFilteredList<>(newPaginatedFilteredList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }

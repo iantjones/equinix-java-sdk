@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.StreamClient;
 import api.equinix.javasdk.fabric.model.Stream;
@@ -31,57 +25,38 @@ import api.equinix.javasdk.fabric.model.json.StreamJson;
 import api.equinix.javasdk.fabric.model.json.creators.StreamCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.StreamWrapper;
 
-import java.util.Map;
-
-public class StreamClientImpl extends PageableBase implements StreamClient<Stream> {
+public class StreamClientImpl extends ResourceClientBase<Stream, StreamJson> implements StreamClient<Stream> {
 
     public StreamClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "Streams");
+        super(configClient, "Fabric", "Streams", StreamJson.class);
+    }
+
+    @Override
+    protected Stream wrap(StreamJson json) {
+        return new StreamWrapper(json, this);
     }
 
     public Page<Stream, StreamJson> list() {
-        EquinixRequest<Stream> equinixRequest = this.buildRequest("ListStreams", RequestType.PAGINATED, StreamJson.class);
-        EquinixResponse<Stream> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListStreams");
     }
 
     public StreamJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamJson> equinixRequest = this.buildRequestWithPathParams("GetStream", RequestType.SINGLE, pParams, StreamJson.class);
-        EquinixResponse<StreamJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetStream", uuid);
     }
 
     public StreamJson create(StreamCreatorJson streamCreatorJson) {
-        EquinixRequest<StreamJson> equinixRequest = this.buildRequest("PostStream", RequestType.SINGLE, StreamJson.class);
-        Utils.serializeJson(equinixRequest, streamCreatorJson);
-        EquinixResponse<StreamJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostStream", streamCreatorJson);
     }
 
     public StreamJson update(String uuid, StreamCreatorJson streamCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamJson> equinixRequest = this.buildRequestWithPathParams("PutStream", RequestType.SINGLE, pParams, StreamJson.class);
-        Utils.serializeJson(equinixRequest, streamCreatorJson);
-        EquinixResponse<StreamJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("PutStream", uuid, streamCreatorJson);
     }
 
     public StreamJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Stream> equinixRequest = this.buildRequestWithPathParams("DeleteStream", RequestType.SINGLE, pParams, StreamJson.class);
-        EquinixResponse<Stream> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteStream", uuid);
     }
 
     public StreamJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<Stream> nextPage(PaginatedRequest<Stream> equinixRequest) {
-        EquinixResponse<Stream> equinixResponse = this.invoke(equinixRequest);
-        Page<Stream, StreamJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Stream> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, StreamWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }

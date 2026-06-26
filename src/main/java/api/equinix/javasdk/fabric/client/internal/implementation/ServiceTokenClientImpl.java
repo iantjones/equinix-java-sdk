@@ -16,14 +16,12 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ServiceTokenClient;
 import api.equinix.javasdk.fabric.model.ServiceToken;
@@ -33,45 +31,33 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
-import java.util.Map;
-
 /**
- * <p>ServiceTokensClientImpl class.</p>
+ * Internal client for Fabric Service Tokens. Standard plumbing/paging come from
+ * {@link ResourceClientBase}; {@code create}/{@code dryRunCreate} remain bespoke because they apply
+ * the {@code createServiceTokenFilter} Jackson serialization filter.
  *
  * @author ianjones
  * @version $Id: $Id
  */
-public class ServiceTokenClientImpl extends PageableBase implements ServiceTokenClient<ServiceToken> {
+public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, ServiceTokenJson> implements ServiceTokenClient<ServiceToken> {
 
-    /**
-     * <p>Constructor for ServiceTokensClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl} object.
-     */
     public ServiceTokenClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "ServiceTokens");
+        super(configClient, "Fabric", "ServiceTokens", ServiceTokenJson.class);
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
+    @Override
+    protected ServiceToken wrap(ServiceTokenJson json) {
+        return new ServiceTokenWrapper(json, this);
+    }
+
     public Page<ServiceToken, ServiceTokenJson> list() {
-        EquinixRequest<ServiceToken> equinixRequest = this.buildRequest("GetServiceTokens", RequestType.PAGINATED, ServiceTokenJson.class);
-        EquinixResponse<ServiceToken> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("GetServiceTokens");
     }
 
-    /** {@inheritDoc} */
     public ServiceTokenJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequestWithPathParams("GetServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.class);
-        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetServiceToken", uuid);
     }
 
-    /** {@inheritDoc} */
     public ServiceTokenJson create(ServiceTokenCreatorJson serviceTokenCreatorJson) {
         EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequest("PostServiceToken", RequestType.SINGLE, ServiceTokenJson.class);
         equinixRequest.setFilters(new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter));
@@ -80,7 +66,6 @@ public class ServiceTokenClientImpl extends PageableBase implements ServiceToken
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
-    /** {@inheritDoc} */
     public ServiceTokenJson dryRunCreate(ServiceTokenCreatorJson serviceTokenCreatorJson) {
         EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequest("PostServiceToken", RequestType.SINGLE, ServiceTokenJson.class);
         equinixRequest.addSingleQueryParameter("dryRun", "true");
@@ -90,24 +75,11 @@ public class ServiceTokenClientImpl extends PageableBase implements ServiceToken
         return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 
-    /** {@inheritDoc} */
     public ServiceTokenJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ServiceToken> equinixRequest = this.buildRequestWithPathParams("DeleteServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.class);
-        EquinixResponse<ServiceToken> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteServiceToken", uuid);
     }
 
-    /** {@inheritDoc} */
     public ServiceTokenJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    /** {@inheritDoc} */
-    public PaginatedList<ServiceToken> nextPage(PaginatedRequest<ServiceToken> equinixRequest) {
-        EquinixResponse<ServiceToken> equinixResponse = this.invoke(equinixRequest);
-        Page<ServiceToken, ServiceTokenJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<ServiceToken> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ServiceTokenWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }
