@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.PrecisionTimeClientImpl;
@@ -26,6 +27,9 @@ import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>PrecisionTimeOperator class.</p>
@@ -54,6 +58,16 @@ public class PrecisionTimeOperator extends ResourceImpl<PrecisionTime> {
      */
     public PrecisionTimeBuilder create() {
         return new PrecisionTimeBuilder();
+    }
+
+    /**
+     * <p>Begins a fluent JSON Patch update of an existing precision time service, identified by uuid.</p>
+     *
+     * @param uuid the uuid of the time service to update
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator.PrecisionTimeUpdater} object.
+     */
+    public PrecisionTimeUpdater update(String uuid) {
+        return new PrecisionTimeUpdater(uuid);
     }
 
     @Getter
@@ -96,6 +110,70 @@ public class PrecisionTimeOperator extends ResourceImpl<PrecisionTime> {
         public PrecisionTime create() {
             PrecisionTimeCreatorJson precisionTimeCreatorJson = new PrecisionTimeCreatorJson(this);
             PrecisionTimeJson precisionTimeJson = ((PrecisionTimeClientImpl) PrecisionTimeOperator.this.getServiceClient()).create(precisionTimeCreatorJson);
+            return new PrecisionTimeWrapper(precisionTimeJson, PrecisionTimeOperator.this.getServiceClient());
+        }
+    }
+
+    /**
+     * Fluent builder for updating an existing precision time service via RFC&nbsp;6902 JSON Patch.
+     * Each typed setter records a {@code replace} operation; {@link #save()} sends them as one
+     * {@code PATCH} with content-type {@code application/json-patch+json} and returns the refreshed model.
+     *
+     * <pre>{@code timeService.update().name("New-Name").save();}</pre>
+     */
+    public class PrecisionTimeUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected PrecisionTimeUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        /**
+         * Replaces the time service name.
+         *
+         * @param name the new name
+         * @return this updater
+         */
+        public PrecisionTimeUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        /**
+         * Replaces the time service package (tier).
+         *
+         * @param packageCode the new package code
+         * @return this updater
+         */
+        public PrecisionTimeUpdater changePackage(PrecisionTimePackageCode packageCode) {
+            operations.add(PatchOperation.replace("/package/code", packageCode));
+            return this;
+        }
+
+        /**
+         * Adds an arbitrary JSON Patch operation, for paths not covered by the typed setters above
+         * (e.g. {@code /ipv4} or {@code /ntpAdvancedConfiguration}).
+         *
+         * @param operation the patch operation
+         * @return this updater
+         */
+        public PrecisionTimeUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        /**
+         * Applies the accumulated changes and returns the time service refreshed from the server.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.PrecisionTime}
+         */
+        public PrecisionTime save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            PrecisionTimeJson precisionTimeJson = ((PrecisionTimeClientImpl) PrecisionTimeOperator.this.getServiceClient()).update(uuid, operations);
             return new PrecisionTimeWrapper(precisionTimeJson, PrecisionTimeOperator.this.getServiceClient());
         }
     }

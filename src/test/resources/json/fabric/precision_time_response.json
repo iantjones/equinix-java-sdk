@@ -1,0 +1,13 @@
+{
+  "uuid": "f6a7b8c9-d0e1-2345-fabc-567890123def",
+  "href": "https://api.equinix.com/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def",
+  "name": "Production-NTP-Service",
+  "type": "NTP",
+  "state": "PROVISIONED",
+  "description": "Primary NTP time service for production",
+  "packageCode": "NTP_STANDARD",
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "connectionsCount": 0
+}

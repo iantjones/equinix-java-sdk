@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.PrecisionTimeClientImpl;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
+import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class PrecisionTimeWrapper extends ResourceImpl<PrecisionTime> implements
         this.serviceClient = serviceClient;
     }
 
+    public PrecisionTimeOperator.PrecisionTimeUpdater update() {
+        return new PrecisionTimeOperator((PrecisionTimeClientImpl) this.serviceClient).update(this.getUuid());
+    }
+
     public Boolean delete() {
         this.jsonObject = ((PrecisionTimeClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class PrecisionTimeWrapper extends ResourceImpl<PrecisionTime> implements
     }
 
     private interface PrecisionTimeMutability {
+        PrecisionTimeOperator.PrecisionTimeUpdater update();
         Boolean delete();
         void refresh();
     }
