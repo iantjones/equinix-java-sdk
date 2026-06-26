@@ -29,6 +29,7 @@ import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.DeploymentWizard;
 import api.equinix.javasdk.design.peering.PeeringIntelligence;
 import api.equinix.javasdk.design.value.savings.SavingsCalculator;
+import api.equinix.javasdk.design.value.tco.TcoCalculator;
 
 /**
  * The primary entry point for accessing the Equinix Fabric APIs.
@@ -523,6 +524,27 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public SavingsCalculator.Builder savingsCalculator() {
         return SavingsCalculator.builder(this);
+    }
+
+    /**
+     * Begins a total-cost-of-ownership comparison across the three deployment
+     * archetypes — public cloud over the internet, on-prem, and Equinix-
+     * interconnected — for a given egress/bandwidth workload.
+     *
+     * <pre>{@code
+     * TcoComparison tco = fabric.tcoComparison()
+     *     .egress(100, DataUnit.TERABYTE)
+     *     .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+     *     .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+     *     .compare();
+     *
+     * System.out.println(tco.toMarkdown());
+     * }</pre>
+     *
+     * @return a {@link TcoCalculator.Builder} for configuring the comparison
+     */
+    public TcoCalculator.Builder tcoComparison() {
+        return TcoCalculator.builder(this);
     }
 
     /**
