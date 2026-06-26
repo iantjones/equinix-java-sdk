@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.UnifiedNotificationClient;
 import api.equinix.javasdk.customerportal.model.UnifiedNotification;
 import api.equinix.javasdk.customerportal.model.json.UnifiedNotificationJson;
 
-import java.util.Map;
-
-public class UnifiedNotificationClientImpl extends PageableBase implements UnifiedNotificationClient<UnifiedNotification> {
+public class UnifiedNotificationClientImpl extends ResourceClientBase<UnifiedNotification, UnifiedNotificationJson> implements UnifiedNotificationClient<UnifiedNotification> {
 
     public UnifiedNotificationClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "UnifiedNotifications");
+        super(configClient, "CustomerPortal", "UnifiedNotifications", UnifiedNotificationJson.class);
+    }
+
+    @Override
+    protected UnifiedNotification wrap(UnifiedNotificationJson json) {
+        return json;
     }
 
     public Page<UnifiedNotification, UnifiedNotificationJson> list() {
-        EquinixRequest<UnifiedNotification> equinixRequest = this.buildRequest("ListUnifiedNotifications", RequestType.PAGINATED, UnifiedNotificationJson.class);
-        EquinixResponse<UnifiedNotification> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListUnifiedNotifications");
     }
 
     public UnifiedNotificationJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<UnifiedNotificationJson> equinixRequest = this.buildRequestWithPathParams("GetUnifiedNotification", RequestType.SINGLE, pParams, UnifiedNotificationJson.class);
-        EquinixResponse<UnifiedNotificationJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<UnifiedNotification> nextPage(PaginatedRequest<UnifiedNotification> equinixRequest) {
-        EquinixResponse<UnifiedNotification> equinixResponse = this.invoke(equinixRequest);
-        Page<UnifiedNotification, UnifiedNotificationJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<UnifiedNotification> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetUnifiedNotification", uuid);
     }
 }

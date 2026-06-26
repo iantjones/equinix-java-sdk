@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.TroubleTicketClient;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
@@ -31,50 +25,34 @@ import api.equinix.javasdk.customerportal.model.json.TroubleTicketJson;
 import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.TroubleTicketWrapper;
 
-import java.util.Map;
-
-public class TroubleTicketClientImpl extends PageableBase implements TroubleTicketClient<TroubleTicket> {
+public class TroubleTicketClientImpl extends ResourceClientBase<TroubleTicket, TroubleTicketJson> implements TroubleTicketClient<TroubleTicket> {
 
     public TroubleTicketClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "TroubleTickets");
+        super(configClient, "CustomerPortal", "TroubleTickets", TroubleTicketJson.class);
+    }
+
+    @Override
+    protected TroubleTicket wrap(TroubleTicketJson json) {
+        return new TroubleTicketWrapper(json, this);
     }
 
     public Page<TroubleTicket, TroubleTicketJson> list() {
-        EquinixRequest<TroubleTicket> equinixRequest = this.buildRequest("ListTroubleTickets", RequestType.PAGINATED, TroubleTicketJson.class);
-        EquinixResponse<TroubleTicket> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListTroubleTickets");
     }
 
     public TroubleTicketJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequestWithPathParams("GetTroubleTicket", RequestType.SINGLE, pParams, TroubleTicketJson.class);
-        EquinixResponse<TroubleTicketJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetTroubleTicket", uuid);
     }
 
     public TroubleTicketJson create(TroubleTicketCreatorJson troubleTicketCreatorJson) {
-        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequest("PostTroubleTicket", RequestType.SINGLE, TroubleTicketJson.class);
-        Utils.serializeJson(equinixRequest, troubleTicketCreatorJson);
-        EquinixResponse<TroubleTicketJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostTroubleTicket", troubleTicketCreatorJson);
     }
 
     public TroubleTicketJson update(String uuid, TroubleTicketCreatorJson troubleTicketCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<TroubleTicketJson> equinixRequest = this.buildRequestWithPathParams("UpdateTroubleTicket", RequestType.SINGLE, pParams, TroubleTicketJson.class);
-        Utils.serializeJson(equinixRequest, troubleTicketCreatorJson);
-        EquinixResponse<TroubleTicketJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateTroubleTicket", uuid, troubleTicketCreatorJson);
     }
 
     public TroubleTicketJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<TroubleTicket> nextPage(PaginatedRequest<TroubleTicket> equinixRequest) {
-        EquinixResponse<TroubleTicket> equinixResponse = this.invoke(equinixRequest);
-        Page<TroubleTicket, TroubleTicketJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<TroubleTicket> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, TroubleTicketWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

@@ -16,13 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.HierarchyClient;
 import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
@@ -32,10 +26,15 @@ import api.equinix.javasdk.ibxsmartview.model.json.PowerHierarchyJson;
 import java.util.List;
 import java.util.Map;
 
-public class HierarchyClientImpl extends PageableBase implements HierarchyClient<LocationHierarchy> {
+public class HierarchyClientImpl extends ResourceClientBase<LocationHierarchy, LocationHierarchyJson> implements HierarchyClient<LocationHierarchy> {
 
     public HierarchyClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "Hierarchy");
+        super(configClient, "IBXSmartView", "Hierarchy", LocationHierarchyJson.class);
+    }
+
+    @Override
+    protected LocationHierarchy wrap(LocationHierarchyJson json) {
+        return json;
     }
 
     public LocationHierarchyJson getLocationHierarchy(String accountNo, String ibx) {
@@ -43,9 +42,7 @@ public class HierarchyClientImpl extends PageableBase implements HierarchyClient
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        EquinixRequest<LocationHierarchy> equinixRequest = this.buildRequestWithQueryParams("GetLocationHierarchy", RequestType.SINGLE, qParams, LocationHierarchyJson.class);
-        EquinixResponse<LocationHierarchy> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOneAs("GetLocationHierarchy", Map.of(), qParams, LocationHierarchyJson.class);
     }
 
     public PowerHierarchyJson getPowerHierarchy(String accountNo, String ibx) {
@@ -53,12 +50,6 @@ public class HierarchyClientImpl extends PageableBase implements HierarchyClient
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        EquinixRequest<LocationHierarchy> equinixRequest = this.buildRequestWithQueryParams("GetPowerHierarchy", RequestType.SINGLE, qParams, PowerHierarchyJson.class);
-        EquinixResponse<LocationHierarchy> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<LocationHierarchy> nextPage(PaginatedRequest<LocationHierarchy> equinixRequest) {
-        return null;
+        return getOneAs("GetPowerHierarchy", Map.of(), qParams, PowerHierarchyJson.class);
     }
 }

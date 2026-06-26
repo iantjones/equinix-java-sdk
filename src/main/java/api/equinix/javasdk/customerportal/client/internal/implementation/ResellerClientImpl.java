@@ -16,36 +16,26 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ResellerClient;
 import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.json.ResellerJson;
 import api.equinix.javasdk.customerportal.model.wrappers.ResellerWrapper;
 
-public class ResellerClientImpl extends PageableBase implements ResellerClient<Reseller> {
+public class ResellerClientImpl extends ResourceClientBase<Reseller, ResellerJson> implements ResellerClient<Reseller> {
 
     public ResellerClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Resellers");
+        super(configClient, "CustomerPortal", "Resellers", ResellerJson.class);
+    }
+
+    @Override
+    protected Reseller wrap(ResellerJson json) {
+        return new ResellerWrapper(json, this);
     }
 
     public Page<Reseller, ResellerJson> list() {
-        EquinixRequest<Reseller> equinixRequest = this.buildRequest("ListResellers", RequestType.PAGINATED, ResellerJson.class);
-        EquinixResponse<Reseller> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<Reseller> nextPage(PaginatedRequest<Reseller> equinixRequest) {
-        EquinixResponse<Reseller> equinixResponse = this.invoke(equinixRequest);
-        Page<Reseller, ResellerJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Reseller> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ResellerWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return listPage("ListResellers");
     }
 }

@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.AttachmentClient;
 import api.equinix.javasdk.customerportal.model.Attachment;
@@ -31,49 +25,34 @@ import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
 import api.equinix.javasdk.customerportal.model.json.creators.AttachmentCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.AttachmentWrapper;
 
-import java.util.Map;
-
-public class AttachmentClientImpl extends PageableBase implements AttachmentClient<Attachment> {
+public class AttachmentClientImpl extends ResourceClientBase<Attachment, AttachmentJson> implements AttachmentClient<Attachment> {
 
     public AttachmentClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Attachments");
+        super(configClient, "CustomerPortal", "Attachments", AttachmentJson.class);
+    }
+
+    @Override
+    protected Attachment wrap(AttachmentJson json) {
+        return new AttachmentWrapper(json, this);
     }
 
     public Page<Attachment, AttachmentJson> list() {
-        EquinixRequest<Attachment> equinixRequest = this.buildRequest("ListAttachments", RequestType.PAGINATED, AttachmentJson.class);
-        EquinixResponse<Attachment> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListAttachments");
     }
 
     public AttachmentJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<AttachmentJson> equinixRequest = this.buildRequestWithPathParams("GetAttachment", RequestType.SINGLE, pParams, AttachmentJson.class);
-        EquinixResponse<AttachmentJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetAttachment", uuid);
     }
 
     public AttachmentJson create(AttachmentCreatorJson attachmentCreatorJson) {
-        EquinixRequest<AttachmentJson> equinixRequest = this.buildRequest("UploadAttachment", RequestType.SINGLE, AttachmentJson.class);
-        Utils.serializeJson(equinixRequest, attachmentCreatorJson);
-        EquinixResponse<AttachmentJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("UploadAttachment", attachmentCreatorJson);
     }
 
     public AttachmentJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Attachment> equinixRequest = this.buildRequestWithPathParams("DeleteAttachment", RequestType.SINGLE, pParams, AttachmentJson.class);
-        EquinixResponse<Attachment> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteAttachment", uuid);
     }
 
     public AttachmentJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<Attachment> nextPage(PaginatedRequest<Attachment> equinixRequest) {
-        EquinixResponse<Attachment> equinixResponse = this.invoke(equinixRequest);
-        Page<Attachment, AttachmentJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Attachment> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, AttachmentWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

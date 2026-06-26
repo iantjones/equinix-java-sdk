@@ -16,14 +16,11 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.StreamingSubscriptionClient;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
@@ -36,10 +33,15 @@ import api.equinix.javasdk.ibxsmartview.model.wrappers.StreamingSubscriptionWrap
 import java.util.List;
 import java.util.Map;
 
-public class StreamingSubscriptionClientImpl extends PageableBase implements StreamingSubscriptionClient<StreamingSubscription> {
+public class StreamingSubscriptionClientImpl extends ResourceClientBase<StreamingSubscription, StreamingSubscriptionJson> implements StreamingSubscriptionClient<StreamingSubscription> {
 
     public StreamingSubscriptionClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "StreamingSubscriptions");
+        super(configClient, "IBXSmartView", "StreamingSubscriptions", StreamingSubscriptionJson.class);
+    }
+
+    @Override
+    protected StreamingSubscription wrap(StreamingSubscriptionJson json) {
+        return new StreamingSubscriptionWrapper(json, this);
     }
 
     public List<StreamingSubscriptionJson> list() {
@@ -49,32 +51,19 @@ public class StreamingSubscriptionClientImpl extends PageableBase implements Str
     }
 
     public StreamingSubscriptionJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.class);
-        EquinixResponse<StreamingSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetSubscription", uuid);
     }
 
     public StreamingSubscriptionJson create(StreamingSubscriptionCreatorJson creatorJson) {
-        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequest("CreateSubscription", RequestType.SINGLE, StreamingSubscriptionJson.class);
-        Utils.serializeJson(equinixRequest, creatorJson);
-        EquinixResponse<StreamingSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("CreateSubscription", creatorJson);
     }
 
     public StreamingSubscriptionJson update(String uuid, StreamingSubscriptionCreatorJson creatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamingSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("UpdateSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.class);
-        Utils.serializeJson(equinixRequest, creatorJson);
-        EquinixResponse<StreamingSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateSubscription", uuid, creatorJson);
     }
 
     public StreamingSubscriptionJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<StreamingSubscription> equinixRequest = this.buildRequestWithPathParams("DeleteSubscription", RequestType.SINGLE, pParams, StreamingSubscriptionJson.class);
-        EquinixResponse<StreamingSubscription> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteSubscription", uuid);
     }
 
     public StreamingSubscriptionJson refresh(String uuid) {
@@ -82,23 +71,10 @@ public class StreamingSubscriptionClientImpl extends PageableBase implements Str
     }
 
     public SubscriptionDataJson getSubscriptionData(String subscriptionId) {
-        Map<String, String> pParams = Map.of("subscriptionId", subscriptionId);
-        EquinixRequest<SubscriptionDataJson> equinixRequest = this.buildRequestWithPathParams("GetSubscriptionData", RequestType.SINGLE, pParams, SubscriptionDataJson.class);
-        EquinixResponse<SubscriptionDataJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOneAs("GetSubscriptionData", Map.of("subscriptionId", subscriptionId), Map.of(), SubscriptionDataJson.class);
     }
 
     public SubscriptionCertificateJson getCertificate(String channelType) {
-        Map<String, List<String>> qParams = Map.of("channelType", List.of(channelType));
-        EquinixRequest<SubscriptionCertificateJson> equinixRequest = this.buildRequestWithQueryParams("GetCertificate", RequestType.SINGLE, qParams, SubscriptionCertificateJson.class);
-        EquinixResponse<SubscriptionCertificateJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<StreamingSubscription> nextPage(PaginatedRequest<StreamingSubscription> equinixRequest) {
-        EquinixResponse<StreamingSubscription> equinixResponse = this.invoke(equinixRequest);
-        Page<StreamingSubscription, StreamingSubscriptionJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<StreamingSubscription> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, StreamingSubscriptionWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOneAs("GetCertificate", Map.of(), Map.of("channelType", List.of(channelType)), SubscriptionCertificateJson.class);
     }
 }

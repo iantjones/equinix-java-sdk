@@ -16,13 +16,11 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -43,7 +41,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
+public class VPNClientImpl extends ResourceClientBase<VPN, VPNJson> implements VPNClient<VPN> {
 
     /**
      * <p>Constructor for VPNClientImpl.</p>
@@ -51,7 +49,13 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public VPNClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "VPNs");
+        super(configClient, "NetworkEdge", "VPNs", VPNJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected VPN wrap(VPNJson json) {
+        return new VPNWrapper(json, this);
     }
 
     /**
@@ -61,17 +65,12 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
      */
     public Page<VPN, VPNJson> list(RequestBuilder.VPN requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<VPN> equinixRequest = this.buildRequest("ListVPNs", RequestType.PAGINATED, null, qParams, VPNJson.class);
-        EquinixResponse<VPN> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListVPNs", qParams);
     }
 
     /** {@inheritDoc} */
     public VPNJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithPathParams("GetVPN", RequestType.SINGLE, pParams, VPNJson.class);
-        EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetVPN", uuid);
     }
 
     /** {@inheritDoc} */
@@ -103,14 +102,5 @@ public class VPNClientImpl extends PageableBase implements VPNClient<VPN> {
     /** {@inheritDoc} */
     public VPNJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<VPN> nextPage(PaginatedRequest<VPN> equinixRequest) {
-        EquinixResponse<VPN> equinixResponse = this.invoke(equinixRequest);
-        Page<VPN, VPNJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<VPN> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, VPNWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

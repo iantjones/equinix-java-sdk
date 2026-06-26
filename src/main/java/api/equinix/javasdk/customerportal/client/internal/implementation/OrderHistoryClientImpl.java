@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.OrderHistoryClient;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
 import api.equinix.javasdk.customerportal.model.json.OrderHistoryItemJson;
 
-import java.util.Map;
-
-public class OrderHistoryClientImpl extends PageableBase implements OrderHistoryClient<OrderHistoryItem> {
+public class OrderHistoryClientImpl extends ResourceClientBase<OrderHistoryItem, OrderHistoryItemJson> implements OrderHistoryClient<OrderHistoryItem> {
 
     public OrderHistoryClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "OrderHistory");
+        super(configClient, "CustomerPortal", "OrderHistory", OrderHistoryItemJson.class);
+    }
+
+    @Override
+    protected OrderHistoryItem wrap(OrderHistoryItemJson json) {
+        return json;
     }
 
     public Page<OrderHistoryItem, OrderHistoryItemJson> list() {
-        EquinixRequest<OrderHistoryItem> equinixRequest = this.buildRequest("ListOrderHistory", RequestType.PAGINATED, OrderHistoryItemJson.class);
-        EquinixResponse<OrderHistoryItem> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListOrderHistory");
     }
 
     public OrderHistoryItemJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<OrderHistoryItemJson> equinixRequest = this.buildRequestWithPathParams("GetOrderHistoryItem", RequestType.SINGLE, pParams, OrderHistoryItemJson.class);
-        EquinixResponse<OrderHistoryItemJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<OrderHistoryItem> nextPage(PaginatedRequest<OrderHistoryItem> equinixRequest) {
-        EquinixResponse<OrderHistoryItem> equinixResponse = this.invoke(equinixRequest);
-        Page<OrderHistoryItem, OrderHistoryItemJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<OrderHistoryItem> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetOrderHistoryItem", uuid);
     }
 }

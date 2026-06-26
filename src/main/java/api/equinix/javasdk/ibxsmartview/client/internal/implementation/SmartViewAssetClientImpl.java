@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.SmartViewAssetClient;
 import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
@@ -31,15 +25,19 @@ import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailJson;
 import api.equinix.javasdk.ibxsmartview.model.json.SmartViewAssetJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TagPointDataJson;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SmartViewAssetClientImpl extends PageableBase implements SmartViewAssetClient<SmartViewAsset> {
+public class SmartViewAssetClientImpl extends ResourceClientBase<SmartViewAsset, SmartViewAssetJson> implements SmartViewAssetClient<SmartViewAsset> {
 
     public SmartViewAssetClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "Assets");
+        super(configClient, "IBXSmartView", "Assets", SmartViewAssetJson.class);
+    }
+
+    @Override
+    protected SmartViewAsset wrap(SmartViewAssetJson json) {
+        return json;
     }
 
     public Page<SmartViewAsset, SmartViewAssetJson> list(String accountNo, String ibx, String classification, List<String> cages) {
@@ -50,9 +48,7 @@ public class SmartViewAssetClientImpl extends PageableBase implements SmartViewA
         if (cages != null && !cages.isEmpty()) {
             qParams.put("cages", cages);
         }
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequestWithQueryParams("ListAssets", RequestType.PAGINATED, qParams, SmartViewAssetJson.class);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListAssets", qParams);
     }
 
     public AssetDetailJson getAssetDetails(String accountNo, String ibx, String classification, String assetId) {
@@ -62,17 +58,11 @@ public class SmartViewAssetClientImpl extends PageableBase implements SmartViewA
                 "classification", List.of(classification),
                 "assetId", List.of(assetId)
         );
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequestWithQueryParams("GetAssetDetails", RequestType.SINGLE, qParams, AssetDetailJson.class);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOneAs("GetAssetDetails", Map.of(), qParams, AssetDetailJson.class);
     }
 
-    @SuppressWarnings("unchecked")
     public List<AssetDetailJson> getMultipleAssetDetails(Object requestBody) {
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequest("PostAssetDetails", RequestType.SINGLE, AssetDetailJson.getListTypeRef());
-        Utils.serializeJson(equinixRequest, requestBody);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return (List<AssetDetailJson>) (Object) Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postForType("PostAssetDetails", requestBody, AssetDetailJson.getListTypeRef());
     }
 
     public Page<SmartViewAsset, SmartViewAssetJson> search(String accountNo, String ibx, String searchString) {
@@ -81,9 +71,7 @@ public class SmartViewAssetClientImpl extends PageableBase implements SmartViewA
                 "ibx", List.of(ibx),
                 "searchString", List.of(searchString)
         );
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequestWithQueryParams("SearchAssets", RequestType.PAGINATED, qParams, SmartViewAssetJson.class);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("SearchAssets", qParams);
     }
 
     public TagPointDataJson getAffectedAssets(String accountNo, String ibx) {
@@ -91,9 +79,7 @@ public class SmartViewAssetClientImpl extends PageableBase implements SmartViewA
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequestWithQueryParams("GetAffectedAssets", RequestType.SINGLE, qParams, TagPointDataJson.class);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOneAs("GetAffectedAssets", Map.of(), qParams, TagPointDataJson.class);
     }
 
     public TagPointDataJson getCurrentTagPoint(String accountNo, String ibx) {
@@ -101,23 +87,10 @@ public class SmartViewAssetClientImpl extends PageableBase implements SmartViewA
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequestWithQueryParams("GetCurrentTagPoint", RequestType.SINGLE, qParams, TagPointDataJson.class);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOneAs("GetCurrentTagPoint", Map.of(), qParams, TagPointDataJson.class);
     }
 
-    @SuppressWarnings("unchecked")
     public List<TagPointDataJson> getMultipleCurrentTagPoints(Object requestBody) {
-        EquinixRequest<SmartViewAsset> equinixRequest = this.buildRequest("PostCurrentTagPoints", RequestType.SINGLE, TagPointDataJson.getListTypeRef());
-        Utils.serializeJson(equinixRequest, requestBody);
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        return (List<TagPointDataJson>) (Object) Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<SmartViewAsset> nextPage(PaginatedRequest<SmartViewAsset> equinixRequest) {
-        EquinixResponse<SmartViewAsset> equinixResponse = this.invoke(equinixRequest);
-        Page<SmartViewAsset, SmartViewAssetJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<SmartViewAsset> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return postForType("PostCurrentTagPoints", requestBody, TagPointDataJson.getListTypeRef());
     }
 }

@@ -16,13 +16,11 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -43,7 +41,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClient<BGPPeering> {
+public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeeringJson> implements BGPPeeringClient<BGPPeering> {
 
     /**
      * <p>Constructor for BGPPeeringClientImpl.</p>
@@ -51,7 +49,13 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public BGPPeeringClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "BGPPeering");
+        super(configClient, "NetworkEdge", "BGPPeering", BGPPeeringJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected BGPPeering wrap(BGPPeeringJson json) {
+        return new BGPPeeringWrapper(json, this);
     }
 
     /**
@@ -61,17 +65,12 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
      */
     public Page<BGPPeering, BGPPeeringJson> list(RequestBuilder.BGP requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<BGPPeering> equinixRequest = this.buildRequest("ListBGP", RequestType.PAGINATED, null, qParams, BGPPeeringJson.class);
-        EquinixResponse<BGPPeering> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListBGP", qParams);
     }
 
     /** {@inheritDoc} */
     public BGPPeeringJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequestWithPathParams("GetBGP", RequestType.SINGLE, pParams, BGPPeeringJson.class);
-        EquinixResponse<BGPPeeringJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetBGP", uuid);
     }
 
     /** {@inheritDoc} */
@@ -103,14 +102,5 @@ public class BGPPeeringClientImpl extends PageableBase implements BGPPeeringClie
     /** {@inheritDoc} */
     public BGPPeeringJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<BGPPeering> nextPage(PaginatedRequest<BGPPeering> equinixRequest) {
-        EquinixResponse<BGPPeering> equinixResponse = this.invoke(equinixRequest);
-        Page<BGPPeering, BGPPeeringJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<BGPPeering> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, BGPPeeringWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

@@ -16,50 +16,33 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.LookupClient;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
 import api.equinix.javasdk.customerportal.model.json.LookupLocationJson;
 
-import java.util.Map;
-
-public class LookupClientImpl extends PageableBase implements LookupClient<LookupLocation> {
+public class LookupClientImpl extends ResourceClientBase<LookupLocation, LookupLocationJson> implements LookupClient<LookupLocation> {
 
     public LookupClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Lookup");
+        super(configClient, "CustomerPortal", "Lookup", LookupLocationJson.class);
+    }
+
+    @Override
+    protected LookupLocation wrap(LookupLocationJson json) {
+        return json;
     }
 
     public Page<LookupLocation, LookupLocationJson> listLocations() {
-        EquinixRequest<LookupLocation> equinixRequest = this.buildRequest("ListLocations", RequestType.PAGINATED, LookupLocationJson.class);
-        EquinixResponse<LookupLocation> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListLocations");
     }
 
     public LookupLocationJson getLocationByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<LookupLocationJson> equinixRequest = this.buildRequestWithPathParams("GetLocation", RequestType.SINGLE, pParams, LookupLocationJson.class);
-        EquinixResponse<LookupLocationJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetLocation", uuid);
     }
 
     public Page<LookupLocation, LookupLocationJson> listPatchPanels() {
-        EquinixRequest<LookupLocation> equinixRequest = this.buildRequest("ListPatchPanels", RequestType.PAGINATED, LookupLocationJson.class);
-        EquinixResponse<LookupLocation> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<LookupLocation> nextPage(PaginatedRequest<LookupLocation> equinixRequest) {
-        EquinixResponse<LookupLocation> equinixResponse = this.invoke(equinixRequest);
-        Page<LookupLocation, LookupLocationJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<LookupLocation> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return listPage("ListPatchPanels");
     }
 }

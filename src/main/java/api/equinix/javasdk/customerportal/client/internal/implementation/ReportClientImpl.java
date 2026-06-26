@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ReportClient;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
 
-import java.util.Map;
-
-public class ReportClientImpl extends PageableBase implements ReportClient<Report> {
+public class ReportClientImpl extends ResourceClientBase<Report, ReportJson> implements ReportClient<Report> {
 
     public ReportClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Reports");
+        super(configClient, "CustomerPortal", "Reports", ReportJson.class);
+    }
+
+    @Override
+    protected Report wrap(ReportJson json) {
+        return json;
     }
 
     public Page<Report, ReportJson> list() {
-        EquinixRequest<Report> equinixRequest = this.buildRequest("ListReports", RequestType.PAGINATED, ReportJson.class);
-        EquinixResponse<Report> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListReports");
     }
 
     public ReportJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ReportJson> equinixRequest = this.buildRequestWithPathParams("GetReport", RequestType.SINGLE, pParams, ReportJson.class);
-        EquinixResponse<ReportJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<Report> nextPage(PaginatedRequest<Report> equinixRequest) {
-        EquinixResponse<Report> equinixResponse = this.invoke(equinixRequest);
-        Page<Report, ReportJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Report> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetReport", uuid);
     }
 }

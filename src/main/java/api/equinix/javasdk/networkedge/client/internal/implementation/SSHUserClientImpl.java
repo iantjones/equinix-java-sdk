@@ -16,13 +16,11 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -42,7 +40,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSHUser> {
+public class SSHUserClientImpl extends ResourceClientBase<SSHUser, SSHUserJson> implements SSHUserClient<SSHUser> {
 
     /**
      * <p>Constructor for SSHUserClientImpl.</p>
@@ -50,7 +48,13 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public SSHUserClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "SSHUsers");
+        super(configClient, "NetworkEdge", "SSHUsers", SSHUserJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected SSHUser wrap(SSHUserJson json) {
+        return new SSHUserWrapper(json, this);
     }
 
     /**
@@ -60,17 +64,12 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
      */
     public Page<SSHUser, SSHUserJson> list(RequestBuilder.SSHUser requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequest("ListSSHUsers", RequestType.PAGINATED, null, qParams, SSHUserJson.class);
-        EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListSSHUsers", qParams);
     }
 
     /** {@inheritDoc} */
     public SSHUserJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SSHUserJson> equinixRequest = this.buildRequestWithPathParams("GetSSHUser", RequestType.SINGLE, pParams, SSHUserJson.class);
-        EquinixResponse<SSHUserJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetSSHUser", uuid);
     }
 
     /** {@inheritDoc} */
@@ -119,14 +118,5 @@ public class SSHUserClientImpl extends PageableBase implements SSHUserClient<SSH
     /** {@inheritDoc} */
     public SSHUserJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<SSHUser> nextPage(PaginatedRequest<SSHUser> equinixRequest) {
-        EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
-        Page<SSHUser, SSHUserJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<SSHUser> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, SSHUserWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

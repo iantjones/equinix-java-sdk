@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.SystemAlertClient;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
@@ -32,10 +26,15 @@ import api.equinix.javasdk.ibxsmartview.model.json.SystemAlertJson;
 import java.util.List;
 import java.util.Map;
 
-public class SystemAlertClientImpl extends PageableBase implements SystemAlertClient<SystemAlert> {
+public class SystemAlertClientImpl extends ResourceClientBase<SystemAlert, SystemAlertJson> implements SystemAlertClient<SystemAlert> {
 
     public SystemAlertClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "SystemAlerts");
+        super(configClient, "IBXSmartView", "SystemAlerts", SystemAlertJson.class);
+    }
+
+    @Override
+    protected SystemAlert wrap(SystemAlertJson json) {
+        return json;
     }
 
     public Page<SystemAlert, SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit) {
@@ -46,22 +45,10 @@ public class SystemAlertClientImpl extends PageableBase implements SystemAlertCl
                 "offset", List.of(String.valueOf(offset)),
                 "limit", List.of(String.valueOf(limit))
         );
-        EquinixRequest<SystemAlert> equinixRequest = this.buildRequestWithQueryParams("SearchAlertsGet", RequestType.PAGINATED, qParams, SystemAlertJson.class);
-        EquinixResponse<SystemAlert> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("SearchAlertsGet", qParams);
     }
 
     public Page<SystemAlert, SystemAlertJson> searchPost(Object filterBody) {
-        EquinixRequest<SystemAlert> equinixRequest = this.buildRequest("SearchAlertsPost", RequestType.PAGINATED_POST, SystemAlertJson.class);
-        Utils.serializeJson(equinixRequest, filterBody);
-        EquinixResponse<SystemAlert> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<SystemAlert> nextPage(PaginatedRequest<SystemAlert> equinixRequest) {
-        EquinixResponse<SystemAlert> equinixResponse = this.invoke(equinixRequest);
-        Page<SystemAlert, SystemAlertJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<SystemAlert> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return searchPage("SearchAlertsPost", filterBody);
     }
 }

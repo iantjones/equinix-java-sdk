@@ -16,15 +16,10 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.MetroClient;
 import api.equinix.javasdk.networkedge.model.Metro;
@@ -40,7 +35,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class MetroClientImpl extends PageableBase implements MetroClient<Metro> {
+public class MetroClientImpl extends ResourceClientBase<Metro, MetroJson> implements MetroClient<Metro> {
 
     /**
      * <p>Constructor for MetroClientImpl.</p>
@@ -48,23 +43,18 @@ public class MetroClientImpl extends PageableBase implements MetroClient<Metro> 
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public MetroClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "Metros");
+        super(configClient, "NetworkEdge", "Metros", MetroJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected Metro wrap(MetroJson json) {
+        return new MetroWrapper(json, this);
     }
 
     /** {@inheritDoc} */
     public Page<Metro, MetroJson> list(Region region) {
         Map<String, List<String>> qParams = Utils.singleParamMap("region" , region);
-        EquinixRequest<Metro> equinixRequest = this.buildRequest("ListMetros", RequestType.PAGINATED, null, qParams, MetroJson.class);
-        EquinixResponse<Metro> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<Metro> nextPage(PaginatedRequest<Metro> equinixRequest) {
-        EquinixResponse<Metro> equinixResponse = this.invoke(equinixRequest);
-        Page<Metro, MetroJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Metro> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, MetroWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return listPage("ListMetros", qParams);
     }
 }

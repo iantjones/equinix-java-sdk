@@ -16,13 +16,11 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -44,7 +42,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class BackupClientImpl extends PageableBase implements BackupClient<Backup> {
+public class BackupClientImpl extends ResourceClientBase<Backup, BackupJson> implements BackupClient<Backup> {
 
     /**
      * <p>Constructor for BackupClientImpl.</p>
@@ -52,7 +50,13 @@ public class BackupClientImpl extends PageableBase implements BackupClient<Backu
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public BackupClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "Backups");
+        super(configClient, "NetworkEdge", "Backups", BackupJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected Backup wrap(BackupJson json) {
+        return new BackupWrapper(json, this);
     }
 
     /**
@@ -63,18 +67,12 @@ public class BackupClientImpl extends PageableBase implements BackupClient<Backu
     public Page<Backup, BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         qParams.put("virtualDeviceUuid", Utils.singleParamList(deviceUuid));
-        
-        EquinixRequest<Backup> equinixRequest = this.buildRequest("ListBackups", RequestType.PAGINATED, null, qParams, BackupJson.class);
-        EquinixResponse<Backup> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListBackups", qParams);
     }
 
     /** {@inheritDoc} */
     public BackupJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequestWithPathParams("GetBackup", RequestType.SINGLE, pParams, BackupJson.class);
-        EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetBackup", uuid);
     }
 
     /** {@inheritDoc} */
@@ -138,14 +136,5 @@ public class BackupClientImpl extends PageableBase implements BackupClient<Backu
     /** {@inheritDoc} */
     public BackupJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<Backup> nextPage(PaginatedRequest<Backup> equinixRequest) {
-        EquinixResponse<Backup> equinixResponse = this.invoke(equinixRequest);
-        Page<Backup, BackupJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Backup> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, BackupWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

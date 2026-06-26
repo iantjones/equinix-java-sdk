@@ -16,13 +16,10 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -42,7 +39,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class AccountClientImpl extends PageableBase implements AccountClient<Account> {
+public class AccountClientImpl extends ResourceClientBase<Account, AccountJson> implements AccountClient<Account> {
 
     /**
      * <p>Constructor for AccountClientImpl.</p>
@@ -50,7 +47,13 @@ public class AccountClientImpl extends PageableBase implements AccountClient<Acc
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public AccountClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "Accounts");
+        super(configClient, "NetworkEdge", "Accounts", AccountJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected Account wrap(AccountJson json) {
+        return new AccountWrapper(json, this);
     }
 
     /** {@inheritDoc} */
@@ -68,14 +71,5 @@ public class AccountClientImpl extends PageableBase implements AccountClient<Acc
         EquinixRequest<BackupJson> equinixRequest = this.buildRequestWithQueryParams("GetOrderSummary", RequestType.SINGLE, qParams);
         EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
         return Utils.handleByteResponse(equinixResponse);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<Account> nextPage(PaginatedRequest<Account> equinixRequest) {
-        EquinixResponse<Account> equinixResponse = this.invoke(equinixRequest);
-        Page<Account, AccountJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Account> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, AccountWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

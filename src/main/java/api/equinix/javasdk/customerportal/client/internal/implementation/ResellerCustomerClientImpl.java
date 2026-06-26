@@ -16,14 +16,12 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ResellerCustomerClient;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
@@ -34,24 +32,23 @@ import api.equinix.javasdk.customerportal.model.wrappers.ResellerCustomerWrapper
 
 import java.util.Map;
 
-public class ResellerCustomerClientImpl extends PageableBase implements ResellerCustomerClient<ResellerCustomer> {
+public class ResellerCustomerClientImpl extends ResourceClientBase<ResellerCustomer, ResellerCustomerJson> implements ResellerCustomerClient<ResellerCustomer> {
 
     public ResellerCustomerClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Resellers");
+        super(configClient, "CustomerPortal", "Resellers", ResellerCustomerJson.class);
+    }
+
+    @Override
+    protected ResellerCustomer wrap(ResellerCustomerJson json) {
+        return new ResellerCustomerWrapper(json, this);
     }
 
     public Page<ResellerCustomer, ResellerCustomerJson> list(String accountNumber) {
-        Map<String, String> pParams = Map.of("accountNumber", accountNumber);
-        EquinixRequest<ResellerCustomer> equinixRequest = this.buildRequestWithPathParams("ListResellerCustomers", RequestType.PAGINATED, pParams, ResellerCustomerJson.class);
-        EquinixResponse<ResellerCustomer> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPagePath("ListResellerCustomers", Map.of("accountNumber", accountNumber));
     }
 
     public ResellerCustomerJson getResellerCustomer(String accountNumber, String customerAccountNumber) {
-        Map<String, String> pParams = Map.of("accountNumber", accountNumber, "customerAccountNumber", customerAccountNumber);
-        EquinixRequest<ResellerCustomer> equinixRequest = this.buildRequestWithPathParams("GetResellerCustomer", RequestType.SINGLE, pParams, ResellerCustomerJson.class);
-        EquinixResponse<ResellerCustomer> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetResellerCustomer", Map.of("accountNumber", accountNumber, "customerAccountNumber", customerAccountNumber));
     }
 
     public Boolean create(String accountNumber, ResellerCustomerCreatorJson resellerCustomerCreatorJson) {
@@ -83,12 +80,5 @@ public class ResellerCustomerClientImpl extends PageableBase implements Reseller
         EquinixResponse<ResellerCustomerJson> equinixResponse = this.invoke(equinixRequest);
 
         return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<ResellerCustomer> nextPage(PaginatedRequest<ResellerCustomer> equinixRequest) {
-        EquinixResponse<ResellerCustomer> equinixResponse = this.invoke(equinixRequest);
-        Page<ResellerCustomer, ResellerCustomerJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<ResellerCustomer> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ResellerCustomerWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

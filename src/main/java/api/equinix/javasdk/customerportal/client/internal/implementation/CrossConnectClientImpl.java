@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.CrossConnectClient;
 import api.equinix.javasdk.customerportal.model.CrossConnect;
@@ -31,57 +25,38 @@ import api.equinix.javasdk.customerportal.model.json.CrossConnectJson;
 import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.CrossConnectWrapper;
 
-import java.util.Map;
-
-public class CrossConnectClientImpl extends PageableBase implements CrossConnectClient<CrossConnect> {
+public class CrossConnectClientImpl extends ResourceClientBase<CrossConnect, CrossConnectJson> implements CrossConnectClient<CrossConnect> {
 
     public CrossConnectClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "CrossConnects");
+        super(configClient, "CustomerPortal", "CrossConnects", CrossConnectJson.class);
+    }
+
+    @Override
+    protected CrossConnect wrap(CrossConnectJson json) {
+        return new CrossConnectWrapper(json, this);
     }
 
     public Page<CrossConnect, CrossConnectJson> list() {
-        EquinixRequest<CrossConnect> equinixRequest = this.buildRequest("ListCrossConnects", RequestType.PAGINATED, CrossConnectJson.class);
-        EquinixResponse<CrossConnect> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListCrossConnects");
     }
 
     public CrossConnectJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequestWithPathParams("GetCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.class);
-        EquinixResponse<CrossConnectJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetCrossConnect", uuid);
     }
 
     public CrossConnectJson create(CrossConnectCreatorJson crossConnectCreatorJson) {
-        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequest("CreateCrossConnect", RequestType.SINGLE, CrossConnectJson.class);
-        Utils.serializeJson(equinixRequest, crossConnectCreatorJson);
-        EquinixResponse<CrossConnectJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("CreateCrossConnect", crossConnectCreatorJson);
     }
 
     public CrossConnectJson update(String uuid, CrossConnectCreatorJson crossConnectCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CrossConnectJson> equinixRequest = this.buildRequestWithPathParams("UpdateCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.class);
-        Utils.serializeJson(equinixRequest, crossConnectCreatorJson);
-        EquinixResponse<CrossConnectJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateCrossConnect", uuid, crossConnectCreatorJson);
     }
 
     public CrossConnectJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<CrossConnect> equinixRequest = this.buildRequestWithPathParams("DeleteCrossConnect", RequestType.SINGLE, pParams, CrossConnectJson.class);
-        EquinixResponse<CrossConnect> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteCrossConnect", uuid);
     }
 
     public CrossConnectJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<CrossConnect> nextPage(PaginatedRequest<CrossConnect> equinixRequest) {
-        EquinixResponse<CrossConnect> equinixResponse = this.invoke(equinixRequest);
-        Page<CrossConnect, CrossConnectJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<CrossConnect> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, CrossConnectWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

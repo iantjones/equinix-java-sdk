@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.DigitalLOAClient;
 import api.equinix.javasdk.customerportal.model.DigitalLOA;
@@ -31,42 +25,30 @@ import api.equinix.javasdk.customerportal.model.json.DigitalLOAJson;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLOACreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.DigitalLOAWrapper;
 
-import java.util.Map;
-
-public class DigitalLOAClientImpl extends PageableBase implements DigitalLOAClient<DigitalLOA> {
+public class DigitalLOAClientImpl extends ResourceClientBase<DigitalLOA, DigitalLOAJson> implements DigitalLOAClient<DigitalLOA> {
 
     public DigitalLOAClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "DigitalLOA");
+        super(configClient, "CustomerPortal", "DigitalLOA", DigitalLOAJson.class);
+    }
+
+    @Override
+    protected DigitalLOA wrap(DigitalLOAJson json) {
+        return new DigitalLOAWrapper(json, this);
     }
 
     public Page<DigitalLOA, DigitalLOAJson> list() {
-        EquinixRequest<DigitalLOA> equinixRequest = this.buildRequest("ListDigitalLOAs", RequestType.PAGINATED, DigitalLOAJson.class);
-        EquinixResponse<DigitalLOA> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListDigitalLOAs");
     }
 
     public DigitalLOAJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<DigitalLOAJson> equinixRequest = this.buildRequestWithPathParams("GetDigitalLOA", RequestType.SINGLE, pParams, DigitalLOAJson.class);
-        EquinixResponse<DigitalLOAJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetDigitalLOA", uuid);
     }
 
     public DigitalLOAJson create(DigitalLOACreatorJson digitalLOACreatorJson) {
-        EquinixRequest<DigitalLOAJson> equinixRequest = this.buildRequest("CreateDigitalLOA", RequestType.SINGLE, DigitalLOAJson.class);
-        Utils.serializeJson(equinixRequest, digitalLOACreatorJson);
-        EquinixResponse<DigitalLOAJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("CreateDigitalLOA", digitalLOACreatorJson);
     }
 
     public DigitalLOAJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<DigitalLOA> nextPage(PaginatedRequest<DigitalLOA> equinixRequest) {
-        EquinixResponse<DigitalLOA> equinixResponse = this.invoke(equinixRequest);
-        Page<DigitalLOA, DigitalLOAJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<DigitalLOA> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, DigitalLOAWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }
