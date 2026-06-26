@@ -16,11 +16,14 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleCreatorJson;
+
+import java.util.List;
 
 public interface RouteAggregationRuleClient<T> extends Pageable<T> {
 
@@ -30,7 +33,7 @@ public interface RouteAggregationRuleClient<T> extends Pageable<T> {
 
     RouteAggregationRuleJson create(String routeAggregationId, RouteAggregationRuleCreatorJson routeAggregationRuleCreatorJson);
 
-    RouteAggregationRuleJson update(String routeAggregationId, String uuid, Object updates);
+    RouteAggregationRuleJson update(String routeAggregationId, String uuid, List<PatchOperation> operations);
 
     RouteAggregationRuleJson delete(String routeAggregationId, String uuid);
 

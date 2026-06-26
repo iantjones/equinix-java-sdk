@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RouteAggregationRuleClientImpl;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationRuleJson;
+import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class RouteAggregationRuleWrapper extends ResourceImpl<RouteAggregationRu
         this.serviceClient = serviceClient;
     }
 
+    public RouteAggregationRuleOperator.RouteAggregationRuleUpdater update(String routeAggregationId) {
+        return new RouteAggregationRuleOperator((RouteAggregationRuleClientImpl) this.serviceClient, routeAggregationId).update(this.getUuid());
+    }
+
     public Boolean delete(String routeAggregationId) {
         this.jsonObject = ((RouteAggregationRuleClientImpl)this.serviceClient).delete(routeAggregationId, this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class RouteAggregationRuleWrapper extends ResourceImpl<RouteAggregationRu
     }
 
     private interface RouteAggregationRuleMutability {
+        RouteAggregationRuleOperator.RouteAggregationRuleUpdater update(String routeAggregationId);
         Boolean delete(String routeAggregationId);
         void refresh(String routeAggregationId);
     }

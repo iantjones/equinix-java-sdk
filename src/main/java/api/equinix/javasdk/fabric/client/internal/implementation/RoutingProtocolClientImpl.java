@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RoutingProtocolClient;
@@ -50,8 +51,10 @@ public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtoco
         return postOne("PostRoutingProtocol", Map.of("connectionId", connectionId), routingProtocolCreatorJson);
     }
 
-    public RoutingProtocolJson update(String connectionId, String uuid, Object updates) {
-        return updateOne("PatchRoutingProtocol", Map.of("connectionId", connectionId, "uuid", uuid), updates);
+    public RoutingProtocolJson update(String connectionId, String uuid, java.util.List<PatchOperation> operations) {
+        // PATCH /connections/{connectionId}/routingProtocols/{uuid} with an op/path/value array
+        // sent as application/json (not json-patch+json), so updateOne (default content-type) is correct here.
+        return updateOne("UpdateRoutingProtocol", Map.of("connectionId", connectionId, "uuid", uuid), operations);
     }
 
     public RoutingProtocolJson delete(String connectionId, String uuid) {

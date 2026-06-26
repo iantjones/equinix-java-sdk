@@ -1,0 +1,32 @@
+{
+  "uuid": "f6a7b8c9-d0e1-2345-fabc-567890123def",
+  "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd/subscriptions/f6a7b8c9-d0e1-2345-fabc-567890123def",
+  "name": "Production-Splunk-Subscription",
+  "type": "STREAM_SUBSCRIPTION",
+  "state": "PROVISIONED",
+  "description": "Delivers production telemetry events to the Splunk HEC sink",
+  "enabled": true,
+  "sink": {
+    "type": "SPLUNK_HEC",
+    "uri": "https://splunk.example.com:8088/services/collector",
+    "credential": {
+      "type": "ACCESS_TOKEN",
+      "accessToken": "test-access-token",
+      "integrationKey": "test-integration-key"
+    }
+  },
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-05-20T13:00:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-11-01T09:15:00.000Z",
+    "deletedBy": null,
+    "deletedByFullName": null,
+    "deletedByEmail": null,
+    "deletedDateTime": null
+  }
+}

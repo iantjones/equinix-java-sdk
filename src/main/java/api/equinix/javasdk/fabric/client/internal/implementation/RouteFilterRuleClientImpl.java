@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteFilterRuleClient;
@@ -25,6 +26,7 @@ import api.equinix.javasdk.fabric.model.json.RouteFilterRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterRuleWrapper;
 
+import java.util.List;
 import java.util.Map;
 
 public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRule, RouteFilterRuleJson> implements RouteFilterRuleClient<RouteFilterRule> {
@@ -48,6 +50,12 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
 
     public RouteFilterRuleJson create(String routeFilterId, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson) {
         return postOne("PostRouteFilterRule", Map.of("routeFilterId", routeFilterId), routeFilterRuleCreatorJson);
+    }
+
+    public RouteFilterRuleJson update(String routeFilterId, String uuid, List<PatchOperation> operations) {
+        // PATCH /routeFilters/{routeFilterId}/routeFilterRules/{uuid} with an op/path/value array sent
+        // as application/json (not json-patch+json), so updateOne (default content-type) is correct here.
+        return updateOne("UpdateRouteFilterRule", Map.of("routeFilterId", routeFilterId, "uuid", uuid), operations);
     }
 
     public RouteFilterRuleJson delete(String routeFilterId, String uuid) {

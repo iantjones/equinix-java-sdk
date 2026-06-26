@@ -23,6 +23,8 @@ import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.Stream;
 import api.equinix.javasdk.fabric.model.StreamSubscription;
+import api.equinix.javasdk.fabric.model.implementation.StreamSink;
+import api.equinix.javasdk.fabric.model.implementation.StreamSinkCredential;
 import api.equinix.javasdk.fabric.model.json.StreamSubscriptionJson;
 import api.equinix.javasdk.fabric.model.wrappers.StreamSubscriptionWrapper;
 import lombok.Getter;
@@ -61,10 +63,42 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         return create(stream.getUuid());
     }
 
+    /**
+     * <p>Begins a fluent full-body update of an existing stream subscription, pre-populated with its
+     * current state. Subscriptions are updated with a full {@code PUT}; the returned builder is seeded
+     * from {@code existing} so callers need only change the fields they want, then call {@code save()}.</p>
+     *
+     * @param streamId a {@link java.lang.String} object identifying the parent stream.
+     * @param existing the current JSON state of the stream subscription to update.
+     * @return a seeded {@link api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator.StreamSubscriptionBuilder} object.
+     */
+    public StreamSubscriptionBuilder update(String streamId, StreamSubscriptionJson existing) {
+        StreamSubscriptionBuilder builder = new StreamSubscriptionBuilder(streamId);
+        builder.targetUuid = existing.getUuid();
+        builder.type = existing.getType();
+        builder.name = existing.getName();
+        builder.description = existing.getDescription();
+        builder.enabled = existing.getEnabled();
+
+        StreamSink sink = existing.getSink();
+        if (sink != null) {
+            builder.sinkType = sink.getType();
+            builder.sinkUri = sink.getUri();
+            StreamSinkCredential credential = sink.getCredential();
+            if (credential != null) {
+                builder.credentialType = credential.getType();
+                builder.accessToken = credential.getAccessToken();
+                builder.integrationKey = credential.getIntegrationKey();
+            }
+        }
+        return builder;
+    }
+
     @Getter
     public class StreamSubscriptionBuilder {
 
         private final String streamId;
+        private String targetUuid;
         private StreamSubscriptionType type;
         private String name;
         private String description;
@@ -125,8 +159,27 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         }
 
         public StreamSubscription create() {
+            if (targetUuid != null) {
+                throw new IllegalStateException("This builder targets an existing stream subscription; call save() to update, not create().");
+            }
             StreamSubscriptionCreatorJson streamSubscriptionCreatorJson = new StreamSubscriptionCreatorJson(this);
             StreamSubscriptionJson streamSubscriptionJson = ((StreamSubscriptionClientImpl) StreamSubscriptionOperator.this.getServiceClient()).create(this.streamId, streamSubscriptionCreatorJson);
+            return new StreamSubscriptionWrapper(streamSubscriptionJson, StreamSubscriptionOperator.this.getServiceClient());
+        }
+
+        /**
+         * Applies the accumulated changes to the existing stream subscription (full-body {@code PUT})
+         * and returns the model refreshed from the server. Only valid on a builder obtained via
+         * {@link StreamSubscriptionOperator#update(String, StreamSubscriptionJson)}.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.StreamSubscription}
+         */
+        public StreamSubscription save() {
+            if (targetUuid == null) {
+                throw new IllegalStateException("save() requires update(...); use create() for new stream subscriptions.");
+            }
+            StreamSubscriptionCreatorJson streamSubscriptionCreatorJson = new StreamSubscriptionCreatorJson(this);
+            StreamSubscriptionJson streamSubscriptionJson = ((StreamSubscriptionClientImpl) StreamSubscriptionOperator.this.getServiceClient()).update(this.streamId, targetUuid, streamSubscriptionCreatorJson);
             return new StreamSubscriptionWrapper(streamSubscriptionJson, StreamSubscriptionOperator.this.getServiceClient());
         }
     }

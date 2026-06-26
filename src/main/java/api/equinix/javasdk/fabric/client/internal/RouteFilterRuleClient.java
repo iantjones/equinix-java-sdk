@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
@@ -29,6 +30,8 @@ public interface RouteFilterRuleClient<T> extends Pageable<T> {
     RouteFilterRuleJson getByUuid(String routeFilterId, String uuid);
 
     RouteFilterRuleJson create(String routeFilterId, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson);
+
+    RouteFilterRuleJson update(String routeFilterId, String uuid, java.util.List<PatchOperation> operations);
 
     RouteFilterRuleJson delete(String routeFilterId, String uuid);
 

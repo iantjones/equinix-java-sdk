@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationRuleClient;
@@ -25,6 +26,7 @@ import api.equinix.javasdk.fabric.model.json.RouteAggregationRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationRuleWrapper;
 
+import java.util.List;
 import java.util.Map;
 
 public class RouteAggregationRuleClientImpl extends ResourceClientBase<RouteAggregationRule, RouteAggregationRuleJson> implements RouteAggregationRuleClient<RouteAggregationRule> {
@@ -50,8 +52,8 @@ public class RouteAggregationRuleClientImpl extends ResourceClientBase<RouteAggr
         return postOne("PostRouteAggregationRule", Map.of("routeAggregationId", routeAggregationId), routeAggregationRuleCreatorJson);
     }
 
-    public RouteAggregationRuleJson update(String routeAggregationId, String uuid, Object updates) {
-        return updateOne("PatchRouteAggregationRule", Map.of("routeAggregationId", routeAggregationId, "uuid", uuid), updates);
+    public RouteAggregationRuleJson update(String routeAggregationId, String uuid, List<PatchOperation> operations) {
+        return updateOne("UpdateRouteAggregationRule", Map.of("routeAggregationId", routeAggregationId, "uuid", uuid), operations);
     }
 
     public RouteAggregationRuleJson delete(String routeAggregationId, String uuid) {

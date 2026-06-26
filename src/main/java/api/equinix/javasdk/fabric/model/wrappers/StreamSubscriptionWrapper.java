@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.StreamSubscriptionClientImpl;
 import api.equinix.javasdk.fabric.model.StreamSubscription;
 import api.equinix.javasdk.fabric.model.json.StreamSubscriptionJson;
+import api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class StreamSubscriptionWrapper extends ResourceImpl<StreamSubscription> 
         this.serviceClient = serviceClient;
     }
 
+    public StreamSubscriptionOperator.StreamSubscriptionBuilder update(String streamId) {
+        return new StreamSubscriptionOperator(this.serviceClient).update(streamId, this.jsonObject);
+    }
+
     public Boolean delete(String streamId) {
         this.jsonObject = ((StreamSubscriptionClientImpl)this.serviceClient).delete(streamId, this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class StreamSubscriptionWrapper extends ResourceImpl<StreamSubscription> 
     }
 
     private interface StreamSubscriptionMutability {
+        StreamSubscriptionOperator.StreamSubscriptionBuilder update(String streamId);
         Boolean delete(String streamId);
         void refresh(String streamId);
     }

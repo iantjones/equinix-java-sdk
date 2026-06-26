@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.fabric.enums.RouteAggregationRuleState;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleOperator;
 
 public interface RouteAggregationRule {
 
@@ -39,6 +40,15 @@ public interface RouteAggregationRule {
     ChangeLog getChangeLog();
 
     Change getChange();
+
+    /**
+     * Begins a fluent update of this route aggregation rule, e.g.
+     * {@code rule.update(routeAggregationId).name("New-Name").save()}.
+     *
+     * @param routeAggregationId the unique identifier of the parent route aggregation
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleOperator.RouteAggregationRuleUpdater}
+     */
+    RouteAggregationRuleOperator.RouteAggregationRuleUpdater update(String routeAggregationId);
 
     Boolean delete(String routeAggregationId);
 
