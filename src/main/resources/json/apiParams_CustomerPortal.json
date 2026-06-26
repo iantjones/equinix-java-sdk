@@ -191,25 +191,6 @@
           }
         }
       },
-      "SupportCases": {
-        "rootUri": "support/cases",
-        "serviceEndpoints": {
-          "ListSupportCases": {
-            "httpMethod": "GET"
-          },
-          "GetSupportCase": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "CreateSupportCase": {
-            "httpMethod": "POST"
-          },
-          "UpdateSupportCase": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
-          }
-        }
-      },
       "Quotes": {
         "rootUri": "quotes",
         "serviceEndpoints": {
@@ -300,22 +281,6 @@
           }
         }
       },
-      "DigitalLOA": {
-        "rootUri": "digitalLoa",
-        "defaultVersion": 1,
-        "serviceEndpoints": {
-          "ListDigitalLOAs": {
-            "httpMethod": "GET"
-          },
-          "GetDigitalLOA": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "CreateDigitalLOA": {
-            "httpMethod": "POST"
-          }
-        }
-      },
       "SecureCabinets": {
         "rootUri": "secureCabinets",
         "defaultVersion": 1,
@@ -332,30 +297,6 @@
           },
           "UpdateSecureCabinet": {
             "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
-          }
-        }
-      },
-      "UnifiedNotifications": {
-        "rootUri": "notifications/unified",
-        "serviceEndpoints": {
-          "ListUnifiedNotifications": {
-            "httpMethod": "GET"
-          },
-          "GetUnifiedNotification": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          }
-        }
-      },
-      "BillingCredits": {
-        "rootUri": "billing/credits",
-        "serviceEndpoints": {
-          "ListBillingCredits": {
-            "httpMethod": "GET"
-          },
-          "GetBillingCredit": {
-            "httpMethod": "GET",
             "requestUri": "{$uuid}"
           }
         }

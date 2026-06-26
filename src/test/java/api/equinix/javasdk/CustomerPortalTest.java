@@ -178,23 +178,6 @@ class CustomerPortalTest {
     }
 
     @Test
-    void supportCases() {
-        try {
-            PaginatedList<SupportCase> supportCases = customerPortal.supportCases().list();
-            assertNotNull(supportCases);
-            assertTrue(supportCases.size() >= 0);
-
-            if (supportCases.size() > 0) {
-                SupportCase supportCase = customerPortal.supportCases().getByUuid(supportCases.get(0).getUuid());
-                assertNotNull(supportCase);
-                assertEquals(supportCases.get(0).getUuid(), supportCase.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Support cases test skipped: " + e.getMessage());
-        }
-    }
-
-    @Test
     void quotes() {
         try {
             PaginatedList<Quote> quotes = customerPortal.quotes().list();
@@ -291,23 +274,6 @@ class CustomerPortalTest {
     }
 
     @Test
-    void digitalLOAs() {
-        try {
-            PaginatedList<DigitalLOA> digitalLOAs = customerPortal.digitalLOAs().list();
-            assertNotNull(digitalLOAs);
-            assertTrue(digitalLOAs.size() >= 0);
-
-            if (digitalLOAs.size() > 0) {
-                DigitalLOA digitalLOA = customerPortal.digitalLOAs().getByUuid(digitalLOAs.get(0).getUuid());
-                assertNotNull(digitalLOA);
-                assertEquals(digitalLOAs.get(0).getUuid(), digitalLOA.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Digital LOAs test skipped: " + e.getMessage());
-        }
-    }
-
-    @Test
     void secureCabinets() {
         try {
             PaginatedList<SecureCabinet> secureCabinets = customerPortal.secureCabinets().list();
@@ -324,37 +290,4 @@ class CustomerPortalTest {
         }
     }
 
-    @Test
-    void unifiedNotifications() {
-        try {
-            PaginatedList<UnifiedNotification> notifications = customerPortal.unifiedNotifications().list();
-            assertNotNull(notifications);
-            assertTrue(notifications.size() >= 0);
-
-            if (notifications.size() > 0) {
-                UnifiedNotification notification = customerPortal.unifiedNotifications().getByUuid(notifications.get(0).getUuid());
-                assertNotNull(notification);
-                assertEquals(notifications.get(0).getUuid(), notification.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Unified notifications test skipped: " + e.getMessage());
-        }
-    }
-
-    @Test
-    void billingCredits() {
-        try {
-            PaginatedList<BillingCredit> billingCredits = customerPortal.billingCredits().list();
-            assertNotNull(billingCredits);
-            assertTrue(billingCredits.size() >= 0);
-
-            if (billingCredits.size() > 0) {
-                BillingCredit billingCredit = customerPortal.billingCredits().getByUuid(billingCredits.get(0).getUuid());
-                assertNotNull(billingCredit);
-                assertEquals(billingCredits.get(0).getUuid(), billingCredit.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Billing credits test skipped: " + e.getMessage());
-        }
-    }
 }

@@ -31,17 +31,13 @@ import api.equinix.javasdk.customerportal.client.internal.implementation.Trouble
 import api.equinix.javasdk.customerportal.client.internal.implementation.WorkVisitClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.NotificationClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.AssetClientImpl;
-import api.equinix.javasdk.customerportal.client.internal.implementation.SupportCaseClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.QuoteClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.SupportPlanClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.OrderHistoryClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.LookupClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.AttachmentClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.ReportClientImpl;
-import api.equinix.javasdk.customerportal.client.internal.implementation.DigitalLOAClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.SecureCabinetClientImpl;
-import api.equinix.javasdk.customerportal.client.internal.implementation.UnifiedNotificationClientImpl;
-import api.equinix.javasdk.customerportal.client.internal.implementation.BillingCreditClientImpl;
 import lombok.Getter;
 
 @Getter
@@ -71,7 +67,6 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
 
     private final AssetClientImpl assetClient;
 
-    private final SupportCaseClientImpl supportCaseClient;
 
     private final QuoteClientImpl quoteClient;
 
@@ -85,13 +80,10 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
 
     private final ReportClientImpl reportClient;
 
-    private final DigitalLOAClientImpl digitalLOAClient;
 
     private final SecureCabinetClientImpl secureCabinetClient;
 
-    private final UnifiedNotificationClientImpl unifiedNotificationClient;
 
-    private final BillingCreditClientImpl billingCreditClient;
 
     public CustomerPortalConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
@@ -107,16 +99,12 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
         this.shipmentClient = new ShipmentClientImpl(this);
         this.notificationClient = new NotificationClientImpl(this);
         this.assetClient = new AssetClientImpl(this);
-        this.supportCaseClient = new SupportCaseClientImpl(this);
         this.quoteClient = new QuoteClientImpl(this);
         this.supportPlanClient = new SupportPlanClientImpl(this);
         this.orderHistoryClient = new OrderHistoryClientImpl(this);
         this.lookupClient = new LookupClientImpl(this);
         this.attachmentClient = new AttachmentClientImpl(this);
         this.reportClient = new ReportClientImpl(this);
-        this.digitalLOAClient = new DigitalLOAClientImpl(this);
         this.secureCabinetClient = new SecureCabinetClientImpl(this);
-        this.unifiedNotificationClient = new UnifiedNotificationClientImpl(this);
-        this.billingCreditClient = new BillingCreditClientImpl(this);
     }
 }

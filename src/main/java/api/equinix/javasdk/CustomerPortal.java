@@ -29,17 +29,13 @@ import api.equinix.javasdk.customerportal.client.TroubleTickets;
 import api.equinix.javasdk.customerportal.client.WorkVisits;
 import api.equinix.javasdk.customerportal.client.Notifications;
 import api.equinix.javasdk.customerportal.client.Assets;
-import api.equinix.javasdk.customerportal.client.SupportCases;
 import api.equinix.javasdk.customerportal.client.Quotes;
 import api.equinix.javasdk.customerportal.client.SupportPlans;
 import api.equinix.javasdk.customerportal.client.OrderHistory;
 import api.equinix.javasdk.customerportal.client.Lookups;
 import api.equinix.javasdk.customerportal.client.Attachments;
 import api.equinix.javasdk.customerportal.client.Reports;
-import api.equinix.javasdk.customerportal.client.DigitalLOAs;
 import api.equinix.javasdk.customerportal.client.SecureCabinets;
-import api.equinix.javasdk.customerportal.client.UnifiedNotifications;
-import api.equinix.javasdk.customerportal.client.BillingCredits;
 import api.equinix.javasdk.customerportal.client.implementation.CrossConnectsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.implementation.InvoicesImpl;
@@ -51,17 +47,13 @@ import api.equinix.javasdk.customerportal.client.implementation.TroubleTicketsIm
 import api.equinix.javasdk.customerportal.client.implementation.WorkVisitsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.NotificationsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.AssetsImpl;
-import api.equinix.javasdk.customerportal.client.implementation.SupportCasesImpl;
 import api.equinix.javasdk.customerportal.client.implementation.QuotesImpl;
 import api.equinix.javasdk.customerportal.client.implementation.SupportPlansImpl;
 import api.equinix.javasdk.customerportal.client.implementation.OrderHistoryImpl;
 import api.equinix.javasdk.customerportal.client.implementation.LookupsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.AttachmentsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.ReportsImpl;
-import api.equinix.javasdk.customerportal.client.implementation.DigitalLOAsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.SecureCabinetsImpl;
-import api.equinix.javasdk.customerportal.client.implementation.UnifiedNotificationsImpl;
-import api.equinix.javasdk.customerportal.client.implementation.BillingCreditsImpl;
 
 /**
  * The primary entry point for accessing Equinix Customer Portal APIs.
@@ -117,7 +109,6 @@ public final class CustomerPortal extends EquinixClient implements Service {
 
     private Assets assets;
 
-    private SupportCases supportCases;
 
     private Quotes quotes;
 
@@ -131,13 +122,10 @@ public final class CustomerPortal extends EquinixClient implements Service {
 
     private Reports reports;
 
-    private DigitalLOAs digitalLOAs;
 
     private SecureCabinets secureCabinets;
 
-    private UnifiedNotifications unifiedNotifications;
 
-    private BillingCredits billingCredits;
 
     final private CustomerPortalConfig customerPortalConfig;
 
@@ -306,19 +294,6 @@ public final class CustomerPortal extends EquinixClient implements Service {
         return assets;
     }
 
-    /**
-     * Returns the client for managing support cases with Equinix customer support.
-     * Support cases provide a formal channel for resolving service issues, requesting
-     * assistance, and tracking interactions with the Equinix support team.
-     *
-     * @return the {@link SupportCases} client for support case operations
-     */
-    public SupportCases supportCases() {
-        if (this.supportCases == null) {
-            this.supportCases = new SupportCasesImpl(this.customerPortalConfig.getSupportCaseClient(), this);
-        }
-        return supportCases;
-    }
 
     /**
      * Returns the client for requesting and managing service quotes. Quotes provide
@@ -405,20 +380,6 @@ public final class CustomerPortal extends EquinixClient implements Service {
     }
 
     /**
-     * Returns the client for managing digital Letters of Authorization for cross-connects.
-     * Digital LOAs are electronic documents that authorize Equinix to provision physical
-     * cross-connect cabling on behalf of the customer.
-     *
-     * @return the {@link DigitalLOAs} client for digital LOA operations
-     */
-    public DigitalLOAs digitalLOAs() {
-        if (this.digitalLOAs == null) {
-            this.digitalLOAs = new DigitalLOAsImpl(this.customerPortalConfig.getDigitalLOAClient(), this);
-        }
-        return digitalLOAs;
-    }
-
-    /**
      * Returns the client for managing secure cabinet access and configurations. Secure
      * cabinets provide enhanced physical security controls for sensitive equipment
      * within Equinix colocation facilities.
@@ -430,33 +391,5 @@ public final class CustomerPortal extends EquinixClient implements Service {
             this.secureCabinets = new SecureCabinetsImpl(this.customerPortalConfig.getSecureCabinetClient(), this);
         }
         return secureCabinets;
-    }
-
-    /**
-     * Returns the client for managing unified notification subscriptions across portal
-     * resources. Unified notifications provide a consolidated subscription model for
-     * receiving alerts from multiple resource types through a single configuration.
-     *
-     * @return the {@link UnifiedNotifications} client for unified notification operations
-     */
-    public UnifiedNotifications unifiedNotifications() {
-        if (this.unifiedNotifications == null) {
-            this.unifiedNotifications = new UnifiedNotificationsImpl(this.customerPortalConfig.getUnifiedNotificationClient(), this);
-        }
-        return unifiedNotifications;
-    }
-
-    /**
-     * Returns the client for accessing billing credit information and history. Billing
-     * credits represent monetary adjustments applied to customer accounts, such as
-     * service-level agreement credits or promotional discounts.
-     *
-     * @return the {@link BillingCredits} client for billing credit operations
-     */
-    public BillingCredits billingCredits() {
-        if (this.billingCredits == null) {
-            this.billingCredits = new BillingCreditsImpl(this.customerPortalConfig.getBillingCreditClient(), this);
-        }
-        return billingCredits;
     }
 }
