@@ -292,13 +292,13 @@ class FabricCloudRouterScenarioTest extends IntegrationTestBase {
             Assumptions.assumeTrue(false, "RouteFilter search failed: " + e.getMessage());
         }
 
-        // List RouteAggregations
+        // Search RouteAggregations
         try {
-            PaginatedList<RouteAggregation> aggregations = timedCall("Fabric", "list", "RouteAggregation", "GET",
-                    () -> fabric.routeAggregations().list());
-            assertNotNull(aggregations, "RouteAggregation list should return results");
+            PaginatedFilteredList<RouteAggregation> aggregations = timedCall("Fabric", "search", "RouteAggregation", "POST",
+                    () -> fabric.routeAggregations().search());
+            assertNotNull(aggregations, "RouteAggregation search should return results");
         } catch (Exception e) {
-            Assumptions.assumeTrue(false, "RouteAggregation list failed: " + e.getMessage());
+            Assumptions.assumeTrue(false, "RouteAggregation search failed: " + e.getMessage());
         }
     }
 

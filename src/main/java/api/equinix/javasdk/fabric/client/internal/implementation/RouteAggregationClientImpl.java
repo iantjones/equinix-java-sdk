@@ -19,9 +19,12 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationClient;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationWrapper;
@@ -39,8 +42,8 @@ public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregat
         return new RouteAggregationWrapper(json, this);
     }
 
-    public Page<RouteAggregation, RouteAggregationJson> list() {
-        return listPage("GetRouteAggregations");
+    public Page<RouteAggregation, RouteAggregationJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage("SearchRouteAggregations", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public RouteAggregationJson getByUuid(String uuid) {
