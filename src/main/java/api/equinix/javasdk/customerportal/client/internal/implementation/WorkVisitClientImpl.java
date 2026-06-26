@@ -45,7 +45,7 @@ public class WorkVisitClientImpl extends ResourceClientBase<WorkVisit, WorkVisit
     }
 
     public WorkVisitJson create(WorkVisitCreatorJson workVisitCreatorJson) {
-        return postOne("PostWorkVisit", workVisitCreatorJson);
+        return postOne("CreateWorkVisit", workVisitCreatorJson);
     }
 
     public WorkVisitJson update(String uuid, WorkVisitCreatorJson workVisitCreatorJson) {

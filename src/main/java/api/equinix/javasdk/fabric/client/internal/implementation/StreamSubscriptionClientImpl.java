@@ -39,7 +39,7 @@ public class StreamSubscriptionClientImpl extends ResourceClientBase<StreamSubsc
     }
 
     public Page<StreamSubscription, StreamSubscriptionJson> list(String streamId) {
-        return listPagePath("ListStreamSubscriptions", Map.of("streamId", streamId));
+        return listPagePath("GetStreamSubscriptions", Map.of("streamId", streamId));
     }
 
     public StreamSubscriptionJson getByUuid(String streamId, String uuid) {

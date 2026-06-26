@@ -45,7 +45,7 @@ public class TroubleTicketClientImpl extends ResourceClientBase<TroubleTicket, T
     }
 
     public TroubleTicketJson create(TroubleTicketCreatorJson troubleTicketCreatorJson) {
-        return postOne("PostTroubleTicket", troubleTicketCreatorJson);
+        return postOne("CreateTroubleTicket", troubleTicketCreatorJson);
     }
 
     public TroubleTicketJson update(String uuid, TroubleTicketCreatorJson troubleTicketCreatorJson) {
