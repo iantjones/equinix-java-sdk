@@ -2,6 +2,7 @@ package api.equinix.javasdk.core;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.RetryPolicy;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -33,6 +34,8 @@ class ResiliencyTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+        // Default every test to no-retry; the Retry nested class opts in explicitly.
+        fabric.getEquinixClient().setRetryPolicy(RetryPolicy.none());
     }
 
     @Nested
@@ -236,6 +239,60 @@ class ResiliencyTest extends WireMockTestBase {
                 // Timeout-based client exception is acceptable
                 assertNotNull(e);
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("Retry/backoff")
+    class Retry {
+
+        // Fast policy: tiny backoff so tests don't sleep meaningfully; full jitter keeps waits in [0,1]ms.
+        private void enableFastRetry(int maxRetries) {
+            fabric.getEquinixClient().setRetryPolicy(
+                    new RetryPolicy(maxRetries, 1, 5, java.util.Set.of(429, 500, 502, 503, 504), true, true));
+        }
+
+        @Test
+        @DisplayName("retries a transient 503 then succeeds")
+        void retriesTransient503ThenSucceeds() {
+            enableFastRetry(3);
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/networks/.*")).inScenario("retry503")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(aResponse().withStatus(503).withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]"))
+                    .willSetStateTo("recovered"));
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/networks/.*")).inScenario("retry503")
+                    .whenScenarioStateIs("recovered")
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json"))));
+
+            var network = fabric.networks().getByUuid("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+            assertNotNull(network);
+            // 1 failed (503) + 1 successful = 2 requests
+            wireMock.verify(2, getRequestedFor(urlPathMatching("/fabric/v4/networks/.*")));
+        }
+
+        @Test
+        @DisplayName("exhausts retries on persistent 503 then throws, making maxRetries+1 attempts")
+        void exhaustsRetriesThenThrows() {
+            enableFastRetry(2);
+            stubErrorInline(wireMock, "/fabric/v4/networks/.*",
+                    503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.networks().getByUuid("test-uuid"));
+            wireMock.verify(3, getRequestedFor(urlPathMatching("/fabric/v4/networks/.*")));
+        }
+
+        @Test
+        @DisplayName("does not retry a non-retryable status (404)")
+        void doesNotRetryNonRetryable() {
+            enableFastRetry(3);
+            stubErrorInline(wireMock, "/fabric/v4/networks/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Not Found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.networks().getByUuid("test-uuid"));
+            wireMock.verify(1, getRequestedFor(urlPathMatching("/fabric/v4/networks/.*")));
         }
     }
 }

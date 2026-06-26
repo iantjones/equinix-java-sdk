@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.exception.EquinixAuthenticationException;
 import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.EquinixHttpClient;
+import api.equinix.javasdk.core.http.RetryPolicy;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
@@ -126,6 +127,15 @@ public class EquinixClient implements Closeable {
      */
     public void setEndPoint(String endPoint) throws IllegalArgumentException {
         this.endPoint = toURI(endPoint);
+    }
+
+    /**
+     * Overrides the automatic retry behavior for transient failures (429/5xx, transient IO).
+     *
+     * @param retryPolicy the policy to apply; {@link api.equinix.javasdk.core.http.RetryPolicy#none()} disables retries
+     */
+    public void setRetryPolicy(RetryPolicy retryPolicy) {
+        equinixHttpClient.setRetryPolicy(retryPolicy);
     }
 
     /**

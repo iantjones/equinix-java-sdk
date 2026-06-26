@@ -68,6 +68,18 @@ public class EquinixHttpClient implements Closeable {
     private final Protocol protocol = Protocol.HTTPS;
     public Boolean outputRequestJson = true;
 
+    /** Automatic retry behavior for transient failures; defaults to {@link RetryPolicy#defaultPolicy()}. */
+    private volatile RetryPolicy retryPolicy = RetryPolicy.defaultPolicy();
+
+    /**
+     * Overrides the retry policy for transient failures.
+     *
+     * @param retryPolicy the policy to apply; {@link RetryPolicy#none()} disables retries
+     */
+    public void setRetryPolicy(RetryPolicy retryPolicy) {
+        this.retryPolicy = (retryPolicy != null) ? retryPolicy : RetryPolicy.none();
+    }
+
     /**
      * <p>Constructor for EquinixHttpClient.</p>
      *
@@ -148,6 +160,13 @@ public class EquinixHttpClient implements Closeable {
                 ese.setStatusCode(equinixResponse.getStatusCode());
                 ese.setPath(singleRequestParams.apacheRequest.getURI().toString());
 
+                org.apache.http.Header retryAfterHeader = singleRequestParams.apacheResponse.getFirstHeader("Retry-After");
+                if (retryAfterHeader != null && retryAfterHeader.getValue() != null) {
+                    java.util.Map<String, String> responseHeaders = new java.util.HashMap<>();
+                    responseHeaders.put("Retry-After", retryAfterHeader.getValue());
+                    ese.setHttpHeaders(responseHeaders);
+                }
+
                 if(equinixResponse.getContent() != null && !(equinixResponse.getContent() instanceof EmptyInputStream)) {
                     try {
                         String errorBody = new BufferedReader(
@@ -212,8 +231,59 @@ public class EquinixHttpClient implements Closeable {
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     public <T> EquinixResponse<T> executeHelper(final EquinixRequest<T> equinixRequest) throws EquinixClientException {
-        final SingleRequestParams execOneParams = new SingleRequestParams();
-        return executeSingleRequest(equinixRequest, execOneParams);
+        final RetryPolicy policy = this.retryPolicy;
+        int attempt = 0;
+        while (true) {
+            try {
+                // A fresh SingleRequestParams (and thus a freshly-built Apache request) is used per
+                // attempt; the serialized body is a repeatable StringEntity, so the request can be
+                // re-sent safely.
+                return executeSingleRequest(equinixRequest, new SingleRequestParams());
+            } catch (EquinixServiceException ese) {
+                Integer status = ese.getStatusCode();
+                if (attempt >= policy.getMaxRetries() || status == null || !policy.isRetryableStatus(status)) {
+                    throw ese;
+                }
+                backoffSleep(policy.computeBackoffMillis(attempt, retryAfterMillis(ese)));
+                attempt++;
+            } catch (EquinixClientException ece) {
+                if (attempt >= policy.getMaxRetries() || !policy.isRetryOnIoException()
+                        || !(ece.getCause() instanceof IOException)) {
+                    throw ece;
+                }
+                backoffSleep(policy.computeBackoffMillis(attempt, null));
+                attempt++;
+            }
+        }
+    }
+
+    /** Parses a {@code Retry-After} value (delta-seconds form) from the exception into millis, or null. */
+    private Long retryAfterMillis(EquinixServiceException ese) {
+        if (ese.getHttpHeaders() == null) {
+            return null;
+        }
+        String value = ese.getHttpHeaders().get("Retry-After");
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value.trim()) * 1000L;
+        } catch (NumberFormatException e) {
+            // HTTP-date form is not honored here; fall back to computed backoff.
+            return null;
+        }
+    }
+
+    private void backoffSleep(long millis) {
+        if (millis <= 0) {
+            return;
+        }
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new EquinixClientException("Interrupted while waiting to retry a request.", ie);
+        }
     }
 
     private EquinixServiceException createServiceException(int statusCode) {
