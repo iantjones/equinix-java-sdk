@@ -20,6 +20,7 @@ import api.equinix.javasdk.fabric.enums.RouteAggregationState;
 import api.equinix.javasdk.fabric.enums.RouteAggregationType;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
 
 public interface RouteAggregation {
 
@@ -44,6 +45,14 @@ public interface RouteAggregation {
     Integer getRulesCount();
 
     Integer getConnectionsCount();
+
+    /**
+     * Begins a fluent update of this route aggregation, e.g.
+     * {@code routeAggregation.update().name("New-Name").save()}.
+     *
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator.RouteAggregationUpdater}
+     */
+    RouteAggregationOperator.RouteAggregationUpdater update();
 
     Boolean delete();
 

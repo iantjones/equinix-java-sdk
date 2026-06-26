@@ -1,0 +1,13 @@
+{
+  "uuid": "b1c2d3e4-f5a6-7890-bcde-f01234567890",
+  "href": "https://api.equinix.com/fabric/v4/routeAggregations/b1c2d3e4-f5a6-7890-bcde-f01234567890",
+  "name": "Production-Aggregation",
+  "type": "BGP_IPv4_PREFIX_AGGREGATION",
+  "state": "PROVISIONED",
+  "description": "Primary route aggregation",
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "rulesCount": 0,
+  "connectionsCount": 0
+}
