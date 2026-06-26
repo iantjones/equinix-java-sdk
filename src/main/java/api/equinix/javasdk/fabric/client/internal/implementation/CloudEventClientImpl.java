@@ -42,6 +42,6 @@ public class CloudEventClientImpl extends ResourceClientBase<CloudEvent, CloudEv
     }
 
     public Page<CloudEvent, CloudEventJson> list() {
-        return listPage("ListCloudEvents");
+        return listPage("GetCloudEvents");
     }
 }

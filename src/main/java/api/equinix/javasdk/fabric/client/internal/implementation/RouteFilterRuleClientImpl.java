@@ -39,7 +39,7 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
     }
 
     public Page<RouteFilterRule, RouteFilterRuleJson> list(String routeFilterId) {
-        return listPagePath("ListRouteFilterRules", Map.of("routeFilterId", routeFilterId));
+        return listPagePath("GetRouteFilterRules", Map.of("routeFilterId", routeFilterId));
     }
 
     public RouteFilterRuleJson getByUuid(String routeFilterId, String uuid) {

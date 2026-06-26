@@ -48,7 +48,7 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
     public AgreementStatus createAgreement(String accountNumber, String termsVersionId) {
         Map<String, String> requestBody = Utils.concatStringMaps(Utils.singlePropertyBody("accountNumber", accountNumber),
                                                                  Utils.singlePropertyBody("apttusId", termsVersionId));
-        postAs("GetVPN", requestBody, AgreementStatus.class);
+        postAs("CreateAgreement", requestBody, AgreementStatus.class);
         return getAgreementStatus(accountNumber);
     }
 

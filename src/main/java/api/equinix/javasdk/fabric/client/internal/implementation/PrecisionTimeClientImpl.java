@@ -37,15 +37,15 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
     }
 
     public Page<PrecisionTime, PrecisionTimeJson> list() {
-        return listPage("ListPrecisionTime");
+        return listPage("GetTimeServices");
     }
 
     public PrecisionTimeJson getByUuid(String uuid) {
-        return getOne("GetPrecisionTime", uuid);
+        return getOne("GetTimeService", uuid);
     }
 
     public PrecisionTimeJson create(PrecisionTimeCreatorJson precisionTimeCreatorJson) {
-        return postOne("PostPrecisionTime", precisionTimeCreatorJson);
+        return postOne("PostTimeService", precisionTimeCreatorJson);
     }
 
     public PrecisionTimeJson update(String uuid, PrecisionTimeCreatorJson precisionTimeCreatorJson) {
@@ -53,7 +53,7 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
     }
 
     public PrecisionTimeJson delete(String uuid) {
-        return deleteOne("DeletePrecisionTime", uuid);
+        return deleteOne("DeleteTimeService", uuid);
     }
 
     public PrecisionTimeJson refresh(String uuid) {

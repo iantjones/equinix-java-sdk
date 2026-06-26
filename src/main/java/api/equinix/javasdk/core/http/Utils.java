@@ -483,6 +483,17 @@ public class Utils {
         JsonNode requestParent = functionalArea.path(equinixRequest.getRequestParent());
         JsonNode requestEndpoint = requestParent.path("serviceEndpoints").path(equinixRequest.getServiceEndpoint());
 
+        // Fail fast on an unknown endpoint name. Without this, a missing serviceEndpoint silently
+        // yields a null httpMethod/requestUri and the request is dispatched with an empty method/URI,
+        // surfacing only as an obscure runtime failure far from the cause. A clear error here pins
+        // the bug to the exact client/endpoint mismatch against apiParams.
+        if (requestEndpoint.isMissingNode()) {
+            throw new EquinixClientException("Unknown service endpoint '" + equinixRequest.getServiceEndpoint()
+                    + "' for resource '" + equinixRequest.getRequestParent() + "'"
+                    + (equinixRequest.getFunctionalArea() != null ? " in functional area '" + equinixRequest.getFunctionalArea() + "'" : "")
+                    + ". The endpoint name used by the client does not match any serviceEndpoint declared in the corresponding apiParams JSON.");
+        }
+
         String empty = "";
 
         String formattedResourcePath;
