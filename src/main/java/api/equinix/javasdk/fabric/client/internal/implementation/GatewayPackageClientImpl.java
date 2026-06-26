@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.GatewayPackageClient;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
@@ -33,29 +27,22 @@ import api.equinix.javasdk.fabric.model.wrappers.GatewayPackageWrapper;
 
 import java.util.Map;
 
-public class GatewayPackageClientImpl extends PageableBase implements GatewayPackageClient<GatewayPackage> {
+public class GatewayPackageClientImpl extends ResourceClientBase<GatewayPackage, GatewayPackageJson> implements GatewayPackageClient<GatewayPackage> {
 
     public GatewayPackageClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "FabricGateways");
+        super(configClient, "Fabric", "FabricGateways", GatewayPackageJson.class);
+    }
+
+    @Override
+    protected GatewayPackage wrap(GatewayPackageJson json) {
+        return new GatewayPackageWrapper(json, this);
     }
 
     public Page<GatewayPackage, GatewayPackageJson> list() {
-        EquinixRequest<GatewayPackage> equinixRequest = this.buildRequest("GetGatewayPackages", RequestType.PAGINATED, GatewayPackageJson.class);
-        EquinixResponse<GatewayPackage> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("GetGatewayPackages");
     }
 
     public GatewayPackageJson getByPackageCode(GatewayPackageCode gatewayPackageCode) {
-        Map<String, String> pParams = Map.of("gatewayPackageCode", gatewayPackageCode.toString());
-        EquinixRequest<GatewayPackage> equinixRequest = this.buildRequestWithPathParams("GetGatewayPackage", RequestType.SINGLE, pParams, GatewayPackageJson.class);
-        EquinixResponse<GatewayPackage> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<GatewayPackage> nextPage(PaginatedRequest<GatewayPackage> equinixRequest) {
-        EquinixResponse<GatewayPackage> equinixResponse = this.invoke(equinixRequest);
-        Page<GatewayPackage, GatewayPackageJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<GatewayPackage> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, GatewayPackageWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetGatewayPackage", Map.of("gatewayPackageCode", gatewayPackageCode.toString()));
     }
 }

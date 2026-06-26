@@ -16,44 +16,36 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.MarketplaceSubscriptionClient;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
 import api.equinix.javasdk.fabric.model.json.MarketplaceSubscriptionJson;
 
-import java.util.Map;
-
-public class MarketplaceSubscriptionClientImpl extends PageableBase implements MarketplaceSubscriptionClient<MarketplaceSubscription> {
+/**
+ * Internal client for Fabric Marketplace Subscriptions (read-only). The JSON model implements the
+ * public interface directly, so {@link #wrap(MarketplaceSubscriptionJson)} is the identity.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
+public class MarketplaceSubscriptionClientImpl extends ResourceClientBase<MarketplaceSubscription, MarketplaceSubscriptionJson> implements MarketplaceSubscriptionClient<MarketplaceSubscription> {
 
     public MarketplaceSubscriptionClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "MarketplaceSubscriptions");
+        super(configClient, "Fabric", "MarketplaceSubscriptions", MarketplaceSubscriptionJson.class);
+    }
+
+    @Override
+    protected MarketplaceSubscription wrap(MarketplaceSubscriptionJson json) {
+        return json;
     }
 
     public Page<MarketplaceSubscription, MarketplaceSubscriptionJson> list() {
-        EquinixRequest<MarketplaceSubscription> equinixRequest = this.buildRequest("GetMarketplaceSubscriptions", RequestType.PAGINATED, MarketplaceSubscriptionJson.class);
-        EquinixResponse<MarketplaceSubscription> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("GetMarketplaceSubscriptions");
     }
 
     public MarketplaceSubscriptionJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<MarketplaceSubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetMarketplaceSubscription", RequestType.SINGLE, pParams, MarketplaceSubscriptionJson.class);
-        EquinixResponse<MarketplaceSubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<MarketplaceSubscription> nextPage(PaginatedRequest<MarketplaceSubscription> equinixRequest) {
-        EquinixResponse<MarketplaceSubscription> equinixResponse = this.invoke(equinixRequest);
-        Page<MarketplaceSubscription, MarketplaceSubscriptionJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<MarketplaceSubscription> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetMarketplaceSubscription", uuid);
     }
 }

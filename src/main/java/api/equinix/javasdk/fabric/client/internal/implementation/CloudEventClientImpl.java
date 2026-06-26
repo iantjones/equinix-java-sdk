@@ -16,35 +16,32 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.CloudEventClient;
 import api.equinix.javasdk.fabric.model.CloudEvent;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
-public class CloudEventClientImpl extends PageableBase implements CloudEventClient<CloudEvent> {
+/**
+ * Internal client for Fabric Cloud Events (read-only). The JSON model implements the public
+ * interface directly, so {@link #wrap(CloudEventJson)} is the identity.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
+public class CloudEventClientImpl extends ResourceClientBase<CloudEvent, CloudEventJson> implements CloudEventClient<CloudEvent> {
 
     public CloudEventClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "CloudEvents");
+        super(configClient, "Fabric", "CloudEvents", CloudEventJson.class);
+    }
+
+    @Override
+    protected CloudEvent wrap(CloudEventJson json) {
+        return json;
     }
 
     public Page<CloudEvent, CloudEventJson> list() {
-        EquinixRequest<CloudEvent> equinixRequest = this.buildRequest("ListCloudEvents", RequestType.PAGINATED, CloudEventJson.class);
-        EquinixResponse<CloudEvent> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<CloudEvent> nextPage(PaginatedRequest<CloudEvent> equinixRequest) {
-        EquinixResponse<CloudEvent> equinixResponse = this.invoke(equinixRequest);
-        Page<CloudEvent, CloudEventJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<CloudEvent> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return listPage("ListCloudEvents");
     }
 }

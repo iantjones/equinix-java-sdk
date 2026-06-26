@@ -16,89 +16,41 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.FabricGatewayClient;
-import api.equinix.javasdk.fabric.model.*;
 import api.equinix.javasdk.fabric.model.FabricGateway;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
-import api.equinix.javasdk.fabric.model.json.*;
 import api.equinix.javasdk.fabric.model.json.FabricGatewayJson;
 import api.equinix.javasdk.fabric.model.wrappers.FabricGatewayWrapper;
 
-import java.util.Map;
-
-public class FabricGatewayClientImpl extends PageableBase implements FabricGatewayClient<FabricGateway> {
+public class FabricGatewayClientImpl extends ResourceClientBase<FabricGateway, FabricGatewayJson> implements FabricGatewayClient<FabricGateway> {
 
     public FabricGatewayClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "FabricGateways");
+        super(configClient, "Fabric", "FabricGateways", FabricGatewayJson.class);
+    }
+
+    @Override
+    protected FabricGateway wrap(FabricGatewayJson json) {
+        return new FabricGatewayWrapper(json, this);
     }
 
     public Page<FabricGateway, FabricGatewayJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<FabricGateway> equinixRequest = this.buildRequest("SearchFabricGateways", RequestType.PAGINATED_POST, FabricGatewayJson.class);
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
-        EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return searchPage("SearchFabricGateways", new FilteredSortedPaginatedPost<>(filter, sort));
     }
-    
+
     public FabricGatewayJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<FabricGatewayJson> equinixRequest = this.buildRequestWithPathParams("GetFabricGateway", RequestType.SINGLE, pParams, FabricGatewayJson.class);
-        EquinixResponse<FabricGatewayJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetFabricGateway", uuid);
     }
-    
-//    public FabricGatewayJson create(FabricGatewayCreatorJson FabricGatewayCreatorJson) {
-//        EquinixRequest<FabricGatewayJson> equinixRequest = this.buildRequest("PostFabricGateway", RequestType.SINGLE, FabricGatewayJson.class);
-//        equinixRequest.setFilters(new SimpleFilterProvider().addFilter("createFabricGatewayFilter", SerializationFilters.createFabricGatewayFilter));
-//        Utils.serializeJson(equinixRequest, FabricGatewayCreatorJson);
-//        EquinixResponse<FabricGatewayJson> equinixResponse = this.invoke(equinixRequest);
-//        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-//    }
-    
+
     public FabricGatewayJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<FabricGateway> equinixRequest = this.buildRequestWithPathParams("DeleteFabricGateway", RequestType.SINGLE, pParams, FabricGatewayJson.class);
-        EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteFabricGateway", uuid);
     }
 
-//
-//    /** {@inheritDoc} */
-//    public ServiceTokenJson getByUuid(String uuid) {
-//        Map<String, String> pParams = Map.of("uuid", uuid);
-//        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequestWithPathParams("GetServiceToken", RequestType.SINGLE, pParams, ServiceTokenJson.class);
-//        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
-//        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-//    }
-    
     public FabricGatewayJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<FabricGateway> nextPage(PaginatedRequest<FabricGateway> equinixRequest) {
-        EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
-        Page<FabricGateway, FabricGatewayJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<FabricGateway> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, FabricGatewayWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
-    }
-
-    public PaginatedFilteredList<FabricGateway> nextPage(PaginatedPostRequest<FabricGateway> equinixRequest) {
-        Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
-        EquinixResponse<FabricGateway> equinixResponse = this.invoke(equinixRequest);
-        Page<FabricGateway, FabricGatewayJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedFilteredList<FabricGateway> newPaginatedFilteredList = Utils.mapPaginatedFilteredList(nextPage.getItems(), this, FabricGatewayWrapper::new);
-        return new PaginatedFilteredList<>(newPaginatedFilteredList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }
