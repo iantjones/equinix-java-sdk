@@ -18,14 +18,10 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.PricingClient;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
-import api.equinix.javasdk.networkedge.model.json.VPNJson;
 
 import java.util.List;
 import java.util.Map;
@@ -38,26 +34,14 @@ import java.util.Map;
  */
 public class PricingClientImpl extends ClientBase implements PricingClient {
 
-    /**
-     * <p>Constructor for PricingClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public PricingClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Pricing");
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>getPricing.</p>
-     */
+    /** {@inheritDoc} */
     public Pricing getPricing(RequestBuilder.Pricing requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-
-        EquinixRequest<Pricing> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.class);
-        EquinixResponse<Pricing> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetPricing", null, qParams, Pricing.class);
     }
 
     /**
@@ -67,10 +51,6 @@ public class PricingClientImpl extends ClientBase implements PricingClient {
      * @return a {@link api.equinix.javasdk.networkedge.model.json.Pricing} object.
      */
     public Pricing getPricing(String deviceUuid) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("virtualDeviceUuid", deviceUuid);
-
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetPricing", RequestType.SINGLE, qParams, Pricing.class);
-        EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetPricing", null, Utils.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
     }
 }

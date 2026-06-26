@@ -42,7 +42,7 @@ public class HierarchyClientImpl extends ResourceClientBase<LocationHierarchy, L
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        return getOneAs("GetLocationHierarchy", Map.of(), qParams, LocationHierarchyJson.class);
+        return getAs("GetLocationHierarchy", Map.of(), qParams, LocationHierarchyJson.class);
     }
 
     public PowerHierarchyJson getPowerHierarchy(String accountNo, String ibx) {
@@ -50,6 +50,6 @@ public class HierarchyClientImpl extends ResourceClientBase<LocationHierarchy, L
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        return getOneAs("GetPowerHierarchy", Map.of(), qParams, PowerHierarchyJson.class);
+        return getAs("GetPowerHierarchy", Map.of(), qParams, PowerHierarchyJson.class);
     }
 }

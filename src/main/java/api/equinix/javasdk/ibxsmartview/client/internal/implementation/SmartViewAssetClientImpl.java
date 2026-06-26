@@ -58,7 +58,7 @@ public class SmartViewAssetClientImpl extends ResourceClientBase<SmartViewAsset,
                 "classification", List.of(classification),
                 "assetId", List.of(assetId)
         );
-        return getOneAs("GetAssetDetails", Map.of(), qParams, AssetDetailJson.class);
+        return getAs("GetAssetDetails", Map.of(), qParams, AssetDetailJson.class);
     }
 
     public List<AssetDetailJson> getMultipleAssetDetails(Object requestBody) {
@@ -79,7 +79,7 @@ public class SmartViewAssetClientImpl extends ResourceClientBase<SmartViewAsset,
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        return getOneAs("GetAffectedAssets", Map.of(), qParams, TagPointDataJson.class);
+        return getAs("GetAffectedAssets", Map.of(), qParams, TagPointDataJson.class);
     }
 
     public TagPointDataJson getCurrentTagPoint(String accountNo, String ibx) {
@@ -87,7 +87,7 @@ public class SmartViewAssetClientImpl extends ResourceClientBase<SmartViewAsset,
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx)
         );
-        return getOneAs("GetCurrentTagPoint", Map.of(), qParams, TagPointDataJson.class);
+        return getAs("GetCurrentTagPoint", Map.of(), qParams, TagPointDataJson.class);
     }
 
     public List<TagPointDataJson> getMultipleCurrentTagPoints(Object requestBody) {

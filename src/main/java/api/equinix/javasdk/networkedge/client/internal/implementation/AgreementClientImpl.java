@@ -17,16 +17,12 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.AgreementClient;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.implementation.AgreementStatus;
-import api.equinix.javasdk.networkedge.model.json.VPNJson;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
 import java.util.Map;
@@ -39,53 +35,31 @@ import java.util.Map;
  */
 public class AgreementClientImpl extends ClientBase implements AgreementClient {
 
-    /**
-     * <p>Constructor for AgreementClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public AgreementClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Agreements");
     }
 
     /** {@inheritDoc} */
     public AgreementStatus getAgreementStatus(String accountNumber) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("account_number", accountNumber);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithQueryParams("GetAgreementStatus", RequestType.SINGLE, qParams, AgreementStatus.class);
-        EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetAgreementStatus", null, Utils.singleParamMap("account_number", accountNumber), AgreementStatus.class);
     }
 
     /** {@inheritDoc} */
     public AgreementStatus createAgreement(String accountNumber, String termsVersionId) {
         Map<String, String> requestBody = Utils.concatStringMaps(Utils.singlePropertyBody("accountNumber", accountNumber),
-                                                                    Utils.singlePropertyBody("apttusId", termsVersionId));
-
-        EquinixRequest<AgreementStatus> equinixRequest = this.buildRequest("GetVPN", RequestType.SINGLE, AgreementStatus.class);
-        Utils.serializeJson(equinixRequest, requestBody);
-        EquinixResponse<AgreementStatus> equinixResponse = this.invoke(equinixRequest);
+                                                                 Utils.singlePropertyBody("apttusId", termsVersionId));
+        postAs("GetVPN", requestBody, AgreementStatus.class);
         return getAgreementStatus(accountNumber);
     }
 
     /** {@inheritDoc} */
     public String getVendorsTerms(String vendorPackage, LicenseType licenseType) {
         Map<String, List<String>> qParams = Map.of("vendorPackage", Utils.singleParamList(vendorPackage), "licenseType", Utils.singleParamList(licenseType));
-
-        EquinixRequest<AgreementStatus> equinixRequest = this.buildRequestWithQueryParams("GetVendorTerms", RequestType.SINGLE, qParams, new TypeReference<Map<String, String>>() {});
-        EquinixResponse<AgreementStatus> equinixResponse = this.invoke(equinixRequest);
-        Map<String, String> responseMap = Utils.handleMapResponse(equinixRequest, equinixResponse);
-        return responseMap.get("terms");
+        return mapOp("GetVendorTerms", RequestType.SINGLE, null, qParams, null).get("terms");
     }
 
-    /**
-     * <p>getOrderTerms.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
+    /** {@inheritDoc} */
     public String getOrderTerms() {
-        EquinixRequest<AgreementStatus> equinixRequest = this.buildRequest("GetOrderTerms", RequestType.SINGLE, new TypeReference<Map<String, String>>() {});
-        EquinixResponse<AgreementStatus> equinixResponse = this.invoke(equinixRequest);
-        Map<String, String> responseMap = Utils.handleMapResponse(equinixRequest, equinixResponse);
-        return responseMap.get("terms");
+        return mapOp("GetOrderTerms", RequestType.SINGLE, null, null, null).get("terms");
     }
 }

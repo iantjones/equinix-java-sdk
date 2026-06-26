@@ -17,11 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.HealthClient;
@@ -35,9 +31,7 @@ public class HealthClientImpl extends PageableBase implements HealthClient<Healt
     }
 
     public HealthStatusJson getHealth() {
-        EquinixRequest<HealthStatus> equinixRequest = this.buildRequest("GetHealth", RequestType.SINGLE, HealthStatusJson.class);
-        EquinixResponse<HealthStatus> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetHealth", HealthStatusJson.class);
     }
 
     public PaginatedList<HealthStatus> nextPage(PaginatedRequest<HealthStatus> equinixRequest) {

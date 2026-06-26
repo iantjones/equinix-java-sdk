@@ -71,10 +71,10 @@ public class StreamingSubscriptionClientImpl extends ResourceClientBase<Streamin
     }
 
     public SubscriptionDataJson getSubscriptionData(String subscriptionId) {
-        return getOneAs("GetSubscriptionData", Map.of("subscriptionId", subscriptionId), Map.of(), SubscriptionDataJson.class);
+        return getAs("GetSubscriptionData", Map.of("subscriptionId", subscriptionId), Map.of(), SubscriptionDataJson.class);
     }
 
     public SubscriptionCertificateJson getCertificate(String channelType) {
-        return getOneAs("GetCertificate", Map.of(), Map.of("channelType", List.of(channelType)), SubscriptionCertificateJson.class);
+        return getAs("GetCertificate", Map.of(), Map.of("channelType", List.of(channelType)), SubscriptionCertificateJson.class);
     }
 }
