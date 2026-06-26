@@ -20,6 +20,7 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeState;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
 
 public interface PrecisionTime {
 
@@ -42,6 +43,14 @@ public interface PrecisionTime {
     ChangeLog getChangeLog();
 
     Integer getConnectionsCount();
+
+    /**
+     * Begins a fluent JSON Patch update of this precision time service, e.g.
+     * {@code timeService.update().name("New-Name").save()}.
+     *
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator.PrecisionTimeUpdater}
+     */
+    PrecisionTimeOperator.PrecisionTimeUpdater update();
 
     Boolean delete();
 

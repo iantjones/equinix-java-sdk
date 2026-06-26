@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PrecisionTimeClient;
@@ -24,6 +25,8 @@ import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
+
+import java.util.List;
 
 public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, PrecisionTimeJson> implements PrecisionTimeClient<PrecisionTime> {
 
@@ -48,8 +51,8 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
         return postOne("PostTimeService", precisionTimeCreatorJson);
     }
 
-    public PrecisionTimeJson update(String uuid, PrecisionTimeCreatorJson precisionTimeCreatorJson) {
-        return updateOne("PutPrecisionTime", uuid, precisionTimeCreatorJson);
+    public PrecisionTimeJson update(String uuid, List<PatchOperation> operations) {
+        return patchOne("UpdateTimeService", uuid, operations);
     }
 
     public PrecisionTimeJson delete(String uuid) {
