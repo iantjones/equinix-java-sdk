@@ -73,4 +73,22 @@ class PlanValueRealizationTest {
         assertEquals(0, new BigDecimal("3500").compareTo(vr.getNetMonthlySavings()), "4500 − 1000 plan cost");
         assertEquals(2, vr.getPerProvider().size());
     }
+
+    @Test
+    void unpricedProviderContributesNothingAndRendersNa() {
+        PlanValueRealization vr = planCosting("700", "1000").valueRealization()
+                .egress(CloudProviderType.AWS, 50, DataUnit.TERABYTE)            // priced: saving 3500
+                .egress(CloudProviderType.ORACLE_CLOUD, 100, DataUnit.TERABYTE)  // no reference egress rate
+                .assess();
+
+        assertEquals(2, vr.getPerProvider().size());
+        var oracle = vr.getPerProvider().stream()
+                .filter(p -> p.getProvider() == CloudProviderType.ORACLE_CLOUD).findFirst().orElseThrow();
+        assertFalse(oracle.isPriced());
+        assertEquals(0, BigDecimal.ZERO.compareTo(oracle.getMonthlySavings()));
+        assertEquals(0, new BigDecimal("3500").compareTo(vr.getTotalMonthlyEgressSavings()),
+                "unpriced provider neither inflates nor zeroes the total");
+        assertEquals(0, new BigDecimal("2800").compareTo(vr.getNetMonthlySavings()));
+        assertTrue(vr.toMarkdown().contains("n/a"));
+    }
 }

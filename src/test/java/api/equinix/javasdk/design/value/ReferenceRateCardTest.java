@@ -63,6 +63,12 @@ class ReferenceRateCardTest {
         // 5000 Mbps has no exact tier -> ceiling to the 10G tier (350).
         assertEquals(0, new BigDecimal("350").compareTo(
                 CARD.connection(ConnectionType.EVPL_VC, 5_000, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
+        // 40000 Mbps is above the largest tier -> floor back to the 10G tier (350).
+        assertEquals(0, new BigDecimal("350").compareTo(
+                CARD.connection(ConnectionType.EVPL_VC, 40_000, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
+        // 50 Mbps is below the smallest tier -> ceiling up to the 100 Mbps tier (75).
+        assertEquals(0, new BigDecimal("75").compareTo(
+                CARD.connection(ConnectionType.EVPL_VC, 50, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
     }
 
     @Test
