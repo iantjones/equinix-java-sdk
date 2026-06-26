@@ -39,8 +39,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>EquinixHttpClient class.</p>
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
  */
 public class EquinixHttpClient implements Closeable {
 
-    private static final Logger logger = Logger.getLogger(EquinixHttpClient.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(EquinixHttpClient.class);
 
     /** Maximum time (ms) to wait for a connection to be established. */
     private static final int DEFAULT_CONNECT_TIMEOUT_MS = 10_000;
@@ -192,13 +193,13 @@ public class EquinixHttpClient implements Closeable {
                                     ArrayList<ExceptionDetail> details = new ArrayList<>();
                                     details.add(rawDetail);
                                     ese.setExceptionDetails(details);
-                                    logger.warning("Could not parse error response body: " + errorBody);
+                                    logger.warn("Could not parse error response body: " + errorBody);
                                 }
                             }
                         }
                     }
                     catch (Exception bodyEx) {
-                        logger.warning("Could not read error response body: " + bodyEx.getMessage());
+                        logger.warn("Could not read error response body: " + bodyEx.getMessage());
                     }
                 }
 
