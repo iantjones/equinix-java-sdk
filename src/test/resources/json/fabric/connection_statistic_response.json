@@ -1,0 +1,26 @@
+{
+  "uuid": "c3d4e5f6-a7b8-9012-cdef-234567890abc",
+  "type": "EVPL_VC",
+  "name": "test-connection-stats",
+  "stats": {
+    "startDateTime": "2026-06-01T00:00:00.000Z",
+    "endDateTime": "2026-06-02T00:00:00.000Z",
+    "viewPoint": "A_Side",
+    "bandwidthUtilization": {
+      "unit": "MB",
+      "metricInterval": "PT1H",
+      "inbound": {
+        "max": 950.5,
+        "mean": 420.25,
+        "lastPolled": 380.0,
+        "metrics": []
+      },
+      "outbound": {
+        "max": 880.0,
+        "mean": 390.75,
+        "lastPolled": 360.5,
+        "metrics": []
+      }
+    }
+  }
+}

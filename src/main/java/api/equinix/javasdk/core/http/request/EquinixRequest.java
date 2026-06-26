@@ -77,6 +77,19 @@ public abstract class EquinixRequest<T> implements Request<T> {
     private Map<String, String> headers = new HashMap<>();
     private Map<String, String> pathParameters = new HashMap<>();
 
+    /**
+     * Sets the query parameters, defensively copying into a mutable map. Callers frequently pass
+     * immutable maps ({@code Map.of(...)}, {@code Collections.emptyMap()}); pagination later mutates
+     * this map (adding {@code offset}/{@code limit}), so storing an immutable instance directly would
+     * throw {@link java.lang.UnsupportedOperationException}. This override (in place of Lombok's
+     * generated setter) guarantees the stored map is always mutable.
+     *
+     * @param queryParameters the query parameters (may be {@code null} or immutable)
+     */
+    public void setQueryParameters(Map<String, List<String>> queryParameters) {
+        this.queryParameters = (queryParameters == null) ? new HashMap<>() : new HashMap<>(queryParameters);
+    }
+
     /** {@inheritDoc} */
     @Override
     public void addHeader(String headerName, String headerValue) {
