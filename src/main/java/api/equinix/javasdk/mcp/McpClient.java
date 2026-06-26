@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * serialization, OAuth2 token management, and error mapping.</p>
  *
  * <p>Follows the same standalone HTTP client pattern as
- * {@link api.equinix.javasdk.fabric.peering.client.PeeringDbClient}, using Apache HttpClient
+ * {@link api.equinix.javasdk.design.peering.client.PeeringDbClient}, using Apache HttpClient
  * and Jackson independently from the SDK's core HTTP infrastructure.</p>
  *
  * <h3>Usage</h3>
