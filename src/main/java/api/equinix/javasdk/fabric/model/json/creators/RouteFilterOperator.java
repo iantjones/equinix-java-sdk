@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RouteFilterClientImpl;
@@ -27,6 +28,9 @@ import api.equinix.javasdk.fabric.model.json.RouteFilterJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterWrapper;
 import lombok.AccessLevel;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>RouteFilterOperator class.</p>
@@ -55,6 +59,16 @@ public class RouteFilterOperator extends ResourceImpl<RouteFilter> {
      */
     public RouteFilterBuilder create() {
         return new RouteFilterBuilder();
+    }
+
+    /**
+     * <p>Begins a fluent update of an existing route filter, identified by uuid.</p>
+     *
+     * @param uuid the uuid of the route filter to update
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator.RouteFilterUpdater} object.
+     */
+    public RouteFilterUpdater update(String uuid) {
+        return new RouteFilterUpdater(uuid);
     }
 
     @Getter(AccessLevel.PACKAGE)
@@ -97,6 +111,69 @@ public class RouteFilterOperator extends ResourceImpl<RouteFilter> {
         public RouteFilter create() {
             RouteFilterCreatorJson routeFilterCreatorJson = new RouteFilterCreatorJson(this);
             RouteFilterJson routeFilterJson = ((RouteFilterClientImpl) RouteFilterOperator.this.getServiceClient()).create(routeFilterCreatorJson);
+            return new RouteFilterWrapper(routeFilterJson, RouteFilterOperator.this.getServiceClient());
+        }
+    }
+
+    /**
+     * Fluent builder for updating an existing route filter. Each typed setter records a
+     * {@code replace} change operation; {@link #save()} sends them as one {@code PATCH}
+     * (an op/path/value array, content-type {@code application/json}) and returns the refreshed model.
+     *
+     * <pre>{@code routeFilter.update().name("New-Name").save();}</pre>
+     */
+    public class RouteFilterUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected RouteFilterUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        /**
+         * Replaces the route filter name.
+         *
+         * @param name the new name
+         * @return this updater
+         */
+        public RouteFilterUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        /**
+         * Replaces the route filter description.
+         *
+         * @param description the new description
+         * @return this updater
+         */
+        public RouteFilterUpdater description(String description) {
+            operations.add(PatchOperation.replace("/description", description));
+            return this;
+        }
+
+        /**
+         * Adds an arbitrary change operation, for paths not covered by the typed setters above.
+         *
+         * @param operation the patch operation
+         * @return this updater
+         */
+        public RouteFilterUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        /**
+         * Applies the accumulated changes and returns the route filter refreshed from the server.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.RouteFilter}
+         */
+        public RouteFilter save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            RouteFilterJson routeFilterJson = ((RouteFilterClientImpl) RouteFilterOperator.this.getServiceClient()).update(uuid, operations);
             return new RouteFilterWrapper(routeFilterJson, RouteFilterOperator.this.getServiceClient());
         }
     }

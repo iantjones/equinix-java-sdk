@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.RouteFilter;
@@ -24,6 +25,8 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteFilterJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterCreatorJson;
 
+import java.util.List;
+
 public interface RouteFilterClient<T> extends PageablePost<T> {
 
     Page<RouteFilter, RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort);
@@ -31,6 +34,8 @@ public interface RouteFilterClient<T> extends PageablePost<T> {
     RouteFilterJson getByUuid(String uuid);
 
     RouteFilterJson create(RouteFilterCreatorJson routeFilterCreatorJson);
+
+    RouteFilterJson update(String uuid, List<PatchOperation> operations);
 
     RouteFilterJson delete(String uuid);
 
