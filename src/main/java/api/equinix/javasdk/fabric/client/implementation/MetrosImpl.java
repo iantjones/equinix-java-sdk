@@ -20,7 +20,6 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.fabric.client.Metros;
 import api.equinix.javasdk.fabric.client.internal.MetroClient;
 import api.equinix.javasdk.fabric.enums.MetroPresence;
@@ -36,18 +35,14 @@ import api.equinix.javasdk.fabric.model.wrappers.MetroWrapper;
  */
 public class MetrosImpl implements Metros {
 
-    private final Fabric serviceManager;
-
     private final MetroClient<Metro> serviceClient;
 
     /**
      * <p>Constructor for MetrosImpl.</p>
      *
      * @param serviceClient a {@link MetroClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.Fabric} object.
      */
-    public MetrosImpl(MetroClient<Metro> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public MetrosImpl(MetroClient<Metro> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

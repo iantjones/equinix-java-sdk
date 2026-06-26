@@ -20,7 +20,6 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.Sortable;
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.fabric.client.Ports;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
@@ -43,8 +42,6 @@ import java.time.LocalDateTime;
  */
 public class PortsImpl implements Ports {
 
-    private final Fabric serviceManager;
-
     private final PortClient<Port> serviceClient;
 
     private final PortStatisticClient<PortStatistic> statisticServiceClient;
@@ -54,10 +51,8 @@ public class PortsImpl implements Ports {
      *
      * @param serviceClient a {@link PortClient} object.
      * @param statisticServiceClient a {@link PortStatisticClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.Fabric} object.
      */
-    public PortsImpl(PortClient<Port> serviceClient, PortStatisticClient<PortStatistic> statisticServiceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public PortsImpl(PortClient<Port> serviceClient, PortStatisticClient<PortStatistic> statisticServiceClient) {
         this.serviceClient = serviceClient;
         this.statisticServiceClient = statisticServiceClient;
     }

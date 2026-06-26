@@ -19,7 +19,6 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.fabric.client.ServiceTokens;
 import api.equinix.javasdk.fabric.client.internal.ServiceTokenClient;
 import api.equinix.javasdk.fabric.enums.Side;
@@ -36,18 +35,14 @@ import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
  */
 public class ServiceTokensImpl implements ServiceTokens {
 
-    private final Fabric serviceManager;
-
     private final ServiceTokenClient<ServiceToken> serviceClient;
 
     /**
      * <p>Constructor for ServiceTokensImpl.</p>
      *
      * @param serviceClient a {@link ServiceTokenClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.Fabric} object.
      */
-    public ServiceTokensImpl(ServiceTokenClient<ServiceToken> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public ServiceTokensImpl(ServiceTokenClient<ServiceToken> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

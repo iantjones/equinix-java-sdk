@@ -800,14 +800,14 @@ final class MetroOptimizerEngine {
                         "Consider expanding to metros in other regions",
                         null));
                 resiliencyScore -= 25;
-                worstSeverity = max(worstSeverity, RiskSeverity.HIGH);
+                worstSeverity = mostSevere(worstSeverity, RiskSeverity.HIGH);
             } else {
                 findings.add(new RiskFinding(RiskSeverity.MEDIUM, "SINGLE_REGION",
                         "All metros are in the " + regions.iterator().next() + " region",
                         "Consider adding a metro in another region for disaster resilience",
                         null));
                 resiliencyScore -= 10;
-                worstSeverity = max(worstSeverity, RiskSeverity.MEDIUM);
+                worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
             }
         }
 
@@ -823,7 +823,7 @@ final class MetroOptimizerEngine {
                             "Consider adding a metro closer to the affected site",
                             metro));
                     resiliencyScore -= 5;
-                    worstSeverity = max(worstSeverity, RiskSeverity.MEDIUM);
+                    worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
                 }
             }
         }
@@ -842,7 +842,7 @@ final class MetroOptimizerEngine {
                             "Consider selecting metros where " + key + " has broader presence",
                             null));
                     resiliencyScore -= 5;
-                    worstSeverity = max(worstSeverity, RiskSeverity.MEDIUM);
+                    worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
                 }
             }
         }
@@ -868,7 +868,7 @@ final class MetroOptimizerEngine {
         return new RiskAssessment(findings, worstSeverity, Math.max(0, resiliencyScore));
     }
 
-    private static RiskSeverity max(RiskSeverity a, RiskSeverity b) {
+    private static RiskSeverity mostSevere(RiskSeverity a, RiskSeverity b) {
         return a.ordinal() <= b.ordinal() ? a : b; // CRITICAL=0 is "higher" severity
     }
 

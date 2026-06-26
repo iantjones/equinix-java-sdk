@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -29,12 +28,9 @@ import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationRuleWrapper;
 
 public class RouteAggregationRulesImpl implements RouteAggregationRules {
 
-    private final Fabric serviceManager;
-
     private final RouteAggregationRuleClient<RouteAggregationRule> serviceClient;
 
-    public RouteAggregationRulesImpl(RouteAggregationRuleClient<RouteAggregationRule> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public RouteAggregationRulesImpl(RouteAggregationRuleClient<RouteAggregationRule> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

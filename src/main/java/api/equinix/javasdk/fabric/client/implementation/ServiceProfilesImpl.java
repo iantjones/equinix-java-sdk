@@ -20,7 +20,6 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.fabric.client.ServiceProfiles;
 import api.equinix.javasdk.fabric.client.internal.ServiceProfileClient;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
@@ -48,18 +47,14 @@ import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
  */
 public class ServiceProfilesImpl implements ServiceProfiles {
 
-    private final Fabric serviceManager;
-
     private final ServiceProfileClient<ServiceProfile> serviceClient;
 
     /**
      * <p>Constructor for ServiceProfilesImpl.</p>
      *
      * @param serviceClient a {@link ServiceProfileClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.Fabric} object.
      */
-    public ServiceProfilesImpl(ServiceProfileClient<ServiceProfile> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public ServiceProfilesImpl(ServiceProfileClient<ServiceProfile> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
