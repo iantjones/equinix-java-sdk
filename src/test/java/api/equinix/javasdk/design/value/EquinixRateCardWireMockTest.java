@@ -100,4 +100,45 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12).isEmpty());
         assertEquals(PriceSource.EQUINIX_LIVE, card.source());
     }
+
+    @Test
+    @DisplayName("matches FABRIC_GATEWAY_PRODUCT for cloudRouter; empty when no package token matches")
+    void cloudRouterMatchesGatewayProduct() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        assertEquals(0, new BigDecimal("1200.00").compareTo(
+                card.cloudRouter("STANDARD", MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
+        assertTrue(card.cloudRouter("LARGE", MetroCode.DC, Term.MONTH_12).isEmpty(),
+                "no gateway row mentions LARGE");
+    }
+
+    @Test
+    @DisplayName("connection prefers the row that mentions the requested metro")
+    void connectionPrefersMetroMatch() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
+        // Two 1 Gbps EVPL_VC rows: 150 (SV/LA) and 175 (DC). Requesting DC must pick the DC row.
+        assertEquals(0, new BigDecimal("175.00").compareTo(
+                EquinixRateCard.of(fabric).connection(ConnectionType.EVPL_VC, 1000, MetroCode.DC, Term.MONTH_12)
+                        .orElseThrow().getMonthlyRecurring()));
+    }
+
+    @Test
+    @DisplayName("invalid currency on a price row falls back to USD")
+    void invalidCurrencyFallsBackToUsd() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
+        PriceQuote q = EquinixRateCard.of(fabric)
+                .connection(ConnectionType.EVPL_VC, 5000, null, Term.MONTH_12).orElseThrow();
+        assertEquals("USD", q.getCurrency().getCurrencyCode());
+    }
+
+    @Test
+    @DisplayName("maps a NON_RECURRING charge to the setup component")
+    void mapsNonRecurringCharge() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
+        PriceQuote q = EquinixRateCard.of(fabric)
+                .connection(ConnectionType.EVPL_VC, 2000, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("300.00").compareTo(q.getMonthlyRecurring()));
+        assertEquals(0, new BigDecimal("1000.00").compareTo(q.getNonRecurring()));
+    }
 }

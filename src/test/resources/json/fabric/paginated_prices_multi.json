@@ -1,0 +1,63 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 5
+  },
+  "data": [
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_SV_LA_1000",
+      "name": "EVPL Virtual Connection SV to LA 1Gbps",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 150.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 1000 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_SV_1000",
+      "name": "EVPL Virtual Connection DC to SV 1Gbps",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 175.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 1000 }
+    },
+    {
+      "type": "FABRIC_GATEWAY_PRODUCT",
+      "currency": "USD",
+      "code": "FCR_STANDARD_DC",
+      "name": "Fabric Cloud Router STANDARD",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 1200.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ]
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "XYZ",
+      "code": "EVPL_VC_XX_YY_5000",
+      "name": "EVPL Virtual Connection 5Gbps (unknown currency)",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 500.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 5000 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_AA_2000",
+      "name": "EVPL Virtual Connection DC 2Gbps with setup",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 300.00 },
+        { "type": "NON_RECURRING", "price": 1000.00 }
+      ],
+      "connection": { "bandwidth": 2000 }
+    }
+  ]
+}

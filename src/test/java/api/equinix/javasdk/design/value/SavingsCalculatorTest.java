@@ -127,4 +127,44 @@ class SavingsCalculatorTest {
         assertEquals(0, new BigDecimal("2300").compareTo(s.getEquinixMonthlyCost()), "connection 2000 + router 300");
         assertEquals(0, new BigDecimal("1200").compareTo(s.getNetMonthlySavings()), "3500 − 2300");
     }
+
+    @Test
+    void resolvesNonUsdCurrencyFromCard() {
+        CustomRateCard eur = CustomRateCard.builder()
+                .currency("EUR")
+                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
+                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
+                .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000"))
+                .build();
+
+        SavingsEstimate s = SavingsCalculator.builder(null)
+                .egress(50, DataUnit.TERABYTE).fromCloud(CloudProviderType.AWS)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000).rateCard(eur)
+                .calculate();
+
+        assertEquals("EUR", s.getCurrency(), "currency follows the card, not a hardcoded USD");
+        assertEquals(0, new BigDecimal("3500").compareTo(s.getMonthlyEgressSavings()), "figures unchanged by currency");
+    }
+
+    @Test
+    void negativeNetSavingsPropagatesAndSuppressesPayback() {
+        // Small egress (1 TB) against an expensive interconnect (2000/mo): a money-losing design.
+        SavingsEstimate s = SavingsCalculator.builder(null)
+                .egress(1, DataUnit.TERABYTE).fromCloud(CloudProviderType.AWS)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000).rateCard(fullCard())
+                .calculate();
+
+        // egress saving = 0.07 × 1000 = 70; net = 70 − 2000 = −1930
+        assertEquals(0, new BigDecimal("-1930").compareTo(s.getNetMonthlySavings()));
+        assertEquals(0, new BigDecimal("-23160").compareTo(s.getAnnualNetSavings()), "net×12, not clamped to zero");
+        assertEquals(0, new BigDecimal("-24160").compareTo(s.getFirstYearNetSavings()), "annual − 1000 setup");
+        assertNull(s.getPaybackMonths(), "no payback when net is not positive");
+        assertNotNull(s.getBreakEvenGbPerMonth(), "break-even still computable: 2000 / 0.07");
+    }
+
+    @Test
+    void rejectsNegativeEgress() {
+        assertThrows(IllegalArgumentException.class,
+                () -> SavingsCalculator.builder(null).egress(-5, DataUnit.TERABYTE));
+    }
 }

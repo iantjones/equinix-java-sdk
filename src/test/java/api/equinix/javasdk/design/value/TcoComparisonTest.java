@@ -102,4 +102,25 @@ class TcoComparisonTest {
                 tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
         assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended(), "still cheapest vs 9000 baseline");
     }
+
+    @Test
+    void unpriceableProviderYieldsUnavailableArchetypesAndNullSavings() {
+        // ORACLE_CLOUD has no egress rate in the bundled reference card.
+        TcoComparison tco = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.ORACLE_CLOUD)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .compare();
+
+        CostBreakdown internet = tco.breakdown(DeploymentArchetype.PUBLIC_CLOUD_INTERNET).orElseThrow();
+        assertFalse(internet.isPriced());
+        assertEquals(0, BigDecimal.ZERO.compareTo(internet.getMonthlyTotal()), "unpriced => zero, surfaced as unavailable");
+        assertFalse(tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().isPriced(),
+                "no private egress rate => unpriced");
+        assertNull(tco.getMonthlySavingsVsBaseline(), "baseline unpriced => savings null, not bogus");
+        assertNull(tco.getAnnualSavingsVsBaseline());
+        // On-prem prices purely from reference midpoints (provider-independent), so it remains the pick.
+        assertEquals(DeploymentArchetype.ON_PREM, tco.getRecommended());
+        assertTrue(tco.toMarkdown().contains("_unavailable_"));
+    }
 }
