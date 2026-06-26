@@ -7,6 +7,7 @@ import api.equinix.javasdk.customerportal.model.WorkVisit;
 import org.junit.jupiter.api.*;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -56,6 +57,36 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.workVisits().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define()...create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs to the CreateWorkVisit endpoint and returns the created object")
+        void createsWorkVisit() {
+            stubCreate(wireMock, "/v2/workVisits",
+                    "/json/customerportal/work_visit_response.json");
+
+            WorkVisit workVisit = customerPortal.workVisits().define()
+                    .ibxCode("SV5")
+                    .accountNumber("128745")
+                    .description("Quarterly hardware maintenance")
+                    .visitorName("David Park")
+                    .create();
+
+            assertNotNull(workVisit);
+            assertEquals("d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80", workVisit.getUuid());
+            assertEquals("SV5", workVisit.getIbxCode());
+
+            // CreateWorkVisit is POST /v2/workVisits (no requestUri); confirms the recent
+            // Post->Create endpoint-name fix routes here and serializes the body.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v2/workVisits"))
+                    .withRequestBody(matchingJsonPath("$.ibxCode", equalTo("SV5")))
+                    .withRequestBody(matchingJsonPath("$.accountNumber", equalTo("128745")))
+                    .withRequestBody(matchingJsonPath("$.visitorName", equalTo("David Park"))));
         }
     }
 

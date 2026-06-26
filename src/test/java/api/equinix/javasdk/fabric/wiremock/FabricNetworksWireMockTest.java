@@ -3,6 +3,8 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.NetworkScope;
+import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.Network;
 import org.junit.jupiter.api.*;
 
@@ -57,6 +59,32 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.networks().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the network body to the collection and returns the created network")
+        void createsNetwork() {
+            stubCreate(wireMock, "/fabric/v4/networks", "/json/fabric/network_response.json");
+
+            Network network = fabric.networks().define(NetworkType.EVPLAN)
+                    .name("Production-EVPLAN-Network")
+                    .scope(NetworkScope.REGIONAL)
+                    .create();
+
+            assertNotNull(network);
+            assertEquals("c3d4e5f6-a7b8-9012-cdef-234567890abc", network.getUuid());
+            assertEquals("Production-EVPLAN-Network", network.getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/networks"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("EVPLAN")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Production-EVPLAN-Network")))
+                    .withRequestBody(matchingJsonPath("$.scope", equalTo("REGIONAL"))));
         }
     }
 

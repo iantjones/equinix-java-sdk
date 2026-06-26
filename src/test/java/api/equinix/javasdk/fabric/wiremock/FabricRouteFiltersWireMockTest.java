@@ -3,6 +3,8 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.RouteFilterAction;
+import api.equinix.javasdk.fabric.enums.RouteFilterType;
 import api.equinix.javasdk.fabric.model.RouteFilter;
 import org.junit.jupiter.api.*;
 
@@ -57,6 +59,34 @@ class FabricRouteFiltersWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.routeFilters().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the configured route filter and returns the created object")
+        void createsRouteFilter() {
+            // POST returns the created object body directly.
+            stubCreate(wireMock, "/fabric/v4/routeFilters",
+                    "/json/fabric/route_filter_response.json");
+
+            RouteFilter created = fabric.routeFilters().define()
+                    .ofType(RouteFilterType.BGP_IPv4_PREFIX_FILTER)
+                    .name("Production-IPv4-Prefix-Filter")
+                    .description("IPv4 prefix filter for production BGP peering sessions")
+                    .notMatchedRuleAction(RouteFilterAction.DENY)
+                    .create();
+
+            assertNotNull(created);
+            assertEquals("e5f6a7b8-c9d0-1234-efab-456789012cde", created.getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/routeFilters"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("BGP_IPv4_PREFIX_FILTER")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Production-IPv4-Prefix-Filter")))
+                    .withRequestBody(matchingJsonPath("$.notMatchedRuleAction", equalTo("DENY"))));
         }
     }
 

@@ -71,5 +71,8 @@ public class ACLTemplateCreatorJson {
         this.name = deviceLinkBuilder.getName();
         this.description = deviceLinkBuilder.getDescription();
         this.inboundRules = deviceLinkBuilder.getInboundRules();
+        // accountUcmId is @JsonIgnore (sent as a query param, not in the body) but must be carried
+        // through so create()/getByUuid() can attach it; it was previously dropped here.
+        this.accountUcmId = deviceLinkBuilder.getAccountUcmId();
     }
 }

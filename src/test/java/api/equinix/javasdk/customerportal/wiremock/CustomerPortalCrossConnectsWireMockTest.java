@@ -3,6 +3,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.CrossConnectType;
 import api.equinix.javasdk.customerportal.model.CrossConnect;
 import org.junit.jupiter.api.*;
 
@@ -57,6 +58,38 @@ class CustomerPortalCrossConnectsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.crossConnects().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define()...create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs to the CreateCrossConnect endpoint and returns the created object")
+        void createsCrossConnect() {
+            stubCreate(wireMock, "/v2/crossConnects",
+                    "/json/customerportal/cross_connect_response.json");
+
+            CrossConnect cc = customerPortal.crossConnects().define()
+                    .name("Primary-DB-CrossConnect-SV5")
+                    .type(CrossConnectType.STANDARD)
+                    .aEndIbx("SV5")
+                    .zEndIbx("SV5")
+                    .accountNumber("128745")
+                    .create();
+
+            assertNotNull(cc);
+            assertEquals("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", cc.getUuid());
+            assertEquals("Primary-DB-CrossConnect-SV5", cc.getName());
+
+            // CreateCrossConnect is POST /v2/crossConnects (no requestUri); confirms the
+            // recent Post->Create endpoint-name fix routes here and serializes the body.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v2/crossConnects"))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Primary-DB-CrossConnect-SV5")))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("STANDARD")))
+                    .withRequestBody(matchingJsonPath("$.aEndIbx", equalTo("SV5")))
+                    .withRequestBody(matchingJsonPath("$.accountNumber", equalTo("128745"))));
         }
     }
 

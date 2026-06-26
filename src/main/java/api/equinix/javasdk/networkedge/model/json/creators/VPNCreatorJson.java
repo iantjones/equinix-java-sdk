@@ -28,7 +28,7 @@ import lombok.Getter;
 @Getter
 public class VPNCreatorJson {
 
-    @JsonProperty("virtualDeviceUuid")
+    @JsonProperty("siteName")
     private String siteName;
 
     @JsonProperty("virtualDeviceUuid")

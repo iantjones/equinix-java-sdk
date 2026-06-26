@@ -92,7 +92,10 @@ public class Constants {
                 .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)
                 .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
                 .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-                .enable(MapperFeature.USE_STD_BEAN_NAMING)
+                // NOTE: USE_STD_BEAN_NAMING was removed — combined with Lombok getters for fields
+                // like `aEndIbx` (getter getAEndIbx()), it derived a phantom capitalized property
+                // ("AEndIbx") in addition to the @JsonProperty("aEndIbx"), emitting duplicate keys
+                // in request bodies. Default naming derives "aEndIbx", matching the annotation.
                 .registerModule(new Jdk8Module())
                 .registerModule(module)
                 .setFilterProvider(new SimpleFilterProvider()

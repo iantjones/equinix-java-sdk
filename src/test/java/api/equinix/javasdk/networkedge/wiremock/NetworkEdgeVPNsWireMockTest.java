@@ -7,6 +7,7 @@ import api.equinix.javasdk.networkedge.model.VPN;
 import org.junit.jupiter.api.*;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -57,6 +58,44 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> networkEdge.vpns().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / save()")
+    class Create {
+
+        // A valid UUID is required in the Location header: createReturningLocationUuid extracts
+        // the new uuid via Constants.UUID_PATTERN (8-4-4-4-12 hex) from the 201 Location header,
+        // then issues a follow-up GET for that uuid.
+        private static final String NEW_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
+        @Test
+        @DisplayName("create POSTs the VPN config and resolves the new uuid from the Location header")
+        void createsVpn() {
+            // POST /ne/v1/vpn -> 201 with Location header carrying the new uuid.
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/vpn/?"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Location", "https://localhost/ne/v1/vpn/" + NEW_UUID)));
+            // GET /ne/v1/vpn/{uuid} -> returns the created object body.
+            stubSingleton(wireMock, "/ne/v1/vpn/.*", "/json/networkedge/vpn_response.json");
+
+            var vpn = networkEdge.vpns()
+                    .define("test-vpn-config")
+                    .onDeviceUuid("dev-1234-5678-90ab-cdef12345678")
+                    .withPeerIp("203.0.113.10")
+                    .save();
+
+            // Regression guard: VPNCreatorJson previously had two fields both annotated
+            // @JsonProperty("virtualDeviceUuid"), so serialization always threw. Fixed so siteName
+            // uses @JsonProperty("siteName") and the create body serializes cleanly.
+            assertNotNull(vpn);
+            wireMock.verify(postRequestedFor(urlPathMatching("/ne/v1/vpn/?"))
+                    .withRequestBody(matchingJsonPath("$.configName", equalTo("test-vpn-config")))
+                    .withRequestBody(matchingJsonPath("$.virtualDeviceUuid", equalTo("dev-1234-5678-90ab-cdef12345678")))
+                    .withRequestBody(matchingJsonPath("$.peerIp", equalTo("203.0.113.10"))));
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + NEW_UUID)));
         }
     }
 
