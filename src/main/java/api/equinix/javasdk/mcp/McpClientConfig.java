@@ -1,4 +1,4 @@
-package api.equinix.javasdk.fabric.mcp;
+package api.equinix.javasdk.mcp;
 
 import lombok.Builder;
 import lombok.Getter;

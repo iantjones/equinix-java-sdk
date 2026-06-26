@@ -1,4 +1,4 @@
-package api.equinix.javasdk.fabric.mcp;
+package api.equinix.javasdk.mcp;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import com.fasterxml.jackson.databind.JsonNode;

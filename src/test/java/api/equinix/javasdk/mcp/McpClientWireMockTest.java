@@ -1,12 +1,12 @@
-package api.equinix.javasdk.fabric.mcp;
+package api.equinix.javasdk.mcp;
 
 import api.equinix.javasdk.core.TestFixtures;
 import api.equinix.javasdk.core.WireMockTestBase;
-import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
-import api.equinix.javasdk.fabric.mcp.bridge.McpConnectionBridge;
-import api.equinix.javasdk.fabric.mcp.bridge.McpMetroBridge;
-import api.equinix.javasdk.fabric.mcp.model.McpToolDefinition;
-import api.equinix.javasdk.fabric.mcp.model.McpToolResult;
+import api.equinix.javasdk.mcp.bridge.McpBridge;
+import api.equinix.javasdk.mcp.bridge.McpConnectionBridge;
+import api.equinix.javasdk.mcp.bridge.McpMetroBridge;
+import api.equinix.javasdk.mcp.model.McpToolDefinition;
+import api.equinix.javasdk.mcp.model.McpToolResult;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

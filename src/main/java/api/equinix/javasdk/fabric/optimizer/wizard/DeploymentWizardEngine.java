@@ -2,8 +2,8 @@ package api.equinix.javasdk.fabric.optimizer.wizard;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
-import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
-import api.equinix.javasdk.fabric.mcp.bridge.McpConnectionBridge;
+import api.equinix.javasdk.mcp.bridge.McpBridge;
+import api.equinix.javasdk.mcp.bridge.McpConnectionBridge;
 import api.equinix.javasdk.fabric.optimizer.model.*;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.fabric.optimizer.wizard.enums.BandwidthStrategy;

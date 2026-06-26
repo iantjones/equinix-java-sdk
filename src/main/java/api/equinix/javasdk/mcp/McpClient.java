@@ -1,9 +1,9 @@
-package api.equinix.javasdk.fabric.mcp;
+package api.equinix.javasdk.mcp;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.exception.EquinixRateLimitException;
 import api.equinix.javasdk.core.exception.EquinixServerException;
-import api.equinix.javasdk.fabric.mcp.model.*;
+import api.equinix.javasdk.mcp.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;

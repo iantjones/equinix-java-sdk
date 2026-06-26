@@ -1,6 +1,6 @@
 package api.equinix.javasdk.fabric.optimizer.model;
 
-import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
+import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.optimizer.enums.OptimizationStrategy;
 import lombok.Builder;
 import lombok.Value;
