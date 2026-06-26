@@ -190,7 +190,7 @@ public class EquinixClient implements Closeable {
         }
 
         setStandardHeaders(equinixRequest);
-        equinixResponse = equinixHttpClient.executeHelper(equinixRequest);
+        equinixResponse = equinixHttpClient.executeWithRetries(equinixRequest);
         return equinixResponse;
     }
 

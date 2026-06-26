@@ -655,6 +655,10 @@ public class Utils {
         catch (NoSuchElementException | IllegalStateException e) {
             throw new EquinixClientException("Cannot find desired response header or failed to match pattern.", e);
         }
+        finally {
+            // This handler reads only headers; drain the body so the pooled connection is released.
+            drainQuietly(equinixResponse);
+        }
     }
 
     /**
@@ -666,7 +670,26 @@ public class Utils {
      * @return a {@link java.lang.Boolean} object.
      */
     public static <T> Boolean handleBooleanResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) {
-        return isRequestSuccessful(equinixResponse.getHttpResponse());
+        boolean successful = isRequestSuccessful(equinixResponse.getHttpResponse());
+        // This handler reads only the status line; drain the body so the pooled connection is released.
+        drainQuietly(equinixResponse);
+        return successful;
+    }
+
+    /**
+     * Best-effort consumes the response entity so the underlying pooled connection is released back
+     * to the connection manager. Used by response handlers (boolean/header) that do not otherwise
+     * read the body; releasing a connection must never fail the call, so all errors are swallowed.
+     *
+     * @param equinixResponse the response whose entity should be drained
+     */
+    private static void drainQuietly(EquinixResponse<?> equinixResponse) {
+        try {
+            EntityUtils.consume(equinixResponse.getEntity());
+        }
+        catch (Exception ignored) {
+            // best effort — never let connection release break the call
+        }
     }
 
     /**
