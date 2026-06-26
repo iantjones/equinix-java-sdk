@@ -1,0 +1,114 @@
+package api.equinix.javasdk.design.value.ratecard;
+
+import lombok.Builder;
+import lombok.Value;
+
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.Objects;
+
+/**
+ * An immutable price for a single resource, split into its monthly-recurring
+ * (MRC) and non-recurring (one-time setup, NRC) components, tagged with the
+ * {@link PriceSource} it was resolved from.
+ *
+ * <p>All monetary values use {@link BigDecimal} to avoid floating-point drift,
+ * consistent with the rest of the SDK's billing models. Quotes are additive via
+ * {@link #plus(PriceQuote)} so an engine can aggregate per-resource quotes into a
+ * deployment total while preserving provenance.</p>
+ */
+@Value
+@Builder
+public class PriceQuote {
+
+    /** Monthly recurring charge. */
+    BigDecimal monthlyRecurring;
+
+    /** One-time, non-recurring charge (e.g. installation / setup). */
+    BigDecimal nonRecurring;
+
+    /** Currency of both amounts. */
+    Currency currency;
+
+    /** Where this quote came from. */
+    PriceSource source;
+
+    /** Optional human-readable note (e.g. the matched price code, or why a fallback was used). */
+    String note;
+
+    /**
+     * Creates a quote with explicit MRC and NRC.
+     *
+     * @param monthlyRecurring the monthly recurring charge (defaults to zero if null)
+     * @param nonRecurring     the one-time setup charge (defaults to zero if null)
+     * @param currency         the currency of both amounts
+     * @param source           the provenance of this quote
+     * @return a new quote
+     */
+    public static PriceQuote of(BigDecimal monthlyRecurring, BigDecimal nonRecurring,
+                                Currency currency, PriceSource source) {
+        return PriceQuote.builder()
+                .monthlyRecurring(monthlyRecurring == null ? BigDecimal.ZERO : monthlyRecurring)
+                .nonRecurring(nonRecurring == null ? BigDecimal.ZERO : nonRecurring)
+                .currency(currency)
+                .source(source)
+                .build();
+    }
+
+    /** Creates a monthly-only quote with no setup charge. */
+    public static PriceQuote monthly(BigDecimal monthlyRecurring, Currency currency, PriceSource source) {
+        return of(monthlyRecurring, BigDecimal.ZERO, currency, source);
+    }
+
+    /** Creates a zero-cost quote in the given currency and source (useful as an aggregation seed). */
+    public static PriceQuote zero(Currency currency, PriceSource source) {
+        return of(BigDecimal.ZERO, BigDecimal.ZERO, currency, source);
+    }
+
+    /** Returns a copy of this quote with the supplied note attached. */
+    public PriceQuote withNote(String note) {
+        return PriceQuote.builder()
+                .monthlyRecurring(monthlyRecurring)
+                .nonRecurring(nonRecurring)
+                .currency(currency)
+                .source(source)
+                .note(note)
+                .build();
+    }
+
+    /** First-year total cost: twelve monthly charges plus the one-time setup. */
+    public BigDecimal annualizedTotal() {
+        return monthlyRecurring.multiply(BigDecimal.valueOf(12)).add(nonRecurring);
+    }
+
+    /** Total cost across the full {@code term}: ({@code term.months()} × MRC) + NRC. */
+    public BigDecimal totalOverTerm(Term term) {
+        return monthlyRecurring.multiply(BigDecimal.valueOf(term.months())).add(nonRecurring);
+    }
+
+    /**
+     * Sums this quote with another. Both must share the same currency. The
+     * resulting source is preserved when both quotes agree, otherwise it is
+     * reported as {@link PriceSource#COMPOSITE}.
+     *
+     * @param other the quote to add
+     * @return a new aggregated quote
+     * @throws IllegalArgumentException if the currencies differ
+     */
+    public PriceQuote plus(PriceQuote other) {
+        if (other == null) {
+            return this;
+        }
+        if (!Objects.equals(currency, other.currency)) {
+            throw new IllegalArgumentException(
+                    "Cannot add quotes in different currencies: " + currency + " vs " + other.currency);
+        }
+        PriceSource combined = (source == other.source) ? source : PriceSource.COMPOSITE;
+        return PriceQuote.builder()
+                .monthlyRecurring(monthlyRecurring.add(other.monthlyRecurring))
+                .nonRecurring(nonRecurring.add(other.nonRecurring))
+                .currency(currency)
+                .source(combined)
+                .build();
+    }
+}
