@@ -18,9 +18,9 @@ package api.equinix.javasdk.core.exception;
 
 import api.equinix.javasdk.core.util.StringUtils;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,13 +58,12 @@ import java.util.Map;
  * @version $Id: $Id
  */
 @Getter
-@Setter
 public class EquinixServiceException extends BaseException {
 
-    private ArrayList<ExceptionDetail> exceptionDetails = new ArrayList<>();
-    private Integer statusCode;
-    private Map<String, String> httpHeaders;
-    private String path;
+    private final List<ExceptionDetail> exceptionDetails;
+    private final Integer statusCode;
+    private final Map<String, String> httpHeaders;
+    private final String path;
 
     /**
      * <p>Constructor for EquinixServiceException.</p>
@@ -72,7 +71,7 @@ public class EquinixServiceException extends BaseException {
      * @param errorMessage a {@link java.lang.String} object.
      */
     public EquinixServiceException(String errorMessage) {
-        super(errorMessage);
+        this(errorMessage, null, null, null, null);
     }
 
     /**
@@ -83,6 +82,30 @@ public class EquinixServiceException extends BaseException {
      */
     public EquinixServiceException(String errorMessage, Exception cause) {
         super(errorMessage, cause);
+        this.exceptionDetails = new ArrayList<>();
+        this.statusCode = null;
+        this.httpHeaders = null;
+        this.path = null;
+    }
+
+    /**
+     * Full constructor used by {@link ResponseErrorMapper} when mapping an HTTP error response
+     * into a typed exception. All API-error metadata is supplied at construction time so the
+     * exception is immutable.
+     *
+     * @param errorMessage     a human-readable summary message.
+     * @param statusCode       the HTTP status code returned by the API.
+     * @param path             the request URI that produced the error.
+     * @param httpHeaders      relevant response headers (e.g. {@code Retry-After}); may be {@code null}.
+     * @param exceptionDetails structured error details parsed from the response body; may be {@code null}.
+     */
+    public EquinixServiceException(String errorMessage, Integer statusCode, String path,
+                                   Map<String, String> httpHeaders, List<ExceptionDetail> exceptionDetails) {
+        super(errorMessage);
+        this.statusCode = statusCode;
+        this.path = path;
+        this.httpHeaders = httpHeaders;
+        this.exceptionDetails = (exceptionDetails != null) ? exceptionDetails : new ArrayList<>();
     }
 
     /**

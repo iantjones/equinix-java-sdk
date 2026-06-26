@@ -255,17 +255,11 @@ public class McpClient implements Closeable {
                 }
 
                 if (statusCode == 429) {
-                    EquinixRateLimitException rle = new EquinixRateLimitException("MCP rate limit exceeded");
-                    rle.setStatusCode(429);
-                    rle.setPath(endpoint);
-                    throw rle;
+                    throw new EquinixRateLimitException("MCP rate limit exceeded", 429, endpoint, null, null);
                 }
 
                 if (statusCode >= 500) {
-                    EquinixServerException se = new EquinixServerException("MCP server error: HTTP " + statusCode);
-                    se.setStatusCode(statusCode);
-                    se.setPath(endpoint);
-                    throw se;
+                    throw new EquinixServerException("MCP server error: HTTP " + statusCode, statusCode, endpoint, null, null);
                 }
 
                 if (statusCode != 200) {

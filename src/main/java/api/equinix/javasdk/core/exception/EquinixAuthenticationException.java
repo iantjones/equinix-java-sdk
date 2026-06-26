@@ -33,4 +33,10 @@ public class EquinixAuthenticationException extends EquinixServiceException {
     public EquinixAuthenticationException(String errorMessage, Exception cause) {
         super(errorMessage, cause);
     }
+
+    public EquinixAuthenticationException(String errorMessage, Integer statusCode, String path,
+                                          java.util.Map<String, String> httpHeaders,
+                                          java.util.List<ExceptionDetail> exceptionDetails) {
+        super(errorMessage, statusCode, path, httpHeaders, exceptionDetails);
+    }
 }
