@@ -295,4 +295,27 @@ public class ClientBase {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, Object.class);
         return Utils.handleByteResponse(invoke(request));
     }
+
+    /**
+     * Execute a request for its side effect only — the response body is validated (throws on API
+     * error) and discarded. Useful for update/action endpoints whose result is then re-fetched
+     * (e.g. {@code voidOp("UpdateX", SINGLE, pathParams, null, body); return getByUuid(uuid);}).
+     */
+    protected void voidOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
+                          Map<String, List<String>> queryParams, Object body) {
+        EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
+        if (body != null) {
+            Utils.serializeJson(request, body);
+        }
+        Utils.handleBooleanResponse(invoke(request), request);
+    }
+
+    /** POST a body under path parameters and deserialize a response of an explicit {@link TypeReference}. */
+    protected <R> R postForType(String serviceEndpoint, Map<String, String> pathParams, Object body, TypeReference<?> typeReference) {
+        EquinixRequest<R> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, typeReference);
+        if (body != null) {
+            Utils.serializeJson(request, body);
+        }
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
 }

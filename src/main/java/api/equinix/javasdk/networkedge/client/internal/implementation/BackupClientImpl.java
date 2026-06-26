@@ -17,11 +17,9 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.BackupClient;
@@ -37,104 +35,63 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>BackupClientImpl class.</p>
+ * Internal client for Network Edge device Backups. Plumbing/paging come from {@link ResourceClientBase};
+ * Network Edge's non-standard contracts (create→UUIDResult→refetch, update→refetch, Boolean delete/restore,
+ * String download, secondary restore-analysis type) use the generic helpers on {@code ClientBase}.
  *
  * @author ianjones
  * @version $Id: $Id
  */
 public class BackupClientImpl extends ResourceClientBase<Backup, BackupJson> implements BackupClient<Backup> {
 
-    /**
-     * <p>Constructor for BackupClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public BackupClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Backups", BackupJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected Backup wrap(BackupJson json) {
         return new BackupWrapper(json, this);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>list.</p>
-     */
     public Page<Backup, BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         qParams.put("virtualDeviceUuid", Utils.singleParamList(deviceUuid));
         return listPage("ListBackups", qParams);
     }
 
-    /** {@inheritDoc} */
     public BackupJson getByUuid(String uuid) {
         return getOne("GetBackup", uuid);
     }
 
-    /** {@inheritDoc} */
     public RestoreFeasibilityJson checkRestoreFeasibility(String uuid, String deviceUuid) {
-        Map<String, List<String>> qParams = Map.of("backupUuid", Utils.singleParamList(uuid));
-        Map<String, String> pParams = Map.of("deviceUuid", deviceUuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequest("GetRestoreAnalysis", RequestType.SINGLE, pParams, qParams, RestoreFeasibilityJson.class);
-        EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetRestoreAnalysis", Map.of("deviceUuid", deviceUuid),
+                Map.of("backupUuid", Utils.singleParamList(uuid)), RestoreFeasibilityJson.class);
     }
 
-    /** {@inheritDoc} */
     public Boolean restore(String uuid, String deviceUuid) {
-        Map<String, List<String>> qParams = Map.of("backupUuid", Utils.singleParamList(uuid));
-        Map<String, String> pParams = Map.of("deviceUuid", deviceUuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequest("RestoreBackup", RequestType.SINGLE, pParams, qParams);
-        EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("deviceUuid", deviceUuid),
+                Map.of("backupUuid", Utils.singleParamList(uuid)), null);
     }
 
-    /** {@inheritDoc} */
     public String download(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequestWithPathParams("DownloadBackup", RequestType.SINGLE, pParams);
-        EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleStringResponse(equinixResponse);
+        return stringOp("DownloadBackup", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
-    /** {@inheritDoc} */
-    public BackupJson create(BackupCreatorJson deviceLinkCreatorJson) {
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequest("CreateBackup", RequestType.SINGLE, BackupJson.getCreateTypeRef());
-        Utils.serializeJson(equinixRequest, deviceLinkCreatorJson);
-        EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
-        UUIDResult uuidResult = Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-        return getByUuid(uuidResult.getUuid());
+    public BackupJson create(BackupCreatorJson backupCreatorJson) {
+        UUIDResult result = postForType("CreateBackup", backupCreatorJson, BackupJson.getCreateTypeRef());
+        return getByUuid(result.getUuid());
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceLinkUpdaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupUpdaterJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     */
-    public BackupJson update(String uuid, BackupUpdaterJson deviceLinkUpdaterJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BackupJson> equinixRequest = this.buildRequestWithPathParams("UpdateBackup", RequestType.SINGLE, pParams);
-        Utils.serializeJson(equinixRequest, deviceLinkUpdaterJson);
-        EquinixResponse<BackupJson> equinixResponse = this.invoke(equinixRequest);
+    public BackupJson update(String uuid, BackupUpdaterJson backupUpdaterJson) {
+        voidOp("UpdateBackup", RequestType.SINGLE, Map.of("uuid", uuid), null, backupUpdaterJson);
         return getByUuid(uuid);
     }
 
-    /** {@inheritDoc} */
     public Boolean delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Backup> equinixRequest = this.buildRequestWithPathParams("DeleteBackup", RequestType.SINGLE, pParams);
-        EquinixResponse<Backup> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeleteBackup", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
-    /** {@inheritDoc} */
     public BackupJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+        return getByUuid(uuid);
     }
 }
