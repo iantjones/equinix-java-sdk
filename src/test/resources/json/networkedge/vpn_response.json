@@ -1,0 +1,17 @@
+{
+  "uuid": "vpn-1111-2222-3333-444455556666",
+  "siteName": "test-site",
+  "status": "PROVISIONED",
+  "bgpState": "Established",
+  "tunnelStatus": "UP",
+  "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+  "useNetworkServiceConnection": false,
+  "configName": "test-vpn-config",
+  "peerIp": "203.0.113.10",
+  "peerSharedKey": "shared-key",
+  "remoteAsn": 65001,
+  "remoteIpAddress": "169.254.0.2",
+  "localAsn": 65000,
+  "projectId": "proj-9999",
+  "tunnelIp": "169.254.0.1"
+}
