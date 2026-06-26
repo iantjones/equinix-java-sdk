@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>Abstract EquinixRequest class.</p>
+ * Base request type for all Equinix API calls. Concrete and directly instantiable for the simple
+ * GET/single/list cases; {@link PaginatedRequest} and {@link PaginatedPostRequest} extend it to add
+ * offset/limit paging and POST-search paging respectively.
  *
  * @author ianjones
  * @version $Id: $Id
@@ -41,7 +43,7 @@ import java.util.Map;
 @Getter
 @Setter
 @NoArgsConstructor
-public abstract class EquinixRequest<T> implements Request<T> {
+public class EquinixRequest<T> implements Request<T> {
 
     private EquinixStaticCredentialsProvider equinixCredentialsProvider;
     private URI endPoint;
