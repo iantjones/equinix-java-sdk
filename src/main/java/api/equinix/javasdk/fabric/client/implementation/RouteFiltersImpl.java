@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -32,12 +31,9 @@ import api.equinix.javasdk.fabric.model.wrappers.RouteFilterWrapper;
 
 public class RouteFiltersImpl implements RouteFilters {
 
-    private final Fabric serviceManager;
-
     private final RouteFilterClient<RouteFilter> serviceClient;
 
-    public RouteFiltersImpl(RouteFilterClient<RouteFilter> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public RouteFiltersImpl(RouteFilterClient<RouteFilter> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

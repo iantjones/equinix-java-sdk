@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -27,11 +26,9 @@ import api.equinix.javasdk.fabric.model.json.MarketplaceSubscriptionJson;
 
 public class MarketplaceSubscriptionsImpl implements MarketplaceSubscriptions {
 
-    private final Fabric serviceManager;
     private final MarketplaceSubscriptionClient<MarketplaceSubscription> serviceClient;
 
-    public MarketplaceSubscriptionsImpl(MarketplaceSubscriptionClient<MarketplaceSubscription> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public MarketplaceSubscriptionsImpl(MarketplaceSubscriptionClient<MarketplaceSubscription> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

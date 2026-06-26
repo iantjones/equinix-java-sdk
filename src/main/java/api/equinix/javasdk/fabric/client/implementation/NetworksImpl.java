@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -33,12 +32,9 @@ import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
 
 public class NetworksImpl implements Networks {
 
-    private final Fabric serviceManager;
-
     private final NetworkClient<Network> serviceClient;
 
-    public NetworksImpl(NetworkClient<Network> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public NetworksImpl(NetworkClient<Network> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

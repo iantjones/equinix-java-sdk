@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -37,14 +36,11 @@ import api.equinix.javasdk.fabric.model.wrappers.GatewayPackageWrapper;
 
 public class FabricGatewaysImpl implements FabricGateways {
 
-    private final Fabric serviceManager;
-
     private final FabricGatewayClient<FabricGateway> serviceClient;
 
     private final GatewayPackageClient<GatewayPackage> gatewayPackageServiceClient;
 
-    public FabricGatewaysImpl(FabricGatewayClient<FabricGateway> serviceClient, GatewayPackageClient<GatewayPackage> gatewayPackageServiceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public FabricGatewaysImpl(FabricGatewayClient<FabricGateway> serviceClient, GatewayPackageClient<GatewayPackage> gatewayPackageServiceClient) {
         this.gatewayPackageServiceClient = gatewayPackageServiceClient;
         this.serviceClient = serviceClient;
     }

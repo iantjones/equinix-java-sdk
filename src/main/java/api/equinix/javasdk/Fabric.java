@@ -158,7 +158,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public Metros metros() {
         if (this.metros == null) {
-            this.metros = new MetrosImpl(this.fabricConfig.getMetrosClient(), this);
+            this.metros = new MetrosImpl(this.fabricConfig.getMetrosClient());
         }
         return metros;
     }
@@ -172,7 +172,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public ServiceTokens serviceTokens() {
         if (this.serviceTokens == null) {
-            this.serviceTokens = new ServiceTokensImpl(this.fabricConfig.getServiceTokensClient(), this);
+            this.serviceTokens = new ServiceTokensImpl(this.fabricConfig.getServiceTokensClient());
         }
         return serviceTokens;
     }
@@ -186,7 +186,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public Ports ports() {
         if (this.ports == null) {
-            this.ports = new PortsImpl(this.fabricConfig.getPortsClient(), this.fabricConfig.getPortStatisticsClient(), this);
+            this.ports = new PortsImpl(this.fabricConfig.getPortsClient(), this.fabricConfig.getPortStatisticsClient());
         }
         return ports;
     }
@@ -201,7 +201,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public Connections connections() {
         if (this.connections == null) {
-            this.connections = new ConnectionsImpl(this.fabricConfig.getConnectionsClient(), this);
+            this.connections = new ConnectionsImpl(this.fabricConfig.getConnectionsClient());
         }
         return connections;
     }
@@ -214,7 +214,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public Prices prices() {
         if (this.prices == null) {
-            this.prices = new PricesImpl(this.fabricConfig.getPricingClient(), this);
+            this.prices = new PricesImpl(this.fabricConfig.getPricingClient());
         }
         return prices;
     }
@@ -228,7 +228,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public ServiceProfiles serviceProfiles() {
         if (this.serviceProfiles == null) {
-            this.serviceProfiles = new ServiceProfilesImpl(this.fabricConfig.getServiceProfilesClient(), this);
+            this.serviceProfiles = new ServiceProfilesImpl(this.fabricConfig.getServiceProfilesClient());
         }
         return serviceProfiles;
     }
@@ -242,7 +242,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public FabricGateways fabricGateways() {
         if (this.fabricGateways == null) {
-            this.fabricGateways = new FabricGatewaysImpl(this.fabricConfig.getFabricGatewaysClient(), this.fabricConfig.getGatewayPackageClient(), this);
+            this.fabricGateways = new FabricGatewaysImpl(this.fabricConfig.getFabricGatewaysClient(), this.fabricConfig.getGatewayPackageClient());
         }
         return fabricGateways;
     }
@@ -255,7 +255,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public CloudRouters cloudRouters() {
         if (this.cloudRouters == null) {
-            this.cloudRouters = new CloudRoutersImpl(this.fabricConfig.getCloudRoutersClient(), this.fabricConfig.getCloudRouterPackagesClient(), this);
+            this.cloudRouters = new CloudRoutersImpl(this.fabricConfig.getCloudRoutersClient(), this.fabricConfig.getCloudRouterPackagesClient());
         }
         return cloudRouters;
     }
@@ -269,7 +269,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public RoutingProtocols routingProtocols() {
         if (this.routingProtocols == null) {
-            this.routingProtocols = new RoutingProtocolsImpl(this.fabricConfig.getRoutingProtocolsClient(), this);
+            this.routingProtocols = new RoutingProtocolsImpl(this.fabricConfig.getRoutingProtocolsClient());
         }
         return routingProtocols;
     }
@@ -283,7 +283,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public RouteFilters routeFilters() {
         if (this.routeFilters == null) {
-            this.routeFilters = new RouteFiltersImpl(this.fabricConfig.getRouteFiltersClient(), this);
+            this.routeFilters = new RouteFiltersImpl(this.fabricConfig.getRouteFiltersClient());
         }
         return routeFilters;
     }
@@ -297,7 +297,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public RouteFilterRules routeFilterRules() {
         if (this.routeFilterRules == null) {
-            this.routeFilterRules = new RouteFilterRulesImpl(this.fabricConfig.getRouteFilterRulesClient(), this);
+            this.routeFilterRules = new RouteFilterRulesImpl(this.fabricConfig.getRouteFilterRulesClient());
         }
         return routeFilterRules;
     }
@@ -311,7 +311,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public RouteAggregations routeAggregations() {
         if (this.routeAggregations == null) {
-            this.routeAggregations = new RouteAggregationsImpl(this.fabricConfig.getRouteAggregationsClient(), this);
+            this.routeAggregations = new RouteAggregationsImpl(this.fabricConfig.getRouteAggregationsClient());
         }
         return routeAggregations;
     }
@@ -324,7 +324,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public RouteAggregationRules routeAggregationRules() {
         if (this.routeAggregationRules == null) {
-            this.routeAggregationRules = new RouteAggregationRulesImpl(this.fabricConfig.getRouteAggregationRulesClient(), this);
+            this.routeAggregationRules = new RouteAggregationRulesImpl(this.fabricConfig.getRouteAggregationRulesClient());
         }
         return routeAggregationRules;
     }
@@ -338,7 +338,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public Networks networks() {
         if (this.networks == null) {
-            this.networks = new NetworksImpl(this.fabricConfig.getNetworksClient(), this);
+            this.networks = new NetworksImpl(this.fabricConfig.getNetworksClient());
         }
         return networks;
     }
@@ -352,7 +352,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public Streams streams() {
         if (this.streams == null) {
-            this.streams = new StreamsImpl(this.fabricConfig.getStreamsClient(), this);
+            this.streams = new StreamsImpl(this.fabricConfig.getStreamsClient());
         }
         return streams;
     }
@@ -366,7 +366,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public StreamSubscriptions streamSubscriptions() {
         if (this.streamSubscriptions == null) {
-            this.streamSubscriptions = new StreamSubscriptionsImpl(this.fabricConfig.getStreamSubscriptionsClient(), this);
+            this.streamSubscriptions = new StreamSubscriptionsImpl(this.fabricConfig.getStreamSubscriptionsClient());
         }
         return streamSubscriptions;
     }
@@ -380,7 +380,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public PrecisionTimes precisionTimes() {
         if (this.precisionTimes == null) {
-            this.precisionTimes = new PrecisionTimesImpl(this.fabricConfig.getPrecisionTimesClient(), this);
+            this.precisionTimes = new PrecisionTimesImpl(this.fabricConfig.getPrecisionTimesClient());
         }
         return precisionTimes;
     }
@@ -393,7 +393,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public CloudEvents cloudEvents() {
         if (this.cloudEvents == null) {
-            this.cloudEvents = new CloudEventsImpl(this.fabricConfig.getCloudEventsClient(), this);
+            this.cloudEvents = new CloudEventsImpl(this.fabricConfig.getCloudEventsClient());
         }
         return cloudEvents;
     }
@@ -407,7 +407,7 @@ public final class Fabric extends EquinixClient implements Service {
      */
     public MarketplaceSubscriptions marketplaceSubscriptions() {
         if (this.marketplaceSubscriptions == null) {
-            this.marketplaceSubscriptions = new MarketplaceSubscriptionsImpl(this.fabricConfig.getMarketplaceSubscriptionsClient(), this);
+            this.marketplaceSubscriptions = new MarketplaceSubscriptionsImpl(this.fabricConfig.getMarketplaceSubscriptionsClient());
         }
         return marketplaceSubscriptions;
     }

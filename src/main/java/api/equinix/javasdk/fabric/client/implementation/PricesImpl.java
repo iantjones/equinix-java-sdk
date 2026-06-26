@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -29,12 +28,9 @@ import api.equinix.javasdk.fabric.model.wrappers.PricingWrapper;
 
 public class PricesImpl implements Prices {
 
-    private final Fabric serviceManager;
-
     private final PricingClient<Pricing> serviceClient;
 
-    public PricesImpl(PricingClient<Pricing> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public PricesImpl(PricingClient<Pricing> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

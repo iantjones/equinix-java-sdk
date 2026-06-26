@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -29,12 +28,9 @@ import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
 
 public class PrecisionTimesImpl implements PrecisionTimes {
 
-    private final Fabric serviceManager;
-
     private final PrecisionTimeClient<PrecisionTime> serviceClient;
 
-    public PrecisionTimesImpl(PrecisionTimeClient<PrecisionTime> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public PrecisionTimesImpl(PrecisionTimeClient<PrecisionTime> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

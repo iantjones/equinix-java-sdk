@@ -18,7 +18,6 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.Side;
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -50,12 +49,9 @@ import java.time.LocalDateTime;
  */
 public class ConnectionsImpl implements Connections {
 
-    private final Fabric serviceManager;
-
     private final ConnectionClient<Connection> serviceClient;
 
-    public ConnectionsImpl(ConnectionClient<Connection> serviceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public ConnectionsImpl(ConnectionClient<Connection> serviceClient) {
         this.serviceClient = serviceClient;
     }
 

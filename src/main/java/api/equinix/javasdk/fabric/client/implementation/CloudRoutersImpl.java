@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -37,14 +36,11 @@ import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
 
 public class CloudRoutersImpl implements CloudRouters {
 
-    private final Fabric serviceManager;
-
     private final CloudRouterClient<CloudRouter> serviceClient;
 
     private final CloudRouterPackageClient<CloudRouterPackage> cloudRouterPackageServiceClient;
 
-    public CloudRoutersImpl(CloudRouterClient<CloudRouter> serviceClient, CloudRouterPackageClient<CloudRouterPackage> cloudRouterPackageServiceClient, Fabric serviceManager) {
-        this.serviceManager = serviceManager;
+    public CloudRoutersImpl(CloudRouterClient<CloudRouter> serviceClient, CloudRouterPackageClient<CloudRouterPackage> cloudRouterPackageServiceClient) {
         this.cloudRouterPackageServiceClient = cloudRouterPackageServiceClient;
         this.serviceClient = serviceClient;
     }
