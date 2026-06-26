@@ -16,16 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteFilterClient;
@@ -36,58 +28,34 @@ import api.equinix.javasdk.fabric.model.json.RouteFilterJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterWrapper;
 
-import java.util.Map;
-
-public class RouteFilterClientImpl extends PageableBase implements RouteFilterClient<RouteFilter> {
+public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, RouteFilterJson> implements RouteFilterClient<RouteFilter> {
 
     public RouteFilterClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "RouteFilters");
+        super(configClient, "Fabric", "RouteFilters", RouteFilterJson.class);
+    }
+
+    @Override
+    protected RouteFilter wrap(RouteFilterJson json) {
+        return new RouteFilterWrapper(json, this);
     }
 
     public Page<RouteFilter, RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<RouteFilter> equinixRequest = this.buildRequest("SearchRouteFilters", RequestType.PAGINATED_POST, RouteFilterJson.class);
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
-        EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return searchPage("SearchRouteFilters", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public RouteFilterJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteFilterJson> equinixRequest = this.buildRequestWithPathParams("GetRouteFilter", RequestType.SINGLE, pParams, RouteFilterJson.class);
-        EquinixResponse<RouteFilterJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetRouteFilter", uuid);
     }
 
     public RouteFilterJson create(RouteFilterCreatorJson routeFilterCreatorJson) {
-        EquinixRequest<RouteFilterJson> equinixRequest = this.buildRequest("PostRouteFilter", RequestType.SINGLE, RouteFilterJson.class);
-        Utils.serializeJson(equinixRequest, routeFilterCreatorJson);
-        EquinixResponse<RouteFilterJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostRouteFilter", routeFilterCreatorJson);
     }
 
     public RouteFilterJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RouteFilter> equinixRequest = this.buildRequestWithPathParams("DeleteRouteFilter", RequestType.SINGLE, pParams, RouteFilterJson.class);
-        EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteRouteFilter", uuid);
     }
 
     public RouteFilterJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<RouteFilter> nextPage(PaginatedRequest<RouteFilter> equinixRequest) {
-        EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
-        Page<RouteFilter, RouteFilterJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<RouteFilter> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, RouteFilterWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
-    }
-
-    public PaginatedFilteredList<RouteFilter> nextPage(PaginatedPostRequest<RouteFilter> equinixRequest) {
-        Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
-        EquinixResponse<RouteFilter> equinixResponse = this.invoke(equinixRequest);
-        Page<RouteFilter, RouteFilterJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedFilteredList<RouteFilter> newPaginatedFilteredList = Utils.mapPaginatedFilteredList(nextPage.getItems(), this, RouteFilterWrapper::new);
-        return new PaginatedFilteredList<>(newPaginatedFilteredList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }
