@@ -48,20 +48,26 @@ public class Pagination {
 
     /**
      * Returns the zero-based page number computed from the current offset and limit.
+     * Returns {@code 0} when offset/limit are absent (some endpoints omit pagination metadata,
+     * e.g. on empty results) so the value is never an unboxing NPE or a divide-by-zero.
      *
      * @return the current page number (0-indexed)
      */
     public int getPageNumber() {
-        return getOffset() / getLimit();
+        if (offset == null || limit == null || limit == 0) {
+            return 0;
+        }
+        return offset / limit;
     }
 
     /**
-     * Returns the page size (number of results per page), which equals the limit.
+     * Returns the page size (number of results per page), which equals the limit, or {@code 0} when
+     * the limit is absent.
      *
      * @return the number of results per page
      */
     public int getPageSize() {
-        return getLimit();
+        return (limit != null) ? limit : 0;
     }
 
     /**
@@ -74,11 +80,16 @@ public class Pagination {
     }
 
     /**
-     * Returns {@code true} if the current page is the last page of results.
+     * Returns {@code true} if the current page is the last page of results. When the total or limit
+     * is absent (some endpoints omit {@code total} on empty results), the current page is treated as
+     * the last so paging terminates gracefully rather than NPE-ing or looping.
      *
      * @return {@code true} if there are no more pages after this one
      */
     public Boolean getIsLastPage() {
-        return (getPageNumber() + 1) * getLimit() >= getTotal();
+        if (total == null || limit == null || limit == 0) {
+            return true;
+        }
+        return (getPageNumber() + 1) * limit >= total;
     }
 }
