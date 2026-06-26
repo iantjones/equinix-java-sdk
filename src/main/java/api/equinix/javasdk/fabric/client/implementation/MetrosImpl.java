@@ -62,7 +62,7 @@ public class MetrosImpl implements Metros {
 
     /** {@inheritDoc} */
     public PaginatedList<Metro> list(MetroPresence metroPresence) {
-        Page<Metro, MetroJson> responsePage = this.serviceClient.list();
+        Page<Metro, MetroJson> responsePage = this.serviceClient.list(metroPresence);
         PaginatedList<Metro> metroList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, MetroWrapper::new);
         return new PaginatedList<>(metroList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }

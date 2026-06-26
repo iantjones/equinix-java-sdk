@@ -31,7 +31,7 @@ import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -79,11 +79,11 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder notification(NotificationType type, String emailAddress) {
             if(this.notifications == null) {
-                this.notifications = Collections.singletonList(new Notification(type, Collections.singletonList(emailAddress)));
+                this.notifications = new ArrayList<>(List.of(new Notification(type, new ArrayList<>(List.of(emailAddress)))));
             }
             else {
                 if (notifications.stream().noneMatch(o -> o.getType().equals(type))) {
-                    notifications.add(new Notification(type, Collections.singletonList(emailAddress)));
+                    notifications.add(new Notification(type, new ArrayList<>(List.of(emailAddress))));
                 } else {
                     Objects.requireNonNull(notifications.stream().filter(o -> o.getType().equals(type)).findFirst().orElse(null)).addEmail(emailAddress);
                 }
@@ -103,7 +103,7 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder allowedEmail(String emailAddress) {
             if(this.allowedEmails == null) {
-                this.allowedEmails = Collections.singletonList(emailAddress);
+                this.allowedEmails = new ArrayList<>(List.of(emailAddress));
             }
             else {
                 this.allowedEmails.add(emailAddress);
@@ -114,7 +114,7 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder tag(String tag) {
             if(this.tags == null) {
-                this.tags = Collections.singletonList(tag);
+                this.tags = new ArrayList<>(List.of(tag));
             }
             else {
                 this.tags.add(tag);
@@ -125,7 +125,7 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder port(String portUuid, PortType portType) {
             if(this.ports == null) {
-                this.ports = Collections.singletonList(new AccessPointTypeConfigPort(portUuid, portType));
+                this.ports = new ArrayList<>(List.of(new AccessPointTypeConfigPort(portUuid, portType)));
             }
             else {
                 this.ports.add(new AccessPointTypeConfigPort(portUuid, portType));
@@ -140,7 +140,7 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder accessPointTypeConfig(AccessPointTypeConfig accessPointTypeConfig) {
             if(this.accessPointTypeConfigs == null) {
-                this.accessPointTypeConfigs = Collections.singletonList(accessPointTypeConfig);
+                this.accessPointTypeConfigs = new ArrayList<>(List.of(accessPointTypeConfig));
             }
             else {
                 this.accessPointTypeConfigs.add(accessPointTypeConfig);
@@ -151,7 +151,7 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder customField(CustomField customField) {
             if(this.customFields == null) {
-                this.customFields = Collections.singletonList(customField);
+                this.customFields = new ArrayList<>(List.of(customField));
             }
             else {
                 this.customFields.add(customField);

@@ -166,14 +166,18 @@
           },
           "GetBGP": {
             "httpMethod": "GET",
-            "requestUri": "{$bgpPeeringUuid}"
+            "requestUri": "{$uuid}"
           },
           "CreateBGP": {
             "httpMethod": "POST"
           },
           "UpdateBGP": {
             "httpMethod": "PUT",
-            "requestUri": "{$bgpPeeringUuid}"
+            "requestUri": "{$uuid}"
+          },
+          "DeleteBGP": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
           }
         }
       },
