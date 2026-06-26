@@ -294,5 +294,33 @@ class ResiliencyTest extends WireMockTestBase {
                     () -> fabric.networks().getByUuid("test-uuid"));
             wireMock.verify(1, getRequestedFor(urlPathMatching("/fabric/v4/networks/.*")));
         }
+
+        @Test
+        @DisplayName("does not retry a POST by default, even on a retryable 503 (no duplicate side effects)")
+        void doesNotRetryPostByDefault() {
+            // Default-method gating: retryNonIdempotentMethods=false, so POST is never retried.
+            enableFastRetry(3);
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/connections/search"))
+                    .willReturn(aResponse().withStatus(503).withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]")));
+
+            assertThrows(EquinixServerException.class, () -> fabric.connections().search());
+            // Exactly one POST despite the 503 being a retryable status — POST is non-idempotent.
+            wireMock.verify(1, postRequestedFor(urlPathMatching("/fabric/v4/connections/search")));
+        }
+
+        @Test
+        @DisplayName("retries a POST when retryNonIdempotentMethods is explicitly enabled")
+        void retriesPostWhenNonIdempotentRetryEnabled() {
+            // Opt-in: the 7-arg policy enables retrying non-idempotent methods.
+            fabric.getEquinixClient().setRetryPolicy(new RetryPolicy(
+                    2, 1, 5, java.util.Set.of(429, 500, 502, 503, 504), true, true, true));
+            stubErrorInline(wireMock, "/fabric/v4/connections/search",
+                    503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]");
+
+            assertThrows(EquinixServerException.class, () -> fabric.connections().search());
+            // 1 initial + 2 retries = 3 POSTs once non-idempotent retry is opted in.
+            wireMock.verify(3, postRequestedFor(urlPathMatching("/fabric/v4/connections/search")));
+        }
     }
 }

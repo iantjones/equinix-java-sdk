@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.core.http;
 
+import api.equinix.javasdk.core.enums.HttpMethod;
+
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -23,6 +25,12 @@ import java.util.concurrent.ThreadLocalRandom;
  * Controls automatic retry of transient failures. By default the SDK retries throttling (429) and
  * the common transient server errors (500, 502, 503, 504) as well as transient {@code IOException}s,
  * using exponential backoff with full jitter and honoring a {@code Retry-After} header when present.
+ *
+ * <p>To avoid duplicate side effects, retries are by default applied <em>only to idempotent
+ * methods</em> (everything except {@code POST}): a transient failure that occurs after the server
+ * has already processed a {@code POST} create would otherwise re-send it and create a second
+ * resource. Set {@code retryNonIdempotentMethods} if your endpoints are safe to retry (e.g. they
+ * dedupe via an idempotency key, or the POST is a side-effect-free search).</p>
  *
  * <p>Retries are bounded by {@link #getMaxRetries()} attempts beyond the initial request. Pass
  * {@link #none()} to disable retries entirely, or build a custom policy via the constructor.</p>
@@ -37,9 +45,10 @@ public final class RetryPolicy {
     private final Set<Integer> retryableStatusCodes;
     private final boolean retryOnIoException;
     private final boolean honorRetryAfter;
+    private final boolean retryNonIdempotentMethods;
 
     /**
-     * <p>Constructor for RetryPolicy.</p>
+     * Constructor for RetryPolicy that retries only idempotent methods (POST is never retried).
      *
      * @param maxRetries maximum retry attempts beyond the initial request (0 disables retries)
      * @param baseDelayMillis base backoff delay; the n-th retry waits up to {@code base * 2^n}
@@ -50,12 +59,42 @@ public final class RetryPolicy {
      */
     public RetryPolicy(int maxRetries, long baseDelayMillis, long maxDelayMillis,
                        Set<Integer> retryableStatusCodes, boolean retryOnIoException, boolean honorRetryAfter) {
+        this(maxRetries, baseDelayMillis, maxDelayMillis, retryableStatusCodes, retryOnIoException, honorRetryAfter, false);
+    }
+
+    /**
+     * Full constructor.
+     *
+     * @param maxRetries maximum retry attempts beyond the initial request (0 disables retries)
+     * @param baseDelayMillis base backoff delay; the n-th retry waits up to {@code base * 2^n}
+     * @param maxDelayMillis ceiling on any single backoff wait
+     * @param retryableStatusCodes HTTP status codes that trigger a retry
+     * @param retryOnIoException whether transient {@link java.io.IOException}s are retried
+     * @param honorRetryAfter whether a {@code Retry-After} response header overrides the computed backoff
+     * @param retryNonIdempotentMethods whether non-idempotent methods (POST) are also retried — leave
+     *                                  {@code false} unless your endpoints dedupe retried requests
+     */
+    public RetryPolicy(int maxRetries, long baseDelayMillis, long maxDelayMillis,
+                       Set<Integer> retryableStatusCodes, boolean retryOnIoException, boolean honorRetryAfter,
+                       boolean retryNonIdempotentMethods) {
         this.maxRetries = Math.max(0, maxRetries);
         this.baseDelayMillis = Math.max(0, baseDelayMillis);
         this.maxDelayMillis = Math.max(0, maxDelayMillis);
         this.retryableStatusCodes = Set.copyOf(retryableStatusCodes);
         this.retryOnIoException = retryOnIoException;
         this.honorRetryAfter = honorRetryAfter;
+        this.retryNonIdempotentMethods = retryNonIdempotentMethods;
+    }
+
+    /**
+     * Whether a request with the given HTTP method is eligible for retry. POST is treated as the
+     * only non-idempotent method and is not retried unless {@code retryNonIdempotentMethods} is set.
+     *
+     * @param method the request method (may be {@code null}, treated as retryable)
+     * @return {@code true} if retries are permitted for this method
+     */
+    public boolean isRetryableMethod(HttpMethod method) {
+        return retryNonIdempotentMethods || method != HttpMethod.POST;
     }
 
     /**
