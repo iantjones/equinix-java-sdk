@@ -5,6 +5,7 @@ import api.equinix.javasdk.design.value.ratecard.EgressRate;
 import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.ReferenceRateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
 
 import java.math.BigDecimal;
@@ -23,9 +24,11 @@ final class SavingsCalculatorEngine {
     private SavingsCalculatorEngine() {}
 
     static SavingsEstimate compute(SavingsCalculator.Builder b) {
+        // Default: live Equinix interconnect pricing, then bundled reference figures
+        // (which also supply the cloud egress rates the savings calculation needs).
         RateCard rateCard = b.getRateCard() != null
                 ? b.getRateCard()
-                : EquinixRateCard.of(b.getFabric());
+                : RateCard.layered(EquinixRateCard.of(b.getFabric()), ReferenceRateCard.standard());
         Term term = b.getTerm();
 
         BigDecimal gb = b.getEgressUnit().toGigabytes(BigDecimal.valueOf(b.getEgressAmount()));
