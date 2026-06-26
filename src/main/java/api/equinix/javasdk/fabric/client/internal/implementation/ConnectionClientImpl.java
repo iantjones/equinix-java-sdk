@@ -94,7 +94,7 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
                 "endDateTime", Utils.singleParamList(Utils.dateTimeForQuery(endDateTime)),
                 "viewPoint", Utils.singleParamList(viewPoint.toViewPoint())
         );
-        return getOneAs("GetStatistics", Map.of("uuid", uuid), qParams, ConnectionStatisticJson.class);
+        return getAs("GetStatistics", Map.of("uuid", uuid), qParams, ConnectionStatisticJson.class);
     }
 
     public ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {

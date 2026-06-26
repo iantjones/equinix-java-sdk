@@ -25,7 +25,6 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 
 import java.util.List;
@@ -153,25 +152,7 @@ public abstract class ResourceClientBase<M, J> extends PageableBase implements P
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /**
-     * POST a body and deserialize the response into an explicit type — for operations whose
-     * response is not this client's model {@code J} (e.g. a bulk {@code List<M>} create).
-     */
-    protected <R> R postForType(String serviceEndpoint, Object body, TypeReference<?> typeReference) {
-        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, typeReference);
-        Utils.serializeJson(request, body);
-        return Utils.handleSingletonResponse(invoke(request), request);
-    }
-
-    /**
-     * GET a single resource of a secondary response type (e.g. statistics), addressed by path and
-     * query parameters — for operations whose response is not this client's model {@code J}.
-     */
-    protected <R> R getOneAs(String serviceEndpoint, Map<String, String> pathParams,
-                             Map<String, List<String>> queryParams, Class<R> responseClass) {
-        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, responseClass);
-        return Utils.handleSingletonResponse(invoke(request), request);
-    }
+    // (postForType / getAs for secondary response types are inherited from ClientBase.)
 
     // ---- path-parameter variants (for sub-resources nested under a parent id, or code-keyed gets) ----
 

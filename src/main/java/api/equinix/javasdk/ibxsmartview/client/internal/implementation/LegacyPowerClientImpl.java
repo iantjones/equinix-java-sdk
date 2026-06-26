@@ -16,15 +16,11 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyPowerClient;
-import api.equinix.javasdk.ibxsmartview.model.PowerData;
-import api.equinix.javasdk.ibxsmartview.model.TrendingPowerData;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerDataJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TrendingPowerDataJson;
 
@@ -32,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LegacyPowerClientImpl extends PageableBase implements LegacyPowerClient {
+public class LegacyPowerClientImpl extends ClientBase implements LegacyPowerClient {
 
     public LegacyPowerClientImpl(IBXSmartViewConfigImpl configClient) {
         super(configClient, "IBXSmartView", "LegacyPower");
@@ -44,17 +40,11 @@ public class LegacyPowerClientImpl extends PageableBase implements LegacyPowerCl
         Utils.addAdditionalValue(qParams, "ibx", ibx);
         Utils.addAdditionalValue(qParams, "levelType", levelType);
         Utils.addAdditionalValue(qParams, "levelValue", levelValue);
-
-        EquinixRequest<PowerData> equinixRequest = this.buildRequestWithQueryParams("GetCurrentPower", RequestType.SINGLE, qParams, PowerDataJson.class);
-        EquinixResponse<PowerData> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetCurrentPower", null, qParams, PowerDataJson.class);
     }
 
     public List<PowerDataJson> postCurrent(Object requestBody) {
-        EquinixRequest<PowerData> equinixRequest = this.buildRequest("PostCurrentPower", RequestType.LIST, PowerDataJson.class);
-        Utils.serializeJson(equinixRequest, requestBody);
-        EquinixResponse<PowerData> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleListResponse(equinixResponse, equinixRequest);
+        return postListAs("PostCurrentPower", requestBody, PowerDataJson.class);
     }
 
     public TrendingPowerDataJson getTrending(String accountNo, String ibx, String levelType,
@@ -68,10 +58,6 @@ public class LegacyPowerClientImpl extends PageableBase implements LegacyPowerCl
         Utils.addAdditionalValue(qParams, "interval", interval);
         Utils.addAdditionalValue(qParams, "fromDate", fromDate);
         Utils.addAdditionalValue(qParams, "toDate", toDate);
-
-        EquinixRequest<TrendingPowerData> equinixRequest = this.buildRequestWithQueryParams("GetTrendingPower", RequestType.SINGLE, qParams, TrendingPowerDataJson.class);
-        EquinixResponse<TrendingPowerData> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetTrendingPower", null, qParams, TrendingPowerDataJson.class);
     }
-
 }

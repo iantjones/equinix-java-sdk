@@ -16,15 +16,10 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.Sortable;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
@@ -38,60 +33,39 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>PortStatisticsClientImpl class.</p>
+ * Internal client for Fabric Port statistics. The statistics endpoints reuse the generic
+ * single/paginated helpers from {@link ResourceClientBase}/{@code ClientBase}.
  *
  * @author ianjones
  * @version $Id: $Id
  */
-public class PortStatisticClientImpl extends PageableBase implements PortStatisticClient<PortStatistic> {
+public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, PortStatisticJson> implements PortStatisticClient<PortStatistic> {
 
-    /**
-     * <p>Constructor for PortStatisticsClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl} object.
-     */
     public PortStatisticClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "Ports");
+        super(configClient, "Fabric", "Ports", PortStatisticJson.class);
     }
 
-    /** {@inheritDoc} */
+    @Override
+    protected PortStatistic wrap(PortStatisticJson json) {
+        return new PortStatisticWrapper(json, this);
+    }
+
     public PortStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         Map<String, List<String>> qParams = Map.of(
                 "startDateTime", Utils.singleParamList(Utils.dateTimeForQuery(startDateTime)),
                 "endDateTime", Utils.singleParamList(Utils.dateTimeForQuery(endDateTime))
         );
-        Map<String, String> pParams = Map.of("uuid", uuid);
-
-        EquinixRequest<PortStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, pParams, qParams, PortStatisticJson.class);
-        EquinixResponse<PortStatistic> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetStatistics", Map.of("uuid", uuid), qParams, PortStatisticJson.class);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>getTopStatistics.</p>
-     */
     public Page<PortStatistic, PortStatisticJson> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         Utils.addAdditionalValue(qParams, "sort", sortable);
         Utils.addAdditionalValue(qParams, "duration", duration);
-
-        EquinixRequest<PortStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.PAGINATED, null, qParams, PortStatisticJson.class);
-        EquinixResponse<PortStatistic> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("GetStatistics", qParams);
     }
 
-    /** {@inheritDoc} */
     public PortStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return this.getStatistics(uuid, startDateTime, endDateTime);
-    }
-
-    /** {@inheritDoc} */
-    public PaginatedList<PortStatistic> nextPage(PaginatedRequest<PortStatistic> equinixRequest) {
-        EquinixResponse<PortStatistic> equinixResponse = this.invoke(equinixRequest);
-        Page<PortStatistic, PortStatisticJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<PortStatistic> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, PortStatisticWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getStatistics(uuid, startDateTime, endDateTime);
     }
 }
