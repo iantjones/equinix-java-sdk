@@ -18,10 +18,7 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -75,11 +72,7 @@ public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeer
 
     /** {@inheritDoc} */
     public BGPPeeringJson create(BGPPeeringCreatorJson bgpPeeringCreatorJson) {
-        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequest("CreateBGP", RequestType.SINGLE, BGPPeeringJson.class);
-        Utils.serializeJson(equinixRequest, bgpPeeringCreatorJson);
-        EquinixResponse<BGPPeeringJson> equinixResponse = this.invoke(equinixRequest);
-        String aclTemplateUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
-        return getByUuid(aclTemplateUuid);
+        return getByUuid(createReturningLocationUuid("CreateBGP", null, null, bgpPeeringCreatorJson));
     }
 
     /** {@inheritDoc} */

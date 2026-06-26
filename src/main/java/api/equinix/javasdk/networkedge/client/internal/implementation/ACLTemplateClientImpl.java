@@ -18,10 +18,7 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.ACLTemplateClient;
@@ -72,12 +69,9 @@ public class ACLTemplateClientImpl extends ResourceClientBase<ACLTemplate, ACLTe
 
     /** {@inheritDoc} */
     public ACLTemplateJson create(ACLTemplateCreatorJson aclTemplateCreatorJson) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , aclTemplateCreatorJson.getAccountUcmId());
-        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("CreateACLTemplate", RequestType.SINGLE, null, qParams, ACLTemplateJson.class);
-        Utils.serializeJson(equinixRequest, aclTemplateCreatorJson);
-        EquinixResponse<ACLTemplateJson> equinixResponse = this.invoke(equinixRequest);
-        String aclTemplateUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
-        return getByUuid(aclTemplateUuid, aclTemplateCreatorJson.getAccountUcmId());
+        String uuid = createReturningLocationUuid("CreateACLTemplate", null,
+                Utils.singleParamMap("accountUcmId", aclTemplateCreatorJson.getAccountUcmId()), aclTemplateCreatorJson);
+        return getByUuid(uuid, aclTemplateCreatorJson.getAccountUcmId());
     }
 
     /** {@inheritDoc} */

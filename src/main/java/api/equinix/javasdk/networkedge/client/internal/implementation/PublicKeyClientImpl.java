@@ -18,9 +18,6 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.PublicKeyClient;
@@ -68,11 +65,7 @@ public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKey
     
     /** {@inheritDoc} */
     public PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson) {
-        EquinixRequest<PublicKeyJson> equinixRequest = this.buildRequest("CreatePublicKey", RequestType.SINGLE, PublicKeyJson.class);
-        Utils.serializeJson(equinixRequest, publicKeyCreatorJson);
-        EquinixResponse<PublicKeyJson> equinixResponse = this.invoke(equinixRequest);
-        String publicKeyUuid = Utils.extractFromHeader(equinixResponse, "Location", Constants.UUID_PATTERN);
-        return getByUuid(publicKeyUuid);
+        return getByUuid(createReturningLocationUuid("CreatePublicKey", null, null, publicKeyCreatorJson));
     }
 
     /** {@inheritDoc} */

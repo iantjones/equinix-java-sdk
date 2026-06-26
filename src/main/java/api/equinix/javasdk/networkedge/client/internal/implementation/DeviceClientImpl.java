@@ -18,8 +18,6 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.RequestType;
@@ -130,20 +128,10 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
         return getAs("GetPricing", null, Utils.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>Left bespoke: the create carries a {@code draft} query parameter, and no {@code postForType}
-     * helper overload accepts a query-param map (only no-params or path-params).</p>
-     */
+    /** {@inheritDoc} */
     public DeviceJson create(DeviceCreatorJson deviceCreatorJson, Boolean draft) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("draft", draft);
-
-        EquinixRequest<DeviceJson> equinixRequest = this.buildRequestWithQueryParams("CreateDevice", RequestType.SINGLE, qParams, DeviceJson.getCreateTypeRef());
-        Utils.serializeJson(equinixRequest, deviceCreatorJson);
-
-        EquinixResponse<DeviceJson> equinixResponse = this.invoke(equinixRequest);
-        UUIDResult uuidResult = Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        UUIDResult uuidResult = postForType("CreateDevice", null, Utils.singleParamMap("draft", draft),
+                deviceCreatorJson, DeviceJson.getCreateTypeRef());
         return getByUuid(uuidResult.getUuid());
     }
 
