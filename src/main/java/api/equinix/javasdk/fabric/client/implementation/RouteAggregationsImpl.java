@@ -18,10 +18,13 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.RouteAggregations;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationClient;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationWrapper;
@@ -34,10 +37,22 @@ public class RouteAggregationsImpl implements RouteAggregations {
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<RouteAggregation> list() {
-        Page<RouteAggregation, RouteAggregationJson> responsePage = this.serviceClient.list();
-        PaginatedList<RouteAggregation> routeAggregationList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, RouteAggregationWrapper::new);
-        return new PaginatedList<>(routeAggregationList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public PaginatedFilteredList<RouteAggregation> search() {
+        return search(Filter.filter().empty());
+    }
+
+    public PaginatedFilteredList<RouteAggregation> search(FilterPropertyList filter) {
+        return search(filter, null);
+    }
+
+    public PaginatedFilteredList<RouteAggregation> search(SortPropertyList sort) {
+        return search(null, sort);
+    }
+
+    public PaginatedFilteredList<RouteAggregation> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<RouteAggregation, RouteAggregationJson> responsePage = this.serviceClient.search(filter, sort);
+        PaginatedFilteredList<RouteAggregation> routeAggregationList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteAggregationWrapper::new);
+        return new PaginatedFilteredList<>(routeAggregationList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public RouteAggregation getByUuid(String uuid) {

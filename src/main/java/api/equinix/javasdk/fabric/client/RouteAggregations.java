@@ -16,8 +16,10 @@
 
 package api.equinix.javasdk.fabric.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
 
 /**
@@ -27,11 +29,37 @@ import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
 public interface RouteAggregations {
 
     /**
-     * Lists all route aggregations accessible to the current account.
+     * Searches all route aggregations accessible to the current account
+     * (Fabric exposes route aggregations via {@code POST /routeAggregations/search}, not a GET list).
      *
-     * @return a paginated list of route aggregations
+     * @return a paginated, filtered list of route aggregations
      */
-    PaginatedList<RouteAggregation> list();
+    PaginatedFilteredList<RouteAggregation> search();
+
+    /**
+     * Searches route aggregations matching the supplied filter criteria.
+     *
+     * @param filter the filter criteria
+     * @return a paginated, filtered list of matching route aggregations
+     */
+    PaginatedFilteredList<RouteAggregation> search(FilterPropertyList filter);
+
+    /**
+     * Searches all route aggregations, applying the supplied sort order.
+     *
+     * @param sort the sort criteria
+     * @return a paginated, filtered list of route aggregations
+     */
+    PaginatedFilteredList<RouteAggregation> search(SortPropertyList sort);
+
+    /**
+     * Searches route aggregations matching the supplied filter criteria, applying the supplied sort order.
+     *
+     * @param filter the filter criteria
+     * @param sort the sort criteria
+     * @return a paginated, filtered list of matching route aggregations
+     */
+    PaginatedFilteredList<RouteAggregation> search(FilterPropertyList filter, SortPropertyList sort);
 
     /**
      * Retrieves a single route aggregation by its unique identifier.

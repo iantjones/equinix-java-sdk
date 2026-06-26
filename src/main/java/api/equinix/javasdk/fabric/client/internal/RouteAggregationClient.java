@@ -18,16 +18,18 @@ package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationCreatorJson;
 
 import java.util.List;
 
-public interface RouteAggregationClient<T> extends Pageable<T> {
+public interface RouteAggregationClient<T> extends PageablePost<T> {
 
-    Page<RouteAggregation, RouteAggregationJson> list();
+    Page<RouteAggregation, RouteAggregationJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     RouteAggregationJson getByUuid(String uuid);
 

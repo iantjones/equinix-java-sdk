@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.RouteAggregationType;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
 import org.junit.jupiter.api.*;
@@ -48,6 +49,27 @@ class FabricRouteAggregationsWireMockTest extends WireMockTestBase {
             RouteAggregation ra = fabric.routeAggregations().getByUuid("b1c2d3e4-f5a6-7890-bcde-f01234567890");
             assertNotNull(ra);
             assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", ra.getUuid());
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        @Test
+        @DisplayName("POSTs to /routeAggregations/search and returns a filtered list")
+        void searchReturnsResults() {
+            // Fabric exposes route aggregations via POST /search, not a GET list.
+            stubPaginatedPost(wireMock, "/fabric/v4/routeAggregations/search",
+                    "/json/fabric/paginated_route_aggregations.json");
+
+            PaginatedFilteredList<RouteAggregation> aggregations = fabric.routeAggregations().search();
+
+            assertNotNull(aggregations);
+            assertEquals(1, aggregations.size());
+            assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", aggregations.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/routeAggregations/search")));
         }
     }
 
