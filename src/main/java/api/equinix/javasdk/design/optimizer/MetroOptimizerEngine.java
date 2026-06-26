@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer;
 
-import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
@@ -62,7 +62,7 @@ final class MetroOptimizerEngine {
      * @return the complete optimization result
      * @see OptimizationResult
      */
-    static OptimizationResult execute(OptimizationRequest request, Fabric fabric) {
+    static OptimizationResult execute(OptimizationRequest request, FabricGateway fabric) {
         long startTime = System.currentTimeMillis();
 
         // Phase 1: Data Collection

@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.wizard;
 
-import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
@@ -54,7 +54,7 @@ public final class DeploymentWizard {
      * @param optimizationResult the optimization result to transform into a deployment plan
      * @return a new {@link Builder} instance
      */
-    public static Builder builder(Fabric fabric, OptimizationResult optimizationResult) {
+    public static Builder builder(FabricGateway fabric, OptimizationResult optimizationResult) {
         return new Builder(fabric, optimizationResult);
     }
 
@@ -65,7 +65,7 @@ public final class DeploymentWizard {
      */
     public static final class Builder {
 
-        private final Fabric fabric;
+        private final FabricGateway fabric;
         private final OptimizationResult optimizationResult;
 
         // Cloud Router settings
@@ -97,7 +97,7 @@ public final class DeploymentWizard {
         // MCP validation
         private McpBridge mcpBridge;
 
-        Builder(Fabric fabric, OptimizationResult optimizationResult) {
+        Builder(FabricGateway fabric, OptimizationResult optimizationResult) {
             this.fabric = fabric;
             this.optimizationResult = optimizationResult;
         }
@@ -299,7 +299,7 @@ public final class DeploymentWizard {
 
         // Package-private accessors for the engine
 
-        Fabric getFabric() { return fabric; }
+        FabricGateway getFabric() { return fabric; }
         OptimizationResult getOptimizationResult() { return optimizationResult; }
         String getRouterPackage() { return routerPackage; }
         String getRouterNamePrefix() { return routerNamePrefix; }

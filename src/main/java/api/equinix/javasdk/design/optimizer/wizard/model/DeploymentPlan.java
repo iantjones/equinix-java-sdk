@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
-import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.CloudRouter;
@@ -56,7 +56,7 @@ public class DeploymentPlan {
 
     /** Reference to the Fabric client for execution. */
     @JsonIgnore
-    Fabric fabric;
+    FabricGateway fabric;
 
     /**
      * Total number of resources that will be created by this plan.
