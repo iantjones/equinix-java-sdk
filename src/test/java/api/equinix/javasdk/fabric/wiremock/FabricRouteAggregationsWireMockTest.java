@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.RouteAggregationType;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
 import org.junit.jupiter.api.*;
 
@@ -47,6 +48,35 @@ class FabricRouteAggregationsWireMockTest extends WireMockTestBase {
             RouteAggregation ra = fabric.routeAggregations().getByUuid("b1c2d3e4-f5a6-7890-bcde-f01234567890");
             assertNotNull(ra);
             assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", ra.getUuid());
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the configured route aggregation and returns the created object")
+        void createsRouteAggregation() {
+            // POST returns the created object body directly.
+            stubCreate(wireMock, "/fabric/v4/routeAggregations",
+                    "/json/fabric/route_aggregation_response.json");
+
+            RouteAggregation created = fabric.routeAggregations().define()
+                    .ofType(RouteAggregationType.BGP_IPv4_PREFIX_AGGREGATION)
+                    .withName("Production-Aggregation")
+                    .withDescription("Primary route aggregation")
+                    .withProjectId("d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345")
+                    .create();
+
+            assertNotNull(created);
+            assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", created.getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/routeAggregations"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("BGP_IPv4_PREFIX_AGGREGATION")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Production-Aggregation")))
+                    .withRequestBody(matchingJsonPath("$.project.projectId",
+                            equalTo("d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"))));
         }
     }
 

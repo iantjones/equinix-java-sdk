@@ -61,6 +61,34 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the cloud router body to the collection and returns the created router")
+        void createsCloudRouter() {
+            stubCreate(wireMock, "/fabric/v4/routers", "/json/fabric/cloud_router_response.json");
+
+            CloudRouter router = fabric.cloudRouters().define()
+                    .name("My-Cloud-Router-Primary")
+                    .inMetro("SV")
+                    .withPackage("PREMIUM")
+                    .create();
+
+            assertNotNull(router);
+            assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", router.getUuid());
+            assertEquals("My-Cloud-Router-Primary", router.getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("XF_ROUTER")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("My-Cloud-Router-Primary")))
+                    .withRequestBody(matchingJsonPath("$.location.metroCode", equalTo("SV")))
+                    .withRequestBody(matchingJsonPath("$.package.code", equalTo("PREMIUM"))));
+        }
+    }
+
+    @Nested
     @DisplayName("update() / save()")
     class Update {
 

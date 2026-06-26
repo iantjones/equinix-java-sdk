@@ -7,6 +7,7 @@ import api.equinix.javasdk.networkedge.model.BGPPeering;
 import org.junit.jupiter.api.*;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -57,6 +58,50 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> networkEdge.bgpPeerings().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / save()")
+    class Create {
+
+        // Valid UUID for the 201 Location header (Constants.UUID_PATTERN = 8-4-4-4-12 hex).
+        private static final String NEW_UUID = "b1c2d3e4-f5a6-7890-bcde-f12345678901";
+
+        @Test
+        @DisplayName("POSTs the create body, follows the 201 Location header, and GETs the new BGP peering")
+        void createsBgpPeering() {
+            // POST /ne/v1/bgp -> 201 with Location header carrying the new uuid.
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/bgp/?"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Location", "https://localhost/ne/v1/bgp/" + NEW_UUID)));
+            // GET /ne/v1/bgp/{uuid} -> returns the created object body.
+            stubSingleton(wireMock, "/ne/v1/bgp/.*", "/json/networkedge/bgppeering_response.json");
+
+            BGPPeering peering = networkEdge.bgpPeerings()
+                    .define()
+                    .forConnection("conn-aaaa-bbbb-cccc-ddddeeeeffff")
+                    .withLocalIpAddress("169.254.0.1/30")
+                    .withRemoteIpAddress("169.254.0.2")
+                    .withLocalAsn(65000)
+                    .withRemoteAsn(65001)
+                    .save();
+
+            assertNotNull(peering);
+            // getUuid()/getConnectionName() reflect the fixture body returned by the follow-up GET.
+            assertEquals("bgp-1111-2222-3333-444455556666", peering.getUuid());
+            assertEquals("test-connection", peering.getConnectionName());
+
+            // Verify the outgoing create request body.
+            wireMock.verify(postRequestedFor(urlPathMatching("/ne/v1/bgp/?"))
+                    .withRequestBody(matchingJsonPath("$.connectionUuid", equalTo("conn-aaaa-bbbb-cccc-ddddeeeeffff")))
+                    .withRequestBody(matchingJsonPath("$.localIpAddress", equalTo("169.254.0.1/30")))
+                    .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("169.254.0.2")))
+                    .withRequestBody(matchingJsonPath("$.localAsn", equalTo("65000")))
+                    .withRequestBody(matchingJsonPath("$.remoteAsn", equalTo("65001"))));
+            // Verify the follow-up GET for the uuid parsed from the Location header.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + NEW_UUID)));
         }
     }
 

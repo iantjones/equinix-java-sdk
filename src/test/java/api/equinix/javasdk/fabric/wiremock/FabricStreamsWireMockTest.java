@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.StreamType;
 import api.equinix.javasdk.fabric.model.Stream;
 import org.junit.jupiter.api.*;
 
@@ -73,6 +74,35 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
             assertEquals(1, streams.size());
             assertEquals("d4e5f6a7-b8c9-0123-defa-345678901bcd", streams.get(0).getUuid());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/streams")));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the stream body to the collection and returns the created stream")
+        void createsStream() {
+            stubCreate(wireMock, "/fabric/v4/streams", "/json/fabric/stream_response.json");
+
+            Stream stream = fabric.streams().define()
+                    .withType(StreamType.TELEMETRY_STREAM)
+                    .withName("Production-Telemetry-Stream")
+                    .withDescription("Primary telemetry stream")
+                    .withEnabled(true)
+                    .create();
+
+            assertNotNull(stream);
+            assertEquals("d4e5f6a7-b8c9-0123-defa-345678901bcd", stream.getUuid());
+            assertEquals("Production-Telemetry-Stream", stream.getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/streams"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("TELEMETRY_STREAM")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Production-Telemetry-Stream")))
+                    .withRequestBody(matchingJsonPath("$.description", equalTo("Primary telemetry stream")))
+                    .withRequestBody(matchingJsonPath("$.enabled", equalTo("true"))));
         }
     }
 
