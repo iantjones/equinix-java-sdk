@@ -18,13 +18,12 @@ package api.equinix.javasdk.core.http.response;
 
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.experimental.Delegate;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A paginated, filtered list of resources returned by Equinix API search operations.
@@ -33,8 +32,9 @@ import java.util.ArrayList;
  * filter and sort criteria in the request body. Returned by {@code search()} methods
  * on resource clients such as {@code fabric.connections().search()}.</p>
  *
- * <p>Provides the same pagination capabilities as {@link PaginatedList}: check for
- * additional pages, load the next page, or eagerly load all pages.</p>
+ * <p>Like {@link PaginatedList}, it implements {@link List} by composition (delegating to an
+ * internal {@code List}) rather than extending {@link ArrayList}, and provides the same pagination
+ * capabilities: check for additional pages, load the next page, or eagerly load all pages.</p>
  *
  * @param <T> the type of resource in the list
  * @author ianjones
@@ -43,9 +43,10 @@ import java.util.ArrayList;
  * @see Pagination
  */
 @Getter
-@Setter
-@NoArgsConstructor
-public class PaginatedFilteredList<T> extends ArrayList<T> {
+public class PaginatedFilteredList<T> implements List<T> {
+
+    @Delegate
+    private final List<T> items = new ArrayList<>();
 
     private PageablePost<T> pageableClient;
     private EquinixRequest<T> equinixRequest;
@@ -53,18 +54,25 @@ public class PaginatedFilteredList<T> extends ArrayList<T> {
     private Pagination pagination;
 
     /**
-     * <p>Constructor for PaginatedList.</p>
+     * No-arg constructor used when collecting mapped items (e.g. {@code Collectors.toCollection}).
+     * Pagination metadata is attached afterwards via the full constructor.
+     */
+    public PaginatedFilteredList() {
+    }
+
+    /**
+     * <p>Constructor for PaginatedFilteredList.</p>
      *
-     * @param initialItems a {@link PaginatedFilteredList} object.
-     * @param pageableClient a {@link Pageable} object.
+     * @param initialItems the items for the current page.
+     * @param pageableClient a {@link PageablePost} object.
      * @param equinixRequest a {@link EquinixRequest} object.
      * @param equinixResponse a {@link EquinixResponse} object.
      * @param pagination a {@link Pagination} object.
      */
-    public PaginatedFilteredList(PaginatedFilteredList<T> initialItems, PageablePost<T> pageableClient,
+    public PaginatedFilteredList(List<T> initialItems, PageablePost<T> pageableClient,
                                  EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse, Pagination pagination) {
 
-        this.addAll(initialItems);
+        this.items.addAll(initialItems);
         this.pageableClient = pageableClient;
         this.equinixRequest = equinixRequest;
         this.equinixResponse = equinixResponse;
@@ -78,7 +86,7 @@ public class PaginatedFilteredList<T> extends ArrayList<T> {
 
     private void loadNextPage() {
         PaginatedFilteredList<T> primaryObjectList = fetchNextPage();
-        this.addAll(primaryObjectList);
+        this.items.addAll(primaryObjectList);
         this.equinixRequest = primaryObjectList.getEquinixRequest();
         this.equinixResponse = primaryObjectList.getEquinixResponse();
         this.pagination = primaryObjectList.getPagination();
@@ -114,5 +122,23 @@ public class PaginatedFilteredList<T> extends ArrayList<T> {
         }
 
         return this;
+    }
+
+    // equals/hashCode/toString delegate to the backing list so the List contract (element-based
+    // equality, per java.util.List) is honored — @Delegate does not generate Object methods.
+
+    @Override
+    public boolean equals(Object o) {
+        return items.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return items.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return items.toString();
     }
 }
