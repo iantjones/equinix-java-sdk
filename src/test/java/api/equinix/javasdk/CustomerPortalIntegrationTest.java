@@ -11,7 +11,6 @@ import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.Shipment;
 import api.equinix.javasdk.customerportal.model.SmartHands;
-import api.equinix.javasdk.customerportal.model.SupportCase;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.WorkVisit;
 import org.junit.jupiter.api.*;
@@ -217,27 +216,6 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
                 }
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Assets test skipped: " + e.getMessage());
-            }
-        }
-
-        @Test
-        @DisplayName("List support cases and get by UUID")
-        void listSupportCases() {
-            try {
-                PaginatedList<SupportCase> items = timedCall("CustomerPortal", "list", "SupportCase", "GET",
-                        () -> client.supportCases().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-
-                if (items.size() > 0) {
-                    SupportCase item = timedCall("CustomerPortal", "getByUuid", "SupportCase", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.supportCases().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "SupportCases test skipped: " + e.getMessage());
             }
         }
 

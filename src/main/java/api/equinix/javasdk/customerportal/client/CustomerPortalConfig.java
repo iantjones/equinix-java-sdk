@@ -28,22 +28,16 @@ import api.equinix.javasdk.customerportal.client.internal.TroubleTicketClient;
 import api.equinix.javasdk.customerportal.client.internal.WorkVisitClient;
 import api.equinix.javasdk.customerportal.client.internal.NotificationClient;
 import api.equinix.javasdk.customerportal.client.internal.AssetClient;
-import api.equinix.javasdk.customerportal.client.internal.SupportCaseClient;
 import api.equinix.javasdk.customerportal.client.internal.QuoteClient;
 import api.equinix.javasdk.customerportal.client.internal.SupportPlanClient;
 import api.equinix.javasdk.customerportal.client.internal.OrderHistoryClient;
 import api.equinix.javasdk.customerportal.client.internal.LookupClient;
 import api.equinix.javasdk.customerportal.client.internal.AttachmentClient;
 import api.equinix.javasdk.customerportal.client.internal.ReportClient;
-import api.equinix.javasdk.customerportal.client.internal.DigitalLOAClient;
 import api.equinix.javasdk.customerportal.client.internal.SecureCabinetClient;
-import api.equinix.javasdk.customerportal.client.internal.UnifiedNotificationClient;
-import api.equinix.javasdk.customerportal.client.internal.BillingCreditClient;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.Attachment;
-import api.equinix.javasdk.customerportal.model.BillingCredit;
 import api.equinix.javasdk.customerportal.model.CrossConnect;
-import api.equinix.javasdk.customerportal.model.DigitalLOA;
 import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
@@ -57,10 +51,8 @@ import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.SecureCabinet;
 import api.equinix.javasdk.customerportal.model.Shipment;
 import api.equinix.javasdk.customerportal.model.SmartHands;
-import api.equinix.javasdk.customerportal.model.SupportCase;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
-import api.equinix.javasdk.customerportal.model.UnifiedNotification;
 import api.equinix.javasdk.customerportal.model.WorkVisit;
 
 public interface CustomerPortalConfig {
@@ -89,7 +81,6 @@ public interface CustomerPortalConfig {
 
     AssetClient<Asset> getAssetClient();
 
-    SupportCaseClient<SupportCase> getSupportCaseClient();
 
     QuoteClient<Quote> getQuoteClient();
 
@@ -103,11 +94,8 @@ public interface CustomerPortalConfig {
 
     ReportClient<Report> getReportClient();
 
-    DigitalLOAClient<DigitalLOA> getDigitalLOAClient();
 
     SecureCabinetClient<SecureCabinet> getSecureCabinetClient();
 
-    UnifiedNotificationClient<UnifiedNotification> getUnifiedNotificationClient();
 
-    BillingCreditClient<BillingCredit> getBillingCreditClient();
 }
