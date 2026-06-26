@@ -109,6 +109,13 @@ public abstract class ResourceClientBase<M, J> extends PageableBase implements P
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
+    /** PUT/PATCH a body to update an existing resource by uuid. */
+    protected J updateOne(String serviceEndpoint, String uuid, Object body) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
+        Utils.serializeJson(request, body);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
     /** DELETE a resource by uuid. */
     protected J deleteOne(String serviceEndpoint, String uuid) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);

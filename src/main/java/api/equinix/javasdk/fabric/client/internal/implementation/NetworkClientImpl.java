@@ -16,16 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.NetworkClient;
@@ -36,66 +28,38 @@ import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
 
-import java.util.Map;
-
-public class NetworkClientImpl extends PageableBase implements NetworkClient<Network> {
+public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> implements NetworkClient<Network> {
 
     public NetworkClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "Networks");
+        super(configClient, "Fabric", "Networks", NetworkJson.class);
+    }
+
+    @Override
+    protected Network wrap(NetworkJson json) {
+        return new NetworkWrapper(json, this);
     }
 
     public Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<Network> equinixRequest = this.buildRequest("SearchNetworks", RequestType.PAGINATED_POST, NetworkJson.class);
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
-        EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return searchPage("SearchNetworks", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public NetworkJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<NetworkJson> equinixRequest = this.buildRequestWithPathParams("GetNetwork", RequestType.SINGLE, pParams, NetworkJson.class);
-        EquinixResponse<NetworkJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetNetwork", uuid);
     }
 
     public NetworkJson create(NetworkCreatorJson networkCreatorJson) {
-        EquinixRequest<NetworkJson> equinixRequest = this.buildRequest("PostNetwork", RequestType.SINGLE, NetworkJson.class);
-        Utils.serializeJson(equinixRequest, networkCreatorJson);
-        EquinixResponse<NetworkJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostNetwork", networkCreatorJson);
     }
 
     public NetworkJson update(String uuid, NetworkCreatorJson networkCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<NetworkJson> equinixRequest = this.buildRequestWithPathParams("UpdateNetwork", RequestType.SINGLE, pParams, NetworkJson.class);
-        Utils.serializeJson(equinixRequest, networkCreatorJson);
-        EquinixResponse<NetworkJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateNetwork", uuid, networkCreatorJson);
     }
 
     public NetworkJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Network> equinixRequest = this.buildRequestWithPathParams("DeleteNetwork", RequestType.SINGLE, pParams, NetworkJson.class);
-        EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteNetwork", uuid);
     }
 
     public NetworkJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<Network> nextPage(PaginatedRequest<Network> equinixRequest) {
-        EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
-        Page<Network, NetworkJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Network> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, NetworkWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
-    }
-
-    public PaginatedFilteredList<Network> nextPage(PaginatedPostRequest<Network> equinixRequest) {
-        Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
-        EquinixResponse<Network> equinixResponse = this.invoke(equinixRequest);
-        Page<Network, NetworkJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedFilteredList<Network> newPaginatedFilteredList = Utils.mapPaginatedFilteredList(nextPage.getItems(), this, NetworkWrapper::new);
-        return new PaginatedFilteredList<>(newPaginatedFilteredList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(uuid);
     }
 }
