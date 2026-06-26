@@ -55,9 +55,29 @@ public class StreamOperator extends ResourceImpl<Stream> {
         return new StreamBuilder();
     }
 
+    /**
+     * <p>Begins a fluent full-body update of an existing stream, pre-populated with its current
+     * state. Streams are updated with a full {@code PUT}; the returned builder is seeded from
+     * {@code existing} so callers need only change the fields they want, then call {@code save()}.</p>
+     *
+     * @param existing the current JSON state of the stream to update
+     * @return a seeded {@link api.equinix.javasdk.fabric.model.json.creators.StreamOperator.StreamBuilder}
+     */
+    public StreamBuilder update(StreamJson existing) {
+        StreamBuilder builder = new StreamBuilder();
+        builder.targetUuid = existing.getUuid();
+        builder.type = existing.getType();
+        builder.name = existing.getName();
+        builder.description = existing.getDescription();
+        builder.project = existing.getProject();
+        builder.enabled = existing.getEnabled();
+        return builder;
+    }
+
     @Getter
     public class StreamBuilder {
 
+        private String targetUuid;
         private StreamType type;
         private String name;
         private String description;
@@ -93,8 +113,27 @@ public class StreamOperator extends ResourceImpl<Stream> {
         }
 
         public Stream create() {
+            if (targetUuid != null) {
+                throw new IllegalStateException("This builder targets an existing stream; call save() to update, not create().");
+            }
             StreamCreatorJson streamCreatorJson = new StreamCreatorJson(this);
             StreamJson streamJson = ((StreamClientImpl) StreamOperator.this.getServiceClient()).create(streamCreatorJson);
+            return new StreamWrapper(streamJson, StreamOperator.this.getServiceClient());
+        }
+
+        /**
+         * Applies the accumulated changes to the existing stream (full-body {@code PUT}) and returns
+         * the model refreshed from the server. Only valid on a builder obtained via
+         * {@link StreamOperator#update(StreamJson)}.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.Stream}
+         */
+        public Stream save() {
+            if (targetUuid == null) {
+                throw new IllegalStateException("save() requires update(...); use create() for new streams.");
+            }
+            StreamCreatorJson streamCreatorJson = new StreamCreatorJson(this);
+            StreamJson streamJson = ((StreamClientImpl) StreamOperator.this.getServiceClient()).update(targetUuid, streamCreatorJson);
             return new StreamWrapper(streamJson, StreamOperator.this.getServiceClient());
         }
     }

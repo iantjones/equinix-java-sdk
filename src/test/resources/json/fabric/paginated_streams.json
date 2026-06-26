@@ -1,0 +1,21 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "uuid": "d4e5f6a7-b8c9-0123-defa-345678901bcd",
+      "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd",
+      "name": "Production-Telemetry-Stream",
+      "type": "TELEMETRY_STREAM",
+      "state": "PROVISIONED",
+      "description": "Primary telemetry stream for production network monitoring and alerting",
+      "project": {
+        "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+      },
+      "enabled": true
+    }
+  ]
+}

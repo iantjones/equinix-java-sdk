@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.StreamClientImpl;
 import api.equinix.javasdk.fabric.model.Stream;
 import api.equinix.javasdk.fabric.model.json.StreamJson;
+import api.equinix.javasdk.fabric.model.json.creators.StreamOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class StreamWrapper extends ResourceImpl<Stream> implements Stream {
         this.serviceClient = serviceClient;
     }
 
+    public StreamOperator.StreamBuilder update() {
+        return new StreamOperator(this.serviceClient).update(this.jsonObject);
+    }
+
     public Boolean delete() {
         this.jsonObject = ((StreamClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class StreamWrapper extends ResourceImpl<Stream> implements Stream {
     }
 
     private interface StreamMutability {
+        StreamOperator.StreamBuilder update();
         Boolean delete();
         void refresh();
     }
