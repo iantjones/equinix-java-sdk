@@ -221,6 +221,24 @@ public class DeploymentPlan {
     }
 
     /**
+     * Begins a value-realization assessment of this plan: declare your per-provider
+     * monthly egress volumes and get back the egress savings the plan's private
+     * interconnects unlock, netted against the plan's actual interconnect cost.
+     *
+     * <pre>{@code
+     * PlanValueRealization vr = plan.valueRealization()
+     *     .egress(CloudProviderType.AWS, 50, DataUnit.TERABYTE)
+     *     .assess();
+     * System.out.println(vr.toMarkdown());
+     * }</pre>
+     *
+     * @return a {@link PlanValueAssessment} builder for declaring egress volumes
+     */
+    public PlanValueAssessment valueRealization() {
+        return new PlanValueAssessment(this);
+    }
+
+    /**
      * Validates the deployment plan using Fabric's dry-run API.
      * Returns a new DeploymentPlan with updated validation status.
      */
