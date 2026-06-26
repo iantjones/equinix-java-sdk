@@ -59,6 +59,9 @@ public abstract class WireMockTestBase {
      */
     protected static void redirectToWireMock(api.equinix.javasdk.EquinixClient client) {
         client.getEquinixClient().setEndPoint(wireMockUrl());
+        // Disable retries by default in tests so error-mapping assertions see exactly one request
+        // and don't incur backoff delays. Retry-specific tests re-enable a policy explicitly.
+        client.getEquinixClient().setRetryPolicy(api.equinix.javasdk.core.http.RetryPolicy.none());
     }
 
     /**
