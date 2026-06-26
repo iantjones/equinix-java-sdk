@@ -5,6 +5,51 @@ All notable changes to the Equinix Java SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-06-26
+
+A major hardening and correctness release. **Breaking:** fictional/misattributed resources
+were removed and the value-add engines moved to dedicated top-level modules.
+
+### Added
+- **Fluent `update()` across all 13 mutable Fabric resources** (Network, CloudRouter, Stream,
+  StreamSubscription, PrecisionTime, RouteFilter, RouteFilterRule, RouteAggregation,
+  RouteAggregationRule, RoutingProtocol). Resources whose API uses RFC 6902 JSON Patch send a
+  typed operations array with `application/json-patch+json`; full-body resources use a seeded
+  builder. Exposed on each model/wrapper, e.g. `network.update().name("x").save()`.
+- **Automatic retry/backoff** (`RetryPolicy`): retries 429/500/502/503/504 and transient IO
+  errors with exponential backoff + full jitter, honoring `Retry-After`. Configurable via
+  `EquinixClient.setRetryPolicy(...)`; on by default.
+- **Forward-compatible enum deserialization**: unknown API enum values no longer crash a
+  response (map to a default/`null`/`UNKNOWN`).
+- **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
+  instead of silently dispatching a malformed request.
+- **WireMock coverage** for 30+ previously-untested resources (request-contract `verify(...)`).
+
+### Changed
+- **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
+  Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
+  `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.
+- **JSON Patch support in core**: per-request content-type + `PatchOperation` model + `patchOne`.
+
+### Fixed
+- **~20 endpoint-name mismatches** where client code referenced endpoints absent from
+  `apiParams` (silent runtime failures) — notably Fabric PrecisionTime (entirely non-functional),
+  Stream/StreamSubscription/RouteAggregation/RoutingProtocol updates, the NetworkEdge BGP delete
+  and PublicKey delete (missing endpoints added), CloudEvents/RouteFilterRule listing, and the
+  Customer Portal WorkVisit/TroubleTicket create names.
+- **Stream-subscriptions path** (`/streamSubscriptions` → `/subscriptions`, spec-verified).
+- Operator builders that initialized accumulator lists with an immutable `singletonList` then
+  mutated them (`UnsupportedOperationException`); `ResellerWrapper` getters returning `null`
+  and defeating `@Delegate`; `MetrosImpl.list(presence)` ignoring its argument.
+- Corrected the unverifiable "60+ MCP tools" claim; removed the dead `PeeringIntelligence
+  .withMcpEnrichment()` no-op.
+
+### Removed (breaking)
+- **Fictional/misattributed surface**: the entire `Messaging` domain (covered by Fabric Stream
+  Subscriptions + Customer Portal Notifications); InternetAccess `RoutingConfigs`/`Ports` (no
+  EIA v2 counterpart); Customer Portal `SupportCases`/`DigitalLOAs`/`UnifiedNotifications`/
+  `BillingCredits`; assorted dead code (`ModelHelper` classes, unused `serviceManager` fields).
+
 ## [1.3.0] - 2026-03-25
 
 ### Added - MCP Bridge Module
