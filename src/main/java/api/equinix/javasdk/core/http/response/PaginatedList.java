@@ -18,39 +18,42 @@ package api.equinix.javasdk.core.http.response;
 
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A paginated list of resources returned by Equinix API list operations.
  *
- * <p>Implements {@link List} by composition (delegating to an internal {@code List}) rather than
- * extending {@link ArrayList}, so it exposes the full {@code List} contract — {@code get(int)},
- * {@code size()}, iteration, {@code stream()}, {@code new ArrayList<>(list)} — without inheriting
- * {@code ArrayList}'s implementation surface. It adds pagination metadata and automatic page
- * loading on top. All SDK list operations return this type (or {@code PaginatedFilteredList} for
- * search operations); methods are provided to check for additional pages, load the next page, or
- * eagerly load all pages.</p>
+ * <p>This is an {@link Iterable} view of the loaded results plus pagination metadata and automatic
+ * page loading — it is deliberately <em>not</em> a {@link java.util.List}. A server response is not a
+ * mutable collection: modeling it as one (the old {@code extends ArrayList}) exposed {@code add}/
+ * {@code remove}/{@code clear}/{@code ensureCapacity}/… that make no sense for a page of API data.
+ * Instead it follows the idiom used by the major cloud SDKs (AWS SDK v2, Google Cloud, Stripe):
+ * iterate it directly, call {@link #stream()}, or take a snapshot with {@link #toList()}.</p>
  *
  * <h3>Usage</h3>
  * <pre>{@code
  * PaginatedList<Port> ports = fabric.ports().list();
  *
- * // Access pagination metadata
+ * // Iterate or stream the current page
+ * for (Port p : ports) { ... }
+ * ports.stream().filter(...).forEach(...);
+ * Port first = ports.get(0);
+ *
+ * // Pagination metadata
  * Pagination pagination = ports.getPagination();
- * int total = pagination.getTotal();
- * boolean isLast = pagination.getIsLastPage();
  *
  * // Load additional pages
- * while (ports.hasNextPage()) {
- *     ports.next();
- * }
+ * while (ports.hasNextPage()) { ports.next(); }
  *
- * // Or load all pages at once
- * ports.loadAll();
+ * // Or load all pages at once, then take a List snapshot
+ * List<Port> all = ports.loadAll().toList();
  * }</pre>
  *
  * @param <T> the type of resource in the list
@@ -59,9 +62,9 @@ import java.util.List;
  * @see Pagination
  */
 @Getter
-public class PaginatedList<T> implements List<T> {
+public class PaginatedList<T> implements Iterable<T> {
 
-    @Delegate
+    @Getter(AccessLevel.NONE)
     private final List<T> items = new ArrayList<>();
 
     private Pageable<T> pageableClient;
@@ -70,8 +73,7 @@ public class PaginatedList<T> implements List<T> {
     private Pagination pagination;
 
     /**
-     * No-arg constructor used when collecting mapped items (e.g. {@code Collectors.toCollection}).
-     * Pagination metadata is attached afterwards via the full constructor.
+     * No-arg constructor; pagination metadata and items are attached afterwards.
      */
     public PaginatedList() {
     }
@@ -79,20 +81,70 @@ public class PaginatedList<T> implements List<T> {
     /**
      * <p>Constructor for PaginatedList.</p>
      *
-     * @param initialItems the items for the current page.
+     * @param initialItems the items for the current page (any iterable; copied in).
      * @param pageableClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
      * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
      * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
      * @param pagination a {@link api.equinix.javasdk.core.http.response.Pagination} object.
      */
-    public PaginatedList(List<T> initialItems, Pageable<T> pageableClient,
+    public PaginatedList(Iterable<? extends T> initialItems, Pageable<T> pageableClient,
                          EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse, Pagination pagination) {
 
-        this.items.addAll(initialItems);
+        initialItems.forEach(this.items::add);
         this.pageableClient = pageableClient;
         this.equinixRequest = equinixRequest;
         this.equinixResponse = equinixResponse;
         this.pagination = pagination;
+    }
+
+    /** {@inheritDoc} Iterates the currently-loaded items. */
+    @Override
+    public Iterator<T> iterator() {
+        return items.iterator();
+    }
+
+    /**
+     * Streams the currently-loaded items.
+     *
+     * @return a sequential {@link Stream} over the loaded items
+     */
+    public Stream<T> stream() {
+        return items.stream();
+    }
+
+    /**
+     * The number of items currently loaded (on this and any already-loaded pages).
+     *
+     * @return the loaded item count
+     */
+    public int size() {
+        return items.size();
+    }
+
+    /**
+     * @return {@code true} if no items are loaded
+     */
+    public boolean isEmpty() {
+        return items.isEmpty();
+    }
+
+    /**
+     * Returns the loaded item at the given index.
+     *
+     * @param index the zero-based index
+     * @return the item at {@code index}
+     */
+    public T get(int index) {
+        return items.get(index);
+    }
+
+    /**
+     * Returns an unmodifiable snapshot of the currently-loaded items as a {@link List}.
+     *
+     * @return an unmodifiable copy of the loaded items
+     */
+    public List<T> toList() {
+        return Collections.unmodifiableList(new ArrayList<>(items));
     }
 
     private PaginatedList<T> fetchNextPage() {
@@ -102,7 +154,7 @@ public class PaginatedList<T> implements List<T> {
 
     private void loadNextPage() {
         PaginatedList<T> primaryObjectList = fetchNextPage();
-        this.items.addAll(primaryObjectList);
+        this.items.addAll(primaryObjectList.items);
         this.equinixRequest = primaryObjectList.getEquinixRequest();
         this.equinixResponse = primaryObjectList.getEquinixResponse();
         this.pagination = primaryObjectList.getPagination();
@@ -143,12 +195,15 @@ public class PaginatedList<T> implements List<T> {
         return this;
     }
 
-    // equals/hashCode/toString delegate to the backing list so the List contract (element-based
-    // equality, per java.util.List) is honored — @Delegate does not generate Object methods.
-
     @Override
     public boolean equals(Object o) {
-        return items.equals(o);
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof PaginatedList)) {
+            return false;
+        }
+        return items.equals(((PaginatedList<?>) o).items);
     }
 
     @Override

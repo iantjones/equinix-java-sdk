@@ -405,16 +405,18 @@ public class Utils {
      */
     public static <T, S> PaginatedList<T> mapPaginatedList(ArrayList<S> paginatedList, Pageable<T> serviceClient,
                                                            BiFunction<? super S, ? super Pageable<T>, ? extends T> objectMapper){
-        return paginatedList.stream()
+        List<T> mapped = paginatedList.stream()
                 .map(jsonObject -> objectMapper.apply(jsonObject, serviceClient))
-                .collect(Collectors.toCollection(PaginatedList::new));
+                .collect(Collectors.toList());
+        return new PaginatedList<>(mapped, serviceClient, null, null, null);
     }
 
     public static <T, S> PaginatedFilteredList<T> mapPaginatedFilteredList(ArrayList<S> paginatedList, PageablePost<T> serviceClient,
                                                                            BiFunction<? super S, ? super PageablePost<T>, ? extends T> objectMapper){
-        return paginatedList.stream()
+        List<T> mapped = paginatedList.stream()
                 .map(jsonObject -> objectMapper.apply(jsonObject, serviceClient))
-                .collect(Collectors.toCollection(PaginatedFilteredList::new));
+                .collect(Collectors.toList());
+        return new PaginatedFilteredList<>(mapped, serviceClient, null, null, null);
     }
 
     /**
