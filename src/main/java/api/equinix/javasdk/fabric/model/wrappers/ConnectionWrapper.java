@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClien
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
+import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -55,6 +56,10 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
 
     public void performOperation(ConnectionOperationType connectionOperation, String description) {
         performOperation(connectionOperation, description, null);
+    }
+
+    public ConnectionOperator.ConnectionUpdater update() {
+        return new ConnectionOperator((ConnectionClientImpl) this.serviceClient).update(this.getUuid());
     }
 
     public void performOperation(ConnectionOperationType connectionOperation) {

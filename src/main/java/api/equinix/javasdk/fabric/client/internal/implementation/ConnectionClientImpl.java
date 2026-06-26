@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.enums.Side;
@@ -82,6 +83,10 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
     public ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
         return postOne("ManageConnection", Map.of("uuid", uuid),
                 new ManageConnection(connectionOperationType, description, bodyObject));
+    }
+
+    public ConnectionJson update(String uuid, List<PatchOperation> operations) {
+        return patchOne("UpdateConnection", uuid, operations);
     }
 
     public List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList) {

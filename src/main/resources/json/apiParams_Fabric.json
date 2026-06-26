@@ -89,6 +89,10 @@
             "httpMethod": "POST",
             "requestUri": "{$uuid}/actions"
           },
+          "UpdateConnection": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
           "GetStatistics": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}/stats"

@@ -75,6 +75,8 @@ public interface Connection {
 
     void performOperation(ConnectionOperationType connectionOperation);
 
+    api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator.ConnectionUpdater update();
+
     Boolean delete();
 
     void refresh();
