@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
 
 public interface Network {
 
@@ -46,6 +47,14 @@ public interface Network {
     Change getChange();
 
     Integer getConnectionsCount();
+
+    /**
+     * Begins a fluent JSON Patch update of this network, e.g.
+     * {@code network.update().name("New-Name").save()}.
+     *
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.NetworkOperator.NetworkUpdater}
+     */
+    NetworkOperator.NetworkUpdater update();
 
     Boolean delete();
 

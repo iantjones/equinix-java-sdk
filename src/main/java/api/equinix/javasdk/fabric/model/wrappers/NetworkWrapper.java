@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.NetworkClientImpl;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.json.NetworkJson;
+import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class NetworkWrapper extends ResourceImpl<Network> implements Network {
         this.serviceClient = serviceClient;
     }
 
+    public NetworkOperator.NetworkUpdater update() {
+        return new NetworkOperator((NetworkClientImpl) this.serviceClient).update(this.getUuid());
+    }
+
     public Boolean delete() {
         this.jsonObject = ((NetworkClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class NetworkWrapper extends ResourceImpl<Network> implements Network {
     }
 
     private interface NetworkMutability {
+        NetworkOperator.NetworkUpdater update();
         Boolean delete();
         void refresh();
     }

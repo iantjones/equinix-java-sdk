@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
@@ -27,6 +28,8 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
+
+import java.util.List;
 
 public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> implements NetworkClient<Network> {
 
@@ -51,8 +54,8 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
         return postOne("PostNetwork", networkCreatorJson);
     }
 
-    public NetworkJson update(String uuid, NetworkCreatorJson networkCreatorJson) {
-        return updateOne("UpdateNetwork", uuid, networkCreatorJson);
+    public NetworkJson update(String uuid, List<PatchOperation> operations) {
+        return patchOne("UpdateNetwork", uuid, operations);
     }
 
     public NetworkJson delete(String uuid) {
