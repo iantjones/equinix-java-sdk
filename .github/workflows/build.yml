@@ -1,0 +1,39 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Default unit/deserialization suite (writes target/jacoco.exec).
+      - name: Default test suite
+        run: mvn -B clean test
+
+      # WireMock request-contract suite; appends to target/jacoco.exec (no clean),
+      # so the coverage gate below sees combined coverage.
+      - name: WireMock test suite
+        run: mvn -B -P wiremock test
+
+      # Fail the build if combined coverage drops below the configured threshold.
+      - name: Enforce coverage gate
+        run: mvn -B -P coverage jacoco:check
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/

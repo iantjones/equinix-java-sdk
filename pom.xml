@@ -314,6 +314,47 @@
                 </plugins>
             </build>
         </profile>
+
+        <!--
+            Coverage gate. Opt-in (so a partial `mvn test` never false-fails on incomplete
+            coverage data). Intended to run AFTER both test profiles have populated the merged
+            target/jacoco.exec, e.g.:
+                mvn clean test            (default suite -> jacoco.exec)
+                mvn -P wiremock test      (appends the wiremock suite, no clean)
+                mvn -P coverage jacoco:check
+            Thresholds are set just below current combined coverage to catch regressions.
+        -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.40</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.40</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <haltOnFailure>true</haltOnFailure>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <dependencies>
