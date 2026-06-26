@@ -16,8 +16,12 @@
 
 package api.equinix.javasdk.core.http;
 
+import api.equinix.javasdk.core.http.request.PaginatedRequest;
+import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.http.response.Pagination;
+import api.equinix.javasdk.core.internal.Constants;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -28,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Locks the redesigned contract for {@link PaginatedList}/{@link PaginatedFilteredList}: they are an
@@ -100,5 +105,43 @@ class PaginatedListIterableTest {
 
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    // --- auto-paging (next()/loadAll()) — previously untested ---
+
+    /** First page is non-last (limit 1 of total 2); the stub client returns the last page. */
+    private static PaginatedList<String> twoPageList() throws Exception {
+        Pagination notLast = Constants.objectMapper.readValue("{\"offset\":0,\"limit\":1,\"total\":2}", Pagination.class);
+        Pagination last = Constants.objectMapper.readValue("{\"offset\":1,\"limit\":1,\"total\":2}", Pagination.class);
+        Pageable<String> client = req -> new PaginatedList<>(List.of("b"), null, req, null, last);
+        return new PaginatedList<>(List.of("a"), client, new PaginatedRequest<>(), null, notLast);
+    }
+
+    @Test
+    void nextLoadsAndAppendsTheFollowingPage() throws Exception {
+        PaginatedList<String> page = twoPageList();
+        assertEquals(1, page.size());
+        assertTrue(page.hasNextPage());
+
+        page.next();
+
+        assertEquals(2, page.size());
+        assertEquals(List.of("a", "b"), page.toList());
+        assertFalse(page.hasNextPage());
+
+        page.next(); // no-op once on the last page
+        assertEquals(2, page.size());
+    }
+
+    @Test
+    void loadAllAccumulatesAllPages() throws Exception {
+        PaginatedList<String> page = twoPageList();
+
+        PaginatedList<String> same = page.loadAll();
+
+        assertEquals(page, same, "loadAll returns this");
+        assertEquals(2, page.size());
+        assertEquals(List.of("a", "b"), page.toList());
+        assertFalse(page.hasNextPage());
     }
 }
