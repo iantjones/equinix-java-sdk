@@ -5,7 +5,7 @@
 [![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.eqixiac.equinix/equinix-sdk-java.svg)](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)
 
-> A comprehensive Java SDK for the Equinix Platform APIs, providing typed access to Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, and Messaging services.
+> A comprehensive Java SDK for the Equinix Platform APIs, providing typed access to Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, and Projects services — plus value-add `Design` (metro optimizer, deployment wizard, peering intelligence) and `Mcp` modules.
 
 **[View Full API Documentation (Javadoc)](https://iantjones.github.io/equinix-java-sdk/)** · **[Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)**
 
@@ -33,7 +33,7 @@
 <dependency>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>1.3.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -54,13 +54,14 @@ Fabric fabric = new Fabric(credentials);
 
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
-| **Fabric** | `new Fabric(creds)` | 21 | Connections, Ports, Service Tokens, Cloud Routers, Streams, Networks, Route Filters, Routing Protocols, Prices, Health, **Metro Optimizer**, **Deployment Wizard**, **Peering Intelligence**, **MCP Bridge** |
-| **Network Edge** | `new NetworkEdge(creds)` | 10 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
-| **Customer Portal** | `new CustomerPortal(creds)` | 21 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Assets, Reports |
+| **Fabric** | `new Fabric(creds)` | 20 | Connections, Ports, Service Tokens, Cloud Routers, Networks, Streams, Stream Subscriptions, Precision Time, Route Filters (+Rules), Route Aggregations (+Rules), Routing Protocols, Service Profiles, Prices, Health — all mutable resources support fluent `update()` |
+| **Network Edge** | `new NetworkEdge(creds)` | 12 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
+| **Customer Portal** | `new CustomerPortal(creds)` | 17 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Resellers, Quotes, Assets, Reports, Secure Cabinets |
 | **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Readings, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
-| **Internet Access** | `new InternetAccess(creds)` | 3 | Internet Access Services, Ports, Routing Configurations |
+| **Internet Access** | `new InternetAccess(creds)` | 1 | Internet Access Services |
 | **Projects** | `new Projects(creds)` | 1 | Project Management |
-| **Messaging** | `new Messaging(creds)` | 2 | Notification Subscriptions, Events |
+| **Design** (value-add) | `Fabric.optimizeMetros()` / `.deploymentWizard()` / `.peeringIntelligence()` | — | Metro Optimizer, Deployment Wizard, Peering Intelligence (`api.equinix.javasdk.design.*`) |
+| **Mcp** (value-add) | `Fabric.mcp()` | — | MCP JSON-RPC bridge (`api.equinix.javasdk.mcp.*`) |
 
 ## Usage Examples
 
@@ -331,8 +332,8 @@ The optimizer uses live Fabric API data — inter-metro latency from `Metro.conn
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
-import api.equinix.javasdk.fabric.optimizer.enums.*;
-import api.equinix.javasdk.fabric.optimizer.model.*;
+import api.equinix.javasdk.design.optimizer.enums.*;
+import api.equinix.javasdk.design.optimizer.model.*;
 
 Fabric fabric = new Fabric(credentials);
 
@@ -868,7 +869,7 @@ JsonNode events = mcp.observability().searchCloudEvents(Map.of(
 
 #### MCP-Enriched Optimization
 
-The Metro Optimizer, Deployment Wizard, and Peering Intelligence modules each accept an optional MCP bridge for real-time enrichment. When MCP is unavailable, they fall back to standard API data with no code changes.
+The Metro Optimizer and Deployment Wizard accept an optional MCP bridge for real-time enrichment. When MCP is unavailable, they fall back to standard API data with no code changes.
 
 ```java
 // Metro Optimizer with MCP enrichment
@@ -891,9 +892,8 @@ DeploymentPlan plan = fabric.deploymentWizard(result)
     .customerAsn(65100L)
     .plan();
 
-// Peering Intelligence with MCP enrichment
+// Peering Intelligence (PeeringDB + optional live Fabric data)
 PeeringIntelligenceResult peeringResult = fabric.peeringIntelligence("your-peeringdb-api-key")
-    .withMcpEnrichment(fabric.mcp())  // enrich with live connection data
     .addAsn(16509, "AWS")
     .addAsn(8075, "Microsoft")
     .customerMetros(MetroCode.DC, MetroCode.DA)
@@ -1433,7 +1433,7 @@ Unit tests validate JSON deserialization, pagination logic, exception mapping, a
 ```bash
 mvn test -Pwiremock
 ```
-WireMock tests run a local HTTP server to simulate Equinix API responses, testing full request/response cycles for Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, Messaging, and MCP Bridge without requiring live API credentials. Coverage includes CRUD operations, pagination, error handling, OAuth2 token management, JSON-RPC protocol, and typed bridge responses.
+WireMock tests run a local HTTP server to simulate Equinix API responses, testing full request/response cycles for Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, and the MCP Bridge without requiring live API credentials. Coverage includes CRUD operations, pagination, error handling, OAuth2 token management, JSON-RPC protocol, and typed bridge responses.
 
 ### Integration Tests (Credentials Required)
 ```bash
