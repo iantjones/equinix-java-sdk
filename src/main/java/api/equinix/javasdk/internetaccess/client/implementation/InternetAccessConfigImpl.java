@@ -20,8 +20,6 @@ import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
 import api.equinix.javasdk.internetaccess.client.InternetAccessConfig;
 import api.equinix.javasdk.internetaccess.client.internal.implementation.InternetAccessServiceClientImpl;
-import api.equinix.javasdk.internetaccess.client.internal.implementation.InternetAccessPortClientImpl;
-import api.equinix.javasdk.internetaccess.client.internal.implementation.RoutingConfigClientImpl;
 import lombok.Getter;
 
 @Getter
@@ -29,14 +27,8 @@ public class InternetAccessConfigImpl extends Config implements InternetAccessCo
 
     private final InternetAccessServiceClientImpl internetAccessServiceClient;
 
-    private final InternetAccessPortClientImpl internetAccessPortClient;
-
-    private final RoutingConfigClientImpl routingConfigClient;
-
     public InternetAccessConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
         this.internetAccessServiceClient = new InternetAccessServiceClientImpl(this);
-        this.internetAccessPortClient = new InternetAccessPortClientImpl(this);
-        this.routingConfigClient = new RoutingConfigClientImpl(this);
     }
 }

@@ -57,19 +57,4 @@ class InternetAccessWireMockTest extends WireMockTestBase {
                     () -> internetAccess.services().getByUuid("test-uuid"));
         }
     }
-
-    @Nested
-    @DisplayName("Ports - Error handling")
-    class PortsErrors {
-
-        @Test
-        @DisplayName("404 throws EquinixNotFoundException")
-        void notFound() {
-            stubErrorInline(wireMock, "/internetAccess/v1/ports/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Port not found\"}]");
-
-            assertThrows(EquinixNotFoundException.class,
-                    () -> internetAccess.ports().getByUuid("invalid-uuid"));
-        }
-    }
 }

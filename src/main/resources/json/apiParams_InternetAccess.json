@@ -12,22 +12,6 @@
           "UpdateService": { "httpMethod": "PUT", "requestUri": "{$uuid}" },
           "DeleteService": { "httpMethod": "DELETE", "requestUri": "{$uuid}" }
         }
-      },
-      "Ports": {
-        "rootUri": "ports",
-        "serviceEndpoints": {
-          "ListPorts": { "httpMethod": "GET" },
-          "GetPort": { "httpMethod": "GET", "requestUri": "{$uuid}" }
-        }
-      },
-      "RoutingConfigs": {
-        "rootUri": "routingConfigs",
-        "serviceEndpoints": {
-          "ListRoutingConfigs": { "httpMethod": "GET" },
-          "GetRoutingConfig": { "httpMethod": "GET", "requestUri": "{$uuid}" },
-          "CreateRoutingConfig": { "httpMethod": "POST" },
-          "UpdateRoutingConfig": { "httpMethod": "PUT", "requestUri": "{$uuid}" }
-        }
       }
     }
   }
