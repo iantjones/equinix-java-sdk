@@ -16,43 +16,32 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.customerportal.client.RequestBuilder;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.InvoiceSummaryClient;
-import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
-import api.equinix.javasdk.customerportal.model.json.InvoiceDetailJson;
 import api.equinix.javasdk.customerportal.model.json.InvoiceSummaryJson;
 import api.equinix.javasdk.customerportal.model.wrappers.InvoiceSummaryWrapper;
 
 import java.util.List;
 import java.util.Map;
 
-public class InvoiceSummaryClientImpl extends PageableBase implements InvoiceSummaryClient<InvoiceSummary> {
+public class InvoiceSummaryClientImpl extends ResourceClientBase<InvoiceSummary, InvoiceSummaryJson> implements InvoiceSummaryClient<InvoiceSummary> {
 
     public InvoiceSummaryClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Invoices");
+        super(configClient, "CustomerPortal", "Invoices", InvoiceSummaryJson.class);
+    }
+
+    @Override
+    protected InvoiceSummary wrap(InvoiceSummaryJson json) {
+        return new InvoiceSummaryWrapper(json, this);
     }
 
     public Page<InvoiceSummary, InvoiceSummaryJson> list(RequestBuilder.Invoice requestBuilder) {
         Map<String, List<String>> qParams = Utils.processRequestBuilder(requestBuilder);
-        EquinixRequest<InvoiceSummary> equinixRequest = this.buildRequestWithQueryParams("ListInvoiceSummaries", RequestType.PAGINATED, qParams, InvoiceSummaryJson.class);
-        EquinixResponse<InvoiceSummary> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<InvoiceSummary> nextPage(PaginatedRequest<InvoiceSummary> equinixRequest) {
-        EquinixResponse<InvoiceSummary> equinixResponse = this.invoke(equinixRequest);
-        Page<InvoiceSummary, InvoiceSummaryJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<InvoiceSummary> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, InvoiceSummaryWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return listPage("ListInvoiceSummaries", qParams);
     }
 }

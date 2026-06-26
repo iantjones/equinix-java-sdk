@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.WorkVisitClient;
 import api.equinix.javasdk.customerportal.model.WorkVisit;
@@ -31,57 +25,38 @@ import api.equinix.javasdk.customerportal.model.json.WorkVisitJson;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.WorkVisitWrapper;
 
-import java.util.Map;
-
-public class WorkVisitClientImpl extends PageableBase implements WorkVisitClient<WorkVisit> {
+public class WorkVisitClientImpl extends ResourceClientBase<WorkVisit, WorkVisitJson> implements WorkVisitClient<WorkVisit> {
 
     public WorkVisitClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "WorkVisits");
+        super(configClient, "CustomerPortal", "WorkVisits", WorkVisitJson.class);
+    }
+
+    @Override
+    protected WorkVisit wrap(WorkVisitJson json) {
+        return new WorkVisitWrapper(json, this);
     }
 
     public Page<WorkVisit, WorkVisitJson> list() {
-        EquinixRequest<WorkVisit> equinixRequest = this.buildRequest("ListWorkVisits", RequestType.PAGINATED, WorkVisitJson.class);
-        EquinixResponse<WorkVisit> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListWorkVisits");
     }
 
     public WorkVisitJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("GetWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.class);
-        EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetWorkVisit", uuid);
     }
 
     public WorkVisitJson create(WorkVisitCreatorJson workVisitCreatorJson) {
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequest("PostWorkVisit", RequestType.SINGLE, WorkVisitJson.class);
-        Utils.serializeJson(equinixRequest, workVisitCreatorJson);
-        EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostWorkVisit", workVisitCreatorJson);
     }
 
     public WorkVisitJson update(String uuid, WorkVisitCreatorJson workVisitCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("UpdateWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.class);
-        Utils.serializeJson(equinixRequest, workVisitCreatorJson);
-        EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateWorkVisit", uuid, workVisitCreatorJson);
     }
 
     public WorkVisitJson cancel(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<WorkVisitJson> equinixRequest = this.buildRequestWithPathParams("CancelWorkVisit", RequestType.SINGLE, pParams, WorkVisitJson.class);
-        EquinixResponse<WorkVisitJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("CancelWorkVisit", uuid);
     }
 
     public WorkVisitJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<WorkVisit> nextPage(PaginatedRequest<WorkVisit> equinixRequest) {
-        EquinixResponse<WorkVisit> equinixResponse = this.invoke(equinixRequest);
-        Page<WorkVisit, WorkVisitJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<WorkVisit> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, WorkVisitWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

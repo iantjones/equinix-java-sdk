@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.BillingCreditClient;
 import api.equinix.javasdk.customerportal.model.BillingCredit;
 import api.equinix.javasdk.customerportal.model.json.BillingCreditJson;
 
-import java.util.Map;
-
-public class BillingCreditClientImpl extends PageableBase implements BillingCreditClient<BillingCredit> {
+public class BillingCreditClientImpl extends ResourceClientBase<BillingCredit, BillingCreditJson> implements BillingCreditClient<BillingCredit> {
 
     public BillingCreditClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "BillingCredits");
+        super(configClient, "CustomerPortal", "BillingCredits", BillingCreditJson.class);
+    }
+
+    @Override
+    protected BillingCredit wrap(BillingCreditJson json) {
+        return json;
     }
 
     public Page<BillingCredit, BillingCreditJson> list() {
-        EquinixRequest<BillingCredit> equinixRequest = this.buildRequest("ListBillingCredits", RequestType.PAGINATED, BillingCreditJson.class);
-        EquinixResponse<BillingCredit> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListBillingCredits");
     }
 
     public BillingCreditJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BillingCreditJson> equinixRequest = this.buildRequestWithPathParams("GetBillingCredit", RequestType.SINGLE, pParams, BillingCreditJson.class);
-        EquinixResponse<BillingCreditJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<BillingCredit> nextPage(PaginatedRequest<BillingCredit> equinixRequest) {
-        EquinixResponse<BillingCredit> equinixResponse = this.invoke(equinixRequest);
-        Page<BillingCredit, BillingCreditJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<BillingCredit> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetBillingCredit", uuid);
     }
 }

@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessPortClient;
 import api.equinix.javasdk.internetaccess.model.InternetAccessPort;
 import api.equinix.javasdk.internetaccess.model.json.InternetAccessPortJson;
 
-import java.util.Map;
-
-public class InternetAccessPortClientImpl extends PageableBase implements InternetAccessPortClient<InternetAccessPort> {
+public class InternetAccessPortClientImpl extends ResourceClientBase<InternetAccessPort, InternetAccessPortJson> implements InternetAccessPortClient<InternetAccessPort> {
 
     public InternetAccessPortClientImpl(InternetAccessConfigImpl configClient) {
-        super(configClient, "InternetAccess", "Ports");
+        super(configClient, "InternetAccess", "Ports", InternetAccessPortJson.class);
+    }
+
+    @Override
+    protected InternetAccessPort wrap(InternetAccessPortJson json) {
+        return json;
     }
 
     public Page<InternetAccessPort, InternetAccessPortJson> list() {
-        EquinixRequest<InternetAccessPort> equinixRequest = this.buildRequest("ListPorts", RequestType.PAGINATED, InternetAccessPortJson.class);
-        EquinixResponse<InternetAccessPort> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListPorts");
     }
 
     public InternetAccessPortJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<InternetAccessPortJson> equinixRequest = this.buildRequestWithPathParams("GetPort", RequestType.SINGLE, pParams, InternetAccessPortJson.class);
-        EquinixResponse<InternetAccessPortJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<InternetAccessPort> nextPage(PaginatedRequest<InternetAccessPort> equinixRequest) {
-        EquinixResponse<InternetAccessPort> equinixResponse = this.invoke(equinixRequest);
-        Page<InternetAccessPort, InternetAccessPortJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<InternetAccessPort> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetPort", uuid);
     }
 }

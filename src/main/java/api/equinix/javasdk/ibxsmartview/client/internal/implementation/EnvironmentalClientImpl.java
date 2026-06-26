@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.EnvironmentalClient;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
@@ -32,30 +26,22 @@ import api.equinix.javasdk.ibxsmartview.model.wrappers.SensorReadingWrapper;
 
 import java.util.Map;
 
-public class EnvironmentalClientImpl extends PageableBase implements EnvironmentalClient<SensorReading> {
+public class EnvironmentalClientImpl extends ResourceClientBase<SensorReading, SensorReadingJson> implements EnvironmentalClient<SensorReading> {
 
     public EnvironmentalClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "Environmental");
+        super(configClient, "IBXSmartView", "Environmental", SensorReadingJson.class);
+    }
+
+    @Override
+    protected SensorReading wrap(SensorReadingJson json) {
+        return new SensorReadingWrapper(json, this);
     }
 
     public Page<SensorReading, SensorReadingJson> list(String ibx) {
-        Map<String, String> pParams = Map.of("ibx", ibx);
-        EquinixRequest<SensorReading> equinixRequest = this.buildRequestWithPathParams("ListSensorReadings", RequestType.PAGINATED, pParams, SensorReadingJson.class);
-        EquinixResponse<SensorReading> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPagePath("ListSensorReadings", Map.of("ibx", ibx));
     }
 
     public SensorReadingJson getSensorReading(String ibx, String sensorId) {
-        Map<String, String> pParams = Map.of("ibx", ibx, "sensorId", sensorId);
-        EquinixRequest<SensorReading> equinixRequest = this.buildRequestWithPathParams("GetSensorReading", RequestType.SINGLE, pParams, SensorReadingJson.class);
-        EquinixResponse<SensorReading> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<SensorReading> nextPage(PaginatedRequest<SensorReading> equinixRequest) {
-        EquinixResponse<SensorReading> equinixResponse = this.invoke(equinixRequest);
-        Page<SensorReading, SensorReadingJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<SensorReading> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, SensorReadingWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetSensorReading", Map.of("ibx", ibx, "sensorId", sensorId));
     }
 }

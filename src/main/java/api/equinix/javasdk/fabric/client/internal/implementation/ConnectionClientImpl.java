@@ -75,8 +75,6 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
         return getByUuid(uuid);
     }
 
-    // ---- Connection-specific operations (not part of the standard CRUD base) ----
-
     public ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson) {
         return dryRunCreate("PostConnection", connectionCreatorJson);
     }

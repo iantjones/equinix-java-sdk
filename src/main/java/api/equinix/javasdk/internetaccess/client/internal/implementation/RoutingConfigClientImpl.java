@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.RoutingConfigClient;
 import api.equinix.javasdk.internetaccess.model.RoutingConfig;
@@ -31,50 +25,34 @@ import api.equinix.javasdk.internetaccess.model.json.RoutingConfigJson;
 import api.equinix.javasdk.internetaccess.model.json.creators.RoutingConfigCreatorJson;
 import api.equinix.javasdk.internetaccess.model.wrappers.RoutingConfigWrapper;
 
-import java.util.Map;
-
-public class RoutingConfigClientImpl extends PageableBase implements RoutingConfigClient<RoutingConfig> {
+public class RoutingConfigClientImpl extends ResourceClientBase<RoutingConfig, RoutingConfigJson> implements RoutingConfigClient<RoutingConfig> {
 
     public RoutingConfigClientImpl(InternetAccessConfigImpl configClient) {
-        super(configClient, "InternetAccess", "RoutingConfigs");
+        super(configClient, "InternetAccess", "RoutingConfigs", RoutingConfigJson.class);
+    }
+
+    @Override
+    protected RoutingConfig wrap(RoutingConfigJson json) {
+        return new RoutingConfigWrapper(json, this);
     }
 
     public Page<RoutingConfig, RoutingConfigJson> list() {
-        EquinixRequest<RoutingConfig> equinixRequest = this.buildRequest("ListRoutingConfigs", RequestType.PAGINATED, RoutingConfigJson.class);
-        EquinixResponse<RoutingConfig> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListRoutingConfigs");
     }
 
     public RoutingConfigJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequestWithPathParams("GetRoutingConfig", RequestType.SINGLE, pParams, RoutingConfigJson.class);
-        EquinixResponse<RoutingConfigJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetRoutingConfig", uuid);
     }
 
     public RoutingConfigJson create(RoutingConfigCreatorJson routingConfigCreatorJson) {
-        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequest("CreateRoutingConfig", RequestType.SINGLE, RoutingConfigJson.class);
-        Utils.serializeJson(equinixRequest, routingConfigCreatorJson);
-        EquinixResponse<RoutingConfigJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("CreateRoutingConfig", routingConfigCreatorJson);
     }
 
     public RoutingConfigJson update(String uuid, RoutingConfigCreatorJson routingConfigCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<RoutingConfigJson> equinixRequest = this.buildRequestWithPathParams("UpdateRoutingConfig", RequestType.SINGLE, pParams, RoutingConfigJson.class);
-        Utils.serializeJson(equinixRequest, routingConfigCreatorJson);
-        EquinixResponse<RoutingConfigJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateRoutingConfig", uuid, routingConfigCreatorJson);
     }
 
     public RoutingConfigJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<RoutingConfig> nextPage(PaginatedRequest<RoutingConfig> equinixRequest) {
-        EquinixResponse<RoutingConfig> equinixResponse = this.invoke(equinixRequest);
-        Page<RoutingConfig, RoutingConfigJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<RoutingConfig> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, RoutingConfigWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

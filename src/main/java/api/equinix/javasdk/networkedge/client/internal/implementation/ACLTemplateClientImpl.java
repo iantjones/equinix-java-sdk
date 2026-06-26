@@ -16,13 +16,11 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -42,7 +40,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateClient<ACLTemplate> {
+public class ACLTemplateClientImpl extends ResourceClientBase<ACLTemplate, ACLTemplateJson> implements ACLTemplateClient<ACLTemplate> {
 
     /**
      * <p>Constructor for ACLTemplateClientImpl.</p>
@@ -50,15 +48,19 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public ACLTemplateClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "ACLTemplates");
+        super(configClient, "NetworkEdge", "ACLTemplates", ACLTemplateJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected ACLTemplate wrap(ACLTemplateJson json) {
+        return new ACLTemplateWrapper(json, this);
     }
 
     /** {@inheritDoc} */
     public Page<ACLTemplate, ACLTemplateJson> list(String accountUcmId) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<ACLTemplate> equinixRequest = this.buildRequest("ListACLTemplates", RequestType.PAGINATED, null, qParams, ACLTemplateJson.class);
-        EquinixResponse<ACLTemplate> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListACLTemplates", qParams);
     }
 
     /** {@inheritDoc} */
@@ -102,14 +104,5 @@ public class ACLTemplateClientImpl extends PageableBase implements ACLTemplateCl
     /** {@inheritDoc} */
     public ACLTemplateJson refresh(String uuid, String accountUcmId) {
         return this.getByUuid(uuid, accountUcmId);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<ACLTemplate> nextPage(PaginatedRequest<ACLTemplate> equinixRequest) {
-        EquinixResponse<ACLTemplate> equinixResponse = this.invoke(equinixRequest);
-        Page<ACLTemplate, ACLTemplateJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<ACLTemplate> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ACLTemplateWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

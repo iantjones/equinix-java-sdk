@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ShipmentClient;
 import api.equinix.javasdk.customerportal.model.Shipment;
@@ -31,57 +25,38 @@ import api.equinix.javasdk.customerportal.model.json.ShipmentJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.ShipmentWrapper;
 
-import java.util.Map;
-
-public class ShipmentClientImpl extends PageableBase implements ShipmentClient<Shipment> {
+public class ShipmentClientImpl extends ResourceClientBase<Shipment, ShipmentJson> implements ShipmentClient<Shipment> {
 
     public ShipmentClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Shipments");
+        super(configClient, "CustomerPortal", "Shipments", ShipmentJson.class);
+    }
+
+    @Override
+    protected Shipment wrap(ShipmentJson json) {
+        return new ShipmentWrapper(json, this);
     }
 
     public Page<Shipment, ShipmentJson> list() {
-        EquinixRequest<Shipment> equinixRequest = this.buildRequest("ListShipments", RequestType.PAGINATED, ShipmentJson.class);
-        EquinixResponse<Shipment> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListShipments");
     }
 
     public ShipmentJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("GetShipment", RequestType.SINGLE, pParams, ShipmentJson.class);
-        EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetShipment", uuid);
     }
 
     public ShipmentJson create(ShipmentCreatorJson shipmentCreatorJson) {
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequest("CreateShipment", RequestType.SINGLE, ShipmentJson.class);
-        Utils.serializeJson(equinixRequest, shipmentCreatorJson);
-        EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("CreateShipment", shipmentCreatorJson);
     }
 
     public ShipmentJson update(String uuid, ShipmentCreatorJson shipmentCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("UpdateShipment", RequestType.SINGLE, pParams, ShipmentJson.class);
-        Utils.serializeJson(equinixRequest, shipmentCreatorJson);
-        EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateShipment", uuid, shipmentCreatorJson);
     }
 
     public ShipmentJson cancel(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ShipmentJson> equinixRequest = this.buildRequestWithPathParams("CancelShipment", RequestType.SINGLE, pParams, ShipmentJson.class);
-        EquinixResponse<ShipmentJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("CancelShipment", uuid);
     }
 
     public ShipmentJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<Shipment> nextPage(PaginatedRequest<Shipment> equinixRequest) {
-        EquinixResponse<Shipment> equinixResponse = this.invoke(equinixRequest);
-        Page<Shipment, ShipmentJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Shipment> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, ShipmentWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

@@ -16,13 +16,10 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -41,7 +38,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient<PublicKey> {
+public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKeyJson> implements PublicKeyClient<PublicKey> {
 
     /**
      * <p>Constructor for PublicKeyClientImpl.</p>
@@ -49,7 +46,13 @@ public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public PublicKeyClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "PublicKeys");
+        super(configClient, "NetworkEdge", "PublicKeys", PublicKeyJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected PublicKey wrap(PublicKeyJson json) {
+        return new PublicKeyWrapper(json, this);
     }
 
     /** {@inheritDoc} */
@@ -62,10 +65,7 @@ public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient
 
     /** {@inheritDoc} */
     public PublicKeyJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PublicKeyJson> equinixRequest = this.buildRequestWithPathParams("GetPublicKey", RequestType.SINGLE, pParams, PublicKeyJson.class);
-        EquinixResponse<PublicKeyJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetPublicKey", uuid);
     }
     
     /** {@inheritDoc} */
@@ -88,14 +88,5 @@ public class PublicKeyClientImpl extends PageableBase implements PublicKeyClient
     /** {@inheritDoc} */
     public PublicKeyJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<PublicKey> nextPage(PaginatedRequest<PublicKey> equinixRequest) {
-        EquinixResponse<PublicKey> equinixResponse = this.invoke(equinixRequest);
-        Page<PublicKey, PublicKeyJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<PublicKey> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, PublicKeyWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }

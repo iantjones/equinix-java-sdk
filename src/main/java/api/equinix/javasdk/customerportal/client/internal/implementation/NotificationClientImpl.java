@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.NotificationClient;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.json.NotificationJson;
 
-import java.util.Map;
-
-public class NotificationClientImpl extends PageableBase implements NotificationClient<Notification> {
+public class NotificationClientImpl extends ResourceClientBase<Notification, NotificationJson> implements NotificationClient<Notification> {
 
     public NotificationClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Notifications");
+        super(configClient, "CustomerPortal", "Notifications", NotificationJson.class);
+    }
+
+    @Override
+    protected Notification wrap(NotificationJson json) {
+        return json;
     }
 
     public Page<Notification, NotificationJson> list() {
-        EquinixRequest<Notification> equinixRequest = this.buildRequest("ListNotifications", RequestType.PAGINATED, NotificationJson.class);
-        EquinixResponse<Notification> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListNotifications");
     }
 
     public NotificationJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<NotificationJson> equinixRequest = this.buildRequestWithPathParams("GetNotification", RequestType.SINGLE, pParams, NotificationJson.class);
-        EquinixResponse<NotificationJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<Notification> nextPage(PaginatedRequest<Notification> equinixRequest) {
-        EquinixResponse<Notification> equinixResponse = this.invoke(equinixRequest);
-        Page<Notification, NotificationJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Notification> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetNotification", uuid);
     }
 }

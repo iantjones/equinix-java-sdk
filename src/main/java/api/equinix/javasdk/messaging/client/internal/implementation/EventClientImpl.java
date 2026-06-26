@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.messaging.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.messaging.client.implementation.MessagingConfigImpl;
 import api.equinix.javasdk.messaging.client.internal.EventClient;
 import api.equinix.javasdk.messaging.model.Event;
 import api.equinix.javasdk.messaging.model.json.EventJson;
 
-import java.util.Map;
-
-public class EventClientImpl extends PageableBase implements EventClient<Event> {
+public class EventClientImpl extends ResourceClientBase<Event, EventJson> implements EventClient<Event> {
 
     public EventClientImpl(MessagingConfigImpl configClient) {
-        super(configClient, "Messaging", "Events");
+        super(configClient, "Messaging", "Events", EventJson.class);
+    }
+
+    @Override
+    protected Event wrap(EventJson json) {
+        return json;
     }
 
     public Page<Event, EventJson> list() {
-        EquinixRequest<Event> equinixRequest = this.buildRequest("ListEvents", RequestType.PAGINATED, EventJson.class);
-        EquinixResponse<Event> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListEvents");
     }
 
     public EventJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<EventJson> equinixRequest = this.buildRequestWithPathParams("GetEvent", RequestType.SINGLE, pParams, EventJson.class);
-        EquinixResponse<EventJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<Event> nextPage(PaginatedRequest<Event> equinixRequest) {
-        EquinixResponse<Event> equinixResponse = this.invoke(equinixRequest);
-        Page<Event, EventJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Event> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetEvent", uuid);
     }
 }

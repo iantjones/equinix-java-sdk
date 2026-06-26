@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.SupportPlanClient;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.json.SupportPlanJson;
 
-import java.util.Map;
-
-public class SupportPlanClientImpl extends PageableBase implements SupportPlanClient<SupportPlan> {
+public class SupportPlanClientImpl extends ResourceClientBase<SupportPlan, SupportPlanJson> implements SupportPlanClient<SupportPlan> {
 
     public SupportPlanClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "SupportPlans");
+        super(configClient, "CustomerPortal", "SupportPlans", SupportPlanJson.class);
+    }
+
+    @Override
+    protected SupportPlan wrap(SupportPlanJson json) {
+        return json;
     }
 
     public Page<SupportPlan, SupportPlanJson> list() {
-        EquinixRequest<SupportPlan> equinixRequest = this.buildRequest("ListSupportPlans", RequestType.PAGINATED, SupportPlanJson.class);
-        EquinixResponse<SupportPlan> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListSupportPlans");
     }
 
     public SupportPlanJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SupportPlanJson> equinixRequest = this.buildRequestWithPathParams("GetSupportPlan", RequestType.SINGLE, pParams, SupportPlanJson.class);
-        EquinixResponse<SupportPlanJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<SupportPlan> nextPage(PaginatedRequest<SupportPlan> equinixRequest) {
-        EquinixResponse<SupportPlan> equinixResponse = this.invoke(equinixRequest);
-        Page<SupportPlan, SupportPlanJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<SupportPlan> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetSupportPlan", uuid);
     }
 }

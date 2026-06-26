@@ -16,44 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.AssetClient;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.json.AssetJson;
 
-import java.util.Map;
-
-public class AssetClientImpl extends PageableBase implements AssetClient<Asset> {
+public class AssetClientImpl extends ResourceClientBase<Asset, AssetJson> implements AssetClient<Asset> {
 
     public AssetClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Assets");
+        super(configClient, "CustomerPortal", "Assets", AssetJson.class);
+    }
+
+    @Override
+    protected Asset wrap(AssetJson json) {
+        return json;
     }
 
     public Page<Asset, AssetJson> list() {
-        EquinixRequest<Asset> equinixRequest = this.buildRequest("ListAssets", RequestType.PAGINATED, AssetJson.class);
-        EquinixResponse<Asset> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListAssets");
     }
 
     public AssetJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<AssetJson> equinixRequest = this.buildRequestWithPathParams("GetAsset", RequestType.SINGLE, pParams, AssetJson.class);
-        EquinixResponse<AssetJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
-    }
-
-    public PaginatedList<Asset> nextPage(PaginatedRequest<Asset> equinixRequest) {
-        EquinixResponse<Asset> equinixResponse = this.invoke(equinixRequest);
-        Page<Asset, AssetJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Asset> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, (json, client) -> json);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getOne("GetAsset", uuid);
     }
 }

@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
@@ -34,7 +34,7 @@ import java.util.Map;
  * @author ianjones
  * @version $Id: $Id
  */
-public class DNSClientImpl extends PageableBase implements DNSClient<DNSLookup> {
+public class DNSClientImpl extends ResourceClientBase<DNSLookup, DNSLookup> implements DNSClient<DNSLookup> {
 
     /**
      * <p>Constructor for DNSClientImpl.</p>
@@ -42,7 +42,13 @@ public class DNSClientImpl extends PageableBase implements DNSClient<DNSLookup> 
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public DNSClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "DNS");
+        super(configClient, "NetworkEdge", "DNS", DNSLookup.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected DNSLookup wrap(DNSLookup json) {
+        return json;
     }
 
     /**

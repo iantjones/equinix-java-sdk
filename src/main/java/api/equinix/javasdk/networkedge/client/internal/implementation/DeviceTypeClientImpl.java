@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.DeviceTypeClient;
 import api.equinix.javasdk.networkedge.model.DeviceType;
@@ -36,7 +30,7 @@ import api.equinix.javasdk.networkedge.model.wrappers.DeviceTypeWrapper;
  * @author ianjones
  * @version $Id: $Id
  */
-public class DeviceTypeClientImpl extends PageableBase implements DeviceTypeClient<DeviceType> {
+public class DeviceTypeClientImpl extends ResourceClientBase<DeviceType, DeviceTypeJson> implements DeviceTypeClient<DeviceType> {
 
     /**
      * <p>Constructor for DeviceTypeClientImpl.</p>
@@ -44,7 +38,13 @@ public class DeviceTypeClientImpl extends PageableBase implements DeviceTypeClie
      * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
      */
     public DeviceTypeClientImpl(NetworkEdgeConfigImpl configClient) {
-        super(configClient, "NetworkEdge", "Devices");
+        super(configClient, "NetworkEdge", "Devices", DeviceTypeJson.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected DeviceType wrap(DeviceTypeJson json) {
+        return new DeviceTypeWrapper(json, this);
     }
 
     /**
@@ -53,17 +53,6 @@ public class DeviceTypeClientImpl extends PageableBase implements DeviceTypeClie
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     public Page<DeviceType, DeviceTypeJson> list() {
-        EquinixRequest<DeviceType> equinixRequest = this.buildRequest("ListDeviceTypes", RequestType.PAGINATED, DeviceTypeJson.class);
-        EquinixResponse<DeviceType> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PaginatedList<DeviceType> nextPage(PaginatedRequest<DeviceType> equinixRequest) {
-        EquinixResponse<DeviceType> equinixResponse = this.invoke(equinixRequest);
-        Page<DeviceType, DeviceTypeJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<DeviceType> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, DeviceTypeWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return listPage("ListDeviceTypes");
     }
 }

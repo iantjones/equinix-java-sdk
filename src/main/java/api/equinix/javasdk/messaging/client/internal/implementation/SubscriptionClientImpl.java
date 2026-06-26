@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.messaging.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.messaging.client.implementation.MessagingConfigImpl;
 import api.equinix.javasdk.messaging.client.internal.SubscriptionClient;
 import api.equinix.javasdk.messaging.model.Subscription;
@@ -31,57 +25,38 @@ import api.equinix.javasdk.messaging.model.json.SubscriptionJson;
 import api.equinix.javasdk.messaging.model.json.creators.SubscriptionCreatorJson;
 import api.equinix.javasdk.messaging.model.wrappers.SubscriptionWrapper;
 
-import java.util.Map;
-
-public class SubscriptionClientImpl extends PageableBase implements SubscriptionClient<Subscription> {
+public class SubscriptionClientImpl extends ResourceClientBase<Subscription, SubscriptionJson> implements SubscriptionClient<Subscription> {
 
     public SubscriptionClientImpl(MessagingConfigImpl configClient) {
-        super(configClient, "Messaging", "Subscriptions");
+        super(configClient, "Messaging", "Subscriptions", SubscriptionJson.class);
+    }
+
+    @Override
+    protected Subscription wrap(SubscriptionJson json) {
+        return new SubscriptionWrapper(json, this);
     }
 
     public Page<Subscription, SubscriptionJson> list() {
-        EquinixRequest<Subscription> equinixRequest = this.buildRequest("ListSubscriptions", RequestType.PAGINATED, SubscriptionJson.class);
-        EquinixResponse<Subscription> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListSubscriptions");
     }
 
     public SubscriptionJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequestWithPathParams("GetSubscription", RequestType.SINGLE, pParams, SubscriptionJson.class);
-        EquinixResponse<SubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetSubscription", uuid);
     }
 
     public SubscriptionJson create(SubscriptionCreatorJson subscriptionCreatorJson) {
-        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequest("CreateSubscription", RequestType.SINGLE, SubscriptionJson.class);
-        Utils.serializeJson(equinixRequest, subscriptionCreatorJson);
-        EquinixResponse<SubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("CreateSubscription", subscriptionCreatorJson);
     }
 
     public SubscriptionJson update(String uuid, SubscriptionCreatorJson subscriptionCreatorJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<SubscriptionJson> equinixRequest = this.buildRequestWithPathParams("UpdateSubscription", RequestType.SINGLE, pParams, SubscriptionJson.class);
-        Utils.serializeJson(equinixRequest, subscriptionCreatorJson);
-        EquinixResponse<SubscriptionJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return updateOne("UpdateSubscription", uuid, subscriptionCreatorJson);
     }
 
     public SubscriptionJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<Subscription> equinixRequest = this.buildRequestWithPathParams("DeleteSubscription", RequestType.SINGLE, pParams, SubscriptionJson.class);
-        EquinixResponse<Subscription> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteSubscription", uuid);
     }
 
     public SubscriptionJson refresh(String uuid) {
         return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<Subscription> nextPage(PaginatedRequest<Subscription> equinixRequest) {
-        EquinixResponse<Subscription> equinixResponse = this.invoke(equinixRequest);
-        Page<Subscription, SubscriptionJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<Subscription> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, SubscriptionWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
     }
 }
