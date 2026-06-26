@@ -798,7 +798,7 @@ System.out.println(result.toMarkdown());
 
 ### Fabric: MCP Bridge — Real-Time Validation & Enrichment
 
-The MCP (Model Context Protocol) Bridge connects the SDK to the [Equinix MCP servers](https://docs.equinix.com/equinix-api/mcp-servers/overview/), providing programmatic access to 60+ Fabric tools via JSON-RPC 2.0. This enables real-time infrastructure validation, live metro data enrichment, and observability metrics — all with typed Java response models.
+The MCP (Model Context Protocol) Bridge connects the SDK to the [Equinix MCP servers](https://docs.equinix.com/equinix-api/mcp-servers/overview/) over JSON-RPC 2.0. It offers typed convenience methods across four domains — metros, connections, cloud routers, and observability — plus dynamic discovery of the server's full tool catalog via `availableTools()` and a generic `callTool(name, args)` escape hatch. This enables real-time infrastructure validation, live metro data enrichment, and observability metrics with typed Java response models.
 
 > **Note:** The Equinix MCP server is currently in Private Beta. Contact `fabric-intelligence-support@equinix.com` or your Equinix account representative for access.
 
@@ -923,7 +923,7 @@ McpBridge mcp = fabric.mcp(config);
 │  Your Code       │────▶│    McpBridge      │────▶│ Equinix MCP Server   │
 │                  │     │                  │     │ mcp.equinix.com      │
 │  fabric.mcp()    │     │  .metros()       │     │                      │
-│  .optimizeMetros │     │  .connections()  │     │  60+ Fabric tools    │
+│  .optimizeMetros │     │  .connections()  │     │  Fabric MCP tools    │
 │  .deploymentWiz  │     │  .cloudRouters() │     │  JSON-RPC 2.0        │
 │  .peeringIntel   │     │  .observability()│     │  OAuth2 Bearer auth  │
 └─────────────────┘     └────────┬─────────┘     └──────────────────────┘

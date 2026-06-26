@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.peering.model;
 
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.fabric.mcp.bridge.McpBridge;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -62,7 +61,4 @@ public class PeeringRequest {
 
     /** Whether to perform resiliency and blast radius analysis. */
     boolean includeResiliency;
-
-    /** Optional MCP bridge for real-time data enrichment. Null when MCP is not configured. */
-    McpBridge mcpBridge;
 }

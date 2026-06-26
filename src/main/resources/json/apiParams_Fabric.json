@@ -369,23 +369,23 @@
         "serviceEndpoints": {
           "GetStreamSubscriptions": {
             "httpMethod": "GET",
-            "requestUri": "{$streamId}/streamSubscriptions"
+            "requestUri": "{$streamId}/subscriptions"
           },
           "GetStreamSubscription": {
             "httpMethod": "GET",
-            "requestUri": "{$streamId}/streamSubscriptions/{$uuid}"
+            "requestUri": "{$streamId}/subscriptions/{$uuid}"
           },
           "PostStreamSubscription": {
             "httpMethod": "POST",
-            "requestUri": "{$streamId}/streamSubscriptions"
+            "requestUri": "{$streamId}/subscriptions"
           },
           "UpdateStreamSubscription": {
             "httpMethod": "PUT",
-            "requestUri": "{$streamId}/streamSubscriptions/{$uuid}"
+            "requestUri": "{$streamId}/subscriptions/{$uuid}"
           },
           "DeleteStreamSubscription": {
             "httpMethod": "DELETE",
-            "requestUri": "{$streamId}/streamSubscriptions/{$uuid}"
+            "requestUri": "{$streamId}/subscriptions/{$uuid}"
           }
         }
       },
