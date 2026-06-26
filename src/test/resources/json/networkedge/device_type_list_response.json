@@ -1,0 +1,49 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "deviceTypeCode": "CSR1000V",
+      "name": "Cisco CSR 1000V",
+      "description": "Cisco Cloud Services Router 1000V",
+      "vendor": "Cisco",
+      "category": "ROUTER",
+      "maxInterfaceCount": 10,
+      "defaultInterfaceCount": 3,
+      "clusterMaxInterfaceCount": 8,
+      "clusterDefaultInterfaceCount": 2,
+      "availableMetros": [
+        {
+          "metroCode": "SV",
+          "region": "AMER",
+          "metroDescription": "Silicon Valley"
+        }
+      ],
+      "softwarePackages": [],
+      "deviceManagementTypes": {}
+    },
+    {
+      "deviceTypeCode": "PA-VM",
+      "name": "Palo Alto VM-Series",
+      "description": "Palo Alto Networks VM-Series Firewall",
+      "vendor": "Palo Alto Networks",
+      "category": "FIREWALL",
+      "maxInterfaceCount": 12,
+      "defaultInterfaceCount": 4,
+      "clusterMaxInterfaceCount": 10,
+      "clusterDefaultInterfaceCount": 3,
+      "availableMetros": [
+        {
+          "metroCode": "DC",
+          "region": "AMER",
+          "metroDescription": "Ashburn"
+        }
+      ],
+      "softwarePackages": [],
+      "deviceManagementTypes": {}
+    }
+  ]
+}

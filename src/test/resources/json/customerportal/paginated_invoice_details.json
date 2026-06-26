@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "transactionId": "INV-2024-00198734",
+      "businessLegalEntity": "Equinix Inc.",
+      "transactionType": "INVOICE",
+      "transactionDate": "2024-11-15",
+      "orderId": "ORD-2024-778231",
+      "lineNumber": "1",
+      "subLineNumber": "1",
+      "purchaseOrderNumber": "PO-2024-005123",
+      "ibxs": ["SV5"],
+      "activityType": "RECURRING_CHARGE",
+      "productCategory": "CABINET",
+      "productDescription": "Cabinet 45U with 5kW power",
+      "productCode": "CAB-45U-5KW",
+      "quantity": 2.0,
+      "unitOfMeasure": "EACH",
+      "unitPrice": 1750.00,
+      "frequency": "MONTHLY",
+      "currencyCode": "USD",
+      "localCurrencyCode": "USD",
+      "nonRecurringAmount": 0.00,
+      "recurringAmount": 3500.00,
+      "adjustment": 0.00,
+      "taxAmount": 288.75,
+      "totalAmount": 3788.75
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "code": "LIMITED",
+      "href": "https://api.equinix.com/fabric/v4/gatewayPackages/LIMITED",
+      "type": "GATEWAY_PACKAGE",
+      "description": "Limited gateway package for basic routing needs",
+      "totalIPv4RoutesMax": 1000,
+      "totalIPv6RoutesMax": 100,
+      "staticIPv4RoutesMax": 10,
+      "staticIPv6RoutesMax": 10,
+      "naclsMax": 5,
+      "naclRulesMax": 50,
+      "haSupported": false,
+      "routeFilterSupported": false,
+      "natType": "STATIC_NAT"
+    },
+    {
+      "code": "ADVANCED",
+      "href": "https://api.equinix.com/fabric/v4/gatewayPackages/ADVANCED",
+      "type": "GATEWAY_PACKAGE",
+      "description": "Advanced gateway package with high availability",
+      "totalIPv4RoutesMax": 4000,
+      "totalIPv6RoutesMax": 1000,
+      "staticIPv4RoutesMax": 50,
+      "staticIPv6RoutesMax": 50,
+      "naclsMax": 20,
+      "naclRulesMax": 200,
+      "haSupported": true,
+      "routeFilterSupported": true,
+      "natType": "STATIC_NAT"
+    }
+  ]
+}

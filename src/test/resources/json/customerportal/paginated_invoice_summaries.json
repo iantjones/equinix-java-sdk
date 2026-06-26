@@ -1,0 +1,31 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "transactionId": "INV-2024-00198734",
+      "transactionType": "INVOICE",
+      "transactionDate": "2024-11-15",
+      "customerDetails": {
+        "accountNumber": "128745",
+        "accountName": "Acme Cloud Services Inc.",
+        "legalEntity": "Acme Cloud Services Inc.",
+        "countryCode": "US",
+        "region": "AMER"
+      },
+      "billingPurchaseOrder": "PO-2024-005123",
+      "billingCycle": "MONTHLY",
+      "paymentDueDate": "2024-12-15",
+      "paymentTerms": "NET_30",
+      "currencyCode": "USD",
+      "totalRecurringAmount": 12450.00,
+      "totalNonRecurringAmount": 3500.00,
+      "totalAmount": 15950.00,
+      "totalAdjustment": -250.00,
+      "vatNumber": "US-EIN-82-1234567"
+    }
+  ]
+}

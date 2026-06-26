@@ -1,0 +1,11 @@
+{
+  "deviceBackup": {
+    "uuid": "bkp-1111-2222-3333-444455556666",
+    "name": "test-backup",
+    "version": "1.0",
+    "deleteAllowed": true
+  },
+  "services": {},
+  "restoreAllowedAfterDeleteOrEdit": true,
+  "restoreAllowed": true
+}

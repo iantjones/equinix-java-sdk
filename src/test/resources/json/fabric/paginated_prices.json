@@ -1,0 +1,29 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_SV_DC_100",
+      "name": "EVPL Virtual Connection SV to DC 100Mbps",
+      "description": "Ethernet Virtual Private Line connection pricing",
+      "charges": [
+        {
+          "type": "MONTHLY_RECURRING",
+          "price": 250.00
+        },
+        {
+          "type": "NON_RECURRING",
+          "price": 0.00
+        }
+      ],
+      "connection": {
+        "bandwidth": 100
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "uuid": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "cabinetId": "SV5:01:0042",
+  "ibx": "SV5",
+  "cageId": "SV5:01:CAGE-A",
+  "status": "ACTIVE",
+  "lockType": "ELECTRONIC",
+  "accountNumber": "128745",
+  "accessCode": "884512"
+}
