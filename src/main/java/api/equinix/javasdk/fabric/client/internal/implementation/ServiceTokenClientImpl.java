@@ -17,10 +17,6 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ServiceTokenClient;
@@ -29,6 +25,7 @@ import api.equinix.javasdk.fabric.model.json.SerializationFilters;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 /**
@@ -40,6 +37,10 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
  * @version $Id: $Id
  */
 public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, ServiceTokenJson> implements ServiceTokenClient<ServiceToken> {
+
+    /** Serialization filter applied when creating service tokens. */
+    private static final FilterProvider CREATE_FILTER =
+            new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter);
 
     public ServiceTokenClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "ServiceTokens", ServiceTokenJson.class);
@@ -59,20 +60,11 @@ public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, Ser
     }
 
     public ServiceTokenJson create(ServiceTokenCreatorJson serviceTokenCreatorJson) {
-        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequest("PostServiceToken", RequestType.SINGLE, ServiceTokenJson.class);
-        equinixRequest.setFilters(new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter));
-        Utils.serializeJson(equinixRequest, serviceTokenCreatorJson);
-        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostServiceToken", serviceTokenCreatorJson, CREATE_FILTER);
     }
 
     public ServiceTokenJson dryRunCreate(ServiceTokenCreatorJson serviceTokenCreatorJson) {
-        EquinixRequest<ServiceTokenJson> equinixRequest = this.buildRequest("PostServiceToken", RequestType.SINGLE, ServiceTokenJson.class);
-        equinixRequest.addSingleQueryParameter("dryRun", "true");
-        equinixRequest.setFilters(new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter));
-        Utils.serializeJson(equinixRequest, serviceTokenCreatorJson);
-        EquinixResponse<ServiceTokenJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return dryRunCreate("PostServiceToken", serviceTokenCreatorJson, CREATE_FILTER);
     }
 
     public ServiceTokenJson delete(String uuid) {

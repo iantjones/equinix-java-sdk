@@ -17,10 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.enums.Side;
@@ -28,7 +25,6 @@ import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
-import api.equinix.javasdk.fabric.model.ConnectionStatistic;
 import api.equinix.javasdk.fabric.model.implementation.ManageConnection;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -82,26 +78,16 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
     // ---- Connection-specific operations (not part of the standard CRUD base) ----
 
     public ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostConnection", RequestType.SINGLE, ConnectionJson.class);
-        equinixRequest.addSingleQueryParameter("dryRun", "true");
-        Utils.serializeJson(equinixRequest, connectionCreatorJson);
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return dryRunCreate("PostConnection", connectionCreatorJson);
     }
 
     public ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
-        ManageConnection connOp = new ManageConnection(connectionOperationType, description, bodyObject);
-        EquinixRequest<Connection> equinixRequest = this.buildRequestWithPathParams("ManageConnection", RequestType.SINGLE, Map.of("uuid", uuid), ConnectionJson.class);
-        Utils.serializeJson(equinixRequest, connOp);
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("ManageConnection", Map.of("uuid", uuid),
+                new ManageConnection(connectionOperationType, description, bodyObject));
     }
 
     public List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList) {
-        EquinixRequest<Connection> equinixRequest = this.buildRequest("PostBulkConnections", RequestType.SINGLE, ConnectionJson.getListTypeRef());
-        Utils.serializeJson(equinixRequest, connectionCreatorJsonList);
-        EquinixResponse<Connection> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postForType("PostBulkConnections", connectionCreatorJsonList, ConnectionJson.getListTypeRef());
     }
 
     public ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
@@ -110,10 +96,7 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
                 "endDateTime", Utils.singleParamList(Utils.dateTimeForQuery(endDateTime)),
                 "viewPoint", Utils.singleParamList(viewPoint.toViewPoint())
         );
-
-        EquinixRequest<ConnectionStatistic> equinixRequest = this.buildRequest("GetStatistics", RequestType.SINGLE, Map.of("uuid", uuid), qParams, ConnectionStatisticJson.class);
-        EquinixResponse<ConnectionStatistic> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOneAs("GetStatistics", Map.of("uuid", uuid), qParams, ConnectionStatisticJson.class);
     }
 
     public ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {

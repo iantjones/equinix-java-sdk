@@ -25,7 +25,10 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -119,6 +122,54 @@ public abstract class ResourceClientBase<M, J> extends PageableBase implements P
     /** DELETE a resource by uuid. */
     protected J deleteOne(String serviceEndpoint, String uuid) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    // ---- specialized operation helpers (filtered create, dry-run, bulk, secondary response types) ----
+
+    /** POST a creator body applying a Jackson serialization filter. */
+    protected J postOne(String serviceEndpoint, Object body, FilterProvider filters) {
+        EquinixRequest<J> request = buildRequest(serviceEndpoint, RequestType.SINGLE, jsonClass);
+        if (filters != null) {
+            request.setFilters(filters);
+        }
+        Utils.serializeJson(request, body);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** POST a creator body in dry-run mode (server-side validation only, no resource created). */
+    protected J dryRunCreate(String serviceEndpoint, Object body) {
+        return dryRunCreate(serviceEndpoint, body, null);
+    }
+
+    /** POST a creator body in dry-run mode, applying a Jackson serialization filter. */
+    protected J dryRunCreate(String serviceEndpoint, Object body, FilterProvider filters) {
+        EquinixRequest<J> request = buildRequest(serviceEndpoint, RequestType.SINGLE, jsonClass);
+        request.addSingleQueryParameter("dryRun", "true");
+        if (filters != null) {
+            request.setFilters(filters);
+        }
+        Utils.serializeJson(request, body);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /**
+     * POST a body and deserialize the response into an explicit type — for operations whose
+     * response is not this client's model {@code J} (e.g. a bulk {@code List<M>} create).
+     */
+    protected <R> R postForType(String serviceEndpoint, Object body, TypeReference<?> typeReference) {
+        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, typeReference);
+        Utils.serializeJson(request, body);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    /**
+     * GET a single resource of a secondary response type (e.g. statistics), addressed by path and
+     * query parameters — for operations whose response is not this client's model {@code J}.
+     */
+    protected <R> R getOneAs(String serviceEndpoint, Map<String, String> pathParams,
+                             Map<String, List<String>> queryParams, Class<R> responseClass) {
+        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, responseClass);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
