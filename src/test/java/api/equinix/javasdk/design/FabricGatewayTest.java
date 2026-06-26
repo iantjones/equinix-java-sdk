@@ -23,6 +23,7 @@ import api.equinix.javasdk.design.peering.PeeringIntelligence;
 import api.equinix.javasdk.fabric.client.CloudRouters;
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.client.Metros;
+import api.equinix.javasdk.fabric.client.Prices;
 import api.equinix.javasdk.fabric.client.RoutingProtocols;
 import api.equinix.javasdk.fabric.client.ServiceProfiles;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ class FabricGatewayTest {
         public CloudRouters cloudRouters() { return null; }
         public Connections connections() { return null; }
         public RoutingProtocols routingProtocols() { return null; }
+        public Prices prices() { return null; }
     };
 
     @Test

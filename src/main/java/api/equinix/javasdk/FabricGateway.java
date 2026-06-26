@@ -19,6 +19,7 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.fabric.client.CloudRouters;
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.client.Metros;
+import api.equinix.javasdk.fabric.client.Prices;
 import api.equinix.javasdk.fabric.client.RoutingProtocols;
 import api.equinix.javasdk.fabric.client.ServiceProfiles;
 
@@ -51,4 +52,7 @@ public interface FabricGateway {
 
     /** @return the Routing Protocols resource client. */
     RoutingProtocols routingProtocols();
+
+    /** @return the Pricing resource client, used by the value-realization cost and savings models. */
+    Prices prices();
 }

@@ -1,6 +1,8 @@
 package api.equinix.javasdk.design.optimizer.wizard;
 
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.mcp.bridge.McpConnectionBridge;
@@ -9,6 +11,11 @@ import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
 import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import api.equinix.javasdk.design.optimizer.wizard.model.*;
+import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
+import api.equinix.javasdk.design.value.ratecard.PriceQuote;
+import api.equinix.javasdk.design.value.ratecard.PriceSource;
+import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.Term;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -378,38 +385,113 @@ final class DeploymentWizardEngine {
             List<PlannedConnection> providerConnections,
             List<PlannedBackboneLink> backboneLinks) {
 
-        // Estimate Cloud Router cost: ~$300/month per router (typical STANDARD package)
-        BigDecimal routerCost = BigDecimal.valueOf(300L * routers.size());
+        RateCard rateCard = resolveRateCard(config);
+        Term term = config.getTerm();
 
-        // Estimate provider connection costs based on bandwidth
-        BigDecimal providerCost = BigDecimal.ZERO;
         Map<String, BigDecimal> perConnectionCost = new LinkedHashMap<>();
+        Currency currency = null;
 
+        // Cloud Routers
+        BigDecimal routerMonthly = BigDecimal.ZERO;
+        BigDecimal routerSetup = BigDecimal.ZERO;
+        for (PlannedCloudRouter router : routers) {
+            PriceQuote quote = priceRouter(rateCard, router, term);
+            routerMonthly = routerMonthly.add(quote.getMonthlyRecurring());
+            routerSetup = routerSetup.add(quote.getNonRecurring());
+            currency = firstNonNull(currency, quote.getCurrency());
+        }
+
+        // Provider connections
+        BigDecimal providerMonthly = BigDecimal.ZERO;
+        BigDecimal providerSetup = BigDecimal.ZERO;
         for (PlannedConnection conn : providerConnections) {
-            BigDecimal cost = estimateConnectionCost(conn.getBandwidthMbps());
-            providerCost = providerCost.add(cost);
-            perConnectionCost.put(conn.getName(), cost);
+            PriceQuote quote = priceConnection(rateCard, conn.getConnectionType(),
+                    conn.getBandwidthMbps(), conn.getASideMetro(), term);
+            providerMonthly = providerMonthly.add(quote.getMonthlyRecurring());
+            providerSetup = providerSetup.add(quote.getNonRecurring());
+            perConnectionCost.put(conn.getName(), quote.getMonthlyRecurring());
+            currency = firstNonNull(currency, quote.getCurrency());
         }
 
-        // Estimate backbone link costs
-        BigDecimal backboneCost = BigDecimal.ZERO;
+        // Backbone links
+        BigDecimal backboneMonthly = BigDecimal.ZERO;
+        BigDecimal backboneSetup = BigDecimal.ZERO;
         for (PlannedBackboneLink link : backboneLinks) {
-            BigDecimal cost = estimateConnectionCost(link.getBandwidthMbps());
-            backboneCost = backboneCost.add(cost);
-            perConnectionCost.put(link.getName(), cost);
+            ConnectionType type = link.getConnection() != null ? link.getConnection().getConnectionType() : null;
+            PriceQuote quote = priceConnection(rateCard, type, link.getBandwidthMbps(), link.getMetroA(), term);
+            backboneMonthly = backboneMonthly.add(quote.getMonthlyRecurring());
+            backboneSetup = backboneSetup.add(quote.getNonRecurring());
+            perConnectionCost.put(link.getName(), quote.getMonthlyRecurring());
+            currency = firstNonNull(currency, quote.getCurrency());
         }
 
-        BigDecimal monthlyTotal = routerCost.add(providerCost).add(backboneCost);
-        BigDecimal setupTotal = BigDecimal.valueOf(500L * (providerConnections.size() + backboneLinks.size()));
+        if (currency == null) {
+            currency = Currency.getInstance("USD");
+        }
+
+        BigDecimal monthlyTotal = routerMonthly.add(providerMonthly).add(backboneMonthly);
+        BigDecimal setupTotal = routerSetup.add(providerSetup).add(backboneSetup);
 
         return PlanPricing.builder()
                 .monthlyTotal(monthlyTotal)
                 .setupTotal(setupTotal)
-                .routerMonthlyCost(routerCost)
-                .providerConnectionMonthlyCost(providerCost)
-                .backboneMonthlyCost(backboneCost)
+                .currency(currency.getCurrencyCode())
+                .routerMonthlyCost(routerMonthly)
+                .providerConnectionMonthlyCost(providerMonthly)
+                .backboneMonthlyCost(backboneMonthly)
                 .perConnectionCost(perConnectionCost)
                 .build();
+    }
+
+    /**
+     * Resolves the rate card to price the plan with: the explicitly-configured
+     * card if set, otherwise live Equinix pricing over the wizard's Fabric
+     * gateway. Returns {@code null} only when neither is available (no gateway),
+     * in which case pricing falls back entirely to the built-in heuristic.
+     */
+    private static RateCard resolveRateCard(DeploymentWizard.Builder config) {
+        if (config.getRateCard() != null) {
+            return config.getRateCard();
+        }
+        FabricGateway fabric = config.getFabric();
+        return fabric != null ? EquinixRateCard.of(fabric) : null;
+    }
+
+    /**
+     * Prices a single connection via the rate card, falling back to the legacy
+     * tiered heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
+     * cannot resolve a price.
+     */
+    private static PriceQuote priceConnection(RateCard rateCard, ConnectionType type,
+                                              int bandwidthMbps, MetroCode metro, Term term) {
+        if (rateCard != null) {
+            Optional<PriceQuote> quote = rateCard.connection(type, bandwidthMbps, metro, term);
+            if (quote.isPresent()) {
+                return quote.get();
+            }
+        }
+        return PriceQuote.of(estimateConnectionCost(bandwidthMbps), BigDecimal.valueOf(500),
+                Currency.getInstance("USD"), PriceSource.ESTIMATE);
+    }
+
+    /**
+     * Prices a single Cloud Router via the rate card, falling back to the legacy
+     * ~$300/month heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
+     * cannot resolve a price.
+     */
+    private static PriceQuote priceRouter(RateCard rateCard, PlannedCloudRouter router, Term term) {
+        if (rateCard != null) {
+            Optional<PriceQuote> quote = rateCard.cloudRouter(router.getPackageCode(), router.getMetroCode(), term);
+            if (quote.isPresent()) {
+                return quote.get();
+            }
+        }
+        return PriceQuote.of(BigDecimal.valueOf(300), BigDecimal.ZERO,
+                Currency.getInstance("USD"), PriceSource.ESTIMATE);
+    }
+
+    private static Currency firstNonNull(Currency current, Currency candidate) {
+        return current != null ? current : candidate;
     }
 
     private static BigDecimal estimateConnectionCost(int bandwidthMbps) {
