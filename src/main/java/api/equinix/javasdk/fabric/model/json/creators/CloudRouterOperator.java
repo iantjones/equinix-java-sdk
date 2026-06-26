@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.CloudRouterClientImpl;
@@ -40,6 +41,16 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
 
     public CloudRouterBuilder create() {
         return new CloudRouterBuilder();
+    }
+
+    /**
+     * <p>Begins a fluent JSON Patch update of an existing cloud router, identified by uuid.</p>
+     *
+     * @param uuid the uuid of the cloud router to update
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator.CloudRouterUpdater} object.
+     */
+    public CloudRouterUpdater update(String uuid) {
+        return new CloudRouterUpdater(uuid);
     }
 
     @Getter
@@ -95,6 +106,69 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
         public CloudRouter create() {
             CloudRouterCreatorJson creatorJson = new CloudRouterCreatorJson(this);
             CloudRouterJson cloudRouterJson = ((CloudRouterClientImpl) CloudRouterOperator.this.getServiceClient()).create(creatorJson);
+            return new CloudRouterWrapper(cloudRouterJson, CloudRouterOperator.this.getServiceClient());
+        }
+    }
+
+    /**
+     * Fluent builder for updating an existing cloud router via RFC&nbsp;6902 JSON Patch. Each typed
+     * setter records a {@code replace} operation; {@link #save()} sends them as one
+     * {@code PATCH} with content-type {@code application/json-patch+json} and returns the refreshed model.
+     *
+     * <pre>{@code cloudRouter.update().name("New-Name").save();}</pre>
+     */
+    public class CloudRouterUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected CloudRouterUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        /**
+         * Replaces the cloud router name.
+         *
+         * @param name the new name
+         * @return this updater
+         */
+        public CloudRouterUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        /**
+         * Replaces the cloud router package (tier).
+         *
+         * @param packageCode the new package code
+         * @return this updater
+         */
+        public CloudRouterUpdater changePackage(String packageCode) {
+            operations.add(PatchOperation.replace("/package/code", packageCode));
+            return this;
+        }
+
+        /**
+         * Adds an arbitrary JSON Patch operation, for paths not covered by the typed setters above.
+         *
+         * @param operation the patch operation
+         * @return this updater
+         */
+        public CloudRouterUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        /**
+         * Applies the accumulated changes and returns the cloud router refreshed from the server.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.CloudRouter}
+         */
+        public CloudRouter save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            CloudRouterJson cloudRouterJson = ((CloudRouterClientImpl) CloudRouterOperator.this.getServiceClient()).update(uuid, operations);
             return new CloudRouterWrapper(cloudRouterJson, CloudRouterOperator.this.getServiceClient());
         }
     }

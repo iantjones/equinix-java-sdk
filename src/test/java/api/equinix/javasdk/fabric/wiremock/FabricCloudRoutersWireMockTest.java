@@ -61,6 +61,40 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("sends an RFC 6902 JSON Patch with json-patch content-type")
+        void savePatchesName() {
+            stubSingleton(wireMock, "/fabric/v4/routers/.*",
+                    "/json/fabric/cloud_router_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/routers/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+
+            CloudRouter router = fabric.cloudRouters().getByUuid("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+            CloudRouter updated = router.update().name("Renamed-Router").save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Router\"}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            stubSingleton(wireMock, "/fabric/v4/routers/.*",
+                    "/json/fabric/cloud_router_response.json");
+
+            CloudRouter router = fabric.cloudRouters().getByUuid("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+            assertThrows(IllegalStateException.class, () -> router.update().save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/routers/.*")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 
