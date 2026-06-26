@@ -27,6 +27,16 @@ import java.time.LocalDateTime;
 /**
  * <p>OAuthToken class.</p>
  *
+ * <h3>Concurrency contract</h3>
+ * <p>An {@code OAuthToken} instance is effectively immutable once populated by
+ * deserialization, but the SDK may publish a freshly authenticated instance to
+ * multiple threads (see {@code EquinixClient#getOAuthToken()} /
+ * {@code setOAuthToken}). The mutable fields that participate in the validity
+ * check ({@link #sessionStart}, {@link #sessionToken} and {@link #tokenTimeout})
+ * are therefore declared {@code volatile} so that a thread reading the token
+ * always observes the fully-written, most recent values rather than a stale or
+ * partially-constructed view. The getters and setters are retained unchanged.</p>
+ *
  * @author ianjones
  * @version $Id: $Id
  */
@@ -36,10 +46,10 @@ public class OAuthToken {
 
 
     @JsonProperty("access_token")
-    private String sessionToken;
+    private volatile String sessionToken;
 
     @JsonProperty("token_timeout")
-    private Integer tokenTimeout;
+    private volatile Integer tokenTimeout;
 
     @JsonProperty("user_name")
     private String userName;
@@ -54,7 +64,7 @@ public class OAuthToken {
     private Integer refreshTokenTimeout;
 
     @JsonIgnore
-    private LocalDateTime sessionStart = LocalDateTime.now();
+    private volatile LocalDateTime sessionStart = LocalDateTime.now();
 
     /**
      * <p>validSession.</p>

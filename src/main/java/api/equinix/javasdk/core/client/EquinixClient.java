@@ -66,8 +66,18 @@ public class EquinixClient implements Closeable {
     @Getter
     private HttpHost httpHost;
 
-    @Getter @Setter
-    private OAuthToken oAuthToken;
+    private volatile OAuthToken oAuthToken;
+
+    /**
+     * Guards the read-validate-publish lifecycle of {@link #oAuthToken}. Reading and
+     * (re)publishing the token are serialized through this monitor so that, under
+     * concurrent load, at most one thread observes an invalid/expired token and acts
+     * on it (single-flight), while the others block briefly and then reuse whatever
+     * valid token is current. The field itself is {@code volatile} so callers that
+     * only need a quick, lock-free snapshot via {@link #getOAuthToken()} still see
+     * the most recently published instance.
+     */
+    private final Object tokenLock = new Object();
 
     private final Boolean isSandBoxed;
 
@@ -187,14 +197,74 @@ public class EquinixClient implements Closeable {
         return ApacheUtils.toUri(endpoint, equinixHttpClient.getProtocol());
     }
 
+    /**
+     * Returns the currently published OAuth token, or {@code null} if the client has
+     * not authenticated yet.
+     *
+     * <p>This is a lock-free {@code volatile} read returning the latest published
+     * instance. For an atomic validity-then-use decision under concurrency, prefer
+     * the internal single-flight path in {@link #setStandardHeaders} which captures
+     * a consistent snapshot under {@link #tokenLock}.</p>
+     *
+     * @return the current {@link api.equinix.javasdk.core.model.OAuthToken}, may be {@code null}.
+     */
+    public OAuthToken getOAuthToken() {
+        return oAuthToken;
+    }
+
+    /**
+     * Publishes a (re)authenticated OAuth token for use by subsequent requests.
+     *
+     * <p>Publication is serialized through {@link #tokenLock} so that a token
+     * obtained by a single-flight refresh becomes visible atomically with respect to
+     * other threads inspecting validity. Once stored, the {@code volatile} field
+     * guarantees the new instance is visible to all threads.</p>
+     *
+     * @param oAuthToken the freshly obtained token, may be {@code null} to clear.
+     */
+    public void setOAuthToken(OAuthToken oAuthToken) {
+        synchronized (tokenLock) {
+            this.oAuthToken = oAuthToken;
+        }
+    }
+
+    /**
+     * Applies the standard headers (authorization + content type) to the request.
+     *
+     * <p>The authorization header is derived from the OAuth token under a
+     * single-flight guard: the token is validated and its session value captured
+     * inside a {@link #tokenLock} synchronized block using a double-checked validity
+     * pattern. This ensures that concurrent callers observe one consistent token
+     * snapshot and that an expired token is detected by a single thread at a time,
+     * rather than many threads racing the validity check and potentially stampeding
+     * the token endpoint. (Re)acquisition itself is performed by the authentication
+     * flow that publishes via {@link #setOAuthToken}; this method does not perform
+     * retry or backoff.)</p>
+     *
+     * @param equinixRequest the request to decorate.
+     */
     private <T> void setStandardHeaders(EquinixRequest<T> equinixRequest){
         Map<String, String> standardHeaders = new HashMap<>();
-        if(oAuthToken != null) {
-            if(!oAuthToken.validSession()) {
-                throw new EquinixAuthenticationException(
-                        "OAuth token has expired. Call authenticate() to obtain a new token.");
+
+        // Lock-free fast path: capture the currently published token snapshot.
+        OAuthToken currentToken = oAuthToken;
+        if(currentToken != null) {
+            String sessionToken = null;
+            synchronized (tokenLock) {
+                // Re-read under the lock so we validate the most recently published
+                // token and do not act on a snapshot another thread has since rotated.
+                currentToken = oAuthToken;
+                if(currentToken != null) {
+                    if(!currentToken.validSession()) {
+                        throw new EquinixAuthenticationException(
+                                "OAuth token has expired. Call authenticate() to obtain a new token.");
+                    }
+                    sessionToken = currentToken.getSessionToken();
+                }
             }
-            standardHeaders.put("authorization", "Bearer " + oAuthToken.getSessionToken());
+            if(sessionToken != null) {
+                standardHeaders.put("authorization", "Bearer " + sessionToken);
+            }
         }
         standardHeaders.put("content-type", "application/json");
         equinixRequest.setHeaders(standardHeaders);
