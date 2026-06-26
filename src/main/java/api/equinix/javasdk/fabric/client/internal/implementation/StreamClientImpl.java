@@ -37,7 +37,7 @@ public class StreamClientImpl extends ResourceClientBase<Stream, StreamJson> imp
     }
 
     public Page<Stream, StreamJson> list() {
-        return listPage("ListStreams");
+        return listPage("GetStreams");
     }
 
     public StreamJson getByUuid(String uuid) {
@@ -49,7 +49,7 @@ public class StreamClientImpl extends ResourceClientBase<Stream, StreamJson> imp
     }
 
     public StreamJson update(String uuid, StreamCreatorJson streamCreatorJson) {
-        return updateOne("PutStream", uuid, streamCreatorJson);
+        return updateOne("UpdateStream", uuid, streamCreatorJson);
     }
 
     public StreamJson delete(String uuid) {

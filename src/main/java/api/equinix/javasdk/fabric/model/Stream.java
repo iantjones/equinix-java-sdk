@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.fabric.enums.StreamState;
 import api.equinix.javasdk.fabric.enums.StreamType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.json.creators.StreamOperator;
 
 public interface Stream {
 
@@ -39,6 +40,14 @@ public interface Stream {
     ChangeLog getChangeLog();
 
     Boolean getEnabled();
+
+    /**
+     * Begins a fluent full-body update of this stream, pre-populated with its current state, e.g.
+     * {@code stream.update().withName("New-Name").save()}.
+     *
+     * @return a seeded {@link api.equinix.javasdk.fabric.model.json.creators.StreamOperator.StreamBuilder}
+     */
+    StreamOperator.StreamBuilder update();
 
     Boolean delete();
 
