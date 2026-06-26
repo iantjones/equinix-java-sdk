@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.Side;
@@ -50,6 +51,8 @@ public interface ConnectionClient<T> extends PageablePost<T> {
     ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson);
 
     ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject);
+
+    ConnectionJson update(String uuid, List<PatchOperation> operations);
 
     List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList);
 

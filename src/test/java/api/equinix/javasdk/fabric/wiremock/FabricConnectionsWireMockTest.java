@@ -63,6 +63,41 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("PATCHes a JSON Patch array as application/json-patch+json")
+        void savePatchesNameAndBandwidth() {
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+            Connection connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+            Connection updated = connection.update().name("Renamed-Connection").bandwidth(200).save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Connection\"},"
+                            + "{\"op\":\"replace\",\"path\":\"/bandwidth\",\"value\":200}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+
+            Connection connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+            assertThrows(IllegalStateException.class, () -> connection.update().save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

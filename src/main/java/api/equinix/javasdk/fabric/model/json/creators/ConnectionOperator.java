@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
@@ -52,6 +53,10 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
 
     public BatchConnectionBuilder batch() {
         return new BatchConnectionBuilder();
+    }
+
+    public ConnectionUpdater update(String uuid) {
+        return new ConnectionUpdater(uuid);
     }
 
     @Getter(AccessLevel.PACKAGE)
@@ -329,6 +334,45 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
 
         public List<Connection> createBatch() {
             return ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).batch(this.connections);
+        }
+    }
+
+    /**
+     * Fluent updater for an existing connection. Typed setters record RFC&nbsp;6902 replace
+     * operations (the API accepts a JSON Patch array at {@code PATCH /connections/{uuid}}); use
+     * {@link #patch(PatchOperation)} for any path not covered by a typed setter (e.g. term length,
+     * notifications, A-side migration). Call {@link #save()} to apply.
+     */
+    public class ConnectionUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected ConnectionUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public ConnectionUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        public ConnectionUpdater bandwidth(Integer bandwidth) {
+            operations.add(PatchOperation.replace("/bandwidth", bandwidth));
+            return this;
+        }
+
+        public ConnectionUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        public Connection save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            ConnectionJson connectionJson = ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).update(uuid, operations);
+            return new ConnectionWrapper(connectionJson, ConnectionOperator.this.getServiceClient());
         }
     }
 }
