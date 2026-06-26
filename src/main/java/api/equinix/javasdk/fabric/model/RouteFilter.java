@@ -21,6 +21,7 @@ import api.equinix.javasdk.fabric.enums.RouteFilterState;
 import api.equinix.javasdk.fabric.enums.RouteFilterType;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator;
 
 public interface RouteFilter {
 
@@ -47,6 +48,14 @@ public interface RouteFilter {
     RouteFilterAction getNotMatchedRuleAction();
 
     Integer getConnectionsCount();
+
+    /**
+     * Begins a fluent update of this route filter, e.g.
+     * {@code routeFilter.update().name("New-Name").save()}.
+     *
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator.RouteFilterUpdater}
+     */
+    RouteFilterOperator.RouteFilterUpdater update();
 
     Boolean delete();
 

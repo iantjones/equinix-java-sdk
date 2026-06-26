@@ -61,6 +61,40 @@ class FabricRouteFiltersWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("PATCHes an op/path/value array as application/json")
+        void savePatchesName() {
+            stubSingleton(wireMock, "/fabric/v4/routeFilters/.*",
+                    "/json/fabric/route_filter_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/routeFilters/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_filter_response.json"))));
+
+            RouteFilter filter = fabric.routeFilters().getByUuid("e5f6a7b8-c9d0-1234-efab-456789012cde");
+            RouteFilter updated = filter.update().name("Renamed-Filter").save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/routeFilters/e5f6a7b8-c9d0-1234-efab-456789012cde"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Filter\"}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            stubSingleton(wireMock, "/fabric/v4/routeFilters/.*",
+                    "/json/fabric/route_filter_response.json");
+
+            RouteFilter filter = fabric.routeFilters().getByUuid("e5f6a7b8-c9d0-1234-efab-456789012cde");
+            assertThrows(IllegalStateException.class, () -> filter.update().save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/routeFilters/.*")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RouteFilterClientImpl;
 import api.equinix.javasdk.fabric.model.RouteFilter;
 import api.equinix.javasdk.fabric.model.json.RouteFilterJson;
+import api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class RouteFilterWrapper extends ResourceImpl<RouteFilter> implements Rou
         this.serviceClient = serviceClient;
     }
 
+    public RouteFilterOperator.RouteFilterUpdater update() {
+        return new RouteFilterOperator((RouteFilterClientImpl) this.serviceClient).update(this.getUuid());
+    }
+
     public Boolean delete() {
         this.jsonObject = ((RouteFilterClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class RouteFilterWrapper extends ResourceImpl<RouteFilter> implements Rou
     }
 
     private interface RouteFilterMutability {
+        RouteFilterOperator.RouteFilterUpdater update();
         Boolean delete();
         void refresh();
     }
