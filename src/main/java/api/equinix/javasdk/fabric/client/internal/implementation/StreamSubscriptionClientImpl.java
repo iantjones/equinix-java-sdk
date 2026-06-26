@@ -51,7 +51,7 @@ public class StreamSubscriptionClientImpl extends ResourceClientBase<StreamSubsc
     }
 
     public StreamSubscriptionJson update(String streamId, String uuid, StreamSubscriptionCreatorJson streamSubscriptionCreatorJson) {
-        return updateOne("PutStreamSubscription", Map.of("streamId", streamId, "uuid", uuid), streamSubscriptionCreatorJson);
+        return updateOne("UpdateStreamSubscription", Map.of("streamId", streamId, "uuid", uuid), streamSubscriptionCreatorJson);
     }
 
     public StreamSubscriptionJson delete(String streamId, String uuid) {

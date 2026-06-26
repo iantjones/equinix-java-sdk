@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RouteFilterRuleClientImpl;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
 import api.equinix.javasdk.fabric.model.json.RouteFilterRuleJson;
+import api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class RouteFilterRuleWrapper extends ResourceImpl<RouteFilterRule> implem
         this.serviceClient = serviceClient;
     }
 
+    public RouteFilterRuleOperator.RouteFilterRuleUpdater update(String routeFilterId) {
+        return new RouteFilterRuleOperator((RouteFilterRuleClientImpl) this.serviceClient, routeFilterId).update(this.getUuid());
+    }
+
     public Boolean delete(String routeFilterId) {
         this.jsonObject = ((RouteFilterRuleClientImpl)this.serviceClient).delete(routeFilterId, this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class RouteFilterRuleWrapper extends ResourceImpl<RouteFilterRule> implem
     }
 
     private interface RouteFilterRuleMutability {
+        RouteFilterRuleOperator.RouteFilterRuleUpdater update(String routeFilterId);
         Boolean delete(String routeFilterId);
         void refresh(String routeFilterId);
     }

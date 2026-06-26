@@ -1,0 +1,48 @@
+{
+  "uuid": "f1e2d3c4-b5a6-7890-abcd-1234567890ef",
+  "href": "https://api.equinix.com/fabric/v4/connections/c0ffee00-1111-2222-3333-444455556666/routingProtocols/f1e2d3c4-b5a6-7890-abcd-1234567890ef",
+  "name": "Production-BGP-RoutingProtocol",
+  "type": "BGP",
+  "state": "PROVISIONED",
+  "description": "BGP routing protocol for production connection",
+  "bgpIpv4": {
+    "customerPeerIp": "192.168.100.1",
+    "equinixPeerIp": "192.168.100.2",
+    "enabled": true
+  },
+  "bgpIpv6": {
+    "customerPeerIp": "2001:db8::1",
+    "equinixPeerIp": "2001:db8::2",
+    "enabled": false
+  },
+  "directIpv4": {
+    "equinixIfaceIp": "192.168.100.2"
+  },
+  "directIpv6": {
+    "equinixIfaceIp": "2001:db8::2"
+  },
+  "bfd": {
+    "enabled": true,
+    "interval": "100"
+  },
+  "customerAsn": 65001,
+  "equinixAsn": 65002,
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-04-12T07:45:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-10-18T15:00:00.000Z"
+  },
+  "change": {
+    "uuid": "a9b8c7d6-e5f4-3210-abcd-fedcba987654",
+    "type": "ROUTING_PROTOCOL_UPDATE",
+    "status": "COMPLETED",
+    "information": "Updated routing protocol configuration",
+    "createdDateTime": "2024-10-18T15:00:00.000Z",
+    "updatedDateTime": "2024-10-18T15:01:00.000Z"
+  }
+}

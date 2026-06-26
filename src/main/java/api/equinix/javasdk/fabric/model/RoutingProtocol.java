@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolState;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.implementation.*;
+import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator;
 
 public interface RoutingProtocol {
 
@@ -51,6 +52,15 @@ public interface RoutingProtocol {
     ChangeLog getChangeLog();
 
     Change getChange();
+
+    /**
+     * Begins a fluent update of this routing protocol on its parent connection, e.g.
+     * {@code routingProtocol.update(connectionId).name("New-Name").save()}.
+     *
+     * @param connectionId the uuid of the parent connection
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator.RoutingProtocolUpdater}
+     */
+    RoutingProtocolOperator.RoutingProtocolUpdater update(String connectionId);
 
     Boolean delete(String connectionId);
 

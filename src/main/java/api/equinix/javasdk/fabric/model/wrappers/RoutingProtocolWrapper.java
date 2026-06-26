@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RoutingProtocolClientImpl;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
+import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class RoutingProtocolWrapper extends ResourceImpl<RoutingProtocol> implem
         this.serviceClient = serviceClient;
     }
 
+    public RoutingProtocolOperator.RoutingProtocolUpdater update(String connectionId) {
+        return new RoutingProtocolOperator((RoutingProtocolClientImpl) this.serviceClient).update(connectionId, this.getUuid());
+    }
+
     public Boolean delete(String connectionId) {
         this.jsonObject = ((RoutingProtocolClientImpl)this.serviceClient).delete(connectionId, this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class RoutingProtocolWrapper extends ResourceImpl<RoutingProtocol> implem
     }
 
     private interface RoutingProtocolMutability {
+        RoutingProtocolOperator.RoutingProtocolUpdater update(String connectionId);
         Boolean delete(String connectionId);
         void refresh(String connectionId);
     }

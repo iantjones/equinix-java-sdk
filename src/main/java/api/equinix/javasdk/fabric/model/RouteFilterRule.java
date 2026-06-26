@@ -20,6 +20,7 @@ import api.equinix.javasdk.fabric.enums.RouteFilterAction;
 import api.equinix.javasdk.fabric.enums.RouteFilterRuleState;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleOperator;
 
 public interface RouteFilterRule {
 
@@ -44,6 +45,15 @@ public interface RouteFilterRule {
     ChangeLog getChangeLog();
 
     Change getChange();
+
+    /**
+     * Begins a fluent update of this route filter rule, e.g.
+     * {@code rule.update(routeFilterId).name("New-Name").save()}.
+     *
+     * @param routeFilterId the unique identifier of the parent route filter
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleOperator.RouteFilterRuleUpdater}
+     */
+    RouteFilterRuleOperator.RouteFilterRuleUpdater update(String routeFilterId);
 
     Boolean delete(String routeFilterId);
 

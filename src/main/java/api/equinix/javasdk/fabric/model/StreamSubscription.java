@@ -20,6 +20,7 @@ import api.equinix.javasdk.fabric.enums.StreamSubscriptionState;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.StreamSink;
+import api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator;
 
 public interface StreamSubscription {
 
@@ -40,6 +41,15 @@ public interface StreamSubscription {
     StreamSink getSink();
 
     ChangeLog getChangeLog();
+
+    /**
+     * Begins a fluent full-body update of this stream subscription, pre-populated with its current
+     * state, e.g. {@code subscription.update(streamId).withName("New-Name").save()}.
+     *
+     * @param streamId the unique identifier of the parent stream
+     * @return a seeded {@link api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator.StreamSubscriptionBuilder}
+     */
+    StreamSubscriptionOperator.StreamSubscriptionBuilder update(String streamId);
 
     Boolean delete(String streamId);
 

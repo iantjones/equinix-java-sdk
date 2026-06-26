@@ -1,0 +1,9 @@
+{
+  "uuid": "c2d3e4f5-a6b7-8901-cdef-012345678901",
+  "href": "https://api.equinix.com/fabric/v4/routeAggregations/b1c2d3e4-f5a6-7890-bcde-f01234567890/routeAggregationRules/c2d3e4f5-a6b7-8901-cdef-012345678901",
+  "name": "Production-Rule",
+  "type": "BGP_IPv4_PREFIX_AGGREGATION_RULE",
+  "state": "PROVISIONED",
+  "prefix": "192.168.0.0/24",
+  "description": "Primary aggregation rule"
+}

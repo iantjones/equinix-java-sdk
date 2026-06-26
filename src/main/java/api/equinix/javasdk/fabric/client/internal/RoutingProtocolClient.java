@@ -30,7 +30,7 @@ public interface RoutingProtocolClient<T> extends Pageable<T> {
 
     RoutingProtocolJson create(String connectionId, RoutingProtocolCreatorJson routingProtocolCreatorJson);
 
-    RoutingProtocolJson update(String connectionId, String uuid, Object updates);
+    RoutingProtocolJson update(String connectionId, String uuid, java.util.List<api.equinix.javasdk.core.http.request.PatchOperation> operations);
 
     RoutingProtocolJson delete(String connectionId, String uuid);
 

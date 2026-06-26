@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RoutingProtocolClientImpl;
@@ -25,6 +26,9 @@ import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
 import api.equinix.javasdk.fabric.model.wrappers.RoutingProtocolWrapper;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
 
@@ -37,6 +41,18 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
 
     public RoutingProtocolBuilder create() {
         return new RoutingProtocolBuilder();
+    }
+
+    /**
+     * Begins a fluent update of an existing routing protocol, identified by its parent
+     * connection and uuid.
+     *
+     * @param connectionId the uuid of the parent connection
+     * @param uuid the uuid of the routing protocol to update
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator.RoutingProtocolUpdater} object.
+     */
+    public RoutingProtocolUpdater update(String connectionId, String uuid) {
+        return new RoutingProtocolUpdater(connectionId, uuid);
     }
 
     @Getter
@@ -123,6 +139,85 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
 
         public RoutingProtocol create(Connection connection) {
             return create(connection.getUuid());
+        }
+    }
+
+    /**
+     * Fluent builder for updating an existing routing protocol. Each typed setter records a
+     * {@code replace} change operation; {@link #save()} sends them as one {@code PATCH}
+     * (an op/path/value array, content-type {@code application/json}) and returns the refreshed model.
+     *
+     * <p>Routing protocols are parent-keyed, so both the parent connection id and the routing
+     * protocol uuid are captured up front.</p>
+     *
+     * <pre>{@code routingProtocol.update(connectionId).name("New-Name").save();}</pre>
+     */
+    public class RoutingProtocolUpdater {
+
+        private final String connectionId;
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected RoutingProtocolUpdater(String connectionId, String uuid) {
+            this.connectionId = connectionId;
+            this.uuid = uuid;
+        }
+
+        /**
+         * Replaces the routing protocol name.
+         *
+         * @param name the new name
+         * @return this updater
+         */
+        public RoutingProtocolUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        /**
+         * Replaces whether BGP IPv4 is enabled on this routing protocol.
+         *
+         * @param enabled the new enabled flag
+         * @return this updater
+         */
+        public RoutingProtocolUpdater bgpIpv4Enabled(Boolean enabled) {
+            operations.add(PatchOperation.replace("/bgpIpv4/enabled", enabled));
+            return this;
+        }
+
+        /**
+         * Replaces whether BGP IPv6 is enabled on this routing protocol.
+         *
+         * @param enabled the new enabled flag
+         * @return this updater
+         */
+        public RoutingProtocolUpdater bgpIpv6Enabled(Boolean enabled) {
+            operations.add(PatchOperation.replace("/bgpIpv6/enabled", enabled));
+            return this;
+        }
+
+        /**
+         * Adds an arbitrary change operation, for paths not covered by the typed setters above.
+         *
+         * @param operation the patch operation
+         * @return this updater
+         */
+        public RoutingProtocolUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        /**
+         * Applies the accumulated changes and returns the routing protocol refreshed from the server.
+         *
+         * @return the updated {@link api.equinix.javasdk.fabric.model.RoutingProtocol}
+         */
+        public RoutingProtocol save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            RoutingProtocolJson routingProtocolJson = ((RoutingProtocolClientImpl) RoutingProtocolOperator.this.getServiceClient()).update(connectionId, uuid, operations);
+            return new RoutingProtocolWrapper(routingProtocolJson, RoutingProtocolOperator.this.getServiceClient());
         }
     }
 }
