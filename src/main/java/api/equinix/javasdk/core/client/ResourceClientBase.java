@@ -60,7 +60,7 @@ import java.util.Map;
  * @param <J> the JSON model type
  * @author ianjones
  */
-public abstract class ResourceClientBase<M, J> extends PageableBase implements PageablePost<M> {
+public abstract class ResourceClientBase<M, J> extends ClientBase implements PageablePost<M> {
 
     private final Class<J> jsonClass;
 

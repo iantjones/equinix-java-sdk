@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
@@ -24,7 +24,7 @@ import api.equinix.javasdk.fabric.client.internal.HealthClient;
 import api.equinix.javasdk.fabric.model.HealthStatus;
 import api.equinix.javasdk.fabric.model.json.HealthStatusJson;
 
-public class HealthClientImpl extends PageableBase implements HealthClient<HealthStatus> {
+public class HealthClientImpl extends ClientBase implements HealthClient<HealthStatus> {
 
     public HealthClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "Health");

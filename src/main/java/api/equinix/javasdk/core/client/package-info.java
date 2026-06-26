@@ -21,8 +21,8 @@
  * {@link api.equinix.javasdk.core.client.EquinixClient} base class that manages HTTP
  * communication, OAuth token lifecycle, and API parameter loading. The
  * {@link api.equinix.javasdk.core.client.ClientBase} provides request-building
- * utilities, while {@link api.equinix.javasdk.core.client.PageableBase} adds
- * pagination support for internal client implementations.
+ * utilities, and {@link api.equinix.javasdk.core.client.ResourceClientBase} adds
+ * CRUD + pagination helpers for internal client implementations.
  *
  * @see api.equinix.javasdk.core.client.Config
  * @see api.equinix.javasdk.core.client.EquinixClient
