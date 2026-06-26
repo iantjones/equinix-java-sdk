@@ -19,11 +19,14 @@ package api.equinix.javasdk.core.http.response;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A paginated, filtered list of resources returned by Equinix API search operations.
@@ -32,9 +35,9 @@ import java.util.List;
  * filter and sort criteria in the request body. Returned by {@code search()} methods
  * on resource clients such as {@code fabric.connections().search()}.</p>
  *
- * <p>Like {@link PaginatedList}, it implements {@link List} by composition (delegating to an
- * internal {@code List}) rather than extending {@link ArrayList}, and provides the same pagination
- * capabilities: check for additional pages, load the next page, or eagerly load all pages.</p>
+ * <p>Like {@link PaginatedList}, it is an {@link Iterable} view of the loaded results plus
+ * pagination metadata — not a {@link java.util.List}. Iterate it directly, call {@link #stream()},
+ * or take a snapshot with {@link #toList()}.</p>
  *
  * @param <T> the type of resource in the list
  * @author ianjones
@@ -43,9 +46,9 @@ import java.util.List;
  * @see Pagination
  */
 @Getter
-public class PaginatedFilteredList<T> implements List<T> {
+public class PaginatedFilteredList<T> implements Iterable<T> {
 
-    @Delegate
+    @Getter(AccessLevel.NONE)
     private final List<T> items = new ArrayList<>();
 
     private PageablePost<T> pageableClient;
@@ -54,8 +57,7 @@ public class PaginatedFilteredList<T> implements List<T> {
     private Pagination pagination;
 
     /**
-     * No-arg constructor used when collecting mapped items (e.g. {@code Collectors.toCollection}).
-     * Pagination metadata is attached afterwards via the full constructor.
+     * No-arg constructor; pagination metadata and items are attached afterwards.
      */
     public PaginatedFilteredList() {
     }
@@ -63,20 +65,70 @@ public class PaginatedFilteredList<T> implements List<T> {
     /**
      * <p>Constructor for PaginatedFilteredList.</p>
      *
-     * @param initialItems the items for the current page.
+     * @param initialItems the items for the current page (any iterable; copied in).
      * @param pageableClient a {@link PageablePost} object.
      * @param equinixRequest a {@link EquinixRequest} object.
      * @param equinixResponse a {@link EquinixResponse} object.
      * @param pagination a {@link Pagination} object.
      */
-    public PaginatedFilteredList(List<T> initialItems, PageablePost<T> pageableClient,
+    public PaginatedFilteredList(Iterable<? extends T> initialItems, PageablePost<T> pageableClient,
                                  EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse, Pagination pagination) {
 
-        this.items.addAll(initialItems);
+        initialItems.forEach(this.items::add);
         this.pageableClient = pageableClient;
         this.equinixRequest = equinixRequest;
         this.equinixResponse = equinixResponse;
         this.pagination = pagination;
+    }
+
+    /** {@inheritDoc} Iterates the currently-loaded items. */
+    @Override
+    public Iterator<T> iterator() {
+        return items.iterator();
+    }
+
+    /**
+     * Streams the currently-loaded items.
+     *
+     * @return a sequential {@link Stream} over the loaded items
+     */
+    public Stream<T> stream() {
+        return items.stream();
+    }
+
+    /**
+     * The number of items currently loaded (on this and any already-loaded pages).
+     *
+     * @return the loaded item count
+     */
+    public int size() {
+        return items.size();
+    }
+
+    /**
+     * @return {@code true} if no items are loaded
+     */
+    public boolean isEmpty() {
+        return items.isEmpty();
+    }
+
+    /**
+     * Returns the loaded item at the given index.
+     *
+     * @param index the zero-based index
+     * @return the item at {@code index}
+     */
+    public T get(int index) {
+        return items.get(index);
+    }
+
+    /**
+     * Returns an unmodifiable snapshot of the currently-loaded items as a {@link List}.
+     *
+     * @return an unmodifiable copy of the loaded items
+     */
+    public List<T> toList() {
+        return Collections.unmodifiableList(new ArrayList<>(items));
     }
 
     private PaginatedFilteredList<T> fetchNextPage() {
@@ -86,7 +138,7 @@ public class PaginatedFilteredList<T> implements List<T> {
 
     private void loadNextPage() {
         PaginatedFilteredList<T> primaryObjectList = fetchNextPage();
-        this.items.addAll(primaryObjectList);
+        this.items.addAll(primaryObjectList.items);
         this.equinixRequest = primaryObjectList.getEquinixRequest();
         this.equinixResponse = primaryObjectList.getEquinixResponse();
         this.pagination = primaryObjectList.getPagination();
@@ -124,12 +176,15 @@ public class PaginatedFilteredList<T> implements List<T> {
         return this;
     }
 
-    // equals/hashCode/toString delegate to the backing list so the List contract (element-based
-    // equality, per java.util.List) is honored — @Delegate does not generate Object methods.
-
     @Override
     public boolean equals(Object o) {
-        return items.equals(o);
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof PaginatedFilteredList)) {
+            return false;
+        }
+        return items.equals(((PaginatedFilteredList<?>) o).items);
     }
 
     @Override

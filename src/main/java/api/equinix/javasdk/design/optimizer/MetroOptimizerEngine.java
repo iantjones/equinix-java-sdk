@@ -66,8 +66,8 @@ final class MetroOptimizerEngine {
         long startTime = System.currentTimeMillis();
 
         // Phase 1: Data Collection
-        List<Metro> allMetros = new ArrayList<>(fabric.metros().list());
-        List<ServiceProfile> serviceProfiles = new ArrayList<>(fabric.serviceProfiles().search());
+        List<Metro> allMetros = new ArrayList<>(fabric.metros().list().toList());
+        List<ServiceProfile> serviceProfiles = new ArrayList<>(fabric.serviceProfiles().search().toList());
 
         // Build lookup maps
         Map<MetroCode, Metro> metroMap = new HashMap<>();

@@ -17,8 +17,10 @@ were removed and the value-add engines moved to dedicated top-level modules.
   typed operations array with `application/json-patch+json`; full-body resources use a seeded
   builder. Exposed on each model/wrapper, e.g. `network.update().name("x").save()`.
 - **Automatic retry/backoff** (`RetryPolicy`): retries 429/500/502/503/504 and transient IO
-  errors with exponential backoff + full jitter, honoring `Retry-After`. Configurable via
-  `EquinixClient.setRetryPolicy(...)`; on by default.
+  errors with exponential backoff + full jitter, honoring `Retry-After` (both delta-seconds and
+  HTTP-date forms). **Idempotent methods only by default** — POST is not retried, so a transient
+  failure after a create cannot duplicate the resource; opt in with `retryNonIdempotentMethods`.
+  Each retry is logged at WARN. Configurable via `EquinixClient.setRetryPolicy(...)`; on by default.
 - **Forward-compatible enum deserialization**: unknown API enum values no longer crash a
   response (map to a default/`null`/`UNKNOWN`).
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
@@ -29,6 +31,19 @@ were removed and the value-add engines moved to dedicated top-level modules.
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
   Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
   `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.
+- **`FabricGateway` interface** — the value-add design engines now depend on a narrow read/build
+  interface (`metros()`/`serviceProfiles()`/`cloudRouters()`/`connections()`/`routingProtocols()`/
+  `prices()`) rather than the concrete `Fabric`; `Fabric implements FabricGateway`, so existing
+  callers are unaffected.
+- **Pagination is now `Iterable`, not `List`** (breaking): `PaginatedList<T>` and
+  `PaginatedFilteredList<T>` implement `Iterable<T>` and expose `stream()`/`get(int)`/`size()`/
+  `isEmpty()`/`toList()` alongside `hasNextPage()`/`next()`/`loadAll()`/`getPagination()`, instead
+  of extending `ArrayList`. A server-returned page is no longer a mutable collection (matching the
+  AWS/Google/Stripe SDK idiom). Migration: `new ArrayList<>(page)` → `new ArrayList<>(page.toList())`;
+  iteration, `stream()`, `get(int)` and `size()` are unchanged.
+- **`RouteAggregations.list()` → `search()`** (breaking): route aggregations are exposed via
+  `POST /routeAggregations/search` (the only endpoint the API provides), returning a
+  `PaginatedFilteredList`; the old `list()` targeted a non-existent GET path and threw at runtime.
 - **JSON Patch support in core**: per-request content-type + `PatchOperation` model + `patchOne`.
 
 ### Fixed

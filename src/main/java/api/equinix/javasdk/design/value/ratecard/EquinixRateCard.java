@@ -132,7 +132,7 @@ public final class EquinixRateCard implements RateCard {
         try {
             PaginatedFilteredList<Pricing> page = fabric.prices().list(null);
             if (page != null) {
-                return new ArrayList<>(page);
+                return new ArrayList<>(page.toList());
             }
         } catch (RuntimeException e) {
             log.debug("Could not fetch Equinix price catalogue; live rate card will yield no prices", e);
