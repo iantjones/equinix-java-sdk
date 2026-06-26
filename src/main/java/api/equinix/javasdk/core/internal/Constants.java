@@ -84,7 +84,12 @@ public class Constants {
      */
     private static ObjectMapper buildObjectMapper() {
         ObjectMapper mapper = new ObjectMapper()
+                // Forward-compatibility for enums: a value the SDK doesn't know maps to the enum's
+                // @JsonEnumDefaultValue when one is declared, otherwise to null — never failing the
+                // whole response. The Equinix APIs add enum values (states, change types, etc.) over
+                // time; without this a single unrecognized value would crash an otherwise-valid read.
                 .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
+                .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)
                 .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
                 .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
                 .enable(MapperFeature.USE_STD_BEAN_NAMING)
