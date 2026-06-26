@@ -24,10 +24,10 @@ import api.equinix.javasdk.fabric.model.HealthStatus;
 import api.equinix.javasdk.mcp.McpClient;
 import api.equinix.javasdk.mcp.McpClientConfig;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
-import api.equinix.javasdk.fabric.optimizer.MetroOptimizer;
-import api.equinix.javasdk.fabric.optimizer.model.OptimizationResult;
-import api.equinix.javasdk.fabric.optimizer.wizard.DeploymentWizard;
-import api.equinix.javasdk.fabric.peering.PeeringIntelligence;
+import api.equinix.javasdk.design.optimizer.MetroOptimizer;
+import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
+import api.equinix.javasdk.design.optimizer.wizard.DeploymentWizard;
+import api.equinix.javasdk.design.peering.PeeringIntelligence;
 
 /**
  * The primary entry point for accessing the Equinix Fabric APIs.
