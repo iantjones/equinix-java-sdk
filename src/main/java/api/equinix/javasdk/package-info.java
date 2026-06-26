@@ -19,7 +19,7 @@
  * for each supported Equinix platform domain: {@link api.equinix.javasdk.Fabric},
  * {@link api.equinix.javasdk.NetworkEdge}, {@link api.equinix.javasdk.CustomerPortal},
  * {@link api.equinix.javasdk.IBXSmartView}, {@link api.equinix.javasdk.InternetAccess},
- * {@link api.equinix.javasdk.Projects}, and {@link api.equinix.javasdk.Messaging}.
+ * and {@link api.equinix.javasdk.Projects}.
  * Each entry point extends {@link api.equinix.javasdk.EquinixClient} and provides
  * lazy-initialized accessor methods for domain-specific resource clients.
  *
