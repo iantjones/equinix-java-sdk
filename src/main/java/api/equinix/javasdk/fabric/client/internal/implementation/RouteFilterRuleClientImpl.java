@@ -16,14 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteFilterRuleClient;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
@@ -33,49 +27,34 @@ import api.equinix.javasdk.fabric.model.wrappers.RouteFilterRuleWrapper;
 
 import java.util.Map;
 
-public class RouteFilterRuleClientImpl extends PageableBase implements RouteFilterRuleClient<RouteFilterRule> {
+public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRule, RouteFilterRuleJson> implements RouteFilterRuleClient<RouteFilterRule> {
 
     public RouteFilterRuleClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "RouteFilterRules");
+        super(configClient, "Fabric", "RouteFilterRules", RouteFilterRuleJson.class);
+    }
+
+    @Override
+    protected RouteFilterRule wrap(RouteFilterRuleJson json) {
+        return new RouteFilterRuleWrapper(json, this);
     }
 
     public Page<RouteFilterRule, RouteFilterRuleJson> list(String routeFilterId) {
-        Map<String, String> pParams = Map.of("routeFilterId", routeFilterId);
-        EquinixRequest<RouteFilterRule> equinixRequest = this.buildRequestWithPathParams("ListRouteFilterRules", RequestType.PAGINATED, pParams, RouteFilterRuleJson.class);
-        EquinixResponse<RouteFilterRule> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPagePath("ListRouteFilterRules", Map.of("routeFilterId", routeFilterId));
     }
 
     public RouteFilterRuleJson getByUuid(String routeFilterId, String uuid) {
-        Map<String, String> pParams = Map.of("routeFilterId", routeFilterId, "uuid", uuid);
-        EquinixRequest<RouteFilterRuleJson> equinixRequest = this.buildRequestWithPathParams("GetRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.class);
-        EquinixResponse<RouteFilterRuleJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetRouteFilterRule", Map.of("routeFilterId", routeFilterId, "uuid", uuid));
     }
 
     public RouteFilterRuleJson create(String routeFilterId, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson) {
-        Map<String, String> pParams = Map.of("routeFilterId", routeFilterId);
-        EquinixRequest<RouteFilterRuleJson> equinixRequest = this.buildRequestWithPathParams("PostRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.class);
-        Utils.serializeJson(equinixRequest, routeFilterRuleCreatorJson);
-        EquinixResponse<RouteFilterRuleJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostRouteFilterRule", Map.of("routeFilterId", routeFilterId), routeFilterRuleCreatorJson);
     }
 
     public RouteFilterRuleJson delete(String routeFilterId, String uuid) {
-        Map<String, String> pParams = Map.of("routeFilterId", routeFilterId, "uuid", uuid);
-        EquinixRequest<RouteFilterRule> equinixRequest = this.buildRequestWithPathParams("DeleteRouteFilterRule", RequestType.SINGLE, pParams, RouteFilterRuleJson.class);
-        EquinixResponse<RouteFilterRule> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteRouteFilterRule", Map.of("routeFilterId", routeFilterId, "uuid", uuid));
     }
 
     public RouteFilterRuleJson refresh(String routeFilterId, String uuid) {
-        return this.getByUuid(routeFilterId, uuid);
-    }
-
-    public PaginatedList<RouteFilterRule> nextPage(PaginatedRequest<RouteFilterRule> equinixRequest) {
-        EquinixResponse<RouteFilterRule> equinixResponse = this.invoke(equinixRequest);
-        Page<RouteFilterRule, RouteFilterRuleJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        PaginatedList<RouteFilterRule> newPaginatedList = Utils.mapPaginatedList(nextPage.getItems(), this, RouteFilterRuleWrapper::new);
-        return new PaginatedList<>(newPaginatedList, this, equinixRequest, equinixResponse, nextPage.getPagination());
+        return getByUuid(routeFilterId, uuid);
     }
 }
