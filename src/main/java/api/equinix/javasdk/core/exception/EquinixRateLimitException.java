@@ -33,4 +33,10 @@ public class EquinixRateLimitException extends EquinixServiceException {
     public EquinixRateLimitException(String errorMessage, Exception cause) {
         super(errorMessage, cause);
     }
+
+    public EquinixRateLimitException(String errorMessage, Integer statusCode, String path,
+                                     java.util.Map<String, String> httpHeaders,
+                                     java.util.List<ExceptionDetail> exceptionDetails) {
+        super(errorMessage, statusCode, path, httpHeaders, exceptionDetails);
+    }
 }

@@ -33,4 +33,10 @@ public class EquinixNotFoundException extends EquinixServiceException {
     public EquinixNotFoundException(String errorMessage, Exception cause) {
         super(errorMessage, cause);
     }
+
+    public EquinixNotFoundException(String errorMessage, Integer statusCode, String path,
+                                    java.util.Map<String, String> httpHeaders,
+                                    java.util.List<ExceptionDetail> exceptionDetails) {
+        super(errorMessage, statusCode, path, httpHeaders, exceptionDetails);
+    }
 }

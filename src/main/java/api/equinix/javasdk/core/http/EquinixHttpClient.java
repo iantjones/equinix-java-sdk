@@ -21,8 +21,6 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.RequestFactory;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.internal.Constants;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.CookieSpecs;
@@ -38,7 +36,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,53 +154,17 @@ public class EquinixHttpClient implements Closeable {
             }
 
             if(!isRequestSuccessful(singleRequestParams.apacheResponse)) {
-                EquinixServiceException ese = createServiceException(equinixResponse.getStatusCode());
-                ese.setStatusCode(equinixResponse.getStatusCode());
-                ese.setPath(singleRequestParams.apacheRequest.getURI().toString());
+                String path = singleRequestParams.apacheRequest.getURI().toString();
 
+                java.util.Map<String, String> responseHeaders = null;
                 org.apache.http.Header retryAfterHeader = singleRequestParams.apacheResponse.getFirstHeader("Retry-After");
                 if (retryAfterHeader != null && retryAfterHeader.getValue() != null) {
-                    java.util.Map<String, String> responseHeaders = new java.util.HashMap<>();
+                    responseHeaders = new java.util.HashMap<>();
                     responseHeaders.put("Retry-After", retryAfterHeader.getValue());
-                    ese.setHttpHeaders(responseHeaders);
                 }
 
-                if(equinixResponse.getContent() != null && !(equinixResponse.getContent() instanceof EmptyInputStream)) {
-                    try {
-                        String errorBody = new BufferedReader(
-                                new InputStreamReader(equinixResponse.getContent(), StandardCharsets.UTF_8)).lines()
-                                .collect(Collectors.joining("\n"));
-
-                        if(errorBody != null && !errorBody.isBlank()) {
-                            try {
-                                ArrayList<ExceptionDetail> exceptionDetails = Constants.objectMapper.readValue(
-                                        errorBody, new TypeReference<ArrayList<ExceptionDetail>>(){});
-                                ese.setExceptionDetails(exceptionDetails);
-                            }
-                            catch (Exception arrayEx) {
-                                try {
-                                    ExceptionDetail singleDetail = Constants.objectMapper.readValue(
-                                            errorBody, new TypeReference<ExceptionDetail>(){});
-                                    ArrayList<ExceptionDetail> details = new ArrayList<>();
-                                    details.add(singleDetail);
-                                    ese.setExceptionDetails(details);
-                                }
-                                catch (Exception singleEx) {
-                                    ExceptionDetail rawDetail = new ExceptionDetail();
-                                    ArrayList<ExceptionDetail> details = new ArrayList<>();
-                                    details.add(rawDetail);
-                                    ese.setExceptionDetails(details);
-                                    logger.warn("Could not parse error response body: " + errorBody);
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception bodyEx) {
-                        logger.warn("Could not read error response body: " + bodyEx.getMessage());
-                    }
-                }
-
-                throw ese;
+                throw ResponseErrorMapper.toException(
+                        equinixResponse.getStatusCode(), path, responseHeaders, readErrorBody(equinixResponse));
             }
             else {
                 return equinixResponse;
@@ -211,6 +172,25 @@ public class EquinixHttpClient implements Closeable {
         }
         catch (IOException ioe) {
             throw new EquinixClientException(ioe);
+        }
+    }
+
+    /**
+     * Reads the raw error response body as a UTF-8 string, returning {@code null} when there is no
+     * body (or it cannot be read). The structured parsing of this body is delegated to
+     * {@link ResponseErrorMapper}.
+     */
+    private String readErrorBody(EquinixResponse<?> equinixResponse) {
+        if (equinixResponse.getContent() == null || equinixResponse.getContent() instanceof EmptyInputStream) {
+            return null;
+        }
+        try {
+            return new BufferedReader(new InputStreamReader(equinixResponse.getContent(), StandardCharsets.UTF_8))
+                    .lines().collect(Collectors.joining("\n"));
+        }
+        catch (Exception bodyEx) {
+            logger.warn("Could not read error response body: {}", bodyEx.getMessage());
+            return null;
         }
     }
 
@@ -287,25 +267,6 @@ public class EquinixHttpClient implements Closeable {
         }
     }
 
-    private EquinixServiceException createServiceException(int statusCode) {
-        switch (statusCode) {
-            case 401:
-                return new EquinixAuthenticationException("Authentication failed (HTTP 401).");
-            case 403:
-                return new EquinixAuthorizationException("Authorization denied (HTTP 403).");
-            case 404:
-                return new EquinixNotFoundException("Resource not found (HTTP 404).");
-            case 409:
-                return new EquinixConflictException("Resource conflict (HTTP 409).");
-            case 429:
-                return new EquinixRateLimitException("Rate limit exceeded (HTTP 429).");
-            default:
-                if (statusCode >= 500) {
-                    return new EquinixServerException("Server error (HTTP " + statusCode + ").");
-                }
-                return new EquinixServiceException("Error returned by Equinix API (HTTP " + statusCode + ").");
-        }
-    }
 
     private boolean isRequestSuccessful(HttpResponse response) {
         int status = response.getStatusLine().getStatusCode();

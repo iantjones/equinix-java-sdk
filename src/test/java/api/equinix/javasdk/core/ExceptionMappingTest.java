@@ -80,9 +80,8 @@ class ExceptionMappingTest {
 
     @Test
     void serviceException_statusCodeAndPath() {
-        EquinixServiceException ex = new EquinixServiceException("test error");
-        ex.setStatusCode(404);
-        ex.setPath("/fabric/v4/connections/invalid-uuid");
+        EquinixServiceException ex = new EquinixServiceException(
+                "test error", 404, "/fabric/v4/connections/invalid-uuid", null, null);
 
         assertEquals(404, ex.getStatusCode());
         assertEquals("/fabric/v4/connections/invalid-uuid", ex.getPath());
@@ -97,9 +96,8 @@ class ExceptionMappingTest {
 
     @Test
     void serviceException_messageContainsStatusAndPath() {
-        EquinixServiceException ex = new EquinixServiceException("test error");
-        ex.setStatusCode(401);
-        ex.setPath("/fabric/v4/ports");
+        EquinixServiceException ex = new EquinixServiceException(
+                "test error", 401, "/fabric/v4/ports", null, null);
 
         String message = ex.getMessage();
         assertTrue(message.contains("401"));
