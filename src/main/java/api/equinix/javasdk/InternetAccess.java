@@ -20,19 +20,14 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.internetaccess.client.InternetAccessConfig;
 import api.equinix.javasdk.internetaccess.client.InternetAccessServices;
-import api.equinix.javasdk.internetaccess.client.InternetAccessPorts;
-import api.equinix.javasdk.internetaccess.client.RoutingConfigs;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessServicesImpl;
-import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessPortsImpl;
-import api.equinix.javasdk.internetaccess.client.implementation.RoutingConfigsImpl;
 
 /**
  * The primary entry point for accessing Equinix Internet Access APIs.
  *
- * <p>Internet Access provides managed internet connectivity services through Equinix
- * data centers. This class offers typed access to internet access services, associated ports,
- * and routing configurations.</p>
+ * <p>Internet Access (EIA) provides managed internet connectivity services through Equinix
+ * data centers. This class offers typed access to internet access services.</p>
  *
  * <p>All resource accessors use lazy initialization — internal clients are created on first access
  * and reused for subsequent calls.</p>
@@ -52,10 +47,6 @@ import api.equinix.javasdk.internetaccess.client.implementation.RoutingConfigsIm
 public final class InternetAccess extends EquinixClient implements Service {
 
     private InternetAccessServices services;
-
-    private InternetAccessPorts ports;
-
-    private RoutingConfigs routingConfigs;
 
     final private InternetAccessConfig internetAccessConfig;
 
@@ -95,31 +86,5 @@ public final class InternetAccess extends EquinixClient implements Service {
             this.services = new InternetAccessServicesImpl(this.internetAccessConfig.getInternetAccessServiceClient(), this);
         }
         return services;
-    }
-
-    /**
-     * Returns the client for managing Internet Access ports.
-     * Ports represent the physical network interfaces used for internet access connectivity.
-     *
-     * @return the {@link InternetAccessPorts} client for managing internet access ports
-     */
-    public InternetAccessPorts ports() {
-        if (this.ports == null) {
-            this.ports = new InternetAccessPortsImpl(this.internetAccessConfig.getInternetAccessPortClient(), this);
-        }
-        return ports;
-    }
-
-    /**
-     * Returns the client for managing routing configurations for Internet Access services.
-     * Routing configurations define BGP sessions, prefixes, and routing policies.
-     *
-     * @return the {@link RoutingConfigs} client for managing routing configurations
-     */
-    public RoutingConfigs routingConfigs() {
-        if (this.routingConfigs == null) {
-            this.routingConfigs = new RoutingConfigsImpl(this.internetAccessConfig.getRoutingConfigClient(), this);
-        }
-        return routingConfigs;
     }
 }

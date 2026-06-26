@@ -17,17 +17,9 @@
 package api.equinix.javasdk.internetaccess.client;
 
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.client.internal.InternetAccessPortClient;
-import api.equinix.javasdk.internetaccess.client.internal.RoutingConfigClient;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
-import api.equinix.javasdk.internetaccess.model.InternetAccessPort;
-import api.equinix.javasdk.internetaccess.model.RoutingConfig;
 
 public interface InternetAccessConfig {
 
     InternetAccessServiceClient<InternetAccessService> getInternetAccessServiceClient();
-
-    InternetAccessPortClient<InternetAccessPort> getInternetAccessPortClient();
-
-    RoutingConfigClient<RoutingConfig> getRoutingConfigClient();
 }
