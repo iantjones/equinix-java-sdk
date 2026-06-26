@@ -1,5 +1,6 @@
 package api.equinix.javasdk.design.value.ratecard;
 
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
@@ -88,5 +89,19 @@ public interface RateCard {
      */
     static RateCard layered(RateCard... cards) {
         return new LayeredRateCard(Arrays.asList(cards));
+    }
+
+    /**
+     * The canonical egress-capable default chain for the value-realization models:
+     * live Equinix Fabric pricing first, then the bundled reference figures (which
+     * also supply the cloud-egress rates). This is the default used by the savings
+     * calculator, TCO comparison, and plan value realization when no rate card is
+     * supplied.
+     *
+     * @param fabric the Fabric client (or any {@link FabricGateway}) for live pricing
+     * @return a layered rate card: {@code EquinixRateCard} → {@code ReferenceRateCard}
+     */
+    static RateCard standardChain(FabricGateway fabric) {
+        return layered(EquinixRateCard.of(fabric), ReferenceRateCard.standard());
     }
 }

@@ -54,43 +54,64 @@ public final class ReferenceRateCard implements RateCard {
     private ReferenceRateCard(JsonNode root) {
         this.asOf = root.path("asOf").asText(null);
         this.disclaimer = root.path("disclaimer").asText(null);
-        String code = root.path("currency").asText("USD");
-        this.currency = safeCurrency(code);
+        this.currency = safeCurrency(root.path("currency").asText("USD"));
 
+        // Missing or non-numeric monetary fields are treated as UNAVAILABLE (the entry is
+        // skipped), never as a fabricated $0 — Jackson's MissingNode/TextNode.decimalValue()
+        // both return ZERO, which would silently violate the "empty != free" contract.
         this.egressRates = new HashMap<>();
         for (JsonNode e : root.path("egress")) {
+            BigDecimal perGb = num(e, "perGb");
+            if (perGb == null) {
+                continue;
+            }
             String key = e.path("provider").asText() + "|" + e.path("path").asText();
-            egressRates.put(key, EgressRate.of(e.path("perGb").decimalValue(), currency, PriceSource.REFERENCE)
+            egressRates.put(key, EgressRate.of(perGb, currency, PriceSource.REFERENCE)
                     .withNote(e.path("note").asText(null)));
         }
 
         this.connectionByBandwidth = new TreeMap<>();
         for (JsonNode c : root.path("equinixConnection")) {
-            connectionByBandwidth.put(c.path("bandwidthMbps").asInt(), c.path("monthly").decimalValue());
+            BigDecimal monthly = num(c, "monthly");
+            if (monthly != null && c.path("bandwidthMbps").isNumber()) {
+                connectionByBandwidth.put(c.path("bandwidthMbps").asInt(), monthly);
+            }
         }
 
         this.routerByPackage = new HashMap<>();
         for (JsonNode r : root.path("equinixCloudRouter")) {
-            routerByPackage.put(r.path("packageCode").asText(), r.path("monthly").decimalValue());
+            BigDecimal monthly = num(r, "monthly");
+            if (monthly != null) {
+                routerByPackage.put(r.path("packageCode").asText(), monthly);
+            }
         }
 
-        this.equinixCrossConnectMonthly = root.has("equinixCrossConnectMonthly")
-                ? root.path("equinixCrossConnectMonthly").decimalValue() : null;
+        this.equinixCrossConnectMonthly = num(root, "equinixCrossConnectMonthly");
 
         this.cspPortByBandwidth = new EnumMap<>(CloudProviderType.class);
         for (JsonNode p : root.path("cspInterconnectPort")) {
             CloudProviderType provider = parseProvider(p.path("provider").asText());
-            if (provider == null) {
+            BigDecimal monthly = num(p, "monthly");
+            if (provider == null || monthly == null || !p.path("bandwidthMbps").isNumber()) {
                 continue;
             }
             cspPortByBandwidth
                     .computeIfAbsent(provider, k -> new TreeMap<>())
-                    .put(p.path("bandwidthMbps").asInt(), p.path("monthly").decimalValue());
+                    .put(p.path("bandwidthMbps").asInt(), monthly);
         }
 
         this.onPrem = new HashMap<>();
-        JsonNode onPremNode = root.path("onPrem");
-        onPremNode.fields().forEachRemaining(f -> onPrem.put(f.getKey(), f.getValue().decimalValue()));
+        root.path("onPrem").fields().forEachRemaining(f -> {
+            if (f.getValue().isNumber()) {
+                onPrem.put(f.getKey(), f.getValue().decimalValue());
+            }
+        });
+    }
+
+    /** Reads a monetary field as BigDecimal, returning null when absent or non-numeric. */
+    private static BigDecimal num(JsonNode parent, String field) {
+        JsonNode n = parent.path(field);
+        return n.isNumber() ? n.decimalValue() : null;
     }
 
     /**
@@ -179,6 +200,11 @@ public final class ReferenceRateCard implements RateCard {
     /** The reference-data disclaimer. */
     public String disclaimer() {
         return disclaimer;
+    }
+
+    /** The ISO 4217 currency code of this card's figures (the reference data is USD). */
+    public String currencyCode() {
+        return currency.getCurrencyCode();
     }
 
     /** A named on-prem reference figure (e.g. {@code "transitPerMbpsMonth"}, {@code "powerPerKwMonth"}). */
