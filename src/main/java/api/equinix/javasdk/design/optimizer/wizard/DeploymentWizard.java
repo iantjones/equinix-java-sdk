@@ -7,6 +7,8 @@ import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
+import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.Term;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,6 +98,10 @@ public final class DeploymentWizard {
 
         // MCP validation
         private McpBridge mcpBridge;
+
+        // Pricing
+        private RateCard rateCard;
+        private Term term = Term.MONTH_12;
 
         Builder(FabricGateway fabric, OptimizationResult optimizationResult) {
             this.fabric = fabric;
@@ -284,6 +290,38 @@ public final class DeploymentWizard {
             return this;
         }
 
+        // ── Pricing ──
+
+        /**
+         * Sets the rate card used to price the plan. When omitted, the wizard
+         * defaults to live Equinix pricing ({@code EquinixRateCard.of(fabric)}),
+         * falling back to a built-in heuristic for any resource the live
+         * catalogue cannot price.
+         *
+         * <p>Supply a {@link api.equinix.javasdk.design.value.ratecard.CustomRateCard}
+         * (or a {@link RateCard#layered layered} card) to price against your own
+         * negotiated rates instead.</p>
+         *
+         * @param rateCard the rate card to price the plan with
+         * @return this builder for method chaining
+         */
+        public Builder rateCard(RateCard rateCard) {
+            this.rateCard = rateCard;
+            return this;
+        }
+
+        /**
+         * Sets the commitment term used when resolving rates. Defaults to
+         * {@link Term#MONTH_12}.
+         *
+         * @param term the commitment term
+         * @return this builder for method chaining
+         */
+        public Builder term(Term term) {
+            this.term = term;
+            return this;
+        }
+
         // ── Build ──
 
         /**
@@ -316,5 +354,7 @@ public final class DeploymentWizard {
         String getProjectId() { return projectId; }
         List<String> getNotificationEmails() { return notificationEmails; }
         McpBridge getMcpBridge() { return mcpBridge; }
+        RateCard getRateCard() { return rateCard; }
+        Term getTerm() { return term; }
     }
 }
