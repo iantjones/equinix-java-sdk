@@ -16,95 +16,59 @@
 
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.PageableBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ServiceProfileClient;
-import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
-import api.equinix.javasdk.fabric.model.ServiceProfile;
-import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
-import api.equinix.javasdk.fabric.model.json.*;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileCreatorJson;
-import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
-import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-
-import java.util.Map;
 
 /**
- * <p>ServiceProfilesClientImpl class.</p>
+ * Internal client for Fabric Service Profiles. Standard request/response plumbing and paging are
+ * provided by {@link ResourceClientBase}; this class supplies only the JSON class, the wrapper
+ * factory, and the per-operation endpoint names.
  *
  * @author ianjones
  * @version $Id: $Id
  */
-public class ServiceProfileClientImpl extends PageableBase implements ServiceProfileClient<ServiceProfile> {
+public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile, ServiceProfileJson>
+        implements ServiceProfileClient<ServiceProfile> {
 
     public ServiceProfileClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "ServiceProfiles");
+        super(configClient, "Fabric", "ServiceProfiles", ServiceProfileJson.class);
+    }
+
+    @Override
+    protected ServiceProfile wrap(ServiceProfileJson json) {
+        return new ServiceProfileWrapper(json, this);
     }
 
     public Page<ServiceProfile, ServiceProfileJson> list() {
-        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("ListServiceProfiles", RequestType.PAGINATED, ServiceProfileJson.class);
-        EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return listPage("ListServiceProfiles");
     }
 
     public Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequest("SearchServiceProfiles", RequestType.PAGINATED_POST, ServiceProfileJson.class);
-        Utils.serializeJson(equinixRequest, new FilteredSortedPaginatedPost<>(filter, sort));
-        EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return searchPage("SearchServiceProfiles", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public ServiceProfileJson getByUuid(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ServiceProfileJson> equinixRequest = this.buildRequestWithPathParams("GetServiceProfile", RequestType.SINGLE, pParams, ServiceProfileJson.class);
-        EquinixResponse<ServiceProfileJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getOne("GetServiceProfile", uuid);
     }
 
     public ServiceProfileJson create(ServiceProfileCreatorJson serviceProfileCreatorJson) {
-        EquinixRequest<ServiceProfileJson> equinixRequest = this.buildRequest("PostServiceProfile", RequestType.SINGLE, ServiceProfileJson.class);
-        Utils.serializeJson(equinixRequest, serviceProfileCreatorJson);
-        EquinixResponse<ServiceProfileJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postOne("PostServiceProfile", serviceProfileCreatorJson);
     }
 
     public ServiceProfileJson delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<ServiceProfile> equinixRequest = this.buildRequestWithPathParams("DeleteServiceProfile", RequestType.SINGLE, pParams, ServiceProfileJson.class);
-        EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return deleteOne("DeleteServiceProfile", uuid);
     }
 
     public ServiceProfileJson refresh(String uuid) {
-        return this.getByUuid(uuid);
-    }
-
-    public PaginatedList<ServiceProfile> nextPage(PaginatedRequest<ServiceProfile> equinixRequest) {
-        EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
-        Page<ServiceProfile, ServiceProfileJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        return Utils.toPaginatedList(nextPage, this, ServiceProfileWrapper::new);
-    }
-
-    public PaginatedFilteredList<ServiceProfile> nextPage(PaginatedPostRequest<ServiceProfile> equinixRequest) {
-        Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());
-        EquinixResponse<ServiceProfile> equinixResponse = this.invoke(equinixRequest);
-        Page<ServiceProfile, ServiceProfileJson> nextPage = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        return Utils.toPaginatedFilteredList(nextPage, this, ServiceProfileWrapper::new);
+        return getByUuid(uuid);
     }
 }
