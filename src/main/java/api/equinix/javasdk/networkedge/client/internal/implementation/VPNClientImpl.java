@@ -84,19 +84,13 @@ public class VPNClientImpl extends ResourceClientBase<VPN, VPNJson> implements V
 
     /** {@inheritDoc} */
     public VPNJson update(String uuid, VPNUpdaterJson vpnUpdaterJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<VPNJson> equinixRequest = this.buildRequestWithPathParams("UpdateVPN", RequestType.SINGLE, pParams, VPNJson.class);
-        Utils.serializeJson(equinixRequest, vpnUpdaterJson);
-        EquinixResponse<VPNJson> equinixResponse = this.invoke(equinixRequest);
+        voidOp("UpdateVPN", RequestType.SINGLE, Map.of("uuid", uuid), null, vpnUpdaterJson);
         return getByUuid(uuid);
     }
 
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<VPN> equinixRequest = this.buildRequestWithPathParams("DeleteVPN", RequestType.SINGLE, pParams, VPNJson.class);
-        EquinixResponse<VPN> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeleteVPN", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
     /** {@inheritDoc} */

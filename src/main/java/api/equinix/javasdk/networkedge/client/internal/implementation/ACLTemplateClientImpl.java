@@ -67,9 +67,7 @@ public class ACLTemplateClientImpl extends ResourceClientBase<ACLTemplate, ACLTe
     public ACLTemplateJson getByUuid(String uuid, String accountUcmId) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("GetACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.class);
-        EquinixResponse<ACLTemplateJson> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return getAs("GetACLTemplate", pParams, qParams, ACLTemplateJson.class);
     }
 
     /** {@inheritDoc} */
@@ -86,9 +84,7 @@ public class ACLTemplateClientImpl extends ResourceClientBase<ACLTemplate, ACLTe
     public ACLTemplateJson update(String uuid, ACLTemplateUpdaterJson aclTemplateUpdaterJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , aclTemplateUpdaterJson.getAccountUcmId());
-        EquinixRequest<ACLTemplateJson> equinixRequest = this.buildRequest("UpdateACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.class);
-        Utils.serializeJson(equinixRequest, aclTemplateUpdaterJson);
-        EquinixResponse<ACLTemplateJson> equinixResponse = this.invoke(equinixRequest);
+        voidOp("UpdateACLTemplate", RequestType.SINGLE, pParams, qParams, aclTemplateUpdaterJson);
         return getByUuid(uuid, aclTemplateUpdaterJson.getAccountUcmId());
     }
 
@@ -96,9 +92,7 @@ public class ACLTemplateClientImpl extends ResourceClientBase<ACLTemplate, ACLTe
     public Boolean delete(String uuid, String accountUcmId) {
         Map<String, String> pParams = Map.of("uuid", uuid);
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<ACLTemplate> equinixRequest = this.buildRequest("DeleteACLTemplate", RequestType.SINGLE, pParams, qParams, ACLTemplateJson.class);
-        EquinixResponse<ACLTemplate> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeleteACLTemplate", RequestType.SINGLE, pParams, qParams, null);
     }
 
     /** {@inheritDoc} */

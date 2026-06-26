@@ -17,10 +17,6 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.DNSClient;
@@ -57,9 +53,6 @@ public class DNSClientImpl extends ResourceClientBase<DNSLookup, DNSLookup> impl
      * <p>dnsLookup.</p>
      */
     public Map<String, DNSLookup> dnsLookup(RequestBuilder.DNSLookup requestBuilder) {
-        EquinixRequest<DNSLookup> equinixRequest = this.buildRequest("DNSLookup", RequestType.SINGLE, DNSLookup.class);
-        Utils.serializeJson(equinixRequest, requestBuilder.build().getDnsLookupRequest());
-        EquinixResponse<DNSLookup> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return postForType("DNSLookup", requestBuilder.build().getDnsLookupRequest(), DNSLookup.getSingleTypeRef());
     }
 }
