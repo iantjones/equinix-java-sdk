@@ -3,9 +3,7 @@ package api.equinix.javasdk.design.optimizer.wizard.model;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
 import api.equinix.javasdk.design.value.ratecard.EgressRate;
-import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
-import api.equinix.javasdk.design.value.ratecard.ReferenceRateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.design.value.savings.DataUnit;
 
@@ -41,6 +39,9 @@ public final class PlanValueAssessment {
 
     /** Declares a monthly egress volume for a cloud provider reached by this plan. */
     public PlanValueAssessment egress(CloudProviderType provider, double amount, DataUnit unit) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("egress amount must be non-negative: " + amount);
+        }
         egressInputs.add(new EgressInput(provider, unit.toGigabytes(BigDecimal.valueOf(amount))));
         return this;
     }
@@ -68,9 +69,7 @@ public final class PlanValueAssessment {
      * @return the egress savings netted against the plan's interconnect cost
      */
     public PlanValueRealization assess() {
-        RateCard rc = rateCard != null
-                ? rateCard
-                : RateCard.layered(EquinixRateCard.of(plan.getFabric()), ReferenceRateCard.standard());
+        RateCard rc = rateCard != null ? rateCard : RateCard.standardChain(plan.getFabric());
 
         PlanPricing pricing = plan.getPricing();
         BigDecimal planMonthly = pricing != null && pricing.getMonthlyTotal() != null
@@ -91,8 +90,8 @@ public final class PlanValueAssessment {
             BigDecimal privateCost = BigDecimal.ZERO;
             BigDecimal savings = BigDecimal.ZERO;
             if (priced) {
-                internetCost = internet.get().getPricePerGb().multiply(input.gigabytes);
-                privateCost = priv.get().getPricePerGb().multiply(input.gigabytes);
+                internetCost = internet.get().costFor(input.gigabytes);
+                privateCost = priv.get().costFor(input.gigabytes);
                 savings = internetCost.subtract(privateCost);
                 totalSavings = totalSavings.add(savings);
                 if (internet.get().getCurrency() != null) {

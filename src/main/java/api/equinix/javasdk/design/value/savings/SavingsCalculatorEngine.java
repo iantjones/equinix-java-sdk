@@ -2,10 +2,8 @@ package api.equinix.javasdk.design.value.savings;
 
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
 import api.equinix.javasdk.design.value.ratecard.EgressRate;
-import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
-import api.equinix.javasdk.design.value.ratecard.ReferenceRateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
 
 import java.math.BigDecimal;
@@ -26,9 +24,7 @@ final class SavingsCalculatorEngine {
     static SavingsEstimate compute(SavingsCalculator.Builder b) {
         // Default: live Equinix interconnect pricing, then bundled reference figures
         // (which also supply the cloud egress rates the savings calculation needs).
-        RateCard rateCard = b.getRateCard() != null
-                ? b.getRateCard()
-                : RateCard.layered(EquinixRateCard.of(b.getFabric()), ReferenceRateCard.standard());
+        RateCard rateCard = b.getRateCard() != null ? b.getRateCard() : RateCard.standardChain(b.getFabric());
         Term term = b.getTerm();
 
         BigDecimal gb = b.getEgressUnit().toGigabytes(BigDecimal.valueOf(b.getEgressAmount()));
@@ -43,6 +39,14 @@ final class SavingsCalculatorEngine {
         BigDecimal internetCost = internetRate.multiply(gb);
         BigDecimal privateCost = privateRate.multiply(gb);
         BigDecimal egressSavings = egressPriced ? internetCost.subtract(privateCost) : BigDecimal.ZERO;
+        if (!egressPriced) {
+            // Only one (or neither) egress rate resolved — don't surface a half-populated
+            // comparison; zero the per-line figures so the report is internally consistent.
+            internetRate = BigDecimal.ZERO;
+            privateRate = BigDecimal.ZERO;
+            internetCost = BigDecimal.ZERO;
+            privateCost = BigDecimal.ZERO;
+        }
 
         // ── Equinix interconnect cost ──
         Optional<PriceQuote> connection = rateCard.connection(
@@ -83,7 +87,8 @@ final class SavingsCalculatorEngine {
         StringBuilder disclaimer = new StringBuilder(
                 "Design-time estimate, not a quote. Equinix interconnect costs use live Fabric pricing where "
                         + "available; egress rates are indicative reference or caller-supplied figures. Actual costs "
-                        + "depend on region, tiering, volume, and contract terms.");
+                        + "depend on region, tiering, volume, and contract terms. Excludes per-provider free-tier "
+                        + "egress allowances and compute/storage costs.");
         if (!egressPriced) {
             disclaimer.append(" Egress rates were unavailable from the rate card, so egress savings could not be computed.");
         }

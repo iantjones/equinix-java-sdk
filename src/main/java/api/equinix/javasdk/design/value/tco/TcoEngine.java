@@ -2,7 +2,6 @@ package api.equinix.javasdk.design.value.tco;
 
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
 import api.equinix.javasdk.design.value.ratecard.EgressRate;
-import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.design.value.ratecard.ReferenceRateCard;
@@ -26,9 +25,7 @@ final class TcoEngine {
     private TcoEngine() {}
 
     static TcoComparison compute(TcoCalculator.Builder b) {
-        RateCard rateCard = b.getRateCard() != null
-                ? b.getRateCard()
-                : RateCard.layered(EquinixRateCard.of(b.getFabric()), ReferenceRateCard.standard());
+        RateCard rateCard = b.getRateCard() != null ? b.getRateCard() : RateCard.standardChain(b.getFabric());
         ReferenceRateCard reference = ReferenceRateCard.standard();
         Term term = b.getTerm();
 
@@ -66,10 +63,11 @@ final class TcoEngine {
             annualSavings = monthlySavings.multiply(BigDecimal.valueOf(12));
         }
 
-        String disclaimer = "Design-time TCO estimate, not a quote. Equinix interconnect costs use live Fabric "
-                + "pricing where available; cloud-egress and on-prem figures are indicative reference midpoints "
-                + "and the on-prem inputs are coarse and overridable. Compute, storage, software, and staffing are "
-                + "out of scope. Actual costs depend on region, volume, tiering, and contract terms.";
+        String disclaimer = "Design-time TCO estimate, not a quote. Equinix Fabric connection costs use live "
+                + "pricing where available; cloud-egress, cloud-provider interconnect-port, cross-connect, and "
+                + "on-prem figures are indicative reference midpoints (the on-prem inputs are coarse and "
+                + "overridable). Compute, storage, software, staffing, and per-provider free-tier egress allowances "
+                + "are out of scope. Actual costs depend on region, volume, tiering, and contract terms.";
 
         return TcoComparison.builder()
                 .breakdowns(breakdowns)
@@ -93,7 +91,7 @@ final class TcoEngine {
                     .note("Public-internet egress rate unavailable for this provider/region.")
                     .build();
         }
-        BigDecimal egressCost = internet.get().getPricePerGb().multiply(gb);
+        BigDecimal egressCost = internet.get().costFor(gb);
         items.put("Cloud egress (public internet)", egressCost);
         return CostBreakdown.builder()
                 .archetype(DeploymentArchetype.PUBLIC_CLOUD_INTERNET)
@@ -141,9 +139,10 @@ final class TcoEngine {
                 b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
         boolean priced = privateEgress.isPresent() && connection.isPresent();
 
-        BigDecimal egressCost = privateEgress.map(r -> r.getPricePerGb().multiply(gb)).orElse(BigDecimal.ZERO);
+        BigDecimal egressCost = privateEgress.map(r -> r.costFor(gb)).orElse(BigDecimal.ZERO);
         BigDecimal monthly = BigDecimal.ZERO;
         BigDecimal setup = BigDecimal.ZERO;
+        String note = priced ? null : "Private egress rate or Equinix connection price unavailable.";
 
         if (privateEgress.isPresent()) {
             items.put("Cloud egress (private interconnect)", egressCost);
@@ -162,22 +161,32 @@ final class TcoEngine {
                 setup = setup.add(router.get().getNonRecurring());
             }
         }
+
+        // The CSP interconnect port and Equinix cross-connect come from the bundled reference
+        // card (USD). Only fold them in when the comparison currency matches, so a non-USD
+        // custom rate card never silently mixes currencies into the total.
         Optional<BigDecimal> cspPort = reference.cspInterconnectPortMonthly(b.getProvider(), b.getBandwidthMbps());
-        if (cspPort.isPresent()) {
-            items.put("Cloud provider interconnect port", cspPort.get());
-            monthly = monthly.add(cspPort.get());
-        }
         Optional<BigDecimal> crossConnect = reference.equinixCrossConnectMonthly();
-        if (crossConnect.isPresent()) {
-            items.put("Equinix cross-connect", crossConnect.get());
-            monthly = monthly.add(crossConnect.get());
+        if (currency.equals(reference.currencyCode())) {
+            if (cspPort.isPresent()) {
+                items.put("Cloud provider interconnect port", cspPort.get());
+                monthly = monthly.add(cspPort.get());
+            }
+            if (crossConnect.isPresent()) {
+                items.put("Equinix cross-connect", crossConnect.get());
+                monthly = monthly.add(crossConnect.get());
+            }
+        } else if (cspPort.isPresent() || crossConnect.isPresent()) {
+            String skip = "CSP interconnect port and Equinix cross-connect omitted: reference figures are "
+                    + reference.currencyCode() + " and cannot be mixed with " + currency + ".";
+            note = note == null ? skip : note + " " + skip;
         }
 
         return CostBreakdown.builder()
                 .archetype(DeploymentArchetype.EQUINIX_INTERCONNECT)
                 .monthlyTotal(monthly).setupTotal(setup)
                 .currency(currency).lineItems(items).priced(priced)
-                .note(priced ? null : "Private egress rate or Equinix connection price unavailable.")
+                .note(note)
                 .build();
     }
 

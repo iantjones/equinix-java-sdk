@@ -390,6 +390,7 @@ final class DeploymentWizardEngine {
 
         Map<String, BigDecimal> perConnectionCost = new LinkedHashMap<>();
         Currency currency = null;
+        Set<PriceSource> sources = new HashSet<>();
 
         // Cloud Routers
         BigDecimal routerMonthly = BigDecimal.ZERO;
@@ -399,6 +400,7 @@ final class DeploymentWizardEngine {
             routerMonthly = routerMonthly.add(quote.getMonthlyRecurring());
             routerSetup = routerSetup.add(quote.getNonRecurring());
             currency = firstNonNull(currency, quote.getCurrency());
+            sources.add(quote.getSource());
         }
 
         // Provider connections
@@ -411,6 +413,7 @@ final class DeploymentWizardEngine {
             providerSetup = providerSetup.add(quote.getNonRecurring());
             perConnectionCost.put(conn.getName(), quote.getMonthlyRecurring());
             currency = firstNonNull(currency, quote.getCurrency());
+            sources.add(quote.getSource());
         }
 
         // Backbone links
@@ -423,6 +426,7 @@ final class DeploymentWizardEngine {
             backboneSetup = backboneSetup.add(quote.getNonRecurring());
             perConnectionCost.put(link.getName(), quote.getMonthlyRecurring());
             currency = firstNonNull(currency, quote.getCurrency());
+            sources.add(quote.getSource());
         }
 
         if (currency == null) {
@@ -432,6 +436,14 @@ final class DeploymentWizardEngine {
         BigDecimal monthlyTotal = routerMonthly.add(providerMonthly).add(backboneMonthly);
         BigDecimal setupTotal = routerSetup.add(providerSetup).add(backboneSetup);
 
+        PriceSource source = dominantSource(sources);
+        boolean authoritative = source == PriceSource.EQUINIX_LIVE || source == PriceSource.CUSTOM;
+        String disclaimer = authoritative
+                ? "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume "
+                    + "discounts, and promotional offers."
+                : "Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable "
+                    + "for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.";
+
         return PlanPricing.builder()
                 .monthlyTotal(monthlyTotal)
                 .setupTotal(setupTotal)
@@ -440,7 +452,20 @@ final class DeploymentWizardEngine {
                 .providerConnectionMonthlyCost(providerMonthly)
                 .backboneMonthlyCost(backboneMonthly)
                 .perConnectionCost(perConnectionCost)
+                .source(source)
+                .disclaimer(disclaimer)
                 .build();
+    }
+
+    /** Collapses the set of per-line price sources to a single dominant provenance. */
+    private static PriceSource dominantSource(Set<PriceSource> sources) {
+        if (sources.isEmpty()) {
+            return PriceSource.ESTIMATE;
+        }
+        if (sources.size() == 1) {
+            return sources.iterator().next();
+        }
+        return PriceSource.COMPOSITE;
     }
 
     /**

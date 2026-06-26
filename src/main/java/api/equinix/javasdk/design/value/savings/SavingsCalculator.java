@@ -72,6 +72,9 @@ public final class SavingsCalculator {
 
         /** Sets the monthly egress volume in the given unit. */
         public Builder egress(double amount, DataUnit unit) {
+            if (amount < 0) {
+                throw new IllegalArgumentException("egress amount must be non-negative: " + amount);
+            }
             this.egressAmount = amount;
             this.egressUnit = unit;
             return this;
