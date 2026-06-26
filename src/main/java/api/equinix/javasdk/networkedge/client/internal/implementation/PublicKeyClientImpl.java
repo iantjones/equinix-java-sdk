@@ -58,9 +58,7 @@ public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKey
     /** {@inheritDoc} */
     public List<PublicKeyJson> list(String accountUcmId) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        EquinixRequest<PublicKey> equinixRequest = this.buildRequest("ListPublicKeys", RequestType.LIST, null, qParams, PublicKeyJson.class);
-        EquinixResponse<PublicKey> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleListResponse(equinixResponse, equinixRequest);
+        return listAs("ListPublicKeys", null, qParams, PublicKeyJson.class);
     }
 
     /** {@inheritDoc} */
@@ -79,10 +77,7 @@ public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKey
 
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<PublicKey> equinixRequest = this.buildRequestWithPathParams("DeletePublicKey", RequestType.SINGLE, pParams, PublicKeyJson.class);
-        EquinixResponse<PublicKey> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeletePublicKey", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
     /** {@inheritDoc} */

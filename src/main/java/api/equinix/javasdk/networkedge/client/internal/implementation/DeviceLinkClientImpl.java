@@ -18,8 +18,6 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -75,10 +73,7 @@ public class DeviceLinkClientImpl extends ResourceClientBase<DeviceLink, DeviceL
 
     /** {@inheritDoc} */
     public DeviceLinkJson create(DeviceLinkCreatorJson deviceLinkCreatorJson) {
-        EquinixRequest<DeviceLinkJson> equinixRequest = this.buildRequest("CreateDeviceLink", RequestType.SINGLE, DeviceLinkJson.getCreateTypeRef());
-        Utils.serializeJson(equinixRequest, deviceLinkCreatorJson);
-        EquinixResponse<DeviceLinkJson> equinixResponse = this.invoke(equinixRequest);
-        UUIDResult uuidResult = Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        UUIDResult uuidResult = postForType("CreateDeviceLink", deviceLinkCreatorJson, DeviceLinkJson.getCreateTypeRef());
         return getByUuid(uuidResult.getUuid());
     }
 
@@ -90,19 +85,13 @@ public class DeviceLinkClientImpl extends ResourceClientBase<DeviceLink, DeviceL
      * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
      */
     public DeviceLinkJson update(String uuid, DeviceLinkUpdaterJson deviceLinkUpdaterJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<DeviceLinkJson> equinixRequest = this.buildRequestWithPathParams("UpdateDeviceLink", RequestType.SINGLE, pParams, DeviceLinkJson.getCreateTypeRef());
-        Utils.serializeJson(equinixRequest, deviceLinkUpdaterJson);
-        EquinixResponse<DeviceLinkJson> equinixResponse = this.invoke(equinixRequest);
+        voidOp("UpdateDeviceLink", RequestType.SINGLE, Map.of("uuid", uuid), null, deviceLinkUpdaterJson);
         return getByUuid(uuid);
     }
 
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<DeviceLink> equinixRequest = this.buildRequestWithPathParams("DeleteDeviceLink", RequestType.SINGLE, pParams, DeviceLinkJson.class);
-        EquinixResponse<DeviceLink> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeleteDeviceLink", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
     /** {@inheritDoc} */

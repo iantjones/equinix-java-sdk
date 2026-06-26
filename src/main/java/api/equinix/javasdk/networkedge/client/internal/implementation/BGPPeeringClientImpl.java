@@ -84,19 +84,13 @@ public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeer
 
     /** {@inheritDoc} */
     public BGPPeeringJson update(String uuid, BGPPeeringUpdaterJson bgpPeeringUpdaterJson) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BGPPeeringJson> equinixRequest = this.buildRequestWithPathParams("UpdateBGP", RequestType.SINGLE, pParams, BGPPeeringJson.class);
-        Utils.serializeJson(equinixRequest, bgpPeeringUpdaterJson);
-        EquinixResponse<BGPPeeringJson> equinixResponse = this.invoke(equinixRequest);
+        voidOp("UpdateBGP", RequestType.SINGLE, Map.of("uuid", uuid), null, bgpPeeringUpdaterJson);
         return getByUuid(uuid);
     }
 
     /** {@inheritDoc} */
     public Boolean delete(String uuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        EquinixRequest<BGPPeering> equinixRequest = this.buildRequestWithPathParams("DeleteBGP", RequestType.SINGLE, pParams, BGPPeeringJson.class);
-        EquinixResponse<BGPPeering> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeleteBGP", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
     /** {@inheritDoc} */

@@ -18,8 +18,6 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
-import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -74,45 +72,28 @@ public class SSHUserClientImpl extends ResourceClientBase<SSHUser, SSHUserJson> 
 
     /** {@inheritDoc} */
     public SSHUserJson create(SSHUserCreatorJson sshUserCreatorJson) {
-        EquinixRequest<SSHUserJson> equinixRequest = this.buildRequest("CreateSSHUser", RequestType.SINGLE, SSHUserJson.class);
-        Utils.serializeJson(equinixRequest, sshUserCreatorJson);
-        EquinixResponse<SSHUserJson> equinixResponse = this.invoke(equinixRequest);
-        UUIDResult uuidResult = Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        UUIDResult uuidResult = postAs("CreateSSHUser", sshUserCreatorJson, UUIDResult.class);
         return getByUuid(uuidResult.getUuid());
     }
 
     /** {@inheritDoc} */
     public Boolean deleteDevice(String uuid, String deviceUuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid, "deviceUuid", deviceUuid);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("DeleteSSHUser", RequestType.SINGLE, pParams, SSHUserJson.class);
-        EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("DeleteSSHUser", RequestType.SINGLE, Map.of("uuid", uuid, "deviceUuid", deviceUuid), null, null);
     }
 
     /** {@inheritDoc} */
     public Boolean addDevice(String uuid, String deviceUuid) {
-        Map<String, String> pParams = Map.of("uuid", uuid, "deviceUuid", deviceUuid);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("SSHUserAddDevice", RequestType.SINGLE, pParams, SSHUserJson.class);
-        EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("SSHUserAddDevice", RequestType.SINGLE, Map.of("uuid", uuid, "deviceUuid", deviceUuid), null, null);
     }
 
     /** {@inheritDoc} */
     public Boolean updatePassword(String uuid, String newPassword) {
-        Map<String, String> pParams = Map.of("uuid", uuid);
-        Map<String, String> payload = Map.of("password", newPassword);
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequestWithPathParams("UpdateSSHUserPassword", RequestType.SINGLE, pParams, SSHUserJson.class);
-        Utils.serializeJson(equinixRequest, payload);
-        EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("UpdateSSHUserPassword", RequestType.SINGLE, Map.of("uuid", uuid), null, Map.of("password", newPassword));
     }
 
     /** {@inheritDoc} */
     public Boolean checkUsernameAvailability(String username) {
-        Map<String, List<String>> qParams = Map.of("username", Utils.singleParamList(username));
-        EquinixRequest<SSHUser> equinixRequest = this.buildRequest("GetSSHUsernameAvailability", RequestType.SINGLE, null, qParams, SSHUserJson.class);
-        EquinixResponse<SSHUser> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleBooleanResponse(equinixResponse, equinixRequest);
+        return booleanOp("GetSSHUsernameAvailability", RequestType.SINGLE, null, Map.of("username", Utils.singleParamList(username)), null);
     }
 
     /** {@inheritDoc} */
