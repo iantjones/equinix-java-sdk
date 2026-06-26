@@ -28,6 +28,7 @@ import api.equinix.javasdk.design.optimizer.MetroOptimizer;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.DeploymentWizard;
 import api.equinix.javasdk.design.peering.PeeringIntelligence;
+import api.equinix.javasdk.design.value.savings.SavingsCalculator;
 
 /**
  * The primary entry point for accessing the Equinix Fabric APIs.
@@ -499,6 +500,29 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public PeeringIntelligence.Builder peeringIntelligence() {
         return PeeringIntelligence.builder(this);
+    }
+
+    /**
+     * Begins a value-realization savings analysis: how much routing cloud egress
+     * over an Equinix private interconnect saves versus the public internet.
+     * Equinix interconnect costs default to live Fabric pricing; egress rates come
+     * from the supplied rate card (a {@code ReferenceRateCard} or a
+     * {@link api.equinix.javasdk.design.value.ratecard.CustomRateCard}).
+     *
+     * <pre>{@code
+     * SavingsEstimate s = fabric.savingsCalculator()
+     *     .egress(50, DataUnit.TERABYTE)
+     *     .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+     *     .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+     *     .calculate();
+     *
+     * System.out.println(s.toMarkdown());
+     * }</pre>
+     *
+     * @return a {@link SavingsCalculator.Builder} for configuring the analysis
+     */
+    public SavingsCalculator.Builder savingsCalculator() {
+        return SavingsCalculator.builder(this);
     }
 
     /**
