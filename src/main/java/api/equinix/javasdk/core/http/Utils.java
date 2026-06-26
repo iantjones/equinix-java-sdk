@@ -95,10 +95,8 @@ public class Utils {
                 equinixRequest = new PaginatedPostRequest<>();
                 break;
             case LIST:
-                equinixRequest = new ListRequest<>();
-                break;
             case SINGLE:
-                equinixRequest = new SingletonRequest<>();
+                equinixRequest = new EquinixRequest<>();
                 break;
         }
 
