@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.CloudRouter;
@@ -24,6 +25,8 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudRouterJson;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCreatorJson;
 
+import java.util.List;
+
 public interface CloudRouterClient<T> extends PageablePost<T> {
 
     Page<CloudRouter, CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort);
@@ -31,6 +34,8 @@ public interface CloudRouterClient<T> extends PageablePost<T> {
     CloudRouterJson getByUuid(String uuid);
 
     CloudRouterJson create(CloudRouterCreatorJson cloudRouterCreatorJson);
+
+    CloudRouterJson update(String uuid, List<PatchOperation> operations);
 
     CloudRouterJson delete(String uuid);
 

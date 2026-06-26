@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
@@ -27,6 +28,8 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudRouterJson;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
+
+import java.util.List;
 
 public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, CloudRouterJson> implements CloudRouterClient<CloudRouter> {
 
@@ -49,6 +52,10 @@ public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, Cloud
 
     public CloudRouterJson create(CloudRouterCreatorJson cloudRouterCreatorJson) {
         return postOne("PostCloudRouter", cloudRouterCreatorJson);
+    }
+
+    public CloudRouterJson update(String uuid, List<PatchOperation> operations) {
+        return patchOne("UpdateCloudRouter", uuid, operations);
     }
 
     public CloudRouterJson delete(String uuid) {

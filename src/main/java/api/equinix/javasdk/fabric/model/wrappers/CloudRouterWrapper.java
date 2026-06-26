@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.CloudRouterClientImpl;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.json.CloudRouterJson;
+import api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class CloudRouterWrapper extends ResourceImpl<CloudRouter> implements Clo
         this.serviceClient = serviceClient;
     }
 
+    public CloudRouterOperator.CloudRouterUpdater update() {
+        return new CloudRouterOperator((CloudRouterClientImpl) this.serviceClient).update(this.getUuid());
+    }
+
     public Boolean delete() {
         this.jsonObject = ((CloudRouterClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class CloudRouterWrapper extends ResourceImpl<CloudRouter> implements Clo
     }
 
     private interface CloudRouterMutability {
+        CloudRouterOperator.CloudRouterUpdater update();
         Boolean delete();
         void refresh();
     }

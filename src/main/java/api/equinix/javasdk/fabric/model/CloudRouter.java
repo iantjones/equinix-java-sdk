@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.fabric.enums.CloudRouterState;
 import api.equinix.javasdk.fabric.enums.CloudRouterType;
 import api.equinix.javasdk.fabric.model.implementation.*;
+import api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator;
 
 import java.util.List;
 
@@ -53,6 +54,14 @@ public interface CloudRouter {
      Integer getConnectionCount();
 
      ChangeLog getChangeLog();
+
+    /**
+     * Begins a fluent JSON Patch update of this cloud router, e.g.
+     * {@code cloudRouter.update().name("New-Name").save()}.
+     *
+     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator.CloudRouterUpdater}
+     */
+    CloudRouterOperator.CloudRouterUpdater update();
 
     Boolean delete();
 
