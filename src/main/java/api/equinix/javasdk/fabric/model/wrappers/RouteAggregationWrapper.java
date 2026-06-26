@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RouteAggregationClientImpl;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
+import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
@@ -36,6 +37,10 @@ public class RouteAggregationWrapper extends ResourceImpl<RouteAggregation> impl
         this.serviceClient = serviceClient;
     }
 
+    public RouteAggregationOperator.RouteAggregationUpdater update() {
+        return new RouteAggregationOperator((RouteAggregationClientImpl) this.serviceClient).update(this.getUuid());
+    }
+
     public Boolean delete() {
         this.jsonObject = ((RouteAggregationClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
@@ -46,6 +51,7 @@ public class RouteAggregationWrapper extends ResourceImpl<RouteAggregation> impl
     }
 
     private interface RouteAggregationMutability {
+        RouteAggregationOperator.RouteAggregationUpdater update();
         Boolean delete();
         void refresh();
     }

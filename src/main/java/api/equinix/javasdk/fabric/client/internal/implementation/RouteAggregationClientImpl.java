@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationClient;
@@ -24,6 +25,8 @@ import api.equinix.javasdk.fabric.model.RouteAggregation;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationWrapper;
+
+import java.util.List;
 
 public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregation, RouteAggregationJson> implements RouteAggregationClient<RouteAggregation> {
 
@@ -48,8 +51,8 @@ public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregat
         return postOne("PostRouteAggregation", routeAggregationCreatorJson);
     }
 
-    public RouteAggregationJson update(String uuid, Object updates) {
-        return updateOne("PatchRouteAggregation", uuid, updates);
+    public RouteAggregationJson update(String uuid, List<PatchOperation> operations) {
+        return updateOne("UpdateRouteAggregation", uuid, operations);
     }
 
     public RouteAggregationJson delete(String uuid) {
