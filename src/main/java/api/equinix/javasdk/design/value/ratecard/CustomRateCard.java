@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.value.ratecard;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public final class CustomRateCard implements RateCard {
     private final Currency currency;
     private final Map<String, PriceQuote> connectionRates;
     private final Map<String, PriceQuote> routerRates;
+    private final Map<String, EgressRate> egressRates;
     private final PriceQuote defaultConnection;
     private final PriceQuote defaultRouter;
 
@@ -49,6 +51,7 @@ public final class CustomRateCard implements RateCard {
         this.currency = b.currency;
         this.connectionRates = new HashMap<>();
         this.routerRates = new HashMap<>();
+        this.egressRates = new HashMap<>();
 
         for (ConnEntry e : b.connectionEntries) {
             connectionRates.put(connKey(e.type, e.bandwidthMbps),
@@ -57,6 +60,10 @@ public final class CustomRateCard implements RateCard {
         for (RouterEntry e : b.routerEntries) {
             routerRates.put(e.packageCode,
                     PriceQuote.of(e.monthly, e.setup, currency, PriceSource.CUSTOM));
+        }
+        for (EgressEntry e : b.egressEntries) {
+            egressRates.put(egressKey(e.provider, e.path),
+                    EgressRate.of(e.perGb, currency, PriceSource.CUSTOM));
         }
         this.defaultConnection = b.defaultConnectionMonthly == null ? null
                 : PriceQuote.of(b.defaultConnectionMonthly, b.defaultConnectionSetup, currency, PriceSource.CUSTOM);
@@ -88,12 +95,24 @@ public final class CustomRateCard implements RateCard {
     }
 
     @Override
+    public Optional<EgressRate> egress(CloudProviderType provider, String region, EgressPath path, Term term) {
+        if (provider == null || path == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(egressRates.get(egressKey(provider, path)));
+    }
+
+    @Override
     public PriceSource source() {
         return PriceSource.CUSTOM;
     }
 
     private static String connKey(ConnectionType type, int bandwidthMbps) {
         return (type == null ? "ANY" : type.name()) + "|" + bandwidthMbps;
+    }
+
+    private static String egressKey(CloudProviderType provider, EgressPath path) {
+        return provider.name() + "|" + path.name();
     }
 
     // ── Builder ──
@@ -104,6 +123,7 @@ public final class CustomRateCard implements RateCard {
         private Currency currency = Currency.getInstance("USD");
         private final List<ConnEntry> connectionEntries = new ArrayList<>();
         private final List<RouterEntry> routerEntries = new ArrayList<>();
+        private final List<EgressEntry> egressEntries = new ArrayList<>();
         private BigDecimal defaultConnectionMonthly;
         private BigDecimal defaultConnectionSetup = BigDecimal.ZERO;
         private BigDecimal defaultRouterMonthly;
@@ -167,6 +187,21 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
+        /**
+         * Declares a per-GB data-egress rate for a cloud provider over a given path.
+         * Provide both {@link EgressPath#INTERNET} and {@link EgressPath#PRIVATE} rates
+         * for a provider to drive the egress savings calculation.
+         *
+         * @param provider the cloud provider the data leaves
+         * @param path     internet vs. private interconnect
+         * @param perGb    the price per GB of egress
+         * @return this builder for method chaining
+         */
+        public Builder egressRate(CloudProviderType provider, EgressPath path, BigDecimal perGb) {
+            egressEntries.add(new EgressEntry(provider, path, perGb));
+            return this;
+        }
+
         /** Builds the immutable {@link CustomRateCard}. */
         public CustomRateCard build() {
             return new CustomRateCard(this);
@@ -198,4 +233,17 @@ public final class CustomRateCard implements RateCard {
             this.setup = setup;
         }
     }
+
+    private static final class EgressEntry {
+        final CloudProviderType provider;
+        final EgressPath path;
+        final BigDecimal perGb;
+
+        EgressEntry(CloudProviderType provider, EgressPath path, BigDecimal perGb) {
+            this.provider = provider;
+            this.path = path;
+            this.perGb = perGb;
+        }
+    }
 }
+

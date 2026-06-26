@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.value.ratecard;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -48,6 +49,25 @@ public interface RateCard {
      * @return the resolved quote, or {@link Optional#empty()} if this card cannot price the router
      */
     Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term);
+
+    /**
+     * Resolves the per-GB data-egress rate for a cloud provider over a given path.
+     *
+     * <p>Equinix does not sell cloud egress, so {@code EquinixRateCard} returns
+     * {@link Optional#empty()} here (the default); egress rates come from a
+     * {@link CustomRateCard} (your figures), a {@code ReferenceRateCard} (bundled
+     * indicative figures), or a provider-pricing-API card. The default returns
+     * empty so cards that do not model egress need not override it.</p>
+     *
+     * @param provider the cloud provider the data is leaving
+     * @param region   the provider region (may be {@code null} for a provider-wide rate)
+     * @param path     internet vs. private interconnect — the savings lever
+     * @param term     the commitment term
+     * @return the resolved egress rate, or {@link Optional#empty()} if this card cannot price it
+     */
+    default Optional<EgressRate> egress(CloudProviderType provider, String region, EgressPath path, Term term) {
+        return Optional.empty();
+    }
 
     /**
      * The dominant provenance of prices this card produces. Aggregating cards
