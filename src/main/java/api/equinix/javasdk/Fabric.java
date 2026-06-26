@@ -79,7 +79,7 @@ import api.equinix.javasdk.design.peering.PeeringIntelligence;
  * @see api.equinix.javasdk.fabric.client.Connections
  * @see api.equinix.javasdk.fabric.client.Ports
  */
-public final class Fabric extends EquinixClient implements Service {
+public final class Fabric extends EquinixClient implements Service, FabricGateway {
 
     private Metros metros;
 

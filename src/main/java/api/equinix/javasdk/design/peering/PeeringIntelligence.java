@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.design.peering.client.PeeringDbClient;
 import api.equinix.javasdk.design.peering.model.PeeringIntelligenceResult;
@@ -83,7 +83,7 @@ public class PeeringIntelligence {
      * @param peeringDbApiKey the PeeringDB API key for authenticated access, or {@code null} for anonymous
      * @return a new {@link Builder}
      */
-    public static Builder builder(Fabric fabric, String peeringDbApiKey) {
+    public static Builder builder(FabricGateway fabric, String peeringDbApiKey) {
         return new Builder(fabric, peeringDbApiKey);
     }
 
@@ -93,7 +93,7 @@ public class PeeringIntelligence {
      * @param fabric the Fabric client instance
      * @return a new {@link Builder}
      */
-    public static Builder builder(Fabric fabric) {
+    public static Builder builder(FabricGateway fabric) {
         return new Builder(fabric, null);
     }
 
@@ -106,7 +106,7 @@ public class PeeringIntelligence {
      */
     public static class Builder {
 
-        private final Fabric fabric;
+        private final FabricGateway fabric;
         private final String peeringDbApiKey;
         private final Map<Long, String> targetAsns = new LinkedHashMap<>();
         private final Set<MetroCode> customerMetros = new LinkedHashSet<>();
@@ -116,7 +116,7 @@ public class PeeringIntelligence {
         private boolean includeFabricConnections;
         private boolean includeResiliency;
 
-        Builder(Fabric fabric, String peeringDbApiKey) {
+        Builder(FabricGateway fabric, String peeringDbApiKey) {
             this.fabric = fabric;
             this.peeringDbApiKey = peeringDbApiKey;
         }

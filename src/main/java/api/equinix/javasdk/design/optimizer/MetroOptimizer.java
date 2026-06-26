@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer;
 
-import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
@@ -35,12 +35,12 @@ public final class MetroOptimizer {
     private MetroOptimizer() {}
 
     /**
-     * Creates a new optimization builder using the given {@link Fabric} client for API access.
+     * Creates a new optimization builder using the given {@link FabricGateway} for API access.
      *
      * @param fabric the authenticated Fabric client used to retrieve metro and service profile data
      * @return a new {@link Builder} instance
      */
-    public static Builder builder(Fabric fabric) {
+    public static Builder builder(FabricGateway fabric) {
         return new Builder(fabric);
     }
 
@@ -56,7 +56,7 @@ public final class MetroOptimizer {
      */
     public static final class Builder {
 
-        private final Fabric fabric;
+        private final FabricGateway fabric;
         private final List<UserSite> sites = new ArrayList<>();
         private final List<ProviderRequirement> providers = new ArrayList<>();
         private final List<WorkloadSpec> workloads = new ArrayList<>();
@@ -65,7 +65,7 @@ public final class MetroOptimizer {
         private ScoringWeights scoringWeights;
         private McpBridge mcpBridge;
 
-        Builder(Fabric fabric) {
+        Builder(FabricGateway fabric) {
             this.fabric = fabric;
         }
 

@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.design.peering.client.*;
 import api.equinix.javasdk.design.peering.enums.*;
@@ -52,7 +52,7 @@ class PeeringIntelligenceEngine {
 
     private static final double EARTH_RADIUS_KM = 6371.0;
 
-    private final Fabric fabric;
+    private final FabricGateway fabric;
     private final PeeringDbClient peeringDb;
     private final PeeringRequest request;
 
@@ -62,7 +62,7 @@ class PeeringIntelligenceEngine {
     private final Map<Long, List<PeeringDbNetFac>> facPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, NetworkPresence> networkPresences = new LinkedHashMap<>();
 
-    PeeringIntelligenceEngine(Fabric fabric, PeeringDbClient peeringDb, PeeringRequest request) {
+    PeeringIntelligenceEngine(FabricGateway fabric, PeeringDbClient peeringDb, PeeringRequest request) {
         this.fabric = fabric;
         this.peeringDb = peeringDb;
         this.request = request;
