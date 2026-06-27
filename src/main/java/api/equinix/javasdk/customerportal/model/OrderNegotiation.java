@@ -14,20 +14,25 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
+package api.equinix.javasdk.customerportal.model;
 
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+/**
+ * A negotiation message on an order, proposing an alternative date and time for fulfilling
+ * the order request. Returned by the order negotiations endpoint.
+ */
+public interface OrderNegotiation {
 
-import java.util.List;
+    String getReferenceId();
 
-public interface SmartHandsClient {
+    String getOrderRequestedDateTime();
 
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
+    String getProposedDateTime();
 
-    List<? extends SmartHandsLocation> listLocations();
+    String getExpirationDateTime();
 
-    List<? extends SmartHandType> listTypes();
+    String getCreatedDateTime();
+
+    Boolean getExpedited();
+
+    String getMessage();
 }

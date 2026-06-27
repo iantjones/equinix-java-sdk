@@ -20,7 +20,7 @@
  * {@link api.equinix.javasdk.customerportal.model.CrossConnect},
  * {@link api.equinix.javasdk.customerportal.model.TroubleTicket},
  * {@link api.equinix.javasdk.customerportal.model.WorkVisit},
- * {@link api.equinix.javasdk.customerportal.model.SmartHands},
+ * {@link api.equinix.javasdk.customerportal.model.SmartHandResponse},
  * {@link api.equinix.javasdk.customerportal.model.Shipment},
  * {@link api.equinix.javasdk.customerportal.model.Order},
  * {@link api.equinix.javasdk.customerportal.model.Quote},

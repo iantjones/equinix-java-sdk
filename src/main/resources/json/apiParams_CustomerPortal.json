@@ -67,17 +67,28 @@
         }
       },
       "Orders": {
-        "rootUri": "orders",
+        "rootUri": "colocations/v2/orders",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
-          "ListOrders": {
-            "httpMethod": "GET"
-          },
           "GetOrder": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "{$orderId}"
           },
-          "CreateOrder": {
-            "httpMethod": "POST"
+          "GetOrderNegotiations": {
+            "httpMethod": "GET",
+            "requestUri": "{$orderId}/negotiations"
+          },
+          "ReplyOrderNegotiation": {
+            "httpMethod": "POST",
+            "requestUri": "{$orderId}/negotiations"
+          },
+          "AddOrderNote": {
+            "httpMethod": "POST",
+            "requestUri": "{$orderId}/notes"
+          },
+          "CancelOrder": {
+            "httpMethod": "POST",
+            "requestUri": "{$orderId}/cancel"
           }
         }
       },
@@ -105,22 +116,64 @@
         }
       },
       "SmartHands": {
-        "rootUri": "smartHands",
+        "rootUri": "orders/smarthands",
         "defaultVersion": 1,
         "serviceEndpoints": {
-          "ListSmartHands": {
-            "httpMethod": "GET"
+          "CreateEquipmentInstall": {
+            "httpMethod": "POST",
+            "requestUri": "equipmentInstall"
           },
-          "GetSmartHands": {
+          "CreateShipmentUnpack": {
+            "httpMethod": "POST",
+            "requestUri": "shipmentUnpack"
+          },
+          "CreateMoveJumperCable": {
+            "httpMethod": "POST",
+            "requestUri": "moveJumperCable"
+          },
+          "CreateCageEscort": {
+            "httpMethod": "POST",
+            "requestUri": "cageEscort"
+          },
+          "CreateLocatePackage": {
+            "httpMethod": "POST",
+            "requestUri": "locatePackage"
+          },
+          "CreatePicturesDocument": {
+            "httpMethod": "POST",
+            "requestUri": "picturesDocument"
+          },
+          "CreatePatchCableInstall": {
+            "httpMethod": "POST",
+            "requestUri": "patchCableInstall"
+          },
+          "CreatePatchCableRemoval": {
+            "httpMethod": "POST",
+            "requestUri": "patchCableRemoval"
+          },
+          "CreateCageCleanup": {
+            "httpMethod": "POST",
+            "requestUri": "cageCleanup"
+          },
+          "CreateCableRequest": {
+            "httpMethod": "POST",
+            "requestUri": "cableRequest"
+          },
+          "CreateRunJumperCable": {
+            "httpMethod": "POST",
+            "requestUri": "runJumperCable"
+          },
+          "CreateOther": {
+            "httpMethod": "POST",
+            "requestUri": "other"
+          },
+          "ListSmartHandsLocations": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "locations"
           },
-          "CreateSmartHands": {
-            "httpMethod": "POST"
-          },
-          "UpdateSmartHands": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
+          "ListSmartHandsTypes": {
+            "httpMethod": "GET",
+            "requestUri": "types"
           }
         }
       },

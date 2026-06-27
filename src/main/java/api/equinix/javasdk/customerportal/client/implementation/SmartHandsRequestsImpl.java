@@ -17,39 +17,79 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.SmartHandsRequests;
 import api.equinix.javasdk.customerportal.client.internal.SmartHandsClient;
-import api.equinix.javasdk.customerportal.model.SmartHands;
-import api.equinix.javasdk.customerportal.model.json.SmartHandsJson;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsOperator;
-import api.equinix.javasdk.customerportal.model.wrappers.SmartHandsWrapper;
+import api.equinix.javasdk.customerportal.model.SmartHandResponse;
+import api.equinix.javasdk.customerportal.model.SmartHandType;
+import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+
+import java.util.List;
 
 public class SmartHandsRequestsImpl implements SmartHandsRequests {
 
     private final CustomerPortal serviceManager;
 
-    private final SmartHandsClient<SmartHands> serviceClient;
+    private final SmartHandsClient serviceClient;
 
-    public SmartHandsRequestsImpl(SmartHandsClient<SmartHands> serviceClient, CustomerPortal serviceManager) {
+    public SmartHandsRequestsImpl(SmartHandsClient serviceClient, CustomerPortal serviceManager) {
         this.serviceClient = serviceClient;
         this.serviceManager = serviceManager;
     }
 
-    public PaginatedList<SmartHands> list() {
-        Page<SmartHands, SmartHandsJson> responsePage = this.serviceClient.list();
-        PaginatedList<SmartHands> smartHandsList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, SmartHandsWrapper::new);
-        return new PaginatedList<>(smartHandsList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public SmartHandResponse createEquipmentInstall(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateEquipmentInstall", request);
     }
 
-    public SmartHands getByUuid(String uuid) {
-        SmartHandsJson smartHandsJson = this.serviceClient.getByUuid(uuid);
-        return new SmartHandsWrapper(smartHandsJson, this.serviceClient);
+    public SmartHandResponse createShipmentUnpack(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateShipmentUnpack", request);
     }
 
-    public SmartHandsOperator.SmartHandsBuilder define() {
-        return new SmartHandsOperator(this.serviceClient).create();
+    public SmartHandResponse createMoveJumperCable(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateMoveJumperCable", request);
+    }
+
+    public SmartHandResponse createCageEscort(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateCageEscort", request);
+    }
+
+    public SmartHandResponse createLocatePackage(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateLocatePackage", request);
+    }
+
+    public SmartHandResponse createPicturesDocument(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreatePicturesDocument", request);
+    }
+
+    public SmartHandResponse createPatchCableInstall(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreatePatchCableInstall", request);
+    }
+
+    public SmartHandResponse createPatchCableRemoval(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreatePatchCableRemoval", request);
+    }
+
+    public SmartHandResponse createCageCleanup(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateCageCleanup", request);
+    }
+
+    public SmartHandResponse createCableRequest(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateCableRequest", request);
+    }
+
+    public SmartHandResponse createRunJumperCable(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateRunJumperCable", request);
+    }
+
+    public SmartHandResponse createOther(SmartHandsRequestJson request) {
+        return this.serviceClient.create("CreateOther", request);
+    }
+
+    public List<? extends SmartHandsLocation> listLocations() {
+        return this.serviceClient.listLocations();
+    }
+
+    public List<? extends SmartHandType> listTypes() {
+        return this.serviceClient.listTypes();
     }
 }

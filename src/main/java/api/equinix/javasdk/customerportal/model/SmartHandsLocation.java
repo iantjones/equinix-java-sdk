@@ -16,40 +16,14 @@
 
 package api.equinix.javasdk.customerportal.model;
 
-import api.equinix.javasdk.customerportal.enums.SmartHandsStatus;
-import api.equinix.javasdk.customerportal.enums.SmartHandsType;
+import java.util.List;
 
-public interface SmartHands {
+/**
+ * An IBX and its cages where the current user is permitted to place smart hands orders.
+ */
+public interface SmartHandsLocation {
 
-    String getUuid();
+    String getIbx();
 
-    String getHref();
-
-    String getRequestId();
-
-    SmartHandsType getType();
-
-    SmartHandsStatus getStatus();
-
-    String getIbxCode();
-
-    String getAccountNumber();
-
-    String getSummary();
-
-    String getDescription();
-
-    String getRequestorName();
-
-    String getRequestorEmail();
-
-    String getScheduleStartDate();
-
-    String getScheduleEndDate();
-
-    String getCreatedDate();
-
-    String getLastUpdatedDate();
-
-    void refresh();
+    List<? extends SmartHandsCage> getCages();
 }

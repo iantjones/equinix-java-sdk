@@ -16,43 +16,36 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.SmartHandsClient;
-import api.equinix.javasdk.customerportal.model.SmartHands;
-import api.equinix.javasdk.customerportal.model.json.SmartHandsJson;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsCreatorJson;
-import api.equinix.javasdk.customerportal.model.wrappers.SmartHandsWrapper;
+import api.equinix.javasdk.customerportal.model.SmartHandResponse;
+import api.equinix.javasdk.customerportal.model.SmartHandType;
+import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
+import api.equinix.javasdk.customerportal.model.json.SmartHandResponseJson;
+import api.equinix.javasdk.customerportal.model.json.SmartHandsLocationsResponseJson;
+import api.equinix.javasdk.customerportal.model.json.SmartHandsTypesResponseJson;
+import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
 
-public class SmartHandsClientImpl extends ResourceClientBase<SmartHands, SmartHandsJson> implements SmartHandsClient<SmartHands> {
+import java.util.List;
+
+public class SmartHandsClientImpl extends ClientBase implements SmartHandsClient {
 
     public SmartHandsClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "SmartHands", SmartHandsJson.class);
+        super(configClient, "CustomerPortal", "SmartHands");
     }
 
-    @Override
-    protected SmartHands wrap(SmartHandsJson json) {
-        return new SmartHandsWrapper(json, this);
+    public SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson) {
+        return postAs(serviceEndpoint, requestJson, SmartHandResponseJson.class);
     }
 
-    public Page<SmartHands, SmartHandsJson> list() {
-        return listPage("ListSmartHands");
+    public List<? extends SmartHandsLocation> listLocations() {
+        SmartHandsLocationsResponseJson response = getAs("ListSmartHandsLocations", SmartHandsLocationsResponseJson.class);
+        return response.getLocations();
     }
 
-    public SmartHandsJson getByUuid(String uuid) {
-        return getOne("GetSmartHands", uuid);
-    }
-
-    public SmartHandsJson create(SmartHandsCreatorJson smartHandsCreatorJson) {
-        return postOne("CreateSmartHands", smartHandsCreatorJson);
-    }
-
-    public SmartHandsJson update(String uuid, SmartHandsCreatorJson smartHandsCreatorJson) {
-        return updateOne("UpdateSmartHands", uuid, smartHandsCreatorJson);
-    }
-
-    public SmartHandsJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    public List<? extends SmartHandType> listTypes() {
+        SmartHandsTypesResponseJson response = getAs("ListSmartHandsTypes", SmartHandsTypesResponseJson.class);
+        return response.getSmarthands();
     }
 }

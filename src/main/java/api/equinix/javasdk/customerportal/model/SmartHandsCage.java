@@ -14,20 +14,18 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
-
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+package api.equinix.javasdk.customerportal.model;
 
 import java.util.List;
 
-public interface SmartHandsClient {
+/**
+ * A cage (or suite) within an IBX, including its types and the accounts it belongs to.
+ */
+public interface SmartHandsCage {
 
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
+    String getCage();
 
-    List<? extends SmartHandsLocation> listLocations();
+    List<String> getCageTypes();
 
-    List<? extends SmartHandType> listTypes();
+    List<? extends SmartHandsAccount> getAccounts();
 }

@@ -14,20 +14,15 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
+package api.equinix.javasdk.customerportal.enums;
 
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+import api.equinix.javasdk.core.model.APIParam;
 
-import java.util.List;
-
-public interface SmartHandsClient {
-
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
-
-    List<? extends SmartHandsLocation> listLocations();
-
-    List<? extends SmartHandType> listTypes();
+/**
+ * Purchase order selection type for a smart hands order. When {@code EXEMPTED}, a purchase
+ * order number is not required.
+ */
+public enum PurchaseOrderType implements APIParam {
+    EXISTING,
+    EXEMPTED
 }

@@ -14,20 +14,14 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
+package api.equinix.javasdk.customerportal.model;
 
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+/**
+ * A cabinet within an account in the smart hands location reference data.
+ */
+public interface SmartHandsCabinet {
 
-import java.util.List;
+    String getCabinet();
 
-public interface SmartHandsClient {
-
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
-
-    List<? extends SmartHandsLocation> listLocations();
-
-    List<? extends SmartHandType> listTypes();
+    String getCabinetType();
 }

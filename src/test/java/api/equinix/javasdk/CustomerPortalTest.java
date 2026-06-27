@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("integration")
@@ -67,14 +69,16 @@ class CustomerPortalTest {
     @Test
     void orders() {
         try {
-            PaginatedList<Order> orders = customerPortal.orders().list();
-            assertNotNull(orders);
-            assertTrue(orders.size() >= 0);
+            // Orders v2 has no list/create; discover an order id via order history.
+            PaginatedList<OrderHistoryItem> history = customerPortal.orderHistory().list();
+            assertNotNull(history);
 
-            if (orders.size() > 0) {
-                Order order = customerPortal.orders().getByUuid(orders.get(0).getUuid());
+            if (history.size() > 0) {
+                String orderId = history.get(0).getOrderNumber();
+                Order order = customerPortal.orders().getByUuid(orderId);
                 assertNotNull(order);
-                assertEquals(orders.get(0).getUuid(), order.getUuid());
+
+                assertNotNull(customerPortal.orders().getNegotiations(orderId));
             }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Orders test skipped: " + e.getMessage());
@@ -118,15 +122,11 @@ class CustomerPortalTest {
     @Test
     void smartHandsRequests() {
         try {
-            PaginatedList<SmartHands> smartHands = customerPortal.smartHandsRequests().list();
-            assertNotNull(smartHands);
-            assertTrue(smartHands.size() >= 0);
+            List<? extends SmartHandType> types = customerPortal.smartHandsRequests().listTypes();
+            assertNotNull(types);
 
-            if (smartHands.size() > 0) {
-                SmartHands smartHand = customerPortal.smartHandsRequests().getByUuid(smartHands.get(0).getUuid());
-                assertNotNull(smartHand);
-                assertEquals(smartHands.get(0).getUuid(), smartHand.getUuid());
-            }
+            List<? extends SmartHandsLocation> locations = customerPortal.smartHandsRequests().listLocations();
+            assertNotNull(locations);
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Smart hands test skipped: " + e.getMessage());
         }

@@ -14,20 +14,22 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
-
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+package api.equinix.javasdk.customerportal.model;
 
 import java.util.List;
 
-public interface SmartHandsClient {
+/**
+ * An account associated with a cage in the smart hands location reference data.
+ */
+public interface SmartHandsAccount {
 
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
+    String getNumber();
 
-    List<? extends SmartHandsLocation> listLocations();
+    String getName();
 
-    List<? extends SmartHandType> listTypes();
+    Boolean getIsCreditHold();
+
+    Boolean getIsPOBearing();
+
+    List<? extends SmartHandsCabinet> getCabinets();
 }

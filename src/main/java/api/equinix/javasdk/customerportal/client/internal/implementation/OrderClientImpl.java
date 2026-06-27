@@ -17,13 +17,20 @@
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.OrderClient;
 import api.equinix.javasdk.customerportal.model.Order;
+import api.equinix.javasdk.customerportal.model.OrderNegotiation;
 import api.equinix.javasdk.customerportal.model.json.OrderJson;
-import api.equinix.javasdk.customerportal.model.json.creators.OrderCreatorJson;
+import api.equinix.javasdk.customerportal.model.json.OrderNegotiationJson;
+import api.equinix.javasdk.customerportal.model.json.creators.CancelRequestJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NegotiationsRequestJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NoteRequestJson;
 import api.equinix.javasdk.customerportal.model.wrappers.OrderWrapper;
+
+import java.util.List;
+import java.util.Map;
 
 public class OrderClientImpl extends ResourceClientBase<Order, OrderJson> implements OrderClient<Order> {
 
@@ -36,15 +43,23 @@ public class OrderClientImpl extends ResourceClientBase<Order, OrderJson> implem
         return new OrderWrapper(json, this);
     }
 
-    public Page<Order, OrderJson> list() {
-        return listPage("ListOrders");
+    public OrderJson getByUuid(String orderId) {
+        return getOne("GetOrder", Map.of("orderId", orderId));
     }
 
-    public OrderJson getByUuid(String uuid) {
-        return getOne("GetOrder", uuid);
+    public List<? extends OrderNegotiation> getNegotiations(String orderId) {
+        return listAs("GetOrderNegotiations", Map.of("orderId", orderId), null, OrderNegotiationJson.class);
     }
 
-    public OrderJson create(OrderCreatorJson orderCreatorJson) {
-        return postOne("CreateOrder", orderCreatorJson);
+    public Boolean replyNegotiation(String orderId, NegotiationsRequestJson negotiationsRequestJson) {
+        return booleanOp("ReplyOrderNegotiation", RequestType.SINGLE, Map.of("orderId", orderId), null, negotiationsRequestJson);
+    }
+
+    public Boolean addNote(String orderId, NoteRequestJson noteRequestJson) {
+        return booleanOp("AddOrderNote", RequestType.SINGLE, Map.of("orderId", orderId), null, noteRequestJson);
+    }
+
+    public Boolean cancel(String orderId, CancelRequestJson cancelRequestJson) {
+        return booleanOp("CancelOrder", RequestType.SINGLE, Map.of("orderId", orderId), null, cancelRequestJson);
     }
 }

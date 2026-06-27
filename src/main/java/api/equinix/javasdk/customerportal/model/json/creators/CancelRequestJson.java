@@ -16,24 +16,32 @@
 
 package api.equinix.javasdk.customerportal.model.json.creators;
 
-import api.equinix.javasdk.customerportal.enums.OrderType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
+/**
+ * Request body for cancelling an order. A {@code reason} is required; {@code attachments}
+ * and {@code lineIds} (to cancel specific order lines) are optional.
+ */
 @Getter
-public class OrderCreatorJson {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class CancelRequestJson {
 
-    @JsonProperty("type") private OrderType type;
-    @JsonProperty("description") private String description;
-    @JsonProperty("customerReferenceId") private String customerReferenceId;
-    @JsonProperty("accountNumber") private String accountNumber;
-    @JsonProperty("ibxCode") private String ibxCode;
+    @JsonProperty("reason")
+    private final String reason;
 
-    public OrderCreatorJson(OrderOperator.OrderBuilder builder) {
-        this.type = builder.getType();
-        this.description = builder.getDescription();
-        this.customerReferenceId = builder.getCustomerReferenceId();
-        this.accountNumber = builder.getAccountNumber();
-        this.ibxCode = builder.getIbxCode();
+    @JsonProperty("attachments")
+    private final List<AttachmentReference> attachments;
+
+    @JsonProperty("lineIds")
+    private final List<String> lineIds;
+
+    public CancelRequestJson(String reason, List<AttachmentReference> attachments, List<String> lineIds) {
+        this.reason = reason;
+        this.attachments = attachments;
+        this.lineIds = lineIds;
     }
 }

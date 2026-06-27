@@ -14,20 +14,20 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
+package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
 import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 import java.util.List;
 
-public interface SmartHandsClient {
+@Getter
+public class SmartHandsLocationJson implements SmartHandsLocation {
 
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
+    @JsonProperty("ibx")
+    private String ibx;
 
-    List<? extends SmartHandsLocation> listLocations();
-
-    List<? extends SmartHandType> listTypes();
+    @JsonProperty("cages")
+    private List<SmartHandsCageJson> cages;
 }

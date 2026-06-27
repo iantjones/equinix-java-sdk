@@ -50,7 +50,6 @@ import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.SecureCabinet;
 import api.equinix.javasdk.customerportal.model.Shipment;
-import api.equinix.javasdk.customerportal.model.SmartHands;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.WorkVisit;
@@ -73,7 +72,7 @@ public interface CustomerPortalConfig {
 
     WorkVisitClient<WorkVisit> getWorkVisitClient();
 
-    SmartHandsClient<SmartHands> getSmartHandsClient();
+    SmartHandsClient getSmartHandsClient();
 
     ShipmentClient<Shipment> getShipmentClient();
 

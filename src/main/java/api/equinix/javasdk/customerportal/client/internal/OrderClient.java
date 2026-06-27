@@ -16,17 +16,24 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.customerportal.model.Order;
+import api.equinix.javasdk.customerportal.model.OrderNegotiation;
 import api.equinix.javasdk.customerportal.model.json.OrderJson;
-import api.equinix.javasdk.customerportal.model.json.creators.OrderCreatorJson;
+import api.equinix.javasdk.customerportal.model.json.creators.CancelRequestJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NegotiationsRequestJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NoteRequestJson;
+
+import java.util.List;
 
 public interface OrderClient<T> extends Pageable<T> {
 
-    Page<Order, OrderJson> list();
+    OrderJson getByUuid(String orderId);
 
-    OrderJson getByUuid(String uuid);
+    List<? extends OrderNegotiation> getNegotiations(String orderId);
 
-    OrderJson create(OrderCreatorJson orderCreatorJson);
+    Boolean replyNegotiation(String orderId, NegotiationsRequestJson negotiationsRequestJson);
+
+    Boolean addNote(String orderId, NoteRequestJson noteRequestJson);
+
+    Boolean cancel(String orderId, CancelRequestJson cancelRequestJson);
 }

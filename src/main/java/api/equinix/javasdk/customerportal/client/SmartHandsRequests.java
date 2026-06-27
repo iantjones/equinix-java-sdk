@@ -16,36 +16,132 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.customerportal.model.SmartHands;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsOperator;
+import api.equinix.javasdk.customerportal.model.SmartHandResponse;
+import api.equinix.javasdk.customerportal.model.SmartHandType;
+import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+
+import java.util.List;
 
 /**
- * Client interface for managing Smart Hands service requests in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create Smart Hands requests where Equinix
- * technicians perform on-site tasks on behalf of customers.
+ * Client interface for submitting Smart Hands orders in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Smart Hands v1 API at {@code /v1/orders/smarthands/{type}}. Each Smart Hands
+ * service has its own typed create operation; all share the common request envelope
+ * ({@link SmartHandsRequestJson}: IBX location, contacts, schedule, optional purchase order and
+ * attachments) plus a per-type {@code serviceDetails} object. Reference data is available via
+ * {@link #listLocations()} and {@link #listTypes()}.</p>
  */
 public interface SmartHandsRequests {
 
     /**
-     * Lists all Smart Hands requests for the current account.
+     * Requests equipment installation per your specifications by an IBX technician.
      *
-     * @return a paginated list of Smart Hands requests
+     * @param request the smart hands request body
+     * @return the created order response
      */
-    PaginatedList<SmartHands> list();
+    SmartHandResponse createEquipmentInstall(SmartHandsRequestJson request);
 
     /**
-     * Retrieves a specific Smart Hands request by its unique identifier.
+     * Requests inbound shipment unpacking and packaging disposal.
      *
-     * @param uuid the unique identifier of the Smart Hands request
-     * @return the matching Smart Hands request
+     * @param request the smart hands request body
+     * @return the created order response
      */
-    SmartHands getByUuid(String uuid);
+    SmartHandResponse createShipmentUnpack(SmartHandsRequestJson request);
 
     /**
-     * Returns a builder for defining a new Smart Hands request.
+     * Requests a jumper cable to be moved.
      *
-     * @return a new SmartHandsBuilder instance
+     * @param request the smart hands request body
+     * @return the created order response
      */
-    SmartHandsOperator.SmartHandsBuilder define();
+    SmartHandResponse createMoveJumperCable(SmartHandsRequestJson request);
+
+    /**
+     * Requests an escort into a cage.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createCageEscort(SmartHandsRequestJson request);
+
+    /**
+     * Requests a package to be located.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createLocatePackage(SmartHandsRequestJson request);
+
+    /**
+     * Requests pictures or documentation of equipment.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createPicturesDocument(SmartHandsRequestJson request);
+
+    /**
+     * Requests a patch cable to be installed.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createPatchCableInstall(SmartHandsRequestJson request);
+
+    /**
+     * Requests a patch cable to be removed.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createPatchCableRemoval(SmartHandsRequestJson request);
+
+    /**
+     * Requests a cage cleanup.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createCageCleanup(SmartHandsRequestJson request);
+
+    /**
+     * Requests a cable.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createCableRequest(SmartHandsRequestJson request);
+
+    /**
+     * Requests a jumper cable to be run.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createRunJumperCable(SmartHandsRequestJson request);
+
+    /**
+     * Requests another smart hands service not covered by a dedicated type.
+     *
+     * @param request the smart hands request body
+     * @return the created order response
+     */
+    SmartHandResponse createOther(SmartHandsRequestJson request);
+
+    /**
+     * Lists the IBX locations, cages and cabinets where the current user may place smart
+     * hands orders.
+     *
+     * @return the list of permitted locations
+     */
+    List<? extends SmartHandsLocation> listLocations();
+
+    /**
+     * Lists all supported smart hands order types.
+     *
+     * @return the list of supported types
+     */
+    List<? extends SmartHandType> listTypes();
 }

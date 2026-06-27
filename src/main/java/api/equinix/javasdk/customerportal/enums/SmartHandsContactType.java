@@ -14,20 +14,16 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
+package api.equinix.javasdk.customerportal.enums;
 
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+import api.equinix.javasdk.core.model.APIParam;
 
-import java.util.List;
-
-public interface SmartHandsClient {
-
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
-
-    List<? extends SmartHandsLocation> listLocations();
-
-    List<? extends SmartHandType> listTypes();
+/**
+ * Type of contact attached to a smart hands order. A request must include exactly one
+ * ORDERING contact, exactly one TECHNICAL contact, and one or more NOTIFICATION contacts.
+ */
+public enum SmartHandsContactType implements APIParam {
+    TECHNICAL,
+    ORDERING,
+    NOTIFICATION
 }

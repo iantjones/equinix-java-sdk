@@ -14,20 +14,17 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.client.internal;
+package api.equinix.javasdk.customerportal.enums;
 
-import api.equinix.javasdk.customerportal.model.SmartHandResponse;
-import api.equinix.javasdk.customerportal.model.SmartHandType;
-import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
+import api.equinix.javasdk.core.model.APIParam;
 
-import java.util.List;
-
-public interface SmartHandsClient {
-
-    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
-
-    List<? extends SmartHandsLocation> listLocations();
-
-    List<? extends SmartHandType> listTypes();
+/**
+ * Type of action to be carried out with an order negotiation. Use {@code APPROVE} to accept
+ * the order with the new proposed date, {@code APPROVE_NON_EXPEDITE} to accept the order
+ * without expediting, and {@code CANCEL} to cancel the order negotiation.
+ */
+public enum NegotiationAction implements APIParam {
+    APPROVE,
+    APPROVE_NON_EXPEDITE,
+    CANCEL
 }
