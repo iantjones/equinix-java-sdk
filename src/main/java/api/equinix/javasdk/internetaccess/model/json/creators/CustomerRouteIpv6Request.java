@@ -16,22 +16,21 @@
 
 package api.equinix.javasdk.internetaccess.model.json.creators;
 
-import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * Customer route of IP Version 6 (IPv6) nested in an IPv6 routing protocol request.
+ */
 @Getter
-public class InternetAccessServiceCreatorJson {
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class CustomerRouteIpv6Request {
 
-    @JsonProperty("name") private String name;
-    @JsonProperty("type") private InternetAccessServiceType type;
-    @JsonProperty("bandwidth") private Integer bandwidth;
-    @JsonProperty("ibx") private String ibx;
+    @JsonProperty("ipBlock") private IpBlockIpv6Request ipBlock;
 
-    public InternetAccessServiceCreatorJson(InternetAccessServiceOperator.InternetAccessServiceBuilder builder) {
-        this.name = builder.getName();
-        this.type = builder.getType();
-        this.bandwidth = builder.getBandwidth();
-        this.ibx = builder.getIbx();
-    }
+    /** Subnet prefix, e.g. {@code 2001:db8::/64}. */
+    @JsonProperty("prefix") private String prefix;
 }

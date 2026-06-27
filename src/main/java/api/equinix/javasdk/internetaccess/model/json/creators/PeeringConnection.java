@@ -14,14 +14,20 @@
  * governing permissions and limitations under the License.
  */
 
+package api.equinix.javasdk.internetaccess.model.json.creators;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Getter;
+
 /**
- * Internet Access client interfaces for the Equinix Java SDK. Provides typed access to the
- * Equinix Internet Access (EIA) v2 API, which exposes a single operation — creating a service
- * via {@code POST /internetAccess/v2/services}. The service connections, IP blocks and routing
- * configuration (direct, static or BGP) are all supplied as a single nested request body
- * assembled through the service builder.
- *
- * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfig
- * @see api.equinix.javasdk.InternetAccess
+ * Reference to the connection a peering is associated with, by {@code uuid}.
  */
-package api.equinix.javasdk.internetaccess.client;
+@Getter
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class PeeringConnection {
+
+    @JsonProperty("uuid") private String uuid;
+}

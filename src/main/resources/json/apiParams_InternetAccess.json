@@ -2,15 +2,11 @@
   "functionalAreas": {
     "InternetAccess": {
       "uriFormat": "internetAccess/v{$version}/{$rootUri}/{$requestUri}",
-      "defaultVersion": 1,
+      "defaultVersion": 2,
       "Services": {
         "rootUri": "services",
         "serviceEndpoints": {
-          "ListServices": { "httpMethod": "GET" },
-          "GetService": { "httpMethod": "GET", "requestUri": "{$uuid}" },
-          "CreateService": { "httpMethod": "POST" },
-          "UpdateService": { "httpMethod": "PUT", "requestUri": "{$uuid}" },
-          "DeleteService": { "httpMethod": "DELETE", "requestUri": "{$uuid}" }
+          "CreateService": { "httpMethod": "POST" }
         }
       }
     }

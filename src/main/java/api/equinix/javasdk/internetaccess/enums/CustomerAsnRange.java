@@ -14,14 +14,14 @@
  * governing permissions and limitations under the License.
  */
 
+package api.equinix.javasdk.internetaccess.enums;
+
+import api.equinix.javasdk.core.model.APIParam;
+
 /**
- * Internet Access client interfaces for the Equinix Java SDK. Provides typed access to the
- * Equinix Internet Access (EIA) v2 API, which exposes a single operation — creating a service
- * via {@code POST /internetAccess/v2/services}. The service connections, IP blocks and routing
- * configuration (direct, static or BGP) are all supplied as a single nested request body
- * assembled through the service builder.
- *
- * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfig
- * @see api.equinix.javasdk.InternetAccess
+ * Customer Autonomous System Number range used by a BGP routing protocol.
  */
-package api.equinix.javasdk.internetaccess.client;
+public enum CustomerAsnRange implements APIParam {
+    BITS_16,
+    BITS_32
+}

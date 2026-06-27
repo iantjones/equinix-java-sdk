@@ -24,21 +24,30 @@ import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessCo
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessServicesImpl;
 
 /**
- * The primary entry point for accessing Equinix Internet Access APIs.
+ * The primary entry point for accessing the Equinix Internet Access (EIA) v2 API.
  *
- * <p>Internet Access (EIA) provides managed internet connectivity services through Equinix
- * data centers. This class offers typed access to internet access services.</p>
+ * <p>Equinix Internet Access provides managed internet connectivity services through Equinix
+ * data centers. EIA v2 exposes a single operation — creating a service via
+ * {@code POST /internetAccess/v2/services} — where the IP blocks and routing configuration are
+ * all supplied as a single nested request body.</p>
  *
- * <p>All resource accessors use lazy initialization — internal clients are created on first access
- * and reused for subsequent calls.</p>
+ * <p>The {@link #services()} accessor uses lazy initialization — the internal client is created
+ * on first access and reused for subsequent calls.</p>
  *
  * <h3>Quick Start</h3>
  * <pre>{@code
  * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
  * InternetAccess internetAccess = new InternetAccess(credentials);
  *
- * // List internet access services
- * PaginatedList<InternetAccessService> services = internetAccess.services().list();
+ * InternetAccessService service = internetAccess.services().define()
+ *     .name("WebServers")
+ *     .type(ServiceTypeV2.SINGLE)
+ *     .connection("9b8c5042-b553-4d5e-a2ac-c73bf6d4fd81")
+ *     .routingProtocol(BgpRoutingProtocolRequest.builder()
+ *         .customerAsn(16220L)
+ *         .exportPolicy(ExportPolicy.FULL)
+ *         .build())
+ *     .create();
  * }</pre>
  *
  * @author ianjones
@@ -76,10 +85,9 @@ public final class InternetAccess extends EquinixClient implements Service {
     }
 
     /**
-     * Returns the client for managing Internet Access service instances.
-     * Each service represents a managed internet connectivity subscription at an Equinix facility.
+     * Returns the client for creating Equinix Internet Access v2 service instances.
      *
-     * @return the {@link InternetAccessServices} client for managing internet access services
+     * @return the {@link InternetAccessServices} client
      */
     public InternetAccessServices services() {
         if (this.services == null) {

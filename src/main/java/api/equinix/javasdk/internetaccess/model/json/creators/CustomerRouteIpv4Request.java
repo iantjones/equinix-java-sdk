@@ -14,14 +14,23 @@
  * governing permissions and limitations under the License.
  */
 
+package api.equinix.javasdk.internetaccess.model.json.creators;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Getter;
+
 /**
- * Internet Access client interfaces for the Equinix Java SDK. Provides typed access to the
- * Equinix Internet Access (EIA) v2 API, which exposes a single operation — creating a service
- * via {@code POST /internetAccess/v2/services}. The service connections, IP blocks and routing
- * configuration (direct, static or BGP) are all supplied as a single nested request body
- * assembled through the service builder.
- *
- * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfig
- * @see api.equinix.javasdk.InternetAccess
+ * Customer route of IP Version 4 (IPv4) nested in an IPv4 routing protocol request.
  */
-package api.equinix.javasdk.internetaccess.client;
+@Getter
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class CustomerRouteIpv4Request {
+
+    @JsonProperty("ipBlock") private IpBlockIpv4Request ipBlock;
+
+    /** Subnet prefix, e.g. {@code 198.51.100.0/24}. */
+    @JsonProperty("prefix") private String prefix;
+}

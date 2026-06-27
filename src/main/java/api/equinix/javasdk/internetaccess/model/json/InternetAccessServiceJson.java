@@ -16,43 +16,32 @@
 
 package api.equinix.javasdk.internetaccess.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceState;
-import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceType;
+import api.equinix.javasdk.internetaccess.enums.ServiceState;
+import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
+/**
+ * Read-only JSON model for the {@code ServiceV2} response returned when creating an Equinix
+ * Internet Access (EIA) v2 service. Implements {@link InternetAccessService} directly.
+ */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternetAccessServiceJson {
-
-    @Getter static TypeReference<List<InternetAccessServiceJson>> listTypeRef = new TypeReference<>() {};
+public class InternetAccessServiceJson implements InternetAccessService {
 
     @JsonProperty("uuid")
     private String uuid;
 
-    @JsonProperty("name")
-    private String name;
-
     @JsonProperty("type")
-    private InternetAccessServiceType type;
-
-    @JsonProperty("status")
-    private String status;
+    private ServiceTypeV2 type;
 
     @JsonProperty("bandwidth")
     private Integer bandwidth;
 
-    @JsonProperty("ibx")
-    private String ibx;
-
     @JsonProperty("state")
-    private InternetAccessServiceState state;
+    private ServiceState state;
 }

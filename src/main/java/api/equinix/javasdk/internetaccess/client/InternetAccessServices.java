@@ -16,34 +16,19 @@
 
 package api.equinix.javasdk.internetaccess.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.internetaccess.model.InternetAccessService;
 import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServiceOperator;
 
 /**
- * Client interface for managing Equinix Internet Access services. Provides methods to
- * list, retrieve, and create internet access service instances that deliver dedicated
- * internet connectivity from Equinix IBX data centers.
+ * Client interface for the Equinix Internet Access (EIA) v2 API.
+ *
+ * <p>EIA v2 exposes a single operation — creating a service via
+ * {@code POST /internetAccess/v2/services}. The IP blocks and routing configuration are all
+ * supplied as a nested request body assembled through the {@link #define()} builder.</p>
  */
 public interface InternetAccessServices {
 
     /**
-     * Lists all internet access services for the current account.
-     *
-     * @return a paginated list of internet access services
-     */
-    PaginatedList<InternetAccessService> list();
-
-    /**
-     * Retrieves a specific internet access service by its unique identifier.
-     *
-     * @param uuid the unique identifier of the internet access service
-     * @return the internet access service
-     */
-    InternetAccessService getByUuid(String uuid);
-
-    /**
-     * Returns a builder for defining and creating a new internet access service.
+     * Returns a builder for defining and creating a new Equinix Internet Access v2 service.
      *
      * @return an internet access service builder
      */

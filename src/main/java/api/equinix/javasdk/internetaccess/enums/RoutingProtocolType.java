@@ -14,14 +14,21 @@
  * governing permissions and limitations under the License.
  */
 
+package api.equinix.javasdk.internetaccess.enums;
+
+import api.equinix.javasdk.core.model.APIParam;
+
 /**
- * Internet Access client interfaces for the Equinix Java SDK. Provides typed access to the
- * Equinix Internet Access (EIA) v2 API, which exposes a single operation — creating a service
- * via {@code POST /internetAccess/v2/services}. The service connections, IP blocks and routing
- * configuration (direct, static or BGP) are all supplied as a single nested request body
- * assembled through the service builder.
+ * Discriminator for the routing protocol nested in an EIA v2 service request.
  *
- * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfig
- * @see api.equinix.javasdk.InternetAccess
+ * <ul>
+ *   <li>{@code DIRECT} — directly attached peering.</li>
+ *   <li>{@code STATIC} — static customer routes.</li>
+ *   <li>{@code BGP} — BGP routing with customer ASN, export policy and peerings.</li>
+ * </ul>
  */
-package api.equinix.javasdk.internetaccess.client;
+public enum RoutingProtocolType implements APIParam {
+    DIRECT,
+    STATIC,
+    BGP
+}
