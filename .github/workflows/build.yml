@@ -28,12 +28,13 @@ jobs:
         run: mvn -B -P wiremock test
 
       # Fail the build if combined coverage drops below the configured threshold.
+      # jacoco.exec now lives under equinix-sdk-java/target, so scope the check to that module.
       - name: Enforce coverage gate
-        run: mvn -B -P coverage jacoco:check
+        run: mvn -B -P coverage jacoco:check -pl equinix-sdk-java
 
       - name: Upload JaCoCo report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: target/site/jacoco/
+          path: equinix-sdk-java/target/site/jacoco/
