@@ -37,6 +37,12 @@ were removed and the value-add engines moved to dedicated top-level modules.
   (`createEquipmentInstall`, `createShipmentUnpack`, …) plus `listTypes()`/`listLocations()`.
 - **Typed async waiter** (`ResourceWaiter`): poll a resource until a target state
   (`PROVISIONING`→`PROVISIONED`), with timeout/failure conditions.
+- **IaC / Terraform export** (`design.export.TerraformExporter`): turn a `DeploymentPlan`
+  into Equinix Terraform-provider HCL (cloud routers, connections, routing protocols).
+- **Topology diagrams** (`design.export.TopologyDiagram`): GitHub-renderable Mermaid graphs
+  from a `DeploymentPlan` or `OptimizationResult`.
+- **Async / virtual-thread client facade** (`core.async.EquinixAsync`): run any SDK call on a
+  Java 21 virtual thread, returning a `CompletableFuture`, without mirroring the API surface.
 
 ### Changed
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
