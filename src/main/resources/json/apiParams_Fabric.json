@@ -60,6 +60,10 @@
           "GetStatistics": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}/stats"
+          },
+          "GetMetrics": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/metrics"
           }
         }
       },
@@ -69,6 +73,10 @@
           "SearchConnections": {
             "httpMethod": "POST",
             "requestUri": "search"
+          },
+          "ValidateConnections": {
+            "httpMethod": "POST",
+            "requestUri": "validate"
           },
           "GetConnection": {
             "httpMethod": "GET",
@@ -96,6 +104,19 @@
           "GetStatistics": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}/stats"
+          },
+          "GetMetrics": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/metrics"
+          }
+        }
+      },
+      "Metrics": {
+        "rootUri": "metrics",
+        "serviceEndpoints": {
+          "SearchMetrics": {
+            "httpMethod": "POST",
+            "requestUri": "search"
           }
         }
       },

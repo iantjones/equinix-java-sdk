@@ -25,6 +25,7 @@ import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
 import api.equinix.javasdk.fabric.client.internal.PortClient;
 import api.equinix.javasdk.fabric.enums.StatisticDuration;
+import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.json.PortJson;
@@ -33,6 +34,7 @@ import api.equinix.javasdk.fabric.model.wrappers.PortStatisticWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.PortWrapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>PortsImpl class.</p>
@@ -75,9 +77,15 @@ public class PortsImpl implements Ports {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     public PortStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         PortStatisticJson portStatisticJson = statisticServiceClient.getStatistics(uuid, startDateTime, endDateTime);
         return new PortStatisticWrapper(portStatisticJson, this.statisticServiceClient);
+    }
+
+    /** {@inheritDoc} */
+    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+        return statisticServiceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
     }
 
     /** {@inheritDoc} */

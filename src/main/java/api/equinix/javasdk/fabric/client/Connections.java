@@ -21,13 +21,16 @@ import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric connections. Provides operations for searching,
@@ -71,6 +74,16 @@ public interface Connections {
     PaginatedFilteredList<Connection> search(FilterPropertyList filter, SortPropertyList sort);
 
     /**
+     * Validates one or more prospective connections against the supplied filter criteria,
+     * for example a cloud provider authorization key or VLAN availability, without creating
+     * the connection. Mirrors the SDK's existing Fabric search filter shape.
+     *
+     * @param filter the validation filter criteria (auth key or VLAN)
+     * @return the list of connection specifications matching the validation request
+     */
+    List<ValidateConnectionResult> validate(FilterPropertyList filter);
+
+    /**
      * Retrieves a single connection by its unique identifier.
      *
      * @param uuid the unique identifier of the connection
@@ -102,7 +115,11 @@ public interface Connections {
      * @param endDateTime the end of the statistics time range
      * @param viewPoint the side (A-side or Z-side) from which to view the statistics
      * @return the connection statistics for the specified time range and viewpoint
+     * @deprecated the {@code /stats} endpoint is deprecated by Equinix; use
+     *             {@link #getMetrics(String, String, LocalDateTime, LocalDateTime)} or
+     *             {@link Metrics#search(FilterPropertyList)} instead.
      */
+    @Deprecated
     ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
 
     /**
@@ -112,6 +129,22 @@ public interface Connections {
      * @param startDateTime the start of the statistics time range
      * @param endDateTime the end of the statistics time range
      * @return the connection statistics for the specified time range
+     * @deprecated the {@code /stats} endpoint is deprecated by Equinix; use
+     *             {@link #getMetrics(String, String, LocalDateTime, LocalDateTime)} or
+     *             {@link Metrics#search(FilterPropertyList)} instead.
      */
+    @Deprecated
     ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
+
+    /**
+     * Retrieves metrics for a single connection over the specified time range. This is the
+     * non-deprecated replacement for {@link #getStatistics(String, LocalDateTime, LocalDateTime)}.
+     *
+     * @param uuid the unique identifier of the connection
+     * @param name the metric name to retrieve (for example {@code equinix.fabric.connection.bandwidth_tx.usage}), or {@code null} for all metrics
+     * @param fromDateTime the start of the metrics time range
+     * @param toDateTime the end of the metrics time range
+     * @return the list of metrics for the connection over the specified time range
+     */
+    List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 }

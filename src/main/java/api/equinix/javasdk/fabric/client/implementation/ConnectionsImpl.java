@@ -26,8 +26,10 @@ import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -40,6 +42,7 @@ import api.equinix.javasdk.fabric.model.wrappers.ConnectionStatisticWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>ConnectionsImpl class.</p>
@@ -73,6 +76,12 @@ public class ConnectionsImpl implements Connections {
         return new PaginatedFilteredList<>(connectionList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public List<ValidateConnectionResult> validate(FilterPropertyList filter) {
+        return this.serviceClient.validate(filter);
+    }
+
     public Connection getByUuid(String uuid) {
         ConnectionJson connectionJson = serviceClient.getByUuid(uuid);
         return new ConnectionWrapper(connectionJson, this.serviceClient);
@@ -87,6 +96,7 @@ public class ConnectionsImpl implements Connections {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
         ConnectionStatisticJson connectionStatisticJson = this.serviceClient.getStatistics(uuid, startDateTime, endDateTime, viewPoint);
@@ -94,8 +104,15 @@ public class ConnectionsImpl implements Connections {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return getStatistics(uuid, startDateTime, endDateTime, Side.A_Side);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+        return this.serviceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
     }
 }
