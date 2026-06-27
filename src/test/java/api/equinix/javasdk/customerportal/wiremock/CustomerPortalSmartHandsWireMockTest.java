@@ -2,20 +2,28 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
-import api.equinix.javasdk.core.exception.*;
-import api.equinix.javasdk.customerportal.enums.SmartHandsStatus;
-import api.equinix.javasdk.customerportal.enums.SmartHandsType;
-import api.equinix.javasdk.customerportal.model.SmartHands;
+import api.equinix.javasdk.customerportal.enums.PhonePreferenceToCall;
+import api.equinix.javasdk.customerportal.enums.SmartHandsContactType;
+import api.equinix.javasdk.customerportal.enums.SmartHandsScheduleType;
+import api.equinix.javasdk.customerportal.model.SmartHandResponse;
+import api.equinix.javasdk.customerportal.model.SmartHandType;
+import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.ContactInfo;
+import api.equinix.javasdk.customerportal.model.json.creators.IbxLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.ScheduleInfo;
+import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
 import org.junit.jupiter.api.*;
 
-import static api.equinix.javasdk.core.ResponseStubs.*;
+import java.util.List;
+import java.util.Map;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for CustomerPortal Smart Hands requests.
- *
- * <p>Exercises the single-resource accessor {@code smartHandsRequests().getByUuid(uuid)}.
- * The SmartHands functional area is keyed to API version 1 ({@code /v1/smartHands/...}).</p>
+ * WireMock-based API tests for the CustomerPortal Smart Hands v1 client, covering the typed
+ * POST creates under {@code /v1/orders/smarthands/{type}} (shared request envelope plus a
+ * per-type {@code serviceDetails} object) and the locations/types reference GETs.
  */
 class CustomerPortalSmartHandsWireMockTest extends WireMockTestBase {
 
@@ -38,50 +46,88 @@ class CustomerPortalSmartHandsWireMockTest extends WireMockTestBase {
         resetStubs();
     }
 
-    @Nested
-    @DisplayName("getByUuid()")
-    class GetByUuid {
+    private SmartHandsRequestJson sampleRequest(Map<String, Object> serviceDetails) {
+        IbxLocation ibxLocation = new IbxLocation("AM1",
+                List.of(new IbxLocation.Cage("AM1:01:001MC3", "12345")));
+        List<ContactInfo> contacts = List.of(
+                ContactInfo.registered(SmartHandsContactType.ORDERING, "jondoe@test.com"),
+                ContactInfo.registered(SmartHandsContactType.NOTIFICATION, "jondoe@test.com"),
+                ContactInfo.technical("John Doe", "1111111", PhonePreferenceToCall.ANYTIME));
+        ScheduleInfo schedule = new ScheduleInfo(SmartHandsScheduleType.STANDARD);
 
-        @Test
-        @DisplayName("returns smart hands request for valid UUID")
-        void returnsSmartHands() {
-            stubSingleton(wireMock, "/v1/smartHands/.*",
-                    "/json/customerportal/smart_hands_response.json");
-
-            SmartHands smartHands = customerPortal.smartHandsRequests()
-                    .getByUuid("e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091");
-
-            assertNotNull(smartHands);
-            assertEquals("e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8091", smartHands.getUuid());
-            assertEquals("SH-2024-0008923", smartHands.getRequestId());
-            assertEquals(SmartHandsType.STANDARD, smartHands.getType());
-            assertEquals(SmartHandsStatus.IN_PROGRESS, smartHands.getStatus());
-            assertEquals("SV5", smartHands.getIbxCode());
-        }
-
-        @Test
-        @DisplayName("404 throws EquinixNotFoundException")
-        void notFound() {
-            stubErrorInline(wireMock, "/v1/smartHands/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Smart Hands request not found\"}]");
-
-            assertThrows(EquinixNotFoundException.class,
-                    () -> customerPortal.smartHandsRequests().getByUuid("invalid-uuid"));
-        }
+        return SmartHandsRequestJson.builder(ibxLocation, contacts, schedule, serviceDetails)
+                .customerReferenceNumber("RSS41244")
+                .build();
     }
 
-    @Nested
-    @DisplayName("Error handling")
-    class Errors {
+    @Test
+    @DisplayName("createEquipmentInstall posts to the typed path with serviceDetails")
+    void createEquipmentInstall_postsToTypedPathWithServiceDetails() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/equipmentInstall"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-128726682521\"}")));
 
-        @Test
-        @DisplayName("500 throws EquinixServerException")
-        void serverError() {
-            stubErrorInline(wireMock, "/v1/smartHands/.*",
-                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+        Map<String, Object> serviceDetails = Map.of(
+                "deviceLocation", "abc location",
+                "scopeOfWork", "Install my equipment");
 
-            assertThrows(EquinixServerException.class,
-                    () -> customerPortal.smartHandsRequests().getByUuid("test-uuid"));
-        }
+        SmartHandResponse response = customerPortal.smartHandsRequests().createEquipmentInstall(sampleRequest(serviceDetails));
+
+        assertNotNull(response);
+        assertEquals("1-128726682521", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/equipmentInstall"))
+                .withRequestBody(matchingJsonPath("$.ibxLocation.ibx", equalTo("AM1")))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.deviceLocation", equalTo("abc location")))
+                .withRequestBody(matchingJsonPath("$.schedule.scheduleType", equalTo("STANDARD"))));
+    }
+
+    @Test
+    @DisplayName("createCageEscort posts to the cageEscort path")
+    void createCageEscort_postsToCageEscortPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/cageEscort"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-999\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createCageEscort(sampleRequest(Map.of("scopeOfWork", "Escort required")));
+
+        assertEquals("1-999", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/cageEscort")));
+    }
+
+    @Test
+    @DisplayName("listTypes returns the supported types")
+    void listTypes_returnsSupportedTypes() {
+        wireMock.stubFor(get(urlPathEqualTo("/v1/orders/smarthands/types"))
+                .willReturn(okJson("{\"smarthands\":[{\"type\":\"EQUIPMENT_INSTALL\","
+                        + "\"typeDescription\":\"Equipment Install\"}]}")));
+
+        List<? extends SmartHandType> types = customerPortal.smartHandsRequests().listTypes();
+
+        assertNotNull(types);
+        assertEquals(1, types.size());
+        assertEquals("EQUIPMENT_INSTALL", types.get(0).getType());
+        assertEquals("Equipment Install", types.get(0).getTypeDescription());
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/smarthands/types")));
+    }
+
+    @Test
+    @DisplayName("listLocations returns the permitted locations")
+    void listLocations_returnsPermittedLocations() {
+        wireMock.stubFor(get(urlPathEqualTo("/v1/orders/smarthands/locations"))
+                .willReturn(okJson("{\"locations\":[{\"ibx\":\"AM1\",\"cages\":[{\"cage\":\"AM1:01:001MC3\","
+                        + "\"accounts\":[{\"number\":\"136008\",\"name\":\"Service Corporation\"}]}]}]}")));
+
+        List<? extends SmartHandsLocation> locations = customerPortal.smartHandsRequests().listLocations();
+
+        assertNotNull(locations);
+        assertEquals(1, locations.size());
+        assertEquals("AM1", locations.get(0).getIbx());
+        assertEquals("AM1:01:001MC3", locations.get(0).getCages().get(0).getCage());
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/smarthands/locations")));
     }
 }

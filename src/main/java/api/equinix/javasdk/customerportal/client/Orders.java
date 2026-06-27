@@ -16,36 +16,99 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.customerportal.enums.NegotiationAction;
 import api.equinix.javasdk.customerportal.model.Order;
-import api.equinix.javasdk.customerportal.model.json.creators.OrderOperator;
+import api.equinix.javasdk.customerportal.model.OrderNegotiation;
+import api.equinix.javasdk.customerportal.model.json.creators.AttachmentReference;
+
+import java.util.List;
 
 /**
- * Client interface for managing orders in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create orders for Equinix
- * products and services.
+ * Client interface for managing colocation orders in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Orders v2 API at {@code /colocations/v2/orders/{orderId}}. Orders cannot be
+ * created or listed through this API (use {@link OrderHistory} for historical listings); they are
+ * retrieved by id and acted upon through negotiations, notes, and cancellation.</p>
  */
 public interface Orders {
 
     /**
-     * Lists all orders for the current account.
-     *
-     * @return a paginated list of orders
-     */
-    PaginatedList<Order> list();
-
-    /**
      * Retrieves a specific order by its unique identifier.
      *
-     * @param uuid the unique identifier of the order
+     * @param orderId the identifier of the order
      * @return the matching order
      */
-    Order getByUuid(String uuid);
+    Order getByUuid(String orderId);
 
     /**
-     * Returns a builder for defining a new order.
+     * Retrieves the negotiation messages for an order, each proposing an alternative
+     * date and time for fulfilling the order request.
      *
-     * @return a new OrderBuilder instance
+     * @param orderId the identifier of the order
+     * @return the list of negotiation messages
      */
-    OrderOperator.OrderBuilder define();
+    List<? extends OrderNegotiation> getNegotiations(String orderId);
+
+    /**
+     * Replies to an order negotiation, approving or cancelling the proposed schedule.
+     *
+     * @param orderId     the identifier of the order
+     * @param action      the action to perform (APPROVE, APPROVE_NON_EXPEDITE, or CANCEL)
+     * @param referenceId the reference id of the activity or order line
+     * @return {@code true} if the reply was accepted
+     */
+    Boolean replyNegotiation(String orderId, NegotiationAction action, String referenceId);
+
+    /**
+     * Replies to an order negotiation, approving or cancelling the proposed schedule, with
+     * an optional reason (used when cancelling).
+     *
+     * @param orderId     the identifier of the order
+     * @param action      the action to perform (APPROVE, APPROVE_NON_EXPEDITE, or CANCEL)
+     * @param referenceId the reference id of the activity or order line
+     * @param reason      the reason for the action (used when cancelling)
+     * @return {@code true} if the reply was accepted
+     */
+    Boolean replyNegotiation(String orderId, NegotiationAction action, String referenceId, String reason);
+
+    /**
+     * Adds a note to an order.
+     *
+     * @param orderId the identifier of the order
+     * @param text    the text of the note
+     * @return {@code true} if the note was accepted
+     */
+    Boolean addNote(String orderId, String text);
+
+    /**
+     * Adds a note to an order with an optional reference id (for two-way notes) and attachments.
+     *
+     * @param orderId     the identifier of the order
+     * @param text        the text of the note
+     * @param referenceId the reference id associated with the note, or {@code null}
+     * @param attachments references to previously uploaded attachments, or {@code null}
+     * @return {@code true} if the note was accepted
+     */
+    Boolean addNote(String orderId, String text, String referenceId, List<AttachmentReference> attachments);
+
+    /**
+     * Cancels an order.
+     *
+     * @param orderId the identifier of the order
+     * @param reason  the reason for cancellation
+     * @return {@code true} if the cancellation was accepted
+     */
+    Boolean cancel(String orderId, String reason);
+
+    /**
+     * Cancels an order, optionally restricting cancellation to specific order lines and
+     * attaching supporting documentation.
+     *
+     * @param orderId     the identifier of the order
+     * @param reason      the reason for cancellation
+     * @param attachments references to previously uploaded attachments, or {@code null}
+     * @param lineIds     the order line ids to cancel, or {@code null} to cancel the whole order
+     * @return {@code true} if the cancellation was accepted
+     */
+    Boolean cancel(String orderId, String reason, List<AttachmentReference> attachments, List<String> lineIds);
 }

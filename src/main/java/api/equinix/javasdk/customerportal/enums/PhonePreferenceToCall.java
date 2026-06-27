@@ -18,9 +18,14 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
-public enum SmartHandsStatus implements APIParam {
-    OPEN,
-    IN_PROGRESS,
-    COMPLETED,
-    CANCELLED
+/**
+ * Preferred time window to call a smart hands contact's phone number. {@code BUSINESS_HOURS}
+ * is deprecated and will be removed in a future release.
+ */
+public enum PhonePreferenceToCall implements APIParam {
+    NEVER,
+    ANYTIME,
+    MY_BUSINESS_HOURS,
+    IBX_BUSINESS_HOURS,
+    BUSINESS_HOURS
 }

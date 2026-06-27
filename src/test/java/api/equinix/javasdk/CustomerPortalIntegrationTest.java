@@ -7,13 +7,17 @@ import api.equinix.javasdk.customerportal.model.CrossConnect;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.Order;
+import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.Shipment;
-import api.equinix.javasdk.customerportal.model.SmartHands;
+import api.equinix.javasdk.customerportal.model.SmartHandType;
+import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.WorkVisit;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -81,20 +85,22 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List orders and get by UUID")
-        void listOrders() {
+        @DisplayName("Get order by id and retrieve its negotiations")
+        void getOrder() {
             try {
-                PaginatedList<Order> items = timedCall("CustomerPortal", "list", "Order", "GET",
-                        () -> client.orders().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
+                // Orders v2 has no list/create; discover an order id via order history.
+                PaginatedList<OrderHistoryItem> history = timedCall("CustomerPortal", "list", "OrderHistoryItem", "GET",
+                        () -> client.orderHistory().list());
+                assertNotNull(history);
 
-                if (items.size() > 0) {
-                    Order item = timedCall("CustomerPortal", "getByUuid", "Order", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.orders().getByUuid(items.get(0).getUuid()));
+                if (history.size() > 0) {
+                    String orderId = history.get(0).getOrderNumber();
+                    Order item = timedCall("CustomerPortal", "getByUuid", "Order", "GET", orderId,
+                            () -> client.orders().getByUuid(orderId));
                     assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
+
+                    assertNotNull(timedCall("CustomerPortal", "getNegotiations", "OrderNegotiation", "GET", orderId,
+                            () -> client.orders().getNegotiations(orderId)));
                 }
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Orders test skipped: " + e.getMessage());
@@ -144,21 +150,16 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List smart hands requests and get by UUID")
-        void listSmartHandsRequests() {
+        @DisplayName("List smart hands types and locations")
+        void listSmartHandsReferenceData() {
             try {
-                PaginatedList<SmartHands> items = timedCall("CustomerPortal", "list", "SmartHands", "GET",
-                        () -> client.smartHandsRequests().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
+                List<? extends SmartHandType> types = timedCall("CustomerPortal", "listTypes", "SmartHandType", "GET",
+                        () -> client.smartHandsRequests().listTypes());
+                assertNotNull(types);
 
-                if (items.size() > 0) {
-                    SmartHands item = timedCall("CustomerPortal", "getByUuid", "SmartHands", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.smartHandsRequests().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
+                List<? extends SmartHandsLocation> locations = timedCall("CustomerPortal", "listLocations", "SmartHandsLocation", "GET",
+                        () -> client.smartHandsRequests().listLocations());
+                assertNotNull(locations);
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "SmartHandsRequests test skipped: " + e.getMessage());
             }

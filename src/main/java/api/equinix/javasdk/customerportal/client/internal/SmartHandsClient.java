@@ -16,21 +16,18 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.customerportal.model.SmartHands;
-import api.equinix.javasdk.customerportal.model.json.SmartHandsJson;
-import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsCreatorJson;
+import api.equinix.javasdk.customerportal.model.SmartHandResponse;
+import api.equinix.javasdk.customerportal.model.SmartHandType;
+import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
 
-public interface SmartHandsClient<T> extends Pageable<T> {
+import java.util.List;
 
-    Page<SmartHands, SmartHandsJson> list();
+public interface SmartHandsClient {
 
-    SmartHandsJson getByUuid(String uuid);
+    SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
 
-    SmartHandsJson create(SmartHandsCreatorJson smartHandsCreatorJson);
+    List<? extends SmartHandsLocation> listLocations();
 
-    SmartHandsJson update(String uuid, SmartHandsCreatorJson smartHandsCreatorJson);
-
-    SmartHandsJson refresh(String uuid);
+    List<? extends SmartHandType> listTypes();
 }

@@ -3,19 +3,28 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.NegotiationAction;
 import api.equinix.javasdk.customerportal.model.Order;
+import api.equinix.javasdk.customerportal.model.OrderNegotiation;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for CustomerPortal Orders.
+ * WireMock-based API tests for the CustomerPortal Orders v2 client, covering the
+ * {@code colocations/v2/orders} base path and the negotiations (GET/POST), notes (POST) and
+ * cancel (POST) sub-actions. The three POST actions return 202/204 with no body and surface
+ * as a {@code Boolean}.
  */
 class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
 
     static CustomerPortal customerPortal;
+
+    private static final String ORDER_ID = "1-23232322";
 
     @BeforeAll
     static void setUp() {
@@ -39,24 +48,118 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
     class GetByUuid {
 
         @Test
-        @DisplayName("returns order for valid UUID")
+        @DisplayName("hits the colocations/v2/orders path and returns the order")
         void returnsOrder() {
-            stubSingleton(wireMock, "/v2/orders/.*",
+            stubSingleton(wireMock, "/colocations/v2/orders/.*",
                     "/json/customerportal/order_response.json");
 
-            Order order = customerPortal.orders().getByUuid("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e");
+            Order order = customerPortal.orders().getByUuid(ORDER_ID);
+
             assertNotNull(order);
             assertEquals("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", order.getUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID)));
         }
 
         @Test
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
-            stubErrorInline(wireMock, "/v2/orders/.*",
+            stubErrorInline(wireMock, "/colocations/v2/orders/.*",
                     404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Order not found\"}]");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.orders().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getNegotiations()")
+    class GetNegotiations {
+
+        @Test
+        @DisplayName("returns the list of negotiation messages")
+        void returnsList() {
+            wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/negotiations"))
+                    .willReturn(okJson("[{\"referenceId\":\"4-12312312132\","
+                            + "\"proposedDateTime\":\"2020-08-25T11:24:10.282Z\","
+                            + "\"expedited\":false,\"message\":\"Alternative time proposed\"}]")));
+
+            List<? extends OrderNegotiation> negotiations = customerPortal.orders().getNegotiations(ORDER_ID);
+
+            assertNotNull(negotiations);
+            assertEquals(1, negotiations.size());
+            assertEquals("4-12312312132", negotiations.get(0).getReferenceId());
+            assertFalse(negotiations.get(0).getExpedited());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/negotiations")));
+        }
+    }
+
+    @Nested
+    @DisplayName("replyNegotiation()")
+    class ReplyNegotiation {
+
+        @Test
+        @DisplayName("posts the action and referenceId, returning true on 202")
+        void postsActionAndReferenceId() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/negotiations"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            Boolean result = customerPortal.orders().replyNegotiation(ORDER_ID, NegotiationAction.APPROVE, "4-9091830");
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/negotiations"))
+                    .withRequestBody(matchingJsonPath("$.action", equalTo("APPROVE")))
+                    .withRequestBody(matchingJsonPath("$.referenceId", equalTo("4-9091830"))));
+        }
+
+        @Test
+        @DisplayName("CANCEL includes the reason, returning true on 204")
+        void cancelIncludesReason() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/negotiations"))
+                    .willReturn(aResponse().withStatus(204)));
+
+            Boolean result = customerPortal.orders()
+                    .replyNegotiation(ORDER_ID, NegotiationAction.CANCEL, "4-9091830", "Cancelling the new time");
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/negotiations"))
+                    .withRequestBody(matchingJsonPath("$.action", equalTo("CANCEL")))
+                    .withRequestBody(matchingJsonPath("$.reason", equalTo("Cancelling the new time"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("addNote()")
+    class AddNote {
+
+        @Test
+        @DisplayName("posts the note text")
+        void postsText() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            Boolean result = customerPortal.orders().addNote(ORDER_ID, "problem description");
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
+                    .withRequestBody(matchingJsonPath("$.text", equalTo("problem description"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("cancel()")
+    class Cancel {
+
+        @Test
+        @DisplayName("posts the cancellation reason")
+        void postsReason() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            Boolean result = customerPortal.orders().cancel(ORDER_ID, "No longer required");
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
+                    .withRequestBody(matchingJsonPath("$.reason", equalTo("No longer required"))));
         }
     }
 
@@ -67,7 +170,7 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("401 throws EquinixAuthenticationException")
         void unauthorized() {
-            stubErrorInline(wireMock, "/v2/orders/.*",
+            stubErrorInline(wireMock, "/colocations/v2/orders/.*",
                     401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
 
             assertThrows(EquinixAuthenticationException.class,
@@ -77,7 +180,7 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
-            stubErrorInline(wireMock, "/v2/orders/.*",
+            stubErrorInline(wireMock, "/colocations/v2/orders/.*",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,

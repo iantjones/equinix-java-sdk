@@ -18,10 +18,13 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
-public enum SmartHandsType implements APIParam {
-    ESCORT,
-    CAGE_ESCORT,
+/**
+ * Scheduling option for a smart hands order. {@code EXPEDITED} requires a requested
+ * completion date; {@code SCHEDULED_MAINTENANCE} requires both a requested start and
+ * completion date.
+ */
+public enum SmartHandsScheduleType implements APIParam {
     STANDARD,
-    BREAKFIX,
-    CUSTOM
+    EXPEDITED,
+    SCHEDULED_MAINTENANCE
 }
