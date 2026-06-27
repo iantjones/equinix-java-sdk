@@ -17,6 +17,7 @@
 package api.equinix.javasdk.core.auth;
 
 import api.equinix.javasdk.core.util.ValidationUtils;
+import lombok.Getter;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 
@@ -26,6 +27,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
  * @author ianjones
  * @version $Id: $Id
  */
+@Getter
 public class EquinixStaticCredentialsProvider extends BasicCredentialsProvider {
 
     private EquinixCredentials credentials;
@@ -37,15 +39,6 @@ public class EquinixStaticCredentialsProvider extends BasicCredentialsProvider {
      */
     public EquinixStaticCredentialsProvider(EquinixCredentials credentials) {
         this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
-    }
-
-    /**
-     * <p>Getter for the field <code>credentials</code>.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.auth.EquinixCredentials} object.
-     */
-    public EquinixCredentials getCredentials() {
-        return credentials;
     }
 
     /**

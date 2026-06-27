@@ -18,6 +18,7 @@ package api.equinix.javasdk.core.auth;
 
 import api.equinix.javasdk.core.enums.GrantType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
  * Standard implementation of {@link EquinixCredentials} using OAuth2 client credentials.
@@ -35,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author ianjones
  * @version $Id: $Id
  */
+@Getter
 public class BasicEquinixCredentials implements EquinixCredentials {
 
     @JsonProperty("client_id")
@@ -56,26 +58,5 @@ public class BasicEquinixCredentials implements EquinixCredentials {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.grantType = GrantType.CLIENT_CREDENTIALS.toString();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getSecretKey() {
-        return secretKey;
-    }
-
-    /**
-     * Returns the OAuth2 grant type. Always returns {@code "client_credentials"}.
-     *
-     * @return the grant type string
-     */
-    public String getGrantType() {
-        return grantType;
     }
 }
