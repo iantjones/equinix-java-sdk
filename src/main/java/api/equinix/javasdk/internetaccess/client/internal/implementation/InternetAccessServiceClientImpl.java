@@ -16,47 +16,32 @@
 
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
 import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
-import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServiceCreatorJson;
-import api.equinix.javasdk.internetaccess.model.wrappers.InternetAccessServiceWrapper;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceRequest;
 
-public class InternetAccessServiceClientImpl extends ResourceClientBase<InternetAccessService, InternetAccessServiceJson> implements InternetAccessServiceClient<InternetAccessService> {
+/**
+ * Internal client implementation for the single Equinix Internet Access (EIA) v2 operation:
+ * {@code POST /internetAccess/v2/services}. The {@code ServiceV2} response is read-only, so the
+ * deserialized {@link InternetAccessServiceJson} (which implements {@link InternetAccessService}
+ * directly) is returned without a wrapper.
+ */
+public class InternetAccessServiceClientImpl extends ClientBase implements InternetAccessServiceClient {
 
     public InternetAccessServiceClientImpl(InternetAccessConfigImpl configClient) {
-        super(configClient, "InternetAccess", "Services", InternetAccessServiceJson.class);
+        super(configClient, "InternetAccess", "Services");
     }
 
-    @Override
-    protected InternetAccessService wrap(InternetAccessServiceJson json) {
-        return new InternetAccessServiceWrapper(json, this);
-    }
-
-    public Page<InternetAccessService, InternetAccessServiceJson> list() {
-        return listPage("ListServices");
-    }
-
-    public InternetAccessServiceJson getByUuid(String uuid) {
-        return getOne("GetService", uuid);
-    }
-
-    public InternetAccessServiceJson create(InternetAccessServiceCreatorJson internetAccessServiceCreatorJson) {
-        return postOne("CreateService", internetAccessServiceCreatorJson);
-    }
-
-    public InternetAccessServiceJson update(String uuid, InternetAccessServiceCreatorJson internetAccessServiceCreatorJson) {
-        return updateOne("UpdateService", uuid, internetAccessServiceCreatorJson);
-    }
-
-    public InternetAccessServiceJson delete(String uuid) {
-        return deleteOne("DeleteService", uuid);
-    }
-
-    public InternetAccessServiceJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    public InternetAccessService create(ServiceRequest serviceRequest) {
+        EquinixRequest<InternetAccessServiceJson> equinixRequest =
+                buildRequest("CreateService", RequestType.SINGLE, InternetAccessServiceJson.class);
+        Utils.serializeJson(equinixRequest, serviceRequest);
+        return Utils.handleSingletonResponse(invoke(equinixRequest), equinixRequest);
     }
 }

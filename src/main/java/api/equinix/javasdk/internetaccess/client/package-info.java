@@ -15,12 +15,11 @@
  */
 
 /**
- * Internet Access client interfaces for the Equinix Java SDK. Provides typed
- * access to Equinix Internet Access resource management including Services for
- * managing internet access service instances, Ports for physical and virtual port
- * configuration, and RoutingConfigs for BGP and static routing configuration on
- * internet access circuits. Each interface defines list, get, create, and update
- * operations as appropriate for the resource type.
+ * Internet Access client interfaces for the Equinix Java SDK. Provides typed access to the
+ * Equinix Internet Access (EIA) v2 API, which exposes a single operation — creating a service
+ * via {@code POST /internetAccess/v2/services}. The service connections, IP blocks and routing
+ * configuration (direct, static or BGP) are all supplied as a single nested request body
+ * assembled through the service builder.
  *
  * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfig
  * @see api.equinix.javasdk.InternetAccess

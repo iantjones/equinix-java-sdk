@@ -16,21 +16,25 @@
 
 package api.equinix.javasdk.internetaccess.model.json.creators;
 
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.internetaccess.client.internal.implementation.InternetAccessServiceClientImpl;
-import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceType;
+import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
+import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
-import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
-import api.equinix.javasdk.internetaccess.model.wrappers.InternetAccessServiceWrapper;
 import lombok.Getter;
 
-public class InternetAccessServiceOperator extends ResourceImpl<InternetAccessService> {
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Fluent builder for the nested {@link ServiceRequest} body of an Equinix Internet Access
+ * (EIA) v2 service create. The routing protocol, IP blocks, customer routes and peerings are
+ * all assembled into the single request body submitted by {@link InternetAccessServiceBuilder#create()}.
+ */
+public class InternetAccessServiceOperator {
 
     @Getter
-    private final Pageable<InternetAccessService> serviceClient;
+    private final InternetAccessServiceClient serviceClient;
 
-    public InternetAccessServiceOperator(Pageable<InternetAccessService> serviceClient) {
+    public InternetAccessServiceOperator(InternetAccessServiceClient serviceClient) {
         this.serviceClient = serviceClient;
     }
 
@@ -41,34 +45,78 @@ public class InternetAccessServiceOperator extends ResourceImpl<InternetAccessSe
     @Getter
     public class InternetAccessServiceBuilder {
         private String name;
-        private InternetAccessServiceType type;
-        private Integer bandwidth;
-        private String ibx;
+        private String description;
+        private ServiceTypeV2 type;
+        private List<String> tags;
+        private List<String> connections = new ArrayList<>();
+        private RoutingProtocolRequest routingProtocol;
+        private ServiceOrderRequest order;
 
         public InternetAccessServiceBuilder name(String name) {
             this.name = name;
             return this;
         }
 
-        public InternetAccessServiceBuilder type(InternetAccessServiceType type) {
+        public InternetAccessServiceBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public InternetAccessServiceBuilder type(ServiceTypeV2 type) {
             this.type = type;
             return this;
         }
 
-        public InternetAccessServiceBuilder bandwidth(Integer bandwidth) {
-            this.bandwidth = bandwidth;
+        public InternetAccessServiceBuilder tags(List<String> tags) {
+            this.tags = tags;
             return this;
         }
 
-        public InternetAccessServiceBuilder ibx(String ibx) {
-            this.ibx = ibx;
+        /**
+         * Sets the collection of service connection uuids (1 or 2 entries).
+         *
+         * @param connections the connection uuids
+         * @return this builder
+         */
+        public InternetAccessServiceBuilder connections(List<String> connections) {
+            this.connections = connections;
+            return this;
+        }
+
+        /**
+         * Adds a single service connection uuid (the service supports 1 or 2 connections).
+         *
+         * @param connectionUuid the connection uuid
+         * @return this builder
+         */
+        public InternetAccessServiceBuilder connection(String connectionUuid) {
+            if (this.connections == null) {
+                this.connections = new ArrayList<>();
+            }
+            this.connections.add(connectionUuid);
+            return this;
+        }
+
+        /**
+         * Sets the nested routing protocol — one of {@link DirectRoutingProtocolRequest},
+         * {@link StaticRoutingProtocolRequest} or {@link BgpRoutingProtocolRequest}.
+         *
+         * @param routingProtocol the routing protocol request
+         * @return this builder
+         */
+        public InternetAccessServiceBuilder routingProtocol(RoutingProtocolRequest routingProtocol) {
+            this.routingProtocol = routingProtocol;
+            return this;
+        }
+
+        public InternetAccessServiceBuilder order(ServiceOrderRequest order) {
+            this.order = order;
             return this;
         }
 
         public InternetAccessService create() {
-            InternetAccessServiceCreatorJson creatorJson = new InternetAccessServiceCreatorJson(this);
-            InternetAccessServiceJson internetAccessServiceJson = ((InternetAccessServiceClientImpl) InternetAccessServiceOperator.this.getServiceClient()).create(creatorJson);
-            return new InternetAccessServiceWrapper(internetAccessServiceJson, InternetAccessServiceOperator.this.getServiceClient());
+            ServiceRequest serviceRequest = new ServiceRequest(this);
+            return InternetAccessServiceOperator.this.getServiceClient().create(serviceRequest);
         }
     }
 }

@@ -17,9 +17,8 @@
 package api.equinix.javasdk.internetaccess.client;
 
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.model.InternetAccessService;
 
 public interface InternetAccessConfig {
 
-    InternetAccessServiceClient<InternetAccessService> getInternetAccessServiceClient();
+    InternetAccessServiceClient getInternetAccessServiceClient();
 }

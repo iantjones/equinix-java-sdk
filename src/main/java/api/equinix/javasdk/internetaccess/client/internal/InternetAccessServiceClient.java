@@ -16,23 +16,14 @@
 
 package api.equinix.javasdk.internetaccess.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
-import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
-import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServiceCreatorJson;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceRequest;
 
-public interface InternetAccessServiceClient<T> extends Pageable<T> {
+/**
+ * Internal client for the single Equinix Internet Access (EIA) v2 operation:
+ * {@code POST /internetAccess/v2/services}.
+ */
+public interface InternetAccessServiceClient {
 
-    Page<InternetAccessService, InternetAccessServiceJson> list();
-
-    InternetAccessServiceJson getByUuid(String uuid);
-
-    InternetAccessServiceJson create(InternetAccessServiceCreatorJson internetAccessServiceCreatorJson);
-
-    InternetAccessServiceJson update(String uuid, InternetAccessServiceCreatorJson internetAccessServiceCreatorJson);
-
-    InternetAccessServiceJson delete(String uuid);
-
-    InternetAccessServiceJson refresh(String uuid);
+    InternetAccessService create(ServiceRequest serviceRequest);
 }

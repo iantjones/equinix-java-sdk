@@ -18,8 +18,16 @@ package api.equinix.javasdk.internetaccess.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
-public enum InternetAccessServiceType implements APIParam {
-    DEDICATED,
-    BURSTABLE,
-    METERED
+/**
+ * Lifecycle state of an Equinix Internet Access (EIA) v2 service.
+ */
+public enum ServiceState implements APIParam {
+    DRAFT,
+    PENDING,
+    PROVISIONING,
+    ACTIVE,
+    INACTIVE,
+    DEPROVISIONING,
+    DEPROVISIONED,
+    FAILED
 }

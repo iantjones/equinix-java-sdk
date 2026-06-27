@@ -18,9 +18,12 @@ package api.equinix.javasdk.internetaccess.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
-public enum InternetAccessServiceState implements APIParam {
-    PROVISIONING,
-    ACTIVE,
-    DEPROVISIONING,
-    DEPROVISIONED
+/**
+ * Denotes which routes should be advertised to the internet for a BGP routing protocol.
+ */
+public enum ExportPolicy implements APIParam {
+    FULL,
+    DEFAULT,
+    FULL_DEFAULT,
+    PARTIAL
 }

@@ -17,36 +17,19 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessServices;
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.model.InternetAccessService;
-import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
 import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServiceOperator;
-import api.equinix.javasdk.internetaccess.model.wrappers.InternetAccessServiceWrapper;
 
 public class InternetAccessServicesImpl implements InternetAccessServices {
 
     private final InternetAccess serviceManager;
 
-    private final InternetAccessServiceClient<InternetAccessService> serviceClient;
+    private final InternetAccessServiceClient serviceClient;
 
-    public InternetAccessServicesImpl(InternetAccessServiceClient<InternetAccessService> serviceClient, InternetAccess serviceManager) {
+    public InternetAccessServicesImpl(InternetAccessServiceClient serviceClient, InternetAccess serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
-    }
-
-    public PaginatedList<InternetAccessService> list() {
-        Page<InternetAccessService, InternetAccessServiceJson> responsePage = this.serviceClient.list();
-        PaginatedList<InternetAccessService> internetAccessServiceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, InternetAccessServiceWrapper::new);
-        return new PaginatedList<>(internetAccessServiceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
-    }
-
-    public InternetAccessService getByUuid(String uuid) {
-        InternetAccessServiceJson internetAccessServiceJson = this.serviceClient.getByUuid(uuid);
-        return new InternetAccessServiceWrapper(internetAccessServiceJson, this.serviceClient);
     }
 
     public InternetAccessServiceOperator.InternetAccessServiceBuilder define() {

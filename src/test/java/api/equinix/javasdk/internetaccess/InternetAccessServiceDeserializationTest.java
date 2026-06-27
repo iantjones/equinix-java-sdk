@@ -1,6 +1,8 @@
 package api.equinix.javasdk.internetaccess;
 
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.internetaccess.enums.ServiceState;
+import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,7 +13,8 @@ import java.io.InputStream;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Deserialization tests for {@link InternetAccessServiceJson}.
+ * Deserialization tests for {@link InternetAccessServiceJson}, the read-only {@code ServiceV2}
+ * response returned when creating an Equinix Internet Access (EIA) v2 service.
  */
 class InternetAccessServiceDeserializationTest {
 
@@ -29,31 +32,21 @@ class InternetAccessServiceDeserializationTest {
 
     @Test
     void uuid_isDeserialized() {
-        assertNotNull(service.getUuid());
-    }
-
-    @Test
-    void name_isDeserialized() {
-        assertNotNull(service.getName());
+        assertEquals("e1f2a3b4-c5d6-4e7f-8091-021324354657", service.getUuid());
     }
 
     @Test
     void type_isDeserialized() {
-        assertNotNull(service.getType());
+        assertEquals(ServiceTypeV2.SINGLE, service.getType());
     }
 
     @Test
     void bandwidth_isDeserialized() {
-        assertNotNull(service.getBandwidth());
-    }
-
-    @Test
-    void ibx_isDeserialized() {
-        assertNotNull(service.getIbx());
+        assertEquals(Integer.valueOf(1000), service.getBandwidth());
     }
 
     @Test
     void state_isDeserialized() {
-        assertNotNull(service.getState());
+        assertEquals(ServiceState.ACTIVE, service.getState());
     }
 }

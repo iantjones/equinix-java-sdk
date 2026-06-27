@@ -16,26 +16,36 @@
 
 package api.equinix.javasdk.internetaccess.model;
 
-import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceState;
-import api.equinix.javasdk.internetaccess.enums.InternetAccessServiceType;
+import api.equinix.javasdk.internetaccess.enums.ServiceState;
+import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 
+/**
+ * An Equinix Internet Access (EIA) v2 service, as returned by
+ * {@code POST /internetAccess/v2/services}.
+ *
+ * <p>This is a read-only response view; the nested IP blocks and routing configuration are
+ * supplied at creation time through the
+ * {@link api.equinix.javasdk.internetaccess.client.InternetAccessServices#define() builder}.</p>
+ */
 public interface InternetAccessService {
 
+    /**
+     * @return the unique identifier of the service
+     */
     String getUuid();
 
-    String getName();
+    /**
+     * @return the topology of the service ({@code SINGLE} or {@code DUAL})
+     */
+    ServiceTypeV2 getType();
 
-    InternetAccessServiceType getType();
-
-    String getStatus();
-
+    /**
+     * @return service bandwidth in Mbps
+     */
     Integer getBandwidth();
 
-    String getIbx();
-
-    InternetAccessServiceState getState();
-
-    Boolean delete();
-
-    void refresh();
+    /**
+     * @return the lifecycle state of the service
+     */
+    ServiceState getState();
 }
