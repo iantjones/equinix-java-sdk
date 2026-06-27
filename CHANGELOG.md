@@ -26,6 +26,17 @@ were removed and the value-add engines moved to dedicated top-level modules.
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
   instead of silently dispatching a malformed request.
 - **WireMock coverage** for 30+ previously-untested resources (request-contract `verify(...)`).
+- **Fabric Connection validation**: `Connections.validate(FilterPropertyList)` →
+  `POST /connections/validate` (validate a provider auth key or VLAN availability before creating).
+- **Fabric Metrics API**: `Fabric.metrics().search(...)` (`POST /metrics/search`) plus per-asset
+  `Connections.getMetrics(...)` / `Ports.getMetrics(...)` (`GET /{uuid}/metrics`) — the successor to
+  the deprecated `/stats` statistics endpoints.
+- **Customer Portal Orders actions**: `getNegotiations`/`replyNegotiation`/`addNote`/`cancel` on
+  `Orders` (the real `colocations/v2` order sub-actions).
+- **Customer Portal SmartHands** typed order builders: 12 typed creates
+  (`createEquipmentInstall`, `createShipmentUnpack`, …) plus `listTypes()`/`listLocations()`.
+- **Typed async waiter** (`ResourceWaiter`): poll a resource until a target state
+  (`PROVISIONING`→`PROVISIONED`), with timeout/failure conditions.
 
 ### Changed
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
@@ -45,6 +56,22 @@ were removed and the value-add engines moved to dedicated top-level modules.
   `POST /routeAggregations/search` (the only endpoint the API provides), returning a
   `PaginatedFilteredList`; the old `list()` targeted a non-existent GET path and threw at runtime.
 - **JSON Patch support in core**: per-request content-type + `PatchOperation` model + `patchOne`.
+- **Connection `update()`** exposed (`PATCH /connections/{uuid}`, JSON Patch) — previously
+  plumbed but unreachable.
+- **Customer Portal Orders → EIA-correct shape** (breaking): base path corrected to
+  `colocations/v2/orders`; the fictional `Orders.list()`/`create()` (no such ops in `ordersv2`;
+  listing lives in `OrderHistory`) were removed.
+- **Customer Portal SmartHands reshape** (breaking): the generic `list/get/create/update` CRUD
+  (which the API does not provide) is replaced by the 12 typed order builders + `listTypes`/
+  `listLocations`; `SmartHands`/`SmartHandsType`/`SmartHandsStatus` removed.
+- **InternetAccess → EIA v2** (breaking): collapsed to the single nested
+  `POST /internetAccess/v2/services` create (`ServiceRequest` with nested routing-protocol/IP-block
+  body); the prior 5-op v1 CRUD shape is gone; enums renamed to `ServiceTypeV2`/`ServiceState`.
+
+### Deprecated
+- **`Connections.getStatistics(...)` / `Ports.getStatistics(...)`** (the `/stats` endpoints, marked
+  deprecated upstream) → use `getMetrics(...)` / `Fabric.metrics().search(...)`. The `/stats` wiring
+  remains for back-compat.
 
 ### Fixed
 - **~20 endpoint-name mismatches** where client code referenced endpoints absent from

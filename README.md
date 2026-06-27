@@ -1343,8 +1343,13 @@ PaginatedList<InvoiceSummary> invoices = portal.invoices().summaries();
 // List work visits
 PaginatedList<WorkVisit> visits = portal.workVisits().list();
 
-// List smart hands requests
-PaginatedList<SmartHands> smartHands = portal.smartHandsRequests().list();
+// SmartHands: discover order types/locations, then place a typed order
+List<? extends SmartHandType> types = portal.smartHandsRequests().listTypes();
+List<? extends SmartHandsLocation> locations = portal.smartHandsRequests().listLocations();
+
+// The request body (ibxLocation, contacts, schedule, serviceDetails) is built via
+// SmartHandsRequestJson; one create method per order type:
+SmartHandResponse order = portal.smartHandsRequests().createEquipmentInstall(smartHandsRequest);
 ```
 
 ### Observability: Chaining Resources
