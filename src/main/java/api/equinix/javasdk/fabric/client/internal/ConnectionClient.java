@@ -24,6 +24,8 @@ import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.Metric;
+import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
@@ -43,6 +45,14 @@ import java.util.List;
 public interface ConnectionClient<T> extends PageablePost<T> {
 
     Page<Connection, ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * <p>Validates connections against the supplied filter (auth key or VLAN availability).</p>
+     *
+     * @param filter a {@link api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList} object.
+     * @return a {@link java.util.List} of {@link api.equinix.javasdk.fabric.model.ValidateConnectionResult} objects.
+     */
+    List<ValidateConnectionResult> validate(FilterPropertyList filter);
 
     ConnectionJson getByUuid(String uuid);
 
@@ -66,6 +76,17 @@ public interface ConnectionClient<T> extends PageablePost<T> {
      * @return a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
      */
     ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
+
+    /**
+     * <p>Retrieves metrics for a single connection over the supplied time range.</p>
+     *
+     * @param uuid a {@link java.lang.String} object.
+     * @param name the metric name to retrieve, or {@code null} for all metrics.
+     * @param fromDateTime a {@link java.time.LocalDateTime} object.
+     * @param toDateTime a {@link java.time.LocalDateTime} object.
+     * @return a {@link java.util.List} of {@link api.equinix.javasdk.fabric.model.Metric} objects.
+     */
+    List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 
     /**
      * <p>refreshStatistics.</p>

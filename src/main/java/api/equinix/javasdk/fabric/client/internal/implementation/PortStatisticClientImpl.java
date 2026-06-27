@@ -17,18 +17,25 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
+import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
 import api.equinix.javasdk.fabric.enums.StatisticDuration;
+import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.PortStatistic;
+import api.equinix.javasdk.fabric.model.json.MetricJson;
 import api.equinix.javasdk.fabric.model.json.PortStatisticJson;
 import api.equinix.javasdk.fabric.model.wrappers.PortStatisticWrapper;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,5 +74,25 @@ public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, P
 
     public PortStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return getStatistics(uuid, startDateTime, endDateTime);
+    }
+
+    /** {@inheritDoc} */
+    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        if (name != null) {
+            Utils.addAdditionalValue(qParams, "name", name);
+        }
+        if (fromDateTime != null) {
+            Utils.addAdditionalValue(qParams, "fromDateTime", Utils.dateTimeForQuery(fromDateTime));
+        }
+        if (toDateTime != null) {
+            Utils.addAdditionalValue(qParams, "toDateTime", Utils.dateTimeForQuery(toDateTime));
+        }
+
+        EquinixRequest<Metric> equinixRequest = buildRequest("GetMetrics", RequestType.PAGINATED,
+                Map.of("uuid", uuid), qParams, MetricJson.getPagedTypeRef());
+        EquinixResponse<Metric> equinixResponse = invoke(equinixRequest);
+        Page<Metric, MetricJson> page = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 }

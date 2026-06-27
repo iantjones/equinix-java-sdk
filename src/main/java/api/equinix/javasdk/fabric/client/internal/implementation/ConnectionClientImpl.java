@@ -17,8 +17,11 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
+import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.enums.Side;
@@ -26,15 +29,22 @@ import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.Metric;
+import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
+import api.equinix.javasdk.fabric.model.implementation.ConnectionValidationRequest;
 import api.equinix.javasdk.fabric.model.implementation.ManageConnection;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson;
+import api.equinix.javasdk.fabric.model.json.ConnectionValidationResponseJson;
+import api.equinix.javasdk.fabric.model.json.MetricJson;
 import api.equinix.javasdk.fabric.model.json.creators.ConnectionCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +68,14 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
 
     public Page<Connection, ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchConnections", new FilteredSortedPaginatedPost<>(filter, sort));
+    }
+
+    public List<ValidateConnectionResult> validate(FilterPropertyList filter) {
+        ConnectionValidationResponseJson response = postForType("ValidateConnections",
+                new ConnectionValidationRequest(filter), ConnectionValidationResponseJson.getSingleTypeRef());
+        return (response != null && response.getData() != null)
+                ? List.copyOf(response.getData())
+                : Collections.<ValidateConnectionResult>emptyList();
     }
 
     public ConnectionJson getByUuid(String uuid) {
@@ -104,5 +122,25 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
 
     public ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
         return this.getStatistics(uuid, startDateTime, endDateTime, viewPoint);
+    }
+
+    /** {@inheritDoc} */
+    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        if (name != null) {
+            Utils.addAdditionalValue(qParams, "name", name);
+        }
+        if (fromDateTime != null) {
+            Utils.addAdditionalValue(qParams, "fromDateTime", Utils.dateTimeForQuery(fromDateTime));
+        }
+        if (toDateTime != null) {
+            Utils.addAdditionalValue(qParams, "toDateTime", Utils.dateTimeForQuery(toDateTime));
+        }
+
+        EquinixRequest<Metric> equinixRequest = buildRequest("GetMetrics", RequestType.PAGINATED,
+                Map.of("uuid", uuid), qParams, MetricJson.getPagedTypeRef());
+        EquinixResponse<Metric> equinixResponse = invoke(equinixRequest);
+        Page<Metric, MetricJson> page = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 }

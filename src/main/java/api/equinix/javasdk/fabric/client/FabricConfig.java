@@ -62,6 +62,13 @@ public interface FabricConfig {
      */
     ConnectionClient<Connection> getConnectionsClient();
 
+    /**
+     * <p>getMetricsClient.</p>
+     *
+     * @return a {@link MetricClient} object.
+     */
+    MetricClient<Metric> getMetricsClient();
+
     PricingClient<Pricing> getPricingClient();
 
     /**

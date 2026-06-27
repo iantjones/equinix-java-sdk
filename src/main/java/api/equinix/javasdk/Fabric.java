@@ -89,6 +89,8 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
 
     private Connections connections;
 
+    private Metrics metrics;
+
     private Prices prices;
 
     private ServiceProfiles serviceProfiles;
@@ -204,6 +206,20 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
             this.connections = new ConnectionsImpl(this.fabricConfig.getConnectionsClient());
         }
         return connections;
+    }
+
+    /**
+     * Returns the client for querying Equinix Fabric metrics.
+     * The Metrics API provides time-series measurements (such as bandwidth usage) for Fabric
+     * assets and supersedes the deprecated per-asset {@code /stats} statistics endpoints.
+     *
+     * @return the {@link Metrics} client for searching Fabric metrics
+     */
+    public Metrics metrics() {
+        if (this.metrics == null) {
+            this.metrics = new MetricsImpl(this.fabricConfig.getMetricsClient());
+        }
+        return metrics;
     }
 
     /**
