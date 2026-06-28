@@ -25,11 +25,12 @@ import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.Setup;
 import api.equinix.javasdk.networkedge.client.internal.*;
+import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
+import api.equinix.javasdk.networkedge.enums.FileProcessType;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Account;
 import api.equinix.javasdk.networkedge.model.Metro;
 import api.equinix.javasdk.networkedge.model.implementation.AgreementStatus;
-import api.equinix.javasdk.networkedge.model.implementation.DNSLookup;
 import api.equinix.javasdk.networkedge.model.json.AccountJson;
 import api.equinix.javasdk.networkedge.model.json.MetroJson;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
@@ -39,7 +40,6 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -60,29 +60,29 @@ public class SetupImpl implements Setup {
 
     private final AccountClient<Account> serviceClientAccounts;
     private final MetroClient<Metro> serviceClientMetros;
-    private final DNSClient<DNSLookup> serviceClientDNS;
     private final AgreementClient serviceClientAgreements;
     private final PricingClient serviceClientPricing;
+    private final FilesClient serviceClientFiles;
 
     /**
      * <p>Constructor for SetupImpl.</p>
      *
      * @param serviceClientAccounts a {@link api.equinix.javasdk.networkedge.client.internal.AccountClient} object.
      * @param serviceClientMetros a {@link api.equinix.javasdk.networkedge.client.internal.MetroClient} object.
-     * @param serviceClientDNS a {@link api.equinix.javasdk.networkedge.client.internal.DNSClient} object.
      * @param serviceClientAgreements a {@link api.equinix.javasdk.networkedge.client.internal.AgreementClient} object.
      * @param serviceClientPricing a {@link api.equinix.javasdk.networkedge.client.internal.PricingClient} object.
+     * @param serviceClientFiles a {@link api.equinix.javasdk.networkedge.client.internal.FilesClient} object.
      * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
      */
     public SetupImpl(AccountClient<Account> serviceClientAccounts, MetroClient<Metro> serviceClientMetros,
-                     DNSClient<DNSLookup> serviceClientDNS, AgreementClient serviceClientAgreements,
-                     PricingClient serviceClientPricing, NetworkEdge serviceManager) {
+                     AgreementClient serviceClientAgreements, PricingClient serviceClientPricing,
+                     FilesClient serviceClientFiles, NetworkEdge serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClientAccounts = serviceClientAccounts;
         this.serviceClientMetros = serviceClientMetros;
-        this.serviceClientDNS = serviceClientDNS;
         this.serviceClientAgreements = serviceClientAgreements;
         this.serviceClientPricing = serviceClientPricing;
+        this.serviceClientFiles = serviceClientFiles;
     }
 
     /** {@inheritDoc} */
@@ -143,15 +143,6 @@ public class SetupImpl implements Setup {
         return new PaginatedList<>(metroList, this.serviceClientMetros, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>dnsLookup.</p>
-     */
-    public Map<String, DNSLookup> dnsLookup(RequestBuilder.DNSLookup requestBuilder) {
-        return this.serviceClientDNS.dnsLookup(requestBuilder);
-    }
-
     /** {@inheritDoc} */
     public AgreementStatus getAgreementStatus(String accountNumber) {
         return serviceClientAgreements.getAgreementStatus(accountNumber);
@@ -197,5 +188,12 @@ public class SetupImpl implements Setup {
 
     public byte[] getOrderSummary(RequestBuilder.OrderSummary requestBuilder) {
         return serviceClientAccounts.getOrderSummary(requestBuilder);
+    }
+
+    /** {@inheritDoc} */
+    public String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
+                             DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents) {
+        return serviceClientFiles.uploadFile(metroCode, deviceTypeCode, processType,
+                deviceManagementType, licenseType, fileContents);
     }
 }

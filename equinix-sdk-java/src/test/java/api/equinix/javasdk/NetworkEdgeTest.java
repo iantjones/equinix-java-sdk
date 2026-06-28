@@ -87,8 +87,7 @@ class NetworkEdgeTest {
             assertTrue(publicKeys.size() >= 0);
 
             if (publicKeys.size() > 0) {
-                PublicKey publicKey = networkEdge.publicKeys().getByUuid(publicKeys.get(0).getUuid());
-                assertNotNull(publicKey);
+                assertNotNull(publicKeys.get(0).getUuid());
             }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Public keys test skipped: " + e.getMessage());
@@ -109,22 +108,6 @@ class NetworkEdgeTest {
             }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Device links test skipped: " + e.getMessage());
-        }
-    }
-
-    @Test
-    void sshUsers() {
-        try {
-            PaginatedList<SSHUser> sshUsers = networkEdge.sshUsers().list();
-            assertNotNull(sshUsers);
-            assertTrue(sshUsers.size() >= 0);
-
-            if (sshUsers.size() > 0) {
-                SSHUser sshUser = networkEdge.sshUsers().getByUuid(sshUsers.get(0).getUuid());
-                assertNotNull(sshUser);
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "SSH users test skipped: " + e.getMessage());
         }
     }
 

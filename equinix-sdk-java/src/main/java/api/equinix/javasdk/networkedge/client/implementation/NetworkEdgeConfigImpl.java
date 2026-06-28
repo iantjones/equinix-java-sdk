@@ -21,15 +21,11 @@ import api.equinix.javasdk.core.client.EquinixClient;
 import api.equinix.javasdk.networkedge.client.NetworkEdgeConfig;
 import api.equinix.javasdk.networkedge.client.internal.ACLTemplateClient;
 import api.equinix.javasdk.networkedge.client.internal.BGPPeeringClient;
-import api.equinix.javasdk.networkedge.client.internal.DNSClient;
-import api.equinix.javasdk.networkedge.client.internal.SSHUserClient;
 import api.equinix.javasdk.networkedge.client.internal.VPNClient;
 import api.equinix.javasdk.networkedge.client.internal.implementation.*;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
-import api.equinix.javasdk.networkedge.model.SSHUser;
 import api.equinix.javasdk.networkedge.model.VPN;
-import api.equinix.javasdk.networkedge.model.implementation.DNSLookup;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -56,19 +52,17 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
     
     private final DeviceLinkClientImpl deviceLinksClient;
 
-    private final SSHUserClientImpl sshUserClient;
-
     private final ACLTemplateClientImpl aclTemplateClient;
 
     private final VPNClientImpl vpnClient;
-
-    private final DNSClientImpl dnsClient;
 
     private final BGPPeeringClientImpl bgpClient;
 
     private final BackupClientImpl backupClient;
 
     private final PricingClientImpl pricingClient;
+
+    private final FilesClientImpl filesClient;
 
     /**
      * <p>Constructor for NetworkEdgeConfigImpl.</p>
@@ -84,20 +78,12 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
         this.deviceTypesClient = new DeviceTypeClientImpl(this);
         this.publicKeysClient = new PublicKeyClientImpl(this);
         this.deviceLinksClient = new DeviceLinkClientImpl(this);
-        this.sshUserClient = new SSHUserClientImpl(this);
         this.aclTemplateClient = new ACLTemplateClientImpl(this);
         this.vpnClient = new VPNClientImpl(this);
-        this.dnsClient = new DNSClientImpl(this);
         this.bgpClient = new BGPPeeringClientImpl(this);
         this.backupClient = new BackupClientImpl(this);
         this.pricingClient = new PricingClientImpl(this);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    @JsonProperty("sSHUserClient")
-    public SSHUserClient<SSHUser> getSSHUserClient() {
-        return sshUserClient;
+        this.filesClient = new FilesClientImpl(this);
     }
 
     /** {@inheritDoc} */
@@ -105,13 +91,6 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
     @JsonProperty("aCLTemplateClient")
     public ACLTemplateClient<ACLTemplate> getACLTemplateClient() {
         return aclTemplateClient;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    @JsonProperty("aCLTemplateClient")
-    public DNSClient<DNSLookup> getDNSClient() {
-        return dnsClient;
     }
 
     /** {@inheritDoc} */

@@ -14,26 +14,21 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.networkedge.client.internal;
+package api.equinix.javasdk.networkedge.enums;
 
-import api.equinix.javasdk.networkedge.client.RequestBuilder;
-import api.equinix.javasdk.networkedge.model.implementation.DNSLookup;
-
-import java.util.Map;
+import api.equinix.javasdk.core.model.APIParam;
 
 /**
- * <p>DNSClient interface.</p>
+ * <p>The provisioning status of an ACL template on a virtual device.</p>
  *
  * @author ianjones
  * @version $Id: $Id
  */
-public interface DNSClient<T> {
-
-    /**
-     * <p>dnsLookup.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.DNSLookup} object.
-     * @return a {@link java.util.Map} object.
-     */
-    Map<String, DNSLookup> dnsLookup(RequestBuilder.DNSLookup requestBuilder);
+public enum DeviceACLStatus implements APIParam {
+    PROVISIONED,
+    DEPROVISIONED,
+    DEVICE_NOT_READY,
+    FAILED,
+    NOT_APPLIED,
+    PROVISIONING
 }

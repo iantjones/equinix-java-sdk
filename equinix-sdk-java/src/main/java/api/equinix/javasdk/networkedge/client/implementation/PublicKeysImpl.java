@@ -69,12 +69,6 @@ public class PublicKeysImpl implements PublicKeys {
     }
 
     /** {@inheritDoc} */
-    public PublicKey getByUuid(String uuid) {
-        PublicKeyJson publicKeyJson = serviceClient.getByUuid(uuid);
-        return new PublicKeyWrapper(publicKeyJson, this.serviceClient);
-    }
-
-    /** {@inheritDoc} */
     public PublicKeyOperator.PublicKeyBuilder define(String keyName, String keyValue) {
         return new PublicKeyOperator(this.serviceClient).create(keyName, keyValue);
     }

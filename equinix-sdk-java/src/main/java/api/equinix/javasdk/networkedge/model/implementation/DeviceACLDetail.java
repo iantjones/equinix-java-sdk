@@ -16,27 +16,42 @@
 
 package api.equinix.javasdk.networkedge.model.implementation;
 
+import api.equinix.javasdk.networkedge.enums.DeviceACLStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * <p>DNSLookup class.</p>
+ * <p>Details of an ACL template as applied to a virtual device, including its current
+ * provisioning {@link api.equinix.javasdk.networkedge.enums.DeviceACLStatus} on the device.</p>
  *
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
-public class DNSLookup {
+public class DeviceACLDetail {
 
-    @Getter static TypeReference<Map<String, DNSLookup>> singleTypeRef = new TypeReference<>() {};
+    @JsonProperty("name")
+    private String name;
 
-    @JsonProperty("cdn")
-    private Boolean cdn;
+    @JsonProperty("uuid")
+    private String uuid;
 
-    @JsonProperty("ips")
-    private List<String> ips;
+    @JsonProperty("description")
+    private String description;
+
+    @JsonProperty("inboundRules")
+    private List<InboundRule> inboundRules;
+
+    @JsonProperty("createdBy")
+    private String createdBy;
+
+    @JsonProperty("createdDateTime")
+    private String createdDateTime;
+
+    @JsonProperty("status")
+    private DeviceACLStatus status;
 }

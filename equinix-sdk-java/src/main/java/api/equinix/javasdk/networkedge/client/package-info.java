@@ -16,7 +16,7 @@
 
 /**
  * Network Edge client interfaces for the Equinix Java SDK. Provides typed access
- * to virtual network device management including Devices, DeviceLinks, SSHUsers,
+ * to virtual network device management including Devices, DeviceLinks,
  * VPNs, BGPPeerings, ACLTemplates, Backups, PublicKeys, DeviceTypes, Accounts,
  * and Metros. Each interface defines CRUD operations appropriate for the resource,
  * enabling provisioning and lifecycle management of Network Edge appliances.

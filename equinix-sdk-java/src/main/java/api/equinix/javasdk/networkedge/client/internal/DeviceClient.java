@@ -22,9 +22,12 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceCreatorJson;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceUpdaterJson;
 
 import java.util.List;
@@ -78,6 +81,51 @@ public interface DeviceClient<T> extends Pageable<T> {
      * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
      */
     DeviceJson updateAdditionalBandwidth(String uuid, Integer additionalBandwidth);
+
+    /**
+     * <p>softReboot.</p>
+     *
+     * @param uuid a {@link java.lang.String} object.
+     * @return a {@link java.lang.Boolean} object.
+     */
+    Boolean softReboot(String uuid);
+
+    /**
+     * <p>createRMA.</p>
+     *
+     * @param uuid a {@link java.lang.String} object.
+     * @param deviceRMARequest a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest} object.
+     * @return a {@link java.lang.Boolean} object.
+     */
+    Boolean createRMA(String uuid, DeviceRMARequest deviceRMARequest);
+
+    /**
+     * <p>getACL.</p>
+     *
+     * @param uuid a {@link java.lang.String} object.
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} object.
+     */
+    DeviceACL getACL(String uuid);
+
+    /**
+     * <p>addACL.</p>
+     *
+     * @param uuid a {@link java.lang.String} object.
+     * @param deviceACLRequest a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} object.
+     * @param accountUcmId a {@link java.lang.String} object.
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} object.
+     */
+    DeviceACL addACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId);
+
+    /**
+     * <p>updateACL.</p>
+     *
+     * @param uuid a {@link java.lang.String} object.
+     * @param deviceACLRequest a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} object.
+     * @param accountUcmId a {@link java.lang.String} object.
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} object.
+     */
+    DeviceACL updateACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId);
 
     /**
      * <p>ping.</p>

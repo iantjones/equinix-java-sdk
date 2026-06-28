@@ -24,9 +24,7 @@ import api.equinix.javasdk.core.util.ModelUtils;
 import api.equinix.javasdk.networkedge.enums.*;
 import api.equinix.javasdk.networkedge.model.implementation.SoftwarePackage;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,24 +45,6 @@ public class RequestBuilder {
      */
     public static RequestBuilder.Device device() {
         return new RequestBuilder.Device();
-    }
-
-    /**
-     * <p>sshUser.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.SSHUser} object.
-     */
-    public static SSHUser sshUser() {
-        return new SSHUser();
-    }
-
-    /**
-     * <p>dnsLookup.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.DNSLookup} object.
-     */
-    public static DNSLookup dnsLookup() {
-        return new DNSLookup();
     }
 
     /**
@@ -141,51 +121,6 @@ public class RequestBuilder {
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class SSHUser extends RequestBuilderBase<SSHUser> {
-
-        private String username;
-        private String deviceUuid;
-        private Boolean verbose;
-        private String accountUcmId;
-
-        protected SSHUser builder() {
-            return new SSHUser();
-        }
-
-        public SSHUser forUsername(String username) {
-            this.username = username;
-            return this;
-        }
-
-        public SSHUser forDeviceUuid(String deviceUuid) {
-            this.deviceUuid = deviceUuid;
-            return this;
-        }
-
-        public SSHUser verbose() {
-            this.verbose = true;
-            return this;
-        }
-
-        public SSHUser forAccount(String accountUcmId) {
-            this.accountUcmId = accountUcmId;
-            return this;
-        }
-
-        public SSHUser build() {
-            this.queryParameters = new HashMap<>();
-
-            this.queryParameters.put("username", ModelUtils.singleValueList(this.username));
-            this.queryParameters.put("virtualDeviceUuid", ModelUtils.singleValueList(this.deviceUuid));
-            this.queryParameters.put("verbose", ModelUtils.singleValueList(this.verbose));
-            this.queryParameters.put("accountUcmId", ModelUtils.singleValueList(this.accountUcmId));
-
-            this.wasBuilt = true;
-            return this;
-        }
-    }
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class DeviceLink extends RequestBuilderBase<DeviceLink> {
 
         private List<APIParam> metroCodes;
@@ -237,44 +172,6 @@ public class RequestBuilder {
 
             this.wasBuilt = true;
             return this;
-        }
-    }
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class DNSLookup extends RequestBuilderBase<DNSLookup> {
-
-        private List<String> fqdns;
-        private MetroCode metroCode;
-        @Getter  private DNSLookupRequest dnsLookupRequest;
-
-        protected DNSLookup builder() {
-            return new DNSLookup();
-        }
-
-        public DNSLookup forFqdn(String fqdn) {
-            if(this.fqdns == null) {
-                this.fqdns = new ArrayList<>();
-            }
-            this.fqdns.add(fqdn);
-            return this;
-        }
-
-        public DNSLookup inMetro(MetroCode metroCode) {
-            this.metroCode = metroCode;
-            return this;
-        }
-
-        public DNSLookup build() {
-            dnsLookupRequest = new DNSLookupRequest(this.fqdns, this.metroCode);
-            this.wasBuilt = true;
-            return this;
-        }
-
-        @RequiredArgsConstructor
-        @Getter
-        public static class DNSLookupRequest {
-            private final List<String> fqdns;
-            private final MetroCode metroCode;
         }
     }
 

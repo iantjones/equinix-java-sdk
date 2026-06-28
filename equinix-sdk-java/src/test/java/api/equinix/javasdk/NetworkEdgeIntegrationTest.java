@@ -8,7 +8,6 @@ import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceLink;
 import api.equinix.javasdk.networkedge.model.DeviceType;
 import api.equinix.javasdk.networkedge.model.PublicKey;
-import api.equinix.javasdk.networkedge.model.SSHUser;
 import api.equinix.javasdk.networkedge.model.VPN;
 import org.junit.jupiter.api.*;
 
@@ -97,19 +96,6 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
                 }
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "DeviceLinks test skipped: " + e.getMessage());
-            }
-        }
-
-        @Test
-        @DisplayName("List SSH users returns valid response")
-        void listSSHUsers() {
-            try {
-                PaginatedList<SSHUser> items = timedCall("NetworkEdge", "list", "SSHUser", "GET",
-                        () -> client.sshUsers().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "SSHUsers test skipped: " + e.getMessage());
             }
         }
 

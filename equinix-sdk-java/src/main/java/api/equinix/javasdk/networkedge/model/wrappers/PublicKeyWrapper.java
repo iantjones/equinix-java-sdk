@@ -18,7 +18,6 @@ package api.equinix.javasdk.networkedge.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.networkedge.client.internal.implementation.PublicKeyClientImpl;
 import api.equinix.javasdk.networkedge.model.PublicKey;
 import api.equinix.javasdk.networkedge.model.json.PublicKeyJson;
 import lombok.Getter;
@@ -46,24 +45,5 @@ public class PublicKeyWrapper extends ResourceImpl<PublicKey> implements PublicK
     public PublicKeyWrapper(PublicKeyJson publicKeyJson, Pageable<PublicKey> serviceClient) {
         this.jsonObject = publicKeyJson;
         this.serviceClient = serviceClient;
-    }
-
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean delete() {
-        return ((PublicKeyClientImpl)this.serviceClient).delete(this.getUuid());
-    }
-
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    public Boolean refresh() {
-        this.jsonObject = ((PublicKeyClientImpl)this.serviceClient).refresh(this.getUuid());
-        return true;
     }
 }
