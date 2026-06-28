@@ -10,6 +10,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 A major hardening and correctness release. **Breaking:** fictional/misattributed resources
 were removed and the value-add engines moved to dedicated top-level modules.
 
+### Full Equinix API catalog coverage
+The SDK was audited against the **complete** Equinix API catalog (all published OpenAPI specs
+at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across every domain:
+- **New domains:** **IAM** (`accessv1` — roles, role assignments, access policies + grants,
+  permission sets, principal policies, policy masks, effective permissions, resource types) and
+  **STS** (`stsv1` — token issuance, OIDC provider lifecycle + suspend/resume, JWKS/OpenID discovery).
+- **New Fabric families:** IP Blocks, Agents + Agent Templates, Company Profiles + Tags, Stream
+  Alert Rules, Stream Assets, Port Packages. Plus connection advertised/received-route search,
+  Cloud Router route search + diagnostic commands + validate, Routing Protocol BGP actions,
+  network connections, Service Profile/Token update + actions, Port search + VLANs, and Precision
+  Time service packages.
+- **Restored** (resources wrongly deleted as "fictional" before the full catalog was reachable):
+  Support Cases (`supportv2`), Unified Notifications (`unifiednotificationv2`), Digital LOAs (`diloav1`).
+- **Reshaped onto the real API:** Projects → read-only `getprojectsv2` (`/resourceManager/v2/projects`);
+  Secure Cabinets / Cross Connects / Shipments / Work Visits → the `/colocations/v2/orders/*` order model;
+  Order History → `POST /v1/retrieve-orders`; Lookups → `/colocations/v2/*`; Reports → `/v1/reportCenter`;
+  Notifications → v1 IBX/network search; Assets → `POST /v1/assets/search`; Cloud Events → `POST /cloudevents/search`.
+- **Internet Access:** completed the EIA v2 service lifecycle (get/update/delete/search + IBX
+  availability) and added EIA v1 price search.
+- **IBX SmartView:** added the `dcim/v3` Power Events resource (events + alert configurations).
+- **Network Edge:** added device soft-reboot, RMA, device-level ACL, and generic file upload.
+
+### Removed (fictional surface — not in the catalog)
+- Fabric **Fabric Gateways** (renamed to Cloud Routers; no `/fabric/v4/gateways` path) and the
+  fictional `MarketplaceSubscriptions.list()` / `RoutingProtocols` subnet-validate.
+- Network Edge **DNS lookup** and the standalone **SSH Users** resource (SSH users are an embedded
+  device sub-resource), plus Public Key get-by-id/delete (the API exposes only list + create).
+- IBX SmartView fictional standalone **Power** resource (real power data is `power/v1/current`).
+
 ### Added
 - **Fluent `update()` across all 13 mutable Fabric resources** (Network, CloudRouter, Stream,
   StreamSubscription, PrecisionTime, RouteFilter, RouteFilterRule, RouteAggregation,
