@@ -17,17 +17,42 @@
 package api.equinix.javasdk.ibxsmartview.model.implementation;
 
 import api.equinix.javasdk.ibxsmartview.enums.ChannelType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
+/**
+ * The single delivery channel of a streaming subscription. Carries the channel type and the
+ * matching typed channel configuration (AWS IoT Core, Webhook or Azure).
+ */
 @Getter
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Channel {
 
     @JsonProperty("channelType")
     private ChannelType channelType;
 
-    @JsonProperty("channelDetails")
-    private Map<String, Object> channelDetails;
+    @JsonProperty("awsIotCoreChannelConfiguration")
+    private AwsIotCoreChannelConfiguration awsIotCoreChannelConfiguration;
+
+    @JsonProperty("webhookChannelConfiguration")
+    private WebhookChannelConfiguration webhookChannelConfiguration;
+
+    @JsonProperty("azureChannelConfiguration")
+    private AzureChannelConfiguration azureChannelConfiguration;
+
+    @Builder
+    public Channel(ChannelType channelType, AwsIotCoreChannelConfiguration awsIotCoreChannelConfiguration,
+                   WebhookChannelConfiguration webhookChannelConfiguration,
+                   AzureChannelConfiguration azureChannelConfiguration) {
+        this.channelType = channelType;
+        this.awsIotCoreChannelConfiguration = awsIotCoreChannelConfiguration;
+        this.webhookChannelConfiguration = webhookChannelConfiguration;
+        this.azureChannelConfiguration = azureChannelConfiguration;
+    }
 }

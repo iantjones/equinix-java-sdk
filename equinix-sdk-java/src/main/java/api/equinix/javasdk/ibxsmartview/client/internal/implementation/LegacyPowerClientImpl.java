@@ -17,13 +17,16 @@
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
-import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyPowerClient;
+import api.equinix.javasdk.ibxsmartview.model.json.PowerDataIBXJson;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.PowerDataResponseIBXJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TrendingPowerDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerCurrentPostRequest;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +46,12 @@ public class LegacyPowerClientImpl extends ClientBase implements LegacyPowerClie
         return getAs("GetCurrentPower", null, qParams, PowerDataJson.class);
     }
 
-    public List<PowerDataJson> postCurrent(Object requestBody) {
-        return postListAs("PostCurrentPower", requestBody, PowerDataJson.class);
+    public List<PowerDataIBXJson> postCurrent(PowerCurrentPostRequest requestBody) {
+        PowerDataResponseIBXJson response = postAs("PostCurrentPower", requestBody, PowerDataResponseIBXJson.class);
+        if (response == null || response.getPayLoad() == null || response.getPayLoad().getData() == null) {
+            return Collections.emptyList();
+        }
+        return response.getPayLoad().getData();
     }
 
     public TrendingPowerDataJson getTrending(String accountNo, String ibx, String levelType,

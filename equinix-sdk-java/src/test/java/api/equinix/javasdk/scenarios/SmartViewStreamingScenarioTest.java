@@ -3,8 +3,11 @@ package api.equinix.javasdk.scenarios;
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.IntegrationTestBase;
 import api.equinix.javasdk.ibxsmartview.enums.ChannelType;
-import api.equinix.javasdk.ibxsmartview.enums.StreamingMessageType;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
+import api.equinix.javasdk.ibxsmartview.model.implementation.EnvironmentalMessageType;
+import api.equinix.javasdk.ibxsmartview.model.implementation.MessageType;
+import api.equinix.javasdk.ibxsmartview.model.implementation.WebhookChannelConfiguration;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -15,7 +18,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -51,22 +53,28 @@ class SmartViewStreamingScenarioTest extends IntegrationTestBase {
 
         try {
             subscriptionName = testResourceName("stream-sub");
+            Channel channel = Channel.builder()
+                    .channelType(ChannelType.WEBHOOK)
+                    .webhookChannelConfiguration(WebhookChannelConfiguration.builder()
+                            .url("https://example.com/webhook")
+                            .build())
+                    .build();
+            MessageType messageType = MessageType.builder()
+                    .environmental(List.of(EnvironmentalMessageType.builder()
+                            .accountNumber("1")
+                            .ibx(List.of("DC2"))
+                            .build()))
+                    .build();
             StreamingSubscription subscription = timedCall("IBXSmartView", "create",
                     "StreamingSubscription", "POST", () ->
                             ibxSmartView.streamingSubscriptions().define()
-                                    .withName(subscriptionName)
-                                    .withDescription("SDK integration test streaming subscription")
-                                    .withChannel(ChannelType.WEBHOOK, Map.of(
-                                            "url", "https://example.com/webhook",
-                                            "contentType", "application/json"
-                                    ))
-                                    .addMessage(StreamingMessageType.ENVIRONMENTAL,
-                                            List.of("1"), List.of("DC2"))
+                                    .withMessageType(messageType)
+                                    .withChannel(channel)
                                     .create()
             );
 
             assertNotNull(subscription, "Streaming subscription should be created");
-            subscriptionId = subscription.getSubscriptionId();
+            subscriptionId = subscription.getId();
             assertNotNull(subscriptionId, "Subscription ID should not be null");
 
             registerCleanup("StreamingSubscription", subscriptionId, id -> {
@@ -97,10 +105,10 @@ class SmartViewStreamingScenarioTest extends IntegrationTestBase {
         );
 
         assertNotNull(subscription, "Streaming subscription should be retrievable");
-        assertNotNull(subscription.getName(), "Subscription name should not be null");
+        assertNotNull(subscription.getId(), "Subscription id should not be null");
         assertNotNull(subscription.getChannel(), "Subscription channel should not be null");
         System.out.printf("  Streaming subscription verified: %s (status=%s)%n",
-                subscription.getName(), subscription.getStatus());
+                subscription.getId(), subscription.getStatus());
     }
 
     @Test
@@ -123,7 +131,7 @@ class SmartViewStreamingScenarioTest extends IntegrationTestBase {
             );
             assertNotNull(subscription, "Subscription should still be accessible");
             System.out.printf("  Streaming subscription accessible for update check: %s%n",
-                    subscription.getName());
+                    subscription.getId());
         } catch (Exception e) {
             Assumptions.assumeTrue(false,
                     "Streaming subscription update not available: " + e.getMessage());
@@ -150,7 +158,7 @@ class SmartViewStreamingScenarioTest extends IntegrationTestBase {
 
         boolean found = false;
         for (StreamingSubscription s : subscriptions) {
-            if (subscriptionId.equals(s.getSubscriptionId())) {
+            if (subscriptionId.equals(s.getId())) {
                 found = true;
                 break;
             }

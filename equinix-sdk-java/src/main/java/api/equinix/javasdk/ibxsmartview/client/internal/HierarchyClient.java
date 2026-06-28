@@ -16,13 +16,14 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal;
 
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.ibxsmartview.model.json.LocationHierarchyJson;
-import api.equinix.javasdk.ibxsmartview.model.json.PowerHierarchyJson;
+import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
+import api.equinix.javasdk.ibxsmartview.model.implementation.PowerHierarchyNode;
 
-public interface HierarchyClient<T> extends Pageable<T> {
+import java.util.List;
 
-    LocationHierarchyJson getLocationHierarchy(String accountNo, String ibx);
+public interface HierarchyClient {
 
-    PowerHierarchyJson getPowerHierarchy(String accountNo, String ibx);
+    List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx);
+
+    List<PowerHierarchyNode> getPowerHierarchy(String accountNo, String ibx);
 }

@@ -19,20 +19,32 @@ package api.equinix.javasdk.ibxsmartview.model;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertConfiguration;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertProcessing;
+import api.equinix.javasdk.ibxsmartview.model.implementation.ValueReadModel;
 
+/**
+ * A system alert raised by a monitored asset ({@code AlertReadModel} in the spec).
+ */
 public interface SystemAlert {
+
+    Long getId();
 
     String getAlertUid();
 
-    String getStatus();
+    String getTraceUid();
 
     String getAssetTagUid();
 
     String getAssetTagDisplayName();
 
-    AlertConfiguration getConfiguration();
+    String getStatus();
+
+    ValueReadModel getValue();
 
     AlertAsset getAsset();
 
+    AlertConfiguration getConfiguration();
+
     AlertProcessing getActiveProcessing();
+
+    AlertProcessing getInactiveProcessing();
 }

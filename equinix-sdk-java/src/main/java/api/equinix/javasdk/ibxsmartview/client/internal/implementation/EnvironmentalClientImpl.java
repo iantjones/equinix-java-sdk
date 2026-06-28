@@ -17,13 +17,18 @@
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.EnvironmentalClient;
+import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.json.SensorReadingJson;
 import api.equinix.javasdk.ibxsmartview.model.wrappers.SensorReadingWrapper;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EnvironmentalClientImpl extends ResourceClientBase<SensorReading, SensorReadingJson> implements EnvironmentalClient<SensorReading> {
@@ -37,8 +42,23 @@ public class EnvironmentalClientImpl extends ResourceClientBase<SensorReading, S
         return new SensorReadingWrapper(json, this);
     }
 
-    public Page<SensorReading, SensorReadingJson> list(String ibx) {
-        return listPagePath("ListSensorReadings", Map.of("ibx", ibx));
+    public Page<SensorReading, SensorReadingJson> list(String ibx, String type, String zone, Integer offset, Integer limit) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        if (type != null) {
+            qParams.put("type", List.of(type));
+        }
+        if (zone != null) {
+            qParams.put("zone", List.of(zone));
+        }
+        if (offset != null) {
+            qParams.put("offset", List.of(String.valueOf(offset)));
+        }
+        if (limit != null) {
+            qParams.put("limit", List.of(String.valueOf(limit)));
+        }
+        EquinixRequest<SensorReading> request = buildRequest(
+                "ListSensorReadings", RequestType.PAGINATED, Map.of("ibx", ibx), qParams, SensorReadingJson.class);
+        return Utils.handlePaginatedListResponse(invoke(request), request);
     }
 
     public SensorReadingJson getSensorReading(String ibx, String sensorId) {

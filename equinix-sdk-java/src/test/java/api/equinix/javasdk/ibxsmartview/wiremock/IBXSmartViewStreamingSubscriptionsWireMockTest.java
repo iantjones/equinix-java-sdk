@@ -45,8 +45,8 @@ class IBXSmartViewStreamingSubscriptionsWireMockTest extends WireMockTestBase {
 
             StreamingSubscription subscription = ibxSmartView.streamingSubscriptions().getByUuid("sub-12345-abcde");
             assertNotNull(subscription);
-            assertEquals("sub-12345-abcde", subscription.getSubscriptionId());
-            assertEquals("My Environment Subscription", subscription.getName());
+            assertEquals("sub-12345-abcde", subscription.getId());
+            assertNotNull(subscription.getChannel());
         }
 
         @Test

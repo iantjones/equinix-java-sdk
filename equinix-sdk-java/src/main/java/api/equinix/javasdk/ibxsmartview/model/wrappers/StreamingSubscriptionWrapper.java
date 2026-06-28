@@ -37,12 +37,12 @@ public class StreamingSubscriptionWrapper extends ResourceImpl<StreamingSubscrip
     }
 
     public Boolean delete() {
-        this.jsonObject = ((StreamingSubscriptionClientImpl)this.serviceClient).delete(this.getSubscriptionId());
+        this.jsonObject = ((StreamingSubscriptionClientImpl)this.serviceClient).delete(this.getId());
         return true;
     }
 
     public void refresh() {
-        this.jsonObject = ((StreamingSubscriptionClientImpl)this.serviceClient).refresh(this.getSubscriptionId());
+        this.jsonObject = ((StreamingSubscriptionClientImpl)this.serviceClient).refresh(this.getId());
     }
 
     private interface StreamingSubscriptionMutability {

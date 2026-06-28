@@ -16,31 +16,29 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.SmartViewAssetClient;
-import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
-import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailJson;
-import api.equinix.javasdk.ibxsmartview.model.json.SmartViewAssetJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailsGetResponseJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailsResponseJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetsJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetsListJson;
+import api.equinix.javasdk.ibxsmartview.model.json.HierarchyNodeForAssetAPIJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TagPointDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.AssetDetailsRequest;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.CurrentTagPointRequest;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SmartViewAssetClientImpl extends ResourceClientBase<SmartViewAsset, SmartViewAssetJson> implements SmartViewAssetClient<SmartViewAsset> {
+public class SmartViewAssetClientImpl extends ClientBase implements SmartViewAssetClient {
 
     public SmartViewAssetClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "Assets", SmartViewAssetJson.class);
+        super(configClient, "IBXSmartView", "Assets");
     }
 
-    @Override
-    protected SmartViewAsset wrap(SmartViewAssetJson json) {
-        return json;
-    }
-
-    public Page<SmartViewAsset, SmartViewAssetJson> list(String accountNo, String ibx, String classification, List<String> cages) {
+    public AssetsListJson list(String accountNo, String ibx, String classification, List<String> cages) {
         Map<String, List<String>> qParams = new LinkedHashMap<>();
         qParams.put("accountNo", List.of(accountNo));
         qParams.put("ibx", List.of(ibx));
@@ -48,49 +46,52 @@ public class SmartViewAssetClientImpl extends ResourceClientBase<SmartViewAsset,
         if (cages != null && !cages.isEmpty()) {
             qParams.put("cages", cages);
         }
-        return listPage("ListAssets", qParams);
+        return getAs("ListAssets", Map.of(), qParams, AssetsListJson.class);
     }
 
-    public AssetDetailJson getAssetDetails(String accountNo, String ibx, String classification, String assetId) {
+    public AssetDetailsGetResponseJson getAssetDetails(String accountNo, String ibx, String classification, String assetId) {
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx),
                 "classification", List.of(classification),
                 "assetId", List.of(assetId)
         );
-        return getAs("GetAssetDetails", Map.of(), qParams, AssetDetailJson.class);
+        return getAs("GetAssetDetails", Map.of(), qParams, AssetDetailsGetResponseJson.class);
     }
 
-    public List<AssetDetailJson> getMultipleAssetDetails(Object requestBody) {
-        return postForType("PostAssetDetails", requestBody, AssetDetailJson.getListTypeRef());
+    public AssetDetailsResponseJson getMultipleAssetDetails(AssetDetailsRequest requestBody) {
+        return postAs("PostAssetDetails", requestBody, AssetDetailsResponseJson.class);
     }
 
-    public Page<SmartViewAsset, SmartViewAssetJson> search(String accountNo, String ibx, String searchString) {
+    public AssetsJson search(String accountNo, String ibx, String searchString) {
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx),
                 "searchString", List.of(searchString)
         );
-        return listPage("SearchAssets", qParams);
+        return getAs("SearchAssets", Map.of(), qParams, AssetsJson.class);
     }
 
-    public TagPointDataJson getAffectedAssets(String accountNo, String ibx) {
+    public HierarchyNodeForAssetAPIJson getAffectedAssets(String accountNo, String ibx, String assetId, String classification) {
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
-                "ibx", List.of(ibx)
+                "ibx", List.of(ibx),
+                "assetId", List.of(assetId),
+                "classification", List.of(classification)
         );
-        return getAs("GetAffectedAssets", Map.of(), qParams, TagPointDataJson.class);
+        return getAs("GetAffectedAssets", Map.of(), qParams, HierarchyNodeForAssetAPIJson.class);
     }
 
-    public TagPointDataJson getCurrentTagPoint(String accountNo, String ibx) {
+    public TagPointDataJson getCurrentTagPoint(String accountNo, String ibx, String tagId) {
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
-                "ibx", List.of(ibx)
+                "ibx", List.of(ibx),
+                "tagid", List.of(tagId)
         );
         return getAs("GetCurrentTagPoint", Map.of(), qParams, TagPointDataJson.class);
     }
 
-    public List<TagPointDataJson> getMultipleCurrentTagPoints(Object requestBody) {
-        return postForType("PostCurrentTagPoints", requestBody, TagPointDataJson.getListTypeRef());
+    public TagPointDataJson getMultipleCurrentTagPoints(CurrentTagPointRequest requestBody) {
+        return postAs("PostCurrentTagPoints", requestBody, TagPointDataJson.class);
     }
 }

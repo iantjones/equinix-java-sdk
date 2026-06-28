@@ -35,6 +35,19 @@ public interface Environmentals {
     PaginatedList<SensorReading> list(String ibx);
 
     /**
+     * Lists environmental sensor readings for the specified IBX, narrowed by sensor data type and
+     * zone and paged by offset/limit.
+     *
+     * @param ibx the IBX code identifying the data center
+     * @param type the sensor data type to filter by (e.g. {@code HUMIDITY}), or {@code null} for all
+     * @param zone the zone name to filter by, or {@code null} for all
+     * @param offset the zero-based results offset, or {@code null} for the default (0)
+     * @param limit the maximum number of records to retrieve, or {@code null} for the default (20)
+     * @return a paginated list of sensor readings
+     */
+    PaginatedList<SensorReading> list(String ibx, String type, String zone, Integer offset, Integer limit);
+
+    /**
      * Retrieves a specific environmental sensor reading by sensor identifier.
      *
      * @param ibx the IBX code identifying the data center

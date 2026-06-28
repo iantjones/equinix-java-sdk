@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal;
 
+import api.equinix.javasdk.ibxsmartview.model.EnvironmentDataForArray;
 import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TrendingEnvironmentDataJson;
 
@@ -25,7 +26,7 @@ public interface LegacyEnvironmentalClient {
 
     EnvironmentDataJson getCurrent(String accountNo, String ibx, String levelType, String levelValue);
 
-    List<EnvironmentDataJson> listCurrent(String accountNo, String ibx, String levelType);
+    List<? extends EnvironmentDataForArray> listCurrent(String accountNo, String ibx, String levelType);
 
     TrendingEnvironmentDataJson getTrending(String accountNo, String ibx, String dataPoint,
                                             String levelType, String levelValue, String interval,

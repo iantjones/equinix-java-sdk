@@ -16,28 +16,23 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
-import java.util.List;
-import java.util.Map;
+import api.equinix.javasdk.ibxsmartview.model.implementation.AssetDetailsPayload;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 
+/**
+ * Asset details (including the asset's tag points) for a single asset, wrapped in the
+ * {@code payLoad}/{@code status} envelope returned by the asset/details GET endpoint
+ * ({@code AssetDetailsGetResponse} in the spec).
+ */
 public interface AssetDetail {
 
-    String getAssetId();
+    /**
+     * @return the asset details payload, or {@code null} when the response carried no data
+     */
+    AssetDetailsPayload getPayLoad();
 
-    String getIbx();
-
-    String getClassification();
-
-    String getAssetType();
-
-    String getDisplayName();
-
-    String getCage();
-
-    String getCabinet();
-
-    String getStatus();
-
-    Boolean getUnderMaintenance();
-
-    List<Map<String, Object>> getAttributes();
+    /**
+     * @return the response status envelope
+     */
+    Status getStatus();
 }

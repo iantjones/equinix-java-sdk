@@ -2,7 +2,7 @@ package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.IntegrationTestBase;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
+import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
 import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
@@ -87,7 +87,7 @@ class IBXSmartViewIntegrationTest extends IntegrationTestBase {
         @DisplayName("Get location hierarchy for IBX returns valid response")
         void getLocationHierarchy() {
             try {
-                LocationHierarchy hierarchy = timedCall("IBXSmartView", "getLocationHierarchy", "LocationHierarchy", "GET",
+                List<HierarchyNode> hierarchy = timedCall("IBXSmartView", "getLocationHierarchy", "LocationHierarchy", "GET",
                         () -> client.hierarchy().getLocationHierarchy(null, testIbxCode));
                 assertNotNull(hierarchy);
             } catch (Exception e) {

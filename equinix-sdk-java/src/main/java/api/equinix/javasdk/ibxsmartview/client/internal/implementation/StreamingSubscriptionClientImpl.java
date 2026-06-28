@@ -70,8 +70,25 @@ public class StreamingSubscriptionClientImpl extends ResourceClientBase<Streamin
         return this.getByUuid(uuid);
     }
 
-    public SubscriptionDataJson getSubscriptionData(String subscriptionId) {
-        return getAs("GetSubscriptionData", Map.of("subscriptionId", subscriptionId), Map.of(), SubscriptionDataJson.class);
+    public SubscriptionDataJson getSubscriptionData(String subscriptionId, List<String> ibxs, List<String> messageTypes,
+                                                    List<String> streamIds, Integer offset, Integer limit) {
+        Map<String, List<String>> qParams = new java.util.HashMap<>();
+        if (ibxs != null && !ibxs.isEmpty()) {
+            qParams.put("ibxs", ibxs);
+        }
+        if (messageTypes != null && !messageTypes.isEmpty()) {
+            qParams.put("messageTypes", messageTypes);
+        }
+        if (streamIds != null && !streamIds.isEmpty()) {
+            qParams.put("streamIds", streamIds);
+        }
+        if (offset != null) {
+            qParams.put("offset", List.of(String.valueOf(offset)));
+        }
+        if (limit != null) {
+            qParams.put("limit", List.of(String.valueOf(limit)));
+        }
+        return getAs("GetSubscriptionData", Map.of("subscriptionId", subscriptionId), qParams, SubscriptionDataJson.class);
     }
 
     public SubscriptionCertificateJson getCertificate(String channelType) {

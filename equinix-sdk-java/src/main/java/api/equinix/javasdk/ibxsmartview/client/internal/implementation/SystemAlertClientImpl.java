@@ -22,6 +22,7 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfig
 import api.equinix.javasdk.ibxsmartview.client.internal.SystemAlertClient;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.json.SystemAlertJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class SystemAlertClientImpl extends ResourceClientBase<SystemAlert, Syste
         return listPage("SearchAlertsGet", qParams);
     }
 
-    public Page<SystemAlert, SystemAlertJson> searchPost(Object filterBody) {
+    public Page<SystemAlert, SystemAlertJson> searchPost(SearchRequest filterBody) {
         return searchPage("SearchAlertsPost", filterBody);
     }
 }

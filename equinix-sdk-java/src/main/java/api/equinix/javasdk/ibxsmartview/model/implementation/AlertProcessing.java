@@ -16,17 +16,31 @@
 
 package api.equinix.javasdk.ibxsmartview.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Processing timestamps for a system alert state change ({@code ProcessingTimeReadModel} in the spec).
+ */
 @Getter
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AlertProcessing {
 
     @JsonProperty("edgeCollectedOn")
     private String edgeCollectedOn;
 
-    @JsonProperty("processedOn")
-    private String processedOn;
+    @JsonProperty("tagCalculationJobProcessedOn")
+    private String tagCalculationJobProcessedOn;
+
+    @JsonProperty("processingStartOn")
+    private String processingStartOn;
+
+    @JsonProperty("processingEndOn")
+    private String processingEndOn;
+
+    @JsonProperty("publishedOn")
+    private String publishedOn;
 }

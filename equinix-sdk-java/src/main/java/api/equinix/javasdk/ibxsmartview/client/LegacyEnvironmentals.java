@@ -17,6 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client;
 
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentData;
+import api.equinix.javasdk.ibxsmartview.model.EnvironmentDataForArray;
 import api.equinix.javasdk.ibxsmartview.model.TrendingEnvironmentData;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public interface LegacyEnvironmentals {
      * @param levelType the hierarchy level type (e.g., cage, cabinet)
      * @return a list of current environmental data entries
      */
-    List<EnvironmentData> listCurrent(String accountNo, String ibx, String levelType);
+    List<EnvironmentDataForArray> listCurrent(String accountNo, String ibx, String levelType);
 
     /**
      * Retrieves trending environmental data over a specified time range and interval.

@@ -24,10 +24,8 @@ import api.equinix.javasdk.ibxsmartview.client.internal.PowerEventClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.SmartViewAssetClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.StreamingSubscriptionClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.SystemAlertClient;
-import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
 import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
-import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 
@@ -41,9 +39,9 @@ public interface IBXSmartViewConfig {
 
     SystemAlertClient<SystemAlert> getSystemAlertClient();
 
-    HierarchyClient<LocationHierarchy> getHierarchyClient();
+    HierarchyClient getHierarchyClient();
 
-    SmartViewAssetClient<SmartViewAsset> getSmartViewAssetClient();
+    SmartViewAssetClient getSmartViewAssetClient();
 
     LegacyEnvironmentalClient getLegacyEnvironmentalClient();
 

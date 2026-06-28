@@ -16,28 +16,30 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
-import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailJson;
-import api.equinix.javasdk.ibxsmartview.model.json.SmartViewAssetJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailsGetResponseJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailsResponseJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetsJson;
+import api.equinix.javasdk.ibxsmartview.model.json.AssetsListJson;
+import api.equinix.javasdk.ibxsmartview.model.json.HierarchyNodeForAssetAPIJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TagPointDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.AssetDetailsRequest;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.CurrentTagPointRequest;
 
 import java.util.List;
 
-public interface SmartViewAssetClient<T> extends Pageable<T> {
+public interface SmartViewAssetClient {
 
-    Page<SmartViewAsset, SmartViewAssetJson> list(String accountNo, String ibx, String classification, List<String> cages);
+    AssetsListJson list(String accountNo, String ibx, String classification, List<String> cages);
 
-    AssetDetailJson getAssetDetails(String accountNo, String ibx, String classification, String assetId);
+    AssetDetailsGetResponseJson getAssetDetails(String accountNo, String ibx, String classification, String assetId);
 
-    List<AssetDetailJson> getMultipleAssetDetails(Object requestBody);
+    AssetDetailsResponseJson getMultipleAssetDetails(AssetDetailsRequest requestBody);
 
-    Page<SmartViewAsset, SmartViewAssetJson> search(String accountNo, String ibx, String searchString);
+    AssetsJson search(String accountNo, String ibx, String searchString);
 
-    TagPointDataJson getAffectedAssets(String accountNo, String ibx);
+    HierarchyNodeForAssetAPIJson getAffectedAssets(String accountNo, String ibx, String assetId, String classification);
 
-    TagPointDataJson getCurrentTagPoint(String accountNo, String ibx);
+    TagPointDataJson getCurrentTagPoint(String accountNo, String ibx, String tagId);
 
-    List<TagPointDataJson> getMultipleCurrentTagPoints(Object requestBody);
+    TagPointDataJson getMultipleCurrentTagPoints(CurrentTagPointRequest requestBody);
 }

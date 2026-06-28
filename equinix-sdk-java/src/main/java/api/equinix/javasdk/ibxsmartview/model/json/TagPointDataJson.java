@@ -17,42 +17,29 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.ibxsmartview.model.TagPointData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
+import api.equinix.javasdk.ibxsmartview.model.implementation.TagPointDataArrayCurrent;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Deserialization holder for the asset/tagpoint/current response, wrapping the current
+ * tag point readings ({@code payLoad}) and the shared status envelope.
+ */
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TagPointDataJson implements TagPointData {
 
-    @Getter static TypeReference<List<TagPointDataJson>> listTypeRef = new TypeReference<>() {};
+    @Getter static com.fasterxml.jackson.core.type.TypeReference<java.util.List<TagPointDataJson>> listTypeRef = new com.fasterxml.jackson.core.type.TypeReference<>() {};
 
-    @JsonProperty("tagPointUid")
-    private String tagPointUid;
-
-    @JsonProperty("tagPointName")
-    private String tagPointName;
-
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("assetUid")
-    private String assetUid;
-
-    @JsonProperty("value")
-    private String value;
-
-    @JsonProperty("unit")
-    private String unit;
-
-    @JsonProperty("timestamp")
-    private String timestamp;
+    @JsonProperty("payLoad")
+    private List<TagPointDataArrayCurrent> payLoad;
 
     @JsonProperty("status")
-    private String status;
+    private Status status;
 }

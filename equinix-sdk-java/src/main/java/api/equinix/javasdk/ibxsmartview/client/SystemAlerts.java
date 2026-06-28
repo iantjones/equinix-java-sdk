@@ -18,6 +18,7 @@ package api.equinix.javasdk.ibxsmartview.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
 
 /**
  * Client interface for querying IBX SmartView system alerts. Provides methods to search
@@ -39,10 +40,10 @@ public interface SystemAlerts {
     PaginatedList<SystemAlert> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit);
 
     /**
-     * Searches for system alerts using a structured filter body submitted via POST.
+     * Searches for system alerts using a typed filter/sort/pagination body submitted via POST.
      *
-     * @param filterBody the filter criteria as a request body object
+     * @param filterBody the typed {@link SearchRequest} carrying the filter, pagination and sort options
      * @return a paginated list of matching system alerts
      */
-    PaginatedList<SystemAlert> searchPost(Object filterBody);
+    PaginatedList<SystemAlert> searchPost(SearchRequest filterBody);
 }

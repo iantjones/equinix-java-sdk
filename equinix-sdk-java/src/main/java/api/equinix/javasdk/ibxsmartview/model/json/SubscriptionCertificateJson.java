@@ -17,20 +17,22 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.ibxsmartview.model.SubscriptionCertificate;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SubscriptionCertificateJson implements SubscriptionCertificate {
-
-
-    @JsonProperty("certificate")
-    private String certificate;
 
     @JsonProperty("channelType")
     private String channelType;
 
-    @JsonProperty("expirationDate")
-    private String expirationDate;
+    @JsonProperty("certificateBase64")
+    private String certificateBase64;
+
+    @JsonProperty("expiryDate")
+    private String expiryDate;
 }

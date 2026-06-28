@@ -16,21 +16,77 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
+
+/**
+ * Current power consumption data for a single hierarchy node, wrapped in the
+ * {@code payLoad}/{@code status} envelope returned by the legacy {@code /power/v1/current}
+ * GET endpoint.
+ */
 public interface PowerData {
 
-    Double getKva();
+    /**
+     * @return the power data payload, or {@code null} when the response carried no data
+     */
+    Payload getPayLoad();
 
-    Double getKw();
+    /**
+     * @return the response status envelope
+     */
+    Status getStatus();
 
-    Double getAmps();
+    /**
+     * The {@code payLoad} of a {@link PowerData} response.
+     */
+    interface Payload {
 
-    Double getMaxKva();
+        String getIbx();
 
-    Double getPercentageUsed();
+        String getAccountNo();
 
-    String getIbx();
+        String getLevelType();
 
-    String getLevelType();
+        String getLevelValue();
 
-    String getLevelValue();
+        String getIsAlarm();
+
+        Double getKva();
+
+        Double getAmps();
+
+        Double getSoldKva();
+
+        Double getCabinetRating();
+
+        Double getContractualKva();
+
+        Double getPercentageKva();
+
+        ComparisonData getComparisonData();
+
+        Double getPeakKvaLastSevenDays();
+
+        Double getPeakKvaLastSevenDaysPercentage();
+
+        Double getPeakKvaLastSevenDaysContractualKva();
+
+        Long getPeakKvaLastSevenDaysTime();
+
+        Integer getSoldAmps();
+
+        Double getPrimaryKva();
+
+        Double getRedundantKva();
+
+        String getKw();
+
+        String getPowerFactor();
+
+        String getReadingTime();
+
+        String getLastUpdatedTime();
+
+        String getCustomerName();
+    }
 }

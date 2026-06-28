@@ -36,6 +36,9 @@ public class AlertAsset {
     @JsonProperty("assetClassification")
     private String assetClassification;
 
+    @JsonProperty("assetRegion")
+    private String assetRegion;
+
     @JsonProperty("assetUnderMaintenance")
     private Boolean assetUnderMaintenance;
 }

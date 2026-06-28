@@ -16,31 +16,38 @@
 
 package api.equinix.javasdk.ibxsmartview.client;
 
-import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
-import api.equinix.javasdk.ibxsmartview.model.PowerHierarchy;
+import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
+import api.equinix.javasdk.ibxsmartview.model.implementation.PowerHierarchyNode;
+
+import java.util.List;
 
 /**
  * Client interface for retrieving IBX SmartView hierarchy structures. Provides methods
  * to obtain the location and power hierarchy trees for an IBX, which define the
- * organizational structure of cages, cabinets, and power circuits.
+ * organizational structure of cages, cabinets, sensors and power circuits.
+ *
+ * <p>Both endpoints return a top-level array of recursive nodes, each describing one
+ * level of the hierarchy and its children.</p>
  */
 public interface Hierarchy {
 
     /**
-     * Retrieves the location hierarchy for an IBX, describing the structure of cages and cabinets.
+     * Retrieves the location hierarchy for an account/IBX, returned as a tree of recursive nodes
+     * spanning ibx, zone, cage, cabinet and sensor levels.
      *
      * @param accountNo the Equinix account number
-     * @param ibx the IBX code identifying the data center
-     * @return the location hierarchy tree
+     * @param ibx the IBX code identifying the data center (optional; may be {@code null} for all entitled IBXs)
+     * @return the top-level location hierarchy nodes
      */
-    LocationHierarchy getLocationHierarchy(String accountNo, String ibx);
+    List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx);
 
     /**
-     * Retrieves the power hierarchy for an IBX, describing the structure of power circuits and feeds.
+     * Retrieves the power hierarchy for an account/IBX, returned as a tree of recursive nodes
+     * spanning ibx, cage, cabinet and circuit levels.
      *
      * @param accountNo the Equinix account number
-     * @param ibx the IBX code identifying the data center
-     * @return the power hierarchy tree
+     * @param ibx the IBX code identifying the data center (optional; may be {@code null} for all entitled IBXs)
+     * @return the top-level power hierarchy nodes
      */
-    PowerHierarchy getPowerHierarchy(String accountNo, String ibx);
+    List<PowerHierarchyNode> getPowerHierarchy(String accountNo, String ibx);
 }

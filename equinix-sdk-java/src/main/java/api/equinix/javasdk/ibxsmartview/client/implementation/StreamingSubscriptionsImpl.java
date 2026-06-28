@@ -59,7 +59,12 @@ public class StreamingSubscriptionsImpl implements StreamingSubscriptions {
     }
 
     public SubscriptionData getSubscriptionData(String subscriptionId) {
-        return this.serviceClient.getSubscriptionData(subscriptionId);
+        return this.serviceClient.getSubscriptionData(subscriptionId, null, null, null, null, null);
+    }
+
+    public SubscriptionData getSubscriptionData(String subscriptionId, List<String> ibxs, List<String> messageTypes,
+                                                List<String> streamIds, Integer offset, Integer limit) {
+        return this.serviceClient.getSubscriptionData(subscriptionId, ibxs, messageTypes, streamIds, offset, limit);
     }
 
     public SubscriptionCertificate getCertificate(String channelType) {

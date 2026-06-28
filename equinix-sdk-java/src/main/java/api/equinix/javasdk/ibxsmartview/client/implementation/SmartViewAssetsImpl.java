@@ -17,20 +17,18 @@
 package api.equinix.javasdk.ibxsmartview.client.implementation;
 
 import api.equinix.javasdk.IBXSmartView;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.client.SmartViewAssets;
 import api.equinix.javasdk.ibxsmartview.client.internal.SmartViewAssetClient;
 import api.equinix.javasdk.ibxsmartview.model.AssetDetail;
-import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
+import api.equinix.javasdk.ibxsmartview.model.AssetDetailsResponse;
+import api.equinix.javasdk.ibxsmartview.model.Assets;
+import api.equinix.javasdk.ibxsmartview.model.AssetsList;
+import api.equinix.javasdk.ibxsmartview.model.HierarchyNodeForAssetAPI;
 import api.equinix.javasdk.ibxsmartview.model.TagPointData;
-import api.equinix.javasdk.ibxsmartview.model.json.AssetDetailJson;
-import api.equinix.javasdk.ibxsmartview.model.json.SmartViewAssetJson;
-import api.equinix.javasdk.ibxsmartview.model.json.TagPointDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.AssetDetailsRequest;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.CurrentTagPointRequest;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -38,47 +36,38 @@ public class SmartViewAssetsImpl implements SmartViewAssets {
 
     private final IBXSmartView serviceManager;
 
-    private final SmartViewAssetClient<SmartViewAsset> serviceClient;
+    private final SmartViewAssetClient serviceClient;
 
-    public SmartViewAssetsImpl(SmartViewAssetClient<SmartViewAsset> serviceClient, IBXSmartView serviceManager) {
+    public SmartViewAssetsImpl(SmartViewAssetClient serviceClient, IBXSmartView serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<SmartViewAsset> list(String accountNo, String ibx, String classification, List<String> cages) {
-        Page<SmartViewAsset, SmartViewAssetJson> responsePage = serviceClient.list(accountNo, ibx, classification, cages);
-        PaginatedList<SmartViewAsset> assetList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(assetList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public AssetsList list(String accountNo, String ibx, String classification, List<String> cages) {
+        return serviceClient.list(accountNo, ibx, classification, cages);
     }
 
     public AssetDetail getAssetDetails(String accountNo, String ibx, String classification, String assetId) {
-        AssetDetailJson assetDetailJson = serviceClient.getAssetDetails(accountNo, ibx, classification, assetId);
-        return assetDetailJson;
+        return serviceClient.getAssetDetails(accountNo, ibx, classification, assetId);
     }
 
-    public List<AssetDetail> getMultipleAssetDetails(Object requestBody) {
-        List<AssetDetailJson> results = serviceClient.getMultipleAssetDetails(requestBody);
-        return new ArrayList<>(results);
+    public AssetDetailsResponse getMultipleAssetDetails(AssetDetailsRequest requestBody) {
+        return serviceClient.getMultipleAssetDetails(requestBody);
     }
 
-    public PaginatedList<SmartViewAsset> search(String accountNo, String ibx, String searchString) {
-        Page<SmartViewAsset, SmartViewAssetJson> responsePage = serviceClient.search(accountNo, ibx, searchString);
-        PaginatedList<SmartViewAsset> assetList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(assetList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public Assets search(String accountNo, String ibx, String searchString) {
+        return serviceClient.search(accountNo, ibx, searchString);
     }
 
-    public TagPointData getAffectedAssets(String accountNo, String ibx) {
-        TagPointDataJson tagPointDataJson = serviceClient.getAffectedAssets(accountNo, ibx);
-        return tagPointDataJson;
+    public HierarchyNodeForAssetAPI getAffectedAssets(String accountNo, String ibx, String assetId, String classification) {
+        return serviceClient.getAffectedAssets(accountNo, ibx, assetId, classification);
     }
 
-    public TagPointData getCurrentTagPoint(String accountNo, String ibx) {
-        TagPointDataJson tagPointDataJson = serviceClient.getCurrentTagPoint(accountNo, ibx);
-        return tagPointDataJson;
+    public TagPointData getCurrentTagPoint(String accountNo, String ibx, String tagId) {
+        return serviceClient.getCurrentTagPoint(accountNo, ibx, tagId);
     }
 
-    public List<TagPointData> getMultipleCurrentTagPoints(Object requestBody) {
-        List<TagPointDataJson> results = serviceClient.getMultipleCurrentTagPoints(requestBody);
-        return new ArrayList<>(results);
+    public TagPointData getMultipleCurrentTagPoints(CurrentTagPointRequest requestBody) {
+        return serviceClient.getMultipleCurrentTagPoints(requestBody);
     }
 }

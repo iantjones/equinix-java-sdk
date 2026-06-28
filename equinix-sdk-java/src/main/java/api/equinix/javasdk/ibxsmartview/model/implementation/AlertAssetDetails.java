@@ -14,52 +14,28 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model.json;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-import api.equinix.javasdk.ibxsmartview.model.AssetDetail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * Identifies the asset associated with an {@link Alert}, including its type and
+ * classification.
+ */
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AssetDetailJson implements AssetDetail {
+public class AlertAssetDetails {
 
-    @Getter static TypeReference<List<AssetDetailJson>> listTypeRef = new TypeReference<>() {};
+    @JsonProperty("id")
+    private String id;
 
-    @JsonProperty("assetId")
-    private String assetId;
-
-    @JsonProperty("ibx")
-    private String ibx;
+    @JsonProperty("type")
+    private String type;
 
     @JsonProperty("classification")
     private String classification;
-
-    @JsonProperty("assetType")
-    private String assetType;
-
-    @JsonProperty("displayName")
-    private String displayName;
-
-    @JsonProperty("cage")
-    private String cage;
-
-    @JsonProperty("cabinet")
-    private String cabinet;
-
-    @JsonProperty("status")
-    private String status;
-
-    @JsonProperty("underMaintenance")
-    private Boolean underMaintenance;
-
-    @JsonProperty("attributes")
-    private List<Map<String, Object>> attributes;
 }

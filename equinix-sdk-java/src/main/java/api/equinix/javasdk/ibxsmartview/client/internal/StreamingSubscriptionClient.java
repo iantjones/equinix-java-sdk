@@ -39,7 +39,8 @@ public interface StreamingSubscriptionClient<T> extends Pageable<T> {
 
     StreamingSubscriptionJson refresh(String uuid);
 
-    SubscriptionDataJson getSubscriptionData(String subscriptionId);
+    SubscriptionDataJson getSubscriptionData(String subscriptionId, List<String> ibxs, List<String> messageTypes,
+                                             List<String> streamIds, Integer offset, Integer limit);
 
     SubscriptionCertificateJson getCertificate(String channelType);
 }

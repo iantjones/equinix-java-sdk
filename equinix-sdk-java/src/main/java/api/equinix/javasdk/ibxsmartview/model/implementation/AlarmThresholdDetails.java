@@ -16,21 +16,26 @@
 
 package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-import api.equinix.javasdk.ibxsmartview.enums.StreamingMessageType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
-
+/**
+ * The threshold definition that an {@link Alarm} breached, including its unit, state
+ * limit and descriptive message.
+ */
 @Getter
-public class SubscriptionMessage {
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AlarmThresholdDetails {
 
-    @JsonProperty("messageType")
-    private StreamingMessageType messageType;
+    @JsonProperty("unit")
+    private String unit;
 
-    @JsonProperty("accountNumbers")
-    private List<String> accountNumbers;
+    @JsonProperty("stateLimit")
+    private String stateLimit;
 
-    @JsonProperty("ibxs")
-    private List<String> ibxs;
+    @JsonProperty("message")
+    private String message;
 }

@@ -16,40 +16,34 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.HierarchyClient;
-import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
-import api.equinix.javasdk.ibxsmartview.model.json.LocationHierarchyJson;
-import api.equinix.javasdk.ibxsmartview.model.json.PowerHierarchyJson;
+import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
+import api.equinix.javasdk.ibxsmartview.model.implementation.PowerHierarchyNode;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HierarchyClientImpl extends ResourceClientBase<LocationHierarchy, LocationHierarchyJson> implements HierarchyClient<LocationHierarchy> {
+public class HierarchyClientImpl extends ClientBase implements HierarchyClient {
 
     public HierarchyClientImpl(IBXSmartViewConfigImpl configClient) {
-        super(configClient, "IBXSmartView", "Hierarchy", LocationHierarchyJson.class);
+        super(configClient, "IBXSmartView", "Hierarchy");
     }
 
-    @Override
-    protected LocationHierarchy wrap(LocationHierarchyJson json) {
-        return json;
+    public List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
+        Utils.addAdditionalValue(qParams, "ibx", ibx);
+        return listAs("GetLocationHierarchy", Map.of(), qParams, HierarchyNode.class);
     }
 
-    public LocationHierarchyJson getLocationHierarchy(String accountNo, String ibx) {
-        Map<String, List<String>> qParams = Map.of(
-                "accountNo", List.of(accountNo),
-                "ibx", List.of(ibx)
-        );
-        return getAs("GetLocationHierarchy", Map.of(), qParams, LocationHierarchyJson.class);
-    }
-
-    public PowerHierarchyJson getPowerHierarchy(String accountNo, String ibx) {
-        Map<String, List<String>> qParams = Map.of(
-                "accountNo", List.of(accountNo),
-                "ibx", List.of(ibx)
-        );
-        return getAs("GetPowerHierarchy", Map.of(), qParams, PowerHierarchyJson.class);
+    public List<PowerHierarchyNode> getPowerHierarchy(String accountNo, String ibx) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
+        Utils.addAdditionalValue(qParams, "ibx", ibx);
+        return listAs("GetPowerHierarchy", Map.of(), qParams, PowerHierarchyNode.class);
     }
 }

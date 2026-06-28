@@ -1,27 +1,33 @@
 {
-  "subscriptionId": "sub-12345-abcde",
-  "name": "My Environment Subscription",
-  "description": "Subscription for environmental data streaming",
+  "id": "sub-12345-abcde",
   "status": "ACTIVE",
+  "messageType": {
+    "environmental": [
+      {
+        "accountNumber": "123456",
+        "ibx": ["SV5", "DC6"],
+        "level": ["IBX", "ZONE"]
+      }
+    ],
+    "power": [
+      {
+        "accountNumber": "123456",
+        "ibx": ["SV5"]
+      }
+    ]
+  },
   "channel": {
     "channelType": "WEBHOOK",
-    "channelDetails": {
-      "endpoint": "https://webhook.example.com/events",
-      "contentType": "application/json"
+    "webhookChannelConfiguration": {
+      "url": "https://webhook.example.com/events",
+      "numberOfRetries": 3,
+      "numberOfConcurrentCalls": 20,
+      "batchSize": 10
     }
   },
-  "messages": [
-    {
-      "messageType": "ENVIRONMENTAL",
-      "accountNumbers": ["123456", "789012"],
-      "ibxs": ["SV5", "DC6"]
-    },
-    {
-      "messageType": "POWER",
-      "accountNumbers": ["123456"],
-      "ibxs": ["SV5"]
-    }
-  ],
-  "createdDate": "2024-01-10T08:00:00Z",
-  "updatedDate": "2024-01-15T12:00:00Z"
+  "orgId": "org-987",
+  "createdBy": "user-a",
+  "createdDateTime": "2024-01-10T08:00:00Z",
+  "updatedBy": "user-b",
+  "updatedDateTime": "2024-01-15T12:00:00Z"
 }

@@ -20,8 +20,9 @@ import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.ibxsmartview.client.LegacyPower;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyPowerClient;
 import api.equinix.javasdk.ibxsmartview.model.PowerData;
+import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
 import api.equinix.javasdk.ibxsmartview.model.TrendingPowerData;
-import api.equinix.javasdk.ibxsmartview.model.json.PowerDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerCurrentPostRequest;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -43,9 +44,8 @@ public class LegacyPowerImpl implements LegacyPower {
         return serviceClient.getCurrent(accountNo, ibx, levelType, levelValue);
     }
 
-    public List<PowerData> postCurrent(Object requestBody) {
-        List<PowerDataJson> jsonList = serviceClient.postCurrent(requestBody);
-        return new ArrayList<>(jsonList);
+    public List<PowerDataIBX> postCurrent(PowerCurrentPostRequest requestBody) {
+        return new ArrayList<>(serviceClient.postCurrent(requestBody));
     }
 
     public TrendingPowerData getTrending(String accountNo, String ibx, String levelType,

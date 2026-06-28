@@ -40,7 +40,11 @@ public class EnvironmentalsImpl implements Environmentals {
     }
 
     public PaginatedList<SensorReading> list(String ibx) {
-        Page<SensorReading, SensorReadingJson> responsePage = serviceClient.list(ibx);
+        return list(ibx, null, null, null, null);
+    }
+
+    public PaginatedList<SensorReading> list(String ibx, String type, String zone, Integer offset, Integer limit) {
+        Page<SensorReading, SensorReadingJson> responsePage = serviceClient.list(ibx, type, zone, offset, limit);
         PaginatedList<SensorReading> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, SensorReadingWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
