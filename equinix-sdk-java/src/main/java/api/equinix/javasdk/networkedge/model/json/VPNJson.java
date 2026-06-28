@@ -18,13 +18,17 @@ package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Lifecycle;
+import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.networkedge.enums.BGPState;
 import api.equinix.javasdk.networkedge.enums.VPNStatus;
 import api.equinix.javasdk.networkedge.model.VPN;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>VPNJson class.</p>
@@ -70,7 +74,7 @@ public class VPNJson extends Lifecycle {
     private String peerSharedKey;
 
     @JsonProperty("remoteAsn")
-    private Integer remoteAsn;
+    private Long remoteAsn;
 
     @JsonProperty("remoteIpAddress")
     private String remoteIpAddress;
@@ -79,11 +83,54 @@ public class VPNJson extends Lifecycle {
     private String password;
 
     @JsonProperty("localAsn")
-    private Integer localAsn;
+    private Long localAsn;
 
     @JsonProperty("projectId")
     private String projectId;
 
     @JsonProperty("tunnelIp")
     private String tunnelIp;
+
+    @JsonProperty("inboundBytes")
+    private String inboundBytes;
+
+    @JsonProperty("inboundPackets")
+    private String inboundPackets;
+
+    @JsonProperty("outboundBytes")
+    private String outboundBytes;
+
+    @JsonProperty("outboundPackets")
+    private String outboundPackets;
+
+    @JsonProperty("custOrgId")
+    private Long custOrgId;
+
+    // Network Edge responses use *DateTime audit fields rather than the shared Lifecycle *Date names.
+    @JsonProperty("createdDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdDateTime;
+
+    @JsonProperty("lastUpdatedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime lastUpdatedDateTime;
+
+    @JsonProperty("deletedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime deletedDateTime;
+
+    @Override
+    public LocalDateTime getCreatedDate() {
+        return createdDateTime != null ? createdDateTime : super.getCreatedDate();
+    }
+
+    @Override
+    public LocalDateTime getLastUpdatedDate() {
+        return lastUpdatedDateTime != null ? lastUpdatedDateTime : super.getLastUpdatedDate();
+    }
+
+    @Override
+    public LocalDateTime getDeletedDate() {
+        return deletedDateTime != null ? deletedDateTime : super.getDeletedDate();
+    }
 }

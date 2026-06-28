@@ -31,6 +31,7 @@ import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Account;
 import api.equinix.javasdk.networkedge.model.Metro;
 import api.equinix.javasdk.networkedge.model.implementation.AgreementStatus;
+import api.equinix.javasdk.networkedge.model.implementation.DowntimeNotification;
 import api.equinix.javasdk.networkedge.model.json.AccountJson;
 import api.equinix.javasdk.networkedge.model.json.MetroJson;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
@@ -63,6 +64,7 @@ public class SetupImpl implements Setup {
     private final AgreementClient serviceClientAgreements;
     private final PricingClient serviceClientPricing;
     private final FilesClient serviceClientFiles;
+    private final NotificationClient serviceClientNotifications;
 
     /**
      * <p>Constructor for SetupImpl.</p>
@@ -72,17 +74,20 @@ public class SetupImpl implements Setup {
      * @param serviceClientAgreements a {@link api.equinix.javasdk.networkedge.client.internal.AgreementClient} object.
      * @param serviceClientPricing a {@link api.equinix.javasdk.networkedge.client.internal.PricingClient} object.
      * @param serviceClientFiles a {@link api.equinix.javasdk.networkedge.client.internal.FilesClient} object.
+     * @param serviceClientNotifications a {@link api.equinix.javasdk.networkedge.client.internal.NotificationClient} object.
      * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
      */
     public SetupImpl(AccountClient<Account> serviceClientAccounts, MetroClient<Metro> serviceClientMetros,
                      AgreementClient serviceClientAgreements, PricingClient serviceClientPricing,
-                     FilesClient serviceClientFiles, NetworkEdge serviceManager) {
+                     FilesClient serviceClientFiles, NotificationClient serviceClientNotifications,
+                     NetworkEdge serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClientAccounts = serviceClientAccounts;
         this.serviceClientMetros = serviceClientMetros;
         this.serviceClientAgreements = serviceClientAgreements;
         this.serviceClientPricing = serviceClientPricing;
         this.serviceClientFiles = serviceClientFiles;
+        this.serviceClientNotifications = serviceClientNotifications;
     }
 
     /** {@inheritDoc} */
@@ -195,5 +200,10 @@ public class SetupImpl implements Setup {
                              DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents) {
         return serviceClientFiles.uploadFile(metroCode, deviceTypeCode, processType,
                 deviceManagementType, licenseType, fileContents);
+    }
+
+    /** {@inheritDoc} */
+    public DowntimeNotification listDowntimeNotifications() {
+        return serviceClientNotifications.getDowntimeNotifications();
     }
 }

@@ -70,12 +70,12 @@ public class DeviceWrapper extends ResourceImpl<Device> implements Device {
      * @return a {@link java.lang.Boolean} object.
      */
     public Boolean restoreFromBackup(Backup backup){
-        return restoreFromBackup(backup.getUuid());
+        return restoreFromBackup(backup.getUuid(), backup.getName());
     }
 
     /** {@inheritDoc} */
-    public Boolean restoreFromBackup(String backupUuid){
-        return ((DeviceClientImpl)this.serviceClient).restore(this.getUuid(), backupUuid);
+    public Boolean restoreFromBackup(String backupUuid, String backupName){
+        return ((DeviceClientImpl)this.serviceClient).restore(backupUuid, backupName);
     }
 
     /** {@inheritDoc} */

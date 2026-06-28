@@ -173,7 +173,7 @@ public class DeviceJson extends Lifecycle {
     private String secondaryDnsName;
 
     @JsonProperty("accountNumber")
-    private Integer accountNumber;
+    private String accountNumber;
 
     @JsonProperty("accountName")
     private String accountName;
@@ -275,4 +275,53 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("versionLastUpgradedDate")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime versionLastUpgradedDate;
+
+    @JsonProperty("expiry")
+    private String expiry;
+
+    @JsonProperty("sshIpFqdnStatus")
+    private SshIpFqdnStatus sshIpFqdnStatus;
+
+    @JsonProperty("connectivity")
+    private Connectivity connectivity;
+
+    @JsonProperty("pricingDetails")
+    private DevicePricingDetail pricingDetails;
+
+    @JsonProperty("plane")
+    private DevicePlane plane;
+
+    @JsonProperty("newTermLength")
+    private String newTermLength;
+
+    @JsonProperty("channelPartner")
+    private String channelPartner;
+
+    // Network Edge responses use *DateTime audit fields rather than the shared Lifecycle *Date names.
+    @JsonProperty("createdDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdDateTime;
+
+    @JsonProperty("lastUpdatedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime lastUpdatedDateTime;
+
+    @JsonProperty("deletedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime deletedDateTime;
+
+    @Override
+    public LocalDateTime getCreatedDate() {
+        return createdDateTime != null ? createdDateTime : super.getCreatedDate();
+    }
+
+    @Override
+    public LocalDateTime getLastUpdatedDate() {
+        return lastUpdatedDateTime != null ? lastUpdatedDateTime : super.getLastUpdatedDate();
+    }
+
+    @Override
+    public LocalDateTime getDeletedDate() {
+        return deletedDateTime != null ? deletedDateTime : super.getDeletedDate();
+    }
 }

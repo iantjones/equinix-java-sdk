@@ -16,8 +16,8 @@
 
 package api.equinix.javasdk.networkedge.model.json.creators;
 
-import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.networkedge.enums.RedundancyType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,8 +41,11 @@ public class DeviceLinkCreatorJson {
     @JsonProperty("subnet")
     private final String subnet;
 
-    @JsonProperty("links")
-    private final List<Link> links;
+    @JsonProperty("redundancyType")
+    private final RedundancyType redundancyType;
+
+    @JsonProperty("metroLinks")
+    private final List<Link> metroLinks;
 
     @JsonProperty("linkDevices")
     private final List<LinkDevice> linkDevices;
@@ -51,19 +54,16 @@ public class DeviceLinkCreatorJson {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     static class Link {
         @JsonProperty("accountNumber")
-        private Integer accountNumber;
-
-        @JsonProperty("sourceMetroCode")
-        private MetroCode sourceMetroCode;
-
-        @JsonProperty("destinationMetroCode")
-        private MetroCode destinationMetroCode;
+        private String accountNumber;
 
         @JsonProperty("throughput")
-        private Double throughput;
+        private String throughput;
 
         @JsonProperty("throughputUnit")
-        private BandwidthUnit throughputUnit;
+        private String throughputUnit;
+
+        @JsonProperty("metroCode")
+        private MetroCode metroCode;
     }
 
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -73,7 +73,7 @@ public class DeviceLinkCreatorJson {
         private String deviceUuid;
 
         @JsonProperty("asn")
-        private Integer asn;
+        private Long asn;
 
         @JsonProperty("interfaceId")
         private Integer interfaceId;
@@ -82,7 +82,8 @@ public class DeviceLinkCreatorJson {
     DeviceLinkCreatorJson(DeviceLinkOperator.DeviceLinkBuilder deviceLinkBuilder) {
         this.groupName = deviceLinkBuilder.getGroupName();
         this.subnet = deviceLinkBuilder.getSubnet();
-        this.links = deviceLinkBuilder.getLinks();
+        this.redundancyType = deviceLinkBuilder.getRedundancyType();
+        this.metroLinks = deviceLinkBuilder.getMetroLinks();
         this.linkDevices = deviceLinkBuilder.getLinkDevices();
     }
 }

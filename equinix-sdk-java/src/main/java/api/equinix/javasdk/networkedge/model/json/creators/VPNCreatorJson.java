@@ -44,7 +44,7 @@ public class VPNCreatorJson {
     private String peerSharedKey;
 
     @JsonProperty("remoteAsn")
-    private Integer remoteAsn;
+    private Long remoteAsn;
 
     @JsonProperty("remoteIpAddress")
     private String remoteIpAddress;
@@ -53,7 +53,7 @@ public class VPNCreatorJson {
     private String password;
 
     @JsonProperty("localAsn")
-    private Integer localAsn;
+    private Long localAsn;
 
     @JsonProperty("tunnelIp")
     private String tunnelIp;

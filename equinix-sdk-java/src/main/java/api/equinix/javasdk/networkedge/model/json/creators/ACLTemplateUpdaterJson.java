@@ -68,5 +68,8 @@ public class ACLTemplateUpdaterJson {
 
         @JsonProperty("seqNo")
         private Integer seqNo;
+
+        @JsonProperty("description")
+        private String description;
     }
 }

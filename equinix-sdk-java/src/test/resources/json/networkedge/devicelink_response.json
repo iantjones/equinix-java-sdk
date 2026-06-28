@@ -4,13 +4,14 @@
   "groupName": "test-device-link",
   "subnet": "10.0.0.0/24",
   "status": "PROVISIONED",
-  "links": [
+  "redundancyType": "PRIMARY",
+  "metroLinks": [
     {
-      "accountNumber": 123456,
-      "throughput": 50,
-      "throughputUnit": "MB",
-      "sourceMetroCode": "SV",
-      "destinationMetroCode": "DC"
+      "accountName": "Acme Corp",
+      "metroCode": "SV",
+      "metroName": "Silicon Valley",
+      "throughput": "50",
+      "throughputUnit": "MB"
     }
   ],
   "linkDevices": [

@@ -9,5 +9,5 @@
   "remoteAsn": 65001,
   "authenticationKey": "secret-key",
   "provisioningStatus": "PROVISIONED",
-  "state": "Established"
+  "state": "ESTABLISHED"
 }

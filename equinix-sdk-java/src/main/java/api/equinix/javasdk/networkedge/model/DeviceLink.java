@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model;
 
 import api.equinix.javasdk.networkedge.enums.DeviceLinkStatus;
+import api.equinix.javasdk.networkedge.enums.RedundancyType;
 import api.equinix.javasdk.networkedge.enums.Source;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceLinkSupportDetail;
@@ -64,6 +65,13 @@ public interface DeviceLink {
     String getSubnet();
 
     /**
+     * <p>getRedundancyType.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.enums.RedundancyType} object.
+     */
+    RedundancyType getRedundancyType();
+
+    /**
      * <p>getStatus.</p>
      *
      * @return a {@link api.equinix.javasdk.networkedge.enums.DeviceLinkStatus} object.
@@ -71,11 +79,11 @@ public interface DeviceLink {
     DeviceLinkStatus getStatus();
 
     /**
-     * <p>getLinks.</p>
+     * <p>getMetroLinks.</p>
      *
      * @return a {@link java.util.List} object.
      */
-    List<Link> getLinks();
+    List<Link> getMetroLinks();
 
     /**
      * <p>getLinkDevices.</p>

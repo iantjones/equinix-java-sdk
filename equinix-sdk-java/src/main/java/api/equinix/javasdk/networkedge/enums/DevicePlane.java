@@ -23,5 +23,6 @@ package api.equinix.javasdk.networkedge.enums;
  * @version $Id: $Id
  */
 public enum DevicePlane {
-    PRIMARY
+    PRIMARY,
+    SECONDARY
 }

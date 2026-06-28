@@ -26,7 +26,15 @@ import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigIm
 import api.equinix.javasdk.networkedge.client.internal.DeviceClient;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
+import api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceReboot;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceRebootHistory;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgrade;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgradeHistory;
+import api.equinix.javasdk.networkedge.model.implementation.DownloadableImage;
+import api.equinix.javasdk.networkedge.model.implementation.ImageDownload;
+import api.equinix.javasdk.networkedge.model.implementation.InterfaceStats;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
@@ -84,9 +92,52 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
     }
 
     /** {@inheritDoc} */
-    public Boolean restore(String uuid, String backupUuid) {
-        return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("uuid", uuid),
-                Map.of("backupUuid", Utils.singleParamList(backupUuid)), null);
+    public AllowedInterfaceResponse getAllowedInterfaces(String deviceType, Map<String, List<String>> queryParams) {
+        return getAs("GetAllowedInterfaces", Map.of("deviceType", deviceType), queryParams, AllowedInterfaceResponse.class);
+    }
+
+    /** {@inheritDoc} */
+    public List<DeviceReboot> listReloadHistory(String uuid) {
+        DeviceRebootHistory history = getAs("ListReloadHistory", Map.of("uuid", uuid), null, DeviceRebootHistory.class);
+        return history != null ? history.getData() : null;
+    }
+
+    /** {@inheritDoc} */
+    public List<DeviceUpgrade> listUpgradeHistory(String uuid) {
+        DeviceUpgradeHistory history = getAs("ListUpgradeHistory", Map.of("uuid", uuid), null, DeviceUpgradeHistory.class);
+        return history != null ? history.getData() : null;
+    }
+
+    /** {@inheritDoc} */
+    public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime) {
+        Map<String, List<String>> qParams = new java.util.HashMap<>();
+        if (startDateTime != null) {
+            qParams.put("startDateTime", Utils.singleParamList(startDateTime));
+        }
+        if (endDateTime != null) {
+            qParams.put("endDateTime", Utils.singleParamList(endDateTime));
+        }
+        return getAs("GetInterfaceStatistics", Map.of("uuid", uuid, "interfaceId", interfaceId),
+                qParams.isEmpty() ? null : qParams, InterfaceStats.class);
+    }
+
+    /** {@inheritDoc} */
+    public List<DownloadableImage> listDownloadableImages(String deviceType) {
+        return listAs("ListDownloadableImages", Map.of("deviceType", deviceType), null, DownloadableImage.class);
+    }
+
+    /** {@inheritDoc} */
+    public ImageDownload requestImageDownload(String deviceType, String version) {
+        return postForType("RequestImageDownload", Map.of("deviceType", deviceType, "version", version),
+                null, ImageDownload.getResponseTypeRef());
+    }
+
+    /** {@inheritDoc} */
+    public Boolean restore(String backupUuid, String backupName) {
+        // Per spec restoreDeviceBackupByUuid: PATCH /ne/v1/devices/{uuid}/restore where {uuid} is the
+        // BACKUP uuid; the body is DeviceBackupUpdateRequest (required name). No query parameter.
+        return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("uuid", backupUuid),
+                null, Utils.singlePropertyBody("name", backupName));
     }
 
     /** {@inheritDoc} */

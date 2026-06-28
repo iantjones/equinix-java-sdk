@@ -25,6 +25,7 @@ import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Account;
 import api.equinix.javasdk.networkedge.model.Metro;
 import api.equinix.javasdk.networkedge.model.implementation.AgreementStatus;
+import api.equinix.javasdk.networkedge.model.implementation.DowntimeNotification;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
 
 import java.util.List;
@@ -142,4 +143,12 @@ public interface Setup {
      */
     String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
                       DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents);
+
+    /**
+     * Returns the current planned and unplanned downtime notifications for Network Edge APIs
+     * and infrastructure.
+     *
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.DowntimeNotification}
+     */
+    DowntimeNotification listDowntimeNotifications();
 }

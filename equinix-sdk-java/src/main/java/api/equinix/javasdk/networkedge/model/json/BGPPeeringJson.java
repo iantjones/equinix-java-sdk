@@ -18,13 +18,17 @@ package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Lifecycle;
+import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.networkedge.enums.BGPState;
 import api.equinix.javasdk.networkedge.enums.BGPStatus;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
 import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>BGPPeeringJson class.</p>
@@ -56,10 +60,10 @@ public class BGPPeeringJson extends Lifecycle {
     private String remoteIpAddress;
 
     @JsonProperty("localAsn")
-    private Integer localAsn;
+    private Long localAsn;
 
     @JsonProperty("remoteAsn")
-    private Integer remoteAsn;
+    private Long remoteAsn;
 
     @JsonProperty("authenticationKey")
     private String authenticationKey;
@@ -69,4 +73,32 @@ public class BGPPeeringJson extends Lifecycle {
 
     @JsonProperty("state")
     private BGPState state;
+
+    // Network Edge responses use *DateTime audit fields rather than the shared Lifecycle *Date names.
+    @JsonProperty("createdDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdDateTime;
+
+    @JsonProperty("lastUpdatedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime lastUpdatedDateTime;
+
+    @JsonProperty("deletedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime deletedDateTime;
+
+    @Override
+    public LocalDateTime getCreatedDate() {
+        return createdDateTime != null ? createdDateTime : super.getCreatedDate();
+    }
+
+    @Override
+    public LocalDateTime getLastUpdatedDate() {
+        return lastUpdatedDateTime != null ? lastUpdatedDateTime : super.getLastUpdatedDate();
+    }
+
+    @Override
+    public LocalDateTime getDeletedDate() {
+        return deletedDateTime != null ? deletedDateTime : super.getDeletedDate();
+    }
 }

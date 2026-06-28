@@ -105,7 +105,7 @@ class DeviceDeserializationTest {
 
     @Test
     void accountNumber_isDeserialized() {
-        assertEquals(123456, device.getAccountNumber());
+        assertEquals("123456", device.getAccountNumber());
     }
 
     @Test

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.networkedge.model.implementation;
 
+import api.equinix.javasdk.networkedge.enums.CvpType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -49,9 +50,6 @@ public class DeviceVendorConfig {
     @JsonProperty("remoteId")
     private String remoteId;
 
-    @JsonProperty("hostNamePrefix")
-    private String hostNamePrefix;
-
     @JsonProperty("controller1")
     private String controller1;
     
@@ -84,4 +82,49 @@ public class DeviceVendorConfig {
     
     @JsonProperty("applianceTag")
     private String applianceTag;
+
+    @JsonProperty("userName")
+    private String userName;
+
+    @JsonProperty("connectToCloudVision")
+    private Boolean connectToCloudVision;
+
+    @JsonProperty("cvpType")
+    private CvpType cvpType;
+
+    @JsonProperty("cvpFqdn")
+    private String cvpFqdn;
+
+    @JsonProperty("cvpIpAddress")
+    private String cvpIpAddress;
+
+    @JsonProperty("cvaasPort")
+    private String cvaasPort;
+
+    @JsonProperty("cvpPort")
+    private String cvpPort;
+
+    @JsonProperty("cvpToken")
+    private String cvpToken;
+
+    @JsonProperty("provisioningKey")
+    private String provisioningKey;
+
+    @JsonProperty("privateAddress")
+    private String privateAddress;
+
+    @JsonProperty("privateCidrMask")
+    private String privateCidrMask;
+
+    @JsonProperty("privateGateway")
+    private String privateGateway;
+
+    @JsonProperty("licenseId")
+    private String licenseId;
+
+    @JsonProperty("panoramaIpAddress")
+    private String panoramaIpAddress;
+
+    @JsonProperty("panoramaAuthKey")
+    private String panoramaAuthKey;
 }

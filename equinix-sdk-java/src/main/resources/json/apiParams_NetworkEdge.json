@@ -11,6 +11,14 @@
           }
         }
       },
+      "Notifications": {
+        "rootUri": "notifications",
+        "serviceEndpoints": {
+          "ListDowntimeNotifications": {
+            "httpMethod": "GET"
+          }
+        }
+      },
       "PublicKeys": {
         "rootUri": "publicKeys",
         "serviceEndpoints": {
@@ -73,6 +81,11 @@
             "overrideRootUri": true,
             "requestUri": "deviceTypes"
           },
+          "GetAllowedInterfaces": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "deviceTypes/{$deviceType}/interfaces"
+          },
           "ListDevices": {
             "httpMethod": "GET"
           },
@@ -107,6 +120,26 @@
           "SoftRebootDevice": {
             "httpMethod": "POST",
             "requestUri": "{$uuid}/softReboot"
+          },
+          "ListReloadHistory": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/softReboot"
+          },
+          "ListUpgradeHistory": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/resourceUpgrade"
+          },
+          "GetInterfaceStatistics": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/interfaces/{$interfaceId}/stats"
+          },
+          "ListDownloadableImages": {
+            "httpMethod": "GET",
+            "requestUri": "{$deviceType}/repositories"
+          },
+          "RequestImageDownload": {
+            "httpMethod": "POST",
+            "requestUri": "{$deviceType}/repositories/{$version}/download"
           },
           "CreateDeviceRMA": {
             "httpMethod": "POST",
@@ -266,7 +299,7 @@
           },
           "RestoreBackup": {
             "httpMethod": "PATCH",
-            "requestUri": "devices/{$deviceUuid}/restore",
+            "requestUri": "devices/{$backupUuid}/restore",
             "overrideRootUri": true
           },
           "UpdateBackup": {

@@ -61,7 +61,7 @@ public class LinkDevice {
     private NetworkScope networkScope;
 
     @JsonProperty("asn")
-    private Integer asn;
+    private Long asn;
 
     @JsonProperty("ipAssigned")
     private String ipAssigned;

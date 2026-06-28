@@ -21,7 +21,13 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceType;
+import api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceReboot;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgrade;
+import api.equinix.javasdk.networkedge.model.implementation.DownloadableImage;
+import api.equinix.javasdk.networkedge.model.implementation.ImageDownload;
+import api.equinix.javasdk.networkedge.model.implementation.InterfaceStats;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator;
@@ -76,6 +82,59 @@ public interface Devices {
      * @return {@link java.util.List}
      */
     List<NetworkInterface> listInterfaces(String uuid);
+
+    /**
+     * Returns the interface layout allowed for a device type with a chosen configuration. Use this
+     * to size a device before creation.
+     *
+     * @param requestBuilder the device type and configuration parameters.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse}
+     */
+    AllowedInterfaceResponse listAllowedInterfaces(RequestBuilder.AllowedInterfaces requestBuilder);
+
+    /**
+     * Returns the reload/soft-reboot history of the specified device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @return {@link java.util.List}
+     */
+    List<DeviceReboot> listReloadHistory(String uuid);
+
+    /**
+     * Returns the resource-upgrade history of the specified device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @return {@link java.util.List}
+     */
+    List<DeviceUpgrade> listUpgradeHistory(String uuid);
+
+    /**
+     * Returns interface throughput statistics for an interface of the specified device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @param interfaceId the interface id.
+     * @param startDateTime the start of the stats window (ISO-8601), or {@code null}.
+     * @param endDateTime the end of the stats window (ISO-8601), or {@code null}.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.InterfaceStats}
+     */
+    InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime);
+
+    /**
+     * Lists the images available to download for the specified device type.
+     *
+     * @param deviceType the device type code.
+     * @return {@link java.util.List}
+     */
+    List<DownloadableImage> listDownloadableImages(String deviceType);
+
+    /**
+     * Requests a download link for a specific image version of the specified device type.
+     *
+     * @param deviceType the device type code.
+     * @param version the device version.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.ImageDownload}
+     */
+    ImageDownload requestImageDownload(String deviceType, String version);
 
     /**
      * Returns an instance of DeviceBuilder for defining a new device.
