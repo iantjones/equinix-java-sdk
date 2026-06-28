@@ -21,9 +21,10 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.json.SupportPlanJson;
 
+import java.util.List;
+import java.util.Map;
+
 public interface SupportPlanClient<T> extends Pageable<T> {
 
-    Page<SupportPlan, SupportPlanJson> list();
-
-    SupportPlanJson getByUuid(String uuid);
+    Page<SupportPlan, SupportPlanJson> list(Map<String, List<String>> queryParams);
 }

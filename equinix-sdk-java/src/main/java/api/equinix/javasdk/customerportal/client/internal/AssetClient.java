@@ -20,10 +20,11 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.json.AssetJson;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
 
 public interface AssetClient<T> extends Pageable<T> {
 
-    Page<Asset, AssetJson> list();
+    Page<Asset, AssetJson> search(AssetSearchRequest request);
 
-    AssetJson getByUuid(String uuid);
+    AssetJson getByUuid(String assetId);
 }

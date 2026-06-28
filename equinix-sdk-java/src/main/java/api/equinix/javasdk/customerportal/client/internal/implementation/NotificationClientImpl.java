@@ -16,29 +16,38 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.NotificationClient;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.json.NotificationJson;
+import api.equinix.javasdk.customerportal.model.json.NotificationSearchResponseJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 
-public class NotificationClientImpl extends ResourceClientBase<Notification, NotificationJson> implements NotificationClient<Notification> {
+import java.util.List;
+import java.util.Map;
+
+public class NotificationClientImpl extends ClientBase implements NotificationClient {
 
     public NotificationClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Notifications", NotificationJson.class);
+        super(configClient, "CustomerPortal", "Notifications");
     }
 
-    @Override
-    protected Notification wrap(NotificationJson json) {
-        return json;
+    public List<? extends Notification> searchIbx(NotificationSearchRequest request) {
+        NotificationSearchResponseJson response = postAs("SearchIbxNotifications", request, NotificationSearchResponseJson.class);
+        return response.getData();
     }
 
-    public Page<Notification, NotificationJson> list() {
-        return listPage("ListNotifications");
+    public List<? extends Notification> searchNetwork(NotificationSearchRequest request) {
+        NotificationSearchResponseJson response = postAs("SearchNetworkNotifications", request, NotificationSearchResponseJson.class);
+        return response.getData();
     }
 
-    public NotificationJson getByUuid(String uuid) {
-        return getOne("GetNotification", uuid);
+    public NotificationJson getIbxById(String id) {
+        return getAs("GetIbxNotification", Map.of("id", id), null, NotificationJson.class);
+    }
+
+    public NotificationJson getNetworkById(String id) {
+        return getAs("GetNetworkNotification", Map.of("id", id), null, NotificationJson.class);
     }
 }

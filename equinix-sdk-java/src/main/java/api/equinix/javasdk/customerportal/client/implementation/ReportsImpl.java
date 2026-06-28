@@ -23,7 +23,11 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Reports;
 import api.equinix.javasdk.customerportal.client.internal.ReportClient;
 import api.equinix.javasdk.customerportal.model.Report;
+import api.equinix.javasdk.customerportal.model.ScheduledReport;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
+import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
+
+import java.util.List;
 
 public class ReportsImpl implements Reports {
 
@@ -36,13 +40,29 @@ public class ReportsImpl implements Reports {
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<Report> list() {
-        Page<Report, ReportJson> responsePage = this.serviceClient.list();
+    public PaginatedList<Report> getReports() {
+        Page<Report, ReportJson> responsePage = this.serviceClient.getReports();
         PaginatedList<Report> reportList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(reportList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    public Report getByUuid(String uuid) {
-        return this.serviceClient.getByUuid(uuid);
+    public Report getReportById(String reportId) {
+        return this.serviceClient.getReportById(reportId);
+    }
+
+    public List<? extends ScheduledReport> getScheduledReports() {
+        return this.serviceClient.getScheduledReports();
+    }
+
+    public ScheduledReport scheduleReport(ScheduleReportRequest request) {
+        return this.serviceClient.scheduleReport(request);
+    }
+
+    public Report generateReport(String scheduledId) {
+        return this.serviceClient.generateReport(scheduledId);
+    }
+
+    public byte[] downloadReport(String reportId) {
+        return this.serviceClient.downloadReport(reportId);
     }
 }

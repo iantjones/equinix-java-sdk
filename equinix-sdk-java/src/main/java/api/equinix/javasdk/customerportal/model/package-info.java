@@ -17,18 +17,18 @@
 /**
  * Customer Portal model interfaces for the Equinix Java SDK. Defines data access
  * contracts for portal resources including
- * {@link api.equinix.javasdk.customerportal.model.CrossConnect},
  * {@link api.equinix.javasdk.customerportal.model.TroubleTicket},
- * {@link api.equinix.javasdk.customerportal.model.WorkVisit},
  * {@link api.equinix.javasdk.customerportal.model.SmartHandResponse},
- * {@link api.equinix.javasdk.customerportal.model.Shipment},
+ * {@link api.equinix.javasdk.customerportal.model.OrderResponse},
  * {@link api.equinix.javasdk.customerportal.model.Order},
  * {@link api.equinix.javasdk.customerportal.model.Quote},
  * {@link api.equinix.javasdk.customerportal.model.InvoiceDetail}, and
- * {@link api.equinix.javasdk.customerportal.model.SupportCase}. Mutable resources
- * expose update and cancel operations through their wrapper implementations.
+ * {@link api.equinix.javasdk.customerportal.model.SupportCase}. Order-submission resources
+ * (cross-connects, shipments, work visits, secure cabinets) return an
+ * {@link api.equinix.javasdk.customerportal.model.OrderResponse}; the resulting order is then
+ * tracked through {@link api.equinix.javasdk.customerportal.model.Order}.
  *
- * @see api.equinix.javasdk.customerportal.model.CrossConnect
  * @see api.equinix.javasdk.customerportal.model.TroubleTicket
+ * @see api.equinix.javasdk.customerportal.model.Order
  */
 package api.equinix.javasdk.customerportal.model;

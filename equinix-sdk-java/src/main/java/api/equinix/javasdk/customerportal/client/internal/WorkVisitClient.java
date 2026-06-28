@@ -16,23 +16,13 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
-import api.equinix.javasdk.customerportal.model.json.WorkVisitJson;
-import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitCreatorJson;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 
-public interface WorkVisitClient<T> extends Pageable<T> {
+public interface WorkVisitClient {
 
-    Page<WorkVisit, WorkVisitJson> list();
+    OrderResponse order(WorkVisitOrderRequest request);
 
-    WorkVisitJson getByUuid(String uuid);
-
-    WorkVisitJson create(WorkVisitCreatorJson workVisitCreatorJson);
-
-    WorkVisitJson update(String uuid, WorkVisitCreatorJson workVisitCreatorJson);
-
-    WorkVisitJson cancel(String uuid);
-
-    WorkVisitJson refresh(String uuid);
+    OrderResponse update(String orderId, WorkVisitUpdateRequest request);
 }

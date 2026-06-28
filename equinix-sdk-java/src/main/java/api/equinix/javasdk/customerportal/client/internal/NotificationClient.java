@@ -16,14 +16,19 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.json.NotificationJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 
-public interface NotificationClient<T> extends Pageable<T> {
+import java.util.List;
 
-    Page<Notification, NotificationJson> list();
+public interface NotificationClient {
 
-    NotificationJson getByUuid(String uuid);
+    List<? extends Notification> searchIbx(NotificationSearchRequest request);
+
+    List<? extends Notification> searchNetwork(NotificationSearchRequest request);
+
+    NotificationJson getIbxById(String id);
+
+    NotificationJson getNetworkById(String id);
 }

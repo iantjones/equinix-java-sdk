@@ -16,16 +16,23 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.customerportal.model.ConnectionService;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
-import api.equinix.javasdk.customerportal.model.json.LookupLocationJson;
+import api.equinix.javasdk.customerportal.model.PatchPanel;
+import api.equinix.javasdk.customerportal.model.Provider;
+import api.equinix.javasdk.customerportal.model.json.PatchPanelJson;
 
-public interface LookupClient<T> extends Pageable<T> {
+import java.util.List;
 
-    Page<LookupLocation, LookupLocationJson> listLocations();
+public interface LookupClient {
 
-    LookupLocationJson getLocationByUuid(String uuid);
+    List<? extends LookupLocation> listLocations(String permissionCode);
 
-    Page<LookupLocation, LookupLocationJson> listPatchPanels();
+    List<? extends PatchPanel> listPatchPanels(String cabinetId);
+
+    PatchPanelJson getPatchPanelById(String patchPanelId);
+
+    List<? extends Provider> listProviders(String cageId, String accountNumber);
+
+    List<? extends ConnectionService> listConnectionServices(String ibx);
 }

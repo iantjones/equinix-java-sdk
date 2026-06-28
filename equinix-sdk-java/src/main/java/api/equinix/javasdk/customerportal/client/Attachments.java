@@ -22,28 +22,45 @@ import api.equinix.javasdk.customerportal.model.json.creators.AttachmentOperator
 
 /**
  * Client interface for managing file attachments in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and upload file attachments associated
- * with support cases, orders, and other portal resources.
+ *
+ * <p>Backed by the Attachments v1 API at {@code /v1/attachments}. Provides listing, retrieval,
+ * upload, download and deletion of attachments referenced by orders, tickets and cases.</p>
  */
 public interface Attachments {
 
     /**
      * Lists all attachments for the current account.
      *
+     * <p>Maps to {@code GET /v1/attachments} ({@code getAttachments}).</p>
+     *
      * @return a paginated list of attachments
      */
     PaginatedList<Attachment> list();
 
     /**
-     * Retrieves a specific attachment by its unique identifier.
+     * Retrieves a specific attachment's metadata by its identifier.
      *
-     * @param uuid the unique identifier of the attachment
+     * <p>Maps to {@code GET /v1/attachments/{attachmentId}} ({@code getAttachment}).</p>
+     *
+     * @param attachmentId the identifier of the attachment
      * @return the matching attachment
      */
-    Attachment getByUuid(String uuid);
+    Attachment getByUuid(String attachmentId);
 
     /**
-     * Returns a builder for defining a new attachment upload.
+     * Downloads an attachment's file bytes.
+     *
+     * <p>Maps to {@code GET /v1/attachments/{attachmentId}/file} ({@code getAttachedFile}).</p>
+     *
+     * @param attachmentId the identifier of the attachment
+     * @return the file bytes
+     */
+    byte[] download(String attachmentId);
+
+    /**
+     * Returns a builder for uploading a new attachment.
+     *
+     * <p>Maps to {@code POST /v1/attachments/file} ({@code createAttachment}).</p>
      *
      * @return a new AttachmentBuilder instance
      */

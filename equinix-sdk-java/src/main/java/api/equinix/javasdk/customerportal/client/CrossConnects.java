@@ -16,36 +16,51 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.customerportal.model.CrossConnect;
-import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOperator;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectDeinstallRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectUpdateRequest;
 
 /**
- * Client interface for managing cross-connect resources in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create cross-connect orders between
- * cages or cabinets within an IBX data center.
+ * Client interface for ordering cross-connects in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Cross Connect v2 order API at {@code /colocations/v2/orders/crossConnects}.
+ * Cross-connects are ordered, updated and deinstalled as orders; the resulting order is tracked
+ * through {@link Orders} and {@link OrderHistory}. Each operation returns the generated order id
+ * (parsed from the {@code Location} response header).</p>
  */
 public interface CrossConnects {
 
     /**
-     * Lists all cross-connects for the current account.
+     * Places a cross-connect installation order.
      *
-     * @return a paginated list of cross-connects
+     * <p>Maps to {@code POST /colocations/v2/orders/crossConnects} ({@code Order cross connects}).</p>
+     *
+     * @param request the cross-connect order request body
+     * @return the order submission result carrying the generated order id
      */
-    PaginatedList<CrossConnect> list();
+    OrderResponse order(CrossConnectOrderRequest request);
 
     /**
-     * Retrieves a specific cross-connect by its unique identifier.
+     * Updates a pending cross-connect order (notification contacts).
      *
-     * @param uuid the unique identifier of the cross-connect
-     * @return the matching cross-connect
+     * <p>Maps to {@code PATCH /colocations/v2/orders/crossConnects/{orderId}}
+     * ({@code Update a Cross Connect Order}).</p>
+     *
+     * @param orderId the identifier of the cross-connect order
+     * @param request the update request body
+     * @return the order submission result carrying the order id
      */
-    CrossConnect getByUuid(String uuid);
+    OrderResponse update(String orderId, CrossConnectUpdateRequest request);
 
     /**
-     * Returns a builder for defining a new cross-connect order.
+     * Places a cross-connect deinstallation order.
      *
-     * @return a new CrossConnectBuilder instance
+     * <p>Maps to {@code POST /colocations/v2/orders/crossConnects/deinstall}
+     * ({@code Place cross connect deinstallation order}).</p>
+     *
+     * @param request the deinstallation request body
+     * @return the order submission result carrying the generated order id
      */
-    CrossConnectOperator.CrossConnectBuilder define();
+    OrderResponse deinstall(CrossConnectDeinstallRequest request);
 }

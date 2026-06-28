@@ -17,28 +17,37 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Notifications;
 import api.equinix.javasdk.customerportal.client.internal.NotificationClient;
 import api.equinix.javasdk.customerportal.model.Notification;
-import api.equinix.javasdk.customerportal.model.json.NotificationJson;
+import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
+
+import java.util.List;
 
 public class NotificationsImpl implements Notifications {
 
     private final CustomerPortal serviceManager;
 
-    private final NotificationClient<Notification> serviceClient;
+    private final NotificationClient serviceClient;
 
-    public NotificationsImpl(NotificationClient<Notification> serviceClient, CustomerPortal serviceManager) {
+    public NotificationsImpl(NotificationClient serviceClient, CustomerPortal serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<Notification> list() {
-        Page<Notification, NotificationJson> responsePage = this.serviceClient.list();
-        PaginatedList<Notification> notificationList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(notificationList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public List<? extends Notification> searchIbx(NotificationSearchRequest request) {
+        return this.serviceClient.searchIbx(request);
+    }
+
+    public List<? extends Notification> searchNetwork(NotificationSearchRequest request) {
+        return this.serviceClient.searchNetwork(request);
+    }
+
+    public Notification getIbxById(String id) {
+        return this.serviceClient.getIbxById(id);
+    }
+
+    public Notification getNetworkById(String id) {
+        return this.serviceClient.getNetworkById(id);
     }
 }

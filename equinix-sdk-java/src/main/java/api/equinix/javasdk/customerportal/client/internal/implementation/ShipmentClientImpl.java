@@ -16,47 +16,37 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ShipmentClient;
-import api.equinix.javasdk.customerportal.model.Shipment;
-import api.equinix.javasdk.customerportal.model.json.ShipmentJson;
-import api.equinix.javasdk.customerportal.model.json.creators.ShipmentCreatorJson;
-import api.equinix.javasdk.customerportal.model.wrappers.ShipmentWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.OrderResponseJson;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 
-public class ShipmentClientImpl extends ResourceClientBase<Shipment, ShipmentJson> implements ShipmentClient<Shipment> {
+import java.util.Map;
+
+public class ShipmentClientImpl extends ClientBase implements ShipmentClient {
 
     public ShipmentClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Shipments", ShipmentJson.class);
+        super(configClient, "CustomerPortal", "Shipments");
     }
 
-    @Override
-    protected Shipment wrap(ShipmentJson json) {
-        return new ShipmentWrapper(json, this);
+    public OrderResponse order(ShipmentOrderRequest request) {
+        return submitOrder("OrderShipment", null, request);
     }
 
-    public Page<Shipment, ShipmentJson> list() {
-        return listPage("ListShipments");
+    public OrderResponse update(String orderId, ShipmentUpdateRequest request) {
+        return submitOrder("UpdateShipment", Map.of("orderId", orderId), request);
     }
 
-    public ShipmentJson getByUuid(String uuid) {
-        return getOne("GetShipment", uuid);
-    }
-
-    public ShipmentJson create(ShipmentCreatorJson shipmentCreatorJson) {
-        return postOne("CreateShipment", shipmentCreatorJson);
-    }
-
-    public ShipmentJson update(String uuid, ShipmentCreatorJson shipmentCreatorJson) {
-        return updateOne("UpdateShipment", uuid, shipmentCreatorJson);
-    }
-
-    public ShipmentJson cancel(String uuid) {
-        return deleteOne("CancelShipment", uuid);
-    }
-
-    public ShipmentJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {
+        EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, null, Object.class);
+        Utils.serializeJson(request, body);
+        String orderId = Utils.extractFromHeader(invoke(request), "Location", OrderLocation.ORDER_ID_PATTERN);
+        return new OrderResponseJson(orderId);
     }
 }

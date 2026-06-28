@@ -25,6 +25,8 @@ import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
 import api.equinix.javasdk.customerportal.model.json.creators.AttachmentCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.AttachmentWrapper;
 
+import java.util.Map;
+
 public class AttachmentClientImpl extends ResourceClientBase<Attachment, AttachmentJson> implements AttachmentClient<Attachment> {
 
     public AttachmentClientImpl(CustomerPortalConfigImpl configClient) {
@@ -41,15 +43,19 @@ public class AttachmentClientImpl extends ResourceClientBase<Attachment, Attachm
     }
 
     public AttachmentJson getByUuid(String uuid) {
-        return getOne("GetAttachment", uuid);
+        return getOne("GetAttachment", Map.of("attachmentId", uuid));
     }
 
     public AttachmentJson create(AttachmentCreatorJson attachmentCreatorJson) {
         return postOne("UploadAttachment", attachmentCreatorJson);
     }
 
+    public byte[] download(String attachmentId) {
+        return bytesOp("DownloadAttachment", Map.of("attachmentId", attachmentId), null);
+    }
+
     public AttachmentJson delete(String uuid) {
-        return deleteOne("DeleteAttachment", uuid);
+        return deleteOne("DeleteAttachment", Map.of("attachmentId", uuid));
     }
 
     public AttachmentJson refresh(String uuid) {

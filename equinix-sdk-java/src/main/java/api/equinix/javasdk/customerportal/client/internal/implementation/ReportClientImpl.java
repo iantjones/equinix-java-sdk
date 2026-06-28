@@ -17,11 +17,21 @@
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ReportClient;
 import api.equinix.javasdk.customerportal.model.Report;
+import api.equinix.javasdk.customerportal.model.ScheduledReport;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
+import api.equinix.javasdk.customerportal.model.json.ScheduledReportJson;
+import api.equinix.javasdk.customerportal.model.json.ScheduledReportsResponseJson;
+import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
+
+import java.util.List;
+import java.util.Map;
 
 public class ReportClientImpl extends ResourceClientBase<Report, ReportJson> implements ReportClient<Report> {
 
@@ -34,11 +44,30 @@ public class ReportClientImpl extends ResourceClientBase<Report, ReportJson> imp
         return json;
     }
 
-    public Page<Report, ReportJson> list() {
-        return listPage("ListReports");
+    public Page<Report, ReportJson> getReports() {
+        return listPage("GetReports");
     }
 
-    public ReportJson getByUuid(String uuid) {
-        return getOne("GetReport", uuid);
+    public ReportJson getReportById(String reportId) {
+        return getOne("GetReport", Map.of("reportId", reportId));
+    }
+
+    public List<? extends ScheduledReport> getScheduledReports() {
+        ScheduledReportsResponseJson response = getAs("GetScheduledReports", ScheduledReportsResponseJson.class);
+        return response.getData();
+    }
+
+    public ScheduledReportJson scheduleReport(ScheduleReportRequest request) {
+        return postAs("ScheduleReport", request, ScheduledReportJson.class);
+    }
+
+    public ReportJson generateReport(String scheduledId) {
+        EquinixRequest<ReportJson> request = buildRequestWithPathParams("GenerateReport", RequestType.SINGLE,
+                Map.of("scheduledId", scheduledId), ReportJson.class);
+        return Utils.handleSingletonResponse(invoke(request), request);
+    }
+
+    public byte[] downloadReport(String reportId) {
+        return bytesOp("DownloadReport", Map.of("reportId", reportId), null);
     }
 }

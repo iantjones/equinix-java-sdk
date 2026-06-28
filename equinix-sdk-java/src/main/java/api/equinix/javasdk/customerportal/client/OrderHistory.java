@@ -16,28 +16,37 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
+import api.equinix.javasdk.customerportal.model.PermissibleLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
+
+import java.util.List;
 
 /**
- * Client interface for accessing order history in the Equinix Customer Portal.
- * Provides read-only operations to list and retrieve historical order records
- * including completed, cancelled, and in-progress orders.
+ * Client interface for searching order history in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Order History v1 API at {@code /v1/retrieve-orders}. Orders are discovered by
+ * posting a filter to {@link #search(OrderHistorySearchRequest)}; the IBX/cage locations the
+ * current user may filter by are available via {@link #listLocations()}.</p>
  */
 public interface OrderHistory {
 
     /**
-     * Lists all order history items for the current account.
+     * Searches order history.
      *
-     * @return a paginated list of order history items
+     * <p>Maps to {@code POST /v1/retrieve-orders} ({@code POST_orders-history}).</p>
+     *
+     * @param request the search request body
+     * @return the matching order history records
      */
-    PaginatedList<OrderHistoryItem> list();
+    List<? extends OrderHistoryItem> search(OrderHistorySearchRequest request);
 
     /**
-     * Retrieves a specific order history item by its unique identifier.
+     * Lists the IBX/cage locations the current user may filter order history by.
      *
-     * @param uuid the unique identifier of the order history item
-     * @return the matching order history item
+     * <p>Maps to {@code GET /v1/retrieve-orders/locations} ({@code GET_retrieve-orders-locations}).</p>
+     *
+     * @return the list of permissible locations
      */
-    OrderHistoryItem getByUuid(String uuid);
+    List<? extends PermissibleLocation> listLocations();
 }

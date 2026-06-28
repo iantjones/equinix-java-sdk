@@ -16,29 +16,29 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.OrderHistoryClient;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
-import api.equinix.javasdk.customerportal.model.json.OrderHistoryItemJson;
+import api.equinix.javasdk.customerportal.model.PermissibleLocation;
+import api.equinix.javasdk.customerportal.model.json.OrderHistorySearchResponseJson;
+import api.equinix.javasdk.customerportal.model.json.PermissibleLocationJson;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
 
-public class OrderHistoryClientImpl extends ResourceClientBase<OrderHistoryItem, OrderHistoryItemJson> implements OrderHistoryClient<OrderHistoryItem> {
+import java.util.List;
+
+public class OrderHistoryClientImpl extends ClientBase implements OrderHistoryClient {
 
     public OrderHistoryClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "OrderHistory", OrderHistoryItemJson.class);
+        super(configClient, "CustomerPortal", "OrderHistory");
     }
 
-    @Override
-    protected OrderHistoryItem wrap(OrderHistoryItemJson json) {
-        return json;
+    public List<? extends OrderHistoryItem> search(OrderHistorySearchRequest request) {
+        OrderHistorySearchResponseJson response = postAs("SearchOrderHistory", request, OrderHistorySearchResponseJson.class);
+        return response.getContent();
     }
 
-    public Page<OrderHistoryItem, OrderHistoryItemJson> list() {
-        return listPage("ListOrderHistory");
-    }
-
-    public OrderHistoryItemJson getByUuid(String uuid) {
-        return getOne("GetOrderHistoryItem", uuid);
+    public List<? extends PermissibleLocation> listLocations() {
+        return listAs("ListOrderHistoryLocations", null, null, PermissibleLocationJson.class);
     }
 }

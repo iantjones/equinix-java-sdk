@@ -17,32 +17,30 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.OrderHistory;
 import api.equinix.javasdk.customerportal.client.internal.OrderHistoryClient;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
-import api.equinix.javasdk.customerportal.model.json.OrderHistoryItemJson;
+import api.equinix.javasdk.customerportal.model.PermissibleLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
+
+import java.util.List;
 
 public class OrderHistoryImpl implements OrderHistory {
 
     private final CustomerPortal serviceManager;
 
-    private final OrderHistoryClient<OrderHistoryItem> serviceClient;
+    private final OrderHistoryClient serviceClient;
 
-    public OrderHistoryImpl(OrderHistoryClient<OrderHistoryItem> serviceClient, CustomerPortal serviceManager) {
+    public OrderHistoryImpl(OrderHistoryClient serviceClient, CustomerPortal serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<OrderHistoryItem> list() {
-        Page<OrderHistoryItem, OrderHistoryItemJson> responsePage = this.serviceClient.list();
-        PaginatedList<OrderHistoryItem> orderHistoryItemList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(orderHistoryItemList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public List<? extends OrderHistoryItem> search(OrderHistorySearchRequest request) {
+        return this.serviceClient.search(request);
     }
 
-    public OrderHistoryItem getByUuid(String uuid) {
-        return this.serviceClient.getByUuid(uuid);
+    public List<? extends PermissibleLocation> listLocations() {
+        return this.serviceClient.listLocations();
     }
 }

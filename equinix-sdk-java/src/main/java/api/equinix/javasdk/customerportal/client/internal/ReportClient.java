@@ -19,11 +19,24 @@ package api.equinix.javasdk.customerportal.client.internal;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.Report;
+import api.equinix.javasdk.customerportal.model.ScheduledReport;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
+import api.equinix.javasdk.customerportal.model.json.ScheduledReportJson;
+import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
+
+import java.util.List;
 
 public interface ReportClient<T> extends Pageable<T> {
 
-    Page<Report, ReportJson> list();
+    Page<Report, ReportJson> getReports();
 
-    ReportJson getByUuid(String uuid);
+    ReportJson getReportById(String reportId);
+
+    List<? extends ScheduledReport> getScheduledReports();
+
+    ScheduledReportJson scheduleReport(ScheduleReportRequest request);
+
+    ReportJson generateReport(String scheduledId);
+
+    byte[] downloadReport(String reportId);
 }

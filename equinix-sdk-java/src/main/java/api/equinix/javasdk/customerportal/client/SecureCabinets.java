@@ -16,36 +16,41 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.customerportal.model.SecureCabinet;
-import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOperator;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.ProductAvailability;
+import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOrderRequest;
+
+import java.util.List;
 
 /**
- * Client interface for managing secure cabinet access in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create secure cabinet access requests
- * for controlled entry to customer cabinets within IBX data centers.
+ * Client interface for ordering secure cabinets in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Secure Cabinet v1 API at {@code /securecabinet/v1}. Secure cabinets are not
+ * listed or retrieved through this API; they are ordered via {@link #createOrder} (the resulting
+ * order is then tracked through {@link Orders} and {@link OrderHistory}), and the orderable
+ * configuration for an account is discovered through {@link #getProductsAvailability(String)}.</p>
  */
 public interface SecureCabinets {
 
     /**
-     * Lists all secure cabinet entries for the current account.
+     * Submits a secure cabinet order.
      *
-     * @return a paginated list of secure cabinet entries
+     * <p>Maps to {@code POST /securecabinet/v1/orders} ({@code createOrder}).</p>
+     *
+     * @param request the secure cabinet order request body
+     * @return the order submission result carrying the generated order id
      */
-    PaginatedList<SecureCabinet> list();
+    OrderResponse createOrder(SecureCabinetOrderRequest request);
 
     /**
-     * Retrieves a specific secure cabinet entry by its unique identifier.
+     * Lists the secure cabinet product availability (cabinet capacity and power configuration)
+     * for the given account.
      *
-     * @param uuid the unique identifier of the secure cabinet entry
-     * @return the matching secure cabinet entry
-     */
-    SecureCabinet getByUuid(String uuid);
-
-    /**
-     * Returns a builder for defining a new secure cabinet access request.
+     * <p>Maps to {@code GET /securecabinet/v1/availability/{accountNumber}}
+     * ({@code getProductsAvailability}).</p>
      *
-     * @return a new SecureCabinetBuilder instance
+     * @param accountNumber the account number
+     * @return the list of product availabilities per IBX
      */
-    SecureCabinetOperator.SecureCabinetBuilder define();
+    List<? extends ProductAvailability> getProductsAvailability(String accountNumber);
 }

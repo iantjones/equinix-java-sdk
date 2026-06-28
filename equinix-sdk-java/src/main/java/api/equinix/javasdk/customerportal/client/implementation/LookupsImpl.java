@@ -17,38 +17,43 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Lookups;
 import api.equinix.javasdk.customerportal.client.internal.LookupClient;
+import api.equinix.javasdk.customerportal.model.ConnectionService;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
-import api.equinix.javasdk.customerportal.model.json.LookupLocationJson;
+import api.equinix.javasdk.customerportal.model.PatchPanel;
+import api.equinix.javasdk.customerportal.model.Provider;
+
+import java.util.List;
 
 public class LookupsImpl implements Lookups {
 
     private final CustomerPortal serviceManager;
 
-    private final LookupClient<LookupLocation> serviceClient;
+    private final LookupClient serviceClient;
 
-    public LookupsImpl(LookupClient<LookupLocation> serviceClient, CustomerPortal serviceManager) {
+    public LookupsImpl(LookupClient serviceClient, CustomerPortal serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<LookupLocation> listLocations() {
-        Page<LookupLocation, LookupLocationJson> responsePage = this.serviceClient.listLocations();
-        PaginatedList<LookupLocation> locationList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(locationList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public List<? extends LookupLocation> listLocations(String permissionCode) {
+        return this.serviceClient.listLocations(permissionCode);
     }
 
-    public LookupLocation getLocationByUuid(String uuid) {
-        return this.serviceClient.getLocationByUuid(uuid);
+    public List<? extends PatchPanel> listPatchPanels(String cabinetId) {
+        return this.serviceClient.listPatchPanels(cabinetId);
     }
 
-    public PaginatedList<LookupLocation> listPatchPanels() {
-        Page<LookupLocation, LookupLocationJson> responsePage = this.serviceClient.listPatchPanels();
-        PaginatedList<LookupLocation> patchPanelList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(patchPanelList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public PatchPanel getPatchPanelById(String patchPanelId) {
+        return this.serviceClient.getPatchPanelById(patchPanelId);
+    }
+
+    public List<? extends Provider> listProviders(String cageId, String accountNumber) {
+        return this.serviceClient.listProviders(cageId, accountNumber);
+    }
+
+    public List<? extends ConnectionService> listConnectionServices(String ibx) {
+        return this.serviceClient.listConnectionServices(ibx);
     }
 }

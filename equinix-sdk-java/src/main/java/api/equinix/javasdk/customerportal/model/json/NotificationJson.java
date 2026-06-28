@@ -16,9 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.NotificationCategory;
 import api.equinix.javasdk.customerportal.model.Notification;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -26,6 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NotificationJson implements Notification {
 
     @Getter static TypeReference<List<NotificationJson>> listTypeRef = new TypeReference<>() {};

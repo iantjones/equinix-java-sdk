@@ -16,23 +16,13 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.customerportal.model.Shipment;
-import api.equinix.javasdk.customerportal.model.json.ShipmentJson;
-import api.equinix.javasdk.customerportal.model.json.creators.ShipmentCreatorJson;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 
-public interface ShipmentClient<T> extends Pageable<T> {
+public interface ShipmentClient {
 
-    Page<Shipment, ShipmentJson> list();
+    OrderResponse order(ShipmentOrderRequest request);
 
-    ShipmentJson getByUuid(String uuid);
-
-    ShipmentJson create(ShipmentCreatorJson shipmentCreatorJson);
-
-    ShipmentJson update(String uuid, ShipmentCreatorJson shipmentCreatorJson);
-
-    ShipmentJson cancel(String uuid);
-
-    ShipmentJson refresh(String uuid);
+    OrderResponse update(String orderId, ShipmentUpdateRequest request);
 }

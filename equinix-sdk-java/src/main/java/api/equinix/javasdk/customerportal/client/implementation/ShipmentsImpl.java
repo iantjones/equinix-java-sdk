@@ -17,39 +17,28 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Shipments;
 import api.equinix.javasdk.customerportal.client.internal.ShipmentClient;
-import api.equinix.javasdk.customerportal.model.Shipment;
-import api.equinix.javasdk.customerportal.model.json.ShipmentJson;
-import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOperator;
-import api.equinix.javasdk.customerportal.model.wrappers.ShipmentWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 
 public class ShipmentsImpl implements Shipments {
 
     private final CustomerPortal serviceManager;
 
-    private final ShipmentClient<Shipment> serviceClient;
+    private final ShipmentClient serviceClient;
 
-    public ShipmentsImpl(ShipmentClient<Shipment> serviceClient, CustomerPortal serviceManager) {
+    public ShipmentsImpl(ShipmentClient serviceClient, CustomerPortal serviceManager) {
         this.serviceClient = serviceClient;
         this.serviceManager = serviceManager;
     }
 
-    public PaginatedList<Shipment> list() {
-        Page<Shipment, ShipmentJson> responsePage = this.serviceClient.list();
-        PaginatedList<Shipment> shipmentList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, ShipmentWrapper::new);
-        return new PaginatedList<>(shipmentList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public OrderResponse order(ShipmentOrderRequest request) {
+        return this.serviceClient.order(request);
     }
 
-    public Shipment getByUuid(String uuid) {
-        ShipmentJson shipmentJson = this.serviceClient.getByUuid(uuid);
-        return new ShipmentWrapper(shipmentJson, this.serviceClient);
-    }
-
-    public ShipmentOperator.ShipmentBuilder define() {
-        return new ShipmentOperator(this.serviceClient).create();
+    public OrderResponse update(String orderId, ShipmentUpdateRequest request) {
+        return this.serviceClient.update(orderId, request);
     }
 }

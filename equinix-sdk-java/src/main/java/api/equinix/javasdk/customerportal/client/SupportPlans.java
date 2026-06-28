@@ -19,25 +19,35 @@ package api.equinix.javasdk.customerportal.client;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 
+import java.util.List;
+
 /**
- * Client interface for accessing support plan information in the Equinix Customer Portal.
- * Provides read-only operations to list and retrieve details about active support plans
- * and their associated service level agreements.
+ * Client interface for accessing Smart Hands support plans in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Support Plans v2 API at {@code /colocations/v2/supportPlans}. Support plans are
+ * listed (optionally filtered by account numbers, IBXs and plan ids); there is no per-id retrieval
+ * endpoint.</p>
  */
 public interface SupportPlans {
 
     /**
      * Lists all support plans for the current account.
      *
+     * <p>Maps to {@code GET /colocations/v2/supportPlans} ({@code Retrieve Smart Hands support plans}).</p>
+     *
      * @return a paginated list of support plans
      */
     PaginatedList<SupportPlan> list();
 
     /**
-     * Retrieves a specific support plan by its unique identifier.
+     * Lists support plans filtered by account numbers, IBXs and/or plan ids.
      *
-     * @param uuid the unique identifier of the support plan
-     * @return the matching support plan
+     * <p>Maps to {@code GET /colocations/v2/supportPlans} ({@code Retrieve Smart Hands support plans}).</p>
+     *
+     * @param accountNumbers the account numbers to filter by, or {@code null}
+     * @param ibxs           the IBX codes to filter by, or {@code null}
+     * @param planIds        the plan ids to filter by, or {@code null}
+     * @return a paginated list of matching support plans
      */
-    SupportPlan getByUuid(String uuid);
+    PaginatedList<SupportPlan> list(List<String> accountNumbers, List<String> ibxs, List<String> planIds);
 }

@@ -16,47 +16,46 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.CrossConnectClient;
-import api.equinix.javasdk.customerportal.model.CrossConnect;
-import api.equinix.javasdk.customerportal.model.json.CrossConnectJson;
-import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectCreatorJson;
-import api.equinix.javasdk.customerportal.model.wrappers.CrossConnectWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.OrderResponseJson;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectDeinstallRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectUpdateRequest;
 
-public class CrossConnectClientImpl extends ResourceClientBase<CrossConnect, CrossConnectJson> implements CrossConnectClient<CrossConnect> {
+import java.util.Map;
+
+public class CrossConnectClientImpl extends ClientBase implements CrossConnectClient {
 
     public CrossConnectClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "CrossConnects", CrossConnectJson.class);
+        super(configClient, "CustomerPortal", "CrossConnects");
     }
 
-    @Override
-    protected CrossConnect wrap(CrossConnectJson json) {
-        return new CrossConnectWrapper(json, this);
+    public OrderResponse order(CrossConnectOrderRequest request) {
+        return submitOrder("OrderCrossConnect", null, request);
     }
 
-    public Page<CrossConnect, CrossConnectJson> list() {
-        return listPage("ListCrossConnects");
+    public OrderResponse update(String orderId, CrossConnectUpdateRequest request) {
+        return submitOrder("UpdateCrossConnect", Map.of("orderId", orderId), request);
     }
 
-    public CrossConnectJson getByUuid(String uuid) {
-        return getOne("GetCrossConnect", uuid);
+    public OrderResponse deinstall(CrossConnectDeinstallRequest request) {
+        return submitOrder("DeinstallCrossConnect", null, request);
     }
 
-    public CrossConnectJson create(CrossConnectCreatorJson crossConnectCreatorJson) {
-        return postOne("CreateCrossConnect", crossConnectCreatorJson);
-    }
-
-    public CrossConnectJson update(String uuid, CrossConnectCreatorJson crossConnectCreatorJson) {
-        return updateOne("UpdateCrossConnect", uuid, crossConnectCreatorJson);
-    }
-
-    public CrossConnectJson delete(String uuid) {
-        return deleteOne("DeleteCrossConnect", uuid);
-    }
-
-    public CrossConnectJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    /**
+     * Serializes and dispatches an order request, returning the order id parsed from the
+     * {@code Location} response header.
+     */
+    private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {
+        EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, null, Object.class);
+        Utils.serializeJson(request, body);
+        String orderId = Utils.extractFromHeader(invoke(request), "Location", OrderLocation.ORDER_ID_PATTERN);
+        return new OrderResponseJson(orderId);
     }
 }

@@ -3,18 +3,16 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.IntegrationTestBase;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Asset;
-import api.equinix.javasdk.customerportal.model.CrossConnect;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.Order;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
-import api.equinix.javasdk.customerportal.model.Quote;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
 import api.equinix.javasdk.customerportal.model.Reseller;
-import api.equinix.javasdk.customerportal.model.Shipment;
 import api.equinix.javasdk.customerportal.model.SmartHandType;
 import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
-import api.equinix.javasdk.customerportal.model.TroubleTicket;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -64,36 +62,22 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List cross-connects and get by UUID")
-        void listCrossConnects() {
-            try {
-                PaginatedList<CrossConnect> items = timedCall("CustomerPortal", "list", "CrossConnect", "GET",
-                        () -> client.crossConnects().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-
-                if (items.size() > 0) {
-                    CrossConnect item = timedCall("CustomerPortal", "getByUuid", "CrossConnect", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.crossConnects().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "CrossConnects test skipped: " + e.getMessage());
-            }
+        @DisplayName("Cross-connect order client is reachable")
+        void crossConnectsClientReachable() {
+            // Cross-connects are ordered (POST/PATCH/deinstall), not listed; nothing read-only to call.
+            assertNotNull(client.crossConnects());
         }
 
         @Test
         @DisplayName("Get order by id and retrieve its negotiations")
         void getOrder() {
             try {
-                // Orders v2 has no list/create; discover an order id via order history.
-                PaginatedList<OrderHistoryItem> history = timedCall("CustomerPortal", "list", "OrderHistoryItem", "GET",
-                        () -> client.orderHistory().list());
+                // Orders v2 has no list/create; discover an order id via order history search.
+                List<? extends OrderHistoryItem> history = timedCall("CustomerPortal", "search", "OrderHistoryItem", "POST",
+                        () -> client.orderHistory().search(OrderHistorySearchRequest.builder().build()));
                 assertNotNull(history);
 
-                if (history.size() > 0) {
+                if (!history.isEmpty()) {
                     String orderId = history.get(0).getOrderNumber();
                     Order item = timedCall("CustomerPortal", "getByUuid", "Order", "GET", orderId,
                             () -> client.orders().getByUuid(orderId));
@@ -108,45 +92,17 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List trouble tickets and get by UUID")
-        void listTroubleTickets() {
-            try {
-                PaginatedList<TroubleTicket> items = timedCall("CustomerPortal", "list", "TroubleTicket", "GET",
-                        () -> client.troubleTickets().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-
-                if (items.size() > 0) {
-                    TroubleTicket item = timedCall("CustomerPortal", "getByUuid", "TroubleTicket", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.troubleTickets().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "TroubleTickets test skipped: " + e.getMessage());
-            }
+        @DisplayName("Trouble ticket client is reachable")
+        void troubleTicketsClientReachable() {
+            // Tickets v2 has no collection listing; create/getByUuid/update/notes/cancel only.
+            assertNotNull(client.troubleTickets());
         }
 
         @Test
-        @DisplayName("List work visits and get by UUID")
-        void listWorkVisits() {
-            try {
-                PaginatedList<WorkVisit> items = timedCall("CustomerPortal", "list", "WorkVisit", "GET",
-                        () -> client.workVisits().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-
-                if (items.size() > 0) {
-                    WorkVisit item = timedCall("CustomerPortal", "getByUuid", "WorkVisit", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.workVisits().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "WorkVisits test skipped: " + e.getMessage());
-            }
+        @DisplayName("Work visit order client is reachable")
+        void workVisitsClientReachable() {
+            // Work visits are scheduled (POST/PATCH), not listed; nothing read-only to call.
+            assertNotNull(client.workVisits());
         }
 
         @Test
@@ -166,45 +122,30 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List shipments and get by UUID")
-        void listShipments() {
-            try {
-                PaginatedList<Shipment> items = timedCall("CustomerPortal", "list", "Shipment", "GET",
-                        () -> client.shipments().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-
-                if (items.size() > 0) {
-                    Shipment item = timedCall("CustomerPortal", "getByUuid", "Shipment", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.shipments().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "Shipments test skipped: " + e.getMessage());
-            }
+        @DisplayName("Shipment order client is reachable")
+        void shipmentsClientReachable() {
+            // Shipments are scheduled (POST/PATCH), not listed; nothing read-only to call.
+            assertNotNull(client.shipments());
         }
 
         @Test
-        @DisplayName("List notifications returns valid response")
-        void listNotifications() {
+        @DisplayName("Search IBX notifications returns valid response")
+        void searchNotifications() {
             try {
-                PaginatedList<Notification> items = timedCall("CustomerPortal", "list", "Notification", "GET",
-                        () -> client.notifications().list());
+                List<? extends Notification> items = timedCall("CustomerPortal", "searchIbx", "Notification", "POST",
+                        () -> client.notifications().searchIbx(new NotificationSearchRequest(java.util.Map.of())));
                 assertNotNull(items);
-                assertTrue(items.size() >= 0);
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Notifications test skipped: " + e.getMessage());
             }
         }
 
         @Test
-        @DisplayName("List assets and get by UUID")
-        void listAssets() {
+        @DisplayName("Search assets and get by UUID")
+        void searchAssets() {
             try {
-                PaginatedList<Asset> items = timedCall("CustomerPortal", "list", "Asset", "GET",
-                        () -> client.assets().list());
+                PaginatedList<Asset> items = timedCall("CustomerPortal", "search", "Asset", "POST",
+                        () -> client.assets().search(new AssetSearchRequest(java.util.Map.of())));
                 assertNotNull(items);
                 assertTrue(items.size() >= 0);
 
@@ -221,24 +162,10 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List quotes and get by UUID")
-        void listQuotes() {
-            try {
-                PaginatedList<Quote> items = timedCall("CustomerPortal", "list", "Quote", "GET",
-                        () -> client.quotes().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-
-                if (items.size() > 0) {
-                    Quote item = timedCall("CustomerPortal", "getByUuid", "Quote", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.quotes().getByUuid(items.get(0).getUuid()));
-                    assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
-                }
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "Quotes test skipped: " + e.getMessage());
-            }
+        @DisplayName("Quote client is reachable")
+        void quotesClientReachable() {
+            // Quotes expose only getByUuid; without a known quote id there is nothing to list.
+            assertNotNull(client.quotes());
         }
     }
 }

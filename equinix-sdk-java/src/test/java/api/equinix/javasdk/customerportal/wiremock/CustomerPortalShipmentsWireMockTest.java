@@ -3,14 +3,23 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
-import api.equinix.javasdk.customerportal.model.Shipment;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 import org.junit.jupiter.api.*;
 
+import java.util.Map;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for CustomerPortal Shipments.
+ * WireMock-based API tests for CustomerPortal Shipment orders.
+ *
+ * <p>Exercises {@code order(...)} (POST {@code /colocations/v2/orders/shipments}) and
+ * {@code update(...)} (PATCH {@code .../{orderId}}); both return the {@code Location}-header order
+ * id. Cancellation is via {@code orders().cancel(orderId, reason)}.</p>
  */
 class CustomerPortalShipmentsWireMockTest extends WireMockTestBase {
 
@@ -34,28 +43,50 @@ class CustomerPortalShipmentsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("getByUuid()")
-    class GetByUuid {
+    @DisplayName("order()")
+    class Order {
 
         @Test
-        @DisplayName("returns shipment for valid UUID")
-        void returnsShipment() {
-            stubSingleton(wireMock, "/v2/shipments/.*",
-                    "/json/customerportal/shipment_response.json");
+        @DisplayName("POSTs the shipment and returns the Location-header order id")
+        void placesOrder() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/shipments"))
+                    .willReturn(aResponse().withStatus(201)
+                            .withHeader("Location", "/orders/1-55667788")));
 
-            Shipment shipment = customerPortal.shipments().getByUuid("f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102");
-            assertNotNull(shipment);
-            assertEquals("f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f809102", shipment.getUuid());
+            OrderResponse response = customerPortal.shipments().order(
+                    ShipmentOrderRequest.builder("INBOUND", "2025-02-01T10:00:00Z", "SV5:01:000ABC",
+                                    Map.of("numberOfBoxes", 4))
+                            .accountNumber("128745")
+                            .description("Server delivery")
+                            .build());
+
+            assertNotNull(response);
+            assertEquals("1-55667788", response.getOrderId());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/shipments"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("INBOUND")))
+                    .withRequestBody(matchingJsonPath("$.cageId", equalTo("SV5:01:000ABC"))));
         }
+    }
+
+    @Nested
+    @DisplayName("update()")
+    class Update {
 
         @Test
-        @DisplayName("404 throws EquinixNotFoundException")
-        void notFound() {
-            stubErrorInline(wireMock, "/v2/shipments/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Shipment not found\"}]");
+        @DisplayName("PATCHes the shipment by id and returns the order id")
+        void updatesOrder() {
+            wireMock.stubFor(patch(urlPathEqualTo("/colocations/v2/orders/shipments/1-55667788"))
+                    .willReturn(aResponse().withStatus(202)
+                            .withHeader("Location", "/orders/1-55667788")));
 
-            assertThrows(EquinixNotFoundException.class,
-                    () -> customerPortal.shipments().getByUuid("invalid-uuid"));
+            OrderResponse response = customerPortal.shipments().update("1-55667788",
+                    ShipmentUpdateRequest.builder().requestedDateTime("2025-02-03T10:00:00Z").build());
+
+            assertNotNull(response);
+            assertEquals("1-55667788", response.getOrderId());
+
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/colocations/v2/orders/shipments/1-55667788")));
         }
     }
 
@@ -66,11 +97,13 @@ class CustomerPortalShipmentsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
-            stubErrorInline(wireMock, "/v2/shipments/.*",
+            stubErrorInline(wireMock, "/colocations/v2/orders/shipments",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,
-                    () -> customerPortal.shipments().getByUuid("test-uuid"));
+                    () -> customerPortal.shipments().order(
+                            ShipmentOrderRequest.builder("INBOUND", "2025-02-01T10:00:00Z", "SV5:01:000ABC",
+                                    Map.of("numberOfBoxes", 1)).build()));
         }
     }
 }

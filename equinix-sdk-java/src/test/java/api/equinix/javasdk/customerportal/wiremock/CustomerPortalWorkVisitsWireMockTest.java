@@ -3,15 +3,24 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
+import java.util.Map;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for CustomerPortal Work Visits.
+ * WireMock-based API tests for CustomerPortal Work Visit orders.
+ *
+ * <p>Exercises {@code order(...)} (POST {@code /colocations/v2/orders/workVisits}) and
+ * {@code update(...)} (PATCH {@code .../{orderId}}); both return the {@code Location}-header order
+ * id. Cancellation is via {@code orders().cancel(orderId, reason)}.</p>
  */
 class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
 
@@ -35,58 +44,54 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("getByUuid()")
-    class GetByUuid {
+    @DisplayName("order()")
+    class Order {
 
         @Test
-        @DisplayName("returns work visit for valid UUID")
-        void returnsWorkVisit() {
-            stubSingleton(wireMock, "/v2/workVisits/.*",
-                    "/json/customerportal/work_visit_response.json");
+        @DisplayName("POSTs the work visit and returns the Location-header order id")
+        void placesOrder() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/workVisits"))
+                    .willReturn(aResponse().withStatus(201)
+                            .withHeader("Location", "/orders/1-44556677")));
 
-            WorkVisit workVisit = customerPortal.workVisits().getByUuid("d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80");
-            assertNotNull(workVisit);
-            assertEquals("d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80", workVisit.getUuid());
-        }
+            OrderResponse response = customerPortal.workVisits().order(
+                    WorkVisitOrderRequest.builder(Map.of(
+                                    "cages", List.of(Map.of("cage", "SV5:01:000ABC")),
+                                    "visitStartDateTime", "2025-03-01T09:00:00Z",
+                                    "visitEndDateTime", "2025-03-01T17:00:00Z",
+                                    "visitors", List.of(Map.of("name", "David Park"))))
+                            .description("Quarterly hardware maintenance")
+                            .build());
 
-        @Test
-        @DisplayName("404 throws EquinixNotFoundException")
-        void notFound() {
-            stubErrorInline(wireMock, "/v2/workVisits/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Work visit not found\"}]");
+            assertNotNull(response);
+            assertEquals("1-44556677", response.getOrderId());
 
-            assertThrows(EquinixNotFoundException.class,
-                    () -> customerPortal.workVisits().getByUuid("invalid-uuid"));
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/workVisits"))
+                    .withRequestBody(matchingJsonPath("$.details"))
+                    .withRequestBody(matchingJsonPath("$.description", equalTo("Quarterly hardware maintenance"))));
         }
     }
 
     @Nested
-    @DisplayName("define()...create()")
-    class Create {
+    @DisplayName("update()")
+    class Update {
 
         @Test
-        @DisplayName("POSTs to the CreateWorkVisit endpoint and returns the created object")
-        void createsWorkVisit() {
-            stubCreate(wireMock, "/v2/workVisits",
-                    "/json/customerportal/work_visit_response.json");
+        @DisplayName("PATCHes the work visit by id and returns the order id")
+        void updatesOrder() {
+            wireMock.stubFor(patch(urlPathEqualTo("/colocations/v2/orders/workVisits/1-44556677"))
+                    .willReturn(aResponse().withStatus(202)
+                            .withHeader("Location", "/orders/1-44556677")));
 
-            WorkVisit workVisit = customerPortal.workVisits().define()
-                    .ibxCode("SV5")
-                    .accountNumber("128745")
-                    .description("Quarterly hardware maintenance")
-                    .visitorName("David Park")
-                    .create();
+            OrderResponse response = customerPortal.workVisits().update("1-44556677",
+                    WorkVisitUpdateRequest.builder()
+                            .details(Map.of("openCabinet", true))
+                            .build());
 
-            assertNotNull(workVisit);
-            assertEquals("d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f80", workVisit.getUuid());
-            assertEquals("SV5", workVisit.getIbxCode());
+            assertNotNull(response);
+            assertEquals("1-44556677", response.getOrderId());
 
-            // CreateWorkVisit is POST /v2/workVisits (no requestUri); confirms the recent
-            // Post->Create endpoint-name fix routes here and serializes the body.
-            wireMock.verify(postRequestedFor(urlPathEqualTo("/v2/workVisits"))
-                    .withRequestBody(matchingJsonPath("$.ibxCode", equalTo("SV5")))
-                    .withRequestBody(matchingJsonPath("$.accountNumber", equalTo("128745")))
-                    .withRequestBody(matchingJsonPath("$.visitorName", equalTo("David Park"))));
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/colocations/v2/orders/workVisits/1-44556677")));
         }
     }
 
@@ -97,11 +102,12 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
-            stubErrorInline(wireMock, "/v2/workVisits/.*",
+            stubErrorInline(wireMock, "/colocations/v2/orders/workVisits",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,
-                    () -> customerPortal.workVisits().getByUuid("test-uuid"));
+                    () -> customerPortal.workVisits().order(
+                            WorkVisitOrderRequest.builder(Map.of("cages", List.of())).build()));
         }
     }
 }

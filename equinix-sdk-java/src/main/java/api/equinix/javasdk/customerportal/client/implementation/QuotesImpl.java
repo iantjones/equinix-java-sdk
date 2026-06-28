@@ -17,14 +17,10 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Quotes;
 import api.equinix.javasdk.customerportal.client.internal.QuoteClient;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.json.QuoteJson;
-import api.equinix.javasdk.customerportal.model.json.creators.QuoteOperator;
 import api.equinix.javasdk.customerportal.model.wrappers.QuoteWrapper;
 
 public class QuotesImpl implements Quotes {
@@ -38,18 +34,8 @@ public class QuotesImpl implements Quotes {
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<Quote> list() {
-        Page<Quote, QuoteJson> responsePage = this.serviceClient.list();
-        PaginatedList<Quote> quoteList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, QuoteWrapper::new);
-        return new PaginatedList<>(quoteList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
-    }
-
-    public Quote getByUuid(String uuid) {
-        QuoteJson quoteJson = this.serviceClient.getByUuid(uuid);
+    public Quote getByUuid(String quoteId) {
+        QuoteJson quoteJson = this.serviceClient.getByUuid(quoteId);
         return new QuoteWrapper(quoteJson, this.serviceClient);
-    }
-
-    public QuoteOperator.QuoteBuilder define() {
-        return new QuoteOperator(this.serviceClient).create();
     }
 }

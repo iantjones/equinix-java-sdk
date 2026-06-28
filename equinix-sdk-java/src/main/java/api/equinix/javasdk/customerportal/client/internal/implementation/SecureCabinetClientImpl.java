@@ -16,43 +16,30 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.SecureCabinetClient;
-import api.equinix.javasdk.customerportal.model.SecureCabinet;
-import api.equinix.javasdk.customerportal.model.json.SecureCabinetJson;
-import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetCreatorJson;
-import api.equinix.javasdk.customerportal.model.wrappers.SecureCabinetWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.ProductAvailability;
+import api.equinix.javasdk.customerportal.model.json.OrderResponseJson;
+import api.equinix.javasdk.customerportal.model.json.ProductAvailabilityJson;
+import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOrderRequest;
 
-public class SecureCabinetClientImpl extends ResourceClientBase<SecureCabinet, SecureCabinetJson> implements SecureCabinetClient<SecureCabinet> {
+import java.util.List;
+import java.util.Map;
+
+public class SecureCabinetClientImpl extends ClientBase implements SecureCabinetClient {
 
     public SecureCabinetClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "SecureCabinets", SecureCabinetJson.class);
+        super(configClient, "CustomerPortal", "SecureCabinets");
     }
 
-    @Override
-    protected SecureCabinet wrap(SecureCabinetJson json) {
-        return new SecureCabinetWrapper(json, this);
+    public OrderResponse createOrder(SecureCabinetOrderRequest request) {
+        return postAs("CreateSecureCabinetOrder", request, OrderResponseJson.class);
     }
 
-    public Page<SecureCabinet, SecureCabinetJson> list() {
-        return listPage("ListSecureCabinets");
-    }
-
-    public SecureCabinetJson getByUuid(String uuid) {
-        return getOne("GetSecureCabinet", uuid);
-    }
-
-    public SecureCabinetJson create(SecureCabinetCreatorJson secureCabinetCreatorJson) {
-        return postOne("CreateSecureCabinet", secureCabinetCreatorJson);
-    }
-
-    public SecureCabinetJson update(String uuid, SecureCabinetCreatorJson secureCabinetCreatorJson) {
-        return updateOne("UpdateSecureCabinet", uuid, secureCabinetCreatorJson);
-    }
-
-    public SecureCabinetJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    public List<? extends ProductAvailability> getProductsAvailability(String accountNumber) {
+        return listAs("GetSecureCabinetAvailability", Map.of("accountNumber", accountNumber), null,
+                ProductAvailabilityJson.class);
     }
 }

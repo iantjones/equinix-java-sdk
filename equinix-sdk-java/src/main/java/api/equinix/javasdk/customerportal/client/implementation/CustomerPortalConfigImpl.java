@@ -38,6 +38,12 @@ import api.equinix.javasdk.customerportal.client.internal.implementation.LookupC
 import api.equinix.javasdk.customerportal.client.internal.implementation.AttachmentClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.ReportClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.SecureCabinetClientImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.SupportCasesClientImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.UnifiedNotificationsClientImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.DigitalLoasClientImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.TroubleTicketOrderClientImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.BillingAccountClientImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.BillingAccountSearchClientImpl;
 import lombok.Getter;
 
 @Getter
@@ -83,6 +89,17 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
 
     private final SecureCabinetClientImpl secureCabinetClient;
 
+    private final SupportCasesClientImpl supportCasesClient;
+
+    private final UnifiedNotificationsClientImpl unifiedNotificationsClient;
+
+    private final DigitalLoasClientImpl digitalLoasClient;
+
+    private final TroubleTicketOrderClientImpl troubleTicketOrderClient;
+
+    private final BillingAccountClientImpl billingAccountClient;
+
+    private final BillingAccountSearchClientImpl billingAccountSearchClient;
 
 
     public CustomerPortalConfigImpl(EquinixClient equinixClient) {
@@ -106,5 +123,11 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
         this.attachmentClient = new AttachmentClientImpl(this);
         this.reportClient = new ReportClientImpl(this);
         this.secureCabinetClient = new SecureCabinetClientImpl(this);
+        this.supportCasesClient = new SupportCasesClientImpl(this);
+        this.unifiedNotificationsClient = new UnifiedNotificationsClientImpl(this);
+        this.digitalLoasClient = new DigitalLoasClientImpl(this);
+        this.troubleTicketOrderClient = new TroubleTicketOrderClientImpl(this);
+        this.billingAccountClient = new BillingAccountClientImpl(this);
+        this.billingAccountSearchClient = new BillingAccountSearchClientImpl(this);
     }
 }

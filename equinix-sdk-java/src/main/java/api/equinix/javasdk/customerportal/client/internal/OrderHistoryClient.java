@@ -16,14 +16,15 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
-import api.equinix.javasdk.customerportal.model.json.OrderHistoryItemJson;
+import api.equinix.javasdk.customerportal.model.PermissibleLocation;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
 
-public interface OrderHistoryClient<T> extends Pageable<T> {
+import java.util.List;
 
-    Page<OrderHistoryItem, OrderHistoryItemJson> list();
+public interface OrderHistoryClient {
 
-    OrderHistoryItemJson getByUuid(String uuid);
+    List<? extends OrderHistoryItem> search(OrderHistorySearchRequest request);
+
+    List<? extends PermissibleLocation> listLocations();
 }

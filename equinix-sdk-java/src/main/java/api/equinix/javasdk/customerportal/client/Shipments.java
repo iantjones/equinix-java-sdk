@@ -16,36 +16,40 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.customerportal.model.Shipment;
-import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOperator;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 
 /**
- * Client interface for managing shipment requests in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create inbound and outbound shipment
- * requests for equipment deliveries to IBX data centers.
+ * Client interface for scheduling equipment shipments in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Shipments v2 order API at {@code /colocations/v2/orders/shipments}. Shipments
+ * are scheduled and updated as orders; the resulting order is tracked through {@link Orders} and
+ * {@link OrderHistory}, and a shipment is cancelled via {@link Orders#cancel(String, String)}.
+ * Each operation returns the generated order id (parsed from the {@code Location} header).</p>
  */
 public interface Shipments {
 
     /**
-     * Lists all shipments for the current account.
+     * Schedules an inbound or outbound shipment.
      *
-     * @return a paginated list of shipments
+     * <p>Maps to {@code POST /colocations/v2/orders/shipments}
+     * ({@code Schedule inbound or outbound shipment}).</p>
+     *
+     * @param request the shipment order request body
+     * @return the order submission result carrying the generated order id
      */
-    PaginatedList<Shipment> list();
+    OrderResponse order(ShipmentOrderRequest request);
 
     /**
-     * Retrieves a specific shipment by its unique identifier.
+     * Updates a pending shipment order.
      *
-     * @param uuid the unique identifier of the shipment
-     * @return the matching shipment
-     */
-    Shipment getByUuid(String uuid);
-
-    /**
-     * Returns a builder for defining a new shipment request.
+     * <p>Maps to {@code PATCH /colocations/v2/orders/shipments/{orderId}}
+     * ({@code Update inbound or outbound shipment}).</p>
      *
-     * @return a new ShipmentBuilder instance
+     * @param orderId the identifier of the shipment order
+     * @param request the update request body
+     * @return the order submission result carrying the order id
      */
-    ShipmentOperator.ShipmentBuilder define();
+    OrderResponse update(String orderId, ShipmentUpdateRequest request);
 }

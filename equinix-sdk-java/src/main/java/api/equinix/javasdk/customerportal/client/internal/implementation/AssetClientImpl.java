@@ -22,6 +22,9 @@ import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalCo
 import api.equinix.javasdk.customerportal.client.internal.AssetClient;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.json.AssetJson;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
+
+import java.util.Map;
 
 public class AssetClientImpl extends ResourceClientBase<Asset, AssetJson> implements AssetClient<Asset> {
 
@@ -34,11 +37,11 @@ public class AssetClientImpl extends ResourceClientBase<Asset, AssetJson> implem
         return json;
     }
 
-    public Page<Asset, AssetJson> list() {
-        return listPage("ListAssets");
+    public Page<Asset, AssetJson> search(AssetSearchRequest request) {
+        return searchPage("SearchAssets", request);
     }
 
-    public AssetJson getByUuid(String uuid) {
-        return getOne("GetAsset", uuid);
+    public AssetJson getByUuid(String assetId) {
+        return getOne("GetAsset", Map.of("assetId", assetId));
     }
 }

@@ -16,21 +16,25 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.json.TroubleTicketJson;
-import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreatorJson;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketUpdateRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreateRequest;
 
 public interface TroubleTicketClient<T> extends Pageable<T> {
 
-    Page<TroubleTicket, TroubleTicketJson> list();
+    String create(TroubleTicketCreateRequest request);
 
-    TroubleTicketJson getByUuid(String uuid);
+    TroubleTicketJson getByUuid(String id);
 
-    TroubleTicketJson create(TroubleTicketCreatorJson troubleTicketCreatorJson);
+    Boolean update(String id, TicketUpdateRequest request);
 
-    TroubleTicketJson update(String uuid, TroubleTicketCreatorJson troubleTicketCreatorJson);
+    Boolean addNote(String id, TicketNoteRequest request);
 
-    TroubleTicketJson refresh(String uuid);
+    Boolean cancel(String id, TicketCancelRequest request);
+
+    TroubleTicketJson refresh(String id);
 }

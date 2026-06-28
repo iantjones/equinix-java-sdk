@@ -17,39 +17,33 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.CrossConnects;
 import api.equinix.javasdk.customerportal.client.internal.CrossConnectClient;
-import api.equinix.javasdk.customerportal.model.CrossConnect;
-import api.equinix.javasdk.customerportal.model.json.CrossConnectJson;
-import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOperator;
-import api.equinix.javasdk.customerportal.model.wrappers.CrossConnectWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectDeinstallRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectUpdateRequest;
 
 public class CrossConnectsImpl implements CrossConnects {
 
     private final CustomerPortal serviceManager;
 
-    private final CrossConnectClient<CrossConnect> serviceClient;
+    private final CrossConnectClient serviceClient;
 
-    public CrossConnectsImpl(CrossConnectClient<CrossConnect> serviceClient, CustomerPortal serviceManager) {
+    public CrossConnectsImpl(CrossConnectClient serviceClient, CustomerPortal serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<CrossConnect> list() {
-        Page<CrossConnect, CrossConnectJson> responsePage = this.serviceClient.list();
-        PaginatedList<CrossConnect> crossConnectList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, CrossConnectWrapper::new);
-        return new PaginatedList<>(crossConnectList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public OrderResponse order(CrossConnectOrderRequest request) {
+        return this.serviceClient.order(request);
     }
 
-    public CrossConnect getByUuid(String uuid) {
-        CrossConnectJson crossConnectJson = this.serviceClient.getByUuid(uuid);
-        return new CrossConnectWrapper(crossConnectJson, this.serviceClient);
+    public OrderResponse update(String orderId, CrossConnectUpdateRequest request) {
+        return this.serviceClient.update(orderId, request);
     }
 
-    public CrossConnectOperator.CrossConnectBuilder define() {
-        return new CrossConnectOperator(this.serviceClient).create();
+    public OrderResponse deinstall(CrossConnectDeinstallRequest request) {
+        return this.serviceClient.deinstall(request);
     }
 }
