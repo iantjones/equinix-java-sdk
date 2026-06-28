@@ -68,5 +68,29 @@ public class RoleAssignmentJson implements RoleAssignment {
 
         @JsonProperty("name")
         private String name;
+
+        @JsonProperty("parent")
+        private ParentJson parent;
+
+        @Override
+        public RoleAssignment.Parent getParent() {
+            return parent;
+        }
+    }
+
+    /** Read-only JSON model for a {@link RoleAssignment.Parent}. */
+    @Getter
+    @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ParentJson implements RoleAssignment.Parent {
+
+        @JsonProperty("id")
+        private String id;
+
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("name")
+        private String name;
     }
 }

@@ -58,8 +58,8 @@ public class IAMAccessPoliciesImpl implements IAMAccessPolicies {
         return this.accessPolicyClient.update(projectId, accessPolicyId, request);
     }
 
-    public Boolean delete(String projectId, String accessPolicyId) {
-        return this.accessPolicyClient.delete(projectId, accessPolicyId);
+    public Boolean delete(String projectId, String accessPolicyId, String lastRev) {
+        return this.accessPolicyClient.delete(projectId, accessPolicyId, lastRev);
     }
 
     public AccessPolicy enable(String projectId, String accessPolicyId, String lastRev) {

@@ -75,4 +75,10 @@ public class AccessPolicyJson implements AccessPolicy {
 
     @JsonProperty("updatedAt")
     private String updatedAt;
+
+    @JsonProperty("approvedAt")
+    private String approvedAt;
+
+    @JsonProperty("approvedBy")
+    private String approvedBy;
 }

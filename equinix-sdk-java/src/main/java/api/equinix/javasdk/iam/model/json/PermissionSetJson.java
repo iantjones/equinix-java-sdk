@@ -72,4 +72,10 @@ public class PermissionSetJson implements PermissionSet {
 
     @JsonProperty("updatedAt")
     private String updatedAt;
+
+    @JsonProperty("approvedAt")
+    private String approvedAt;
+
+    @JsonProperty("approvedBy")
+    private String approvedBy;
 }

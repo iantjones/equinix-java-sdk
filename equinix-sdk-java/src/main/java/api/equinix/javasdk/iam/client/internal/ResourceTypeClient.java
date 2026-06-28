@@ -33,21 +33,26 @@ public interface ResourceTypeClient {
      * Lists the registered resource types for a project (operationId {@code listResourceTypes}).
      *
      * @param projectId the project identifier (path parameter)
+     * @param serviceId the fully qualified service id (required query parameter)
      * @param pageToken the opaque page token from a prior response, or {@code null}
      * @param pageSize the maximum number of results per page, or {@code null}
+     * @param projectErn the project ERN (optional, mutually exclusive with {@code projectId}), or {@code null}
      * @return the requested page of resource types
      */
-    ResourceTypeList listResourceTypes(String projectId, String pageToken, Integer pageSize);
+    ResourceTypeList listResourceTypes(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                       String projectErn);
 
     /**
      * Lists the available actions for a project (operationId {@code listActions}).
      *
      * @param projectId the project identifier (path parameter)
+     * @param serviceId the fully qualified service id (required query parameter)
      * @param pageToken the opaque page token from a prior response, or {@code null}
      * @param pageSize the maximum number of results per page, or {@code null}
+     * @param projectErn the project ERN (optional, mutually exclusive with {@code projectId}), or {@code null}
      * @return the requested page of actions
      */
-    ActionList listActions(String projectId, String pageToken, Integer pageSize);
+    ActionList listActions(String projectId, String serviceId, String pageToken, Integer pageSize, String projectErn);
 
     /**
      * Lists the action sets for a service within a project (operationId {@code listActionSets}).
@@ -56,20 +61,28 @@ public interface ResourceTypeClient {
      * @param serviceId the service to list action sets for (required query parameter)
      * @param pageToken the opaque page token from a prior response, or {@code null}
      * @param pageSize the maximum number of results per page, or {@code null}
+     * @param projectErn the project ERN (optional, mutually exclusive with {@code projectId}), or {@code null}
      * @return the requested page of action sets
      */
-    ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize);
+    ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                        String projectErn);
 
     /**
      * Pages the resource-type-to-action mappings for a project
      * (operationId {@code pageResourceTypeActions}).
      *
      * @param projectId the project identifier (path parameter)
-     * @param pageToken the opaque page token from a prior response, or {@code null}
+     * @param serviceId the fully qualified service id owning the resource type (required query parameter)
+     * @param resourceType the resource type within the service (required query parameter)
+     * @param resourceTypeServiceId the service id of the resource type when different from {@code serviceId}, or {@code null}
+     * @param lastAction the id of the last action received, used for cursor-based pagination, or {@code null}
      * @param pageSize the maximum number of results per page, or {@code null}
+     * @param projectErn the project ERN (optional, mutually exclusive with {@code projectId}), or {@code null}
      * @return the requested page of resource-type actions
      */
-    ResourceTypeActionPage pageResourceTypeActions(String projectId, String pageToken, Integer pageSize);
+    ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+                                                   String resourceTypeServiceId, String lastAction, Integer pageSize,
+                                                   String projectErn);
 
     /**
      * Gets the policy schema for a service within a project

@@ -63,4 +63,10 @@ public class PrincipalPolicyJson implements PrincipalPolicy {
 
     @JsonProperty("updatedAt")
     private String updatedAt;
+
+    @JsonProperty("approvedAt")
+    private String approvedAt;
+
+    @JsonProperty("approvedBy")
+    private String approvedBy;
 }

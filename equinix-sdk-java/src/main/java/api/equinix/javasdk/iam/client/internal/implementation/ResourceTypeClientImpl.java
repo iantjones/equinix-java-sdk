@@ -43,38 +43,52 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
     }
 
     @Override
-    public ResourceTypeList listResourceTypes(String projectId, String pageToken, Integer pageSize) {
+    public ResourceTypeList listResourceTypes(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                              String projectErn) {
         Map<String, List<String>> queryParams = IamQueryParams.builder()
+                .add("serviceId", serviceId)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
+                .add("projectErn", projectErn)
                 .build();
         return getAs("ListResourceTypes", Map.of("projectId", projectId), queryParams, ResourceTypeList.class);
     }
 
     @Override
-    public ActionList listActions(String projectId, String pageToken, Integer pageSize) {
+    public ActionList listActions(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                  String projectErn) {
         Map<String, List<String>> queryParams = IamQueryParams.builder()
+                .add("serviceId", serviceId)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
+                .add("projectErn", projectErn)
                 .build();
         return getAs("ListActions", Map.of("projectId", projectId), queryParams, ActionList.class);
     }
 
     @Override
-    public ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize) {
+    public ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                               String projectErn) {
         Map<String, List<String>> queryParams = IamQueryParams.builder()
                 .add("serviceId", serviceId)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
+                .add("projectErn", projectErn)
                 .build();
         return getAs("ListActionSets", Map.of("projectId", projectId), queryParams, ServiceActionSetList.class);
     }
 
     @Override
-    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String pageToken, Integer pageSize) {
+    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+                                                          String resourceTypeServiceId, String lastAction,
+                                                          Integer pageSize, String projectErn) {
         Map<String, List<String>> queryParams = IamQueryParams.builder()
-                .add("pageToken", pageToken)
+                .add("serviceId", serviceId)
+                .add("resourceType", resourceType)
+                .add("resourceTypeServiceId", resourceTypeServiceId)
+                .add("lastAction", lastAction)
                 .add("pageSize", pageSize)
+                .add("projectErn", projectErn)
                 .build();
         return getAs("PageResourceTypeActions", Map.of("projectId", projectId), queryParams, ResourceTypeActionPage.class);
     }

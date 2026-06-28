@@ -80,9 +80,13 @@ public interface IAMPermissionSets {
     /**
      * Deletes a permission set.
      *
+     * <p>The spec requires the permission set's last-known revision in the request body for
+     * optimistic-concurrency-controlled deletion.</p>
+     *
      * @param projectId the project identifier
      * @param permissionSetId the permission set identifier
+     * @param lastRev the last-known revision of the permission set (required; from {@link PermissionSet#getRev()})
      * @return {@code true} if the deletion request was accepted
      */
-    Boolean delete(String projectId, String permissionSetId);
+    Boolean delete(String projectId, String permissionSetId, String lastRev);
 }

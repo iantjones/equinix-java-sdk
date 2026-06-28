@@ -55,8 +55,8 @@ public class IAMPolicyMasksImpl implements IAMPolicyMasks {
         return this.policyMaskClient.update(projectId, policyMaskId, request);
     }
 
-    public Boolean delete(String projectId, String policyMaskId) {
-        return this.policyMaskClient.delete(projectId, policyMaskId);
+    public Boolean delete(String projectId, String policyMaskId, String lastRev) {
+        return this.policyMaskClient.delete(projectId, policyMaskId, lastRev);
     }
 
     public PolicyMask enable(String projectId, String policyMaskId, String lastRev) {

@@ -80,11 +80,15 @@ public interface IAMPolicyMasks {
     /**
      * Deletes a policy mask.
      *
+     * <p>The spec requires the policy mask's last-known revision in the request body for
+     * optimistic-concurrency-controlled deletion.</p>
+     *
      * @param projectId the project identifier
      * @param policyMaskId the policy mask identifier
+     * @param lastRev the last-known revision of the mask (required; from {@link PolicyMask#getRev()})
      * @return {@code true} if the deletion request was accepted
      */
-    Boolean delete(String projectId, String policyMaskId);
+    Boolean delete(String projectId, String policyMaskId, String lastRev);
 
     /**
      * Enables a previously disabled policy mask.

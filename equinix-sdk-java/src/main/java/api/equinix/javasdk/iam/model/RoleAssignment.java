@@ -73,5 +73,29 @@ public interface RoleAssignment {
          * @return the name of the object this scope refers to (may be {@code null})
          */
         String getName();
+
+        /**
+         * @return the owning project when the scope {@code type} is {@code PORT}, otherwise {@code null}
+         */
+        Parent getParent();
+    }
+
+    /** The owning project of a {@code PORT}-typed {@link AssignmentScope}. */
+    interface Parent {
+
+        /**
+         * @return the identifier of the project that owns this port
+         */
+        String getId();
+
+        /**
+         * @return the type of the parent object (always {@code PROJECT})
+         */
+        String getType();
+
+        /**
+         * @return the name of the parent project (may be {@code null})
+         */
+        String getName();
     }
 }
