@@ -18,10 +18,13 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.CloudEvents;
 import api.equinix.javasdk.fabric.client.internal.CloudEventClient;
 import api.equinix.javasdk.fabric.model.CloudEvent;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
 public class CloudEventsImpl implements CloudEvents {
@@ -32,9 +35,25 @@ public class CloudEventsImpl implements CloudEvents {
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<CloudEvent> list() {
-        Page<CloudEvent, CloudEventJson> responsePage = this.serviceClient.list();
-        PaginatedList<CloudEvent> cloudEventList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(cloudEventList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public PaginatedFilteredList<CloudEvent> search() {
+        return search(Filter.filter().empty());
+    }
+
+    public PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter) {
+        return search(filter, null);
+    }
+
+    public PaginatedFilteredList<CloudEvent> search(SortPropertyList sort) {
+        return search(null, sort);
+    }
+
+    public PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<CloudEvent, CloudEventJson> responsePage = this.serviceClient.search(filter, sort);
+        PaginatedFilteredList<CloudEvent> cloudEventList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        return new PaginatedFilteredList<>(cloudEventList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public CloudEvent getByUuid(String uuid) {
+        return this.serviceClient.getByUuid(uuid);
     }
 }

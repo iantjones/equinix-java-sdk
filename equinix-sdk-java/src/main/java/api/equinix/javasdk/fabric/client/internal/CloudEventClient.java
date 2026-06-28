@@ -17,11 +17,15 @@
 package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.CloudEvent;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
-public interface CloudEventClient<T> extends Pageable<T> {
+public interface CloudEventClient<T> extends PageablePost<T> {
 
-    Page<CloudEvent, CloudEventJson> list();
+    Page<CloudEvent, CloudEventJson> search(FilterPropertyList filter, SortPropertyList sort);
+
+    CloudEventJson getByUuid(String uuid);
 }

@@ -207,10 +207,6 @@
           "PostBGPAction": {
             "httpMethod": "POST",
             "requestUri": "{$connectionId}/routingProtocols/{$uuid}/actions"
-          },
-          "ValidateSubnet": {
-            "httpMethod": "POST",
-            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/validate"
           }
         }
       },
@@ -410,17 +406,19 @@
       "CloudEvents": {
         "rootUri": "cloudevents",
         "serviceEndpoints": {
-          "GetCloudEvents": {
-            "httpMethod": "GET"
+          "SearchCloudEvents": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetCloudEvent": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
           }
         }
       },
       "MarketplaceSubscriptions": {
         "rootUri": "marketplaceSubscriptions",
         "serviceEndpoints": {
-          "GetMarketplaceSubscriptions": {
-            "httpMethod": "GET"
-          },
           "GetMarketplaceSubscription": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}"

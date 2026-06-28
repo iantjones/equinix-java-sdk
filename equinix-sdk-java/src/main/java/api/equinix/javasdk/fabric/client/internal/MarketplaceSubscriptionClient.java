@@ -16,14 +16,10 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
 import api.equinix.javasdk.fabric.model.json.MarketplaceSubscriptionJson;
 
 public interface MarketplaceSubscriptionClient<T> extends Pageable<T> {
-
-    Page<MarketplaceSubscription, MarketplaceSubscriptionJson> list();
 
     MarketplaceSubscriptionJson getByUuid(String uuid);
 }
