@@ -16,36 +16,37 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.model.implementation.DataValue;
+
 import java.util.List;
 
+/**
+ * Trending environmental (temperature or humidity) time-series data for a hierarchy node,
+ * wrapped in the {@code payLoad} envelope returned by the legacy
+ * {@code /environment/v1/trending} endpoint.
+ */
 public interface TrendingEnvironmentData {
 
-    String getIbx();
+    /**
+     * @return the trending data payload, or {@code null} when the response carried no data
+     */
+    Payload getPayLoad();
 
-    String getLevelType();
+    /**
+     * The {@code payLoad} of a {@link TrendingEnvironmentData} response.
+     */
+    interface Payload {
 
-    String getLevelValue();
+        String getIbx();
 
-    String getDataPoint();
+        String getAccountNo();
 
-    String getInterval();
+        String getInterval();
 
-    String getFromDate();
+        String getDatapoint();
 
-    String getToDate();
+        String getUom();
 
-    List<? extends TrendingEnvironmentDataPoint> getDataPoints();
-
-    interface TrendingEnvironmentDataPoint {
-
-        String getTimestamp();
-
-        Double getValue();
-
-        Double getMin();
-
-        Double getMax();
-
-        Double getAvg();
+        List<DataValue> getSeries();
     }
 }

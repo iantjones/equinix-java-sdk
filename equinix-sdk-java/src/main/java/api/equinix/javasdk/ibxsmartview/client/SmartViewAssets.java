@@ -16,83 +16,90 @@
 
 package api.equinix.javasdk.ibxsmartview.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.model.AssetDetail;
-import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
+import api.equinix.javasdk.ibxsmartview.model.AssetDetailsResponse;
+import api.equinix.javasdk.ibxsmartview.model.Assets;
+import api.equinix.javasdk.ibxsmartview.model.AssetsList;
+import api.equinix.javasdk.ibxsmartview.model.HierarchyNodeForAssetAPI;
 import api.equinix.javasdk.ibxsmartview.model.TagPointData;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.AssetDetailsRequest;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.CurrentTagPointRequest;
 
 import java.util.List;
 
 /**
- * Client interface for managing IBX SmartView monitored assets. Provides methods to list,
- * search, and retrieve details for infrastructure assets such as cooling units and power
- * distribution equipment, as well as their associated tag point data.
+ * Client interface for the IBX SmartView Assets API. Provides methods to list assets as a
+ * category/template/asset hierarchy, search assets, retrieve asset details and their tag points,
+ * and read current tag-point values.
  */
 public interface SmartViewAssets {
 
     /**
-     * Lists monitored assets for the specified IBX, optionally filtered by classification and cages.
+     * Lists monitored assets for the specified account/IBX as a category/template/asset hierarchy.
      *
      * @param accountNo the Equinix account number
      * @param ibx the IBX code identifying the data center
-     * @param classification the asset classification to filter by
-     * @param cages the list of cage identifiers to filter by
-     * @return a paginated list of SmartView assets
+     * @param classification the asset classification to filter by ({@code Electrical} or {@code Mechanical})
+     * @param cages the list of cage unique space ids to filter by, or {@code null} for all
+     * @return the assets list hierarchy
      */
-    PaginatedList<SmartViewAsset> list(String accountNo, String ibx, String classification, List<String> cages);
+    AssetsList list(String accountNo, String ibx, String classification, List<String> cages);
 
     /**
-     * Retrieves detailed information for a specific monitored asset.
+     * Retrieves detailed information (including tag points) for a single monitored asset.
      *
      * @param accountNo the Equinix account number
      * @param ibx the IBX code identifying the data center
-     * @param classification the asset classification
+     * @param classification the asset classification ({@code Electrical} or {@code Mechanical})
      * @param assetId the unique identifier of the asset
-     * @return the asset detail
+     * @return the asset detail envelope
      */
     AssetDetail getAssetDetails(String accountNo, String ibx, String classification, String assetId);
 
     /**
-     * Retrieves details for multiple assets using a structured request body.
+     * Retrieves details for multiple assets using a typed request body.
      *
-     * @param requestBody the request body specifying the assets to query
-     * @return a list of asset details
+     * @param requestBody the typed request body specifying the account, IBX, classification and asset ids
+     * @return the multi-asset details response
      */
-    List<AssetDetail> getMultipleAssetDetails(Object requestBody);
+    AssetDetailsResponse getMultipleAssetDetails(AssetDetailsRequest requestBody);
 
     /**
-     * Searches for monitored assets matching a search string within an IBX.
+     * Searches for monitored assets matching a wildcard search string within an account/IBX.
      *
      * @param accountNo the Equinix account number
      * @param ibx the IBX code identifying the data center
-     * @param searchString the search term to match against asset names or attributes
-     * @return a paginated list of matching SmartView assets
+     * @param searchString the search term to match against asset identifiers
+     * @return the asset search results
      */
-    PaginatedList<SmartViewAsset> search(String accountNo, String ibx, String searchString);
+    Assets search(String accountNo, String ibx, String searchString);
 
     /**
-     * Retrieves tag point data for assets affected by active alerts in the specified IBX.
+     * Retrieves the hierarchy of customer assets affected by a given asset.
      *
      * @param accountNo the Equinix account number
      * @param ibx the IBX code identifying the data center
-     * @return the tag point data for affected assets
+     * @param assetId the unique identifier of the asset
+     * @param classification the asset classification ({@code Electrical} or {@code Mechanical})
+     * @return the affected-assets hierarchy
      */
-    TagPointData getAffectedAssets(String accountNo, String ibx);
+    HierarchyNodeForAssetAPI getAffectedAssets(String accountNo, String ibx, String assetId, String classification);
 
     /**
-     * Retrieves the current tag point data for a specified IBX.
+     * Retrieves the most recent tag-point data for a given tag identifier.
      *
      * @param accountNo the Equinix account number
      * @param ibx the IBX code identifying the data center
-     * @return the current tag point data
+     * @param tagId the unique identifier of the tag point
+     * @return the current tag-point data
      */
-    TagPointData getCurrentTagPoint(String accountNo, String ibx);
+    TagPointData getCurrentTagPoint(String accountNo, String ibx, String tagId);
 
     /**
-     * Retrieves current tag point data for multiple assets using a structured request body.
+     * Retrieves current tag-point data for multiple tag identifiers using a typed request body.
      *
-     * @param requestBody the request body specifying the assets to query
-     * @return a list of tag point data entries
+     * @param requestBody the typed request body specifying the account, tag ids and IBX
+     * @return the current tag-point data
      */
-    List<TagPointData> getMultipleCurrentTagPoints(Object requestBody);
+    TagPointData getMultipleCurrentTagPoints(CurrentTagPointRequest requestBody);
 }

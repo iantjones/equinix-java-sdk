@@ -17,9 +17,9 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.ibxsmartview.model.TrendingEnvironmentData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.DataValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,49 +30,30 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TrendingEnvironmentDataJson implements TrendingEnvironmentData {
 
-
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("levelType")
-    private String levelType;
-
-    @JsonProperty("levelValue")
-    private String levelValue;
-
-    @JsonProperty("dataPoint")
-    private String dataPoint;
-
-    @JsonProperty("interval")
-    private String interval;
-
-    @JsonProperty("fromDate")
-    private String fromDate;
-
-    @JsonProperty("toDate")
-    private String toDate;
-
-    @JsonProperty("dataPoints")
-    private List<DataPointJson> dataPoints;
+    @JsonProperty("payLoad")
+    private PayloadJson payLoad;
 
     @Getter
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class DataPointJson implements TrendingEnvironmentDataPoint {
+    public static class PayloadJson implements Payload {
 
-        @JsonProperty("timestamp")
-        private String timestamp;
+        @JsonProperty("ibx")
+        private String ibx;
 
-        @JsonProperty("value")
-        private Double value;
+        @JsonProperty("accountNo")
+        private String accountNo;
 
-        @JsonProperty("min")
-        private Double min;
+        @JsonProperty("interval")
+        private String interval;
 
-        @JsonProperty("max")
-        private Double max;
+        @JsonProperty("datapoint")
+        private String datapoint;
 
-        @JsonProperty("avg")
-        private Double avg;
+        @JsonProperty("uom")
+        private String uom;
+
+        @JsonProperty("series")
+        private List<DataValue> series;
     }
 }

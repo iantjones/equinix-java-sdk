@@ -16,28 +16,33 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.SubscriptionStatus;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
-import api.equinix.javasdk.ibxsmartview.model.implementation.SubscriptionMessage;
+import api.equinix.javasdk.ibxsmartview.model.implementation.MessageType;
 
-import java.util.List;
-
+/**
+ * A streaming subscription ({@code SubscriptionResponse} in the spec). Describes the message
+ * types delivered, the single delivery channel, and lifecycle/audit metadata.
+ */
 public interface StreamingSubscription {
 
-    String getSubscriptionId();
+    String getId();
 
-    String getName();
+    SubscriptionStatus getStatus();
 
-    String getDescription();
-
-    String getStatus();
+    MessageType getMessageType();
 
     Channel getChannel();
 
-    List<SubscriptionMessage> getMessages();
+    String getOrgId();
 
-    String getCreatedDate();
+    String getCreatedBy();
 
-    String getUpdatedDate();
+    String getCreatedDateTime();
+
+    String getUpdatedBy();
+
+    String getUpdatedDateTime();
 
     Boolean delete();
 

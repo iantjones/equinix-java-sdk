@@ -16,8 +16,10 @@
 
 package api.equinix.javasdk.ibxsmartview.client.internal;
 
+import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerDataJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TrendingPowerDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerCurrentPostRequest;
 
 import java.util.List;
 
@@ -25,7 +27,7 @@ public interface LegacyPowerClient {
 
     PowerDataJson getCurrent(String accountNo, String ibx, String levelType, String levelValue);
 
-    List<PowerDataJson> postCurrent(Object requestBody);
+    List<? extends PowerDataIBX> postCurrent(PowerCurrentPostRequest requestBody);
 
     TrendingPowerDataJson getTrending(String accountNo, String ibx, String levelType,
                                       String levelValue, String interval,

@@ -14,16 +14,26 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
-public interface PowerHierarchy {
+/**
+ * A template within an asset-list category, grouping a set of assets.
+ */
+@Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Template {
 
-    String getIbx();
+    @JsonProperty("templateId")
+    private String templateId;
 
-    String getAccountNo();
-
-    List<Map<String, Object>> getPayLoad();
+    @JsonProperty("assets")
+    private List<AssetForAssetAPI> assets;
 }

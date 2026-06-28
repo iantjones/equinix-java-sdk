@@ -17,7 +17,9 @@
 package api.equinix.javasdk.ibxsmartview.client;
 
 import api.equinix.javasdk.ibxsmartview.model.PowerData;
+import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
 import api.equinix.javasdk.ibxsmartview.model.TrendingPowerData;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerCurrentPostRequest;
 
 import java.util.List;
 
@@ -40,12 +42,13 @@ public interface LegacyPower {
     PowerData getCurrent(String accountNo, String ibx, String levelType, String levelValue);
 
     /**
-     * Retrieves current power data for multiple assets using a structured request body.
+     * Retrieves current power data for all values at the given level type using a typed
+     * request body.
      *
-     * @param requestBody the request body specifying the assets to query
+     * @param requestBody the typed request body specifying the account, IBX and level type to query
      * @return a list of current power data entries
      */
-    List<PowerData> postCurrent(Object requestBody);
+    List<PowerDataIBX> postCurrent(PowerCurrentPostRequest requestBody);
 
     /**
      * Retrieves trending power data over a specified time range and interval.

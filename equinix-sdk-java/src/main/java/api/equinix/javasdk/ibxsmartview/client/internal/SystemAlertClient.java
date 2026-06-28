@@ -20,10 +20,11 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.json.SystemAlertJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
 
 public interface SystemAlertClient<T> extends Pageable<T> {
 
     Page<SystemAlert, SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit);
 
-    Page<SystemAlert, SystemAlertJson> searchPost(Object filterBody);
+    Page<SystemAlert, SystemAlertJson> searchPost(SearchRequest filterBody);
 }

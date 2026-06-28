@@ -17,9 +17,10 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.ibxsmartview.model.TrendingPowerData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonDataTrend;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,52 +31,33 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TrendingPowerDataJson implements TrendingPowerData {
 
+    @JsonProperty("payLoad")
+    private PayloadJson payLoad;
 
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("levelType")
-    private String levelType;
-
-    @JsonProperty("levelValue")
-    private String levelValue;
-
-    @JsonProperty("interval")
-    private String interval;
-
-    @JsonProperty("fromDate")
-    private String fromDate;
-
-    @JsonProperty("toDate")
-    private String toDate;
-
-    @JsonProperty("maxAllowedKva")
-    private Double maxAllowedKva;
-
-    @JsonProperty("maxAllowedPercentage")
-    private Double maxAllowedPercentage;
-
-    @JsonProperty("dataPoints")
-    private List<DataPointJson> dataPoints;
+    @JsonProperty("status")
+    private Status status;
 
     @Getter
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class DataPointJson implements TrendingPowerDataPoint {
+    public static class PayloadJson implements Payload {
 
-        @JsonProperty("timestamp")
-        private String timestamp;
+        @JsonProperty("accountNumber")
+        private String accountNumber;
 
-        @JsonProperty("kva")
-        private Double kva;
+        @JsonProperty("ibx")
+        private String ibx;
 
-        @JsonProperty("kw")
-        private Double kw;
+        @JsonProperty("levelType")
+        private String levelType;
 
-        @JsonProperty("amps")
-        private Double amps;
+        @JsonProperty("levelValue")
+        private String levelValue;
 
-        @JsonProperty("percentageUsed")
-        private Double percentageUsed;
+        @JsonProperty("interval")
+        private String interval;
+
+        @JsonProperty("data")
+        private List<ComparisonDataTrend> data;
     }
 }

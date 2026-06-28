@@ -16,38 +16,43 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonDataTrend;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
+
 import java.util.List;
 
+/**
+ * Trending power consumption time-series data for a hierarchy node, wrapped in the
+ * {@code payLoad}/{@code status} envelope returned by the legacy {@code /power/v1/trending}
+ * endpoint.
+ */
 public interface TrendingPowerData {
 
-    String getIbx();
+    /**
+     * @return the trending power data payload, or {@code null} when the response carried no data
+     */
+    Payload getPayLoad();
 
-    String getLevelType();
+    /**
+     * @return the response status envelope
+     */
+    Status getStatus();
 
-    String getLevelValue();
+    /**
+     * The {@code payLoad} of a {@link TrendingPowerData} response.
+     */
+    interface Payload {
 
-    String getInterval();
+        String getAccountNumber();
 
-    String getFromDate();
+        String getIbx();
 
-    String getToDate();
+        String getLevelType();
 
-    Double getMaxAllowedKva();
+        String getLevelValue();
 
-    Double getMaxAllowedPercentage();
+        String getInterval();
 
-    List<? extends TrendingPowerDataPoint> getDataPoints();
-
-    interface TrendingPowerDataPoint {
-
-        String getTimestamp();
-
-        Double getKva();
-
-        Double getKw();
-
-        Double getAmps();
-
-        Double getPercentageUsed();
+        List<ComparisonDataTrend> getData();
     }
 }

@@ -20,7 +20,10 @@ import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
+import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.Pagination;
+import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.PowerEventClient;
 import api.equinix.javasdk.ibxsmartview.model.PowerAlertConfiguration;
@@ -28,10 +31,13 @@ import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerAlertConfigurationCreateResponseJson;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerAlertConfigurationJson;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerEventJson;
+import api.equinix.javasdk.ibxsmartview.model.json.PowerEventsPaginatedResponseJson;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerAlertConfigurationCreatorJson;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerAlertConfigurationUpdateJson;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,6 +53,12 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     }
 
     // GET /dcim/v3/powerEvents/search — operationId getPowerEvents
+    //
+    // PowerEventsPaginatedResponse returns its pagination fields (items/limit/offset/totalCount) at
+    // the TOP LEVEL rather than under a nested 'pagination' object, so the response cannot be
+    // deserialized directly into the core Page (which expects {data/items, pagination{offset,limit,
+    // total}}). We deserialize the flat shape ourselves and assemble a Page with a Pagination whose
+    // total is mapped from totalCount, so getIsLastPage()/total are correct for the returned page.
     public Page<PowerEvent, PowerEventJson> getPowerEvents(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (ibx != null && !ibx.isEmpty()) {
@@ -60,7 +72,28 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         }
         qParams.put("offset", List.of(String.valueOf(offset)));
         qParams.put("limit", List.of(String.valueOf(limit)));
-        return listPage("GetPowerEvents", qParams);
+
+        EquinixRequest<PowerEvent> request = buildRequestWithQueryParams(
+                "GetPowerEvents", RequestType.PAGINATED, qParams, PowerEventJson.class);
+        EquinixResponse<PowerEvent> response = invoke(request);
+        // Re-target deserialization at the flat response holder before reading the body.
+        request.setJavaType(Constants.objectMapper.getTypeFactory().constructType(PowerEventsPaginatedResponseJson.class));
+        PowerEventsPaginatedResponseJson flat = Utils.handleSingletonResponse(response, request);
+
+        Page<PowerEvent, PowerEventJson> page = new Page<>();
+        page.setItems(flat != null && flat.getItems() != null ? flat.getItems() : new ArrayList<>());
+        page.setPagination(toPagination(flat));
+        page.setAssociatedRequest(request);
+        page.setAssociatedResponse(response);
+        return page;
+    }
+
+    private Pagination toPagination(PowerEventsPaginatedResponseJson flat) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("offset", flat != null ? flat.getOffset() : null);
+        values.put("limit", flat != null ? flat.getLimit() : null);
+        values.put("total", flat != null ? flat.getTotalCount() : null);
+        return Constants.objectMapper.convertValue(values, Pagination.class);
     }
 
     // POST /dcim/v3/powerEvents/configurations — operationId createPowerAlertConfiguration

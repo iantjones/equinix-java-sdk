@@ -62,9 +62,15 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.SystemAlertsImpl;
  * // Create a streaming subscription for real-time alerts
  * StreamingSubscription sub = smartView.streamingSubscriptions()
  *     .define()
- *     .withName("My-Alerts")
- *     .withChannelType(ChannelType.WEBHOOK)
- *     .withWebhookUrl("https://example.com/webhook")
+ *     .withChannel(Channel.builder()
+ *         .channelType(ChannelType.WEBHOOK)
+ *         .webhookChannelConfiguration(WebhookChannelConfiguration.builder()
+ *             .url("https://example.com/webhook").build())
+ *         .build())
+ *     .withMessageType(MessageType.builder()
+ *         .environmental(List.of(EnvironmentalMessageType.builder()
+ *             .accountNumber("123456").ibx(List.of("SV5")).build()))
+ *         .build())
  *     .create();
  * }</pre>
  *

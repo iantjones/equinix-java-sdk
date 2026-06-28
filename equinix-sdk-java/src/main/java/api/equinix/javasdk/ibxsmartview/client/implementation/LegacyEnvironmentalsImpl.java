@@ -20,8 +20,8 @@ import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.ibxsmartview.client.LegacyEnvironmentals;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyEnvironmentalClient;
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentData;
+import api.equinix.javasdk.ibxsmartview.model.EnvironmentDataForArray;
 import api.equinix.javasdk.ibxsmartview.model.TrendingEnvironmentData;
-import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataJson;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -43,9 +43,8 @@ public class LegacyEnvironmentalsImpl implements LegacyEnvironmentals {
         return serviceClient.getCurrent(accountNo, ibx, levelType, levelValue);
     }
 
-    public List<EnvironmentData> listCurrent(String accountNo, String ibx, String levelType) {
-        List<EnvironmentDataJson> jsonList = serviceClient.listCurrent(accountNo, ibx, levelType);
-        return new ArrayList<>(jsonList);
+    public List<EnvironmentDataForArray> listCurrent(String accountNo, String ibx, String levelType) {
+        return new ArrayList<>(serviceClient.listCurrent(accountNo, ibx, levelType));
     }
 
     public TrendingEnvironmentData getTrending(String accountNo, String ibx, String dataPoint,

@@ -14,30 +14,49 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model.json;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-import api.equinix.javasdk.ibxsmartview.model.PowerHierarchy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * A streaming metered power reading for an IBX cage, including the account it is billed
+ * to, the originating tag and the measured value with its unit.
+ */
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PowerHierarchyJson implements PowerHierarchy {
+public class MeteredPower {
 
+    @JsonProperty("streamId")
+    private String streamId;
 
     @JsonProperty("ibx")
     private String ibx;
 
-    @JsonProperty("accountNo")
-    private String accountNo;
+    @JsonProperty("asset")
+    private MeteredPowerAssetDetails asset;
 
-    @JsonProperty("payLoad")
-    private List<Map<String, Object>> payLoad;
+    @JsonProperty("cage")
+    private String cage;
+
+    @JsonProperty("cageSerialNo")
+    private String cageSerialNo;
+
+    @JsonProperty("accountNumber")
+    private String accountNumber;
+
+    @JsonProperty("tag")
+    private MeteredPowerTagDetails tag;
+
+    @JsonProperty("reading")
+    private MeteredPowerValueWithUnit reading;
+
+    @JsonProperty("readingTime")
+    private String readingTime;
+
+    @JsonProperty("dataQuality")
+    private String dataQuality;
 }

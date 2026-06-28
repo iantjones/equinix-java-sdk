@@ -53,12 +53,29 @@ public interface StreamingSubscriptions {
     StreamingSubscriptionOperator.StreamingSubscriptionBuilder define();
 
     /**
-     * Retrieves the data payload associated with a specific subscription.
+     * Retrieves the near real-time data associated with a specific subscription.
      *
      * @param subscriptionId the unique identifier of the subscription
      * @return the subscription data
      */
     SubscriptionData getSubscriptionData(String subscriptionId);
+
+    /**
+     * Retrieves the near real-time data associated with a specific subscription, narrowed by the
+     * given filters and pagination.
+     *
+     * @param subscriptionId the unique identifier of the subscription
+     * @param ibxs filter to the given set of IBXs, or {@code null} for all
+     * @param messageTypes filter to the given message types
+     *                     ({@code ALARM}, {@code ALERT}, {@code ENVIRONMENTAL},
+     *                     {@code METERED_POWER}, {@code POWER}, {@code TAG_POINT}), or {@code null} for all
+     * @param streamIds filter to the given set of stream IDs, or {@code null} for all
+     * @param offset the zero-based offset of the first item, or {@code null} for the default
+     * @param limit the maximum number of items to return, or {@code null} for the default (250)
+     * @return the subscription data
+     */
+    SubscriptionData getSubscriptionData(String subscriptionId, List<String> ibxs, List<String> messageTypes,
+                                         List<String> streamIds, Integer offset, Integer limit);
 
     /**
      * Retrieves the certificate used for authenticating a streaming channel.

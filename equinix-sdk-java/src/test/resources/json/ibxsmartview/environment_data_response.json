@@ -1,10 +1,20 @@
 {
-  "ibx": "SV5",
-  "levelType": "CAGE",
-  "levelValue": "SV5:01:001100",
-  "temperature": 21.8,
-  "humidity": 42.3,
-  "dewPoint": 8.5,
-  "sensorId": "ENV-SV5-002",
-  "timestamp": "2024-01-15T14:30:00Z"
+  "payLoad": {
+    "ibx": "SV5",
+    "accountNo": "123456",
+    "zone": "SV5:1:01:ColoArea:1",
+    "cage": "SV5:01:001100",
+    "cabinet": "SV5:01:001100:0105",
+    "sensor": "ENV-SV5-002",
+    "temperature": "21.8",
+    "humidity": "42.3",
+    "timestamp": "2024-01-15T14:30:00Z",
+    "temperatureUom": "°C",
+    "humidityUom": "%"
+  },
+  "status": {
+    "type": "INFO",
+    "statuscode": 1000,
+    "msg": "OK"
+  }
 }

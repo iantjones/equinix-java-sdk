@@ -14,30 +14,37 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model.json;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
+/**
+ * A {@code systemAlert} message-type entry within a subscription's {@link MessageType}
+ * ({@code SystemAlert} in the spec). System alert messages are sent when Equinix-defined
+ * alert conditions become true.
+ */
 @Getter
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LocationHierarchyJson implements LocationHierarchy {
+public class SystemAlertMessageType {
 
+    @JsonProperty("accountNumber")
+    private String accountNumber;
 
     @JsonProperty("ibx")
-    private String ibx;
+    private List<String> ibx;
 
-    @JsonProperty("accountNo")
-    private String accountNo;
-
-    @JsonProperty("payLoad")
-    private List<Map<String, Object>> payLoad;
+    @Builder
+    public SystemAlertMessageType(String accountNumber, List<String> ibx) {
+        this.accountNumber = accountNumber;
+        this.ibx = ibx;
+    }
 }

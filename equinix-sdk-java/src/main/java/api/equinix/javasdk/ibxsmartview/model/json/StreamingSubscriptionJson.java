@@ -16,41 +16,48 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
+import api.equinix.javasdk.ibxsmartview.enums.SubscriptionStatus;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
-import api.equinix.javasdk.ibxsmartview.model.implementation.SubscriptionMessage;
+import api.equinix.javasdk.ibxsmartview.model.implementation.MessageType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamingSubscriptionJson {
 
     @Getter static TypeReference<List<StreamingSubscriptionJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("subscriptionId")
-    private String subscriptionId;
-
-    @JsonProperty("name")
-    private String name;
-
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("id")
+    private String id;
 
     @JsonProperty("status")
-    private String status;
+    private SubscriptionStatus status;
+
+    @JsonProperty("messageType")
+    private MessageType messageType;
 
     @JsonProperty("channel")
     private Channel channel;
 
-    @JsonProperty("messages")
-    private List<SubscriptionMessage> messages;
+    @JsonProperty("orgId")
+    private String orgId;
 
-    @JsonProperty("createdDate")
-    private String createdDate;
+    @JsonProperty("createdBy")
+    private String createdBy;
 
-    @JsonProperty("updatedDate")
-    private String updatedDate;
+    @JsonProperty("createdDateTime")
+    private String createdDateTime;
+
+    @JsonProperty("updatedBy")
+    private String updatedBy;
+
+    @JsonProperty("updatedDateTime")
+    private String updatedDateTime;
 }

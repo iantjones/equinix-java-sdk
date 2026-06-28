@@ -14,23 +14,25 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-public interface SmartViewAsset {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    String getAssetId();
+/**
+ * The streaming envelope wrapping a {@link MeteredPower} payload, carrying the message
+ * type and its data.
+ */
+@Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class MeteredPowerMessageData {
 
-    String getIbx();
+    @JsonProperty("type")
+    private String type;
 
-    String getClassification();
-
-    String getAssetType();
-
-    String getDisplayName();
-
-    String getCage();
-
-    String getCabinet();
-
-    String getStatus();
+    @JsonProperty("data")
+    private MeteredPower data;
 }

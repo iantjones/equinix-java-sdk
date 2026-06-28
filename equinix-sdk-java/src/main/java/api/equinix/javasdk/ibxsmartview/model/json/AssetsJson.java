@@ -16,41 +16,39 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
+import api.equinix.javasdk.ibxsmartview.model.Assets;
+import api.equinix.javasdk.ibxsmartview.model.implementation.AssetsArray;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
+/**
+ * Deserialization holder for the asset/search response ({@code Assets}).
+ */
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SmartViewAssetJson implements SmartViewAsset {
+public class AssetsJson implements Assets {
 
-
-    @JsonProperty("assetId")
-    private String assetId;
-
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("classification")
-    private String classification;
-
-    @JsonProperty("assetType")
-    private String assetType;
-
-    @JsonProperty("displayName")
-    private String displayName;
-
-    @JsonProperty("cage")
-    private String cage;
-
-    @JsonProperty("cabinet")
-    private String cabinet;
+    @JsonProperty("payLoad")
+    private PayloadJson payLoad;
 
     @JsonProperty("status")
-    private String status;
+    private Status status;
+
+    @Getter
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PayloadJson implements Payload {
+
+        @JsonProperty("totalCount")
+        private Integer totalCount;
+
+        @JsonProperty("assetsList")
+        private List<AssetsArray> assetsList;
+    }
 }

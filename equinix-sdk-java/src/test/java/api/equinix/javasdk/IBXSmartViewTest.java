@@ -71,7 +71,7 @@ class IBXSmartViewTest {
             assertTrue(subscriptions.size() >= 0);
 
             if (subscriptions.size() > 0) {
-                StreamingSubscription subscription = ibxSmartView.streamingSubscriptions().getByUuid(subscriptions.get(0).getSubscriptionId());
+                StreamingSubscription subscription = ibxSmartView.streamingSubscriptions().getByUuid(subscriptions.get(0).getId());
                 assertNotNull(subscription);
             }
         } catch (Exception e) {
@@ -119,9 +119,8 @@ class IBXSmartViewTest {
     @Test
     void smartViewAssets() {
         try {
-            var assets = ibxSmartView.smartViewAssets().list(null, "DC2", null, null);
+            var assets = ibxSmartView.smartViewAssets().list(null, "DC2", "Electrical", null);
             assertNotNull(assets);
-            assertTrue(assets.size() >= 0);
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "SmartView assets test skipped: " + e.getMessage());
         }

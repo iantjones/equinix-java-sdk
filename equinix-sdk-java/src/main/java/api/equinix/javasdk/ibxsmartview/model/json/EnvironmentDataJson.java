@@ -17,42 +17,59 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EnvironmentDataJson implements EnvironmentData {
 
-    @Getter static TypeReference<List<EnvironmentDataJson>> listTypeRef = new TypeReference<>() {};
+    @JsonProperty("payLoad")
+    private PayloadJson payLoad;
 
-    @JsonProperty("temperature")
-    private Double temperature;
+    @JsonProperty("status")
+    private Status status;
 
-    @JsonProperty("humidity")
-    private Double humidity;
+    @Getter
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PayloadJson implements Payload {
 
-    @JsonProperty("dewPoint")
-    private Double dewPoint;
+        @JsonProperty("ibx")
+        private String ibx;
 
-    @JsonProperty("ibx")
-    private String ibx;
+        @JsonProperty("accountNo")
+        private String accountNo;
 
-    @JsonProperty("levelType")
-    private String levelType;
+        @JsonProperty("zone")
+        private String zone;
 
-    @JsonProperty("levelValue")
-    private String levelValue;
+        @JsonProperty("cage")
+        private String cage;
 
-    @JsonProperty("sensorId")
-    private String sensorId;
+        @JsonProperty("cabinet")
+        private String cabinet;
 
-    @JsonProperty("timestamp")
-    private String timestamp;
+        @JsonProperty("sensor")
+        private String sensor;
+
+        @JsonProperty("temperature")
+        private String temperature;
+
+        @JsonProperty("humidity")
+        private String humidity;
+
+        @JsonProperty("timestamp")
+        private String timestamp;
+
+        @JsonProperty("temperatureUom")
+        private String temperatureUom;
+
+        @JsonProperty("humidityUom")
+        private String humidityUom;
+    }
 }

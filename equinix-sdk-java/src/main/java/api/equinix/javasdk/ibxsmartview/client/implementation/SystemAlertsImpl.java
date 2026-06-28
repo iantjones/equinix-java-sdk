@@ -24,6 +24,7 @@ import api.equinix.javasdk.ibxsmartview.client.SystemAlerts;
 import api.equinix.javasdk.ibxsmartview.client.internal.SystemAlertClient;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.json.SystemAlertJson;
+import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
 import lombok.Getter;
 
 @Getter
@@ -44,7 +45,7 @@ public class SystemAlertsImpl implements SystemAlerts {
         return new PaginatedList<>(alertList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    public PaginatedList<SystemAlert> searchPost(Object filterBody) {
+    public PaginatedList<SystemAlert> searchPost(SearchRequest filterBody) {
         Page<SystemAlert, SystemAlertJson> responsePage = serviceClient.searchPost(filterBody);
         PaginatedList<SystemAlert> alertList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(alertList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());

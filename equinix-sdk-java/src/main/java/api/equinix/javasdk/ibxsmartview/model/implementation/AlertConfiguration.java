@@ -16,13 +16,27 @@
 
 package api.equinix.javasdk.ibxsmartview.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * The alert configuration that produced a system alert ({@code ConfigurationReadModel} in the spec).
+ */
 @Getter
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AlertConfiguration {
+
+    @JsonProperty("thresholdValue")
+    private String thresholdValue;
+
+    @JsonProperty("thresholdValueDisplayName")
+    private String thresholdValueDisplayName;
+
+    @JsonProperty("unitOfMeasurement")
+    private String unitOfMeasurement;
 
     @JsonProperty("thresholdType")
     private String thresholdType;
@@ -30,6 +44,9 @@ public class AlertConfiguration {
     @JsonProperty("conditionName")
     private String conditionName;
 
-    @JsonProperty("conditionValue")
-    private String conditionValue;
+    @JsonProperty("customerVisible")
+    private Boolean customerVisible;
+
+    @JsonProperty("configurationVersion")
+    private String configurationVersion;
 }

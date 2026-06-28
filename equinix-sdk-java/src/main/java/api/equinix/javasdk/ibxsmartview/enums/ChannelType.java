@@ -19,11 +19,14 @@ package api.equinix.javasdk.ibxsmartview.enums;
 import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+/**
+ * The delivery channel type for a streaming subscription. Per the smartviewv2 spec the
+ * supported values are {@code AWS_IOT_CORE}, {@code WEBHOOK} and {@code AZURE}.
+ */
 public enum ChannelType implements APIParam {
     AWS_IOT_CORE,
-    AZURE_EVENT_HUB,
     WEBHOOK,
-    REST,
+    AZURE,
     UNKNOWN;
 
     @JsonCreator

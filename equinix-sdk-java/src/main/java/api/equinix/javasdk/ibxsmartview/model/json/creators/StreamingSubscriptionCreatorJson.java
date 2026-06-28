@@ -16,73 +16,29 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json.creators;
 
-import api.equinix.javasdk.ibxsmartview.enums.StreamingMessageType;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
+import api.equinix.javasdk.ibxsmartview.model.implementation.MessageType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-@Setter(AccessLevel.PRIVATE)
+/**
+ * Typed request body for creating/updating a streaming subscription
+ * ({@code SubscriptionRequest} in the spec). Carries the typed {@link MessageType} and
+ * the single delivery {@link Channel}.
+ */
+@Getter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class StreamingSubscriptionCreatorJson {
 
-    @JsonProperty("name")
-    private String name;
-
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("messageType")
+    private final MessageType messageType;
 
     @JsonProperty("channel")
-    private ChannelCreator channel;
-
-    @JsonProperty("messages")
-    private List<MessageCreator> messages;
+    private final Channel channel;
 
     public StreamingSubscriptionCreatorJson(StreamingSubscriptionOperator.StreamingSubscriptionBuilder builder) {
-        this.name = builder.getName();
-        this.description = builder.getDescription();
-        this.channel = new ChannelCreator(builder.getChannelType(), builder.getChannelDetails());
-        this.messages = builder.getMessages().stream()
-                .map(m -> new MessageCreator(m.getMessageType(), m.getAccountNumbers(), m.getIbxs()))
-                .collect(Collectors.toList());
-    }
-
-    @Getter
-    @Setter(AccessLevel.PRIVATE)
-    static class ChannelCreator {
-
-        @JsonProperty("channelType")
-        private Object channelType;
-
-        @JsonProperty("channelDetails")
-        private Map<String, Object> channelDetails;
-
-        ChannelCreator(Object channelType, Map<String, Object> channelDetails) {
-            this.channelType = channelType;
-            this.channelDetails = channelDetails;
-        }
-    }
-
-    @Getter
-    @Setter(AccessLevel.PRIVATE)
-    static class MessageCreator {
-
-        @JsonProperty("messageType")
-        private StreamingMessageType messageType;
-
-        @JsonProperty("accountNumbers")
-        private List<String> accountNumbers;
-
-        @JsonProperty("ibxs")
-        private List<String> ibxs;
-
-        MessageCreator(StreamingMessageType messageType, List<String> accountNumbers, List<String> ibxs) {
-            this.messageType = messageType;
-            this.accountNumbers = accountNumbers;
-            this.ibxs = ibxs;
-        }
+        this.messageType = builder.getMessageType();
+        this.channel = builder.getChannel();
     }
 }

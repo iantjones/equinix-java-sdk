@@ -16,14 +16,33 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
-import java.util.List;
-import java.util.Map;
+import api.equinix.javasdk.core.http.response.Pagination;
+import api.equinix.javasdk.ibxsmartview.model.implementation.AlarmMessageData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.AlertMessageData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.EnvironmentMessageData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.MeteredPowerMessageData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.PowerMessageData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.TagPointMessageData;
 
+import java.util.List;
+
+/**
+ * Near real-time subscription data retrieved via REST ({@code SubscriptionData} in the spec).
+ * Groups the latest messages by message type alongside pagination metadata.
+ */
 public interface SubscriptionData {
 
-    String getSubscriptionId();
+    List<AlarmMessageData> getAlarmMessageData();
 
-    String getTimestamp();
+    List<AlertMessageData> getAlertMessageData();
 
-    List<Map<String, Object>> getData();
+    List<EnvironmentMessageData> getEnvironmentMessageData();
+
+    List<MeteredPowerMessageData> getMeteredPowerMessageData();
+
+    List<PowerMessageData> getPowerMessageData();
+
+    List<TagPointMessageData> getTagPointMessageData();
+
+    Pagination getPagination();
 }

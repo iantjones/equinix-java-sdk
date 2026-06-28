@@ -119,45 +119,62 @@ class SmartViewDeserializationTest {
         assertEquals("123456", powerEvent.getAccountNo());
     }
 
-    // --- EnvironmentDataJson tests ---
+    // --- EnvironmentDataJson tests (payLoad/status envelope) ---
+
+    @Test
+    void env_payLoad_isDeserialized() {
+        assertNotNull(environmentData.getPayLoad());
+    }
 
     @Test
     void env_ibx_isDeserialized() {
-        assertEquals("SV5", environmentData.getIbx());
+        assertEquals("SV5", environmentData.getPayLoad().getIbx());
     }
 
     @Test
-    void env_levelType_isDeserialized() {
-        assertEquals("CAGE", environmentData.getLevelType());
+    void env_accountNo_isDeserialized() {
+        assertEquals("123456", environmentData.getPayLoad().getAccountNo());
     }
 
     @Test
-    void env_levelValue_isDeserialized() {
-        assertEquals("SV5:01:001100", environmentData.getLevelValue());
+    void env_cage_isDeserialized() {
+        assertEquals("SV5:01:001100", environmentData.getPayLoad().getCage());
     }
 
     @Test
     void env_temperature_isDeserialized() {
-        assertEquals(21.8, environmentData.getTemperature());
+        assertEquals("21.8", environmentData.getPayLoad().getTemperature());
     }
 
     @Test
     void env_humidity_isDeserialized() {
-        assertEquals(42.3, environmentData.getHumidity());
+        assertEquals("42.3", environmentData.getPayLoad().getHumidity());
     }
 
     @Test
-    void env_dewPoint_isDeserialized() {
-        assertEquals(8.5, environmentData.getDewPoint());
+    void env_temperatureUom_isDeserialized() {
+        assertEquals("°C", environmentData.getPayLoad().getTemperatureUom());
     }
 
     @Test
-    void env_sensorId_isDeserialized() {
-        assertEquals("ENV-SV5-002", environmentData.getSensorId());
+    void env_humidityUom_isDeserialized() {
+        assertEquals("%", environmentData.getPayLoad().getHumidityUom());
+    }
+
+    @Test
+    void env_sensor_isDeserialized() {
+        assertEquals("ENV-SV5-002", environmentData.getPayLoad().getSensor());
     }
 
     @Test
     void env_timestamp_isDeserialized() {
-        assertEquals("2024-01-15T14:30:00Z", environmentData.getTimestamp());
+        assertEquals("2024-01-15T14:30:00Z", environmentData.getPayLoad().getTimestamp());
+    }
+
+    @Test
+    void env_status_isDeserialized() {
+        assertNotNull(environmentData.getStatus());
+        assertEquals("OK", environmentData.getStatus().getMsg());
+        assertEquals(1000, environmentData.getStatus().getStatuscode());
     }
 }

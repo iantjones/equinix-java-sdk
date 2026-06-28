@@ -16,21 +16,50 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
+
+/**
+ * Current environmental (temperature and humidity) data for a single hierarchy node,
+ * wrapped in the {@code payLoad}/{@code status} envelope returned by the legacy
+ * {@code /environment/v1/current} endpoint.
+ */
 public interface EnvironmentData {
 
-    Double getTemperature();
+    /**
+     * @return the environmental data payload, or {@code null} when the response carried no data
+     */
+    Payload getPayLoad();
 
-    Double getHumidity();
+    /**
+     * @return the response status envelope
+     */
+    Status getStatus();
 
-    Double getDewPoint();
+    /**
+     * The {@code payLoad} of an {@link EnvironmentData} response.
+     */
+    interface Payload {
 
-    String getIbx();
+        String getIbx();
 
-    String getLevelType();
+        String getAccountNo();
 
-    String getLevelValue();
+        String getZone();
 
-    String getSensorId();
+        String getCage();
 
-    String getTimestamp();
+        String getCabinet();
+
+        String getSensor();
+
+        String getTemperature();
+
+        String getHumidity();
+
+        String getTimestamp();
+
+        String getTemperatureUom();
+
+        String getHumidityUom();
+    }
 }

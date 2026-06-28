@@ -23,7 +23,7 @@ import api.equinix.javasdk.ibxsmartview.model.json.SensorReadingJson;
 
 public interface EnvironmentalClient<T> extends Pageable<T> {
 
-    Page<SensorReading, SensorReadingJson> list(String ibx);
+    Page<SensorReading, SensorReadingJson> list(String ibx, String type, String zone, Integer offset, Integer limit);
 
     SensorReadingJson getSensorReading(String ibx, String sensorId);
 }

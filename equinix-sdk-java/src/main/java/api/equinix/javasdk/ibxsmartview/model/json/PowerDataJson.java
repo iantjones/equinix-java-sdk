@@ -17,42 +17,99 @@
 package api.equinix.javasdk.ibxsmartview.model.json;
 
 import api.equinix.javasdk.ibxsmartview.model.PowerData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonData;
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PowerDataJson implements PowerData {
 
-    @Getter static TypeReference<List<PowerDataJson>> listTypeRef = new TypeReference<>() {};
+    @JsonProperty("payLoad")
+    private PayloadJson payLoad;
 
-    @JsonProperty("kva")
-    private Double kva;
+    @JsonProperty("status")
+    private Status status;
 
-    @JsonProperty("kw")
-    private Double kw;
+    @Getter
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PayloadJson implements Payload {
 
-    @JsonProperty("amps")
-    private Double amps;
+        @JsonProperty("ibx")
+        private String ibx;
 
-    @JsonProperty("maxKva")
-    private Double maxKva;
+        @JsonProperty("accountNo")
+        private String accountNo;
 
-    @JsonProperty("percentageUsed")
-    private Double percentageUsed;
+        @JsonProperty("levelType")
+        private String levelType;
 
-    @JsonProperty("ibx")
-    private String ibx;
+        @JsonProperty("levelValue")
+        private String levelValue;
 
-    @JsonProperty("levelType")
-    private String levelType;
+        @JsonProperty("isAlarm")
+        private String isAlarm;
 
-    @JsonProperty("levelValue")
-    private String levelValue;
+        @JsonProperty("kva")
+        private Double kva;
+
+        @JsonProperty("amps")
+        private Double amps;
+
+        @JsonProperty("soldKva")
+        private Double soldKva;
+
+        @JsonProperty("cabinetRating")
+        private Double cabinetRating;
+
+        @JsonProperty("contractualKva")
+        private Double contractualKva;
+
+        @JsonProperty("percentageKva")
+        private Double percentageKva;
+
+        @JsonProperty("comparisonData")
+        private ComparisonData comparisonData;
+
+        @JsonProperty("peakKvaLastSevenDays")
+        private Double peakKvaLastSevenDays;
+
+        @JsonProperty("peakKvaLastSevenDaysPercentage")
+        private Double peakKvaLastSevenDaysPercentage;
+
+        @JsonProperty("peakKvaLastSevenDaysContractualKva")
+        private Double peakKvaLastSevenDaysContractualKva;
+
+        @JsonProperty("peakKvaLastSevenDaysTime")
+        private Long peakKvaLastSevenDaysTime;
+
+        @JsonProperty("soldAmps")
+        private Integer soldAmps;
+
+        @JsonProperty("primaryKva")
+        private Double primaryKva;
+
+        @JsonProperty("redundantKva")
+        private Double redundantKva;
+
+        @JsonProperty("kw")
+        private String kw;
+
+        @JsonProperty("powerFactor")
+        private String powerFactor;
+
+        @JsonProperty("readingTime")
+        private String readingTime;
+
+        @JsonProperty("lastUpdatedTime")
+        private String lastUpdatedTime;
+
+        @JsonProperty("customerName")
+        private String customerName;
+    }
 }

@@ -16,14 +16,13 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertConfiguration;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertProcessing;
+import api.equinix.javasdk.ibxsmartview.model.implementation.ValueReadModel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,12 +31,14 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SystemAlertJson implements SystemAlert {
 
+    @JsonProperty("id")
+    private Long id;
 
     @JsonProperty("alertUid")
     private String alertUid;
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("traceUid")
+    private String traceUid;
 
     @JsonProperty("assetTagUid")
     private String assetTagUid;
@@ -45,12 +46,21 @@ public class SystemAlertJson implements SystemAlert {
     @JsonProperty("assetTagDisplayName")
     private String assetTagDisplayName;
 
-    @JsonProperty("configuration")
-    private AlertConfiguration configuration;
+    @JsonProperty("status")
+    private String status;
+
+    @JsonProperty("value")
+    private ValueReadModel value;
 
     @JsonProperty("asset")
     private AlertAsset asset;
 
+    @JsonProperty("configuration")
+    private AlertConfiguration configuration;
+
     @JsonProperty("activeProcessing")
     private AlertProcessing activeProcessing;
+
+    @JsonProperty("inactiveProcessing")
+    private AlertProcessing inactiveProcessing;
 }

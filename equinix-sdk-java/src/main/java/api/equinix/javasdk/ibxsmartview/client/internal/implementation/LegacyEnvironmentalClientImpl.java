@@ -20,9 +20,12 @@ import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyEnvironmentalClient;
+import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataForArrayJson;
 import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataJson;
+import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataResponseJson;
 import api.equinix.javasdk.ibxsmartview.model.json.TrendingEnvironmentDataJson;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +45,16 @@ public class LegacyEnvironmentalClientImpl extends ClientBase implements LegacyE
         return getAs("GetCurrentEnvironment", null, qParams, EnvironmentDataJson.class);
     }
 
-    public List<EnvironmentDataJson> listCurrent(String accountNo, String ibx, String levelType) {
+    public List<EnvironmentDataForArrayJson> listCurrent(String accountNo, String ibx, String levelType) {
         Map<String, List<String>> qParams = new HashMap<>();
         Utils.addAdditionalValue(qParams, "accountNo", accountNo);
         Utils.addAdditionalValue(qParams, "ibx", ibx);
         Utils.addAdditionalValue(qParams, "levelType", levelType);
-        return listAs("ListCurrentEnvironment", null, qParams, EnvironmentDataJson.class);
+        EnvironmentDataResponseJson response = getAs("ListCurrentEnvironment", null, qParams, EnvironmentDataResponseJson.class);
+        if (response == null || response.getPayLoad() == null || response.getPayLoad().getData() == null) {
+            return Collections.emptyList();
+        }
+        return response.getPayLoad().getData();
     }
 
     public TrendingEnvironmentDataJson getTrending(String accountNo, String ibx, String dataPoint,

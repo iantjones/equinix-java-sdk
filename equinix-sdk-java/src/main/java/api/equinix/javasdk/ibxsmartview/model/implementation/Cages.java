@@ -14,16 +14,29 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
-public interface LocationHierarchy {
+/**
+ * A cage node within an asset hierarchy, containing cabinets.
+ */
+@Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Cages {
 
-    String getIbx();
+    @JsonProperty("name")
+    private String name;
 
-    String getAccountNo();
+    @JsonProperty("type")
+    private String type;
 
-    List<Map<String, Object>> getPayLoad();
+    @JsonProperty("cabinets")
+    private List<Cabinets> cabinets;
 }

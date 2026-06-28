@@ -16,21 +16,25 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
+import api.equinix.javasdk.ibxsmartview.model.implementation.TagPointDataArrayCurrent;
+
+import java.util.List;
+
+/**
+ * Current tag-point data for one or more tag identifiers, wrapped in the
+ * {@code payLoad}/{@code status} envelope returned by the asset tag-point endpoints
+ * ({@code TagPointData} in the spec).
+ */
 public interface TagPointData {
 
-    String getTagPointUid();
+    /**
+     * @return the current tag-point readings, or {@code null} when the response carried no data
+     */
+    List<TagPointDataArrayCurrent> getPayLoad();
 
-    String getTagPointName();
-
-    String getIbx();
-
-    String getAssetUid();
-
-    String getValue();
-
-    String getUnit();
-
-    String getTimestamp();
-
-    String getStatus();
+    /**
+     * @return the response status envelope
+     */
+    Status getStatus();
 }
