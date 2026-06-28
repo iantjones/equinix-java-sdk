@@ -17,10 +17,13 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.Side;
+import api.equinix.javasdk.fabric.enums.AccessPointRole;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.InterfaceType;
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
 import api.equinix.javasdk.fabric.enums.PeeringType;
+import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
@@ -61,6 +64,21 @@ public class SimpleAccessPoint {
     @JsonProperty("peeringType")
     private PeeringType peeringType;
 
+    @JsonProperty("router")
+    private MinimalCloudRouter router;
+
+    @JsonProperty("network")
+    private MinimalNetwork network;
+
+    @JsonProperty("virtualNetwork")
+    private VirtualNetwork virtualNetwork;
+
+    @JsonProperty("interconnection")
+    private MetalInterconnection interconnection;
+
+    @JsonProperty("role")
+    private AccessPointRole role;
+
     protected SimpleAccessPoint(AccessPointBuilder accessPointBuilder) {
         this.type = accessPointBuilder.type;
         this.port = accessPointBuilder.port;
@@ -71,6 +89,11 @@ public class SimpleAccessPoint {
         this.sellerRegion = accessPointBuilder.sellerRegion;
         this.authenticationKey = accessPointBuilder.authenticationKey;
         this.peeringType = accessPointBuilder.peeringType;
+        this.router = accessPointBuilder.router;
+        this.network = accessPointBuilder.network;
+        this.virtualNetwork = accessPointBuilder.virtualNetwork;
+        this.interconnection = accessPointBuilder.interconnection;
+        this.role = accessPointBuilder.role;
     }
 
     public SimpleAccessPoint setLinkProtocol(LinkProtocol linkProtocol) {
@@ -118,6 +141,16 @@ public class SimpleAccessPoint {
         private String authenticationKey;
 
         private PeeringType peeringType;
+
+        private MinimalCloudRouter router;
+
+        private MinimalNetwork network;
+
+        private VirtualNetwork virtualNetwork;
+
+        private MetalInterconnection interconnection;
+
+        private AccessPointRole role;
 
         protected AccessPointBuilder(AccessPointType type) {
             this.type = type;
@@ -187,6 +220,53 @@ public class SimpleAccessPoint {
 
         public AccessPointBuilder peeringType(PeeringType peeringType) {
             this.peeringType = peeringType;
+            return this;
+        }
+
+        /**
+         * Targets a Fabric Cloud Router (by uuid) as this access point. Used to build
+         * Fabric Cloud Router connections.
+         *
+         * @param cloudRouterUuid the Cloud Router uuid
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder cloudRouter(String cloudRouterUuid) {
+            this.router = new MinimalCloudRouter(cloudRouterUuid);
+            return this;
+        }
+
+        public AccessPointBuilder cloudRouter(CloudRouter cloudRouter) {
+            return cloudRouter(cloudRouter.getUuid());
+        }
+
+        /**
+         * Targets a Fabric Network (by uuid) as this access point. Used to build
+         * network-type (E-LAN / E-Tree) connections.
+         *
+         * @param networkUuid the network uuid
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder network(String networkUuid) {
+            this.network = new MinimalNetwork(networkUuid);
+            return this;
+        }
+
+        public AccessPointBuilder network(Network network) {
+            return network(network.getUuid());
+        }
+
+        public AccessPointBuilder virtualNetwork(String virtualNetworkUuid) {
+            this.virtualNetwork = new VirtualNetwork(virtualNetworkUuid);
+            return this;
+        }
+
+        public AccessPointBuilder interconnection(String interconnectionUuid) {
+            this.interconnection = new MetalInterconnection(interconnectionUuid);
+            return this;
+        }
+
+        public AccessPointBuilder role(AccessPointRole role) {
+            this.role = role;
             return this;
         }
 

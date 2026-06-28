@@ -1,0 +1,55 @@
+{
+  "uuid": "31fbdb3f-8def-410d-868b-ef920878affb",
+  "href": "/fabric/v4/ipBlocks/31fbdb3f-8def-410d-868b-ef920878affb",
+  "type": "IPV4_IP_BLOCK",
+  "state": "ACTIVE",
+  "ownership": "EQUINIX",
+  "prefixLength": 28,
+  "prefix": "192.0.2.0/28",
+  "project": {
+    "projectId": "997924658"
+  },
+  "location": {
+    "metroHref": "https://api.equinix.com/fabric/v4/metros/SY",
+    "metroCode": "SY"
+  },
+  "order": {
+    "href": "https://api.equinix.com/colocations/v2/orders/1-34834234",
+    "orderNumber": "1-34834234",
+    "purchaseOrderNumber": "PO-9981",
+    "orderLine": "10"
+  },
+  "account": {
+    "accountNumber": "123456"
+  },
+  "regulations": {
+    "addressingPlans": [
+      {
+        "purpose": "Customer servers",
+        "size": 8
+      }
+    ],
+    "questions": {
+      "privateSpaceConsidered": true,
+      "refusedPreviously": false,
+      "returningAddressSpace": false
+    }
+  },
+  "assets": [
+    {
+      "type": "FABRIC",
+      "uuid": "fd8c5042-b553-4d5e-a2ac-c73bf6d4fd92",
+      "href": "https://api.equinix.com/fabric/v4/connections/fd8c5042-b553-4d5e-a2ac-c73bf6d4fd92"
+    }
+  ],
+  "change": {
+    "href": "https://api.equinix.com/fabric/v4/ipBlocks/31fbdb3f-8def-410d-868b-ef920878affb/changes/abc"
+  },
+  "error": {
+    "errorCode": "EQ-3142509",
+    "errorMessage": "Invalid prefix length"
+  },
+  "changeLog": {
+    "createdDateTime": "2024-03-15T10:00:00.000Z"
+  }
+}

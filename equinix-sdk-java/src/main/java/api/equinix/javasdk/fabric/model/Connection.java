@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.Direction;
+import api.equinix.javasdk.fabric.enums.GeoScopeType;
 import api.equinix.javasdk.fabric.model.implementation.*;
 
 import java.util.List;
@@ -41,7 +42,11 @@ public interface Connection {
 
     String getName();
 
+    String getDescription();
+
     ConnectionState getState();
+
+    GeoScopeType getGeoScope();
 
     Order getOrder();
 
@@ -66,6 +71,10 @@ public interface Connection {
     ConnectionSide getZSide();
 
     List<KeyValuePair> getAdditionalInfo();
+
+    MarketplaceSubscriptionRef getMarketplaceSubscription();
+
+    Project getProject();
 
     Change getChange();
 

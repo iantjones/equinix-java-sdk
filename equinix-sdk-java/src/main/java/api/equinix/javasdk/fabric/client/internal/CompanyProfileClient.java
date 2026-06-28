@@ -19,10 +19,15 @@ package api.equinix.javasdk.fabric.client.internal;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.PrivateService;
+import api.equinix.javasdk.fabric.model.Tag;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CompanyProfileJson;
 import api.equinix.javasdk.fabric.model.json.creators.CompanyProfileCreatorJson;
+
+import java.util.List;
 
 public interface CompanyProfileClient<T> extends PageablePost<T> {
 
@@ -41,6 +46,20 @@ public interface CompanyProfileClient<T> extends PageablePost<T> {
     void attachTag(String companyProfileId, String tagId);
 
     void detachTag(String companyProfileId, String tagId);
+
+    List<CompanyServiceProfile> getServiceProfiles(String companyProfileId);
+
+    List<Tag> getTags(String companyProfileId);
+
+    List<PrivateService> getPrivateServices(String companyProfileId);
+
+    void attachPrivateService(String companyProfileId, String privateServiceId);
+
+    void detachPrivateService(String companyProfileId, String privateServiceId);
+
+    byte[] getLogo(String uuid);
+
+    void deleteLogo(String uuid);
 
     CompanyProfileJson refresh(String uuid);
 }

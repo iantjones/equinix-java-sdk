@@ -21,9 +21,12 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric networks. Networks provide logical groupings
@@ -87,4 +90,21 @@ public interface Networks {
      * @return a paginated list of the network's connections
      */
     PaginatedList<Connection> getConnections(String networkId);
+
+    /**
+     * Lists the lifecycle changes recorded against a network.
+     *
+     * @param uuid the unique identifier of the network
+     * @return the list of network changes
+     */
+    List<Change> getChanges(String uuid);
+
+    /**
+     * Retrieves a single network change by its identifier.
+     *
+     * @param uuid the unique identifier of the network
+     * @param changeId the unique identifier of the change
+     * @return the matching network change
+     */
+    Change getChange(String uuid, String changeId);
 }

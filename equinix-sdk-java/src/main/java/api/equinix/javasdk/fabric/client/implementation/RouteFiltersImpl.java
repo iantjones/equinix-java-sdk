@@ -21,13 +21,17 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.RouteFilters;
 import api.equinix.javasdk.fabric.client.internal.RouteFilterClient;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteFilter;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteFilterJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterWrapper;
+
+import java.util.List;
 
 public class RouteFiltersImpl implements RouteFilters {
 
@@ -62,5 +66,17 @@ public class RouteFiltersImpl implements RouteFilters {
 
     public RouteFilterOperator.RouteFilterBuilder define() {
         return new RouteFilterOperator(this.serviceClient).create();
+    }
+
+    public List<Change> getChanges(String uuid) {
+        return this.serviceClient.getChanges(uuid);
+    }
+
+    public Change getChange(String uuid, String changeId) {
+        return this.serviceClient.getChange(uuid, changeId);
+    }
+
+    public List<Connection> getConnections(String uuid) {
+        return this.serviceClient.getConnections(uuid);
     }
 }

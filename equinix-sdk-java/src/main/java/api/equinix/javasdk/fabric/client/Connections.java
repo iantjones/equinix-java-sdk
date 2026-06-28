@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
@@ -24,6 +25,8 @@ import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
@@ -186,4 +189,75 @@ public interface Connections {
      * @return a paginated, filtered list of received route table entries
      */
     PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Lists all Route Aggregations attached to a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @return the list of route aggregation attachments
+     */
+    List<RouteAggregationAttachment> getRouteAggregations(String connectionId);
+
+    /**
+     * Retrieves a single Route Aggregation attached to a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routeAggregationId the unique identifier of the route aggregation
+     * @return the route aggregation attachment
+     */
+    RouteAggregationAttachment getRouteAggregation(String connectionId, String routeAggregationId);
+
+    /**
+     * Attaches a Route Aggregation to a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routeAggregationId the unique identifier of the route aggregation to attach
+     * @return the resulting route aggregation attachment
+     */
+    RouteAggregationAttachment attachRouteAggregation(String connectionId, String routeAggregationId);
+
+    /**
+     * Detaches a Route Aggregation from a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routeAggregationId the unique identifier of the route aggregation to detach
+     * @return {@code true} if the detach request was accepted
+     */
+    Boolean detachRouteAggregation(String connectionId, String routeAggregationId);
+
+    /**
+     * Lists all Route Filters attached to a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @return the list of route filter attachments
+     */
+    List<RouteFilterAttachment> getRouteFilters(String connectionId);
+
+    /**
+     * Retrieves a single Route Filter attached to a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routeFilterId the unique identifier of the route filter
+     * @return the route filter attachment
+     */
+    RouteFilterAttachment getRouteFilter(String connectionId, String routeFilterId);
+
+    /**
+     * Attaches a Route Filter to a connection in the given direction.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routeFilterId the unique identifier of the route filter to attach
+     * @param direction the direction to apply the route filter ({@code INBOUND} or {@code OUTBOUND})
+     * @return the resulting route filter attachment
+     */
+    RouteFilterAttachment attachRouteFilter(String connectionId, String routeFilterId, Direction direction);
+
+    /**
+     * Detaches a Route Filter from a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routeFilterId the unique identifier of the route filter to detach
+     * @return {@code true} if the detach request was accepted
+     */
+    Boolean detachRouteFilter(String connectionId, String routeFilterId);
 }

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.fabric.enums.*;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -50,6 +51,21 @@ public class ConnectionCreatorJson {
         @JsonProperty("notifications")
         private List<Notification> notifications;
 
+        @JsonProperty("geoScope")
+        private GeoScopeType geoScope;
+
+        @JsonProperty("project")
+        private Project project;
+
+        @JsonProperty("additionalInfo")
+        private List<ConnectionSideAdditionalInfo> additionalInfo;
+
+        @JsonProperty("marketplaceSubscription")
+        private MarketplaceSubscriptionRef marketplaceSubscription;
+
+        @JsonProperty("endCustomer")
+        private EndCustomer endCustomer;
+
         @AllArgsConstructor(access = AccessLevel.PACKAGE)
         @NoArgsConstructor(access = AccessLevel.PROTECTED)
         public static class ConnectionSide {
@@ -63,10 +79,16 @@ public class ConnectionCreatorJson {
         public ConnectionCreatorJson(ConnectionOperator.ConnectionBuilder connectionBuilder) {
                 this.type = connectionBuilder.getType();
                 this.name = connectionBuilder.getName();
+                this.order = connectionBuilder.getOrder();
                 this.bandwidth = connectionBuilder.getBandwidth();
                 this.redundancy = connectionBuilder.getRedundancy();
                 this.aSide = new ConnectionSide(connectionBuilder.getASideAccessPoint(), connectionBuilder.getASideServiceToken());
                 this.zSide = new ConnectionSide(connectionBuilder.getZSideAccessPoint(), connectionBuilder.getZSideServiceToken());
                 this.notifications = connectionBuilder.getNotifications();
+                this.geoScope = connectionBuilder.getGeoScope();
+                this.project = connectionBuilder.getProject();
+                this.additionalInfo = connectionBuilder.getAdditionalInfo();
+                this.marketplaceSubscription = connectionBuilder.getMarketplaceSubscription();
+                this.endCustomer = connectionBuilder.getEndCustomer();
         }
 }

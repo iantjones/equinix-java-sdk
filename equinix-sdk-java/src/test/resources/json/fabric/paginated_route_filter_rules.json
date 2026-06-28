@@ -1,0 +1,33 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "b1c2d3e4-f5a6-7890-bcde-f01234567890",
+      "href": "https://api.equinix.com/fabric/v4/routeFilters/e5f6a7b8-c9d0-1234-efab-456789012cde/routeFilterRules/b1c2d3e4-f5a6-7890-bcde-f01234567890",
+      "name": "Allow-10-0-0-0-8",
+      "type": "IPv4_PREFIX_RULE",
+      "state": "PROVISIONED",
+      "prefix": "10.0.0.0/8",
+      "action": "PERMIT",
+      "prefixMatch": "exact",
+      "description": "Permit the 10/8 private range"
+    },
+    {
+      "uuid": "c2d3e4f5-a6b7-8901-cdef-012345678901",
+      "href": "https://api.equinix.com/fabric/v4/routeFilters/e5f6a7b8-c9d0-1234-efab-456789012cde/routeFilterRules/c2d3e4f5-a6b7-8901-cdef-012345678901",
+      "name": "Allow-192-168-0-0-16",
+      "type": "IPv4_PREFIX_RULE",
+      "state": "PROVISIONED",
+      "prefix": "192.168.0.0/16",
+      "action": "PERMIT",
+      "prefixMatch": "orlonger",
+      "description": "Permit the 192.168/16 private range"
+    }
+  ]
+}

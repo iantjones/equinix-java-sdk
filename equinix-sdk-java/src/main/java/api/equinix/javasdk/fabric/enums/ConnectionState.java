@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  * <p>ConnectionState class.</p>
@@ -26,10 +27,21 @@ import api.equinix.javasdk.core.model.APIParam;
  */
 public enum ConnectionState implements APIParam {
     ACTIVE,
-    PENDING,
-    NOT_AVAILABLE,
+    CANCELLED,
     DEPROVISIONED,
     DEPROVISIONING,
+    DRAFT,
+    FAILED,
+    PENDING,
+    PROVISIONING,
+    // Non-spec values retained for backward compatibility with older API responses.
+    NOT_AVAILABLE,
     PROVISIONED,
-    FAILED;
+    UNKNOWN;
+
+    @JsonCreator
+    public static ConnectionState fromString(String value) {
+        try { return ConnectionState.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

@@ -25,6 +25,7 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceFulfillRequest;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
@@ -64,5 +65,10 @@ public class PrecisionTimesImpl implements PrecisionTimes {
 
     public List<TimeServiceConnection> getConnections(String serviceId) {
         return this.serviceClient.getConnections(serviceId);
+    }
+
+    public PrecisionTime fulfill(String uuid, List<String> connectionUuids) {
+        PrecisionTimeJson precisionTimeJson = this.serviceClient.fulfill(uuid, new TimeServiceFulfillRequest(connectionUuids));
+        return new PrecisionTimeWrapper(precisionTimeJson, this.serviceClient);
     }
 }

@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * <p>AccessPointType class.</p>
  *
@@ -23,8 +25,24 @@ package api.equinix.javasdk.fabric.enums;
  * @version $Id: $Id
  */
 public enum AccessPointType {
-    COLO,
-    SP,
     VD,
-    CX_PORT;
+    VG,
+    SP,
+    IGW,
+    COLO,
+    SUBNET,
+    CLOUD_ROUTER,
+    NETWORK,
+    METAL_NETWORK,
+    VPIC_INTERFACE,
+    APP_LINK,
+    // Non-spec value retained for backward compatibility.
+    CX_PORT,
+    UNKNOWN;
+
+    @JsonCreator
+    public static AccessPointType fromString(String value) {
+        try { return AccessPointType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

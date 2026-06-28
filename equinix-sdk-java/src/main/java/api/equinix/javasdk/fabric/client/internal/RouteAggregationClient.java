@@ -19,7 +19,9 @@ package api.equinix.javasdk.fabric.client.internal;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
@@ -40,4 +42,10 @@ public interface RouteAggregationClient<T> extends PageablePost<T> {
     RouteAggregationJson delete(String uuid);
 
     RouteAggregationJson refresh(String uuid);
+
+    List<Change> getChanges(String uuid);
+
+    Change getChange(String uuid, String changeId);
+
+    List<Connection> getConnections(String uuid);
 }

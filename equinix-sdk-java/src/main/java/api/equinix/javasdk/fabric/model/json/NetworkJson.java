@@ -22,9 +22,12 @@ import api.equinix.javasdk.fabric.enums.NetworkState;
 import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.Account;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.Link;
 import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.implementation.NetworkOperation;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -60,11 +63,20 @@ public class NetworkJson {
     @JsonProperty("project")
     private Project project;
 
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("operation")
+    private NetworkOperation operation;
+
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
 
     @JsonProperty("change")
     private Change change;
+
+    @JsonProperty("links")
+    private List<Link> links;
 
     @JsonProperty("connectionsCount")
     private Integer connectionsCount;

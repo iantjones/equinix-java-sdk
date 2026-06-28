@@ -28,6 +28,7 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceFulfillRequest;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.json.TimeServiceConnectionJson;
 import api.equinix.javasdk.fabric.model.json.TimeServicePackageJson;
@@ -59,6 +60,10 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
 
     public PrecisionTimeJson create(PrecisionTimeCreatorJson precisionTimeCreatorJson) {
         return postOne("PostTimeService", precisionTimeCreatorJson);
+    }
+
+    public PrecisionTimeJson fulfill(String uuid, TimeServiceFulfillRequest request) {
+        return updateOne("FulfillTimeService", uuid, request);
     }
 
     public PrecisionTimeJson update(String uuid, List<PatchOperation> operations) {

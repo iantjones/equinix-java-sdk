@@ -16,8 +16,11 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.core.model.KeyValuePair;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * <p>ConnectionSide class.</p>
@@ -33,4 +36,7 @@ public class ConnectionSide {
 
     @JsonProperty("accessPoint")
     private AccessPoint accessPoint;
+
+    @JsonProperty("additionalInfo")
+    private List<KeyValuePair> additionalInfo;
 }

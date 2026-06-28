@@ -19,12 +19,15 @@ package api.equinix.javasdk.fabric.client.internal;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Metric;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -98,4 +101,20 @@ public interface ConnectionClient<T> extends PageablePost<T> {
      * @return a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
      */
     ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
+
+    List<RouteAggregationAttachment> getRouteAggregations(String connectionId);
+
+    RouteAggregationAttachment getRouteAggregation(String connectionId, String routeAggregationId);
+
+    RouteAggregationAttachment attachRouteAggregation(String connectionId, String routeAggregationId);
+
+    Boolean detachRouteAggregation(String connectionId, String routeAggregationId);
+
+    List<RouteFilterAttachment> getRouteFilters(String connectionId);
+
+    RouteFilterAttachment getRouteFilter(String connectionId, String routeFilterId);
+
+    RouteFilterAttachment attachRouteFilter(String connectionId, String routeFilterId, Direction direction);
+
+    Boolean detachRouteFilter(String connectionId, String routeFilterId);
 }

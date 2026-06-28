@@ -19,7 +19,11 @@ package api.equinix.javasdk.fabric.client.internal;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.CloudRouterAction;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.RoutingProtocolValidation;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -43,4 +47,14 @@ public interface CloudRouterClient<T> extends PageablePost<T> {
     CloudRouterJson refresh(String uuid);
 
     RoutingProtocolValidation validateRoutingProtocol(String routerId, FilterPropertyList filter);
+
+    List<CloudRouterAction> getActions(String routerId);
+
+    CloudRouterAction getAction(String routerId, String uuid);
+
+    PaginatedFilteredList<CloudRouterAction> searchActions(String routerId, FilterPropertyList filter, SortPropertyList sort);
+
+    PaginatedFilteredList<RouteFilterAttachment> searchRouteFilterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
+
+    PaginatedFilteredList<RouteAggregationAttachment> searchRouteAggregationAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
 }

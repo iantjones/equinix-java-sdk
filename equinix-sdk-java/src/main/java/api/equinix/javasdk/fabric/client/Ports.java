@@ -24,8 +24,11 @@ import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.PhysicalPortsResponseJson;
+import api.equinix.javasdk.fabric.model.json.creators.PortOperator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -138,4 +141,39 @@ public interface Ports {
      * @return a paginated list of top port statistics
      */
     PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder);
+
+    /**
+     * Begins the fluent builder for creating a new port ({@code POST /fabric/v4/ports}).
+     * Configure the returned builder, then call {@code create()}.
+     *
+     * @return a builder for configuring the new port
+     */
+    PortOperator.PortBuilder define();
+
+    /**
+     * Deletes a port by its unique identifier ({@code DELETE /fabric/v4/ports/{uuid}}).
+     *
+     * @param uuid the unique identifier of the port to delete
+     * @return the deleted port as returned by the server
+     */
+    Port delete(String uuid);
+
+    /**
+     * Begins a fluent update of an existing port ({@code PATCH /fabric/v4/ports/{uuid}}).
+     * Configure the returned updater, then call {@code save()}.
+     *
+     * @param uuid the unique identifier of the port to update
+     * @return an updater for applying changes to the port
+     */
+    PortOperator.PortUpdater update(String uuid);
+
+    /**
+     * Adds physical ports to a virtual port's Link Aggregation Group
+     * ({@code POST /fabric/v4/ports/{portId}/physicalPorts/bulk}).
+     *
+     * @param portId the virtual port uuid
+     * @param physicalPorts the physical ports to add to the LAG
+     * @return the full set of physical ports backing the virtual port after the addition
+     */
+    PhysicalPortsResponseJson addToLag(String portId, List<PhysicalPort> physicalPorts);
 }

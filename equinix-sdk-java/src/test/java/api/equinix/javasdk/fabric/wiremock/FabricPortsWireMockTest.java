@@ -3,9 +3,14 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.PhysicalPortType;
+import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.model.Port;
+import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
+import api.equinix.javasdk.fabric.model.json.PhysicalPortsResponseJson;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -58,6 +63,118 @@ class FabricPortsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.ports().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the configured PortRequest body and returns the created port")
+        void createsPort() {
+            stubCreate(wireMock, "/fabric/v4/ports",
+                    "/json/fabric/port_response.json");
+
+            Port created = fabric.ports().define()
+                    .ofType(PortType.XF_PORT)
+                    .name("My-New-Port")
+                    .physicalPortsSpeed(10000)
+                    .physicalPortsType(PhysicalPortType._10GBASE_LR)
+                    .physicalPortsCount(1)
+                    .connectivitySourceType("COLO")
+                    .lagEnabled(false)
+                    .projectId("proj-abc-123")
+                    .accountNumber(123456L)
+                    .metroCode("SV")
+                    .create();
+
+            assertNotNull(created);
+            assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", created.getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/ports"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("XF_PORT")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("My-New-Port")))
+                    .withRequestBody(matchingJsonPath("$.physicalPortsSpeed", equalTo("10000")))
+                    .withRequestBody(matchingJsonPath("$.physicalPortsType", equalTo("10GBASE_LR")))
+                    .withRequestBody(matchingJsonPath("$.connectivitySourceType", equalTo("COLO")))
+                    .withRequestBody(matchingJsonPath("$.project.projectId", equalTo("proj-abc-123")))
+                    .withRequestBody(matchingJsonPath("$.account.accountNumber", equalTo("123456")))
+                    .withRequestBody(matchingJsonPath("$.location.metroCode", equalTo("SV"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("update()")
+    class Update {
+
+        @Test
+        @DisplayName("PATCHes an op/path/value array as application/json")
+        void updatePatchesName() {
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/ports/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
+
+            Port updated = fabric.ports().update("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee")
+                    .name("Renamed-Port").save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Port\"}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            assertThrows(IllegalStateException.class,
+                    () -> fabric.ports().update("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee").save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/ports/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("delete()")
+    class Delete {
+
+        @Test
+        @DisplayName("DELETEs the port and returns the deleted object")
+        void deletesPort() {
+            wireMock.stubFor(delete(urlPathMatching("/fabric/v4/ports/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
+
+            Port deleted = fabric.ports().delete("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee");
+
+            assertNotNull(deleted);
+            assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", deleted.getUuid());
+            wireMock.verify(deleteRequestedFor(urlPathMatching("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee")));
+        }
+    }
+
+    @Nested
+    @DisplayName("addToLag()")
+    class AddToLag {
+
+        @Test
+        @DisplayName("POSTs {data:[...]} to physicalPorts/bulk and deserializes the response")
+        void addsToLag() {
+            String responseBody = "{"
+                    + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
+                    + "\"data\":[{\"uuid\":\"phys-1\",\"type\":\"XF_PHYSICAL_PORT\",\"state\":\"ACTIVE\"}]"
+                    + "}";
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/ports/.*/physicalPorts/bulk"))
+                    .willReturn(okJson(responseBody)));
+
+            PhysicalPortsResponseJson response = fabric.ports().addToLag(
+                    "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", List.of(new PhysicalPort()));
+
+            assertNotNull(response);
+            assertNotNull(response.getData());
+            assertEquals(1, response.getData().size());
+            assertEquals("phys-1", response.getData().get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee/physicalPorts/bulk"))
+                    .withRequestBody(matchingJsonPath("$.data")));
         }
     }
 

@@ -16,11 +16,22 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum StreamSubscriptionSinkType {
     DATADOG,
-    SPLUNK_HEC,
-    PAGER_DUTY,
+    GOOGLE_PUBSUB,
+    PAGERDUTY,
+    SERVICENOW,
     SLACK,
-    CUSTOM,
-    UNKNOWN
+    SPLUNK_HEC,
+    TEAMS,
+    WEBHOOK,
+    UNKNOWN;
+
+    @JsonCreator
+    public static StreamSubscriptionSinkType fromString(String value) {
+        try { return StreamSubscriptionSinkType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

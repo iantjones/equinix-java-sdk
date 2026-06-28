@@ -18,6 +18,10 @@ package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.fabric.enums.IpBlockProductType;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockAccount;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockLocation;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockOrder;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockRegulations;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -33,6 +37,18 @@ public class IpBlockCreatorJson {
     @JsonProperty("project")
     private Project project;
 
+    @JsonProperty("location")
+    private IpBlockLocation location;
+
+    @JsonProperty("account")
+    private IpBlockAccount account;
+
+    @JsonProperty("order")
+    private IpBlockOrder order;
+
+    @JsonProperty("regulations")
+    private IpBlockRegulations regulations;
+
     @JsonProperty("prefixLength")
     private Integer prefixLength;
 
@@ -42,6 +58,10 @@ public class IpBlockCreatorJson {
     public IpBlockCreatorJson(IpBlockOperator.IpBlockBuilder builder) {
         this.type = builder.getType();
         this.project = builder.getProject();
+        this.location = builder.getLocation();
+        this.account = builder.getAccount();
+        this.order = builder.getOrder();
+        this.regulations = builder.getRegulations();
         this.prefixLength = builder.getPrefixLength();
         this.prefix = builder.getPrefix();
     }

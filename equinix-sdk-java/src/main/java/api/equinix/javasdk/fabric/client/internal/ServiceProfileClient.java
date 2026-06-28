@@ -22,6 +22,7 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceProfileAction;
+import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
@@ -63,6 +64,8 @@ public interface ServiceProfileClient<T> extends PageablePost<T> {
     ServiceProfileJson delete(String uuid);
 
     ServiceProfileAction createAction(String uuid, String type, String description);
+
+    List<ServiceMetro> getMetros(String uuid);
 
     /**
      * <p>refreshServiceProfile.</p>

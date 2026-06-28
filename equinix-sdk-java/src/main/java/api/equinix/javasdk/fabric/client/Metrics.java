@@ -21,6 +21,9 @@ import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 /**
  * Client interface for the Equinix Fabric Metrics API. Provides a filtered search over
  * time-series metrics for Fabric assets (connections, ports, and more), superseding the
@@ -55,4 +58,29 @@ public interface Metrics {
      * @return a paginated, filtered list of matching metrics
      */
     PaginatedFilteredList<Metric> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Retrieves metrics by wildcard metric name ({@code GET /fabric/v4/metrics}). Only the wildcard
+     * metro metric types are supported (for example {@code equinix.fabric.metro.*.latency} or
+     * {@code equinix.fabric.metro.*.jitter_avg}).
+     *
+     * @param name the wildcard metric name (required)
+     * @param value which value to retrieve (for example {@code last}; required)
+     * @param fromDateTime the start of the metrics time range, or {@code null}
+     * @param toDateTime the end of the metrics time range, or {@code null}
+     * @return the list of matching metrics
+     */
+    List<Metric> getMetricsByName(String name, String value, LocalDateTime fromDateTime, LocalDateTime toDateTime);
+
+    /**
+     * Retrieves metrics for a specific asset ({@code GET /fabric/v4/{asset}/{assetId}/metrics}).
+     *
+     * @param asset the asset type, one of {@code ports}, {@code connections}, or {@code metros}
+     * @param assetId the asset uuid
+     * @param name the metric name to retrieve (for example {@code equinix.fabric.port.bandwidth_rx.usage})
+     * @param fromDateTime the start of the metrics time range, or {@code null}
+     * @param toDateTime the end of the metrics time range, or {@code null}
+     * @return the list of matching metrics for the asset
+     */
+    List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 }

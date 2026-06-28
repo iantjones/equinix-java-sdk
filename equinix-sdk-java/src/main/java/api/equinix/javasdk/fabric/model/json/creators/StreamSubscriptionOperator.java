@@ -25,6 +25,8 @@ import api.equinix.javasdk.fabric.model.Stream;
 import api.equinix.javasdk.fabric.model.StreamSubscription;
 import api.equinix.javasdk.fabric.model.implementation.StreamSink;
 import api.equinix.javasdk.fabric.model.implementation.StreamSinkCredential;
+import api.equinix.javasdk.fabric.model.implementation.StreamSinkSetting;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import api.equinix.javasdk.fabric.model.json.StreamSubscriptionJson;
 import api.equinix.javasdk.fabric.model.wrappers.StreamSubscriptionWrapper;
 import lombok.Getter;
@@ -84,11 +86,19 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         if (sink != null) {
             builder.sinkType = sink.getType();
             builder.sinkUri = sink.getUri();
+            builder.sinkHost = sink.getHost();
+            builder.batchEnabled = sink.getBatchEnabled();
+            builder.batchSizeMax = sink.getBatchSizeMax();
+            builder.batchWaitTimeMax = sink.getBatchWaitTimeMax();
+            builder.sinkSettings = sink.getSettings();
             StreamSinkCredential credential = sink.getCredential();
             if (credential != null) {
                 builder.credentialType = credential.getType();
                 builder.accessToken = credential.getAccessToken();
                 builder.integrationKey = credential.getIntegrationKey();
+                builder.apiKey = credential.getApiKey();
+                builder.username = credential.getUsername();
+                builder.password = credential.getPassword();
             }
         }
         return builder;
@@ -105,9 +115,19 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         private Boolean enabled;
         private StreamSubscriptionSinkType sinkType;
         private String sinkUri;
+        private String sinkHost;
+        private Boolean batchEnabled;
+        private Integer batchSizeMax;
+        private Integer batchWaitTimeMax;
+        private StreamSinkSetting sinkSettings;
         private String credentialType;
         private String accessToken;
         private String integrationKey;
+        private String apiKey;
+        private String username;
+        private String password;
+        private StreamSubscriptionSelector metricSelector;
+        private StreamSubscriptionSelector eventSelector;
 
         protected StreamSubscriptionBuilder(String streamId) {
             this.streamId = streamId;
@@ -155,6 +175,56 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
 
         public StreamSubscriptionOperator.StreamSubscriptionBuilder withIntegrationKey(String integrationKey) {
             this.integrationKey = integrationKey;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withApiKey(String apiKey) {
+            this.apiKey = apiKey;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withUsername(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withPassword(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withSinkHost(String sinkHost) {
+            this.sinkHost = sinkHost;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withBatchEnabled(Boolean batchEnabled) {
+            this.batchEnabled = batchEnabled;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withBatchSizeMax(Integer batchSizeMax) {
+            this.batchSizeMax = batchSizeMax;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withBatchWaitTimeMax(Integer batchWaitTimeMax) {
+            this.batchWaitTimeMax = batchWaitTimeMax;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withSinkSettings(StreamSinkSetting sinkSettings) {
+            this.sinkSettings = sinkSettings;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withMetricSelector(StreamSubscriptionSelector metricSelector) {
+            this.metricSelector = metricSelector;
+            return this;
+        }
+
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withEventSelector(StreamSubscriptionSelector eventSelector) {
+            this.eventSelector = eventSelector;
             return this;
         }
 

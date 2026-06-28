@@ -20,7 +20,16 @@ import api.equinix.javasdk.fabric.enums.IpBlockOwnership;
 import api.equinix.javasdk.fabric.enums.IpBlockProductType;
 import api.equinix.javasdk.fabric.enums.IpBlockState;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.Error;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockAccount;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockAsset;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockChange;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockLocation;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockOrder;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockRegulations;
 import api.equinix.javasdk.fabric.model.json.creators.IpBlockOperator;
+
+import java.util.List;
 
 /**
  * An IP block (BYOIP / Equinix-owned IPv4 or IPv6 prefix) managed through Fabric.
@@ -42,6 +51,20 @@ public interface IpBlock {
     String getPrefix();
 
     Project getProject();
+
+    IpBlockLocation getLocation();
+
+    IpBlockOrder getOrder();
+
+    IpBlockAccount getAccount();
+
+    IpBlockRegulations getRegulations();
+
+    List<IpBlockAsset> getAssets();
+
+    IpBlockChange getChange();
+
+    Error getError();
 
     ChangeLog getChangeLog();
 

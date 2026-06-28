@@ -32,4 +32,13 @@ public class StreamSinkCredential {
 
     @JsonProperty("integrationKey")
     private String integrationKey;
+
+    @JsonProperty("apiKey")
+    private String apiKey;
+
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("password")
+    private String password;
 }

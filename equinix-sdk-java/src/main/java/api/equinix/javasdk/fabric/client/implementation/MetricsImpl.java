@@ -27,6 +27,9 @@ import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.MetricJson;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 /**
  * <p>MetricsImpl class.</p>
  *
@@ -52,5 +55,15 @@ public class MetricsImpl implements Metrics {
     public PaginatedFilteredList<Metric> search(FilterPropertyList filter, SortPropertyList sort) {
         Page<Metric, MetricJson> responsePage = serviceClient.search(filter, sort);
         return Utils.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
+    }
+
+    /** {@inheritDoc} */
+    public List<Metric> getMetricsByName(String name, String value, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+        return serviceClient.getMetricsByName(name, value, fromDateTime, toDateTime);
+    }
+
+    /** {@inheritDoc} */
+    public List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+        return serviceClient.getMetricsByAssetId(asset, assetId, name, fromDateTime, toDateTime);
     }
 }

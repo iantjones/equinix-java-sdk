@@ -17,15 +17,24 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationRuleClient;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
+import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.RouteAggregationRulesBulkRequest;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationRuleWrapper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -62,5 +71,39 @@ public class RouteAggregationRuleClientImpl extends ResourceClientBase<RouteAggr
 
     public RouteAggregationRuleJson refresh(String routeAggregationId, String uuid) {
         return getByUuid(routeAggregationId, uuid);
+    }
+
+    public RouteAggregationRuleJson replace(String routeAggregationId, String uuid, RouteAggregationRuleCreatorJson routeAggregationRuleCreatorJson) {
+        // PUT /routeAggregations/{routeAggregationId}/routeAggregationRules/{uuid} replaces the rule's configuration.
+        return updateOne("ReplaceRouteAggregationRule", Map.of("routeAggregationId", routeAggregationId, "uuid", uuid), routeAggregationRuleCreatorJson);
+    }
+
+    public List<RouteAggregationRuleJson> createBulk(String routeAggregationId, List<RouteAggregationRuleCreatorJson> routeAggregationRuleCreatorJsonList) {
+        EquinixRequest<RouteAggregationRule> request = buildRequestWithPathParams("PostRouteAggregationRulesBulk", RequestType.PAGINATED_POST,
+                Map.of("routeAggregationId", routeAggregationId), RouteAggregationRuleJson.class);
+        Utils.serializeJson(request, new RouteAggregationRulesBulkRequest(routeAggregationRuleCreatorJsonList));
+        Page<RouteAggregationRule, RouteAggregationRuleJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Page<RouteAggregationRule, RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort) {
+        // POST /routeAggregations/{routeAggregationId}/routeAggregationRules/search — searchPage cannot carry
+        // path params, so build the paginated-post request manually (mirrors RouteAggregation.search otherwise).
+        EquinixRequest<RouteAggregationRule> request = buildRequestWithPathParams("SearchRouteAggregationRules", RequestType.PAGINATED_POST,
+                Map.of("routeAggregationId", routeAggregationId), RouteAggregationRuleJson.class);
+        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return Utils.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    public List<Change> getChanges(String routeAggregationId, String uuid) {
+        EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteAggregationRuleChanges", RequestType.PAGINATED,
+                Map.of("routeAggregationId", routeAggregationId, "uuid", uuid), Change.class);
+        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Change getChange(String routeAggregationId, String uuid, String changeId) {
+        return getAs("GetRouteAggregationRuleChange",
+                Map.of("routeAggregationId", routeAggregationId, "uuid", uuid, "changeId", changeId), null, Change.class);
     }
 }

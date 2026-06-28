@@ -4,9 +4,13 @@ import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
 import org.junit.jupiter.api.*;
 
+import java.util.List;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -57,6 +61,29 @@ class FabricServiceProfilesWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.serviceProfiles().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getMetros()")
+    class GetMetros {
+
+        @Test
+        @DisplayName("GETs {uuid}/metros and returns the list of service metros")
+        void returnsMetros() {
+            stubPaginatedGet(wireMock, "/fabric/v4/serviceProfiles/.*/metros",
+                    "/json/fabric/service_profile_metros_response.json");
+
+            List<ServiceMetro> metros = fabric.serviceProfiles().getMetros("f6a7b8c9-d0e1-2345-fabc-567890123def");
+
+            assertNotNull(metros);
+            assertEquals(2, metros.size());
+            assertEquals("Silicon Valley (SV)", metros.get(0).getDisplayName());
+            assertEquals(10000, metros.get(0).getVcBandwidthMax());
+            assertTrue(metros.get(0).getInTrail());
+
+            wireMock.verify(getRequestedFor(urlPathMatching(
+                    "/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def/metros")));
         }
     }
 

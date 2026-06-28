@@ -18,14 +18,17 @@ package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
+import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleCreatorJson;
 
 import java.util.List;
 
-public interface RouteAggregationRuleClient<T> extends Pageable<T> {
+public interface RouteAggregationRuleClient<T> extends PageablePost<T> {
 
     Page<RouteAggregationRule, RouteAggregationRuleJson> list(String routeAggregationId);
 
@@ -38,4 +41,14 @@ public interface RouteAggregationRuleClient<T> extends Pageable<T> {
     RouteAggregationRuleJson delete(String routeAggregationId, String uuid);
 
     RouteAggregationRuleJson refresh(String routeAggregationId, String uuid);
+
+    RouteAggregationRuleJson replace(String routeAggregationId, String uuid, RouteAggregationRuleCreatorJson routeAggregationRuleCreatorJson);
+
+    List<RouteAggregationRuleJson> createBulk(String routeAggregationId, List<RouteAggregationRuleCreatorJson> routeAggregationRuleCreatorJsonList);
+
+    Page<RouteAggregationRule, RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort);
+
+    List<Change> getChanges(String routeAggregationId, String uuid);
+
+    Change getChange(String routeAggregationId, String uuid, String changeId);
 }

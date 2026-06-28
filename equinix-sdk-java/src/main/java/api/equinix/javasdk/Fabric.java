@@ -101,6 +101,8 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
 
     private RouteFilters routeFilters;
 
+    private EiaServices eiaServices;
+
     private RouteFilterRules routeFilterRules;
 
     private RouteAggregations routeAggregations;
@@ -303,6 +305,20 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
             this.routeFilters = new RouteFiltersImpl(this.fabricConfig.getRouteFiltersClient());
         }
         return routeFilters;
+    }
+
+    /**
+     * Returns the client for managing Equinix Internet Access (EIA) services.
+     * EIA services provide dedicated internet connectivity (single or dual) over Equinix Fabric,
+     * with configurable bandwidth, billing, and routing protocol (BGP/DIRECT/STATIC).
+     *
+     * @return the {@link EiaServices} client for creating, searching, and managing EIA services
+     */
+    public EiaServices eiaServices() {
+        if (this.eiaServices == null) {
+            this.eiaServices = new EiaServicesImpl(this.fabricConfig.getEiaServicesClient());
+        }
+        return eiaServices;
     }
 
     /**

@@ -56,6 +56,12 @@ public class RoutingProtocolCreatorJson {
     @JsonProperty("equinixAsn")
     private Long equinixAsn;
 
+    @JsonProperty("bgpAuthKey")
+    private String bgpAuthKey;
+
+    @JsonProperty("asOverrideEnabled")
+    private Boolean asOverrideEnabled;
+
     @Setter(AccessLevel.PACKAGE)
     public static class BGPIpv4Config {
 
@@ -111,6 +117,8 @@ public class RoutingProtocolCreatorJson {
         this.name = routingProtocolBuilder.getName();
         this.customerAsn = routingProtocolBuilder.getCustomerAsn();
         this.equinixAsn = routingProtocolBuilder.getEquinixAsn();
+        this.bgpAuthKey = routingProtocolBuilder.getBgpAuthKey();
+        this.asOverrideEnabled = routingProtocolBuilder.getAsOverrideEnabled();
 
         if (routingProtocolBuilder.getBgpIpv4CustomerPeerIp() != null) {
             BGPIpv4Config ipv4Config = new BGPIpv4Config();

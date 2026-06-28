@@ -37,4 +37,18 @@ public class RouteAggregationRuleCreatorJson {
         this.prefix = routeAggregationRuleBuilder.getPrefix();
         this.description = routeAggregationRuleBuilder.getDescription();
     }
+
+    /**
+     * Constructs a route aggregation rule configuration body directly, for use with the bulk-create
+     * and replace endpoints (which accept rule bodies outside the single-rule fluent builder flow).
+     *
+     * @param name the rule name
+     * @param prefix the route prefix the rule aggregates
+     * @param description the rule description
+     */
+    public RouteAggregationRuleCreatorJson(String name, String prefix, String description) {
+        this.name = name;
+        this.prefix = prefix;
+        this.description = description;
+    }
 }

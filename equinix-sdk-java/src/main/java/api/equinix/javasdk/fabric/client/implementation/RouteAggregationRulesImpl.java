@@ -18,13 +18,21 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.RouteAggregationRules;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationRuleClient;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
+import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationRuleJson;
+import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleCreatorJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationRuleWrapper;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class RouteAggregationRulesImpl implements RouteAggregationRules {
 
@@ -47,5 +55,30 @@ public class RouteAggregationRulesImpl implements RouteAggregationRules {
 
     public RouteAggregationRuleOperator.RouteAggregationRuleBuilder define(String routeAggregationId) {
         return new RouteAggregationRuleOperator(this.serviceClient, routeAggregationId).create();
+    }
+
+    public RouteAggregationRule replace(String routeAggregationId, String uuid, RouteAggregationRuleCreatorJson routeAggregationRuleCreatorJson) {
+        RouteAggregationRuleJson routeAggregationRuleJson = this.serviceClient.replace(routeAggregationId, uuid, routeAggregationRuleCreatorJson);
+        return new RouteAggregationRuleWrapper(routeAggregationRuleJson, this.serviceClient);
+    }
+
+    public List<RouteAggregationRule> createBulk(String routeAggregationId, List<RouteAggregationRuleCreatorJson> routeAggregationRuleCreatorJsonList) {
+        return this.serviceClient.createBulk(routeAggregationId, routeAggregationRuleCreatorJsonList).stream()
+                .map(json -> (RouteAggregationRule) new RouteAggregationRuleWrapper(json, this.serviceClient))
+                .collect(Collectors.toList());
+    }
+
+    public PaginatedFilteredList<RouteAggregationRule> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort) {
+        Page<RouteAggregationRule, RouteAggregationRuleJson> responsePage = this.serviceClient.search(routeAggregationId, filter, sort);
+        PaginatedFilteredList<RouteAggregationRule> routeAggregationRuleList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteAggregationRuleWrapper::new);
+        return new PaginatedFilteredList<>(routeAggregationRuleList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public List<Change> getChanges(String routeAggregationId, String uuid) {
+        return this.serviceClient.getChanges(routeAggregationId, uuid);
+    }
+
+    public Change getChange(String routeAggregationId, String uuid, String changeId) {
+        return this.serviceClient.getChange(routeAggregationId, uuid, changeId);
     }
 }

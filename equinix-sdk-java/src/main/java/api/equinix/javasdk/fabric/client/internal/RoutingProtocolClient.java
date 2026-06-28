@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.fabric.enums.BGPActionType;
 import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.json.BGPActionJson;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
 import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolCreatorJson;
@@ -33,6 +34,10 @@ public interface RoutingProtocolClient<T> extends Pageable<T> {
 
     RoutingProtocolJson create(String connectionId, RoutingProtocolCreatorJson routingProtocolCreatorJson);
 
+    RoutingProtocolJson replace(String connectionId, String uuid, RoutingProtocolCreatorJson routingProtocolCreatorJson);
+
+    java.util.List<RoutingProtocol> createBulk(String connectionId, java.util.List<RoutingProtocolCreatorJson> routingProtocolCreatorJsonList);
+
     RoutingProtocolJson update(String connectionId, String uuid, java.util.List<api.equinix.javasdk.core.http.request.PatchOperation> operations);
 
     RoutingProtocolJson delete(String connectionId, String uuid);
@@ -42,4 +47,10 @@ public interface RoutingProtocolClient<T> extends Pageable<T> {
     java.util.List<BGPAction> getBgpActions(String connectionId, String routingProtocolId);
 
     BGPActionJson createBgpAction(String connectionId, String routingProtocolId, BGPActionType type);
+
+    BGPAction getBgpAction(String connectionId, String routingProtocolId, String actionId);
+
+    java.util.List<Change> getChanges(String connectionId, String routingProtocolId);
+
+    Change getChange(String connectionId, String routingProtocolId, String changeId);
 }

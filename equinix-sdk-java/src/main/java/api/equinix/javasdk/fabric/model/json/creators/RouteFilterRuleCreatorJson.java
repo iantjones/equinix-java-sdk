@@ -46,4 +46,23 @@ public class RouteFilterRuleCreatorJson {
         this.action = routeFilterRuleBuilder.getAction();
         this.prefixMatch = routeFilterRuleBuilder.getPrefixMatch();
     }
+
+    /**
+     * Constructs a route filter rule configuration body directly, for use with the bulk-create and
+     * replace endpoints (which accept rule bodies outside the single-rule fluent builder flow).
+     *
+     * @param prefix the route prefix the rule matches
+     * @param name the rule name
+     * @param description the rule description
+     * @param action the action to take on a match
+     * @param prefixMatch the prefix match strategy (e.g. {@code exact}, {@code orlonger})
+     */
+    public RouteFilterRuleCreatorJson(String prefix, String name, String description,
+                                      RouteFilterAction action, String prefixMatch) {
+        this.prefix = prefix;
+        this.name = name;
+        this.description = description;
+        this.action = action;
+        this.prefixMatch = prefixMatch;
+    }
 }

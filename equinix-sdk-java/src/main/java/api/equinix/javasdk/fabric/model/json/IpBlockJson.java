@@ -23,6 +23,13 @@ import api.equinix.javasdk.fabric.enums.IpBlockState;
 import api.equinix.javasdk.fabric.model.IpBlock;
 import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.Error;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockAccount;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockAsset;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockChange;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockLocation;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockOrder;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockRegulations;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -59,6 +66,27 @@ public class IpBlockJson {
 
     @JsonProperty("project")
     private Project project;
+
+    @JsonProperty("location")
+    private IpBlockLocation location;
+
+    @JsonProperty("order")
+    private IpBlockOrder order;
+
+    @JsonProperty("account")
+    private IpBlockAccount account;
+
+    @JsonProperty("regulations")
+    private IpBlockRegulations regulations;
+
+    @JsonProperty("assets")
+    private List<IpBlockAsset> assets;
+
+    @JsonProperty("change")
+    private IpBlockChange change;
+
+    @JsonProperty("error")
+    private Error error;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
