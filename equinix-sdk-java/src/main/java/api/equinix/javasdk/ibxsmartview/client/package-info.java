@@ -17,10 +17,10 @@
 /**
  * IBX SmartView client interfaces for the Equinix Java SDK. Provides typed access
  * to data center environmental monitoring and power management including
- * Environmentals for temperature, humidity, and airflow sensor readings, Power
- * for power circuit readings, and supporting resources for system alerts, asset
- * management, hierarchy browsing, and streaming subscriptions. Enables real-time
- * and historical monitoring of IBX facility conditions.
+ * Environmentals for temperature, humidity, and airflow sensor readings, PowerEvents
+ * for power-event search and power alert configuration management, and supporting
+ * resources for system alerts, asset management, hierarchy browsing, and streaming
+ * subscriptions. Enables real-time and historical monitoring of IBX facility conditions.
  *
  * @see api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfig
  * @see api.equinix.javasdk.IBXSmartView

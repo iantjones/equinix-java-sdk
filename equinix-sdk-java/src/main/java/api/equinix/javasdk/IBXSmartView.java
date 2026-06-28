@@ -23,7 +23,7 @@ import api.equinix.javasdk.ibxsmartview.client.Hierarchy;
 import api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfig;
 import api.equinix.javasdk.ibxsmartview.client.LegacyEnvironmentals;
 import api.equinix.javasdk.ibxsmartview.client.LegacyPower;
-import api.equinix.javasdk.ibxsmartview.client.Power;
+import api.equinix.javasdk.ibxsmartview.client.PowerEvents;
 import api.equinix.javasdk.ibxsmartview.client.SmartViewAssets;
 import api.equinix.javasdk.ibxsmartview.client.StreamingSubscriptions;
 import api.equinix.javasdk.ibxsmartview.client.SystemAlerts;
@@ -32,7 +32,7 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.HierarchyImpl;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.implementation.LegacyEnvironmentalsImpl;
 import api.equinix.javasdk.ibxsmartview.client.implementation.LegacyPowerImpl;
-import api.equinix.javasdk.ibxsmartview.client.implementation.PowerImpl;
+import api.equinix.javasdk.ibxsmartview.client.implementation.PowerEventsImpl;
 import api.equinix.javasdk.ibxsmartview.client.implementation.SmartViewAssetsImpl;
 import api.equinix.javasdk.ibxsmartview.client.implementation.StreamingSubscriptionsImpl;
 import api.equinix.javasdk.ibxsmartview.client.implementation.SystemAlertsImpl;
@@ -56,8 +56,8 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.SystemAlertsImpl;
  * // Get environmental readings for a data center
  * PaginatedList<SensorReading> readings = smartView.environmentals().list("DC2");
  *
- * // Get power readings
- * PaginatedList<PowerReading> power = smartView.power().list("DC2");
+ * // Search recent power events for one or more IBX data centers
+ * PaginatedList<PowerEvent> events = smartView.powerEvents().search(List.of("SV5"), null, null, 0, 100);
  *
  * // Create a streaming subscription for real-time alerts
  * StreamingSubscription sub = smartView.streamingSubscriptions()
@@ -76,7 +76,7 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.SystemAlertsImpl;
 public final class IBXSmartView extends EquinixClient implements Service {
 
     private Environmentals environmentals;
-    private Power power;
+    private PowerEvents powerEvents;
     private StreamingSubscriptions streamingSubscriptions;
     private SystemAlerts systemAlerts;
     private Hierarchy hierarchy;
@@ -125,16 +125,17 @@ public final class IBXSmartView extends EquinixClient implements Service {
     }
 
     /**
-     * Returns the client for accessing current power usage data from IBX data centers.
-     * Provides real-time power consumption and capacity metrics.
+     * Returns the client for accessing IBX SmartView power events and power alert configurations.
+     * Provides power-event search plus create, search, pause, resume, and delete operations for
+     * power alert configurations.
      *
-     * @return the {@link Power} client for querying power usage data
+     * @return the {@link PowerEvents} client for querying power events and managing power alert configurations
      */
-    public Power power() {
-        if (this.power == null) {
-            this.power = new PowerImpl(this.ibxSmartViewConfig.getPowerClient(), this);
+    public PowerEvents powerEvents() {
+        if (this.powerEvents == null) {
+            this.powerEvents = new PowerEventsImpl(this.ibxSmartViewConfig.getPowerEventClient(), this);
         }
-        return power;
+        return powerEvents;
     }
 
     /**

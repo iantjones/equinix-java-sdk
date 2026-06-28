@@ -16,47 +16,20 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.ibxsmartview.model.PowerReading;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
+/**
+ * Response returned after successfully creating a power alert configuration. Contains the
+ * unique identifier of the newly created configuration.
+ */
 @Getter
-@Setter
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PowerReadingJson implements PowerReading {
+public class PowerAlertConfigurationCreateResponseJson {
 
-
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("cageId")
-    private String cageId;
-
-    @JsonProperty("cabinetId")
-    private String cabinetId;
-
-    @JsonProperty("phase")
-    private String phase;
-
-    @JsonProperty("currentAmps")
-    private Double currentAmps;
-
-    @JsonProperty("apparentPower")
-    private Double apparentPower;
-
-    @JsonProperty("activePower")
-    private Double activePower;
-
-    @JsonProperty("voltage")
-    private Double voltage;
-
-    @JsonProperty("timestamp")
-    private String timestamp;
-
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("alertConfigurationUid")
+    private String alertConfigurationUid;
 }

@@ -2,7 +2,7 @@ package api.equinix.javasdk.ibxsmartview;
 
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataJson;
-import api.equinix.javasdk.ibxsmartview.model.json.PowerReadingJson;
+import api.equinix.javasdk.ibxsmartview.model.json.PowerEventJson;
 import api.equinix.javasdk.ibxsmartview.model.json.SensorReadingJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,13 +14,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Deserialization tests for IBX SmartView JSON models:
- * {@link SensorReadingJson}, {@link PowerReadingJson}, and {@link EnvironmentDataJson}.
+ * {@link SensorReadingJson}, {@link PowerEventJson}, and {@link EnvironmentDataJson}.
  */
 class SmartViewDeserializationTest {
 
     private static ObjectMapper objectMapper;
     private static SensorReadingJson sensorReading;
-    private static PowerReadingJson powerReading;
+    private static PowerEventJson powerEvent;
     private static EnvironmentDataJson environmentData;
 
     @BeforeAll
@@ -31,9 +31,9 @@ class SmartViewDeserializationTest {
         assertNotNull(sensorIs, "sensor_reading_response.json fixture not found on classpath");
         sensorReading = objectMapper.readValue(sensorIs, SensorReadingJson.class);
 
-        InputStream powerIs = SmartViewDeserializationTest.class.getResourceAsStream("/json/ibxsmartview/power_reading_response.json");
-        assertNotNull(powerIs, "power_reading_response.json fixture not found on classpath");
-        powerReading = objectMapper.readValue(powerIs, PowerReadingJson.class);
+        InputStream powerIs = SmartViewDeserializationTest.class.getResourceAsStream("/json/ibxsmartview/power_event_response.json");
+        assertNotNull(powerIs, "power_event_response.json fixture not found on classpath");
+        powerEvent = objectMapper.readValue(powerIs, PowerEventJson.class);
 
         InputStream envIs = SmartViewDeserializationTest.class.getResourceAsStream("/json/ibxsmartview/environment_data_response.json");
         assertNotNull(envIs, "environment_data_response.json fixture not found on classpath");
@@ -69,56 +69,54 @@ class SmartViewDeserializationTest {
         assertEquals(45.0, sensorReading.getHumidity().getValue());
     }
 
-    // --- PowerReadingJson tests ---
+    // --- PowerEventJson tests ---
 
     @Test
-    void power_ibx_isDeserialized() {
-        assertEquals("SV5", powerReading.getIbx());
+    void powerEvent_alertUid_isDeserialized() {
+        assertEquals("SV5.CAGE-DRAW#EXCEEDS:95", powerEvent.getAlertUid());
     }
 
     @Test
-    void power_cageId_isDeserialized() {
-        assertEquals("SV5:01:001100", powerReading.getCageId());
+    void powerEvent_status_isDeserialized() {
+        assertEquals("ACTIVE", powerEvent.getStatus());
     }
 
     @Test
-    void power_cabinetId_isDeserialized() {
-        assertEquals("SV5:01:001100:0101", powerReading.getCabinetId());
+    void powerEvent_eventType_isDeserialized() {
+        assertEquals("CAGE_DRAW", powerEvent.getEventType());
     }
 
     @Test
-    void power_phase_isDeserialized() {
-        assertEquals("A", powerReading.getPhase());
+    void powerEvent_conditionType_isDeserialized() {
+        assertEquals("EXCEEDS", powerEvent.getConditionType());
     }
 
     @Test
-    void power_currentAmps_isDeserialized() {
-        assertEquals(12.5, powerReading.getCurrentAmps());
+    void powerEvent_triggerValue_isDeserialized() {
+        assertEquals("95", powerEvent.getTriggerValue());
     }
 
     @Test
-    void power_apparentPower_isDeserialized() {
-        assertEquals(2.75, powerReading.getApparentPower());
+    void powerEvent_currentValue_isDeserialized() {
+        assertEquals("97.3", powerEvent.getCurrentValue());
     }
 
     @Test
-    void power_activePower_isDeserialized() {
-        assertEquals(2.50, powerReading.getActivePower());
+    void powerEvent_asset_isDeserialized() {
+        assertNotNull(powerEvent.getAsset());
+        assertEquals("SV5", powerEvent.getAsset().getIbx());
+        assertEquals("SV5:01:A1234", powerEvent.getAsset().getAssetUid());
     }
 
     @Test
-    void power_voltage_isDeserialized() {
-        assertEquals(220.0, powerReading.getVoltage());
+    void powerEvent_activeProcessing_isDeserialized() {
+        assertNotNull(powerEvent.getActiveProcessing());
+        assertEquals("2024-01-15T08:30:00.000Z", powerEvent.getActiveProcessing().getEdgeCollectedOn());
     }
 
     @Test
-    void power_timestamp_isDeserialized() {
-        assertEquals("2024-01-15T14:30:00Z", powerReading.getTimestamp());
-    }
-
-    @Test
-    void power_status_isDeserialized() {
-        assertEquals("OK", powerReading.getStatus());
+    void powerEvent_accountNo_isDeserialized() {
+        assertEquals("123456", powerEvent.getAccountNo());
     }
 
     // --- EnvironmentDataJson tests ---

@@ -20,12 +20,12 @@ import api.equinix.javasdk.ibxsmartview.client.internal.EnvironmentalClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.HierarchyClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyEnvironmentalClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyPowerClient;
-import api.equinix.javasdk.ibxsmartview.client.internal.PowerClient;
+import api.equinix.javasdk.ibxsmartview.client.internal.PowerEventClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.SmartViewAssetClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.StreamingSubscriptionClient;
 import api.equinix.javasdk.ibxsmartview.client.internal.SystemAlertClient;
 import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
-import api.equinix.javasdk.ibxsmartview.model.PowerReading;
+import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.SmartViewAsset;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
@@ -35,7 +35,7 @@ public interface IBXSmartViewConfig {
 
     EnvironmentalClient<SensorReading> getEnvironmentalClient();
 
-    PowerClient<PowerReading> getPowerClient();
+    PowerEventClient<PowerEvent> getPowerEventClient();
 
     StreamingSubscriptionClient<StreamingSubscription> getStreamingSubscriptionClient();
 

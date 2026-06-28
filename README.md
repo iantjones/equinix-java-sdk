@@ -87,7 +87,7 @@ class MyService {
 | **Fabric** | `new Fabric(creds)` | 20 | Connections, Ports, Service Tokens, Cloud Routers, Networks, Streams, Stream Subscriptions, Precision Time, Route Filters (+Rules), Route Aggregations (+Rules), Routing Protocols, Service Profiles, Prices, Health — all mutable resources support fluent `update()` |
 | **Network Edge** | `new NetworkEdge(creds)` | 12 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
 | **Customer Portal** | `new CustomerPortal(creds)` | 17 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Resellers, Quotes, Assets, Reports, Secure Cabinets |
-| **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Readings, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
+| **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Events, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
 | **Internet Access** | `new InternetAccess(creds)` | 1 | Internet Access Services |
 | **Projects** | `new Projects(creds)` | 1 | Project Management |
 | **Design** (value-add) | `Fabric.optimizeMetros()` / `.deploymentWizard()` / `.peeringIntelligence()` | — | Metro Optimizer, Deployment Wizard, Peering Intelligence (`api.equinix.javasdk.design.*`) |
@@ -1307,8 +1307,9 @@ for (SensorReading reading : readings) {
     System.out.println(reading.getSensorId() + ": " + reading.getTemperature() + "C");
 }
 
-// Get power readings
-PaginatedList<PowerReading> power = smartView.power().list("DC2");
+// Search power events for a data center
+PaginatedList<PowerEvent> events = smartView.powerEvents()
+    .search(List.of("DC2"), null, null, 0, 50);
 
 // Search system alerts
 PaginatedList<SystemAlert> alerts = smartView.systemAlerts()
@@ -1493,7 +1494,7 @@ Browse Javadocs by domain:
 - [Fabric](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/package-summary.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
 - [Network Edge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/networkedge/package-summary.html) — Virtual Devices, SSH Users, ACL Templates, VPNs
 - [Customer Portal](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
-- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/ibxsmartview/package-summary.html) — Environmental Sensors, Power, Streaming
+- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
 - [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
 - [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/package-summary.html) — Intelligent metro placement engine
 - [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline

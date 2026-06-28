@@ -3,7 +3,7 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.IntegrationTestBase;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.model.LocationHierarchy;
-import api.equinix.javasdk.ibxsmartview.model.PowerReading;
+import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
@@ -45,15 +45,15 @@ class IBXSmartViewIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("List power readings for IBX returns valid response")
-        void listPower() {
+        @DisplayName("Search power events for IBX returns valid response")
+        void searchPowerEvents() {
             try {
-                PaginatedList<PowerReading> items = timedCall("IBXSmartView", "list", "PowerReading", "GET",
-                        () -> client.power().list(testIbxCode));
+                PaginatedList<PowerEvent> items = timedCall("IBXSmartView", "search", "PowerEvent", "GET",
+                        () -> client.powerEvents().search(List.of(testIbxCode), null, null, 0, 10));
                 assertNotNull(items);
                 assertTrue(items.size() >= 0);
             } catch (Exception e) {
-                Assumptions.assumeTrue(false, "Power test skipped: " + e.getMessage());
+                Assumptions.assumeTrue(false, "Power events test skipped: " + e.getMessage());
             }
         }
 

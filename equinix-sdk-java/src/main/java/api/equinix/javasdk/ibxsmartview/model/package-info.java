@@ -16,14 +16,15 @@
 
 /**
  * IBX SmartView model interfaces for the Equinix Java SDK. Defines data access
- * contracts for sensor readings, power readings, environment data, streaming
+ * contracts for sensor readings, power events, environment data, streaming
  * subscriptions, and other IBX SmartView resources. The
  * {@link api.equinix.javasdk.ibxsmartview.model.SensorReading} interface provides
  * access to temperature, humidity, and airflow measurements, while
- * {@link api.equinix.javasdk.ibxsmartview.model.PowerReading} covers power circuit
- * data. These read-only models represent point-in-time facility measurements.
+ * {@link api.equinix.javasdk.ibxsmartview.model.PowerEvent} represents a power
+ * event raised against a monitored asset. These read-only models represent
+ * point-in-time facility measurements.
  *
  * @see api.equinix.javasdk.ibxsmartview.model.SensorReading
- * @see api.equinix.javasdk.ibxsmartview.model.PowerReading
+ * @see api.equinix.javasdk.ibxsmartview.model.PowerEvent
  */
 package api.equinix.javasdk.ibxsmartview.model;

@@ -48,8 +48,8 @@ class IBXSmartViewWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("power() client accessor returns non-null")
-    void powerAccessor() {
-        assertNotNull(ibxSmartView.power());
+    @DisplayName("powerEvents() client accessor returns non-null")
+    void powerEventsAccessor() {
+        assertNotNull(ibxSmartView.powerEvents());
     }
 }

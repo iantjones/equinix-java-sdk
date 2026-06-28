@@ -1,0 +1,19 @@
+{
+  "id": 1042,
+  "alertUid": "SV5.CAGE-DRAW#EXCEEDS:95",
+  "traceUid": "1652686263561/SV5.CAGE-DRAW#EXCEEDS:95",
+  "status": "ACTIVE",
+  "asset": {
+    "ibx": "SV5",
+    "assetUid": "SV5:01:A1234"
+  },
+  "activeProcessing": {
+    "edgeCollectedOn": "2024-01-15T08:30:00.000Z"
+  },
+  "category": "POWER",
+  "eventType": "CAGE_DRAW",
+  "conditionType": "EXCEEDS",
+  "triggerValue": "95",
+  "currentValue": "97.3",
+  "accountNo": "123456"
+}

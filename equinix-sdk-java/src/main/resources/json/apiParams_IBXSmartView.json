@@ -16,16 +16,38 @@
           }
         }
       },
-      "Power": {
-        "rootUri": "power",
+      "PowerEvents": {
+        "defaultVersion": 3,
+        "overrideUriFormat": "dcim/v{$version}/powerEvents/{$requestUri}",
+        "rootUri": "",
         "serviceEndpoints": {
-          "ListPowerReadings": {
+          "GetPowerEvents": {
             "httpMethod": "GET",
-            "requestUri": "ibxs/{$ibx}/readings"
+            "requestUri": "search"
           },
-          "GetPowerReading": {
+          "CreatePowerAlertConfiguration": {
+            "httpMethod": "POST",
+            "requestUri": "configurations"
+          },
+          "UpdatePowerAlertConfiguration": {
+            "httpMethod": "PUT",
+            "requestUri": "configurations"
+          },
+          "SearchAlertConfigurations": {
             "httpMethod": "GET",
-            "requestUri": "ibxs/{$ibx}/cabinets/{$cabinetId}/readings"
+            "requestUri": "configurations/search"
+          },
+          "PauseAlertConfiguration": {
+            "httpMethod": "PUT",
+            "requestUri": "configurations/{$alertConfigurationUid}/pause"
+          },
+          "ResumeAlertConfiguration": {
+            "httpMethod": "PUT",
+            "requestUri": "configurations/{$alertConfigurationUid}/resume"
+          },
+          "DeleteAlertConfiguration": {
+            "httpMethod": "DELETE",
+            "requestUri": "configurations/{$alertConfigurationUid}"
           }
         }
       },
