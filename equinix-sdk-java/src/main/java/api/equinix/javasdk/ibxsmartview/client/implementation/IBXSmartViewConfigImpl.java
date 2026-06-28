@@ -23,7 +23,7 @@ import api.equinix.javasdk.ibxsmartview.client.internal.implementation.Environme
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.HierarchyClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.LegacyEnvironmentalClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.LegacyPowerClientImpl;
-import api.equinix.javasdk.ibxsmartview.client.internal.implementation.PowerClientImpl;
+import api.equinix.javasdk.ibxsmartview.client.internal.implementation.PowerEventClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.SmartViewAssetClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.StreamingSubscriptionClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.SystemAlertClientImpl;
@@ -33,7 +33,7 @@ import lombok.Getter;
 public class IBXSmartViewConfigImpl extends Config implements IBXSmartViewConfig {
 
     private final EnvironmentalClientImpl environmentalClient;
-    private final PowerClientImpl powerClient;
+    private final PowerEventClientImpl powerEventClient;
     private final StreamingSubscriptionClientImpl streamingSubscriptionClient;
     private final SystemAlertClientImpl systemAlertClient;
     private final HierarchyClientImpl hierarchyClient;
@@ -44,7 +44,7 @@ public class IBXSmartViewConfigImpl extends Config implements IBXSmartViewConfig
     public IBXSmartViewConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
         this.environmentalClient = new EnvironmentalClientImpl(this);
-        this.powerClient = new PowerClientImpl(this);
+        this.powerEventClient = new PowerEventClientImpl(this);
         this.streamingSubscriptionClient = new StreamingSubscriptionClientImpl(this);
         this.systemAlertClient = new SystemAlertClientImpl(this);
         this.hierarchyClient = new HierarchyClientImpl(this);

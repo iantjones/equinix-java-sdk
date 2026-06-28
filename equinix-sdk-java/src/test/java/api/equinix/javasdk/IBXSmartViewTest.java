@@ -2,7 +2,7 @@ package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.ibxsmartview.model.PowerReading;
+import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
@@ -38,19 +38,17 @@ class IBXSmartViewTest {
     }
 
     @Test
-    void power() {
+    void powerEvents() {
         try {
-            PaginatedList<PowerReading> powerReadings = ibxSmartView.power().list("DC2");
-            assertNotNull(powerReadings);
-            assertTrue(powerReadings.size() >= 0);
+            PaginatedList<PowerEvent> powerEvents = ibxSmartView.powerEvents().search(List.of("DC2"), null, null, 0, 10);
+            assertNotNull(powerEvents);
+            assertTrue(powerEvents.size() >= 0);
 
-            if (powerReadings.size() > 0) {
-                PowerReading powerReading = ibxSmartView.power().getPowerReading("DC2", powerReadings.get(0).getCabinetId());
-                assertNotNull(powerReading);
-                assertNotNull(powerReading.getCabinetId());
+            if (powerEvents.size() > 0) {
+                assertNotNull(powerEvents.get(0).getAlertUid());
             }
         } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Power test skipped - account may not have access: " + e.getMessage());
+            Assumptions.assumeTrue(false, "Power events test skipped - account may not have access: " + e.getMessage());
         }
     }
 

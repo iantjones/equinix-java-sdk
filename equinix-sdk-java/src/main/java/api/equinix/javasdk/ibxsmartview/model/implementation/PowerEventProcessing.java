@@ -14,27 +14,21 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.model;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-public interface PowerReading {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    String getIbx();
+/**
+ * Processing-time information for an IBX SmartView power event.
+ */
+@Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class PowerEventProcessing {
 
-    String getCageId();
-
-    String getCabinetId();
-
-    String getPhase();
-
-    Double getCurrentAmps();
-
-    Double getApparentPower();
-
-    Double getActivePower();
-
-    Double getVoltage();
-
-    String getTimestamp();
-
-    String getStatus();
+    @JsonProperty("edgeCollectedOn")
+    private String edgeCollectedOn;
 }

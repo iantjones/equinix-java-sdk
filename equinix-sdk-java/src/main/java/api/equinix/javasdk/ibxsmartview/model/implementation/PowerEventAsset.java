@@ -14,16 +14,24 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.ibxsmartview.client.internal;
+package api.equinix.javasdk.ibxsmartview.model.implementation;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.ibxsmartview.model.PowerReading;
-import api.equinix.javasdk.ibxsmartview.model.json.PowerReadingJson;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public interface PowerClient<T> extends Pageable<T> {
+/**
+ * Asset information associated with an IBX SmartView power event.
+ */
+@Getter
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class PowerEventAsset {
 
-    Page<PowerReading, PowerReadingJson> list(String ibx);
+    @JsonProperty("ibx")
+    private String ibx;
 
-    PowerReadingJson getPowerReading(String ibx, String cabinetId);
+    @JsonProperty("assetUid")
+    private String assetUid;
 }
