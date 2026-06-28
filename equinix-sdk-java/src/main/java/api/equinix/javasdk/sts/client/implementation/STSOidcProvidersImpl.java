@@ -1,0 +1,65 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package api.equinix.javasdk.sts.client.implementation;
+
+import api.equinix.javasdk.STS;
+import api.equinix.javasdk.sts.client.STSOidcProviders;
+import api.equinix.javasdk.sts.client.internal.OidcProviderClient;
+import api.equinix.javasdk.sts.model.OidcProvider;
+import api.equinix.javasdk.sts.model.json.OidcProviderPage;
+import api.equinix.javasdk.sts.model.json.creators.CreateOidcProviderRequest;
+import api.equinix.javasdk.sts.model.json.creators.PatchOidcProviderRequest;
+
+public class STSOidcProvidersImpl implements STSOidcProviders {
+
+    private final STS serviceManager;
+
+    private final OidcProviderClient oidcProviderClient;
+
+    public STSOidcProvidersImpl(OidcProviderClient oidcProviderClient, STS serviceManager) {
+        this.serviceManager = serviceManager;
+        this.oidcProviderClient = oidcProviderClient;
+    }
+
+    public OidcProviderPage page(String projectId) {
+        return this.oidcProviderClient.page(projectId, null, null, null);
+    }
+
+    public OidcProviderPage page(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize) {
+        return this.oidcProviderClient.page(projectId, includeSuspended, pageToken, pageSize);
+    }
+
+    public OidcProvider create(String projectId, CreateOidcProviderRequest request) {
+        return this.oidcProviderClient.create(projectId, request);
+    }
+
+    public OidcProvider patch(String projectId, String idpId, PatchOidcProviderRequest request) {
+        return this.oidcProviderClient.patch(projectId, idpId, request);
+    }
+
+    public Boolean delete(String projectId, String idpId) {
+        return this.oidcProviderClient.delete(projectId, idpId);
+    }
+
+    public Boolean suspend(String projectId, String idpId) {
+        return this.oidcProviderClient.suspend(projectId, idpId);
+    }
+
+    public Boolean resume(String projectId, String idpId) {
+        return this.oidcProviderClient.resume(projectId, idpId);
+    }
+}
