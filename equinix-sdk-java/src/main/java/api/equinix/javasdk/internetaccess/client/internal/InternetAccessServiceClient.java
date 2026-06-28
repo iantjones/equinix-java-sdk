@@ -40,9 +40,9 @@ public interface InternetAccessServiceClient extends PageablePost<InternetAccess
 
     InternetAccessServiceJson getByUuid(String serviceId);
 
-    InternetAccessServiceJson update(String serviceId, List<ChangeOperationUpdate> operations);
+    InternetAccessServiceJson update(String serviceId, List<ChangeOperationUpdate> operations, boolean dryRun);
 
-    Boolean delete(String serviceId);
+    Boolean delete(String serviceId, boolean dryRun);
 
     Page<InternetAccessService, InternetAccessServiceJson> search(ServiceSearchRequest searchRequest);
 }

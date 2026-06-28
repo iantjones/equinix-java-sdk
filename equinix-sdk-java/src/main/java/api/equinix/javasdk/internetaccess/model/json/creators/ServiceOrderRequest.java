@@ -25,17 +25,23 @@ import lombok.Singular;
 import java.util.List;
 
 /**
- * Optional order details nested in a {@link ServiceRequest} for an Equinix Internet Access (EIA)
- * v2 service.
+ * Optional order details ({@code ServiceOrder}) nested in a {@link ServiceRequest} for an Equinix
+ * Internet Access (EIA) v2 service create.
+ *
+ * <p>Carries the order contacts, purchase order, reference number and signature configuration used
+ * to drive the provisioning/ordering flow.</p>
  */
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ServiceOrderRequest {
 
-    @JsonProperty("draft") private Boolean draft;
+    @Singular("contact")
+    @JsonProperty("contacts") private List<ContactItemRequest> contacts;
+
+    @JsonProperty("purchaseOrder") private ServicePurchaseOrderRequest purchaseOrder;
+
     @JsonProperty("referenceNumber") private String referenceNumber;
 
-    @Singular("tag")
-    @JsonProperty("tags") private List<String> tags;
+    @JsonProperty("signature") private OrderSignatureRequest signature;
 }

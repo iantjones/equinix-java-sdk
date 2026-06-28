@@ -62,12 +62,19 @@ public class InternetAccessServiceClientImpl
         return getOne("GetService", serviceId);
     }
 
-    public InternetAccessServiceJson update(String serviceId, List<ChangeOperationUpdate> operations) {
-        return updateOne("UpdateService", serviceId, operations);
+    public InternetAccessServiceJson update(String serviceId, List<ChangeOperationUpdate> operations, boolean dryRun) {
+        EquinixRequest<InternetAccessServiceJson> request =
+                buildRequestWithPathParams("UpdateService", RequestType.SINGLE, Map.of("uuid", serviceId), InternetAccessServiceJson.class);
+        if (dryRun) {
+            request.addSingleQueryParameter("dryRun", "true");
+        }
+        Utils.serializeJson(request, operations);
+        return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    public Boolean delete(String serviceId) {
-        return booleanOp("DeleteService", RequestType.SINGLE, Map.of("uuid", serviceId), null, null);
+    public Boolean delete(String serviceId, boolean dryRun) {
+        Map<String, List<String>> queryParams = dryRun ? Map.of("dryRun", List.of("true")) : null;
+        return booleanOp("DeleteService", RequestType.SINGLE, Map.of("uuid", serviceId), queryParams, null);
     }
 
     public Page<InternetAccessService, InternetAccessServiceJson> search(ServiceSearchRequest searchRequest) {

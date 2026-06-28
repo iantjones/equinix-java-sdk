@@ -50,11 +50,19 @@ public class InternetAccessServicesImpl implements InternetAccessServices {
     }
 
     public InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations) {
-        return this.serviceClient.update(serviceId, operations);
+        return this.serviceClient.update(serviceId, operations, false);
+    }
+
+    public InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations, boolean dryRun) {
+        return this.serviceClient.update(serviceId, operations, dryRun);
     }
 
     public Boolean delete(String serviceId) {
-        return this.serviceClient.delete(serviceId);
+        return this.serviceClient.delete(serviceId, false);
+    }
+
+    public Boolean delete(String serviceId, boolean dryRun) {
+        return this.serviceClient.delete(serviceId, dryRun);
     }
 
     public PaginatedFilteredList<InternetAccessService> search(ServiceSearchRequest searchRequest) {

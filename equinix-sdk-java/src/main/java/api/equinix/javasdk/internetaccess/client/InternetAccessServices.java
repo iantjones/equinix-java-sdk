@@ -62,12 +62,32 @@ public interface InternetAccessServices {
     InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations);
 
     /**
+     * Updates the mutable properties of an Equinix Internet Access v2 service, optionally in
+     * validate-only mode.
+     *
+     * @param serviceId the unique identifier of the service to update
+     * @param operations the change operations to apply
+     * @param dryRun if {@code true}, the request is only validated and the service is not updated
+     * @return the updated (or, in dry-run mode, the validated) service
+     */
+    InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations, boolean dryRun);
+
+    /**
      * Deletes an Equinix Internet Access v2 service by its unique identifier.
      *
      * @param serviceId the unique identifier of the service to delete
      * @return {@code true} if the deletion request was accepted
      */
     Boolean delete(String serviceId);
+
+    /**
+     * Deletes an Equinix Internet Access v2 service, optionally in validate-only mode.
+     *
+     * @param serviceId the unique identifier of the service to delete
+     * @param dryRun if {@code true}, the request is only validated and the service is not deleted
+     * @return {@code true} if the (deletion or validation) request was accepted
+     */
+    Boolean delete(String serviceId, boolean dryRun);
 
     /**
      * Searches for Equinix Internet Access v2 services matching the specified filter criteria.

@@ -16,22 +16,24 @@
 
 package api.equinix.javasdk.internetaccess.model.json.creators;
 
+import api.equinix.javasdk.internetaccess.enums.PurposeOfIpBlock;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
 /**
- * Addressing plan attached to an IP block request when requesting public IP space for
- * an Equinix Internet Access (EIA) v2 service.
+ * Addressing plan ({@code IpBlockAddressingPlans}) attached to an IP block request when requesting
+ * public IP space for an Equinix Internet Access (EIA) v2 service.
  */
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IpBlockAddressingPlan {
 
+    /** Number of addresses for this plan (required, minimum 1). */
     @JsonProperty("size") private Integer size;
-    @JsonProperty("purpose") private String purpose;
-    @JsonProperty("immediate") private Integer immediate;
-    @JsonProperty("afterThreeMonths") private Integer afterThreeMonths;
+
+    /** Purpose of the provider-assigned (PA) IP block, supplied for regulatory reasons. */
+    @JsonProperty("purpose") private PurposeOfIpBlock purpose;
 }
