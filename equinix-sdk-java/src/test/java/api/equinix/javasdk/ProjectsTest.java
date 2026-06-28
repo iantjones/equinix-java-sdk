@@ -33,9 +33,9 @@ class ProjectsTest {
             assertTrue(projectList.size() >= 0);
 
             if (projectList.size() > 0) {
-                Project project = projects.projects().getByUuid(projectList.get(0).getUuid());
+                Project project = projectList.get(0);
                 assertNotNull(project);
-                assertEquals(projectList.get(0).getUuid(), project.getUuid());
+                assertNotNull(project.getProjectId());
             }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Projects test skipped: " + e.getMessage());

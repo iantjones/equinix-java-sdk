@@ -26,8 +26,8 @@ import api.equinix.javasdk.projects.client.implementation.ProjectsConfigImpl;
 /**
  * The primary entry point for accessing Equinix Projects APIs.
  *
- * <p>Projects provides organizational management for Equinix resources, allowing
- * users to group and manage related infrastructure components under named projects.</p>
+ * <p>Projects are read-only organizational containers associated with a root organization,
+ * grouping related Equinix infrastructure components under named projects.</p>
  *
  * <p>All resource accessors use lazy initialization — internal clients are created on first access
  * and reused for subsequent calls.</p>
@@ -76,10 +76,10 @@ public final class Projects extends EquinixClient implements Service {
     }
 
     /**
-     * Returns the client for managing Equinix projects.
-     * Projects are organizational containers for grouping related infrastructure resources.
+     * Returns the client for listing Equinix projects.
+     * Projects are read-only organizational containers for grouping related infrastructure resources.
      *
-     * @return the {@link ProjectList} client for creating, listing, and managing projects
+     * @return the {@link ProjectList} client for listing projects
      */
     public ProjectList projects() {
         if (this.projects == null) {

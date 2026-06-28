@@ -1,0 +1,19 @@
+{
+  "projectId": "1234",
+  "projectName": "Default project",
+  "inboxResource": true,
+  "parentOrganizationId": "5678",
+  "labels": {
+    "application": "Network Edge"
+  },
+  "silentProject": false,
+  "permissions": [
+    {
+      "actions": [
+        "resourcemanager.project.read",
+        "fabric.l3connection.create"
+      ],
+      "resourceType": "L2_CONNECTION"
+    }
+  ]
+}

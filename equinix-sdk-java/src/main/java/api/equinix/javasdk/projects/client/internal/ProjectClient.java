@@ -20,19 +20,20 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.projects.model.Project;
 import api.equinix.javasdk.projects.model.json.ProjectJson;
-import api.equinix.javasdk.projects.model.json.creators.ProjectCreatorJson;
 
+/**
+ * Internal client for the read-only Equinix Resource Manager projects endpoint.
+ *
+ * @param <T> the public model type
+ */
 public interface ProjectClient<T> extends Pageable<T> {
 
-    Page<Project, ProjectJson> list();
-
-    ProjectJson getByUuid(String uuid);
-
-    ProjectJson create(ProjectCreatorJson projectCreatorJson);
-
-    ProjectJson update(String uuid, ProjectCreatorJson projectCreatorJson);
-
-    ProjectJson delete(String uuid);
-
-    ProjectJson refresh(String uuid);
+    /**
+     * Retrieves a page of projects, optionally including permissions and inbox-classified projects.
+     *
+     * @param includePermissions whether to include the user permissions on each project, or {@code null} for the default
+     * @param includeInbox whether to include inbox-classified projects, or {@code null} for the default
+     * @return a page of projects
+     */
+    Page<Project, ProjectJson> list(Boolean includePermissions, Boolean includeInbox);
 }

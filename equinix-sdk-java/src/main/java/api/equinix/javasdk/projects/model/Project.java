@@ -16,23 +16,65 @@
 
 package api.equinix.javasdk.projects.model;
 
-import api.equinix.javasdk.projects.enums.ProjectStatus;
+import api.equinix.javasdk.projects.model.implementation.ProjectPermission;
 
+import java.util.List;
+import java.util.Map;
+
+/**
+ * A project associated with a root organization, as returned by the Equinix Resource
+ * Manager. Projects are read-only organizational containers used to scope and group
+ * related Equinix resources.
+ */
 public interface Project {
 
-    String getUuid();
+    /**
+     * Returns the unique identifier of the project.
+     *
+     * @return the project id
+     */
+    String getProjectId();
 
-    String getName();
+    /**
+     * Returns the human-readable name of the project.
+     *
+     * @return the project name
+     */
+    String getProjectName();
 
-    String getDescription();
+    /**
+     * Returns whether this project is an inbox project.
+     *
+     * @return {@code true} if this is an inbox project
+     */
+    Boolean getInboxResource();
 
-    ProjectStatus getStatus();
+    /**
+     * Returns the identifier of the parent organization.
+     *
+     * @return the parent organization id
+     */
+    String getParentOrganizationId();
 
-    String getCreatedDate();
+    /**
+     * Returns the resource labels as key/value pairs.
+     *
+     * @return the project labels
+     */
+    Map<String, String> getLabels();
 
-    String getUpdatedDate();
+    /**
+     * Returns whether the returned project is a SILENT project.
+     *
+     * @return {@code true} if this is a silent project
+     */
+    Boolean getSilentProject();
 
-    Boolean delete();
-
-    void refresh();
+    /**
+     * Returns the available user permissions on the project resource. Populated only when the
+     * list request is made with {@code includePermissions} enabled; otherwise {@code null}.
+     *
+     * @return the list of permissions, or {@code null} if not requested
+     */
+    List<ProjectPermission> getPermissions();
 }

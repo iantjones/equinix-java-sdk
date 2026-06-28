@@ -14,19 +14,28 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.projects.model.json.creators;
+package api.equinix.javasdk.projects.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
+/**
+ * A user permission entry on a project resource, returned only when the list request is made
+ * with the {@code includePermissions} query parameter enabled.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
 @Getter
-public class ProjectCreatorJson {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ProjectPermission {
 
-    @JsonProperty("name") private String name;
-    @JsonProperty("description") private String description;
+    @JsonProperty("actions")
+    private List<String> actions;
 
-    public ProjectCreatorJson(ProjectOperator.ProjectBuilder builder) {
-        this.name = builder.getName();
-        this.description = builder.getDescription();
-    }
+    @JsonProperty("resourceType")
+    private String resourceType;
 }

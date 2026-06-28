@@ -24,8 +24,6 @@ import api.equinix.javasdk.projects.client.ProjectList;
 import api.equinix.javasdk.projects.client.internal.ProjectClient;
 import api.equinix.javasdk.projects.model.Project;
 import api.equinix.javasdk.projects.model.json.ProjectJson;
-import api.equinix.javasdk.projects.model.json.creators.ProjectOperator;
-import api.equinix.javasdk.projects.model.wrappers.ProjectWrapper;
 
 public class ProjectListImpl implements ProjectList {
 
@@ -39,17 +37,12 @@ public class ProjectListImpl implements ProjectList {
     }
 
     public PaginatedList<Project> list() {
-        Page<Project, ProjectJson> responsePage = this.serviceClient.list();
-        PaginatedList<Project> projectList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, ProjectWrapper::new);
+        return this.list(null, null);
+    }
+
+    public PaginatedList<Project> list(Boolean includePermissions, Boolean includeInbox) {
+        Page<Project, ProjectJson> responsePage = this.serviceClient.list(includePermissions, includeInbox);
+        PaginatedList<Project> projectList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(projectList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
-    }
-
-    public Project getByUuid(String uuid) {
-        ProjectJson projectJson = this.serviceClient.getByUuid(uuid);
-        return new ProjectWrapper(projectJson, this.serviceClient);
-    }
-
-    public ProjectOperator.ProjectBuilder define() {
-        return new ProjectOperator(this.serviceClient).create();
     }
 }
