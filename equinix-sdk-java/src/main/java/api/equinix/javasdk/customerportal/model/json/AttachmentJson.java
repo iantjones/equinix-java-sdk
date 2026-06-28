@@ -16,40 +16,41 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.customerportal.model.Attachment;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for an Attachments v1 {@code attachment} ({@code GET /v1/attachments/{attachmentId}},
+ * {@code GET /v1/attachments}, {@code POST /v1/attachments/file}).
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AttachmentJson {
 
     @Getter static TypeReference<List<AttachmentJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("attachmentId")
+    private String attachmentId;
 
-    @JsonProperty("fileName")
-    private String fileName;
+    @JsonProperty("attachmentName")
+    private String attachmentName;
 
-    @JsonProperty("fileSize")
-    private Long fileSize;
+    @JsonProperty("attachmentType")
+    private String attachmentType;
 
-    @JsonProperty("contentType")
-    private String contentType;
+    @JsonProperty("attachmentSize")
+    private Long attachmentSize;
 
-    @JsonProperty("entityType")
-    private String entityType;
+    @JsonProperty("createdDate")
+    private String createdDate;
 
-    @JsonProperty("entityUuid")
-    private String entityUuid;
+    @JsonProperty("createdBy")
+    private String createdBy;
 
-    @JsonProperty("uploadedBy")
-    private String uploadedBy;
-
-    @JsonProperty("uploadedDate")
-    private String uploadedDate;
+    @JsonProperty("lastUpdatedDate")
+    private String lastUpdatedDate;
 }

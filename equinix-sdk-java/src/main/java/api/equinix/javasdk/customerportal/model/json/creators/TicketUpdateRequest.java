@@ -25,16 +25,17 @@ import java.util.List;
 /**
  * Request body for updating a trouble ticket
  * ({@code PATCH /v2/tickets/{id}}, {@code Tickets_Modify}). Only the notification {@code contacts}
- * (a single registered user) may be updated.
+ * (a single registered-user entry, {@code ContactRequestRegisteredUser_Update}) may be updated; the
+ * contact {@code type} is fixed to {@code NOTIFICATION}.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TicketUpdateRequest {
 
     @JsonProperty("contacts")
-    private final List<OrderContact> contacts;
+    private final List<ContactUpdate> contacts;
 
-    public TicketUpdateRequest(List<OrderContact> contacts) {
+    public TicketUpdateRequest(List<ContactUpdate> contacts) {
         this.contacts = contacts;
     }
 }

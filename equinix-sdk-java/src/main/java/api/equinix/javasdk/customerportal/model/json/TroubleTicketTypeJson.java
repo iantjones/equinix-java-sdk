@@ -17,6 +17,7 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.TroubleTicketType;
+import api.equinix.javasdk.customerportal.model.implementation.TroubleTicketTypeDetails;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -36,4 +37,7 @@ public class TroubleTicketTypeJson implements TroubleTicketType {
 
     @JsonProperty("severity")
     private String severity;
+
+    @JsonProperty("additionalDetails")
+    private TroubleTicketTypeDetails additionalDetails;
 }

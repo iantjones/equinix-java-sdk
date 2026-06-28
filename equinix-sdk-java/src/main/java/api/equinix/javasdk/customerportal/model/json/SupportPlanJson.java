@@ -16,33 +16,67 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.customerportal.enums.PlanFrequency;
+import api.equinix.javasdk.customerportal.enums.SupportPlanStatus;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
+import api.equinix.javasdk.customerportal.model.implementation.SupportPlanAssignment;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for a Smart Hands support plan ({@code supports} schema, Support Plans v2 API).
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SupportPlanJson implements SupportPlan {
 
-    @Getter static TypeReference<List<SupportPlanJson>> listTypeRef = new TypeReference<>() {};
-
-    @JsonProperty("uuid")
-    private String uuid;
-
-    @JsonProperty("planName")
-    private String planName;
-
-    @JsonProperty("planType")
-    private String planType;
+    @JsonProperty("id")
+    private String id;
 
     @JsonProperty("accountNumber")
     private String accountNumber;
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("planName")
+    private String planName;
+
+    @JsonProperty("productCode")
+    private String productCode;
+
+    @JsonProperty("ibxs")
+    private List<String> ibxs;
+
+    @JsonProperty("ibxSpecific")
+    private Boolean ibxSpecific;
+
+    @JsonProperty("planFrequency")
+    private PlanFrequency planFrequency;
+
+    @JsonProperty("purchasedMinutes")
+    private Integer purchasedMinutes;
+
+    @JsonProperty("assignedMinutes")
+    private Integer assignedMinutes;
+
+    @JsonProperty("consumedMinutes")
+    private Integer consumedMinutes;
+
+    @JsonProperty("remainingMinutes")
+    private Integer remainingMinutes;
+
+    @JsonProperty("previousConsumedMinutes")
+    private Integer previousConsumedMinutes;
+
+    @JsonProperty("currentConsumedMinutes")
+    private Integer currentConsumedMinutes;
+
+    @JsonProperty("prepaidConsumedMinutes")
+    private Integer prepaidConsumedMinutes;
+
+    @JsonProperty("transitionMinutes")
+    private Integer transitionMinutes;
 
     @JsonProperty("startDate")
     private String startDate;
@@ -50,6 +84,15 @@ public class SupportPlanJson implements SupportPlan {
     @JsonProperty("endDate")
     private String endDate;
 
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("status")
+    private SupportPlanStatus status;
+
+    @JsonProperty("createdDateTime")
+    private String createdDateTime;
+
+    @JsonProperty("updatedDateTime")
+    private String updatedDateTime;
+
+    @JsonProperty("assignment")
+    private SupportPlanAssignment assignment;
 }

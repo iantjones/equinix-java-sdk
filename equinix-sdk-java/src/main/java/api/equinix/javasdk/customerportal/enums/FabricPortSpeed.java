@@ -18,11 +18,10 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
-public enum TicketCategory implements APIParam {
-    BREAK_FIX,
-    CONNECTIVITY,
-    PHYSICAL_INFRASTRUCTURE,
-    POWER,
-    REMOTE_HANDS,
-    OTHER
+/**
+ * Fabric port speed available for a secure cabinet location.
+ */
+public enum FabricPortSpeed implements APIParam {
+    SPEED_1_GBPS,
+    SPEED_10_GBPS
 }

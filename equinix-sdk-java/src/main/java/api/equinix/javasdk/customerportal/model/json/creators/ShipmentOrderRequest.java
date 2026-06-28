@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for scheduling an inbound or outbound shipment
@@ -29,7 +28,10 @@ import java.util.Map;
  *
  * <p>{@code type} ({@code INBOUND}/{@code OUTBOUND}), {@code requestedDateTime}, {@code cageId} and
  * {@code details} are required. {@code details} is one of {@code InboundShipments_create} or
- * {@code OutboundShipments_create}; because the shape varies it is supplied as a free-form map.</p>
+ * {@code OutboundShipments_create}; supply the corresponding typed creator
+ * ({@link InboundShipmentDetails} or {@link OutboundShipmentDetails}). The {@code details}
+ * parameter is typed as {@link Object} to accept either typed creator or, as an escape hatch, a
+ * free-form {@code Map<String, Object>}.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -45,7 +47,7 @@ public class ShipmentOrderRequest {
     private final String cageId;
 
     @JsonProperty("details")
-    private final Map<String, Object> details;
+    private final Object details;
 
     @JsonProperty("accountNumber")
     private final String accountNumber;
@@ -84,10 +86,12 @@ public class ShipmentOrderRequest {
      * @param type              the shipment type ({@code INBOUND}/{@code OUTBOUND}) (required)
      * @param requestedDateTime the requested date/time (required)
      * @param cageId            the cage id (required)
-     * @param details           the inbound/outbound shipment details (required)
+     * @param details           the inbound/outbound shipment details (required); pass an
+     *                          {@link InboundShipmentDetails}, an {@link OutboundShipmentDetails},
+     *                          or a free-form {@code Map<String, Object>}
      * @return a new builder
      */
-    public static Builder builder(String type, String requestedDateTime, String cageId, Map<String, Object> details) {
+    public static Builder builder(String type, String requestedDateTime, String cageId, Object details) {
         return new Builder(type, requestedDateTime, cageId, details);
     }
 
@@ -95,7 +99,7 @@ public class ShipmentOrderRequest {
         private final String type;
         private final String requestedDateTime;
         private final String cageId;
-        private final Map<String, Object> details;
+        private final Object details;
         private String accountNumber;
         private String description;
         private String customerReferenceId;
@@ -103,7 +107,7 @@ public class ShipmentOrderRequest {
         private List<OrderAttachment> attachments;
         private List<OrderContact> contacts;
 
-        private Builder(String type, String requestedDateTime, String cageId, Map<String, Object> details) {
+        private Builder(String type, String requestedDateTime, String cageId, Object details) {
             this.type = type;
             this.requestedDateTime = requestedDateTime;
             this.cageId = cageId;

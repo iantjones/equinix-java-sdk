@@ -16,8 +16,18 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.BillingFrequency;
+import api.equinix.javasdk.customerportal.enums.InvoiceFormat;
+import api.equinix.javasdk.customerportal.model.implementation.BillingContactInfo;
+import api.equinix.javasdk.customerportal.model.implementation.BillingInvoice;
+import api.equinix.javasdk.customerportal.model.implementation.BillingPayment;
+
+import java.util.List;
+
 /**
- * A billing account summary, as returned by the Billing v1 finance accounts API.
+ * A billing account, as returned by the Billing v1 finance accounts API. The list endpoint returns
+ * account summaries, while a single-account fetch additionally populates the billing preferences,
+ * contact, available invoices and payments.
  */
 public interface BillingAccount {
 
@@ -26,4 +36,20 @@ public interface BillingAccount {
     String getAccountName();
 
     String getParentAccountNumber();
+
+    BillingFrequency getBillingFrequency();
+
+    String getCurrencyCode();
+
+    String getInvoiceLanguage();
+
+    InvoiceFormat getInvoiceFormat();
+
+    List<String> getAccountIbxs();
+
+    BillingContactInfo getBillingContact();
+
+    List<BillingInvoice> getInvoices();
+
+    List<BillingPayment> getPayments();
 }

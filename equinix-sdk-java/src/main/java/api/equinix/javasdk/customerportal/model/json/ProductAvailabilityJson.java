@@ -16,7 +16,12 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.FabricPortSpeed;
 import api.equinix.javasdk.customerportal.model.ProductAvailability;
+import api.equinix.javasdk.customerportal.model.implementation.AcCircuitConfig;
+import api.equinix.javasdk.customerportal.model.implementation.CabinetDimensionsInfo;
+import api.equinix.javasdk.customerportal.model.implementation.PduConfig;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -24,6 +29,7 @@ import lombok.Getter;
  * JSON model for a secure cabinet {@code ProductsAvailability} element.
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductAvailabilityJson implements ProductAvailability {
 
     @JsonProperty("ibx")
@@ -38,6 +44,15 @@ public class ProductAvailabilityJson implements ProductAvailability {
     @JsonProperty("maximumDrawCapacityPerCabinet")
     private Double maximumDrawCapacityPerCabinet;
 
+    @JsonProperty("cabinetDimensions")
+    private CabinetDimensionsInfo cabinetDimensions;
+
+    @JsonProperty("acCircuitConfiguration")
+    private AcCircuitConfig acCircuitConfiguration;
+
+    @JsonProperty("pduConfiguration")
+    private PduConfig pduConfiguration;
+
     @JsonProperty("fabricPortSpeed")
-    private String fabricPortSpeed;
+    private FabricPortSpeed fabricPortSpeed;
 }

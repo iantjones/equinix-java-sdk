@@ -16,11 +16,24 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.SupportCaseStatus;
 import api.equinix.javasdk.customerportal.model.SupportCase;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseAttachmentInfo;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseContact;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseEmail;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseLocation;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseNote;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseOtherDetails;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
+/**
+ * A support case retrieved by case or order number from the Equinix Customer Portal support v2 API
+ * ({@code SingleCaseResponseV2}).
+ */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SupportCaseJson implements SupportCase {
@@ -44,8 +57,26 @@ public class SupportCaseJson implements SupportCase {
     private String orderId;
 
     @JsonProperty("status")
-    private String status;
+    private SupportCaseStatus status;
 
     @JsonProperty("createdDateTime")
     private String createdDateTime;
+
+    @JsonProperty("location")
+    private SupportCaseLocation location;
+
+    @JsonProperty("contacts")
+    private List<SupportCaseContact> contacts;
+
+    @JsonProperty("notes")
+    private List<SupportCaseNote> notes;
+
+    @JsonProperty("attachments")
+    private List<SupportCaseAttachmentInfo> attachments;
+
+    @JsonProperty("email")
+    private List<SupportCaseEmail> email;
+
+    @JsonProperty("otherDetails")
+    private SupportCaseOtherDetails otherDetails;
 }

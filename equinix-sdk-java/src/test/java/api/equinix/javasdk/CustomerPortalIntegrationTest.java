@@ -7,6 +7,7 @@ import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.Order;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchFilter;
 import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
@@ -133,7 +134,7 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         void searchNotifications() {
             try {
                 List<? extends Notification> items = timedCall("CustomerPortal", "searchIbx", "Notification", "POST",
-                        () -> client.notifications().searchIbx(new NotificationSearchRequest(java.util.Map.of())));
+                        () -> client.notifications().searchIbx(NotificationSearchRequest.builder().build()));
                 assertNotNull(items);
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Notifications test skipped: " + e.getMessage());
@@ -145,16 +146,16 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         void searchAssets() {
             try {
                 PaginatedList<Asset> items = timedCall("CustomerPortal", "search", "Asset", "POST",
-                        () -> client.assets().search(new AssetSearchRequest(java.util.Map.of())));
+                        () -> client.assets().search(new AssetSearchRequest((AssetSearchFilter) null)));
                 assertNotNull(items);
                 assertTrue(items.size() >= 0);
 
                 if (items.size() > 0) {
                     Asset item = timedCall("CustomerPortal", "getByUuid", "Asset", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.assets().getByUuid(items.get(0).getUuid()));
+                            items.get(0).getAssetNumber(),
+                            () -> client.assets().getByUuid(items.get(0).getAssetNumber()));
                     assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
+                    assertEquals(items.get(0).getAssetNumber(), item.getAssetNumber());
                 }
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Assets test skipped: " + e.getMessage());

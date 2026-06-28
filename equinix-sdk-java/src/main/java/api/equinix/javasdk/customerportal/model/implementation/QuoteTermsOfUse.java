@@ -14,21 +14,27 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.customerportal.model.json.creators;
+package api.equinix.javasdk.customerportal.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+/**
+ * A quote terms-of-use entry ({@code termsOfUse_Details}): a {@code value} measured in
+ * {@code period} ({@code MONTHS} or {@code DAYS}) for a given term {@code type}
+ * ({@code INITIAL_TERM}, {@code RENEWAL_TERM} or {@code NON_RENEWAL_NOTICE}).
+ */
 @Getter
-public class AttachmentCreatorJson {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class QuoteTermsOfUse {
 
-    @JsonProperty("fileName") private String fileName;
-    @JsonProperty("entityType") private String entityType;
-    @JsonProperty("entityUuid") private String entityUuid;
+    @JsonProperty("value")
+    private Integer value;
 
-    public AttachmentCreatorJson(AttachmentOperator.AttachmentBuilder builder) {
-        this.fileName = builder.getFileName();
-        this.entityType = builder.getEntityType();
-        this.entityUuid = builder.getEntityUuid();
-    }
+    @JsonProperty("period")
+    private String period;
+
+    @JsonProperty("type")
+    private String type;
 }

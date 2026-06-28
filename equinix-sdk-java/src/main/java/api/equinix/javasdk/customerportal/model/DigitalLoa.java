@@ -16,6 +16,14 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.LoaState;
+import api.equinix.javasdk.customerportal.model.implementation.LoaChangeLog;
+import api.equinix.javasdk.customerportal.model.implementation.LoaLink;
+import api.equinix.javasdk.customerportal.model.implementation.LoaParty;
+import api.equinix.javasdk.customerportal.model.implementation.LoaProduct;
+
+import java.util.List;
+
 /**
  * A Digital Letter of Authorization (Digital LOA) document from the Equinix Customer Portal
  * diLOA v1 API.
@@ -26,7 +34,21 @@ public interface DigitalLoa {
 
     String getToken();
 
-    String getState();
+    LoaState getState();
+
+    List<LoaProduct> getProducts();
+
+    LoaParty getRequestor();
+
+    LoaParty getProvider();
+
+    String getNotes();
+
+    String getExpiryDateTime();
+
+    LoaChangeLog getChangeLog();
+
+    List<LoaLink> getLinks();
 
     String getHref();
 }

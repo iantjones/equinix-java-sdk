@@ -17,6 +17,7 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.TroubleTicketOrderLocation;
+import api.equinix.javasdk.customerportal.model.implementation.TroubleTicketOrderCage;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -31,5 +32,5 @@ public class TroubleTicketOrderLocationJson implements TroubleTicketOrderLocatio
     private String ibx;
 
     @JsonProperty("cages")
-    private List<String> cages;
+    private List<TroubleTicketOrderCage> cages;
 }

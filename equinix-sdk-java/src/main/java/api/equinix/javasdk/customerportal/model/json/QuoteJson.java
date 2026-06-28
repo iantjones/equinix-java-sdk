@@ -16,38 +16,79 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.QuoteStatus;
-import api.equinix.javasdk.customerportal.model.Quote;
+import api.equinix.javasdk.customerportal.model.implementation.QuoteContact;
+import api.equinix.javasdk.customerportal.model.implementation.QuoteDetail;
+import api.equinix.javasdk.customerportal.model.implementation.QuotePricing;
+import api.equinix.javasdk.customerportal.model.implementation.QuoteTermsOfUse;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for a quote ({@code quote_response} = {@code quote_response_base} + {@code details[]})
+ * from the Quotes v2 API. Wrapped by {@code QuoteWrapper} for the public {@code Quote} view.
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class QuoteJson {
 
     @Getter static TypeReference<List<QuoteJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("quoteId")
+    private String quoteId;
 
-    @JsonProperty("quoteNumber")
-    private String quoteNumber;
+    @JsonProperty("accountName")
+    private String accountName;
+
+    @JsonProperty("accountNumber")
+    private String accountNumber;
+
+    @JsonProperty("quoteRequestType")
+    private String quoteRequestType;
+
+    @JsonProperty("contacts")
+    private List<QuoteContact> contacts;
 
     @JsonProperty("status")
     private QuoteStatus status;
 
-    @JsonProperty("totalAmount")
-    private String totalAmount;
+    @JsonProperty("createdDateTime")
+    private String createdDateTime;
 
-    @JsonProperty("currency")
-    private String currency;
+    @JsonProperty("updatedDateTime")
+    private String updatedDateTime;
 
-    @JsonProperty("expirationDate")
-    private String expirationDate;
+    @JsonProperty("expirationDateTime")
+    private String expirationDateTime;
 
-    @JsonProperty("createdDate")
-    private String createdDate;
+    @JsonProperty("channel")
+    private String channel;
+
+    @JsonProperty("subChannel")
+    private String subChannel;
+
+    @JsonProperty("customerReferenceId")
+    private String customerReferenceId;
+
+    @JsonProperty("agreementNumber")
+    private String agreementNumber;
+
+    @JsonProperty("currencyCode")
+    private String currencyCode;
+
+    @JsonProperty("termsOfUse")
+    private List<QuoteTermsOfUse> termsOfUse;
+
+    @JsonProperty("totalPricing")
+    private List<QuotePricing> totalPricing;
+
+    @JsonProperty("versionNumber")
+    private String versionNumber;
+
+    @JsonProperty("details")
+    private List<QuoteDetail> details;
 }

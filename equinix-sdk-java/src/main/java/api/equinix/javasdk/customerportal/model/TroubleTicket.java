@@ -16,43 +16,46 @@
 
 package api.equinix.javasdk.customerportal.model;
 
-import api.equinix.javasdk.customerportal.enums.TicketCategory;
-import api.equinix.javasdk.customerportal.enums.TicketPriority;
 import api.equinix.javasdk.customerportal.enums.TicketStatus;
+import api.equinix.javasdk.customerportal.model.implementation.TicketAttachment;
+import api.equinix.javasdk.customerportal.model.implementation.TicketContact;
+import api.equinix.javasdk.customerportal.model.implementation.TicketNote;
+import api.equinix.javasdk.customerportal.model.implementation.TicketResolution;
 
+import java.util.List;
+
+/**
+ * A trouble ticket retrieved from the Equinix Customer Portal Tickets v2 API.
+ */
 public interface TroubleTicket {
 
-    String getUuid();
+    String getId();
 
-    String getHref();
+    String getCategory();
 
-    String getTicketNumber();
-
-    TicketCategory getCategory();
-
-    TicketStatus getStatus();
-
-    TicketPriority getPriority();
-
-    String getSubject();
+    String getSubCategory();
 
     String getDescription();
 
-    String getIbxCode();
+    String getPrimaryId();
 
-    String getAccountNumber();
+    String getSecondaryId();
 
-    String getRequestorName();
+    String getCustomerReferenceId();
 
-    String getRequestorEmail();
+    String getOccurredDateTime();
 
-    String getAssigneeName();
+    String getResolutionDateTime();
 
-    String getCreatedDate();
+    TicketStatus getStatus();
 
-    String getLastUpdatedDate();
+    List<TicketResolution> getResolutions();
 
-    String getResolvedDate();
+    List<TicketNote> getNotes();
+
+    List<TicketAttachment> getAttachments();
+
+    List<TicketContact> getContacts();
 
     void refresh();
 }

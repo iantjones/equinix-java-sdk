@@ -17,17 +17,16 @@
 package api.equinix.javasdk.customerportal.model;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * A scheduled report definition in the Report Center.
+ * A scheduled report definition in the Report Center (Reports v1 {@code scheduledReport}).
  */
 public interface ScheduledReport {
 
     /**
      * Returns the scheduled report id.
      *
-     * @return the scheduled report id
+     * @return the scheduled report id (UUID)
      */
     String getScheduledId();
 
@@ -36,19 +35,103 @@ public interface ScheduledReport {
      *
      * @return the report name
      */
-    String getName();
+    String getReportName();
 
     /**
-     * Returns the schedule type (e.g. {@code ONE_TIME}, {@code DAILY}, {@code WEEKLY}).
+     * Returns the schedule type (e.g. {@code DAILY}, {@code WEEKLY}, {@code MONTHLY}).
      *
      * @return the schedule type, or {@code null} if not provided
      */
     String getScheduleType();
 
     /**
-     * Returns the report parameters.
+     * Returns the period (e.g. {@code 30_DAYS}, {@code 1_DAY}).
+     *
+     * @return the period, or {@code null} if not provided
+     */
+    String getPeriod();
+
+    /**
+     * Returns the person/entity who created this schedule.
+     *
+     * @return the creator, or {@code null} if not provided
+     */
+    String getCreatedBy();
+
+    /**
+     * Returns the time this schedule was first created.
+     *
+     * @return the created date, or {@code null} if not provided
+     */
+    String getCreatedDate();
+
+    /**
+     * Returns the last attempted date to trigger report generation.
+     *
+     * @return the last attempted date, or {@code null} if not provided
+     */
+    String getLastAttemptedDate();
+
+    /**
+     * Returns the customer organization id.
+     *
+     * @return the customer organization id, or {@code null} if not provided
+     */
+    Integer getCustomerOrganizationId();
+
+    /**
+     * Returns the customer org id the report is generated on behalf of.
+     *
+     * @return the forOrg value, or {@code null} if not provided
+     */
+    Integer getForOrg();
+
+    /**
+     * Returns the user key the report is generated on behalf of.
+     *
+     * @return the forUser value, or {@code null} if not provided
+     */
+    String getForUser();
+
+    /**
+     * Returns the person/entity who last modified this schedule.
+     *
+     * @return the last modifier, or {@code null} if not provided
+     */
+    String getLastModifiedBy();
+
+    /**
+     * Returns the last modified date of this schedule.
+     *
+     * @return the last modified date, or {@code null} if not provided
+     */
+    String getLastModifiedDate();
+
+    /**
+     * Returns the number of times report generation has failed.
+     *
+     * @return the failed-attempt count, or {@code null} if not provided
+     */
+    Integer getNumberOfFailedAttempts();
+
+    /**
+     * Returns the schedule status (e.g. {@code ACTIVE}, {@code INACTIVE}).
+     *
+     * @return the status, or {@code null} if not provided
+     */
+    String getStatus();
+
+    /**
+     * Returns the parameters used to generate the reports.
      *
      * @return the parameters, or {@code null} if not provided
      */
-    List<Map<String, Object>> getParameters();
+    List<? extends ReportParameter> getParameters();
+
+    /**
+     * Returns the reports generated from this schedule.
+     *
+     * @return the generated reports, or {@code null} if not provided
+     */
+    List<? extends Report> getReports();
 }

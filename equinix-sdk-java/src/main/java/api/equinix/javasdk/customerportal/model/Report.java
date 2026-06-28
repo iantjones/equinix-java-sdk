@@ -16,19 +16,152 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.FileType;
+
+import java.util.List;
+
+/**
+ * A generated report in the Report Center (Reports v1 {@code downloadable-report} for the list view,
+ * {@code report} for the detail view).
+ *
+ * <p>The list view ({@code getReports}) populates the {@code downloadable-report} fields; the detail
+ * view ({@code getReportById}) additionally populates the richer {@code report} fields
+ * ({@code createdBy}, {@code createdDate}, {@code startTime}, {@code endTime}, {@code errorMessage},
+ * {@code location}, {@code numberOfAttempts}, {@code parameters}). Fields not present in a given
+ * response are {@code null}.</p>
+ */
 public interface Report {
 
-    String getUuid();
+    /**
+     * Returns the unique identifier of the report.
+     *
+     * @return the report id (UUID)
+     */
+    String getReportId();
 
+    /**
+     * Returns the scheduled report id this report was generated from.
+     *
+     * @return the scheduled id, or {@code null} if not provided
+     */
+    String getScheduledId();
+
+    /**
+     * Returns the report name.
+     *
+     * @return the report name, or {@code null} if not provided
+     */
     String getReportName();
 
-    String getReportType();
+    /**
+     * Returns the file name of the report.
+     *
+     * @return the file name, or {@code null} if not provided
+     */
+    String getFileName();
 
-    String getStatus();
+    /**
+     * Returns the file type of the report.
+     *
+     * @return the file type, or {@code null} if not provided
+     */
+    FileType getFileType();
 
-    String getAccountNumber();
+    /**
+     * Returns the size of the report in bytes.
+     *
+     * @return the file size, or {@code null} if not provided
+     */
+    Long getFileSize();
 
+    /**
+     * Returns the person/entity this report was created for.
+     *
+     * @return the createdFor value, or {@code null} if not provided
+     */
+    String getCreatedFor();
+
+    /**
+     * Returns the time this report was first requested.
+     *
+     * @return the requested date, or {@code null} if not provided
+     */
+    String getRequestedDate();
+
+    /**
+     * Returns the time this report was generated.
+     *
+     * @return the generated date, or {@code null} if not provided
+     */
     String getGeneratedDate();
 
-    String getFileFormat();
+    /**
+     * Returns the report status.
+     *
+     * @return the status
+     */
+    String getStatus();
+
+    /**
+     * Returns the number of times this report has been downloaded.
+     *
+     * @return the download count, or {@code null} if not provided
+     */
+    Integer getNumberOfDownloads();
+
+    /**
+     * Returns the person/entity who created this report (detail view only).
+     *
+     * @return the creator, or {@code null} if not provided
+     */
+    String getCreatedBy();
+
+    /**
+     * Returns the time this report was first created (detail view only).
+     *
+     * @return the created date, or {@code null} if not provided
+     */
+    String getCreatedDate();
+
+    /**
+     * Returns the processing start time of the report (detail view only).
+     *
+     * @return the start time, or {@code null} if not provided
+     */
+    String getStartTime();
+
+    /**
+     * Returns the processing end time of the report (detail view only).
+     *
+     * @return the end time, or {@code null} if not provided
+     */
+    String getEndTime();
+
+    /**
+     * Returns an error message if report generation failed (detail view only).
+     *
+     * @return the error message, or {@code null} if not provided
+     */
+    String getErrorMessage();
+
+    /**
+     * Returns the location of the report once generated (detail view only).
+     *
+     * @return the location, or {@code null} if not provided
+     */
+    String getLocation();
+
+    /**
+     * Returns the number of attempts made to generate the report (detail view only).
+     *
+     * @return the attempt count, or {@code null} if not provided
+     */
+    Integer getNumberOfAttempts();
+
+    /**
+     * Returns the parameters used to generate the report (detail view only).
+     *
+     * @return the parameters, or {@code null} if not provided
+     */
+    List<? extends ReportParameter> getParameters();
 }

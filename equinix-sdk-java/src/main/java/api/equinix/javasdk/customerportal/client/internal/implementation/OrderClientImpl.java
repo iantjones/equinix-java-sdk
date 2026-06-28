@@ -47,6 +47,10 @@ public class OrderClientImpl extends ResourceClientBase<Order, OrderJson> implem
         return getOne("GetOrder", Map.of("orderId", orderId));
     }
 
+    public OrderJson refresh(String orderId) {
+        return this.getByUuid(orderId);
+    }
+
     public List<? extends OrderNegotiation> getNegotiations(String orderId) {
         return listAs("GetOrderNegotiations", Map.of("orderId", orderId), null, OrderNegotiationJson.class);
     }

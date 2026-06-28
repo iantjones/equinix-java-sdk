@@ -18,10 +18,9 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
-public enum AssetType implements APIParam {
-    CAGE,
-    CABINET,
-    POWER_CIRCUIT,
-    CROSS_CONNECT,
-    IBX_SPACE
+/**
+ * Phase of an AC power circuit for a secure cabinet.
+ */
+public enum CircuitPhase implements APIParam {
+    SINGLE
 }

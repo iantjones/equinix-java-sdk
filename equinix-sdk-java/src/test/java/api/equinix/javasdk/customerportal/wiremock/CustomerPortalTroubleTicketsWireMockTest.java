@@ -77,9 +77,9 @@ class CustomerPortalTroubleTicketsWireMockTest extends WireMockTestBase {
             stubSingleton(wireMock, "/v2/tickets/.*",
                     "/json/customerportal/trouble_ticket_response.json");
 
-            TroubleTicket ticket = customerPortal.troubleTickets().getByUuid("c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f");
+            TroubleTicket ticket = customerPortal.troubleTickets().getByUuid("1-9808089098");
             assertNotNull(ticket);
-            assertEquals("c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", ticket.getUuid());
+            assertEquals("1-9808089098", ticket.getId());
         }
 
         @Test

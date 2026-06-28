@@ -20,6 +20,7 @@ import api.equinix.javasdk.customerportal.enums.TransactionType;
 import api.equinix.javasdk.customerportal.model.implementation.BillingContact;
 import api.equinix.javasdk.customerportal.model.implementation.CustomerDetail;
 import api.equinix.javasdk.customerportal.model.implementation.PaymentInstructions;
+import api.equinix.javasdk.customerportal.model.implementation.PriorAdjustmentInfo;
 import api.equinix.javasdk.customerportal.model.implementation.TaxInfo;
 
 import java.math.BigDecimal;
@@ -30,6 +31,8 @@ import java.util.List;
 public interface InvoiceSummary {
     
     String getTransactionId();
+
+    String getBusinessLegalEntity();
 
     TransactionType getTransactionType();
 
@@ -62,4 +65,8 @@ public interface InvoiceSummary {
     PaymentInstructions getPaymentInstructions();
 
     List<TaxInfo> getTaxInfo();
+
+    List<PriorAdjustmentInfo> getPriorAdjustmentInfo();
+
+    BigDecimal getTotalPriorAdjustmentAmount();
 }

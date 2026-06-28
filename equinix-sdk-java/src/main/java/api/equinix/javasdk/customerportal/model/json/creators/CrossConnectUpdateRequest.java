@@ -25,16 +25,17 @@ import java.util.List;
 /**
  * Request body for updating a cross-connect order
  * ({@code PATCH /colocations/v2/orders/crossConnects/{orderId}}, {@code Modify_request}).
- * Only the notification {@code contacts} (a single registered user) may be updated.
+ * Only the notification {@code contacts} (registered users, {@code type=NOTIFICATION}) may be
+ * updated.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CrossConnectUpdateRequest {
 
     @JsonProperty("contacts")
-    private final List<OrderContact> contacts;
+    private final List<ContactUpdate> contacts;
 
-    public CrossConnectUpdateRequest(List<OrderContact> contacts) {
+    public CrossConnectUpdateRequest(List<ContactUpdate> contacts) {
         this.contacts = contacts;
     }
 }

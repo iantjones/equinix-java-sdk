@@ -21,23 +21,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for updating a work visit order
  * ({@code PATCH /colocations/v2/orders/workVisits/{orderId}}, {@code Modify_request}). All fields
  * are optional; {@code details} carries {@code visitStartDateTime}, {@code visitEndDateTime} and
- * {@code openCabinet}.
+ * {@code openCabinet} — supply the typed {@link WorkVisitUpdateDetails} creator or, as an escape
+ * hatch, a free-form {@code Map<String, Object>}.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkVisitUpdateRequest {
 
     @JsonProperty("contacts")
-    private final List<OrderContact> contacts;
+    private final List<ContactUpdate> contacts;
 
     @JsonProperty("details")
-    private final Map<String, Object> details;
+    private final Object details;
 
     private WorkVisitUpdateRequest(Builder builder) {
         this.contacts = builder.contacts;
@@ -54,18 +54,25 @@ public class WorkVisitUpdateRequest {
     }
 
     public static class Builder {
-        private List<OrderContact> contacts;
-        private Map<String, Object> details;
+        private List<ContactUpdate> contacts;
+        private Object details;
 
         private Builder() {
         }
 
-        public Builder contacts(List<OrderContact> contacts) {
+        public Builder contacts(List<ContactUpdate> contacts) {
             this.contacts = contacts;
             return this;
         }
 
-        public Builder details(Map<String, Object> details) {
+        /**
+         * Sets the work visit update details. Pass a {@link WorkVisitUpdateDetails} or a free-form
+         * {@code Map<String, Object>}.
+         *
+         * @param details the work visit update details
+         * @return this builder
+         */
+        public Builder details(Object details) {
             this.details = details;
             return this;
         }

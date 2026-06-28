@@ -1,9 +1,86 @@
 {
-  "uuid": "d0e1f2a3-b4c5-4d6e-7f80-910213243546",
-  "quoteNumber": "QT-2024-0019873",
-  "status": "PENDING",
-  "totalAmount": "24750.00",
-  "currency": "USD",
-  "expirationDate": "2025-01-15T23:59:59.000Z",
-  "createdDate": "2024-11-10T16:30:00.000Z"
+  "quoteId": "1-1234567891011",
+  "accountName": "AAA Corporation Ltd",
+  "accountNumber": "123456",
+  "quoteRequestType": "NEW",
+  "contacts": [
+    {
+      "registeredUser": "john_doe",
+      "firstName": "John",
+      "lastName": "Doe",
+      "type": "QUOTATION",
+      "details": [
+        {
+          "type": "EMAIL",
+          "value": "john_doe@aaacorp.com"
+        },
+        {
+          "type": "PHONE",
+          "value": "+1-4601231122"
+        }
+      ]
+    }
+  ],
+  "status": "SUBMITTED",
+  "createdDateTime": "2020-11-19T06:51:10.000Z",
+  "updatedDateTime": "2020-11-20T06:51:10.000Z",
+  "expirationDateTime": "2020-12-31T06:51:10.000Z",
+  "channel": "PORTAL",
+  "subChannel": "QUOTE",
+  "customerReferenceId": "048837d6-4cd8-401f-ba41-a4ac015c3f3e",
+  "agreementNumber": "AGR-2020-0099",
+  "currencyCode": "USD",
+  "termsOfUse": [
+    {
+      "value": 12,
+      "period": "MONTHS",
+      "type": "INITIAL_TERM"
+    }
+  ],
+  "totalPricing": [
+    {
+      "value": 100,
+      "valueType": "ABSOLUTE",
+      "type": "MONTHLY_CHARGE"
+    }
+  ],
+  "versionNumber": "1",
+  "details": [
+    {
+      "lineId": "1-NEYSNX123",
+      "parentLineId": null,
+      "rootLineId": "1-NEYSNX120",
+      "ibx": "AM1",
+      "cage": "DC2:01:001030",
+      "productDescription": "Smart Hands Support Plan",
+      "productType": "SMART_HANDS",
+      "productCode": "PS00002.PROD",
+      "productName": "Smart Hands Support Plan",
+      "assetizable": true,
+      "lineItemModified": false,
+      "quantity": 20,
+      "unitOfMeasure": "HRS",
+      "unitPricing": [
+        {
+          "value": 5,
+          "valueType": "ABSOLUTE",
+          "type": "ONE_TIME_CHARGE"
+        }
+      ],
+      "totalPricing": [
+        {
+          "value": 100,
+          "valueType": "ABSOLUTE",
+          "type": "ONE_TIME_CHARGE"
+        }
+      ],
+      "requestType": "ADD",
+      "additionalInfo": [
+        {
+          "key": "ASSET_ID",
+          "value": "4-89137987923"
+        }
+      ]
+    }
+  ]
 }

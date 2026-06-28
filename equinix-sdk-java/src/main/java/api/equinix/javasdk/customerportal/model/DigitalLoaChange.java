@@ -16,6 +16,13 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.LoaChangeStatus;
+import api.equinix.javasdk.customerportal.enums.LoaChangeType;
+import api.equinix.javasdk.customerportal.model.implementation.LoaChangeResult;
+import api.equinix.javasdk.customerportal.model.implementation.LoaLink;
+
+import java.util.List;
+
 /**
  * A change record applied to a Digital LOA document, from the Equinix Customer Portal diLOA v1 API.
  */
@@ -23,7 +30,21 @@ public interface DigitalLoaChange {
 
     String getUuid();
 
-    String getChangeType();
+    LoaChangeType getChangeType();
+
+    LoaChangeStatus getStatus();
 
     String getCreatedDateTime();
+
+    String getUpdatedDateTime();
+
+    String getData();
+
+    String getDescription();
+
+    String getHref();
+
+    List<LoaLink> getLinks();
+
+    LoaChangeResult getResult();
 }

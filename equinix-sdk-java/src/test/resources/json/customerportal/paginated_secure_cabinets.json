@@ -1,29 +1,58 @@
-{
-  "pagination": {
-    "offset": 0,
-    "limit": 20,
-    "total": 2
-  },
-  "data": [
-    {
-      "uuid": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-      "cabinetId": "SV5:01:0042",
-      "ibx": "SV5",
-      "cageId": "SV5:01:CAGE-A",
-      "status": "ACTIVE",
-      "lockType": "ELECTRONIC",
-      "accountNumber": "128745",
-      "accessCode": "884512"
+[
+  {
+    "ibx": "SV5",
+    "maximumNumberOfCabinetsToOrder": 10,
+    "minimumDrawCapacityPerCabinet": 1.0,
+    "maximumDrawCapacityPerCabinet": 17.3,
+    "cabinetDimensions": {
+      "width": {
+        "value": 600,
+        "unit": "MILLIMETER"
+      },
+      "depth": {
+        "value": 1200,
+        "unit": "MILLIMETER"
+      },
+      "height": {
+        "value": 2200,
+        "unit": "MILLIMETER"
+      }
     },
-    {
-      "uuid": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-      "cabinetId": "DC11:03:0118",
-      "ibx": "DC11",
-      "cageId": "DC11:03:CAGE-C",
-      "status": "PENDING",
-      "lockType": "COMBINATION",
-      "accountNumber": "128745",
-      "accessCode": "551209"
+    "acCircuitConfiguration": {
+      "voltage": 220,
+      "soldAmperage": 8.9,
+      "phase": "SINGLE",
+      "receptacle": "IEC 60309 1P+N+E"
+    },
+    "pduConfiguration": {
+      "model": "UU30009L"
+    },
+    "fabricPortSpeed": "SPEED_1_GBPS"
+  },
+  {
+    "ibx": "DC11",
+    "maximumNumberOfCabinetsToOrder": 2,
+    "minimumDrawCapacityPerCabinet": 5.0,
+    "maximumDrawCapacityPerCabinet": 10.0,
+    "cabinetDimensions": {
+      "width": {
+        "value": 700,
+        "unit": "MILLIMETER"
+      },
+      "depth": {
+        "value": 1070,
+        "unit": "MILLIMETER"
+      },
+      "height": {
+        "value": 2000,
+        "unit": "MILLIMETER"
+      }
+    },
+    "acCircuitConfiguration": {
+      "voltage": 208,
+      "soldAmperage": 16.0,
+      "phase": "SINGLE",
+      "receptacle": "NEMA L6-30"
     }
-  ]
-}
+  }
+]

@@ -20,61 +20,137 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
- * A contact on a colocation v2 order (cross-connect, shipment, work visit, trouble ticket).
+ * A contact on a colocation v2 order (cross-connect, shipment, work visit) or a v2 trouble
+ * ticket / support case. The {@code contacts} array entries are modelled by the spec as an
+ * {@code anyOf} of two variants:
  *
- * <p>Registered customer-portal users are referenced by {@code userName} and a {@code contactType}
- * (e.g. {@code NOTIFICATION}, {@code TECHNICAL}, {@code ORDERING}); non-registered contacts may be
- * supplied inline with {@code name}, {@code email} and {@code phone}.</p>
+ * <ul>
+ *   <li><b>Registered user</b> ({@code ContactRequestRegisteredUser}): {@code registeredUsers[]} +
+ *       {@code type} ({@code NOTIFICATION}, {@code TECHNICAL}, or {@code ORDERING} on support
+ *       cases), with optional {@code availability} and {@code timezone}.</li>
+ *   <li><b>Non-registered contact</b> ({@code ContactRequestNonRegisteredUser}): {@code firstName},
+ *       {@code lastName}, {@code type} ({@code TECHNICAL}), {@code details[]} of
+ *       {@code {type, value}} (where {@code type} is {@code PHONE}, {@code MOBILE} or
+ *       {@code EMAIL}), with optional {@code availability} and {@code timezone}.</li>
+ * </ul>
+ *
+ * <p>Use {@link #registered(String, java.util.List)} / {@link #registered(String, java.util.List,
+ * String, String)} for the first variant and {@link #nonRegistered(String, String, java.util.List)}
+ * / {@link #nonRegistered(String, String, java.util.List, String, String)} for the second. Only the
+ * fields relevant to the chosen variant are serialized.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderContact {
 
-    @JsonProperty("contactType")
-    private final String contactType;
+    @JsonProperty("registeredUsers")
+    private final List<String> registeredUsers;
 
-    @JsonProperty("userName")
-    private final String userName;
+    @JsonProperty("firstName")
+    private final String firstName;
 
-    @JsonProperty("name")
-    private final String name;
+    @JsonProperty("lastName")
+    private final String lastName;
 
-    @JsonProperty("email")
-    private final String email;
+    @JsonProperty("type")
+    private final String type;
 
-    @JsonProperty("phone")
-    private final String phone;
+    @JsonProperty("availability")
+    private final String availability;
 
-    private OrderContact(String contactType, String userName, String name, String email, String phone) {
-        this.contactType = contactType;
-        this.userName = userName;
-        this.name = name;
-        this.email = email;
-        this.phone = phone;
+    @JsonProperty("timezone")
+    private final String timezone;
+
+    @JsonProperty("details")
+    private final List<ContactDetail> details;
+
+    private OrderContact(List<String> registeredUsers, String firstName, String lastName, String type,
+                         String availability, String timezone, List<ContactDetail> details) {
+        this.registeredUsers = registeredUsers;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.type = type;
+        this.availability = availability;
+        this.timezone = timezone;
+        this.details = details;
     }
 
     /**
-     * Builds a registered-user contact referenced by user name.
+     * Builds a registered-user contact ({@code ContactRequestRegisteredUser}).
      *
-     * @param contactType the contact type (e.g. {@code NOTIFICATION})
-     * @param userName    the registered customer-portal user name
+     * @param type            the contact type (e.g. {@code NOTIFICATION}, {@code TECHNICAL})
+     * @param registeredUsers the registered customer-portal user names
      * @return the contact
      */
-    public static OrderContact registered(String contactType, String userName) {
-        return new OrderContact(contactType, userName, null, null, null);
+    public static OrderContact registered(String type, List<String> registeredUsers) {
+        return new OrderContact(registeredUsers, null, null, type, null, null, null);
     }
 
     /**
-     * Builds a non-registered contact specified inline.
+     * Builds a registered-user contact ({@code ContactRequestRegisteredUser}) with availability and
+     * timezone.
      *
-     * @param contactType the contact type
-     * @param name        the contact's full name
-     * @param email       the contact's email
-     * @param phone       the contact's phone number
+     * @param type            the contact type (e.g. {@code NOTIFICATION}, {@code TECHNICAL})
+     * @param registeredUsers the registered customer-portal user names
+     * @param availability    the contact's availability ({@code WORK_HOURS} or {@code ANYTIME})
+     * @param timezone        the contact's timezone
      * @return the contact
      */
-    public static OrderContact nonRegistered(String contactType, String name, String email, String phone) {
-        return new OrderContact(contactType, null, name, email, phone);
+    public static OrderContact registered(String type, List<String> registeredUsers, String availability, String timezone) {
+        return new OrderContact(registeredUsers, null, null, type, availability, timezone, null);
+    }
+
+    /**
+     * Builds a non-registered contact ({@code ContactRequestNonRegisteredUser}).
+     *
+     * @param firstName the contact's first name
+     * @param lastName  the contact's last name
+     * @param details   the contact details ({@code {type, value}} entries; email is required)
+     * @return the contact
+     */
+    public static OrderContact nonRegistered(String firstName, String lastName, List<ContactDetail> details) {
+        return new OrderContact(null, firstName, lastName, "TECHNICAL", null, null, details);
+    }
+
+    /**
+     * Builds a non-registered contact ({@code ContactRequestNonRegisteredUser}) with availability
+     * and timezone.
+     *
+     * @param firstName    the contact's first name
+     * @param lastName     the contact's last name
+     * @param details      the contact details ({@code {type, value}} entries; email is required)
+     * @param availability the contact's availability ({@code WORK_HOURS} or {@code ANYTIME})
+     * @param timezone     the contact's timezone
+     * @return the contact
+     */
+    public static OrderContact nonRegistered(String firstName, String lastName, List<ContactDetail> details,
+                                             String availability, String timezone) {
+        return new OrderContact(null, firstName, lastName, "TECHNICAL", availability, timezone, details);
+    }
+
+    /**
+     * A single contact-detail entry ({@code ContactsRequestDetails}) for a non-registered contact.
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class ContactDetail {
+
+        @JsonProperty("type")
+        private final String type;
+
+        @JsonProperty("value")
+        private final String value;
+
+        /**
+         * @param type  the detail type ({@code PHONE}, {@code MOBILE} or {@code EMAIL})
+         * @param value the detail value (email address, or phone number prefixed with country code)
+         */
+        public ContactDetail(String type, String value) {
+            this.type = type;
+            this.value = value;
+        }
     }
 }

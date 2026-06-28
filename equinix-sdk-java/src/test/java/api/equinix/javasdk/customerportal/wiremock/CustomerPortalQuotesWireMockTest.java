@@ -43,10 +43,10 @@ class CustomerPortalQuotesWireMockTest extends WireMockTestBase {
             stubSingleton(wireMock, "/v2/quotes/.*",
                     "/json/customerportal/quote_response.json");
 
-            Quote quote = customerPortal.quotes().getByUuid("d0e1f2a3-b4c5-4d6e-7f80-910213243546");
+            Quote quote = customerPortal.quotes().getByUuid("1-1234567891011");
             assertNotNull(quote);
-            assertEquals("d0e1f2a3-b4c5-4d6e-7f80-910213243546", quote.getUuid());
-            assertEquals("QT-2024-0019873", quote.getQuoteNumber());
+            assertEquals("1-1234567891011", quote.getQuoteId());
+            assertEquals("AAA Corporation Ltd", quote.getAccountName());
         }
 
         @Test

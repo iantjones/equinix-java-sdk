@@ -327,6 +327,13 @@
             "httpMethod": "GET",
             "requestUri": "{$reportId}"
           },
+          "DeleteReports": {
+            "httpMethod": "DELETE"
+          },
+          "DownloadReports": {
+            "httpMethod": "GET",
+            "requestUri": "files"
+          },
           "GetScheduledReports": {
             "httpMethod": "GET",
             "requestUri": "scheduler"
@@ -335,9 +342,29 @@
             "httpMethod": "POST",
             "requestUri": "scheduler"
           },
+          "DeleteScheduledReports": {
+            "httpMethod": "DELETE",
+            "requestUri": "scheduler"
+          },
+          "GetScheduledReport": {
+            "httpMethod": "GET",
+            "requestUri": "scheduler/{$scheduledId}"
+          },
+          "UpdateScheduledReport": {
+            "httpMethod": "PUT",
+            "requestUri": "scheduler/{$scheduledId}"
+          },
           "GenerateReport": {
             "httpMethod": "POST",
             "requestUri": "scheduler/{$scheduledId}/report"
+          },
+          "ListReportDefinitions": {
+            "httpMethod": "GET",
+            "requestUri": "definitions"
+          },
+          "GetReportDefinition": {
+            "httpMethod": "GET",
+            "requestUri": "definitions/{$reportName}"
           },
           "DownloadReport": {
             "httpMethod": "GET",
@@ -382,6 +409,15 @@
             "httpMethod": "POST",
             "overrideRootUri": true,
             "requestUri": "support/v1/tickets/{$caseNumber}/notes"
+          },
+          "DownloadSupportCaseAttachment": {
+            "httpMethod": "GET",
+            "requestUri": "attachment/download/{$caseId}/{$attachmentId}"
+          },
+          "GetSupportCaseEmailDetails": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "support/v1/tickets/emailDetails/{$emailId}/caseNumber/{$caseNumber}"
           }
         }
       },
@@ -433,6 +469,31 @@
           "GetDigitalLoaChange": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}/changes/{$changeUuid}"
+          },
+          "FindDigitalLoaOrganizations": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "diloa/v1/organizations"
+          },
+          "GetDigitalLoaPrivateBetaAccess": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "diloa/v1/privateBetaAccess"
+          },
+          "CreateDigitalLoaPrivateBetaAccess": {
+            "httpMethod": "POST",
+            "overrideRootUri": true,
+            "requestUri": "diloa/v1/privateBetaAccess"
+          },
+          "GetDigitalLoaBetaTermsAgreement": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "diloa/v1/betaTermsAgreement"
+          },
+          "UpdateDigitalLoaBetaTermsAgreement": {
+            "httpMethod": "PUT",
+            "overrideRootUri": true,
+            "requestUri": "diloa/v1/betaTermsAgreement"
           }
         }
       },

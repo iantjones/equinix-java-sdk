@@ -23,6 +23,7 @@ import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.customerportal.model.implementation.BillingContact;
 import api.equinix.javasdk.customerportal.model.implementation.CustomerDetail;
 import api.equinix.javasdk.customerportal.model.implementation.PaymentInstructions;
+import api.equinix.javasdk.customerportal.model.implementation.PriorAdjustmentInfo;
 import api.equinix.javasdk.customerportal.model.implementation.TaxInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,6 +41,9 @@ public class InvoiceSummaryJson {
 
     @JsonProperty("transactionId")
     private String transactionId;
+
+    @JsonProperty("businessLegalEntity")
+    private String businessLegalEntity;
 
     @JsonProperty("transactionType")
     private TransactionType transactionType;
@@ -90,4 +94,10 @@ public class InvoiceSummaryJson {
 
     @JsonProperty("taxInfo")
     private List<TaxInfo> taxInfo;
+
+    @JsonProperty("priorAdjustmentInfo")
+    private List<PriorAdjustmentInfo> priorAdjustmentInfo;
+
+    @JsonProperty("totalPriorAdjustmentAmount")
+    private BigDecimal totalPriorAdjustmentAmount;
 }

@@ -24,6 +24,7 @@ import api.equinix.javasdk.customerportal.client.Reports;
 import api.equinix.javasdk.customerportal.client.internal.ReportClient;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.ScheduledReport;
+import api.equinix.javasdk.customerportal.model.json.ReportDefinitionJson;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
 
@@ -50,19 +51,47 @@ public class ReportsImpl implements Reports {
         return this.serviceClient.getReportById(reportId);
     }
 
+    public boolean deleteReports(List<String> reportIds) {
+        return this.serviceClient.deleteReports(reportIds);
+    }
+
+    public byte[] downloadReports(List<String> reportIds) {
+        return this.serviceClient.downloadReports(reportIds);
+    }
+
+    public byte[] downloadReport(String reportId) {
+        return this.serviceClient.downloadReport(reportId);
+    }
+
     public List<? extends ScheduledReport> getScheduledReports() {
         return this.serviceClient.getScheduledReports();
+    }
+
+    public ScheduledReport getScheduledReport(String scheduledId) {
+        return this.serviceClient.getScheduledReport(scheduledId);
     }
 
     public ScheduledReport scheduleReport(ScheduleReportRequest request) {
         return this.serviceClient.scheduleReport(request);
     }
 
+    public ScheduledReport updateScheduledReport(String scheduledId, ScheduleReportRequest request) {
+        return this.serviceClient.updateScheduledReport(scheduledId, request);
+    }
+
+    public boolean deleteScheduledReports(List<String> scheduledIds) {
+        return this.serviceClient.deleteScheduledReports(scheduledIds);
+    }
+
     public Report generateReport(String scheduledId) {
         return this.serviceClient.generateReport(scheduledId);
     }
 
-    public byte[] downloadReport(String reportId) {
-        return this.serviceClient.downloadReport(reportId);
+    public List<ReportDefinitionJson> getReportDefinitions() {
+        return this.serviceClient.getReportDefinitions();
+    }
+
+    public ReportDefinitionJson getReportDefinition(String reportName) {
+        return this.serviceClient.getReportDefinition(reportName);
     }
 }

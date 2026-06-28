@@ -16,15 +16,14 @@
 
 /**
  * Customer Portal enumerations for the Equinix Java SDK. Defines typed constants
- * for order types ({@link api.equinix.javasdk.customerportal.enums.OrderType}),
- * order statuses ({@link api.equinix.javasdk.customerportal.enums.OrderStatus}),
- * ticket priorities ({@link api.equinix.javasdk.customerportal.enums.TicketPriority}),
+ * for order statuses ({@link api.equinix.javasdk.customerportal.enums.OrderStatus}),
+ * quote statuses ({@link api.equinix.javasdk.customerportal.enums.QuoteStatus}),
  * ticket statuses ({@link api.equinix.javasdk.customerportal.enums.TicketStatus}),
  * shipment statuses ({@link api.equinix.javasdk.customerportal.enums.ShipmentStatus}),
  * cross-connect types, smart hands types, work visit statuses, case priorities,
  * asset types, and other Customer Portal domain values.
  *
- * @see api.equinix.javasdk.customerportal.enums.OrderType
+ * @see api.equinix.javasdk.customerportal.enums.OrderStatus
  * @see api.equinix.javasdk.customerportal.enums.TicketStatus
  */
 package api.equinix.javasdk.customerportal.enums;

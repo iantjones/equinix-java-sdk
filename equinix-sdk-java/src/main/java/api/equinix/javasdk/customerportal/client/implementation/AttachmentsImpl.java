@@ -22,9 +22,9 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Attachments;
 import api.equinix.javasdk.customerportal.client.internal.AttachmentClient;
+import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
 import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
-import api.equinix.javasdk.customerportal.model.json.creators.AttachmentOperator;
 import api.equinix.javasdk.customerportal.model.wrappers.AttachmentWrapper;
 
 public class AttachmentsImpl implements Attachments {
@@ -53,7 +53,8 @@ public class AttachmentsImpl implements Attachments {
         return this.serviceClient.download(attachmentId);
     }
 
-    public AttachmentOperator.AttachmentBuilder define() {
-        return new AttachmentOperator(this.serviceClient).create();
+    public Attachment upload(byte[] fileBytes, String fileName, AttachmentPurpose purpose) {
+        AttachmentJson attachmentJson = this.serviceClient.upload(fileBytes, fileName, purpose);
+        return new AttachmentWrapper(attachmentJson, this.serviceClient);
     }
 }

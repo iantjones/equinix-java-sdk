@@ -3,9 +3,13 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
 import org.junit.jupiter.api.*;
 
+import java.nio.charset.StandardCharsets;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,8 +49,11 @@ class CustomerPortalAttachmentsWireMockTest extends WireMockTestBase {
 
             Attachment attachment = customerPortal.attachments().getByUuid("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b");
             assertNotNull(attachment);
-            assertEquals("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b", attachment.getUuid());
-            assertEquals("rack-diagram.pdf", attachment.getFileName());
+            assertEquals("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b", attachment.getAttachmentId());
+            assertEquals("rack-diagram.pdf", attachment.getAttachmentName());
+            assertEquals("application/pdf", attachment.getAttachmentType());
+            assertEquals(482310L, attachment.getAttachmentSize());
+            assertEquals("jane.doe@example.com", attachment.getCreatedBy());
         }
 
         @Test
@@ -57,6 +64,35 @@ class CustomerPortalAttachmentsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.attachments().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("upload()")
+    class Upload {
+
+        @Test
+        @DisplayName("posts multipart/form-data with purpose query param")
+        void uploadsMultipart() {
+            wireMock.stubFor(post(urlPathEqualTo("/v1/attachments/file"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/customerportal/attachment_response.json"))));
+
+            byte[] fileBytes = "loa-document-contents".getBytes(StandardCharsets.UTF_8);
+            Attachment attachment = customerPortal.attachments().upload(fileBytes, "loa.pdf", AttachmentPurpose.LOA);
+
+            assertNotNull(attachment);
+            assertEquals("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b", attachment.getAttachmentId());
+
+            // Verify the request was multipart with the file part and purpose query param.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/attachments/file"))
+                    .withQueryParam("purpose", equalTo("LOA"))
+                    .withHeader("content-type", containing("multipart/form-data"))
+                    .withHeader("content-type", containing("boundary="))
+                    .withRequestBody(containing("name=\"uploadFile\""))
+                    .withRequestBody(containing("filename=\"loa.pdf\"")));
         }
     }
 

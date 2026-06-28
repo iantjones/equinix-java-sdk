@@ -38,12 +38,33 @@ public interface BillingAccounts {
     PaginatedList<BillingAccount> summaries();
 
     /**
+     * Pages over a summary of all the billing accounts that the current user has permission to view,
+     * sorted by the supplied sort specifier.
+     *
+     * @param sorts the sort specifier, e.g. {@code "ACCOUNT_NUMBER"} ascending or
+     *              {@code "-ACCOUNT_NUMBER"} descending (may be {@code null})
+     * @return a paginated list of billing account summaries
+     */
+    PaginatedList<BillingAccount> summaries(String sorts);
+
+    /**
      * Returns the billing summary of a single account by its account number.
      *
      * @param accountNumber the billing account number
      * @return the billing account summary
      */
     BillingAccount getByAccountNumber(String accountNumber);
+
+    /**
+     * Returns the billing detail of a single account by its account number, restricting the
+     * available finance documents to the supplied months.
+     *
+     * @param accountNumber the billing account number
+     * @param months        the months to pull finance documents for, as a comma-separated list of
+     *                      ISO local dates (e.g. {@code "2017-12-03,2018-01-03"}); may be {@code null}
+     * @return the billing account detail
+     */
+    BillingAccount getByAccountNumber(String accountNumber, String months);
 
     /**
      * Downloads a specific invoice document for an account by its invoice and document identifiers.

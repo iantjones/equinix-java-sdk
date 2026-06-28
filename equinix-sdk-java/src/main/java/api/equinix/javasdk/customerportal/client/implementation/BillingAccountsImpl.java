@@ -42,8 +42,18 @@ public class BillingAccountsImpl implements BillingAccounts {
         return new PaginatedList<>(accountList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
+    public PaginatedList<BillingAccount> summaries(String sorts) {
+        Page<BillingAccount, BillingAccountJson> responsePage = this.serviceClient.summaries(sorts);
+        PaginatedList<BillingAccount> accountList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        return new PaginatedList<>(accountList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
     public BillingAccount getByAccountNumber(String accountNumber) {
         return this.serviceClient.getByAccountNumber(accountNumber);
+    }
+
+    public BillingAccount getByAccountNumber(String accountNumber, String months) {
+        return this.serviceClient.getByAccountNumber(accountNumber, months);
     }
 
     public byte[] downloadInvoiceDocument(String accountNumber, String invoiceId, String documentId) {

@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.BillingAccountStatus;
+
 /**
  * A billing account, as returned by the Platform Billing Account v2 (BAS) API.
  */
@@ -31,7 +33,17 @@ public interface BillingAccountV2 {
 
     String getBillingCountry();
 
-    String getAccountStatus();
+    BillingAccountStatus getAccountStatus();
+
+    Boolean getIsGlobal();
+
+    Boolean getIsPoRequired();
+
+    Boolean getIsSignatureRequired();
+
+    Boolean getIsReseller();
+
+    Boolean getIsSubCustomer();
 
     String getCreatedDatetime();
 

@@ -56,7 +56,8 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
             Order order = customerPortal.orders().getByUuid(ORDER_ID);
 
             assertNotNull(order);
-            assertEquals("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", order.getUuid());
+            assertEquals(ORDER_ID, order.getOrderId());
+            assertEquals(api.equinix.javasdk.customerportal.enums.OrderStatus.IN_PROGRESS, order.getStatus());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID)));
         }
 

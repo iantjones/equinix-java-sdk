@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * JSON model for a Report Center {@code scheduledReport}.
@@ -34,12 +33,48 @@ public class ScheduledReportJson implements ScheduledReport {
     @JsonProperty("scheduledId")
     private String scheduledId;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("reportName")
+    private String reportName;
 
     @JsonProperty("scheduleType")
     private String scheduleType;
 
+    @JsonProperty("period")
+    private String period;
+
+    @JsonProperty("createdBy")
+    private String createdBy;
+
+    @JsonProperty("createdDate")
+    private String createdDate;
+
+    @JsonProperty("lastAttemptedDate")
+    private String lastAttemptedDate;
+
+    @JsonProperty("customerOrganizationId")
+    private Integer customerOrganizationId;
+
+    @JsonProperty("forOrg")
+    private Integer forOrg;
+
+    @JsonProperty("forUser")
+    private String forUser;
+
+    @JsonProperty("lastModifiedBy")
+    private String lastModifiedBy;
+
+    @JsonProperty("lastModifiedDate")
+    private String lastModifiedDate;
+
+    @JsonProperty("numberOfFailedAttempts")
+    private Integer numberOfFailedAttempts;
+
+    @JsonProperty("status")
+    private String status;
+
     @JsonProperty("parameters")
-    private List<Map<String, Object>> parameters;
+    private List<ReportParameterJson> parameters;
+
+    @JsonProperty("reports")
+    private List<ReportJson> reports;
 }

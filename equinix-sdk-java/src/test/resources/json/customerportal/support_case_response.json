@@ -1,10 +1,80 @@
 {
-  "uuid": "c9d0e1f2-a3b4-4c5d-6e7f-809102132435",
-  "subject": "Request for additional power capacity in cabinet C-14",
-  "description": "Requesting upgrade from 10kW to 15kW power allocation for cabinet C-14 in cage SV5:01:000ABC to support new server deployment.",
-  "status": "OPEN",
-  "priority": "MEDIUM",
-  "caseNumber": "CS-2024-0042156",
-  "createdDate": "2024-11-09T13:00:00.000Z",
-  "updatedDate": "2024-11-11T10:25:33.000Z"
+  "id": "11150929",
+  "accountNumber": "182389736",
+  "accountName": "VjT Existing Reseller New BA",
+  "customerReferenceId": "REF-44211",
+  "channel": "PORTAL",
+  "orderId": "1-204976070710",
+  "status": "IN_PROGRESS",
+  "createdDateTime": "2024-11-09T13:00:00Z",
+  "location": {
+    "ibx": ["SV5", "DA3"]
+  },
+  "contacts": [
+    {
+      "firstName": "John",
+      "lastName": "Don",
+      "type": "NOTIFICATION",
+      "details": [
+        {
+          "type": "EMAIL",
+          "value": "SomeContact@email.com"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "id": "note-1",
+      "createdDateTime": "2024-11-10T08:00:00Z",
+      "text": "This is a note.",
+      "type": "RESOLUTION_NOTES"
+    }
+  ],
+  "attachments": [
+    {
+      "id": "c77c5f58-a7ea-4e88-9fc4-1a2900027425",
+      "name": "error-log",
+      "source": "CUSTOMER"
+    }
+  ],
+  "email": [
+    {
+      "id": "02s7z00000D30lZAAR",
+      "createdDateTime": "2024-11-10T09:00:00Z",
+      "subject": "Issue with device",
+      "author_name": "Ali bin Carud",
+      "FromAddress": "abc@equinix.com",
+      "ToAddress": "xyz@example.com"
+    }
+  ],
+  "otherDetails": {
+    "category": "Trouble Services",
+    "subCategory": "Incident",
+    "description": "Sample description.",
+    "statusHistory": [
+      {
+        "status": "SUBMITTED",
+        "createdDate": "2024-11-09T13:00:00Z"
+      }
+    ],
+    "purchaseOrders": ["PO.1234"],
+    "products": ["SMART_HANDS"],
+    "details": [
+      {
+        "lineId": "1-2RCPXBUV",
+        "productType": "SMART_HANDS",
+        "productName": "Other",
+        "status": "SUBMITTED",
+        "ibx": "DA3",
+        "cage": "DA3:01:010315",
+        "modifiable": false,
+        "cancellable": true
+      }
+    ],
+    "modifiable": false,
+    "reOpen": false,
+    "cancellable": true,
+    "respond": true
+  }
 }

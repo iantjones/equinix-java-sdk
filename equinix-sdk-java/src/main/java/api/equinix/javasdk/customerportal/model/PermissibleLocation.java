@@ -16,8 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.model.implementation.IbxDetail;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * A location the current user may filter order history by: an IBX and its permitted cages.
@@ -27,9 +28,9 @@ public interface PermissibleLocation {
     /**
      * Returns the IBX detail (code, metro, region, country, city, state, address, postalCode).
      *
-     * @return the IBX detail map
+     * @return the IBX detail
      */
-    Map<String, Object> getIbx();
+    IbxDetail getIbx();
 
     /**
      * Returns the cage ids permitted for the current user at this IBX.

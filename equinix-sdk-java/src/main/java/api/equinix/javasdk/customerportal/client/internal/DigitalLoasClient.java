@@ -16,10 +16,14 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
+import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
+import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
+import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -43,4 +47,14 @@ public interface DigitalLoasClient {
     List<? extends DigitalLoaChange> findChangesByLoaUuid(String uuid);
 
     DigitalLoaChange findChangeByUuid(String uuid, String changeUuid);
+
+    List<? extends LoaCustomerOrganization> findOrganizations();
+
+    PrivateBetaPermission isPrivateBetaAllowed();
+
+    Boolean createPrivateBetaAccessRequest(PrivateBetaAccessRequest request);
+
+    BetaTermsAgreement getBetaTermsAgreement();
+
+    BetaTermsAgreement updateBetaTermsAgreement(Boolean agreementAccepted);
 }

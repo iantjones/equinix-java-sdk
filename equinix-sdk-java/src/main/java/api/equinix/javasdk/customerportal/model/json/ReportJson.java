@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.FileType;
 import api.equinix.javasdk.customerportal.model.Report;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,30 +25,75 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for a Report Center report.
+ *
+ * <p>Carries the union of the {@code downloadable-report} (list view, {@code getReports}) and
+ * {@code report} (detail view, {@code getReportById}) schemas, so the same class deserializes both
+ * operations. Fields absent from a given response remain {@code null}.</p>
+ */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReportJson implements Report {
 
     @Getter static TypeReference<List<ReportJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("reportId")
+    private String reportId;
+
+    @JsonProperty("scheduledId")
+    private String scheduledId;
 
     @JsonProperty("reportName")
     private String reportName;
 
-    @JsonProperty("reportType")
-    private String reportType;
+    @JsonProperty("fileName")
+    private String fileName;
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("fileType")
+    private FileType fileType;
 
-    @JsonProperty("accountNumber")
-    private String accountNumber;
+    @JsonProperty("fileSize")
+    private Long fileSize;
+
+    @JsonProperty("createdFor")
+    private String createdFor;
+
+    @JsonProperty("requestedDate")
+    private String requestedDate;
 
     @JsonProperty("generatedDate")
     private String generatedDate;
 
-    @JsonProperty("fileFormat")
-    private String fileFormat;
+    @JsonProperty("status")
+    private String status;
+
+    @JsonProperty("numberOfDownloads")
+    private Integer numberOfDownloads;
+
+    // ---- detail view ({@code report}) fields ----
+
+    @JsonProperty("createdBy")
+    private String createdBy;
+
+    @JsonProperty("createdDate")
+    private String createdDate;
+
+    @JsonProperty("startTime")
+    private String startTime;
+
+    @JsonProperty("endTime")
+    private String endTime;
+
+    @JsonProperty("errorMessage")
+    private String errorMessage;
+
+    @JsonProperty("location")
+    private String location;
+
+    @JsonProperty("numberOfAttempts")
+    private Integer numberOfAttempts;
+
+    @JsonProperty("parameters")
+    private List<ReportParameterJson> parameters;
 }

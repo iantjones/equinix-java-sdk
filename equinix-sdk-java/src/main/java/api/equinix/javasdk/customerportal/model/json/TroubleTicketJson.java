@@ -16,67 +16,64 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.customerportal.enums.TicketCategory;
-import api.equinix.javasdk.customerportal.enums.TicketPriority;
 import api.equinix.javasdk.customerportal.enums.TicketStatus;
-import api.equinix.javasdk.customerportal.model.TroubleTicket;
+import api.equinix.javasdk.customerportal.model.implementation.TicketAttachment;
+import api.equinix.javasdk.customerportal.model.implementation.TicketContact;
+import api.equinix.javasdk.customerportal.model.implementation.TicketNote;
+import api.equinix.javasdk.customerportal.model.implementation.TicketResolution;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * A trouble ticket as returned by the Tickets v2 API ({@code Tickets}). A record of an issue in
+ * the ticket management system, identified by {@link #getId()}.
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TroubleTicketJson {
 
-    @Getter static TypeReference<List<TroubleTicketJson>> listTypeRef = new TypeReference<>() {};
-
-    @JsonProperty("uuid")
-    private String uuid;
-
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("ticketNumber")
-    private String ticketNumber;
+    @JsonProperty("id")
+    private String id;
 
     @JsonProperty("category")
-    private TicketCategory category;
+    private String category;
 
-    @JsonProperty("status")
-    private TicketStatus status;
-
-    @JsonProperty("priority")
-    private TicketPriority priority;
-
-    @JsonProperty("subject")
-    private String subject;
+    @JsonProperty("subCategory")
+    private String subCategory;
 
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("ibxCode")
-    private String ibxCode;
+    @JsonProperty("primaryId")
+    private String primaryId;
 
-    @JsonProperty("accountNumber")
-    private String accountNumber;
+    @JsonProperty("secondaryId")
+    private String secondaryId;
 
-    @JsonProperty("requestorName")
-    private String requestorName;
+    @JsonProperty("customerReferenceId")
+    private String customerReferenceId;
 
-    @JsonProperty("requestorEmail")
-    private String requestorEmail;
+    @JsonProperty("occurredDateTime")
+    private String occurredDateTime;
 
-    @JsonProperty("assigneeName")
-    private String assigneeName;
+    @JsonProperty("resolutionDateTime")
+    private String resolutionDateTime;
 
-    @JsonProperty("createdDate")
-    private String createdDate;
+    @JsonProperty("status")
+    private TicketStatus status;
 
-    @JsonProperty("lastUpdatedDate")
-    private String lastUpdatedDate;
+    @JsonProperty("resolutions")
+    private List<TicketResolution> resolutions;
 
-    @JsonProperty("resolvedDate")
-    private String resolvedDate;
+    @JsonProperty("notes")
+    private List<TicketNote> notes;
+
+    @JsonProperty("attachments")
+    private List<TicketAttachment> attachments;
+
+    @JsonProperty("contacts")
+    private List<TicketContact> contacts;
 }

@@ -1,0 +1,36 @@
+{
+  "scheduledId": "806f281c-6295-465e-bd41-04559d4d4960",
+  "reportName": "my_report",
+  "scheduleType": "WEEKLY",
+  "period": "30_DAYS",
+  "createdBy": "john.doe",
+  "createdDate": "2017-05-14T00:40:59.790Z",
+  "lastAttemptedDate": "2018-07-02T21:59:15.045Z",
+  "customerOrganizationId": 44010,
+  "forOrg": 28120,
+  "forUser": "john.user",
+  "lastModifiedBy": "john.doe",
+  "lastModifiedDate": "2017-07-02T21:59:15.045Z",
+  "numberOfFailedAttempts": 0,
+  "status": "ACTIVE",
+  "parameters": [
+    {
+      "name": "user_key",
+      "value": "143534,908373",
+      "type": "ARRAY",
+      "required": true
+    }
+  ],
+  "reports": [
+    {
+      "reportId": "71df1306-94f9-4cbd-b6b0-735098bf7f87",
+      "scheduledId": "806f281c-6295-465e-bd41-04559d4d4960",
+      "createdBy": "john.doe",
+      "createdDate": "2018-09-09T05:31:51.735Z",
+      "startTime": "2018-09-09T05:31:52.000Z",
+      "status": "SUCCESS",
+      "numberOfAttempts": 3,
+      "parameters": []
+    }
+  ]
+}

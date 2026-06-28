@@ -16,7 +16,13 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.NotificationCategory;
+import api.equinix.javasdk.customerportal.enums.NotificationProductType;
+import api.equinix.javasdk.customerportal.enums.NotificationStatus;
+import api.equinix.javasdk.customerportal.enums.NotificationType;
 import api.equinix.javasdk.customerportal.model.UnifiedNotification;
+import api.equinix.javasdk.customerportal.model.implementation.AdditionalInfo;
+import api.equinix.javasdk.customerportal.model.implementation.NotificationContact;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -34,20 +40,29 @@ public class UnifiedNotificationJson implements UnifiedNotification {
     private String notificationNumber;
 
     @JsonProperty("category")
-    private String category;
+    private NotificationCategory category;
 
     @JsonProperty("type")
-    private String type;
+    private NotificationType type;
+
+    @JsonProperty("productTypes")
+    private List<NotificationProductType> productTypes;
 
     @JsonProperty("summary")
     private String summary;
 
     @JsonProperty("status")
-    private String status;
+    private NotificationStatus status;
 
     @JsonProperty("createdDateTime")
     private String createdDateTime;
 
     @JsonProperty("ibxs")
     private List<String> ibxs;
+
+    @JsonProperty("contacts")
+    private List<NotificationContact> contacts;
+
+    @JsonProperty("additionalInfo")
+    private List<AdditionalInfo> additionalInfo;
 }

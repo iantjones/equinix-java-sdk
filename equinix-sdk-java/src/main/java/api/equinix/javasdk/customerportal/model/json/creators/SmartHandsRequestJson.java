@@ -46,6 +46,38 @@ public class SmartHandsRequestJson {
     @JsonProperty("schedule")
     private final ScheduleInfo schedule;
 
+    /**
+     * The per-type {@code serviceDetails} object whose shape varies by smart hands order type.
+     * Because the API exposes around a dozen distinct order types, each with its own
+     * {@code serviceDetails} schema, this is intentionally left as a free-form
+     * {@code Map<String, Object>} rather than modelled as typed classes; a map is an acceptable
+     * escape hatch here.
+     *
+     * <p>The required keys for each type are defined by the corresponding
+     * {@code *Request.serviceDetails} schema in the smarthands v1 spec. The order type maps to a
+     * spec schema (and to the {@code createXxx} client method / typed POST path) as follows:</p>
+     *
+     * <ul>
+     *     <li>{@code equipmentInstall} — {@code equipmentInstallRequest.serviceDetails} (required:
+     *     {@code deviceLocation}, {@code elevationDrawingAttached}, {@code installationPoint},
+     *     {@code installedEquipmentPhotoRequired}, {@code mountHardwareIncluded},
+     *     {@code patchDevices}, {@code powerItOn}, {@code scopeOfWork})</li>
+     *     <li>{@code cageCleanup} — {@code cageCleanupRequest.serviceDetails}</li>
+     *     <li>{@code cageEscort} — {@code cageEscortRequest.serviceDetails}</li>
+     *     <li>{@code shipmentUnpack} — {@code shipmentUnpackRequest.serviceDetails}</li>
+     *     <li>{@code cableRequest} — {@code cableRequestRequest.serviceDetails}</li>
+     *     <li>{@code locatePackage} — {@code locatePackageRequest.serviceDetails}</li>
+     *     <li>{@code moveJumperCable} — {@code moveJumperCableRequest.serviceDetails}</li>
+     *     <li>{@code runJumperCable} — {@code runJumperCableRequest.serviceDetails}</li>
+     *     <li>{@code patchCableInstall} — {@code patchCableInstallRequest.serviceDetails}</li>
+     *     <li>{@code patchCableRemoval} — {@code patchCableRemovalRequest.serviceDetails}</li>
+     *     <li>{@code picturesDocument} — {@code picturesDocumentRequest.serviceDetails}</li>
+     *     <li>{@code other} — {@code otherRequest.serviceDetails}</li>
+     * </ul>
+     *
+     * <p>Consult the smarthands v1 spec for the full set of properties and which are required for
+     * the specific type you are ordering.</p>
+     */
     @JsonProperty("serviceDetails")
     private final Map<String, Object> serviceDetails;
 

@@ -16,22 +16,19 @@
 
 package api.equinix.javasdk.customerportal.model.json.creators;
 
+import api.equinix.javasdk.customerportal.enums.ContractTerm;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-
-import java.util.Map;
 
 /**
  * Request body for a secure cabinet order
  * ({@code POST /securecabinet/v1/orders}, {@code OrderCreateRequest}).
  *
  * <p>{@code accountNumber}, {@code ibxCode}, {@code contractTerm} and {@code orderItem} are
- * required by the API. {@code contractTerm} is one of {@code TERM_24_MONTHS}, {@code TERM_36_MONTHS},
- * {@code TERM_48_MONTHS}, {@code TERM_60_MONTHS}. {@code orderItem} carries the cabinet
- * configuration ({@code drawCapacity}, {@code numberOfCabinets}, {@code fabricPort},
- * {@code cabinetDimensions}, {@code pdus}); its shape varies, so it is supplied as a free-form
- * map.</p>
+ * required by the API. {@code contractTerm} is a {@link ContractTerm} and {@code orderItem} is a
+ * typed {@link SecureCabinetOrderItem} carrying the cabinet configuration. The optional
+ * {@code technicalContact} is a typed {@link SecureCabinetContact}.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -44,10 +41,10 @@ public class SecureCabinetOrderRequest {
     private final String ibxCode;
 
     @JsonProperty("contractTerm")
-    private final String contractTerm;
+    private final ContractTerm contractTerm;
 
     @JsonProperty("orderItem")
-    private final Map<String, Object> orderItem;
+    private final SecureCabinetOrderItem orderItem;
 
     @JsonProperty("customerReference")
     private final String customerReference;
@@ -59,7 +56,7 @@ public class SecureCabinetOrderRequest {
     private final String purchaseOrderNumber;
 
     @JsonProperty("technicalContact")
-    private final Map<String, Object> technicalContact;
+    private final SecureCabinetContact technicalContact;
 
     private SecureCabinetOrderRequest(Builder builder) {
         this.accountNumber = builder.accountNumber;
@@ -81,22 +78,22 @@ public class SecureCabinetOrderRequest {
      * @param orderItem     the cabinet configuration (required)
      * @return a new builder
      */
-    public static Builder builder(String accountNumber, String ibxCode, String contractTerm,
-                                  Map<String, Object> orderItem) {
+    public static Builder builder(String accountNumber, String ibxCode, ContractTerm contractTerm,
+                                  SecureCabinetOrderItem orderItem) {
         return new Builder(accountNumber, ibxCode, contractTerm, orderItem);
     }
 
     public static class Builder {
         private final String accountNumber;
         private final String ibxCode;
-        private final String contractTerm;
-        private final Map<String, Object> orderItem;
+        private final ContractTerm contractTerm;
+        private final SecureCabinetOrderItem orderItem;
         private String customerReference;
         private String endCustomerName;
         private String purchaseOrderNumber;
-        private Map<String, Object> technicalContact;
+        private SecureCabinetContact technicalContact;
 
-        private Builder(String accountNumber, String ibxCode, String contractTerm, Map<String, Object> orderItem) {
+        private Builder(String accountNumber, String ibxCode, ContractTerm contractTerm, SecureCabinetOrderItem orderItem) {
             this.accountNumber = accountNumber;
             this.ibxCode = ibxCode;
             this.contractTerm = contractTerm;
@@ -118,7 +115,7 @@ public class SecureCabinetOrderRequest {
             return this;
         }
 
-        public Builder technicalContact(Map<String, Object> technicalContact) {
+        public Builder technicalContact(SecureCabinetContact technicalContact) {
             this.technicalContact = technicalContact;
             return this;
         }

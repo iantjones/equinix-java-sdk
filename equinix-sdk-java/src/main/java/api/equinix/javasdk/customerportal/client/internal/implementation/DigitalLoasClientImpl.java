@@ -22,13 +22,20 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.DigitalLoasClient;
+import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
+import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
+import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
+import api.equinix.javasdk.customerportal.model.json.BetaTermsAgreementJson;
 import api.equinix.javasdk.customerportal.model.json.DigitalLoaChangeJson;
 import api.equinix.javasdk.customerportal.model.json.DigitalLoaJson;
 import api.equinix.javasdk.customerportal.model.json.DigitalLoaSearchResponseJson;
+import api.equinix.javasdk.customerportal.model.json.LoaCustomerOrganizationJson;
+import api.equinix.javasdk.customerportal.model.json.PrivateBetaPermissionJson;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -80,5 +87,25 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
 
     public DigitalLoaChange findChangeByUuid(String uuid, String changeUuid) {
         return getAs("GetDigitalLoaChange", Map.of("uuid", uuid, "changeUuid", changeUuid), null, DigitalLoaChangeJson.class);
+    }
+
+    public List<? extends LoaCustomerOrganization> findOrganizations() {
+        return listAs("FindDigitalLoaOrganizations", null, null, LoaCustomerOrganizationJson.class);
+    }
+
+    public PrivateBetaPermission isPrivateBetaAllowed() {
+        return getAs("GetDigitalLoaPrivateBetaAccess", null, null, PrivateBetaPermissionJson.class);
+    }
+
+    public Boolean createPrivateBetaAccessRequest(PrivateBetaAccessRequest request) {
+        return booleanOp("CreateDigitalLoaPrivateBetaAccess", RequestType.SINGLE, null, null, request);
+    }
+
+    public BetaTermsAgreement getBetaTermsAgreement() {
+        return getAs("GetDigitalLoaBetaTermsAgreement", null, null, BetaTermsAgreementJson.class);
+    }
+
+    public BetaTermsAgreement updateBetaTermsAgreement(Boolean agreementAccepted) {
+        return postAs("UpdateDigitalLoaBetaTermsAgreement", Map.of("agreementAccepted", agreementAccepted), BetaTermsAgreementJson.class);
     }
 }

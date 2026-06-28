@@ -17,8 +17,8 @@
 package api.equinix.javasdk.customerportal.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
-import api.equinix.javasdk.customerportal.model.json.creators.AttachmentOperator;
 
 /**
  * Client interface for managing file attachments in the Equinix Customer Portal.
@@ -58,11 +58,16 @@ public interface Attachments {
     byte[] download(String attachmentId);
 
     /**
-     * Returns a builder for uploading a new attachment.
+     * Uploads a file as a new attachment.
      *
-     * <p>Maps to {@code POST /v1/attachments/file} ({@code createAttachment}).</p>
+     * <p>Maps to {@code POST /v1/attachments/file} ({@code createAttachment}). The file is sent as
+     * a {@code multipart/form-data} {@code uploadFile} part and the {@code purpose} is supplied as
+     * a query parameter.</p>
      *
-     * @return a new AttachmentBuilder instance
+     * @param fileBytes the raw file content (sent as the required {@code uploadFile} part)
+     * @param fileName  the file name to advertise for the uploaded file
+     * @param purpose   the purpose of the upload ({@code LOA} or {@code PO_DOCUMENT})
+     * @return the created attachment
      */
-    AttachmentOperator.AttachmentBuilder define();
+    Attachment upload(byte[] fileBytes, String fileName, AttachmentPurpose purpose);
 }

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.client;
 
+import api.equinix.javasdk.customerportal.model.EmailDetails;
 import api.equinix.javasdk.customerportal.model.SupportCase;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCancelRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCreateRequest;
@@ -36,7 +37,7 @@ public interface SupportCases {
      * Creates a trouble ticket / case.
      *
      * @param request the ticket create request body
-     * @return the created case or order number (parsed from the {@code Location} response header)
+     * @return the created case or order number (the {@code id} of the {@code TicketResponse} body)
      */
     String create(SupportCaseCreateRequest request);
 
@@ -74,4 +75,26 @@ public interface SupportCases {
      * @return {@code true} if the note was added successfully
      */
     Boolean addNotesByCaseNumber(String caseNumber, SupportCaseNoteRequest request);
+
+    /**
+     * Downloads the binary content of an attachment on a support case.
+     *
+     * <p>Maps to {@code GET /support/v2/tickets/attachment/download/{caseId}/{attachmentId}}.</p>
+     *
+     * @param caseId       the case or order number the attachment belongs to
+     * @param attachmentId the attachment id
+     * @return the raw attachment bytes
+     */
+    byte[] downloadAttachment(String caseId, String attachmentId);
+
+    /**
+     * Retrieves the full details of a single email associated with a support case.
+     *
+     * <p>Maps to {@code GET /support/v1/tickets/emailDetails/{emailId}/caseNumber/{caseNumber}}.</p>
+     *
+     * @param emailId    the email id
+     * @param caseNumber the case number the email belongs to
+     * @return the email details
+     */
+    EmailDetails getEmailDetails(String emailId, String caseNumber);
 }

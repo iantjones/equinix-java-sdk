@@ -1,0 +1,25 @@
+{
+  "reportId": "8f204c59-f70f-437b-92d5-dbbde2932de5",
+  "scheduledId": "886fc5de-6304-46c7-902c-d946c656c169",
+  "reportName": "Power Usage",
+  "fileName": "power-usage.xls",
+  "fileType": "XLS",
+  "fileSize": 95806395,
+  "createdFor": "john.doe",
+  "requestedDate": "2024-08-28T13:34:33.735Z",
+  "generatedDate": "2024-09-19T23:25:35.305Z",
+  "status": "SUCCESS",
+  "numberOfDownloads": 1,
+  "createdBy": "john.doe",
+  "createdDate": "2024-08-28T13:00:00.000Z",
+  "startTime": "2024-08-28T13:30:00.000Z",
+  "endTime": "2024-08-28T13:34:33.735Z",
+  "numberOfAttempts": 1,
+  "parameters": [
+    {
+      "name": "metro",
+      "value": "SV",
+      "type": "STRING"
+    }
+  ]
+}

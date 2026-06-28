@@ -16,25 +16,69 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+/**
+ * Metadata for a file attachment in the Equinix Customer Portal (Attachments v1 {@code attachment}).
+ */
 public interface Attachment {
 
-    String getUuid();
+    /**
+     * Returns the unique identifier of the attachment.
+     *
+     * @return the attachment id (UUID)
+     */
+    String getAttachmentId();
 
-    String getFileName();
+    /**
+     * Returns the file name of the attachment.
+     *
+     * @return the attachment name
+     */
+    String getAttachmentName();
 
-    Long getFileSize();
+    /**
+     * Returns the document extension / content type of the attachment.
+     *
+     * @return the attachment type
+     */
+    String getAttachmentType();
 
-    String getContentType();
+    /**
+     * Returns the size of the attachment in bytes.
+     *
+     * @return the attachment size
+     */
+    Long getAttachmentSize();
 
-    String getEntityType();
+    /**
+     * Returns the created date of the attachment.
+     *
+     * @return the created date
+     */
+    String getCreatedDate();
 
-    String getEntityUuid();
+    /**
+     * Returns the user key of the author of the attachment.
+     *
+     * @return the creator
+     */
+    String getCreatedBy();
 
-    String getUploadedBy();
+    /**
+     * Returns the last accessed/updated date of the attachment.
+     *
+     * @return the last updated date
+     */
+    String getLastUpdatedDate();
 
-    String getUploadedDate();
-
+    /**
+     * Deletes this attachment.
+     *
+     * @return {@code true} if the attachment was deleted
+     */
     Boolean delete();
 
+    /**
+     * Refreshes this attachment's metadata from the API.
+     */
     void refresh();
 }

@@ -16,10 +16,17 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.BillingFrequency;
+import api.equinix.javasdk.customerportal.enums.InvoiceFormat;
 import api.equinix.javasdk.customerportal.model.BillingAccount;
+import api.equinix.javasdk.customerportal.model.implementation.BillingContactInfo;
+import api.equinix.javasdk.customerportal.model.implementation.BillingInvoice;
+import api.equinix.javasdk.customerportal.model.implementation.BillingPayment;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -33,4 +40,28 @@ public class BillingAccountJson implements BillingAccount {
 
     @JsonProperty("parentAccountNumber")
     private String parentAccountNumber;
+
+    @JsonProperty("billingFrequency")
+    private BillingFrequency billingFrequency;
+
+    @JsonProperty("currencyCode")
+    private String currencyCode;
+
+    @JsonProperty("invoiceLanguage")
+    private String invoiceLanguage;
+
+    @JsonProperty("invoiceFormat")
+    private InvoiceFormat invoiceFormat;
+
+    @JsonProperty("accountIbxs")
+    private List<String> accountIbxs;
+
+    @JsonProperty("billingContact")
+    private BillingContactInfo billingContact;
+
+    @JsonProperty("invoices")
+    private List<BillingInvoice> invoices;
+
+    @JsonProperty("payments")
+    private List<BillingPayment> payments;
 }

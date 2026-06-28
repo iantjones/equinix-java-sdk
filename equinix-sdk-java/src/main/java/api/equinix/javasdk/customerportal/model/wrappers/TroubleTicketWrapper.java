@@ -37,7 +37,7 @@ public class TroubleTicketWrapper extends ResourceImpl<TroubleTicket> implements
     }
 
     public void refresh() {
-        this.jsonObject = ((TroubleTicketClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.jsonObject = ((TroubleTicketClientImpl)this.serviceClient).refresh(this.getId());
     }
 
     private interface TroubleTicketMutability {

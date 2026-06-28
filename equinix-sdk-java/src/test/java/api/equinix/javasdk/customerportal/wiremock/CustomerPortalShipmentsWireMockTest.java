@@ -3,11 +3,14 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.ShipmentCarrier;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.InboundShipmentDetails;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 import org.junit.jupiter.api.*;
 
+import java.util.List;
 import java.util.Map;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
@@ -55,7 +58,7 @@ class CustomerPortalShipmentsWireMockTest extends WireMockTestBase {
 
             OrderResponse response = customerPortal.shipments().order(
                     ShipmentOrderRequest.builder("INBOUND", "2025-02-01T10:00:00Z", "SV5:01:000ABC",
-                                    Map.of("numberOfBoxes", 4))
+                                    InboundShipmentDetails.builder(ShipmentCarrier.FEDEX, List.of("123ABC"), 4).build())
                             .accountNumber("128745")
                             .description("Server delivery")
                             .build());
@@ -65,7 +68,9 @@ class CustomerPortalShipmentsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/shipments"))
                     .withRequestBody(matchingJsonPath("$.type", equalTo("INBOUND")))
-                    .withRequestBody(matchingJsonPath("$.cageId", equalTo("SV5:01:000ABC"))));
+                    .withRequestBody(matchingJsonPath("$.cageId", equalTo("SV5:01:000ABC")))
+                    .withRequestBody(matchingJsonPath("$.details.carrier", equalTo("FEDEX")))
+                    .withRequestBody(matchingJsonPath("$.details.numberOfBoxes", equalTo("4"))));
         }
     }
 

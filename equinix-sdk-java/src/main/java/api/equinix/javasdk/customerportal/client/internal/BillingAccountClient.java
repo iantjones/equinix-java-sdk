@@ -25,7 +25,11 @@ public interface BillingAccountClient<T> extends Pageable<T> {
 
     Page<BillingAccount, BillingAccountJson> summaries();
 
+    Page<BillingAccount, BillingAccountJson> summaries(String sorts);
+
     BillingAccountJson getByAccountNumber(String accountNumber);
+
+    BillingAccountJson getByAccountNumber(String accountNumber, String months);
 
     byte[] downloadInvoiceDocument(String accountNumber, String invoiceId, String documentId);
 }
