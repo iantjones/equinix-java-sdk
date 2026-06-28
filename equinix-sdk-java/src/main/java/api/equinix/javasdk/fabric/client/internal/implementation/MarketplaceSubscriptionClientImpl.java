@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.MarketplaceSubscriptionClient;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
@@ -39,10 +38,6 @@ public class MarketplaceSubscriptionClientImpl extends ResourceClientBase<Market
     @Override
     protected MarketplaceSubscription wrap(MarketplaceSubscriptionJson json) {
         return json;
-    }
-
-    public Page<MarketplaceSubscription, MarketplaceSubscriptionJson> list() {
-        return listPage("GetMarketplaceSubscriptions");
     }
 
     public MarketplaceSubscriptionJson getByUuid(String uuid) {

@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
 
 /**
@@ -24,13 +23,6 @@ import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
  * subscriptions represent active enrollments in provider-offered services.
  */
 public interface MarketplaceSubscriptions {
-
-    /**
-     * Lists all marketplace subscriptions accessible to the current account.
-     *
-     * @return a paginated list of marketplace subscriptions
-     */
-    PaginatedList<MarketplaceSubscription> list();
 
     /**
      * Retrieves a single marketplace subscription by its unique identifier.

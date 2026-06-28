@@ -18,9 +18,12 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.CloudEventClient;
 import api.equinix.javasdk.fabric.model.CloudEvent;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
 /**
@@ -41,7 +44,11 @@ public class CloudEventClientImpl extends ResourceClientBase<CloudEvent, CloudEv
         return json;
     }
 
-    public Page<CloudEvent, CloudEventJson> list() {
-        return listPage("GetCloudEvents");
+    public Page<CloudEvent, CloudEventJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage("SearchCloudEvents", new FilteredSortedPaginatedPost<>(filter, sort));
+    }
+
+    public CloudEventJson getByUuid(String uuid) {
+        return getOne("GetCloudEvent", uuid);
     }
 }

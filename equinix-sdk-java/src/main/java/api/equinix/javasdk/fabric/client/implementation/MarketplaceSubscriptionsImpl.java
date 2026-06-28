@@ -16,13 +16,9 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.MarketplaceSubscriptions;
 import api.equinix.javasdk.fabric.client.internal.MarketplaceSubscriptionClient;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
-import api.equinix.javasdk.fabric.model.json.MarketplaceSubscriptionJson;
 
 public class MarketplaceSubscriptionsImpl implements MarketplaceSubscriptions {
 
@@ -30,12 +26,6 @@ public class MarketplaceSubscriptionsImpl implements MarketplaceSubscriptions {
 
     public MarketplaceSubscriptionsImpl(MarketplaceSubscriptionClient<MarketplaceSubscription> serviceClient) {
         this.serviceClient = serviceClient;
-    }
-
-    public PaginatedList<MarketplaceSubscription> list() {
-        Page<MarketplaceSubscription, MarketplaceSubscriptionJson> responsePage = serviceClient.list();
-        PaginatedList<MarketplaceSubscription> list = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(list, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public MarketplaceSubscription getByUuid(String uuid) {
