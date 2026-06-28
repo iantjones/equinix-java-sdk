@@ -14,17 +14,15 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.client;
+package api.equinix.javasdk.internetaccess.enums;
 
-import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
-import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.client.internal.PriceClient;
+import api.equinix.javasdk.core.model.APIParam;
 
-public interface InternetAccessConfig {
-
-    InternetAccessServiceClient getInternetAccessServiceClient();
-
-    IbxClient getIbxClient();
-
-    PriceClient getPriceClient();
+/**
+ * Geographic region of an Equinix IBX data center where Internet Access is available.
+ */
+public enum Region implements APIParam {
+    APAC,
+    EMEA,
+    AMER
 }

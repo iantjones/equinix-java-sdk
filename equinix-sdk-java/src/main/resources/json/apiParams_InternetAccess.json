@@ -6,7 +6,24 @@
       "Services": {
         "rootUri": "services",
         "serviceEndpoints": {
-          "CreateService": { "httpMethod": "POST" }
+          "CreateService": { "httpMethod": "POST" },
+          "GetService": { "httpMethod": "GET", "requestUri": "{$uuid}" },
+          "UpdateService": { "httpMethod": "PATCH", "requestUri": "{$uuid}" },
+          "DeleteService": { "httpMethod": "DELETE", "requestUri": "{$uuid}" },
+          "SearchServices": { "httpMethod": "POST", "requestUri": "search" }
+        }
+      },
+      "Ibxs": {
+        "rootUri": "ibxs",
+        "serviceEndpoints": {
+          "ListIbxs": { "httpMethod": "GET" }
+        }
+      },
+      "Prices": {
+        "rootUri": "prices",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "SearchPrices": { "httpMethod": "POST", "requestUri": "search" }
         }
       }
     }

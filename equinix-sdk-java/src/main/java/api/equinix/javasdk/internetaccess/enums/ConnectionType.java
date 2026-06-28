@@ -14,17 +14,19 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.client;
+package api.equinix.javasdk.internetaccess.enums;
 
-import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
-import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.client.internal.PriceClient;
+import api.equinix.javasdk.core.model.APIParam;
 
-public interface InternetAccessConfig {
-
-    InternetAccessServiceClient getInternetAccessServiceClient();
-
-    IbxClient getIbxClient();
-
-    PriceClient getPriceClient();
+/**
+ * Service connection type for Equinix Internet Access (EIA).
+ *
+ * <ul>
+ *   <li>{@code IA_C} — physical (dedicated port) connection.</li>
+ *   <li>{@code IA_VC} — virtual connection.</li>
+ * </ul>
+ */
+public enum ConnectionType implements APIParam {
+    IA_C,
+    IA_VC
 }

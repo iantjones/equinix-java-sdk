@@ -16,41 +16,42 @@
 
 package api.equinix.javasdk.internetaccess.model.json;
 
-import api.equinix.javasdk.internetaccess.enums.ServiceState;
-import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
-import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.enums.Region;
+import api.equinix.javasdk.internetaccess.model.Ibx;
+import api.equinix.javasdk.internetaccess.model.implementation.GeoCoordinates;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Read-only JSON model for the {@code ServiceV2} response returned when creating an Equinix
- * Internet Access (EIA) v2 service. Implements {@link InternetAccessService} directly.
+ * Read-only JSON model for an {@link Ibx} returned by the Equinix Internet Access (EIA) v2
+ * product-availability lookup {@code GET /internetAccess/v2/ibxs}. Implements {@link Ibx}
+ * directly, so no wrapper is required.
  */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternetAccessServiceJson implements InternetAccessService {
-
-    @JsonProperty("uuid")
-    private String uuid;
+public class IbxJson implements Ibx {
 
     @JsonProperty("href")
     private String href;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("countryCode")
+    private String countryCode;
 
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("countryName")
+    private String countryName;
 
-    @JsonProperty("type")
-    private ServiceTypeV2 type;
+    @JsonProperty("region")
+    private Region region;
 
-    @JsonProperty("bandwidth")
-    private Integer bandwidth;
+    @JsonProperty("metroCode")
+    private String metroCode;
 
-    @JsonProperty("state")
-    private ServiceState state;
+    @JsonProperty("ibxCode")
+    private String ibxCode;
+
+    @JsonProperty("geoCoordinates")
+    private GeoCoordinates geoCoordinates;
 }

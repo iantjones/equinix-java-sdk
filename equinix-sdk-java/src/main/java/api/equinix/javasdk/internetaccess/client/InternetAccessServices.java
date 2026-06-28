@@ -16,14 +16,23 @@
 
 package api.equinix.javasdk.internetaccess.client;
 
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.model.json.creators.ChangeOperationUpdate;
 import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServiceOperator;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceSearchRequest;
+
+import java.util.List;
 
 /**
- * Client interface for the Equinix Internet Access (EIA) v2 API.
+ * Client interface for the Equinix Internet Access (EIA) v2 service lifecycle.
  *
- * <p>EIA v2 exposes a single operation — creating a service via
- * {@code POST /internetAccess/v2/services}. The IP blocks and routing configuration are all
- * supplied as a nested request body assembled through the {@link #define()} builder.</p>
+ * <p>Supports creating a service via the {@link #define()} builder
+ * ({@code POST /internetAccess/v2/services}), retrieving it by id
+ * ({@code GET /internetAccess/v2/services/{serviceId}}), updating its mutable properties
+ * ({@code PATCH /internetAccess/v2/services/{serviceId}}), deleting it
+ * ({@code DELETE /internetAccess/v2/services/{serviceId}}) and searching across services
+ * ({@code POST /internetAccess/v2/services/search}).</p>
  */
 public interface InternetAccessServices {
 
@@ -33,4 +42,38 @@ public interface InternetAccessServices {
      * @return an internet access service builder
      */
     InternetAccessServiceOperator.InternetAccessServiceBuilder define();
+
+    /**
+     * Retrieves a single Equinix Internet Access v2 service by its unique identifier.
+     *
+     * @param serviceId the unique identifier of the service
+     * @return the service matching the given identifier
+     */
+    InternetAccessService getByUuid(String serviceId);
+
+    /**
+     * Updates the mutable properties of an Equinix Internet Access v2 service by applying the
+     * supplied change operations (for example replacing {@code /bandwidth}).
+     *
+     * @param serviceId the unique identifier of the service to update
+     * @param operations the change operations to apply
+     * @return the updated service
+     */
+    InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations);
+
+    /**
+     * Deletes an Equinix Internet Access v2 service by its unique identifier.
+     *
+     * @param serviceId the unique identifier of the service to delete
+     * @return {@code true} if the deletion request was accepted
+     */
+    Boolean delete(String serviceId);
+
+    /**
+     * Searches for Equinix Internet Access v2 services matching the specified filter criteria.
+     *
+     * @param searchRequest the search filter criteria
+     * @return a paginated, filtered list of matching services
+     */
+    PaginatedFilteredList<InternetAccessService> search(ServiceSearchRequest searchRequest);
 }

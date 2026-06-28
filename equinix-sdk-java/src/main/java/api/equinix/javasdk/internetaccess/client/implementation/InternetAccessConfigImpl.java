@@ -19,7 +19,9 @@ package api.equinix.javasdk.internetaccess.client.implementation;
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
 import api.equinix.javasdk.internetaccess.client.InternetAccessConfig;
+import api.equinix.javasdk.internetaccess.client.internal.implementation.IbxClientImpl;
 import api.equinix.javasdk.internetaccess.client.internal.implementation.InternetAccessServiceClientImpl;
+import api.equinix.javasdk.internetaccess.client.internal.implementation.PriceClientImpl;
 import lombok.Getter;
 
 @Getter
@@ -27,8 +29,14 @@ public class InternetAccessConfigImpl extends Config implements InternetAccessCo
 
     private final InternetAccessServiceClientImpl internetAccessServiceClient;
 
+    private final IbxClientImpl ibxClient;
+
+    private final PriceClientImpl priceClient;
+
     public InternetAccessConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
         this.internetAccessServiceClient = new InternetAccessServiceClientImpl(this);
+        this.ibxClient = new IbxClientImpl(this);
+        this.priceClient = new PriceClientImpl(this);
     }
 }

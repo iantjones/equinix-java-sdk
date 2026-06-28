@@ -16,26 +16,39 @@
 
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
+import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
 import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
+import api.equinix.javasdk.internetaccess.model.json.creators.ChangeOperationUpdate;
 import api.equinix.javasdk.internetaccess.model.json.creators.ServiceRequest;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceSearchRequest;
+
+import java.util.List;
+import java.util.Map;
 
 /**
- * Internal client implementation for the single Equinix Internet Access (EIA) v2 operation:
- * {@code POST /internetAccess/v2/services}. The {@code ServiceV2} response is read-only, so the
- * deserialized {@link InternetAccessServiceJson} (which implements {@link InternetAccessService}
- * directly) is returned without a wrapper.
+ * Internal client implementation for the Equinix Internet Access (EIA) v2 service lifecycle.
+ * Standard get/update/delete/search + paging come from {@link ResourceClientBase}; the
+ * {@code ServiceV2} responses are read-only, so the deserialized {@link InternetAccessServiceJson}
+ * (which implements {@link InternetAccessService} directly) is returned without a wrapper.
  */
-public class InternetAccessServiceClientImpl extends ClientBase implements InternetAccessServiceClient {
+public class InternetAccessServiceClientImpl
+        extends ResourceClientBase<InternetAccessService, InternetAccessServiceJson>
+        implements InternetAccessServiceClient {
 
     public InternetAccessServiceClientImpl(InternetAccessConfigImpl configClient) {
-        super(configClient, "InternetAccess", "Services");
+        super(configClient, "InternetAccess", "Services", InternetAccessServiceJson.class);
+    }
+
+    @Override
+    protected InternetAccessService wrap(InternetAccessServiceJson json) {
+        return json;
     }
 
     public InternetAccessService create(ServiceRequest serviceRequest) {
@@ -43,5 +56,21 @@ public class InternetAccessServiceClientImpl extends ClientBase implements Inter
                 buildRequest("CreateService", RequestType.SINGLE, InternetAccessServiceJson.class);
         Utils.serializeJson(equinixRequest, serviceRequest);
         return Utils.handleSingletonResponse(invoke(equinixRequest), equinixRequest);
+    }
+
+    public InternetAccessServiceJson getByUuid(String serviceId) {
+        return getOne("GetService", serviceId);
+    }
+
+    public InternetAccessServiceJson update(String serviceId, List<ChangeOperationUpdate> operations) {
+        return updateOne("UpdateService", serviceId, operations);
+    }
+
+    public Boolean delete(String serviceId) {
+        return booleanOp("DeleteService", RequestType.SINGLE, Map.of("uuid", serviceId), null, null);
+    }
+
+    public Page<InternetAccessService, InternetAccessServiceJson> search(ServiceSearchRequest searchRequest) {
+        return searchPage("SearchServices", searchRequest);
     }
 }

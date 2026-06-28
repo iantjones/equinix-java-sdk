@@ -20,8 +20,11 @@ import api.equinix.javasdk.internetaccess.enums.ServiceState;
 import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 
 /**
- * An Equinix Internet Access (EIA) v2 service, as returned by
- * {@code POST /internetAccess/v2/services}.
+ * An Equinix Internet Access (EIA) v2 service, as returned by the create
+ * ({@code POST /internetAccess/v2/services}), get-details
+ * ({@code GET /internetAccess/v2/services/{serviceId}}), update
+ * ({@code PATCH /internetAccess/v2/services/{serviceId}}) and search
+ * ({@code POST /internetAccess/v2/services/search}) operations.
  *
  * <p>This is a read-only response view; the nested IP blocks and routing configuration are
  * supplied at creation time through the
@@ -33,6 +36,21 @@ public interface InternetAccessService {
      * @return the unique identifier of the service
      */
     String getUuid();
+
+    /**
+     * @return the URI of the service
+     */
+    String getHref();
+
+    /**
+     * @return the name of the service
+     */
+    String getName();
+
+    /**
+     * @return the description of the service
+     */
+    String getDescription();
 
     /**
      * @return the topology of the service ({@code SINGLE} or {@code DUAL})

@@ -16,28 +16,36 @@
 
 package api.equinix.javasdk.internetaccess.model.json;
 
-import api.equinix.javasdk.internetaccess.enums.ServiceState;
-import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
-import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.enums.PriceCategory;
+import api.equinix.javasdk.internetaccess.enums.ProductType;
+import api.equinix.javasdk.internetaccess.model.Price;
+import api.equinix.javasdk.internetaccess.model.implementation.PriceCharge;
+import api.equinix.javasdk.internetaccess.model.implementation.PriceSummary;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
- * Read-only JSON model for the {@code ServiceV2} response returned when creating an Equinix
- * Internet Access (EIA) v2 service. Implements {@link InternetAccessService} directly.
+ * Read-only JSON model for a {@link Price} returned by the Equinix Internet Access (EIA) v1
+ * price search {@code POST /internetAccess/v1/prices/search}. Implements {@link Price}
+ * directly, so no wrapper is required.
  */
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternetAccessServiceJson implements InternetAccessService {
-
-    @JsonProperty("uuid")
-    private String uuid;
+public class PriceJson implements Price {
 
     @JsonProperty("href")
     private String href;
+
+    @JsonProperty("type")
+    private ProductType type;
+
+    @JsonProperty("code")
+    private String code;
 
     @JsonProperty("name")
     private String name;
@@ -45,12 +53,15 @@ public class InternetAccessServiceJson implements InternetAccessService {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("type")
-    private ServiceTypeV2 type;
+    @JsonProperty("currency")
+    private String currency;
 
-    @JsonProperty("bandwidth")
-    private Integer bandwidth;
+    @JsonProperty("category")
+    private PriceCategory category;
 
-    @JsonProperty("state")
-    private ServiceState state;
+    @JsonProperty("charges")
+    private List<PriceCharge> charges;
+
+    @JsonProperty("summary")
+    private PriceSummary summary;
 }

@@ -16,14 +16,33 @@
 
 package api.equinix.javasdk.internetaccess.client.internal;
 
+import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
+import api.equinix.javasdk.internetaccess.model.json.creators.ChangeOperationUpdate;
 import api.equinix.javasdk.internetaccess.model.json.creators.ServiceRequest;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceSearchRequest;
+
+import java.util.List;
 
 /**
- * Internal client for the single Equinix Internet Access (EIA) v2 operation:
- * {@code POST /internetAccess/v2/services}.
+ * Internal client for the Equinix Internet Access (EIA) v2 service lifecycle:
+ * {@code POST /internetAccess/v2/services} (create),
+ * {@code GET /internetAccess/v2/services/{serviceId}} (get details),
+ * {@code PATCH /internetAccess/v2/services/{serviceId}} (update),
+ * {@code DELETE /internetAccess/v2/services/{serviceId}} (delete) and
+ * {@code POST /internetAccess/v2/services/search} (search).
  */
-public interface InternetAccessServiceClient {
+public interface InternetAccessServiceClient extends PageablePost<InternetAccessService> {
 
     InternetAccessService create(ServiceRequest serviceRequest);
+
+    InternetAccessServiceJson getByUuid(String serviceId);
+
+    InternetAccessServiceJson update(String serviceId, List<ChangeOperationUpdate> operations);
+
+    Boolean delete(String serviceId);
+
+    Page<InternetAccessService, InternetAccessServiceJson> search(ServiceSearchRequest searchRequest);
 }

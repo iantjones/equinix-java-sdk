@@ -14,17 +14,22 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.client;
+package api.equinix.javasdk.internetaccess.model.implementation;
 
-import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
-import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.client.internal.PriceClient;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-public interface InternetAccessConfig {
+/**
+ * Geographic coordinates of an Equinix IBX data center.
+ */
+@Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class GeoCoordinates {
 
-    InternetAccessServiceClient getInternetAccessServiceClient();
+    @JsonProperty("latitude")
+    private Double latitude;
 
-    IbxClient getIbxClient();
-
-    PriceClient getPriceClient();
+    @JsonProperty("longitude")
+    private Double longitude;
 }

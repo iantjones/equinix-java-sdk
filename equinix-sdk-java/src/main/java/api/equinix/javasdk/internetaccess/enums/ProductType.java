@@ -14,17 +14,14 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.client;
+package api.equinix.javasdk.internetaccess.enums;
 
-import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
-import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
-import api.equinix.javasdk.internetaccess.client.internal.PriceClient;
+import api.equinix.javasdk.core.model.APIParam;
 
-public interface InternetAccessConfig {
-
-    InternetAccessServiceClient getInternetAccessServiceClient();
-
-    IbxClient getIbxClient();
-
-    PriceClient getPriceClient();
+/**
+ * Product type of an Equinix Internet Access (EIA) v1 price entry.
+ */
+public enum ProductType implements APIParam {
+    INTERNET_ACCESS_PRODUCT,
+    IP_BLOCK_PRODUCT
 }
