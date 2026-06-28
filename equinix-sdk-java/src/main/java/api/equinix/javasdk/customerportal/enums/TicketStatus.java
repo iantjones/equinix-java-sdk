@@ -18,10 +18,13 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
+/**
+ * The current status of a trouble ticket (Tickets v2 API).
+ */
 public enum TicketStatus implements APIParam {
-    OPEN,
+    RECEIVED,
     IN_PROGRESS,
-    PENDING_CUSTOMER,
-    RESOLVED,
-    CLOSED
+    ON_HOLD,
+    CLOSED,
+    CANCELLED
 }

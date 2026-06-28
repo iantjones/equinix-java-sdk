@@ -21,11 +21,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for adding a note to an existing trouble ticket / case. The {@code text} of the
- * note is required; supporting {@code attachments} are optional and modelled as free-form maps.
+ * note is required; supporting {@code attachments} reference previously uploaded files by id.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -35,13 +34,13 @@ public class SupportCaseNoteRequest {
     private final String text;
 
     @JsonProperty("attachments")
-    private final List<Map<String, Object>> attachments;
+    private final List<SupportCaseAttachment> attachments;
 
     public SupportCaseNoteRequest(String text) {
         this(text, null);
     }
 
-    public SupportCaseNoteRequest(String text, List<Map<String, Object>> attachments) {
+    public SupportCaseNoteRequest(String text, List<SupportCaseAttachment> attachments) {
         this.text = text;
         this.attachments = attachments;
     }

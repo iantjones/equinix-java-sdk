@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.model.implementation.TroubleTicketTypeDetails;
+
 /**
  * A trouble ticket problem category, as returned by the reference types endpoint. The
  * {@code code} value is used when placing a trouble ticket order.
@@ -29,4 +31,6 @@ public interface TroubleTicketType {
     String getDescription();
 
     String getSeverity();
+
+    TroubleTicketTypeDetails getAdditionalDetails();
 }

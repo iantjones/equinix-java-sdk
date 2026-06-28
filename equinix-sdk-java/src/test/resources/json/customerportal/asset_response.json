@@ -1,9 +1,29 @@
 {
-  "uuid": "b8c9d0e1-f2a3-4b4c-5d6e-7f8091021324",
-  "assetType": "CAGE",
-  "name": "Primary Cage SV5-01",
+  "assetNumber": "AST-100045",
+  "serialNumber": "SN-998877",
+  "orderNumber": "1-204050607",
+  "productName": "CROSS_CONNECT",
   "ibx": "SV5",
-  "cageId": "SV5:01:000ABC",
-  "cabinetId": "C-14",
-  "status": "ACTIVE"
+  "cage": "SV5:01:000ABC",
+  "productDescription": "Single-mode fiber cross connect",
+  "accountNumber": "128745",
+  "accountName": "Acme Corp",
+  "installationDate": "2025-09-15T10:30:00Z",
+  "customerReferenceNumber": "CRN-5521",
+  "status": "ACTIVE",
+  "productDetails": [
+    {
+      "key": "Media Type",
+      "value": "Single Mode Fiber",
+      "tag": "A-SIDE"
+    },
+    {
+      "key": "Connector",
+      "value": "LC"
+    }
+  ],
+  "additionalDetails": {
+    "cabinetNumber": "C-14",
+    "customerOrCarrierCircuitID": "CIRCUIT-7788"
+  }
 }

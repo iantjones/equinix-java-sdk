@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.ScheduledReport;
+import api.equinix.javasdk.customerportal.model.json.ReportDefinitionJson;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
 import api.equinix.javasdk.customerportal.model.json.ScheduledReportJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
@@ -32,11 +33,25 @@ public interface ReportClient<T> extends Pageable<T> {
 
     ReportJson getReportById(String reportId);
 
+    boolean deleteReports(List<String> reportIds);
+
+    byte[] downloadReports(List<String> reportIds);
+
     List<? extends ScheduledReport> getScheduledReports();
 
     ScheduledReportJson scheduleReport(ScheduleReportRequest request);
 
+    boolean deleteScheduledReports(List<String> scheduledIds);
+
+    ScheduledReportJson getScheduledReport(String scheduledId);
+
+    ScheduledReportJson updateScheduledReport(String scheduledId, ScheduleReportRequest request);
+
     ReportJson generateReport(String scheduledId);
+
+    List<ReportDefinitionJson> getReportDefinitions();
+
+    ReportDefinitionJson getReportDefinition(String reportName);
 
     byte[] downloadReport(String reportId);
 }

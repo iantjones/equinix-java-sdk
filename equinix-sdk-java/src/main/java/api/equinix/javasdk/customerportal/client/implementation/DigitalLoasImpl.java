@@ -19,10 +19,14 @@ package api.equinix.javasdk.customerportal.client.implementation;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.customerportal.client.DigitalLoas;
 import api.equinix.javasdk.customerportal.client.internal.DigitalLoasClient;
+import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
+import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
+import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -72,5 +76,25 @@ public class DigitalLoasImpl implements DigitalLoas {
 
     public DigitalLoaChange findChangeByUuid(String uuid, String changeUuid) {
         return this.serviceClient.findChangeByUuid(uuid, changeUuid);
+    }
+
+    public List<? extends LoaCustomerOrganization> findOrganizations() {
+        return this.serviceClient.findOrganizations();
+    }
+
+    public PrivateBetaPermission isPrivateBetaAllowed() {
+        return this.serviceClient.isPrivateBetaAllowed();
+    }
+
+    public Boolean createPrivateBetaAccessRequest(PrivateBetaAccessRequest request) {
+        return this.serviceClient.createPrivateBetaAccessRequest(request);
+    }
+
+    public BetaTermsAgreement getBetaTermsAgreement() {
+        return this.serviceClient.getBetaTermsAgreement();
+    }
+
+    public BetaTermsAgreement updateBetaTermsAgreement(Boolean agreementAccepted) {
+        return this.serviceClient.updateBetaTermsAgreement(agreementAccepted);
     }
 }

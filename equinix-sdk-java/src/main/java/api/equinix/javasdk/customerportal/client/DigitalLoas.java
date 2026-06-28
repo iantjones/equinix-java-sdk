@@ -16,10 +16,14 @@
 
 package api.equinix.javasdk.customerportal.client;
 
+import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
+import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
+import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -111,4 +115,47 @@ public interface DigitalLoas {
      * @return the Digital LOA change record
      */
     DigitalLoaChange findChangeByUuid(String uuid, String changeUuid);
+
+    /**
+     * Lists the customer organizations the current user may use as a Digital LOA requestor.
+     *
+     * <p>Private beta endpoint ({@code GET /diloa/v1/organizations}).</p>
+     *
+     * @return the customer organizations
+     */
+    List<? extends LoaCustomerOrganization> findOrganizations();
+
+    /**
+     * Returns whether the current user is permitted to use the Digital LOA application in its
+     * private beta phase ({@code GET /diloa/v1/privateBetaAccess}).
+     *
+     * @return the private beta permission
+     */
+    PrivateBetaPermission isPrivateBetaAllowed();
+
+    /**
+     * Submits a request for Digital LOA private beta access
+     * ({@code POST /diloa/v1/privateBetaAccess}).
+     *
+     * @param request the private beta access request body
+     * @return {@code true} if the request was submitted successfully
+     */
+    Boolean createPrivateBetaAccessRequest(PrivateBetaAccessRequest request);
+
+    /**
+     * Returns the current user's acceptance of the Digital LOA private beta terms
+     * ({@code GET /diloa/v1/betaTermsAgreement}).
+     *
+     * @return the beta terms agreement
+     */
+    BetaTermsAgreement getBetaTermsAgreement();
+
+    /**
+     * Records the current user's acceptance of the Digital LOA private beta terms
+     * ({@code PUT /diloa/v1/betaTermsAgreement}).
+     *
+     * @param agreementAccepted whether the beta terms are accepted
+     * @return the updated beta terms agreement
+     */
+    BetaTermsAgreement updateBetaTermsAgreement(Boolean agreementAccepted);
 }

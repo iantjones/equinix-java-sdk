@@ -1,15 +1,106 @@
 {
-  "uuid": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-  "href": "/v1/orders/b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-  "orderNumber": "ORD-2024-0078542",
-  "type": "NEW_CROSS_CONNECT",
-  "status": "IN_PROGRESS",
-  "description": "New cabinet installation in SV5 with 10kW power allocation",
-  "customerReferenceId": "CREF-ORD-20241015",
+  "orderId": "1-23232322",
+  "accountName": "AAA Corporation Ltd",
   "accountNumber": "128745",
-  "ibxCode": "SV5",
-  "submittedDate": "2024-10-15T08:30:00.000Z",
-  "completedDate": null,
-  "createdDate": "2024-10-15T08:30:00.000Z",
-  "lastUpdatedDate": "2024-11-12T16:45:22.000Z"
+  "quoteRequestType": "NEW",
+  "contacts": [
+    {
+      "registeredUser": "john_doe",
+      "type": "ORDERING",
+      "availability": "ANYTIME",
+      "timezone": "America/Los_Angeles",
+      "details": [
+        {
+          "type": "EMAIL",
+          "value": "john_doe@aaacorp.com"
+        }
+      ]
+    }
+  ],
+  "status": "IN_PROGRESS",
+  "createdDateTime": "2020-08-25T08:30:00.000Z",
+  "updatedDateTime": "2020-09-01T16:45:22.000Z",
+  "closedDateTime": null,
+  "estimatedCompletionDateTime": "2020-09-15T00:00:00.000Z",
+  "currencyCode": "USD",
+  "channel": "PORTAL",
+  "subChannel": "ECP",
+  "notes": [
+    {
+      "id": "1-NOTE-001",
+      "referenceId": "4-12312312132",
+      "createdDateTime": "2020-08-26T09:00:00.000Z",
+      "text": "Please refer to the attachment for patch panel image",
+      "author": "johndoe@acme.com",
+      "type": "CUSTOMER_NOTES",
+      "attachments": [
+        {
+          "id": "c77c5f58-a7ea-4e88-9fc4-1a2900027425",
+          "name": "error-log"
+        }
+      ]
+    }
+  ],
+  "additionalInfo": [
+    {
+      "key": "ASSET_ID",
+      "value": "4-89137987923"
+    }
+  ],
+  "customerReferenceId": "CREF-ORD-20200825",
+  "cancellable": true,
+  "modifiable": false,
+  "details": [
+    {
+      "lineId": "1-NEYSNX123",
+      "parentlineId": null,
+      "rootlineId": "1-NEYSNX120",
+      "status": "IN_PROGRESS",
+      "description": "New cabinet installation in SV5 with 10kW power allocation",
+      "billingStartDateTime": "2020-09-15T00:00:00.000Z",
+      "estimatedCompletionDateTime": "2020-09-15T00:00:00.000Z",
+      "unitPricing": [
+        {
+          "value": 500,
+          "valueType": "ABSOLUTE",
+          "type": "MONTHLY_CHARGE"
+        }
+      ],
+      "totalPricing": [
+        {
+          "value": 5000,
+          "valueType": "ABSOLUTE",
+          "type": "MONTHLY_CHARGE"
+        }
+      ],
+      "productType": "CROSS_CONNECT",
+      "productCode": "CC00001",
+      "productName": "Cage with KVA Power",
+      "ibx": "SV5",
+      "cage": "SV5:01:0101",
+      "cabinets": [
+        "SV5:01:0101:01"
+      ],
+      "requestType": "ADD",
+      "attachments": [
+        {
+          "id": "a11c5f58-a7ea-4e88-9fc4-1a2900027999",
+          "name": "floor-plan"
+        }
+      ],
+      "additionalInfo": [
+        {
+          "key": "SERIAL_NUMBER",
+          "value": "232891719"
+        }
+      ],
+      "purchaseOrder": {
+        "type": "NEW",
+        "number": "PO-2020-0042",
+        "closingDate": "2020-08-25T00:00:00.000Z"
+      },
+      "cancellable": true,
+      "modifiable": false
+    }
+  ]
 }

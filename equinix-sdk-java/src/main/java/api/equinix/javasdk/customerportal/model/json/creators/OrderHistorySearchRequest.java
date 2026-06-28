@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for searching order history
@@ -29,16 +28,16 @@ import java.util.Map;
  *
  * <p>{@code filters} carries the optional {@code ibxs}, {@code productTypes}, {@code orderStatus},
  * {@code dateRange}, {@code fromDate} and {@code toDate}; {@code source} restricts the fields a
- * free-text {@code q} query matches; {@code page} carries paging ({@code number}/{@code size}).
- * The nested objects are highly structured, so {@code filters} and {@code page} are supplied as
- * free-form maps.</p>
+ * free-text {@code q} query matches; {@code sorts} carries the sort {@code name}/{@code direction}
+ * pairs; {@code page} carries paging ({@code number}/{@code size}). Enum-valued fields
+ * ({@code productTypes}, {@code orderStatus}, sort {@code direction}) are kept as strings.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderHistorySearchRequest {
 
     @JsonProperty("filters")
-    private final Map<String, Object> filters;
+    private final Filters filters;
 
     @JsonProperty("source")
     private final List<String> source;
@@ -47,10 +46,10 @@ public class OrderHistorySearchRequest {
     private final String q;
 
     @JsonProperty("sorts")
-    private final List<Map<String, Object>> sorts;
+    private final List<Sort> sorts;
 
     @JsonProperty("page")
-    private final Map<String, Object> page;
+    private final PageRequest page;
 
     private OrderHistorySearchRequest(Builder builder) {
         this.filters = builder.filters;
@@ -70,16 +69,16 @@ public class OrderHistorySearchRequest {
     }
 
     public static class Builder {
-        private Map<String, Object> filters;
+        private Filters filters;
         private List<String> source;
         private String q;
-        private List<Map<String, Object>> sorts;
-        private Map<String, Object> page;
+        private List<Sort> sorts;
+        private PageRequest page;
 
         private Builder() {
         }
 
-        public Builder filters(Map<String, Object> filters) {
+        public Builder filters(Filters filters) {
             this.filters = filters;
             return this;
         }
@@ -94,18 +93,152 @@ public class OrderHistorySearchRequest {
             return this;
         }
 
-        public Builder sorts(List<Map<String, Object>> sorts) {
+        public Builder sorts(List<Sort> sorts) {
             this.sorts = sorts;
             return this;
         }
 
-        public Builder page(Map<String, Object> page) {
+        public Builder page(PageRequest page) {
             this.page = page;
             return this;
         }
 
         public OrderHistorySearchRequest build() {
             return new OrderHistorySearchRequest(this);
+        }
+    }
+
+    /**
+     * Filters for an order history search: {@code ibxs}, {@code productTypes}, {@code orderStatus},
+     * a relative {@code dateRange} (e.g. {@code LAST_30_DAYS}) or an absolute {@code fromDate}/{@code
+     * toDate} window.
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Filters {
+
+        @JsonProperty("ibxs")
+        private final List<String> ibxs;
+
+        @JsonProperty("productTypes")
+        private final List<String> productTypes;
+
+        @JsonProperty("orderStatus")
+        private final List<String> orderStatus;
+
+        @JsonProperty("dateRange")
+        private final String dateRange;
+
+        @JsonProperty("fromDate")
+        private final String fromDate;
+
+        @JsonProperty("toDate")
+        private final String toDate;
+
+        private Filters(Builder builder) {
+            this.ibxs = builder.ibxs;
+            this.productTypes = builder.productTypes;
+            this.orderStatus = builder.orderStatus;
+            this.dateRange = builder.dateRange;
+            this.fromDate = builder.fromDate;
+            this.toDate = builder.toDate;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+            private List<String> ibxs;
+            private List<String> productTypes;
+            private List<String> orderStatus;
+            private String dateRange;
+            private String fromDate;
+            private String toDate;
+
+            private Builder() {
+            }
+
+            public Builder ibxs(List<String> ibxs) {
+                this.ibxs = ibxs;
+                return this;
+            }
+
+            public Builder productTypes(List<String> productTypes) {
+                this.productTypes = productTypes;
+                return this;
+            }
+
+            public Builder orderStatus(List<String> orderStatus) {
+                this.orderStatus = orderStatus;
+                return this;
+            }
+
+            public Builder dateRange(String dateRange) {
+                this.dateRange = dateRange;
+                return this;
+            }
+
+            public Builder fromDate(String fromDate) {
+                this.fromDate = fromDate;
+                return this;
+            }
+
+            public Builder toDate(String toDate) {
+                this.toDate = toDate;
+                return this;
+            }
+
+            public Filters build() {
+                return new Filters(this);
+            }
+        }
+    }
+
+    /**
+     * A sort directive: the field {@code name} and the {@code direction} ({@code ASC} or
+     * {@code DESC}).
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Sort {
+
+        @JsonProperty("name")
+        private final String name;
+
+        @JsonProperty("direction")
+        private final String direction;
+
+        /**
+         * @param name      the field to sort by
+         * @param direction the sort direction ({@code ASC} or {@code DESC})
+         */
+        public Sort(String name, String direction) {
+            this.name = name;
+            this.direction = direction;
+        }
+    }
+
+    /**
+     * Paging request: the zero-based page {@code number} and the page {@code size}.
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class PageRequest {
+
+        @JsonProperty("number")
+        private final Integer number;
+
+        @JsonProperty("size")
+        private final Integer size;
+
+        /**
+         * @param number the zero-based page number
+         * @param size   the page size
+         */
+        public PageRequest(Integer number, Integer size) {
+            this.number = number;
+            this.size = size;
         }
     }
 }

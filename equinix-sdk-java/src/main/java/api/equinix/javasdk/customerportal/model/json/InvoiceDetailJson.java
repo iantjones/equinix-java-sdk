@@ -19,7 +19,10 @@ package api.equinix.javasdk.customerportal.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.deserializers.LocalDateDeserializer;
 import api.equinix.javasdk.customerportal.enums.ActivityType;
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.Frequency;
+import api.equinix.javasdk.customerportal.enums.Region;
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.core.model.KeyValuePair;
@@ -31,7 +34,6 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Currency;
 import java.util.List;
 
@@ -45,6 +47,12 @@ public class InvoiceDetailJson {
     @JsonProperty("businessLegalEntity")
     private String businessLegalEntity;
 
+    @JsonProperty("region")
+    private Region region;
+
+    @JsonProperty("countryCode")
+    private String countryCode;
+
     @JsonProperty("transactionType")
     private String transactionType;
 
@@ -54,6 +62,12 @@ public class InvoiceDetailJson {
 
     @JsonProperty("orderId")
     private String orderId;
+
+    @JsonProperty("channel")
+    private Channel channel;
+
+    @JsonProperty("subChannel")
+    private SubChannel subChannel;
 
     @JsonProperty("lineNumber")
     private String lineNumber;
@@ -73,15 +87,26 @@ public class InvoiceDetailJson {
     @JsonProperty("customerReferenceId")
     private String customerReferenceId;
 
+    @JsonProperty("priorAdjustmentReference")
+    private String priorAdjustmentReference;
+
     @JsonProperty("ibxs")
     private List<String> ibxs;
+
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonProperty("recurringStartDate")
+    private LocalDate recurringStartDate;
+
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonProperty("recurringEndDate")
+    private LocalDate recurringEndDate;
 
     @JsonProperty("contacts")
     private List<BillingContact> contacts;
 
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonProperty("orderBookedDate")
-    private LocalDateTime orderBookedDate;
+    private LocalDate orderBookedDate;
 
     @JsonProperty("activityType")
     private ActivityType activityType;
@@ -94,6 +119,9 @@ public class InvoiceDetailJson {
 
     @JsonProperty("productCode")
     private String productCode;
+
+    @JsonProperty("productName")
+    private String productName;
 
     @JsonProperty("detailedDescription")
     private String detailedDescription;
@@ -118,7 +146,10 @@ public class InvoiceDetailJson {
     
     @JsonProperty("localCurrencyCode")
     private Currency localCurrencyCode;
-    
+
+    @JsonProperty("exchangeRate")
+    private BigDecimal exchangeRate;
+
     @JsonProperty("nonRecurringAmount")
     private BigDecimal nonRecurringAmount;
     
@@ -139,4 +170,7 @@ public class InvoiceDetailJson {
 
     @JsonProperty("additionalInfo")
     private List<KeyValuePair> additionalInfo;
+
+    @JsonProperty("termsOfUse")
+    private List<TermsOfUse> termsOfUse;
 }

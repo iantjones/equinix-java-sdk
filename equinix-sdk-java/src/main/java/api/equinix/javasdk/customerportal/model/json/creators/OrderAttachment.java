@@ -29,18 +29,18 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderAttachment {
 
-    @JsonProperty("attachmentId")
-    private final String attachmentId;
+    @JsonProperty("id")
+    private final String id;
 
     @JsonProperty("name")
     private final String name;
 
-    public OrderAttachment(String attachmentId) {
-        this(attachmentId, null);
+    public OrderAttachment(String id) {
+        this(id, null);
     }
 
-    public OrderAttachment(String attachmentId, String name) {
-        this.attachmentId = attachmentId;
+    public OrderAttachment(String id, String name) {
+        this.id = id;
         this.name = name;
     }
 }

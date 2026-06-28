@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.model.implementation.TroubleTicketOrderCage;
+
 import java.util.List;
 
 /**
@@ -25,5 +27,5 @@ public interface TroubleTicketOrderLocation {
 
     String getIbx();
 
-    List<String> getCages();
+    List<TroubleTicketOrderCage> getCages();
 }

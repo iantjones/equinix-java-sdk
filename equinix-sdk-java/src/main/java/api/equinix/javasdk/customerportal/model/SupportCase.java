@@ -16,9 +16,19 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.SupportCaseStatus;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseAttachmentInfo;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseContact;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseEmail;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseLocation;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseNote;
+import api.equinix.javasdk.customerportal.model.implementation.SupportCaseOtherDetails;
+
+import java.util.List;
+
 /**
  * A trouble ticket / support case retrieved by case or order number from the Equinix Customer
- * Portal support v2 API.
+ * Portal support v2 API ({@code SingleCaseResponseV2}).
  */
 public interface SupportCase {
 
@@ -34,7 +44,19 @@ public interface SupportCase {
 
     String getOrderId();
 
-    String getStatus();
+    SupportCaseStatus getStatus();
 
     String getCreatedDateTime();
+
+    SupportCaseLocation getLocation();
+
+    List<SupportCaseContact> getContacts();
+
+    List<SupportCaseNote> getNotes();
+
+    List<SupportCaseAttachmentInfo> getAttachments();
+
+    List<SupportCaseEmail> getEmail();
+
+    SupportCaseOtherDetails getOtherDetails();
 }

@@ -21,22 +21,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for scheduling a work visit
  * ({@code POST /colocations/v2/orders/workVisits}, {@code Workvisit_Create}).
  *
- * <p>{@code details} is required and carries the cages, visit start/end times and visitors;
- * because that structure is composite it is supplied as a free-form map. The remaining fields are
- * optional.</p>
+ * <p>{@code details} is required and carries the cages, visit start/end times and visitors; supply
+ * the typed {@link WorkVisitDetails} creator. The {@code details} parameter is typed as
+ * {@link Object} to accept the typed creator or, as an escape hatch, a free-form
+ * {@code Map<String, Object>}. The remaining fields are optional.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkVisitOrderRequest {
 
     @JsonProperty("details")
-    private final Map<String, Object> details;
+    private final Object details;
 
     @JsonProperty("description")
     private final String description;
@@ -65,22 +65,23 @@ public class WorkVisitOrderRequest {
     /**
      * Returns a new builder for a work visit order request.
      *
-     * @param details the work visit details (cages, times, visitors) (required)
+     * @param details the work visit details (cages, times, visitors) (required); pass a
+     *                {@link WorkVisitDetails} or a free-form {@code Map<String, Object>}
      * @return a new builder
      */
-    public static Builder builder(Map<String, Object> details) {
+    public static Builder builder(Object details) {
         return new Builder(details);
     }
 
     public static class Builder {
-        private final Map<String, Object> details;
+        private final Object details;
         private String description;
         private String customerReferenceId;
         private OrderPurchaseOrder purchaseOrder;
         private List<OrderAttachment> attachments;
         private List<OrderContact> contacts;
 
-        private Builder(Map<String, Object> details) {
+        private Builder(Object details) {
             this.details = details;
         }
 

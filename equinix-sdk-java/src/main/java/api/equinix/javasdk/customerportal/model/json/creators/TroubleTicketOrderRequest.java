@@ -21,37 +21,34 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for placing a trouble ticket order ({@code POST /v1/orders/troubleticket},
- * {@code placeTroubleTicketOrder}).
+ * {@code TroubleTicketOrderRequest}).
  *
  * <p>{@code ibxLocation} (IBX, cage and cabinet detail), {@code serviceDetails} (incident time,
  * problem code and supporting information) and {@code contacts} (ordering, notification and
  * technical contacts) are required by the API. An optional {@code customerReferenceNumber} and a
- * list of previously uploaded {@code attachments} may also be supplied. Because the
- * {@code ibxLocation}, {@code serviceDetails}, {@code contacts} and {@code attachments} shapes are
- * structured, they are supplied as free-form maps.</p>
+ * list of previously uploaded {@code attachments} may also be supplied.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TroubleTicketOrderRequest {
 
     @JsonProperty("ibxLocation")
-    private final Map<String, Object> ibxLocation;
+    private final IbxLocation ibxLocation;
 
     @JsonProperty("serviceDetails")
-    private final Map<String, Object> serviceDetails;
+    private final TroubleTicketServiceDetails serviceDetails;
 
     @JsonProperty("contacts")
-    private final List<Map<String, Object>> contacts;
+    private final List<TroubleTicketContact> contacts;
 
     @JsonProperty("customerReferenceNumber")
     private final String customerReferenceNumber;
 
     @JsonProperty("attachments")
-    private final List<Map<String, Object>> attachments;
+    private final List<OrderAttachment> attachments;
 
     private TroubleTicketOrderRequest(Builder builder) {
         this.ibxLocation = builder.ibxLocation;
@@ -69,20 +66,20 @@ public class TroubleTicketOrderRequest {
      * @param contacts       the ordering, notification and technical contacts (required)
      * @return a new builder
      */
-    public static Builder builder(Map<String, Object> ibxLocation, Map<String, Object> serviceDetails,
-                                  List<Map<String, Object>> contacts) {
+    public static Builder builder(IbxLocation ibxLocation, TroubleTicketServiceDetails serviceDetails,
+                                  List<TroubleTicketContact> contacts) {
         return new Builder(ibxLocation, serviceDetails, contacts);
     }
 
     public static class Builder {
-        private final Map<String, Object> ibxLocation;
-        private final Map<String, Object> serviceDetails;
-        private final List<Map<String, Object>> contacts;
+        private final IbxLocation ibxLocation;
+        private final TroubleTicketServiceDetails serviceDetails;
+        private final List<TroubleTicketContact> contacts;
         private String customerReferenceNumber;
-        private List<Map<String, Object>> attachments;
+        private List<OrderAttachment> attachments;
 
-        private Builder(Map<String, Object> ibxLocation, Map<String, Object> serviceDetails,
-                        List<Map<String, Object>> contacts) {
+        private Builder(IbxLocation ibxLocation, TroubleTicketServiceDetails serviceDetails,
+                        List<TroubleTicketContact> contacts) {
             this.ibxLocation = ibxLocation;
             this.serviceDetails = serviceDetails;
             this.contacts = contacts;
@@ -93,7 +90,7 @@ public class TroubleTicketOrderRequest {
             return this;
         }
 
-        public Builder attachments(List<Map<String, Object>> attachments) {
+        public Builder attachments(List<OrderAttachment> attachments) {
             this.attachments = attachments;
             return this;
         }

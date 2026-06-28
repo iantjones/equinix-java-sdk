@@ -18,9 +18,9 @@ package api.equinix.javasdk.customerportal.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
 import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
-import api.equinix.javasdk.customerportal.model.json.creators.AttachmentCreatorJson;
 
 public interface AttachmentClient<T> extends Pageable<T> {
 
@@ -28,7 +28,7 @@ public interface AttachmentClient<T> extends Pageable<T> {
 
     AttachmentJson getByUuid(String uuid);
 
-    AttachmentJson create(AttachmentCreatorJson attachmentCreatorJson);
+    AttachmentJson upload(byte[] fileBytes, String fileName, AttachmentPurpose purpose);
 
     byte[] download(String attachmentId);
 

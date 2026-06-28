@@ -16,43 +16,57 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
+import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryAccount;
+import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryContact;
+import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryLink;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for an order history record ({@code order-header}). Read-only list element of an order
+ * history search response, so it implements {@link OrderHistoryItem} directly.
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderHistoryItemJson implements OrderHistoryItem {
 
     @Getter static TypeReference<List<OrderHistoryItemJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
-
     @JsonProperty("orderNumber")
     private String orderNumber;
 
-    @JsonProperty("orderType")
-    private String orderType;
+    @JsonProperty("type")
+    private List<String> type;
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("orderStatus")
+    private String orderStatus;
+
+    @JsonProperty("createdAt")
+    private String createdAt;
+
+    @JsonProperty("submittedDate")
+    private String submittedDate;
+
+    @JsonProperty("account")
+    private OrderHistoryAccount account;
+
+    @JsonProperty("orderingContact")
+    private OrderHistoryContact orderingContact;
+
+    @JsonProperty("notificationContact")
+    private OrderHistoryContact notificationContact;
 
     @JsonProperty("ibx")
-    private String ibx;
+    private List<String> ibx;
 
-    @JsonProperty("accountNumber")
-    private String accountNumber;
+    @JsonProperty("customerReferenceNumbers")
+    private List<String> customerReferenceNumbers;
 
-    @JsonProperty("createdDate")
-    private String createdDate;
-
-    @JsonProperty("completedDate")
-    private String completedDate;
-
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("links")
+    private List<OrderHistoryLink> links;
 }

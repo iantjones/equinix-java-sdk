@@ -18,6 +18,7 @@ package api.equinix.javasdk.customerportal.model.wrappers;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
+import api.equinix.javasdk.customerportal.client.internal.implementation.OrderClientImpl;
 import api.equinix.javasdk.customerportal.model.Order;
 import api.equinix.javasdk.customerportal.model.json.OrderJson;
 import lombok.Getter;
@@ -25,13 +26,21 @@ import lombok.experimental.Delegate;
 
 public class OrderWrapper extends ResourceImpl<Order> implements Order {
 
-    @Delegate
-    private OrderJson json;
+    @Delegate(excludes = OrderMutability.class)
+    private OrderJson jsonObject;
     @Getter
     private final Pageable<Order> serviceClient;
 
     public OrderWrapper(OrderJson orderJson, Pageable<Order> serviceClient) {
-        this.json = orderJson;
+        this.jsonObject = orderJson;
         this.serviceClient = serviceClient;
+    }
+
+    public void refresh() {
+        this.jsonObject = ((OrderClientImpl)this.serviceClient).refresh(this.getOrderId());
+    }
+
+    private interface OrderMutability {
+        void refresh();
     }
 }

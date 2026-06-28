@@ -16,30 +16,34 @@
 
 package api.equinix.javasdk.customerportal.model.json.creators;
 
+import api.equinix.javasdk.customerportal.enums.NotificationCategory;
+import api.equinix.javasdk.customerportal.enums.NotificationSortBy;
+import api.equinix.javasdk.customerportal.enums.NotificationSortDirection;
+import api.equinix.javasdk.customerportal.enums.NotificationType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * Search criteria body for the unified notifications search endpoint. All fields are optional;
- * the {@code filter}, {@code sort} and {@code pagination} blocks are modelled as free-form maps to
- * accommodate the full, deeply nested search grammar.
+ * Search criteria body for the unified notifications search endpoint
+ * ({@code POST /notifications/v2/events/findAll}). All blocks are optional: {@link Filter} narrows
+ * by category/type/notification number/account number/created date, {@link SortCriteria} controls
+ * ordering and {@link PaginationRequest} controls paging.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UnifiedNotificationSearchRequest {
 
     @JsonProperty("filter")
-    private final Map<String, Object> filter;
+    private final Filter filter;
 
     @JsonProperty("sort")
-    private final List<Map<String, Object>> sort;
+    private final List<SortCriteria> sort;
 
     @JsonProperty("pagination")
-    private final Map<String, Object> pagination;
+    private final PaginationRequest pagination;
 
     private UnifiedNotificationSearchRequest(Builder builder) {
         this.filter = builder.filter;
@@ -57,30 +61,144 @@ public class UnifiedNotificationSearchRequest {
     }
 
     public static class Builder {
-        private Map<String, Object> filter;
-        private List<Map<String, Object>> sort;
-        private Map<String, Object> pagination;
+        private Filter filter;
+        private List<SortCriteria> sort;
+        private PaginationRequest pagination;
 
         private Builder() {
         }
 
-        public Builder filter(Map<String, Object> filter) {
+        public Builder filter(Filter filter) {
             this.filter = filter;
             return this;
         }
 
-        public Builder sort(List<Map<String, Object>> sort) {
+        public Builder sort(List<SortCriteria> sort) {
             this.sort = sort;
             return this;
         }
 
-        public Builder pagination(Map<String, Object> pagination) {
+        public Builder pagination(PaginationRequest pagination) {
             this.pagination = pagination;
             return this;
         }
 
         public UnifiedNotificationSearchRequest build() {
             return new UnifiedNotificationSearchRequest(this);
+        }
+    }
+
+    /**
+     * Filter criteria for a unified notifications search. All criteria are optional and are
+     * combined with AND semantics; each is a list of accepted values.
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Filter {
+
+        @JsonProperty("category")
+        private final List<NotificationCategory> category;
+
+        @JsonProperty("type")
+        private final List<NotificationType> type;
+
+        @JsonProperty("notificationNumber")
+        private final List<String> notificationNumber;
+
+        @JsonProperty("accountNumber")
+        private final List<String> accountNumber;
+
+        @JsonProperty("createdDateTime")
+        private final List<String> createdDateTime;
+
+        private Filter(Builder builder) {
+            this.category = builder.category;
+            this.type = builder.type;
+            this.notificationNumber = builder.notificationNumber;
+            this.accountNumber = builder.accountNumber;
+            this.createdDateTime = builder.createdDateTime;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+            private List<NotificationCategory> category;
+            private List<NotificationType> type;
+            private List<String> notificationNumber;
+            private List<String> accountNumber;
+            private List<String> createdDateTime;
+
+            private Builder() {
+            }
+
+            public Builder category(List<NotificationCategory> category) {
+                this.category = category;
+                return this;
+            }
+
+            public Builder type(List<NotificationType> type) {
+                this.type = type;
+                return this;
+            }
+
+            public Builder notificationNumber(List<String> notificationNumber) {
+                this.notificationNumber = notificationNumber;
+                return this;
+            }
+
+            public Builder accountNumber(List<String> accountNumber) {
+                this.accountNumber = accountNumber;
+                return this;
+            }
+
+            public Builder createdDateTime(List<String> createdDateTime) {
+                this.createdDateTime = createdDateTime;
+                return this;
+            }
+
+            public Filter build() {
+                return new Filter(this);
+            }
+        }
+    }
+
+    /**
+     * A single sort criterion for a unified notifications search.
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class SortCriteria {
+
+        @JsonProperty("direction")
+        private final NotificationSortDirection direction;
+
+        @JsonProperty("property")
+        private final NotificationSortBy property;
+
+        public SortCriteria(NotificationSortDirection direction, NotificationSortBy property) {
+            this.direction = direction;
+            this.property = property;
+        }
+    }
+
+    /**
+     * Pagination request information for a unified notifications search.
+     */
+    @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class PaginationRequest {
+
+        @JsonProperty("offset")
+        private final Integer offset;
+
+        @JsonProperty("limit")
+        private final Integer limit;
+
+        public PaginationRequest(Integer offset, Integer limit) {
+            this.offset = offset;
+            this.limit = limit;
         }
     }
 }

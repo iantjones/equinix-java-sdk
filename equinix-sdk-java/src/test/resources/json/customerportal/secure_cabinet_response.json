@@ -1,10 +1,30 @@
 {
-  "uuid": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-  "cabinetId": "SV5:01:0042",
   "ibx": "SV5",
-  "cageId": "SV5:01:CAGE-A",
-  "status": "ACTIVE",
-  "lockType": "ELECTRONIC",
-  "accountNumber": "128745",
-  "accessCode": "884512"
+  "maximumNumberOfCabinetsToOrder": 10,
+  "minimumDrawCapacityPerCabinet": 1.0,
+  "maximumDrawCapacityPerCabinet": 17.3,
+  "cabinetDimensions": {
+    "width": {
+      "value": 600,
+      "unit": "MILLIMETER"
+    },
+    "depth": {
+      "value": 1200,
+      "unit": "MILLIMETER"
+    },
+    "height": {
+      "value": 2200,
+      "unit": "MILLIMETER"
+    }
+  },
+  "acCircuitConfiguration": {
+    "voltage": 220,
+    "soldAmperage": 8.9,
+    "phase": "SINGLE",
+    "receptacle": "IEC 60309 1P+N+E"
+  },
+  "pduConfiguration": {
+    "model": "UU30009L"
+  },
+  "fabricPortSpeed": "SPEED_1_GBPS"
 }

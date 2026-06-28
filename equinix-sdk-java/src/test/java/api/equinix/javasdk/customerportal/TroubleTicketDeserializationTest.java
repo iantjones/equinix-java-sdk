@@ -1,9 +1,10 @@
 package api.equinix.javasdk.customerportal;
 
 import api.equinix.javasdk.core.internal.Constants;
-import api.equinix.javasdk.customerportal.enums.TicketCategory;
-import api.equinix.javasdk.customerportal.enums.TicketPriority;
 import api.equinix.javasdk.customerportal.enums.TicketStatus;
+import api.equinix.javasdk.customerportal.model.implementation.TicketContact;
+import api.equinix.javasdk.customerportal.model.implementation.TicketNote;
+import api.equinix.javasdk.customerportal.model.implementation.TicketResolution;
 import api.equinix.javasdk.customerportal.model.json.TroubleTicketJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,38 +28,23 @@ class TroubleTicketDeserializationTest {
     }
 
     @Test
-    void uuid_isDeserialized() {
-        assertEquals("c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", troubleTicket.getUuid());
-    }
-
-    @Test
-    void href_isDeserialized() {
-        assertEquals("/v1/troubleTickets/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", troubleTicket.getHref());
-    }
-
-    @Test
-    void ticketNumber_isDeserialized() {
-        assertEquals("TT-2024-0034891", troubleTicket.getTicketNumber());
+    void id_isDeserialized() {
+        assertEquals("1-9808089098", troubleTicket.getId());
     }
 
     @Test
     void category_isDeserialized() {
-        assertEquals(TicketCategory.CONNECTIVITY, troubleTicket.getCategory());
+        assertEquals("Network", troubleTicket.getCategory());
+    }
+
+    @Test
+    void subCategory_isDeserialized() {
+        assertEquals("NE Connectivity Issue", troubleTicket.getSubCategory());
     }
 
     @Test
     void status_isDeserialized() {
-        assertEquals(TicketStatus.OPEN, troubleTicket.getStatus());
-    }
-
-    @Test
-    void priority_isDeserialized() {
-        assertEquals(TicketPriority.HIGH, troubleTicket.getPriority());
-    }
-
-    @Test
-    void subject_isDeserialized() {
-        assertEquals("Intermittent packet loss on cross-connect XC-1042", troubleTicket.getSubject());
+        assertEquals(TicketStatus.IN_PROGRESS, troubleTicket.getStatus());
     }
 
     @Test
@@ -67,27 +53,75 @@ class TroubleTicketDeserializationTest {
     }
 
     @Test
-    void ibxCode_isDeserialized() {
-        assertEquals("SV5", troubleTicket.getIbxCode());
+    void primaryId_isDeserialized() {
+        assertEquals("SV5:01:000ABC", troubleTicket.getPrimaryId());
     }
 
     @Test
-    void accountNumber_isDeserialized() {
-        assertEquals("128745", troubleTicket.getAccountNumber());
+    void secondaryId_isDeserialized() {
+        assertEquals("SV5:01:000ABC:001", troubleTicket.getSecondaryId());
     }
 
     @Test
-    void requestorName_isDeserialized() {
-        assertEquals("Robert Chen", troubleTicket.getRequestorName());
+    void customerReferenceId_isDeserialized() {
+        assertEquals("REF-9981", troubleTicket.getCustomerReferenceId());
     }
 
     @Test
-    void requestorEmail_isDeserialized() {
-        assertEquals("robert.chen@acmecloudservices.com", troubleTicket.getRequestorEmail());
+    void occurredDateTime_isDeserialized() {
+        assertEquals("2024-11-10T03:00:00Z", troubleTicket.getOccurredDateTime());
     }
 
     @Test
-    void createdDate_isDeserialized() {
-        assertEquals("2024-11-10T10:15:30.000Z", troubleTicket.getCreatedDate());
+    void resolutionDateTime_isDeserialized() {
+        assertEquals("2024-11-12T14:22:18Z", troubleTicket.getResolutionDateTime());
+    }
+
+    @Test
+    void resolutions_areDeserialized() {
+        assertEquals(1, troubleTicket.getResolutions().size());
+        TicketResolution resolution = troubleTicket.getResolutions().get(0);
+        assertEquals("5-2000000000", resolution.getId());
+        assertEquals("Trouble", resolution.getType());
+        assertEquals("Open - Dispatch", resolution.getStatus());
+        assertEquals("40.00", resolution.getPrice());
+        assertEquals("10", resolution.getHours());
+    }
+
+    @Test
+    void notes_areDeserialized() {
+        assertEquals(1, troubleTicket.getNotes().size());
+        TicketNote note = troubleTicket.getNotes().get(0);
+        assertEquals("1-ABCDE6IS", note.getId());
+        assertEquals("Provide more details to understand the issue.", note.getText());
+        assertEquals("Equinix Support", note.getAuthor());
+        assertEquals("5-2000000000", note.getReferenceId());
+        assertEquals("TECHNICIAN_QUERY", note.getType());
+        assertEquals(1, note.getAttachments().size());
+        assertEquals("c77c5f58-a7ea-4e88-9fc4-1a2900027425", note.getAttachments().get(0).getId());
+        assertEquals("error-log", note.getAttachments().get(0).getName());
+    }
+
+    @Test
+    void attachments_areDeserialized() {
+        assertEquals(1, troubleTicket.getAttachments().size());
+        assertEquals("c77c5f58-a7ea-4e88-9fc4-1a2900027425", troubleTicket.getAttachments().get(0).getId());
+        assertEquals("error-log", troubleTicket.getAttachments().get(0).getName());
+    }
+
+    @Test
+    void contacts_areDeserialized() {
+        assertEquals(2, troubleTicket.getContacts().size());
+        TicketContact registered = troubleTicket.getContacts().get(0);
+        assertEquals("john_doe", registered.getRegisteredUser());
+        assertEquals("NOTIFICATION", registered.getType());
+
+        TicketContact nonRegistered = troubleTicket.getContacts().get(1);
+        assertEquals("John", nonRegistered.getFirstName());
+        assertEquals("Doe", nonRegistered.getLastName());
+        assertEquals("TECHNICAL", nonRegistered.getType());
+        assertEquals(2, nonRegistered.getDetails().size());
+        assertEquals("EMAIL", nonRegistered.getDetails().get(0).getType());
+        assertEquals("john.doe@example.com", nonRegistered.getDetails().get(0).getValue());
     }
 }

@@ -4,8 +4,12 @@ import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitCage;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitDetails;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateDetails;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitVisitor;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -55,11 +59,14 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
                             .withHeader("Location", "/orders/1-44556677")));
 
             OrderResponse response = customerPortal.workVisits().order(
-                    WorkVisitOrderRequest.builder(Map.of(
-                                    "cages", List.of(Map.of("cage", "SV5:01:000ABC")),
-                                    "visitStartDateTime", "2025-03-01T09:00:00Z",
-                                    "visitEndDateTime", "2025-03-01T17:00:00Z",
-                                    "visitors", List.of(Map.of("name", "David Park"))))
+                    WorkVisitOrderRequest.builder(
+                                    WorkVisitDetails.builder(
+                                                    List.of(new WorkVisitCage("SV5:01:000ABC")),
+                                                    "2025-03-01T09:00:00Z",
+                                                    "2025-03-01T17:00:00Z",
+                                                    List.of(WorkVisitVisitor.nonRegistered("David", "Park", "Acme")))
+                                            .openCabinet(true)
+                                            .build())
                             .description("Quarterly hardware maintenance")
                             .build());
 
@@ -67,7 +74,8 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
             assertEquals("1-44556677", response.getOrderId());
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/workVisits"))
-                    .withRequestBody(matchingJsonPath("$.details"))
+                    .withRequestBody(matchingJsonPath("$.details.cages[0].id", equalTo("SV5:01:000ABC")))
+                    .withRequestBody(matchingJsonPath("$.details.visitors[0].firstName", equalTo("David")))
                     .withRequestBody(matchingJsonPath("$.description", equalTo("Quarterly hardware maintenance"))));
         }
     }
@@ -85,7 +93,7 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
 
             OrderResponse response = customerPortal.workVisits().update("1-44556677",
                     WorkVisitUpdateRequest.builder()
-                            .details(Map.of("openCabinet", true))
+                            .details(new WorkVisitUpdateDetails().openCabinet(true))
                             .build());
 
             assertNotNull(response);

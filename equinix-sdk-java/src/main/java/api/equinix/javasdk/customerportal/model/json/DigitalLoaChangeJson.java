@@ -16,10 +16,16 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.LoaChangeStatus;
+import api.equinix.javasdk.customerportal.enums.LoaChangeType;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
+import api.equinix.javasdk.customerportal.model.implementation.LoaChangeResult;
+import api.equinix.javasdk.customerportal.model.implementation.LoaLink;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,8 +35,29 @@ public class DigitalLoaChangeJson implements DigitalLoaChange {
     private String uuid;
 
     @JsonProperty("type")
-    private String changeType;
+    private LoaChangeType changeType;
+
+    @JsonProperty("status")
+    private LoaChangeStatus status;
 
     @JsonProperty("createdDateTime")
     private String createdDateTime;
+
+    @JsonProperty("updatedDateTime")
+    private String updatedDateTime;
+
+    @JsonProperty("data")
+    private String data;
+
+    @JsonProperty("description")
+    private String description;
+
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("links")
+    private List<LoaLink> links;
+
+    @JsonProperty("result")
+    private LoaChangeResult result;
 }

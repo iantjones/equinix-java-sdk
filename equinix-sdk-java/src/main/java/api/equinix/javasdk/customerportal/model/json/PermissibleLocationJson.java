@@ -17,20 +17,22 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.PermissibleLocation;
+import api.equinix.javasdk.customerportal.model.implementation.IbxDetail;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * JSON model for an order history {@code permissible-location} element.
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PermissibleLocationJson implements PermissibleLocation {
 
     @JsonProperty("ibx")
-    private Map<String, Object> ibx;
+    private IbxDetail ibx;
 
     @JsonProperty("cages")
     private List<String> cages;

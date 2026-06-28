@@ -29,6 +29,8 @@ public interface OrderClient<T> extends Pageable<T> {
 
     OrderJson getByUuid(String orderId);
 
+    OrderJson refresh(String orderId);
+
     List<? extends OrderNegotiation> getNegotiations(String orderId);
 
     Boolean replyNegotiation(String orderId, NegotiationsRequestJson negotiationsRequestJson);

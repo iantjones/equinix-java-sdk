@@ -27,14 +27,18 @@ import java.util.Map;
  * Request body for placing a cross-connect deinstallation order
  * ({@code POST /colocations/v2/orders/crossConnects/deinstall}, {@code Layer1_Deinstall_request}).
  *
- * <p>{@code details} (one entry per asset to deinstall) and {@code removalDate} are required.</p>
+ * <p>{@code details} (one entry per asset to deinstall) and {@code removalDate} are required. The
+ * recommended (typed) path is {@link #builder(List, String)} with a list of
+ * {@link Layer1DeinstallDetail}; for forward compatibility a raw
+ * {@link #builderRaw(List, String)} escape hatch accepting a list of free-form maps is also
+ * provided.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CrossConnectDeinstallRequest {
 
     @JsonProperty("details")
-    private final List<Map<String, Object>> details;
+    private final Object details;
 
     @JsonProperty("removalDate")
     private final String removalDate;
@@ -65,18 +69,32 @@ public class CrossConnectDeinstallRequest {
     }
 
     /**
-     * Returns a new builder for a cross-connect deinstallation request.
+     * Returns a new builder for a cross-connect deinstallation request using typed details
+     * (recommended).
      *
      * @param details     the per-asset deinstall details (required)
      * @param removalDate the requested removal date (required)
      * @return a new builder
      */
-    public static Builder builder(List<Map<String, Object>> details, String removalDate) {
+    public static Builder builder(List<Layer1DeinstallDetail> details, String removalDate) {
         return new Builder(details, removalDate);
     }
 
+    /**
+     * Returns a new builder for a cross-connect deinstallation request using raw, free-form
+     * details. This escape hatch is provided for forward compatibility; prefer
+     * {@link #builder(List, String)}.
+     *
+     * @param rawDetails  the per-asset deinstall details as free-form maps (required)
+     * @param removalDate the requested removal date (required)
+     * @return a new builder
+     */
+    public static Builder builderRaw(List<Map<String, Object>> rawDetails, String removalDate) {
+        return new Builder((Object) rawDetails, removalDate);
+    }
+
     public static class Builder {
-        private final List<Map<String, Object>> details;
+        private final Object details;
         private final String removalDate;
         private String customerReferenceId;
         private String description;
@@ -84,7 +102,12 @@ public class CrossConnectDeinstallRequest {
         private List<OrderContact> contacts;
         private List<OrderAttachment> attachments;
 
-        private Builder(List<Map<String, Object>> details, String removalDate) {
+        private Builder(List<Layer1DeinstallDetail> details, String removalDate) {
+            this.details = details;
+            this.removalDate = removalDate;
+        }
+
+        private Builder(Object details, String removalDate) {
             this.details = details;
             this.removalDate = removalDate;
         }

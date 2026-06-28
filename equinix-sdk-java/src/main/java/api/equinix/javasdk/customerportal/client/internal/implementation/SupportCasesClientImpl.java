@@ -18,12 +18,13 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.SupportCasesClient;
+import api.equinix.javasdk.customerportal.model.EmailDetails;
 import api.equinix.javasdk.customerportal.model.SupportCase;
+import api.equinix.javasdk.customerportal.model.json.EmailDetailsResponseJson;
 import api.equinix.javasdk.customerportal.model.json.SupportCaseJson;
+import api.equinix.javasdk.customerportal.model.json.TicketResponseJson;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCancelRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseNoteRequest;
@@ -37,9 +38,8 @@ public class SupportCasesClientImpl extends ClientBase implements SupportCasesCl
     }
 
     public String create(SupportCaseCreateRequest request) {
-        EquinixRequest<Object> equinixRequest = buildRequest("CreateSupportCase", RequestType.SINGLE, Object.class);
-        Utils.serializeJson(equinixRequest, request);
-        return Utils.extractFromHeader(invoke(equinixRequest), "Location", OrderLocation.LAST_SEGMENT_PATTERN);
+        TicketResponseJson response = postAs("CreateSupportCase", request, TicketResponseJson.class);
+        return response.getId();
     }
 
     public SupportCase getByCaseOrOrderNumber(String id) {
@@ -56,5 +56,14 @@ public class SupportCasesClientImpl extends ClientBase implements SupportCasesCl
 
     public Boolean addNotesByCaseNumber(String caseNumber, SupportCaseNoteRequest request) {
         return booleanOp("AddSupportCaseNotesByCaseNumber", RequestType.SINGLE, Map.of("caseNumber", caseNumber), null, request);
+    }
+
+    public byte[] downloadAttachment(String caseId, String attachmentId) {
+        return bytesOp("DownloadSupportCaseAttachment", Map.of("caseId", caseId, "attachmentId", attachmentId), null);
+    }
+
+    public EmailDetails getEmailDetails(String emailId, String caseNumber) {
+        return getAs("GetSupportCaseEmailDetails", Map.of("emailId", emailId, "caseNumber", caseNumber), null,
+                EmailDetailsResponseJson.class);
     }
 }

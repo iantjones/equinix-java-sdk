@@ -26,8 +26,8 @@ import java.util.Map;
 /**
  * Request body for creating a trouble ticket / support case. The ticket {@code code} (identifying
  * the support category) and a {@code description} of the issue are required; all other fields are
- * optional. The deeply nested polymorphic blocks ({@code details}, {@code contacts} and
- * {@code attachments}), whose shape varies by ticket code, are modelled as free-form maps.
+ * optional. {@code attachments} reference previously uploaded files by id; the {@code details} and
+ * {@code contacts} blocks, whose shape varies by ticket code, are modelled as free-form maps.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -58,7 +58,7 @@ public class SupportCaseCreateRequest {
     private final List<Map<String, Object>> contacts;
 
     @JsonProperty("attachments")
-    private final List<Map<String, Object>> attachments;
+    private final List<SupportCaseAttachment> attachments;
 
     private SupportCaseCreateRequest(Builder builder) {
         this.code = builder.code;
@@ -92,7 +92,7 @@ public class SupportCaseCreateRequest {
         private String customerReferenceId;
         private Map<String, Object> details;
         private List<Map<String, Object>> contacts;
-        private List<Map<String, Object>> attachments;
+        private List<SupportCaseAttachment> attachments;
 
         private Builder(String code, String description) {
             this.code = code;
@@ -129,7 +129,7 @@ public class SupportCaseCreateRequest {
             return this;
         }
 
-        public Builder attachments(List<Map<String, Object>> attachments) {
+        public Builder attachments(List<SupportCaseAttachment> attachments) {
             this.attachments = attachments;
             return this;
         }

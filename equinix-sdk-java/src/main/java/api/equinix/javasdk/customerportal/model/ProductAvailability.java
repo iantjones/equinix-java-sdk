@@ -16,6 +16,11 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.FabricPortSpeed;
+import api.equinix.javasdk.customerportal.model.implementation.AcCircuitConfig;
+import api.equinix.javasdk.customerportal.model.implementation.CabinetDimensionsInfo;
+import api.equinix.javasdk.customerportal.model.implementation.PduConfig;
+
 /**
  * Secure cabinet product availability for an IBX, describing the cabinet capacity and power
  * configuration that may be ordered at a given location.
@@ -51,9 +56,32 @@ public interface ProductAvailability {
     Double getMaximumDrawCapacityPerCabinet();
 
     /**
-     * Returns the supported Fabric port speed for the location, if any.
+     * Returns the cabinet dimensions available at the location.
      *
-     * @return the Fabric port speed, or {@code null} if not provided
+     * @return the cabinet dimensions, or {@code null} if not provided
      */
-    String getFabricPortSpeed();
+    CabinetDimensionsInfo getCabinetDimensions();
+
+    /**
+     * Returns the AC power circuit configuration available at the location.
+     *
+     * @return the AC circuit configuration, or {@code null} if not provided
+     */
+    AcCircuitConfig getAcCircuitConfiguration();
+
+    /**
+     * Returns the PDU configuration available at the location. A {@code null} value means PDUs are
+     * not offered at the IBX.
+     *
+     * @return the PDU configuration, or {@code null} if not offered
+     */
+    PduConfig getPduConfiguration();
+
+    /**
+     * Returns the supported Fabric port speed for the location. A {@code null} value means a Fabric
+     * port is not available at the IBX.
+     *
+     * @return the Fabric port speed, or {@code null} if not available
+     */
+    FabricPortSpeed getFabricPortSpeed();
 }

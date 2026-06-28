@@ -21,15 +21,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Request body for creating a trouble ticket
  * ({@code POST /v2/tickets}, {@code Tickets_Create}).
  *
  * <p>{@code code}, {@code description}, {@code occurredDateTime} and {@code primaryId} are
- * required. {@code details} is category-specific (one of many {@code anyOf} schemas), so it is
- * supplied as a free-form map.</p>
+ * required. Each entry in {@code contacts} is either a registered-user contact or a
+ * non-registered contact (build with {@link OrderContact#registered} /
+ * {@link OrderContact#nonRegistered}); each {@code attachments} entry references a previously
+ * uploaded attachment by id.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -53,9 +54,6 @@ public class TroubleTicketCreateRequest {
     @JsonProperty("customerReferenceId")
     private final String customerReferenceId;
 
-    @JsonProperty("details")
-    private final Map<String, Object> details;
-
     @JsonProperty("contacts")
     private final List<OrderContact> contacts;
 
@@ -69,7 +67,6 @@ public class TroubleTicketCreateRequest {
         this.primaryId = builder.primaryId;
         this.secondaryId = builder.secondaryId;
         this.customerReferenceId = builder.customerReferenceId;
-        this.details = builder.details;
         this.contacts = builder.contacts;
         this.attachments = builder.attachments;
     }
@@ -94,7 +91,6 @@ public class TroubleTicketCreateRequest {
         private final String primaryId;
         private String secondaryId;
         private String customerReferenceId;
-        private Map<String, Object> details;
         private List<OrderContact> contacts;
         private List<OrderAttachment> attachments;
 
@@ -112,11 +108,6 @@ public class TroubleTicketCreateRequest {
 
         public Builder customerReferenceId(String customerReferenceId) {
             this.customerReferenceId = customerReferenceId;
-            return this;
-        }
-
-        public Builder details(Map<String, Object> details) {
-            this.details = details;
             return this;
         }
 

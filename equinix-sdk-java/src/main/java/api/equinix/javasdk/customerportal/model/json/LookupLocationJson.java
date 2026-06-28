@@ -17,6 +17,8 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.LookupLocation;
+import api.equinix.javasdk.customerportal.model.implementation.Account;
+import api.equinix.javasdk.customerportal.model.implementation.CageDetails;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,24 +32,18 @@ public class LookupLocationJson implements LookupLocation {
 
     @Getter static TypeReference<List<LookupLocationJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
-
-    @JsonProperty("name")
-    private String name;
-
     @JsonProperty("ibx")
     private String ibx;
 
-    @JsonProperty("region")
-    private String region;
+    @JsonProperty("accessRestricted")
+    private Boolean accessRestricted;
 
-    @JsonProperty("metro")
-    private String metro;
+    @JsonProperty("specialPrivilege")
+    private Boolean specialPrivilege;
 
-    @JsonProperty("country")
-    private String country;
+    @JsonProperty("accounts")
+    private List<Account> accounts;
 
-    @JsonProperty("address")
-    private String address;
+    @JsonProperty("cages")
+    private List<CageDetails> cages;
 }

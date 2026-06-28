@@ -7,6 +7,7 @@
   "data": [
     {
       "transactionId": "INV-2024-00198734",
+      "businessLegalEntity": "Equinix Inc.",
       "transactionType": "INVOICE",
       "transactionDate": "2024-11-15",
       "customerDetails": {
@@ -25,7 +26,15 @@
       "totalNonRecurringAmount": 3500.00,
       "totalAmount": 15950.00,
       "totalAdjustment": -250.00,
-      "vatNumber": "US-EIN-82-1234567"
+      "vatNumber": "US-EIN-82-1234567",
+      "totalPriorAdjustmentAmount": -250.00,
+      "priorAdjustmentInfo": [
+        {
+          "transactionId": "CM-2024-000451",
+          "totalAmount": -250.00,
+          "transactionDate": "2024-10-01"
+        }
+      ]
     }
   ]
 }

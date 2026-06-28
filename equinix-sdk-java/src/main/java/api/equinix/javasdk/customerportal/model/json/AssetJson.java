@@ -16,38 +16,62 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.customerportal.enums.AssetType;
+import api.equinix.javasdk.customerportal.enums.AssetStatus;
 import api.equinix.javasdk.customerportal.model.Asset;
+import api.equinix.javasdk.customerportal.model.implementation.AssetAdditionalDetails;
+import api.equinix.javasdk.customerportal.model.implementation.AssetProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for an installed-base asset ({@code asset}/{@code assetsSummary} schema, Assets v1 API).
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AssetJson implements Asset {
 
-    @Getter static TypeReference<List<AssetJson>> listTypeRef = new TypeReference<>() {};
+    @JsonProperty("assetNumber")
+    private String assetNumber;
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("serialNumber")
+    private String serialNumber;
 
-    @JsonProperty("assetType")
-    private AssetType assetType;
+    @JsonProperty("orderNumber")
+    private String orderNumber;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("productName")
+    private String productName;
 
     @JsonProperty("ibx")
     private String ibx;
 
-    @JsonProperty("cageId")
-    private String cageId;
+    @JsonProperty("cage")
+    private String cage;
 
-    @JsonProperty("cabinetId")
-    private String cabinetId;
+    @JsonProperty("productDescription")
+    private String productDescription;
+
+    @JsonProperty("accountNumber")
+    private String accountNumber;
+
+    @JsonProperty("accountName")
+    private String accountName;
+
+    @JsonProperty("installationDate")
+    private String installationDate;
+
+    @JsonProperty("customerReferenceNumber")
+    private String customerReferenceNumber;
 
     @JsonProperty("status")
-    private String status;
+    private AssetStatus status;
+
+    @JsonProperty("productDetails")
+    private List<AssetProperty> productDetails;
+
+    @JsonProperty("additionalDetails")
+    private AssetAdditionalDetails additionalDetails;
 }

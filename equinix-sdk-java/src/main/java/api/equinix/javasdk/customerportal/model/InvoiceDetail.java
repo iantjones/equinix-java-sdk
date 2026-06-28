@@ -16,18 +16,16 @@
 
 package api.equinix.javasdk.customerportal.model;
 
-import api.equinix.javasdk.core.model.deserializers.LocalDateDeserializer;
 import api.equinix.javasdk.customerportal.enums.ActivityType;
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.Frequency;
-import api.equinix.javasdk.customerportal.enums.TransactionType;
+import api.equinix.javasdk.customerportal.enums.Region;
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.customerportal.model.implementation.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Currency;
 import java.util.List;
 
@@ -38,11 +36,19 @@ public interface InvoiceDetail {
 
     String getBusinessLegalEntity();
 
+    Region getRegion();
+
+    String getCountryCode();
+
     String getTransactionType();
 
     LocalDate getTransactionDate();
 
     String getOrderId();
+
+    Channel getChannel();
+
+    SubChannel getSubChannel();
 
     String getLineNumber();
 
@@ -56,11 +62,17 @@ public interface InvoiceDetail {
 
     String getCustomerReferenceId();
 
+    String getPriorAdjustmentReference();
+
     List<String> getIbxs();
+
+    LocalDate getRecurringStartDate();
+
+    LocalDate getRecurringEndDate();
 
     List<BillingContact> getContacts();
 
-    LocalDateTime getOrderBookedDate();
+    LocalDate getOrderBookedDate();
 
     ActivityType getActivityType();
 
@@ -69,6 +81,8 @@ public interface InvoiceDetail {
     String getProductDescription();
 
     String getProductCode();
+
+    String getProductName();
 
     String getDetailedDescription();
 
@@ -86,6 +100,8 @@ public interface InvoiceDetail {
 
     Currency getLocalCurrencyCode();
 
+    BigDecimal getExchangeRate();
+
     BigDecimal getNonRecurringAmount();
 
     BigDecimal getRecurringAmount();
@@ -99,4 +115,6 @@ public interface InvoiceDetail {
     String getLegacyOrderId();
 
     List<KeyValuePair> getAdditionalInfo();
+
+    List<TermsOfUse> getTermsOfUse();
 }

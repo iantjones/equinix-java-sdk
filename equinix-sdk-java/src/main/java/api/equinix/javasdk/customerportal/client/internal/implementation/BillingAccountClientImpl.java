@@ -42,8 +42,23 @@ public class BillingAccountClientImpl extends ResourceClientBase<BillingAccount,
         return listPage("ListBillingAccounts");
     }
 
+    public Page<BillingAccount, BillingAccountJson> summaries(String sorts) {
+        if (sorts == null) {
+            return listPage("ListBillingAccounts");
+        }
+        return listPage("ListBillingAccounts", Map.of("sorts", List.of(sorts)));
+    }
+
     public BillingAccountJson getByAccountNumber(String accountNumber) {
         return getOne("GetBillingAccount", Map.of("accountNumber", accountNumber));
+    }
+
+    public BillingAccountJson getByAccountNumber(String accountNumber, String months) {
+        if (months == null) {
+            return getByAccountNumber(accountNumber);
+        }
+        return getAs("GetBillingAccount", Map.of("accountNumber", accountNumber),
+                Map.of("months", List.of(months)), BillingAccountJson.class);
     }
 
     public byte[] downloadInvoiceDocument(String accountNumber, String invoiceId, String documentId) {

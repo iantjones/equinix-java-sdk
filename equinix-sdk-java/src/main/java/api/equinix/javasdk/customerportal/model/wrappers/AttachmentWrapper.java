@@ -37,12 +37,12 @@ public class AttachmentWrapper extends ResourceImpl<Attachment> implements Attac
     }
 
     public Boolean delete() {
-        this.jsonObject = ((AttachmentClientImpl)this.serviceClient).delete(this.getUuid());
+        this.jsonObject = ((AttachmentClientImpl)this.serviceClient).delete(this.getAttachmentId());
         return true;
     }
 
     public void refresh() {
-        this.jsonObject = ((AttachmentClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.jsonObject = ((AttachmentClientImpl)this.serviceClient).refresh(this.getAttachmentId());
     }
 
     private interface AttachmentMutability {

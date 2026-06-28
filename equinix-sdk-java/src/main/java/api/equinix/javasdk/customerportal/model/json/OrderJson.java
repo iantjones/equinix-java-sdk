@@ -16,57 +16,82 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.OrderStatus;
-import api.equinix.javasdk.customerportal.enums.OrderType;
-import api.equinix.javasdk.customerportal.model.Order;
+import api.equinix.javasdk.customerportal.model.implementation.AdditionalInfo;
+import api.equinix.javasdk.customerportal.model.implementation.OrderContactInfo;
+import api.equinix.javasdk.customerportal.model.implementation.OrderLine;
+import api.equinix.javasdk.customerportal.model.implementation.OrderNote;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for an order ({@code Orders} = {@code ordersBase} + {@code OrderDetails}) from the
+ * Orders v2 API. Wrapped by {@code OrderWrapper} for the public {@code Order} view.
+ */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderJson {
 
     @Getter static TypeReference<List<OrderJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("orderId")
+    private String orderId;
 
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("orderNumber")
-    private String orderNumber;
-
-    @JsonProperty("type")
-    private OrderType type;
-
-    @JsonProperty("status")
-    private OrderStatus status;
-
-    @JsonProperty("description")
-    private String description;
-
-    @JsonProperty("customerReferenceId")
-    private String customerReferenceId;
+    @JsonProperty("accountName")
+    private String accountName;
 
     @JsonProperty("accountNumber")
     private String accountNumber;
 
-    @JsonProperty("ibxCode")
-    private String ibxCode;
+    @JsonProperty("quoteRequestType")
+    private String quoteRequestType;
 
-    @JsonProperty("submittedDate")
-    private String submittedDate;
+    @JsonProperty("contacts")
+    private List<OrderContactInfo> contacts;
 
-    @JsonProperty("completedDate")
-    private String completedDate;
+    @JsonProperty("status")
+    private OrderStatus status;
 
-    @JsonProperty("createdDate")
-    private String createdDate;
+    @JsonProperty("createdDateTime")
+    private String createdDateTime;
 
-    @JsonProperty("lastUpdatedDate")
-    private String lastUpdatedDate;
+    @JsonProperty("updatedDateTime")
+    private String updatedDateTime;
+
+    @JsonProperty("closedDateTime")
+    private String closedDateTime;
+
+    @JsonProperty("estimatedCompletionDateTime")
+    private String estimatedCompletionDateTime;
+
+    @JsonProperty("currencyCode")
+    private String currencyCode;
+
+    @JsonProperty("channel")
+    private String channel;
+
+    @JsonProperty("subChannel")
+    private String subChannel;
+
+    @JsonProperty("notes")
+    private List<OrderNote> notes;
+
+    @JsonProperty("additionalInfo")
+    private List<AdditionalInfo> additionalInfo;
+
+    @JsonProperty("customerReferenceId")
+    private String customerReferenceId;
+
+    @JsonProperty("cancellable")
+    private Boolean cancellable;
+
+    @JsonProperty("modifiable")
+    private Boolean modifiable;
+
+    @JsonProperty("details")
+    private List<OrderLine> details;
 }

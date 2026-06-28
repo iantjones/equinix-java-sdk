@@ -3,6 +3,7 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.*;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchFilter;
 import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
@@ -113,11 +114,11 @@ class CustomerPortalTest {
     void notifications() {
         try {
             List<? extends Notification> ibx = customerPortal.notifications()
-                    .searchIbx(new NotificationSearchRequest(java.util.Map.of()));
+                    .searchIbx(NotificationSearchRequest.builder().build());
             assertNotNull(ibx);
 
             List<? extends Notification> network = customerPortal.notifications()
-                    .searchNetwork(new NotificationSearchRequest(java.util.Map.of()));
+                    .searchNetwork(NotificationSearchRequest.builder().build());
             assertNotNull(network);
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Notifications test skipped: " + e.getMessage());
@@ -128,14 +129,14 @@ class CustomerPortalTest {
     void assets() {
         try {
             PaginatedList<Asset> assets = customerPortal.assets()
-                    .search(new AssetSearchRequest(java.util.Map.of()));
+                    .search(new AssetSearchRequest((AssetSearchFilter) null));
             assertNotNull(assets);
             assertTrue(assets.size() >= 0);
 
             if (assets.size() > 0) {
-                Asset asset = customerPortal.assets().getByUuid(assets.get(0).getUuid());
+                Asset asset = customerPortal.assets().getByUuid(assets.get(0).getAssetNumber());
                 assertNotNull(asset);
-                assertEquals(assets.get(0).getUuid(), asset.getUuid());
+                assertEquals(assets.get(0).getAssetNumber(), asset.getAssetNumber());
             }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Assets test skipped: " + e.getMessage());
@@ -190,9 +191,9 @@ class CustomerPortalTest {
             assertTrue(attachments.size() >= 0);
 
             if (attachments.size() > 0) {
-                Attachment attachment = customerPortal.attachments().getByUuid(attachments.get(0).getUuid());
+                Attachment attachment = customerPortal.attachments().getByUuid(attachments.get(0).getAttachmentId());
                 assertNotNull(attachment);
-                assertEquals(attachments.get(0).getUuid(), attachment.getUuid());
+                assertEquals(attachments.get(0).getAttachmentId(), attachment.getAttachmentId());
             }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Attachments test skipped: " + e.getMessage());

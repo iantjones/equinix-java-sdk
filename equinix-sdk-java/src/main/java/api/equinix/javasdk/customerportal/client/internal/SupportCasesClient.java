@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
+import api.equinix.javasdk.customerportal.model.EmailDetails;
 import api.equinix.javasdk.customerportal.model.SupportCase;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCancelRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCreateRequest;
@@ -32,4 +33,8 @@ public interface SupportCasesClient {
     Boolean cancel(String id, SupportCaseCancelRequest request);
 
     Boolean addNotesByCaseNumber(String caseNumber, SupportCaseNoteRequest request);
+
+    byte[] downloadAttachment(String caseId, String attachmentId);
+
+    EmailDetails getEmailDetails(String emailId, String caseNumber);
 }

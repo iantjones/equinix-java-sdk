@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.BillingAccountStatus;
 import api.equinix.javasdk.customerportal.model.BillingAccountV2;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -41,7 +42,22 @@ public class BillingAccountV2Json implements BillingAccountV2 {
     private String billingCountry;
 
     @JsonProperty("accountStatus")
-    private String accountStatus;
+    private BillingAccountStatus accountStatus;
+
+    @JsonProperty("isGlobal")
+    private Boolean isGlobal;
+
+    @JsonProperty("isPoRequired")
+    private Boolean isPoRequired;
+
+    @JsonProperty("isSignatureRequired")
+    private Boolean isSignatureRequired;
+
+    @JsonProperty("isReseller")
+    private Boolean isReseller;
+
+    @JsonProperty("isSubCustomer")
+    private Boolean isSubCustomer;
 
     @JsonProperty("createdDatetime")
     private String createdDatetime;

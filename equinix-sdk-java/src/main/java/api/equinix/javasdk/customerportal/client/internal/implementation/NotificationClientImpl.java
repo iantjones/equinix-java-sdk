@@ -23,6 +23,7 @@ import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.json.NotificationJson;
 import api.equinix.javasdk.customerportal.model.json.NotificationSearchResponseJson;
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
 import java.util.Map;
@@ -34,13 +35,11 @@ public class NotificationClientImpl extends ClientBase implements NotificationCl
     }
 
     public List<? extends Notification> searchIbx(NotificationSearchRequest request) {
-        NotificationSearchResponseJson response = postAs("SearchIbxNotifications", request, NotificationSearchResponseJson.class);
-        return response.getData();
+        return search("SearchIbxNotifications", request);
     }
 
     public List<? extends Notification> searchNetwork(NotificationSearchRequest request) {
-        NotificationSearchResponseJson response = postAs("SearchNetworkNotifications", request, NotificationSearchResponseJson.class);
-        return response.getData();
+        return search("SearchNetworkNotifications", request);
     }
 
     public NotificationJson getIbxById(String id) {
@@ -49,5 +48,18 @@ public class NotificationClientImpl extends ClientBase implements NotificationCl
 
     public NotificationJson getNetworkById(String id) {
         return getAs("GetNetworkNotification", Map.of("id", id), null, NotificationJson.class);
+    }
+
+    /**
+     * Posts a notification search, forwarding any {@code sorts} as a query parameter and reading the
+     * notifications from the response {@code data} array.
+     */
+    private List<? extends Notification> search(String serviceEndpoint, NotificationSearchRequest request) {
+        Map<String, List<String>> queryParams = (request != null && request.getSorts() != null && !request.getSorts().isEmpty())
+                ? Map.of("sorts", request.getSorts())
+                : null;
+        NotificationSearchResponseJson response = postForType(serviceEndpoint, null, queryParams, request,
+                new TypeReference<NotificationSearchResponseJson>() {});
+        return response.getData();
     }
 }

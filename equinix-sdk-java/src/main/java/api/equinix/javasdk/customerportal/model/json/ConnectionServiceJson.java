@@ -17,12 +17,12 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.ConnectionService;
+import api.equinix.javasdk.customerportal.model.implementation.LookupMediaType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * JSON model for a cross-connect {@code Connection_services_details} element.
@@ -35,5 +35,5 @@ public class ConnectionServiceJson implements ConnectionService {
     private String name;
 
     @JsonProperty("mediaTypes")
-    private List<Map<String, Object>> mediaTypes;
+    private List<LookupMediaType> mediaTypes;
 }

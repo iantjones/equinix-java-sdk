@@ -1,18 +1,65 @@
 {
-  "uuid": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
-  "href": "/v1/troubleTickets/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
-  "ticketNumber": "TT-2024-0034891",
-  "category": "CONNECTIVITY",
-  "status": "OPEN",
-  "priority": "HIGH",
-  "subject": "Intermittent packet loss on cross-connect XC-1042",
+  "id": "1-9808089098",
+  "category": "Network",
+  "subCategory": "NE Connectivity Issue",
   "description": "Experiencing intermittent packet loss averaging 2.5% on cross-connect XC-1042 between cage SV5:01:000ABC and SV5:01:000DEF since 2024-11-10 03:00 UTC.",
-  "ibxCode": "SV5",
-  "accountNumber": "128745",
-  "requestorName": "Robert Chen",
-  "requestorEmail": "robert.chen@acmecloudservices.com",
-  "assigneeName": "Maria Garcia",
-  "createdDate": "2024-11-10T10:15:30.000Z",
-  "lastUpdatedDate": "2024-11-12T14:22:18.000Z",
-  "resolvedDate": null
+  "primaryId": "SV5:01:000ABC",
+  "secondaryId": "SV5:01:000ABC:001",
+  "customerReferenceId": "REF-9981",
+  "occurredDateTime": "2024-11-10T03:00:00Z",
+  "resolutionDateTime": "2024-11-12T14:22:18Z",
+  "status": "IN_PROGRESS",
+  "resolutions": [
+    {
+      "id": "5-2000000000",
+      "type": "Trouble",
+      "status": "Open - Dispatch",
+      "description": "Network issue",
+      "price": "40.00",
+      "hours": "10"
+    }
+  ],
+  "notes": [
+    {
+      "id": "1-ABCDE6IS",
+      "createdDateTime": "2024-11-11T09:00:00Z",
+      "text": "Provide more details to understand the issue.",
+      "author": "Equinix Support",
+      "referenceId": "5-2000000000",
+      "type": "TECHNICIAN_QUERY",
+      "attachments": [
+        {
+          "id": "c77c5f58-a7ea-4e88-9fc4-1a2900027425",
+          "name": "error-log"
+        }
+      ]
+    }
+  ],
+  "attachments": [
+    {
+      "id": "c77c5f58-a7ea-4e88-9fc4-1a2900027425",
+      "name": "error-log"
+    }
+  ],
+  "contacts": [
+    {
+      "registeredUser": "john_doe",
+      "type": "NOTIFICATION"
+    },
+    {
+      "firstName": "John",
+      "lastName": "Doe",
+      "type": "TECHNICAL",
+      "details": [
+        {
+          "type": "EMAIL",
+          "value": "john.doe@example.com"
+        },
+        {
+          "type": "PHONE",
+          "value": "+1-4601231122"
+        }
+      ]
+    }
+  ]
 }

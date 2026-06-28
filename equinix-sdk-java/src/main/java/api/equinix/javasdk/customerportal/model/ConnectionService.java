@@ -16,8 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.model.implementation.LookupMediaType;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * A connection service available at an IBX, with its supported media types.
@@ -36,5 +37,5 @@ public interface ConnectionService {
      *
      * @return the media types
      */
-    List<Map<String, Object>> getMediaTypes();
+    List<LookupMediaType> getMediaTypes();
 }

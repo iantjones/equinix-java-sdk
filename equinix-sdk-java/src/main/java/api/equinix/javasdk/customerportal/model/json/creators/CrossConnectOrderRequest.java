@@ -27,18 +27,20 @@ import java.util.Map;
  * Request body for placing a cross-connect order
  * ({@code POST /colocations/v2/orders/crossConnects}, {@code Layer1_Create}).
  *
- * <p>{@code details} is required and carries one entry per cross-connect (each with an
- * {@code aSide}/{@code zSide}); because that structure is highly polymorphic it is supplied as a
- * list of free-form maps. {@code customerReferenceId}, {@code description},
- * {@code expediteDateTime}, {@code purchaseOrder}, {@code contacts} and {@code attachments} are
- * optional.</p>
+ * <p>{@code details} is required and carries one entry per cross-connect, each with an
+ * {@code aSide}/{@code zSide}. The recommended (typed) path is
+ * {@link #builder(List)} with a list of {@link Layer1Detail}; for forward compatibility a raw
+ * {@link #builderRaw(List)} escape hatch accepting a list of free-form maps is also provided.</p>
+ *
+ * <p>{@code customerReferenceId}, {@code description}, {@code expediteDateTime},
+ * {@code purchaseOrder}, {@code contacts} and {@code attachments} are optional.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CrossConnectOrderRequest {
 
     @JsonProperty("details")
-    private final List<Map<String, Object>> details;
+    private final Object details;
 
     @JsonProperty("customerReferenceId")
     private final String customerReferenceId;
@@ -69,17 +71,28 @@ public class CrossConnectOrderRequest {
     }
 
     /**
-     * Returns a new builder for a cross-connect order request.
+     * Returns a new builder for a cross-connect order request using typed details (recommended).
      *
      * @param details the per-cross-connect details (required)
      * @return a new builder
      */
-    public static Builder builder(List<Map<String, Object>> details) {
+    public static Builder builder(List<Layer1Detail> details) {
         return new Builder(details);
     }
 
+    /**
+     * Returns a new builder for a cross-connect order request using raw, free-form details. This
+     * escape hatch is provided for forward compatibility; prefer {@link #builder(List)}.
+     *
+     * @param rawDetails the per-cross-connect details as free-form maps (required)
+     * @return a new builder
+     */
+    public static Builder builderRaw(List<Map<String, Object>> rawDetails) {
+        return new Builder((Object) rawDetails);
+    }
+
     public static class Builder {
-        private final List<Map<String, Object>> details;
+        private final Object details;
         private String customerReferenceId;
         private String description;
         private String expediteDateTime;
@@ -87,7 +100,11 @@ public class CrossConnectOrderRequest {
         private List<OrderContact> contacts;
         private List<OrderAttachment> attachments;
 
-        private Builder(List<Map<String, Object>> details) {
+        private Builder(List<Layer1Detail> details) {
+            this.details = details;
+        }
+
+        private Builder(Object details) {
             this.details = details;
         }
 

@@ -16,19 +16,79 @@
 
 package api.equinix.javasdk.customerportal.model;
 
-import api.equinix.javasdk.customerportal.enums.NotificationCategory;
+import java.util.List;
 
+/**
+ * An IBX or network notification in the Equinix Customer Portal (Notifications v1
+ * {@code ibx-notification} / {@code network-notification}).
+ *
+ * <p>This single model carries the union of the IBX and network notification fields:
+ * {@code productTypes} is only populated for network notifications, and {@code emails} is only
+ * populated when an individual notification is fetched by id (the search responses carry summaries
+ * without email details).</p>
+ */
 public interface Notification {
 
-    String getUuid();
+    /**
+     * Returns the notification identifier.
+     *
+     * @return the notification id
+     */
+    String getId();
 
+    /**
+     * Returns the notification type (e.g. {@code IBX_MAINTENANCE}, {@code NETWORK_INCIDENT}).
+     *
+     * @return the notification type
+     */
     String getType();
 
-    NotificationCategory getCategory();
+    /**
+     * Returns the event/notification start timestamp.
+     *
+     * @return the start timestamp
+     */
+    String getStartTimestamp();
 
-    String getMessage();
+    /**
+     * Returns the event/notification end timestamp.
+     *
+     * @return the end timestamp, or {@code null} if not provided
+     */
+    String getEndTimestamp();
 
-    String getTimestamp();
+    /**
+     * Returns the list of affected IBXs.
+     *
+     * @return the IBX codes
+     */
+    List<String> getIbxs();
 
-    Boolean getRead();
+    /**
+     * Returns the notification status (e.g. {@code NEW}, {@code RESOLVED}).
+     *
+     * @return the status
+     */
+    String getStatus();
+
+    /**
+     * Returns summary information about the event/notification.
+     *
+     * @return the summary, or {@code null} if not provided
+     */
+    String getSummary();
+
+    /**
+     * Returns the affected network product types (network notifications only).
+     *
+     * @return the product types, or {@code null} for IBX notifications
+     */
+    List<String> getProductTypes();
+
+    /**
+     * Returns the notification email content (populated only when fetched by id).
+     *
+     * @return the emails, or {@code null} if not provided
+     */
+    List<? extends NotificationEmail> getEmails();
 }

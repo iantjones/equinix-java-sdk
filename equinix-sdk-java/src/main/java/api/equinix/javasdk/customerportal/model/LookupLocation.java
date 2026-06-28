@@ -16,19 +16,24 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.model.implementation.Account;
+import api.equinix.javasdk.customerportal.model.implementation.CageDetails;
+
+import java.util.List;
+
+/**
+ * A permitted IBX location for a customer, with its accounts and cages, as returned by the Customer
+ * Portal Lookup v2 colocation locations API ({@code locations_details}).
+ */
 public interface LookupLocation {
-
-    String getUuid();
-
-    String getName();
 
     String getIbx();
 
-    String getRegion();
+    Boolean getAccessRestricted();
 
-    String getMetro();
+    Boolean getSpecialPrivilege();
 
-    String getCountry();
+    List<Account> getAccounts();
 
-    String getAddress();
+    List<CageDetails> getCages();
 }

@@ -1,0 +1,28 @@
+{
+  "id": "SP-100023",
+  "accountNumber": "128745",
+  "planName": "Smart Hands Premium",
+  "productCode": "SMARTHANDS_PREMIUM",
+  "ibxs": ["SV5", "DC11"],
+  "ibxSpecific": true,
+  "planFrequency": "MONTHLY_ROLLOVER",
+  "purchasedMinutes": 600,
+  "assignedMinutes": 550,
+  "consumedMinutes": 120,
+  "remainingMinutes": 430,
+  "previousConsumedMinutes": 60,
+  "currentConsumedMinutes": 60,
+  "prepaidConsumedMinutes": 0,
+  "transitionMinutes": 0,
+  "startDate": "2026-01-01",
+  "endDate": "2026-12-31",
+  "status": "ACTIVE",
+  "createdDateTime": "2026-01-01T08:00:00Z",
+  "updatedDateTime": "2026-06-01T08:00:00Z",
+  "assignment": {
+    "name": "Acme Corp",
+    "accountNumber": "998877",
+    "status": "ASSIGNED",
+    "eligible": true
+  }
+}

@@ -19,9 +19,6 @@ package api.equinix.javasdk.customerportal.enums;
 import api.equinix.javasdk.core.model.APIParam;
 
 public enum QuoteStatus implements APIParam {
-    DRAFT,
-    PENDING,
-    APPROVED,
-    EXPIRED,
-    REJECTED
+    SUBMITTED,
+    APPROVED
 }

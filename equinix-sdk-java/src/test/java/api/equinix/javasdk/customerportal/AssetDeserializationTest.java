@@ -1,7 +1,7 @@
 package api.equinix.javasdk.customerportal;
 
 import api.equinix.javasdk.core.internal.Constants;
-import api.equinix.javasdk.customerportal.enums.AssetType;
+import api.equinix.javasdk.customerportal.enums.AssetStatus;
 import api.equinix.javasdk.customerportal.model.json.AssetJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,37 +25,42 @@ class AssetDeserializationTest {
     }
 
     @Test
-    void uuid_isDeserialized() {
-        assertEquals("b8c9d0e1-f2a3-4b4c-5d6e-7f8091021324", asset.getUuid());
+    void assetNumber_isDeserialized() {
+        assertEquals("AST-100045", asset.getAssetNumber());
     }
 
     @Test
-    void assetType_isDeserialized() {
-        assertEquals(AssetType.CAGE, asset.getAssetType());
-    }
-
-    @Test
-    void name_isDeserialized() {
-        assertEquals("Primary Cage SV5-01", asset.getName());
-    }
-
-    @Test
-    void ibx_isDeserialized() {
+    void scalarFields_areDeserialized() {
+        assertEquals("SN-998877", asset.getSerialNumber());
+        assertEquals("1-204050607", asset.getOrderNumber());
+        assertEquals("CROSS_CONNECT", asset.getProductName());
         assertEquals("SV5", asset.getIbx());
-    }
-
-    @Test
-    void cageId_isDeserialized() {
-        assertEquals("SV5:01:000ABC", asset.getCageId());
-    }
-
-    @Test
-    void cabinetId_isDeserialized() {
-        assertEquals("C-14", asset.getCabinetId());
+        assertEquals("SV5:01:000ABC", asset.getCage());
+        assertEquals("Single-mode fiber cross connect", asset.getProductDescription());
+        assertEquals("128745", asset.getAccountNumber());
+        assertEquals("Acme Corp", asset.getAccountName());
+        assertEquals("2025-09-15T10:30:00Z", asset.getInstallationDate());
+        assertEquals("CRN-5521", asset.getCustomerReferenceNumber());
     }
 
     @Test
     void status_isDeserialized() {
-        assertEquals("ACTIVE", asset.getStatus());
+        assertEquals(AssetStatus.ACTIVE, asset.getStatus());
+    }
+
+    @Test
+    void productDetails_isDeserialized() {
+        assertNotNull(asset.getProductDetails());
+        assertEquals(2, asset.getProductDetails().size());
+        assertEquals("Media Type", asset.getProductDetails().get(0).getKey());
+        assertEquals("Single Mode Fiber", asset.getProductDetails().get(0).getValue());
+        assertEquals("A-SIDE", asset.getProductDetails().get(0).getTag());
+    }
+
+    @Test
+    void additionalDetails_isDeserialized() {
+        assertNotNull(asset.getAdditionalDetails());
+        assertEquals("C-14", asset.getAdditionalDetails().getCabinetNumber());
+        assertEquals("CIRCUIT-7788", asset.getAdditionalDetails().getCustomerOrCarrierCircuitID());
     }
 }

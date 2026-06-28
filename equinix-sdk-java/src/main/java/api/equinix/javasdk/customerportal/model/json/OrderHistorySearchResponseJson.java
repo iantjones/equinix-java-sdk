@@ -16,18 +16,48 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryLink;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
 
 /**
- * JSON model for the order history search response ({@code Order History Response}), whose order
- * records are carried in the {@code content} array.
+ * JSON model for the order history search response ({@code order-history-response}). The matching
+ * order records are carried in the {@code content} array, with the response-level {@code links} and
+ * {@code page} ({@code page-details-for-response}) describing paging.
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderHistorySearchResponseJson {
 
     @JsonProperty("content")
     private List<OrderHistoryItemJson> content;
+
+    @JsonProperty("links")
+    private List<OrderHistoryLink> links;
+
+    @JsonProperty("page")
+    private PageDetails page;
+
+    /**
+     * Paging details for an order history search response ({@code page-details-for-response}).
+     */
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PageDetails {
+
+        @JsonProperty("size")
+        private Integer size;
+
+        @JsonProperty("totalElements")
+        private Long totalElements;
+
+        @JsonProperty("totalPages")
+        private Integer totalPages;
+
+        @JsonProperty("number")
+        private Integer number;
+    }
 }

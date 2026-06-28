@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
-import api.equinix.javasdk.customerportal.enums.NotificationCategory;
 import api.equinix.javasdk.customerportal.model.Notification;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,27 +24,44 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * JSON model for an IBX or network notification (Notifications v1 {@code ibx-notification} /
+ * {@code network-notification}).
+ *
+ * <p>One model carries the union of both notification shapes: {@code productTypes} is populated
+ * only for network notifications and {@code emails} only when a notification is fetched by id, so
+ * the same class deserializes the IBX get, the network get, and both search-response summaries.</p>
+ */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NotificationJson implements Notification {
 
     @Getter static TypeReference<List<NotificationJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("id")
+    private String id;
 
     @JsonProperty("type")
     private String type;
 
-    @JsonProperty("category")
-    private NotificationCategory category;
+    @JsonProperty("startTimestamp")
+    private String startTimestamp;
 
-    @JsonProperty("message")
-    private String message;
+    @JsonProperty("endTimestamp")
+    private String endTimestamp;
 
-    @JsonProperty("timestamp")
-    private String timestamp;
+    @JsonProperty("ibxs")
+    private List<String> ibxs;
 
-    @JsonProperty("read")
-    private Boolean read;
+    @JsonProperty("status")
+    private String status;
+
+    @JsonProperty("summary")
+    private String summary;
+
+    @JsonProperty("productTypes")
+    private List<String> productTypes;
+
+    @JsonProperty("emails")
+    private List<NotificationEmailJson> emails;
 }

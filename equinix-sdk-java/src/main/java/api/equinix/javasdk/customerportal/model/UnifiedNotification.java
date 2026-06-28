@@ -16,6 +16,13 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.NotificationCategory;
+import api.equinix.javasdk.customerportal.enums.NotificationProductType;
+import api.equinix.javasdk.customerportal.enums.NotificationStatus;
+import api.equinix.javasdk.customerportal.enums.NotificationType;
+import api.equinix.javasdk.customerportal.model.implementation.AdditionalInfo;
+import api.equinix.javasdk.customerportal.model.implementation.NotificationContact;
+
 import java.util.List;
 
 /**
@@ -28,15 +35,21 @@ public interface UnifiedNotification {
 
     String getNotificationNumber();
 
-    String getCategory();
+    NotificationCategory getCategory();
 
-    String getType();
+    NotificationType getType();
+
+    List<NotificationProductType> getProductTypes();
 
     String getSummary();
 
-    String getStatus();
+    NotificationStatus getStatus();
 
     String getCreatedDateTime();
 
     List<String> getIbxs();
+
+    List<NotificationContact> getContacts();
+
+    List<AdditionalInfo> getAdditionalInfo();
 }

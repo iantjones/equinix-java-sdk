@@ -19,6 +19,7 @@ package api.equinix.javasdk.customerportal.client;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.ScheduledReport;
+import api.equinix.javasdk.customerportal.model.json.ReportDefinitionJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
 
 import java.util.List;
@@ -27,8 +28,8 @@ import java.util.List;
  * Client interface for the Report Center in the Equinix Customer Portal.
  *
  * <p>Backed by the Reports v1 API at {@code /v1/reportCenter/reports}. Generated reports are
- * listed and retrieved by id, downloaded as files, and produced from scheduled report
- * definitions which can themselves be listed and created.</p>
+ * listed, retrieved, downloaded and deleted; scheduled report definitions can be listed, created,
+ * fetched, updated and deleted; and the available report definitions can be enumerated.</p>
  */
 public interface Reports {
 
@@ -52,6 +53,36 @@ public interface Reports {
     Report getReportById(String reportId);
 
     /**
+     * Deletes generated reports in bulk.
+     *
+     * <p>Maps to {@code DELETE /v1/reportCenter/reports} ({@code deleteReports}).</p>
+     *
+     * @param reportIds the report ids to delete
+     * @return {@code true} if the request succeeded
+     */
+    boolean deleteReports(List<String> reportIds);
+
+    /**
+     * Downloads one or more generated reports as a combined file (zip).
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports/files} ({@code downloadReports}).</p>
+     *
+     * @param reportIds the report ids to download
+     * @return the downloaded file bytes
+     */
+    byte[] downloadReports(List<String> reportIds);
+
+    /**
+     * Downloads a single generated report's file.
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports/{reportId}/file} ({@code downloadReport}).</p>
+     *
+     * @param reportId the report id
+     * @return the report file bytes
+     */
+    byte[] downloadReport(String reportId);
+
+    /**
      * Lists scheduled report definitions.
      *
      * <p>Maps to {@code GET /v1/reportCenter/reports/scheduler} ({@code getScheduledReports}).</p>
@@ -59,6 +90,17 @@ public interface Reports {
      * @return the list of scheduled reports
      */
     List<? extends ScheduledReport> getScheduledReports();
+
+    /**
+     * Retrieves a scheduled report by id.
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports/scheduler/{scheduledId}}
+     * ({@code getScheduledReport}).</p>
+     *
+     * @param scheduledId the scheduled report id
+     * @return the matching scheduled report
+     */
+    ScheduledReport getScheduledReport(String scheduledId);
 
     /**
      * Creates a scheduled report definition.
@@ -69,6 +111,29 @@ public interface Reports {
      * @return the created scheduled report
      */
     ScheduledReport scheduleReport(ScheduleReportRequest request);
+
+    /**
+     * Updates an existing scheduled report definition.
+     *
+     * <p>Maps to {@code PUT /v1/reportCenter/reports/scheduler/{scheduledId}}
+     * ({@code updateScheduledReport}).</p>
+     *
+     * @param scheduledId the scheduled report id
+     * @param request     the updated schedule request body
+     * @return the updated scheduled report
+     */
+    ScheduledReport updateScheduledReport(String scheduledId, ScheduleReportRequest request);
+
+    /**
+     * Deletes scheduled report definitions in bulk.
+     *
+     * <p>Maps to {@code DELETE /v1/reportCenter/reports/scheduler}
+     * ({@code deleteScheduledReports}).</p>
+     *
+     * @param scheduledIds the scheduled report ids to delete
+     * @return {@code true} if the request succeeded
+     */
+    boolean deleteScheduledReports(List<String> scheduledIds);
 
     /**
      * Generates a report from a scheduled report definition.
@@ -82,12 +147,23 @@ public interface Reports {
     Report generateReport(String scheduledId);
 
     /**
-     * Downloads a generated report's file.
+     * Lists the available report definitions.
      *
-     * <p>Maps to {@code GET /v1/reportCenter/reports/{reportId}/file} ({@code downloadReport}).</p>
+     * <p>Maps to {@code GET /v1/reportCenter/reports/definitions}
+     * ({@code getReportDefinitions}).</p>
      *
-     * @param reportId the report id
-     * @return the report file bytes
+     * @return the list of report definitions
      */
-    byte[] downloadReport(String reportId);
+    List<ReportDefinitionJson> getReportDefinitions();
+
+    /**
+     * Retrieves a single report definition by name.
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports/definitions/{reportName}}
+     * ({@code getReportDefinition}).</p>
+     *
+     * @param reportName the report definition name
+     * @return the matching report definition
+     */
+    ReportDefinitionJson getReportDefinition(String reportName);
 }

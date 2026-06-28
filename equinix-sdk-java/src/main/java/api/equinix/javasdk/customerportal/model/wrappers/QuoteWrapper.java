@@ -37,7 +37,7 @@ public class QuoteWrapper extends ResourceImpl<Quote> implements Quote {
     }
 
     public void refresh() {
-        this.jsonObject = ((QuoteClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.jsonObject = ((QuoteClientImpl)this.serviceClient).refresh(this.getQuoteId());
     }
 
     private interface QuoteMutability {

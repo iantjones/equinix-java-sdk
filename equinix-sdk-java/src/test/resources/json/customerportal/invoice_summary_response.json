@@ -1,5 +1,6 @@
 {
   "transactionId": "INV-2024-00198734",
+  "businessLegalEntity": "Equinix Inc.",
   "transactionType": "INVOICE",
   "transactionDate": "2024-11-15",
   "customerDetails": {
@@ -43,6 +44,14 @@
       "taxType": "STATE_TAX",
       "taxRate": 8.25,
       "taxAmount": 1315.88
+    }
+  ],
+  "totalPriorAdjustmentAmount": -250.00,
+  "priorAdjustmentInfo": [
+    {
+      "transactionId": "CM-2024-000451",
+      "totalAmount": -250.00,
+      "transactionDate": "2024-10-01"
     }
   ]
 }
