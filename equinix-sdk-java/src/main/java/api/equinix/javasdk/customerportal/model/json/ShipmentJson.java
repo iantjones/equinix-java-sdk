@@ -20,7 +20,6 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.CarrierType;
 import api.equinix.javasdk.customerportal.enums.ShipmentStatus;
 import api.equinix.javasdk.customerportal.enums.ShipmentType;
-import api.equinix.javasdk.customerportal.model.Shipment;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;

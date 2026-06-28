@@ -17,13 +17,20 @@
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.TroubleTicketClient;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.json.TroubleTicketJson;
-import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreatorJson;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketUpdateRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreateRequest;
 import api.equinix.javasdk.customerportal.model.wrappers.TroubleTicketWrapper;
+
+import java.util.Map;
 
 public class TroubleTicketClientImpl extends ResourceClientBase<TroubleTicket, TroubleTicketJson> implements TroubleTicketClient<TroubleTicket> {
 
@@ -36,23 +43,29 @@ public class TroubleTicketClientImpl extends ResourceClientBase<TroubleTicket, T
         return new TroubleTicketWrapper(json, this);
     }
 
-    public Page<TroubleTicket, TroubleTicketJson> list() {
-        return listPage("ListTroubleTickets");
+    public String create(TroubleTicketCreateRequest request) {
+        EquinixRequest<Object> equinixRequest = buildRequest("CreateTroubleTicket", RequestType.SINGLE, Object.class);
+        Utils.serializeJson(equinixRequest, request);
+        return Utils.extractFromHeader(invoke(equinixRequest), "Location", OrderLocation.LAST_SEGMENT_PATTERN);
     }
 
-    public TroubleTicketJson getByUuid(String uuid) {
-        return getOne("GetTroubleTicket", uuid);
+    public TroubleTicketJson getByUuid(String id) {
+        return getOne("GetTroubleTicket", Map.of("id", id));
     }
 
-    public TroubleTicketJson create(TroubleTicketCreatorJson troubleTicketCreatorJson) {
-        return postOne("CreateTroubleTicket", troubleTicketCreatorJson);
+    public Boolean update(String id, TicketUpdateRequest request) {
+        return booleanOp("UpdateTroubleTicket", RequestType.SINGLE, Map.of("id", id), null, request);
     }
 
-    public TroubleTicketJson update(String uuid, TroubleTicketCreatorJson troubleTicketCreatorJson) {
-        return updateOne("UpdateTroubleTicket", uuid, troubleTicketCreatorJson);
+    public Boolean addNote(String id, TicketNoteRequest request) {
+        return booleanOp("AddTroubleTicketNote", RequestType.SINGLE, Map.of("id", id), null, request);
     }
 
-    public TroubleTicketJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    public Boolean cancel(String id, TicketCancelRequest request) {
+        return booleanOp("CancelTroubleTicket", RequestType.SINGLE, Map.of("id", id), null, request);
+    }
+
+    public TroubleTicketJson refresh(String id) {
+        return this.getByUuid(id);
     }
 }

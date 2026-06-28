@@ -16,36 +16,23 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Quote;
-import api.equinix.javasdk.customerportal.model.json.creators.QuoteOperator;
 
 /**
- * Client interface for managing quotes in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create price quotes for
- * Equinix products and services.
+ * Client interface for retrieving quotes in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Quotes v2 API at {@code /v2/quotes/{quoteId}}. The API exposes only retrieval
+ * of an individual quote by id (there is no collection, create or refresh endpoint).</p>
  */
 public interface Quotes {
 
     /**
-     * Lists all quotes for the current account.
+     * Retrieves a specific quote by its identifier.
      *
-     * @return a paginated list of quotes
-     */
-    PaginatedList<Quote> list();
-
-    /**
-     * Retrieves a specific quote by its unique identifier.
+     * <p>Maps to {@code GET /v2/quotes/{quoteId}} ({@code Retrieve a quote}).</p>
      *
-     * @param uuid the unique identifier of the quote
+     * @param quoteId the identifier of the quote
      * @return the matching quote
      */
-    Quote getByUuid(String uuid);
-
-    /**
-     * Returns a builder for defining a new quote request.
-     *
-     * @return a new QuoteBuilder instance
-     */
-    QuoteOperator.QuoteBuilder define();
+    Quote getByUuid(String quoteId);
 }

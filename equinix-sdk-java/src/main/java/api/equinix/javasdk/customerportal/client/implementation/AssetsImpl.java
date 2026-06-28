@@ -24,6 +24,7 @@ import api.equinix.javasdk.customerportal.client.Assets;
 import api.equinix.javasdk.customerportal.client.internal.AssetClient;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.json.AssetJson;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
 
 public class AssetsImpl implements Assets {
 
@@ -36,13 +37,13 @@ public class AssetsImpl implements Assets {
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<Asset> list() {
-        Page<Asset, AssetJson> responsePage = this.serviceClient.list();
+    public PaginatedList<Asset> search(AssetSearchRequest request) {
+        Page<Asset, AssetJson> responsePage = this.serviceClient.search(request);
         PaginatedList<Asset> assetList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(assetList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    public Asset getByUuid(String uuid) {
-        return this.serviceClient.getByUuid(uuid);
+    public Asset getByUuid(String assetId) {
+        return this.serviceClient.getByUuid(assetId);
     }
 }

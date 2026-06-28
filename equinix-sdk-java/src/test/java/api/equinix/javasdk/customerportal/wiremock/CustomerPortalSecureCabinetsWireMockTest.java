@@ -3,19 +3,25 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.customerportal.model.SecureCabinet;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.ProductAvailability;
+import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOrderRequest;
 import org.junit.jupiter.api.*;
 
+import java.util.List;
+import java.util.Map;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * WireMock-based API tests for CustomerPortal Secure Cabinets.
  *
- * <p>Exercises the list accessor {@code secureCabinets().list()} and the single-resource
- * accessor {@code secureCabinets().getByUuid(uuid)}. The SecureCabinets functional area is
- * keyed to API version 1 ({@code /v1/secureCabinets...}).</p>
+ * <p>Exercises the order submission {@code secureCabinets().createOrder(...)} (POST
+ * {@code /securecabinet/v1/orders}) and the availability lookup
+ * {@code secureCabinets().getProductsAvailability(accountNumber)} (GET
+ * {@code /securecabinet/v1/availability/{accountNumber}}).</p>
  */
 class CustomerPortalSecureCabinetsWireMockTest extends WireMockTestBase {
 
@@ -39,54 +45,52 @@ class CustomerPortalSecureCabinetsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("list()")
-    class List {
+    @DisplayName("createOrder()")
+    class CreateOrder {
 
         @Test
-        @DisplayName("returns paginated secure cabinets")
-        void returnsSecureCabinets() {
-            stubPaginatedGet(wireMock, "/v1/secureCabinets",
-                    "/json/customerportal/paginated_secure_cabinets.json");
+        @DisplayName("POSTs to the secure cabinet orders endpoint and returns the order id")
+        void createsOrder() {
+            wireMock.stubFor(post(urlPathEqualTo("/securecabinet/v1/orders"))
+                    .willReturn(aResponse().withStatus(202)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{\"orderNumber\":\"1-126546546546\"}")));
 
-            PaginatedList<SecureCabinet> cabinets = customerPortal.secureCabinets().list();
+            OrderResponse response = customerPortal.secureCabinets().createOrder(
+                    SecureCabinetOrderRequest.builder("128745", "SV5", "TERM_36_MONTHS",
+                                    Map.of("numberOfCabinets", 2, "drawCapacity", 5.0))
+                            .customerReference("PO-2024-9981")
+                            .build());
 
-            assertNotNull(cabinets);
-            assertEquals(2, cabinets.size());
-            SecureCabinet first = cabinets.get(0);
-            assertEquals("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", first.getUuid());
-            assertEquals("SV5:01:0042", first.getCabinetId());
-            assertEquals("SV5", first.getIbx());
-            assertEquals("ACTIVE", first.getStatus());
+            assertNotNull(response);
+            assertEquals("1-126546546546", response.getOrderId());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/securecabinet/v1/orders"))
+                    .withRequestBody(matchingJsonPath("$.accountNumber", equalTo("128745")))
+                    .withRequestBody(matchingJsonPath("$.ibxCode", equalTo("SV5")))
+                    .withRequestBody(matchingJsonPath("$.contractTerm", equalTo("TERM_36_MONTHS"))));
         }
     }
 
     @Nested
-    @DisplayName("getByUuid()")
-    class GetByUuid {
+    @DisplayName("getProductsAvailability()")
+    class Availability {
 
         @Test
-        @DisplayName("returns secure cabinet for valid UUID")
-        void returnsSecureCabinet() {
-            stubSingleton(wireMock, "/v1/secureCabinets/.*",
-                    "/json/customerportal/secure_cabinet_response.json");
+        @DisplayName("returns the availability list for an account")
+        void returnsAvailability() {
+            wireMock.stubFor(get(urlPathMatching("/securecabinet/v1/availability/.*"))
+                    .willReturn(okJson("[{\"ibx\":\"SV5\",\"maximumNumberOfCabinetsToOrder\":10,"
+                            + "\"minimumDrawCapacityPerCabinet\":1.0,\"maximumDrawCapacityPerCabinet\":17.3,"
+                            + "\"fabricPortSpeed\":\"1G\"}]")));
 
-            SecureCabinet cabinet = customerPortal.secureCabinets()
-                    .getByUuid("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d");
+            List<? extends ProductAvailability> availabilities =
+                    customerPortal.secureCabinets().getProductsAvailability("128745");
 
-            assertNotNull(cabinet);
-            assertEquals("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", cabinet.getUuid());
-            assertEquals("SV5:01:0042", cabinet.getCabinetId());
-            assertEquals("ELECTRONIC", cabinet.getLockType());
-        }
-
-        @Test
-        @DisplayName("404 throws EquinixNotFoundException")
-        void notFound() {
-            stubErrorInline(wireMock, "/v1/secureCabinets/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Secure cabinet not found\"}]");
-
-            assertThrows(EquinixNotFoundException.class,
-                    () -> customerPortal.secureCabinets().getByUuid("invalid-uuid"));
+            assertNotNull(availabilities);
+            assertEquals(1, availabilities.size());
+            assertEquals("SV5", availabilities.get(0).getIbx());
+            assertEquals(10, availabilities.get(0).getMaximumNumberOfCabinetsToOrder());
         }
     }
 
@@ -97,11 +101,11 @@ class CustomerPortalSecureCabinetsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
-            stubErrorInline(wireMock, "/v1/secureCabinets/.*",
+            stubErrorInline(wireMock, "/securecabinet/v1/availability/.*",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,
-                    () -> customerPortal.secureCabinets().getByUuid("test-uuid"));
+                    () -> customerPortal.secureCabinets().getProductsAvailability("128745"));
         }
     }
 }

@@ -44,25 +44,19 @@
         }
       },
       "CrossConnects": {
-        "rootUri": "crossConnects",
+        "rootUri": "colocations/v2/orders/crossConnects",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
-          "ListCrossConnects": {
-            "httpMethod": "GET"
-          },
-          "GetCrossConnect": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "CreateCrossConnect": {
+          "OrderCrossConnect": {
             "httpMethod": "POST"
           },
           "UpdateCrossConnect": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
+            "httpMethod": "PATCH",
+            "requestUri": "{$orderId}"
           },
-          "DeleteCrossConnect": {
-            "httpMethod": "DELETE",
-            "requestUri": "{$uuid}"
+          "DeinstallCrossConnect": {
+            "httpMethod": "POST",
+            "requestUri": "deinstall"
           }
         }
       },
@@ -93,25 +87,15 @@
         }
       },
       "Shipments": {
-        "rootUri": "shipments",
+        "rootUri": "colocations/v2/orders/shipments",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
-          "ListShipments": {
-            "httpMethod": "GET"
-          },
-          "GetShipment": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "CreateShipment": {
+          "OrderShipment": {
             "httpMethod": "POST"
           },
           "UpdateShipment": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
-          },
-          "CancelShipment": {
-            "httpMethod": "DELETE",
-            "requestUri": "{$uuid}"
+            "httpMethod": "PATCH",
+            "requestUri": "{$orderId}"
           }
         }
       },
@@ -178,56 +162,61 @@
         }
       },
       "WorkVisits": {
-        "rootUri": "workVisits",
+        "rootUri": "colocations/v2/orders/workVisits",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
-          "ListWorkVisits": {
-            "httpMethod": "GET"
-          },
-          "GetWorkVisit": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "CreateWorkVisit": {
+          "OrderWorkVisit": {
             "httpMethod": "POST"
           },
           "UpdateWorkVisit": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
-          },
-          "CancelWorkVisit": {
-            "httpMethod": "DELETE",
-            "requestUri": "{$uuid}"
+            "httpMethod": "PATCH",
+            "requestUri": "{$orderId}"
           }
         }
       },
       "TroubleTickets": {
         "rootUri": "tickets",
         "serviceEndpoints": {
-          "ListTroubleTickets": {
-            "httpMethod": "GET"
-          },
-          "GetTroubleTicket": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
           "CreateTroubleTicket": {
             "httpMethod": "POST"
           },
+          "GetTroubleTicket": {
+            "httpMethod": "GET",
+            "requestUri": "{$id}"
+          },
           "UpdateTroubleTicket": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
+            "httpMethod": "PATCH",
+            "requestUri": "{$id}"
+          },
+          "AddTroubleTicketNote": {
+            "httpMethod": "POST",
+            "requestUri": "{$id}/notes"
+          },
+          "CancelTroubleTicket": {
+            "httpMethod": "POST",
+            "requestUri": "{$id}/cancel"
           }
         }
       },
       "Notifications": {
         "rootUri": "notifications",
+        "defaultVersion": 1,
         "serviceEndpoints": {
-          "ListNotifications": {
-            "httpMethod": "GET"
+          "SearchIbxNotifications": {
+            "httpMethod": "POST",
+            "requestUri": "ibx/search"
           },
-          "GetNotification": {
+          "SearchNetworkNotifications": {
+            "httpMethod": "POST",
+            "requestUri": "network/search"
+          },
+          "GetIbxNotification": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "ibx/{$id}"
+          },
+          "GetNetworkNotification": {
+            "httpMethod": "GET",
+            "requestUri": "network/{$id}"
           }
         }
       },
@@ -235,69 +224,70 @@
         "rootUri": "assets",
         "defaultVersion": 1,
         "serviceEndpoints": {
-          "ListAssets": {
-            "httpMethod": "GET"
+          "SearchAssets": {
+            "httpMethod": "POST",
+            "requestUri": "search"
           },
           "GetAsset": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "{$assetId}"
           }
         }
       },
       "Quotes": {
         "rootUri": "quotes",
         "serviceEndpoints": {
-          "ListQuotes": {
-            "httpMethod": "GET"
-          },
           "GetQuote": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "CreateQuote": {
-            "httpMethod": "POST"
+            "requestUri": "{$quoteId}"
           }
         }
       },
       "SupportPlans": {
-        "rootUri": "support/plans",
+        "rootUri": "colocations/v2/supportPlans",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
           "ListSupportPlans": {
             "httpMethod": "GET"
-          },
-          "GetSupportPlan": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
           }
         }
       },
       "OrderHistory": {
-        "rootUri": "orders/history",
+        "rootUri": "retrieve-orders",
         "defaultVersion": 1,
         "serviceEndpoints": {
-          "ListOrderHistory": {
-            "httpMethod": "GET"
+          "SearchOrderHistory": {
+            "httpMethod": "POST"
           },
-          "GetOrderHistoryItem": {
+          "ListOrderHistoryLocations": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "locations"
           }
         }
       },
       "Lookup": {
-        "rootUri": "lookup",
+        "rootUri": "colocations/v2",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
           "ListLocations": {
             "httpMethod": "GET",
             "requestUri": "locations"
           },
-          "GetLocation": {
-            "httpMethod": "GET",
-            "requestUri": "locations/{$uuid}"
-          },
           "ListPatchPanels": {
             "httpMethod": "GET",
             "requestUri": "patchPanels"
+          },
+          "GetPatchPanel": {
+            "httpMethod": "GET",
+            "requestUri": "patchPanels/{$patchPanelId}"
+          },
+          "ListProviders": {
+            "httpMethod": "GET",
+            "requestUri": "providers"
+          },
+          "ListConnectionServices": {
+            "httpMethod": "GET",
+            "requestUri": "connectionServices"
           }
         }
       },
@@ -310,47 +300,191 @@
           },
           "GetAttachment": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "{$attachmentId}"
+          },
+          "DownloadAttachment": {
+            "httpMethod": "GET",
+            "requestUri": "{$attachmentId}/file"
           },
           "UploadAttachment": {
-            "httpMethod": "POST"
+            "httpMethod": "POST",
+            "requestUri": "file"
           },
           "DeleteAttachment": {
             "httpMethod": "DELETE",
-            "requestUri": "{$uuid}"
+            "requestUri": "{$attachmentId}"
           }
         }
       },
       "Reports": {
-        "rootUri": "reports",
+        "rootUri": "reportCenter/reports",
         "defaultVersion": 1,
         "serviceEndpoints": {
-          "ListReports": {
+          "GetReports": {
             "httpMethod": "GET"
           },
           "GetReport": {
             "httpMethod": "GET",
-            "requestUri": "{$uuid}"
+            "requestUri": "{$reportId}"
+          },
+          "GetScheduledReports": {
+            "httpMethod": "GET",
+            "requestUri": "scheduler"
+          },
+          "ScheduleReport": {
+            "httpMethod": "POST",
+            "requestUri": "scheduler"
+          },
+          "GenerateReport": {
+            "httpMethod": "POST",
+            "requestUri": "scheduler/{$scheduledId}/report"
+          },
+          "DownloadReport": {
+            "httpMethod": "GET",
+            "requestUri": "{$reportId}/file"
           }
         }
       },
       "SecureCabinets": {
-        "rootUri": "secureCabinets",
-        "defaultVersion": 1,
+        "rootUri": "securecabinet/v1",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
         "serviceEndpoints": {
-          "ListSecureCabinets": {
-            "httpMethod": "GET"
+          "CreateSecureCabinetOrder": {
+            "httpMethod": "POST",
+            "requestUri": "orders"
           },
-          "GetSecureCabinet": {
+          "GetSecureCabinetAvailability": {
+            "httpMethod": "GET",
+            "requestUri": "availability/{$accountNumber}"
+          }
+        }
+      },
+      "SupportCases": {
+        "rootUri": "support/v2/tickets",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
+        "serviceEndpoints": {
+          "CreateSupportCase": {
+            "httpMethod": "POST"
+          },
+          "GetSupportCase": {
+            "httpMethod": "GET",
+            "requestUri": "{$id}"
+          },
+          "AddSupportCaseNotesById": {
+            "httpMethod": "POST",
+            "requestUri": "{$id}/notes"
+          },
+          "CancelSupportCase": {
+            "httpMethod": "POST",
+            "requestUri": "{$id}/cancel"
+          },
+          "AddSupportCaseNotesByCaseNumber": {
+            "httpMethod": "POST",
+            "overrideRootUri": true,
+            "requestUri": "support/v1/tickets/{$caseNumber}/notes"
+          }
+        }
+      },
+      "UnifiedNotifications": {
+        "rootUri": "notifications/v2",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
+        "serviceEndpoints": {
+          "GetUnifiedNotifications": {
+            "httpMethod": "POST",
+            "requestUri": "events/findAll"
+          }
+        }
+      },
+      "DigitalLoas": {
+        "rootUri": "diloa/v1/digitalLoas",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
+        "serviceEndpoints": {
+          "CreateDigitalLoa": {
+            "httpMethod": "POST"
+          },
+          "GetDigitalLoa": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
           },
-          "CreateSecureCabinet": {
-            "httpMethod": "POST"
+          "SearchDigitalLoas": {
+            "httpMethod": "POST",
+            "requestUri": "search"
           },
-          "UpdateSecureCabinet": {
-            "httpMethod": "PUT",
+          "PatchDigitalLoa": {
+            "httpMethod": "PATCH",
             "requestUri": "{$uuid}"
+          },
+          "CancelDigitalLoa": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "PerformDigitalLoaAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/actions"
+          },
+          "CreateDigitalLoaRequest": {
+            "httpMethod": "POST",
+            "requestUri": "loaRequests"
+          },
+          "GetDigitalLoaChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes"
+          },
+          "GetDigitalLoaChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes/{$changeUuid}"
+          }
+        }
+      },
+      "TroubleTicketOrders": {
+        "rootUri": "orders/troubleticket",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "GetTroubleTicketTypes": {
+            "httpMethod": "GET",
+            "requestUri": "types"
+          },
+          "GetTroubleTicketLocations": {
+            "httpMethod": "GET",
+            "requestUri": "locations"
+          },
+          "PlaceTroubleTicketOrder": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "BillingAccounts": {
+        "rootUri": "finance/accounts",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListBillingAccounts": {
+            "httpMethod": "GET"
+          },
+          "GetBillingAccount": {
+            "httpMethod": "GET",
+            "requestUri": "{$accountNumber}"
+          },
+          "DownloadBillingDocument": {
+            "httpMethod": "GET",
+            "requestUri": "{$accountNumber}/{$invoiceId}"
+          }
+        }
+      },
+      "BillingAccountsSearch": {
+        "rootUri": "billing/v2/billingAccounts",
+        "overrideUriFormat": "{$rootUri}/{$requestUri}",
+        "serviceEndpoints": {
+          "SearchBillingAccounts": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetBillingAccountByNumber": {
+            "httpMethod": "GET",
+            "requestUri": "accountNumber/{$accountNumber}"
+          },
+          "GetBillingAccountById": {
+            "httpMethod": "GET",
+            "requestUri": "{$accountId}"
           }
         }
       }

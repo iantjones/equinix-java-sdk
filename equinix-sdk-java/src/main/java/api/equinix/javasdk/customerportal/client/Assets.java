@@ -18,26 +18,33 @@ package api.equinix.javasdk.customerportal.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Asset;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
 
 /**
  * Client interface for accessing asset information in the Equinix Customer Portal.
- * Provides read-only operations to list and retrieve details about physical assets
- * such as cages, cabinets, and power circuits within IBX data centers.
+ *
+ * <p>Backed by the Assets v1 API at {@code /v1/assets}. Assets are discovered by posting a filter
+ * to {@link #search(AssetSearchRequest)} and retrieved individually by id.</p>
  */
 public interface Assets {
 
     /**
-     * Lists all assets for the current account.
+     * Searches assets.
      *
-     * @return a paginated list of assets
+     * <p>Maps to {@code POST /v1/assets/search} ({@code searchAssets}).</p>
+     *
+     * @param request the asset search request body
+     * @return a paginated list of matching assets
      */
-    PaginatedList<Asset> list();
+    PaginatedList<Asset> search(AssetSearchRequest request);
 
     /**
-     * Retrieves a specific asset by its unique identifier.
+     * Retrieves a specific asset by its identifier.
      *
-     * @param uuid the unique identifier of the asset
+     * <p>Maps to {@code GET /v1/assets/{assetId}} ({@code getAssetById}).</p>
+     *
+     * @param assetId the identifier of the asset
      * @return the matching asset
      */
-    Asset getByUuid(String uuid);
+    Asset getByUuid(String assetId);
 }

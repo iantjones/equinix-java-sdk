@@ -30,6 +30,8 @@ public interface AttachmentClient<T> extends Pageable<T> {
 
     AttachmentJson create(AttachmentCreatorJson attachmentCreatorJson);
 
+    byte[] download(String attachmentId);
+
     AttachmentJson delete(String uuid);
 
     AttachmentJson refresh(String uuid);

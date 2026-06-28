@@ -17,14 +17,14 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.TroubleTickets;
 import api.equinix.javasdk.customerportal.client.internal.TroubleTicketClient;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.json.TroubleTicketJson;
-import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketOperator;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketUpdateRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreateRequest;
 import api.equinix.javasdk.customerportal.model.wrappers.TroubleTicketWrapper;
 
 public class TroubleTicketsImpl implements TroubleTickets {
@@ -38,18 +38,24 @@ public class TroubleTicketsImpl implements TroubleTickets {
         this.serviceManager = serviceManager;
     }
 
-    public PaginatedList<TroubleTicket> list() {
-        Page<TroubleTicket, TroubleTicketJson> responsePage = this.serviceClient.list();
-        PaginatedList<TroubleTicket> troubleTicketList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, TroubleTicketWrapper::new);
-        return new PaginatedList<>(troubleTicketList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public String create(TroubleTicketCreateRequest request) {
+        return this.serviceClient.create(request);
     }
 
-    public TroubleTicket getByUuid(String uuid) {
-        TroubleTicketJson troubleTicketJson = this.serviceClient.getByUuid(uuid);
+    public TroubleTicket getByUuid(String id) {
+        TroubleTicketJson troubleTicketJson = this.serviceClient.getByUuid(id);
         return new TroubleTicketWrapper(troubleTicketJson, this.serviceClient);
     }
 
-    public TroubleTicketOperator.TroubleTicketBuilder define() {
-        return new TroubleTicketOperator(this.serviceClient).create();
+    public Boolean update(String id, TicketUpdateRequest request) {
+        return this.serviceClient.update(id, request);
+    }
+
+    public Boolean addNote(String id, TicketNoteRequest request) {
+        return this.serviceClient.addNote(id, request);
+    }
+
+    public Boolean cancel(String id, TicketCancelRequest request) {
+        return this.serviceClient.cancel(id, request);
     }
 }

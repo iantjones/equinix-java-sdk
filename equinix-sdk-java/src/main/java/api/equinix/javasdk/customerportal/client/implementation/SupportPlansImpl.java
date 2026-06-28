@@ -25,6 +25,10 @@ import api.equinix.javasdk.customerportal.client.internal.SupportPlanClient;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.json.SupportPlanJson;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class SupportPlansImpl implements SupportPlans {
 
     private final CustomerPortal serviceManager;
@@ -37,12 +41,22 @@ public class SupportPlansImpl implements SupportPlans {
     }
 
     public PaginatedList<SupportPlan> list() {
-        Page<SupportPlan, SupportPlanJson> responsePage = this.serviceClient.list();
-        PaginatedList<SupportPlan> supportPlanList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedList<>(supportPlanList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return list(null, null, null);
     }
 
-    public SupportPlan getByUuid(String uuid) {
-        return this.serviceClient.getByUuid(uuid);
+    public PaginatedList<SupportPlan> list(List<String> accountNumbers, List<String> ibxs, List<String> planIds) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (accountNumbers != null && !accountNumbers.isEmpty()) {
+            queryParams.put("accountNumbers", accountNumbers);
+        }
+        if (ibxs != null && !ibxs.isEmpty()) {
+            queryParams.put("ibxs", ibxs);
+        }
+        if (planIds != null && !planIds.isEmpty()) {
+            queryParams.put("planIds", planIds);
+        }
+        Page<SupportPlan, SupportPlanJson> responsePage = this.serviceClient.list(queryParams);
+        PaginatedList<SupportPlan> supportPlanList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        return new PaginatedList<>(supportPlanList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

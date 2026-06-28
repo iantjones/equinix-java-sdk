@@ -16,23 +16,16 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.customerportal.model.CrossConnect;
-import api.equinix.javasdk.customerportal.model.json.CrossConnectJson;
-import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectCreatorJson;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectDeinstallRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectUpdateRequest;
 
-public interface CrossConnectClient<T> extends Pageable<T> {
+public interface CrossConnectClient {
 
-    Page<CrossConnect, CrossConnectJson> list();
+    OrderResponse order(CrossConnectOrderRequest request);
 
-    CrossConnectJson getByUuid(String uuid);
+    OrderResponse update(String orderId, CrossConnectUpdateRequest request);
 
-    CrossConnectJson create(CrossConnectCreatorJson crossConnectCreatorJson);
-
-    CrossConnectJson update(String uuid, CrossConnectCreatorJson crossConnectCreatorJson);
-
-    CrossConnectJson delete(String uuid);
-
-    CrossConnectJson refresh(String uuid);
+    OrderResponse deinstall(CrossConnectDeinstallRequest request);
 }

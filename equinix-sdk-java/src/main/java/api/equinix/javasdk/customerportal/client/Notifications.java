@@ -16,20 +16,56 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Notification;
+import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
+
+import java.util.List;
 
 /**
- * Client interface for accessing notifications in the Equinix Customer Portal.
- * Provides read-only access to account notifications such as maintenance windows
- * and service alerts.
+ * Client interface for accessing IBX and network notifications in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Notifications v1 API at {@code /v1/notifications}. IBX and network notifications
+ * are searched separately and retrieved individually by id.</p>
  */
 public interface Notifications {
 
     /**
-     * Lists all notifications for the current account.
+     * Searches IBX notifications (maintenance, incidents, advisories).
      *
-     * @return a paginated list of notifications
+     * <p>Maps to {@code POST /v1/notifications/ibx/search} ({@code search-ibx-notifications}).</p>
+     *
+     * @param request the search request body
+     * @return the matching IBX notifications
      */
-    PaginatedList<Notification> list();
+    List<? extends Notification> searchIbx(NotificationSearchRequest request);
+
+    /**
+     * Searches network notifications (network maintenance and incidents).
+     *
+     * <p>Maps to {@code POST /v1/notifications/network/search} ({@code search-network-notifications}).</p>
+     *
+     * @param request the search request body
+     * @return the matching network notifications
+     */
+    List<? extends Notification> searchNetwork(NotificationSearchRequest request);
+
+    /**
+     * Retrieves an IBX notification by id.
+     *
+     * <p>Maps to {@code GET /v1/notifications/ibx/{id}} ({@code get-ibx-Notification}).</p>
+     *
+     * @param id the notification id
+     * @return the matching IBX notification
+     */
+    Notification getIbxById(String id);
+
+    /**
+     * Retrieves a network notification by id.
+     *
+     * <p>Maps to {@code GET /v1/notifications/network/{id}} ({@code get-network-Notification}).</p>
+     *
+     * @param id the notification id
+     * @return the matching network notification
+     */
+    Notification getNetworkById(String id);
 }

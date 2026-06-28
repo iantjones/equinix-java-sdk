@@ -16,47 +16,37 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.WorkVisitClient;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
-import api.equinix.javasdk.customerportal.model.json.WorkVisitJson;
-import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitCreatorJson;
-import api.equinix.javasdk.customerportal.model.wrappers.WorkVisitWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.OrderResponseJson;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 
-public class WorkVisitClientImpl extends ResourceClientBase<WorkVisit, WorkVisitJson> implements WorkVisitClient<WorkVisit> {
+import java.util.Map;
+
+public class WorkVisitClientImpl extends ClientBase implements WorkVisitClient {
 
     public WorkVisitClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "WorkVisits", WorkVisitJson.class);
+        super(configClient, "CustomerPortal", "WorkVisits");
     }
 
-    @Override
-    protected WorkVisit wrap(WorkVisitJson json) {
-        return new WorkVisitWrapper(json, this);
+    public OrderResponse order(WorkVisitOrderRequest request) {
+        return submitOrder("OrderWorkVisit", null, request);
     }
 
-    public Page<WorkVisit, WorkVisitJson> list() {
-        return listPage("ListWorkVisits");
+    public OrderResponse update(String orderId, WorkVisitUpdateRequest request) {
+        return submitOrder("UpdateWorkVisit", Map.of("orderId", orderId), request);
     }
 
-    public WorkVisitJson getByUuid(String uuid) {
-        return getOne("GetWorkVisit", uuid);
-    }
-
-    public WorkVisitJson create(WorkVisitCreatorJson workVisitCreatorJson) {
-        return postOne("CreateWorkVisit", workVisitCreatorJson);
-    }
-
-    public WorkVisitJson update(String uuid, WorkVisitCreatorJson workVisitCreatorJson) {
-        return updateOne("UpdateWorkVisit", uuid, workVisitCreatorJson);
-    }
-
-    public WorkVisitJson cancel(String uuid) {
-        return deleteOne("CancelWorkVisit", uuid);
-    }
-
-    public WorkVisitJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {
+        EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, null, Object.class);
+        Utils.serializeJson(request, body);
+        String orderId = Utils.extractFromHeader(invoke(request), "Location", OrderLocation.ORDER_ID_PATTERN);
+        return new OrderResponseJson(orderId);
     }
 }

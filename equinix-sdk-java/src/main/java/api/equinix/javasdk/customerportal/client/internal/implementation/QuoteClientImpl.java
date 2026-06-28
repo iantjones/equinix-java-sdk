@@ -17,13 +17,13 @@
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.QuoteClient;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.json.QuoteJson;
-import api.equinix.javasdk.customerportal.model.json.creators.QuoteCreatorJson;
 import api.equinix.javasdk.customerportal.model.wrappers.QuoteWrapper;
+
+import java.util.Map;
 
 public class QuoteClientImpl extends ResourceClientBase<Quote, QuoteJson> implements QuoteClient<Quote> {
 
@@ -36,19 +36,11 @@ public class QuoteClientImpl extends ResourceClientBase<Quote, QuoteJson> implem
         return new QuoteWrapper(json, this);
     }
 
-    public Page<Quote, QuoteJson> list() {
-        return listPage("ListQuotes");
+    public QuoteJson getByUuid(String quoteId) {
+        return getOne("GetQuote", Map.of("quoteId", quoteId));
     }
 
-    public QuoteJson getByUuid(String uuid) {
-        return getOne("GetQuote", uuid);
-    }
-
-    public QuoteJson create(QuoteCreatorJson quoteCreatorJson) {
-        return postOne("CreateQuote", quoteCreatorJson);
-    }
-
-    public QuoteJson refresh(String uuid) {
-        return this.getByUuid(uuid);
+    public QuoteJson refresh(String quoteId) {
+        return this.getByUuid(quoteId);
     }
 }

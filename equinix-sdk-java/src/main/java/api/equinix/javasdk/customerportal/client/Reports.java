@@ -18,26 +18,76 @@ package api.equinix.javasdk.customerportal.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Report;
+import api.equinix.javasdk.customerportal.model.ScheduledReport;
+import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
+
+import java.util.List;
 
 /**
- * Client interface for accessing reports in the Equinix Customer Portal.
- * Provides read-only operations to list and retrieve generated reports
- * covering usage, billing, and operational metrics.
+ * Client interface for the Report Center in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Reports v1 API at {@code /v1/reportCenter/reports}. Generated reports are
+ * listed and retrieved by id, downloaded as files, and produced from scheduled report
+ * definitions which can themselves be listed and created.</p>
  */
 public interface Reports {
 
     /**
-     * Lists all reports for the current account.
+     * Lists generated reports.
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports} ({@code getReports}).</p>
      *
      * @return a paginated list of reports
      */
-    PaginatedList<Report> list();
+    PaginatedList<Report> getReports();
 
     /**
-     * Retrieves a specific report by its unique identifier.
+     * Retrieves a generated report by id.
      *
-     * @param uuid the unique identifier of the report
+     * <p>Maps to {@code GET /v1/reportCenter/reports/{reportId}} ({@code getReportById}).</p>
+     *
+     * @param reportId the report id
      * @return the matching report
      */
-    Report getByUuid(String uuid);
+    Report getReportById(String reportId);
+
+    /**
+     * Lists scheduled report definitions.
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports/scheduler} ({@code getScheduledReports}).</p>
+     *
+     * @return the list of scheduled reports
+     */
+    List<? extends ScheduledReport> getScheduledReports();
+
+    /**
+     * Creates a scheduled report definition.
+     *
+     * <p>Maps to {@code POST /v1/reportCenter/reports/scheduler} ({@code scheduleReport}).</p>
+     *
+     * @param request the schedule request body
+     * @return the created scheduled report
+     */
+    ScheduledReport scheduleReport(ScheduleReportRequest request);
+
+    /**
+     * Generates a report from a scheduled report definition.
+     *
+     * <p>Maps to {@code POST /v1/reportCenter/reports/scheduler/{scheduledId}/report}
+     * ({@code generateReport}).</p>
+     *
+     * @param scheduledId the scheduled report id
+     * @return the generated report
+     */
+    Report generateReport(String scheduledId);
+
+    /**
+     * Downloads a generated report's file.
+     *
+     * <p>Maps to {@code GET /v1/reportCenter/reports/{reportId}/file} ({@code downloadReport}).</p>
+     *
+     * @param reportId the report id
+     * @return the report file bytes
+     */
+    byte[] downloadReport(String reportId);
 }

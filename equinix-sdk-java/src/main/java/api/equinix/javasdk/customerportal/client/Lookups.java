@@ -16,35 +16,72 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.customerportal.model.ConnectionService;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
+import api.equinix.javasdk.customerportal.model.PatchPanel;
+import api.equinix.javasdk.customerportal.model.Provider;
+
+import java.util.List;
 
 /**
- * Client interface for performing lookup queries in the Equinix Customer Portal.
- * Provides read-only operations to retrieve reference data such as IBX locations
- * and patch panel information.
+ * Client interface for colocation reference-data lookups in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Colocation v2 lookup APIs under {@code /colocations/v2}. Provides the locations,
+ * patch panels, providers and connection services required when building cross-connect and other
+ * colocation orders.</p>
  */
 public interface Lookups {
 
     /**
-     * Lists all available IBX locations.
+     * Lists the locations the current user may order at, for the given permission code.
      *
-     * @return a paginated list of locations
+     * <p>Maps to {@code GET /colocations/v2/locations} ({@code Get Locations by permission code}).</p>
+     *
+     * @param permissionCode the permission code ({@code CROSS_CONNECT}, {@code WORK_VISIT} or {@code SHIPMENTS})
+     * @return the list of permitted locations
      */
-    PaginatedList<LookupLocation> listLocations();
+    List<? extends LookupLocation> listLocations(String permissionCode);
 
     /**
-     * Retrieves a specific location by its unique identifier.
+     * Lists the patch panels in the given cabinet.
      *
-     * @param uuid the unique identifier of the location
-     * @return the matching location
+     * <p>Maps to {@code GET /colocations/v2/patchPanels} ({@code Retrieve all patch panels}).</p>
+     *
+     * @param cabinetId the cabinet id (required)
+     * @return the list of patch panels
      */
-    LookupLocation getLocationByUuid(String uuid);
+    List<? extends PatchPanel> listPatchPanels(String cabinetId);
 
     /**
-     * Lists all available patch panels.
+     * Retrieves the details of a patch panel by id.
      *
-     * @return a paginated list of patch panel locations
+     * <p>Maps to {@code GET /colocations/v2/patchPanels/{patchPanelId}}
+     * ({@code Retrieve patch panel details}).</p>
+     *
+     * @param patchPanelId the patch panel id
+     * @return the patch panel details
      */
-    PaginatedList<LookupLocation> listPatchPanels();
+    PatchPanel getPatchPanelById(String patchPanelId);
+
+    /**
+     * Lists the cross-connect providers available for a cabinet and account.
+     *
+     * <p>Maps to {@code GET /colocations/v2/providers} ({@code Retrieve list of providers}).</p>
+     *
+     * @param cageId        the cage id (required)
+     * @param accountNumber the account number (required)
+     * @return the list of providers
+     */
+    List<? extends Provider> listProviders(String cageId, String accountNumber);
+
+    /**
+     * Lists the connection services available at an IBX.
+     *
+     * <p>Maps to {@code GET /colocations/v2/connectionServices}
+     * ({@code Retrieve list of connection services}).</p>
+     *
+     * @param ibx the IBX code (required)
+     * @return the list of connection services
+     */
+    List<? extends ConnectionService> listConnectionServices(String ibx);
 }

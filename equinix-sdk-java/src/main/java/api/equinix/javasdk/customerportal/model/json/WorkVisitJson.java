@@ -18,7 +18,6 @@ package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.WorkVisitStatus;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;

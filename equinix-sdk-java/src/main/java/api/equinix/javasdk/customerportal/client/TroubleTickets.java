@@ -16,36 +16,72 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
-import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketOperator;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketUpdateRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreateRequest;
 
 /**
  * Client interface for managing trouble tickets in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create trouble tickets for reporting
- * and tracking infrastructure issues.
+ *
+ * <p>Backed by the Tickets v2 API at {@code /v2/tickets}. Tickets are created, retrieved by id,
+ * updated (notification contacts), annotated with notes and cancelled. There is no collection
+ * listing endpoint.</p>
  */
 public interface TroubleTickets {
 
     /**
-     * Lists all trouble tickets for the current account.
+     * Creates a trouble ticket.
      *
-     * @return a paginated list of trouble tickets
+     * <p>Maps to {@code POST /v2/tickets} ({@code Create a Ticket}). The created ticket id is
+     * returned from the {@code Location} response header.</p>
+     *
+     * @param request the create request body
+     * @return the created ticket id
      */
-    PaginatedList<TroubleTicket> list();
+    String create(TroubleTicketCreateRequest request);
 
     /**
-     * Retrieves a specific trouble ticket by its unique identifier.
+     * Retrieves a specific trouble ticket by its identifier.
      *
-     * @param uuid the unique identifier of the trouble ticket
-     * @return the matching trouble ticket
+     * <p>Maps to {@code GET /v2/tickets/{id}} ({@code Retrieve a ticket}).</p>
+     *
+     * @param id the identifier of the ticket
+     * @return the matching ticket
      */
-    TroubleTicket getByUuid(String uuid);
+    TroubleTicket getByUuid(String id);
 
     /**
-     * Returns a builder for defining a new trouble ticket.
+     * Updates a trouble ticket's notification contacts.
      *
-     * @return a new TroubleTicketBuilder instance
+     * <p>Maps to {@code PATCH /v2/tickets/{id}} ({@code Update a ticket}).</p>
+     *
+     * @param id      the identifier of the ticket
+     * @param request the update request body
+     * @return {@code true} if the update was accepted
      */
-    TroubleTicketOperator.TroubleTicketBuilder define();
+    Boolean update(String id, TicketUpdateRequest request);
+
+    /**
+     * Adds a note to a trouble ticket.
+     *
+     * <p>Maps to {@code POST /v2/tickets/{id}/notes} ({@code Add notes to ticket}).</p>
+     *
+     * @param id      the identifier of the ticket
+     * @param request the note request body
+     * @return {@code true} if the note was accepted
+     */
+    Boolean addNote(String id, TicketNoteRequest request);
+
+    /**
+     * Cancels a trouble ticket.
+     *
+     * <p>Maps to {@code POST /v2/tickets/{id}/cancel} ({@code Cancel a ticket}).</p>
+     *
+     * @param id      the identifier of the ticket
+     * @param request the cancel request body
+     * @return {@code true} if the cancellation was accepted
+     */
+    Boolean cancel(String id, TicketCancelRequest request);
 }

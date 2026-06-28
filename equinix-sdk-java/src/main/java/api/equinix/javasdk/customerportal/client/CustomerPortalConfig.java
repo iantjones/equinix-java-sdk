@@ -35,24 +35,25 @@ import api.equinix.javasdk.customerportal.client.internal.LookupClient;
 import api.equinix.javasdk.customerportal.client.internal.AttachmentClient;
 import api.equinix.javasdk.customerportal.client.internal.ReportClient;
 import api.equinix.javasdk.customerportal.client.internal.SecureCabinetClient;
+import api.equinix.javasdk.customerportal.client.internal.SupportCasesClient;
+import api.equinix.javasdk.customerportal.client.internal.UnifiedNotificationsClient;
+import api.equinix.javasdk.customerportal.client.internal.DigitalLoasClient;
+import api.equinix.javasdk.customerportal.client.internal.TroubleTicketOrderClient;
+import api.equinix.javasdk.customerportal.client.internal.BillingAccountClient;
+import api.equinix.javasdk.customerportal.client.internal.BillingAccountSearchClient;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.Attachment;
-import api.equinix.javasdk.customerportal.model.CrossConnect;
+import api.equinix.javasdk.customerportal.model.BillingAccount;
+import api.equinix.javasdk.customerportal.model.BillingAccountV2;
 import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
-import api.equinix.javasdk.customerportal.model.LookupLocation;
-import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.Order;
-import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
-import api.equinix.javasdk.customerportal.model.SecureCabinet;
-import api.equinix.javasdk.customerportal.model.Shipment;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
 
 public interface CustomerPortalConfig {
 
@@ -64,19 +65,19 @@ public interface CustomerPortalConfig {
 
     ResellerCustomerClient<ResellerCustomer> getResellerCustomerClient();
 
-    CrossConnectClient<CrossConnect> getCrossConnectClient();
+    CrossConnectClient getCrossConnectClient();
 
     OrderClient<Order> getOrderClient();
 
     TroubleTicketClient<TroubleTicket> getTroubleTicketClient();
 
-    WorkVisitClient<WorkVisit> getWorkVisitClient();
+    WorkVisitClient getWorkVisitClient();
 
     SmartHandsClient getSmartHandsClient();
 
-    ShipmentClient<Shipment> getShipmentClient();
+    ShipmentClient getShipmentClient();
 
-    NotificationClient<Notification> getNotificationClient();
+    NotificationClient getNotificationClient();
 
     AssetClient<Asset> getAssetClient();
 
@@ -85,16 +86,27 @@ public interface CustomerPortalConfig {
 
     SupportPlanClient<SupportPlan> getSupportPlanClient();
 
-    OrderHistoryClient<OrderHistoryItem> getOrderHistoryClient();
+    OrderHistoryClient getOrderHistoryClient();
 
-    LookupClient<LookupLocation> getLookupClient();
+    LookupClient getLookupClient();
 
     AttachmentClient<Attachment> getAttachmentClient();
 
     ReportClient<Report> getReportClient();
 
 
-    SecureCabinetClient<SecureCabinet> getSecureCabinetClient();
+    SecureCabinetClient getSecureCabinetClient();
 
+    SupportCasesClient getSupportCasesClient();
+
+    UnifiedNotificationsClient getUnifiedNotificationsClient();
+
+    DigitalLoasClient getDigitalLoasClient();
+
+    TroubleTicketOrderClient getTroubleTicketOrderClient();
+
+    BillingAccountClient<BillingAccount> getBillingAccountClient();
+
+    BillingAccountSearchClient<BillingAccountV2> getBillingAccountSearchClient();
 
 }

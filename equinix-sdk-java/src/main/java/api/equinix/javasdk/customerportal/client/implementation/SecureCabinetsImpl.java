@@ -17,39 +17,30 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.SecureCabinets;
 import api.equinix.javasdk.customerportal.client.internal.SecureCabinetClient;
-import api.equinix.javasdk.customerportal.model.SecureCabinet;
-import api.equinix.javasdk.customerportal.model.json.SecureCabinetJson;
-import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOperator;
-import api.equinix.javasdk.customerportal.model.wrappers.SecureCabinetWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.ProductAvailability;
+import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOrderRequest;
+
+import java.util.List;
 
 public class SecureCabinetsImpl implements SecureCabinets {
 
     private final CustomerPortal serviceManager;
 
-    private final SecureCabinetClient<SecureCabinet> serviceClient;
+    private final SecureCabinetClient serviceClient;
 
-    public SecureCabinetsImpl(SecureCabinetClient<SecureCabinet> serviceClient, CustomerPortal serviceManager) {
+    public SecureCabinetsImpl(SecureCabinetClient serviceClient, CustomerPortal serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    public PaginatedList<SecureCabinet> list() {
-        Page<SecureCabinet, SecureCabinetJson> responsePage = this.serviceClient.list();
-        PaginatedList<SecureCabinet> secureCabinetList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, SecureCabinetWrapper::new);
-        return new PaginatedList<>(secureCabinetList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public OrderResponse createOrder(SecureCabinetOrderRequest request) {
+        return this.serviceClient.createOrder(request);
     }
 
-    public SecureCabinet getByUuid(String uuid) {
-        SecureCabinetJson secureCabinetJson = this.serviceClient.getByUuid(uuid);
-        return new SecureCabinetWrapper(secureCabinetJson, this.serviceClient);
-    }
-
-    public SecureCabinetOperator.SecureCabinetBuilder define() {
-        return new SecureCabinetOperator(this.serviceClient).create();
+    public List<? extends ProductAvailability> getProductsAvailability(String accountNumber) {
+        return this.serviceClient.getProductsAvailability(accountNumber);
     }
 }

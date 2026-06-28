@@ -36,6 +36,12 @@ import api.equinix.javasdk.customerportal.client.Lookups;
 import api.equinix.javasdk.customerportal.client.Attachments;
 import api.equinix.javasdk.customerportal.client.Reports;
 import api.equinix.javasdk.customerportal.client.SecureCabinets;
+import api.equinix.javasdk.customerportal.client.SupportCases;
+import api.equinix.javasdk.customerportal.client.UnifiedNotifications;
+import api.equinix.javasdk.customerportal.client.DigitalLoas;
+import api.equinix.javasdk.customerportal.client.TroubleTicketOrders;
+import api.equinix.javasdk.customerportal.client.BillingAccounts;
+import api.equinix.javasdk.customerportal.client.BillingAccountsSearch;
 import api.equinix.javasdk.customerportal.client.implementation.CrossConnectsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.implementation.InvoicesImpl;
@@ -54,6 +60,12 @@ import api.equinix.javasdk.customerportal.client.implementation.LookupsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.AttachmentsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.ReportsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.SecureCabinetsImpl;
+import api.equinix.javasdk.customerportal.client.implementation.SupportCasesImpl;
+import api.equinix.javasdk.customerportal.client.implementation.UnifiedNotificationsImpl;
+import api.equinix.javasdk.customerportal.client.implementation.DigitalLoasImpl;
+import api.equinix.javasdk.customerportal.client.implementation.TroubleTicketOrdersImpl;
+import api.equinix.javasdk.customerportal.client.implementation.BillingAccountsImpl;
+import api.equinix.javasdk.customerportal.client.implementation.BillingAccountsSearchImpl;
 
 /**
  * The primary entry point for accessing Equinix Customer Portal APIs.
@@ -125,6 +137,17 @@ public final class CustomerPortal extends EquinixClient implements Service {
 
     private SecureCabinets secureCabinets;
 
+    private SupportCases supportCases;
+
+    private UnifiedNotifications unifiedNotifications;
+
+    private DigitalLoas digitalLoas;
+
+    private TroubleTicketOrders troubleTicketOrders;
+
+    private BillingAccounts billingAccounts;
+
+    private BillingAccountsSearch billingAccountsSearch;
 
 
     final private CustomerPortalConfig customerPortalConfig;
@@ -391,5 +414,85 @@ public final class CustomerPortal extends EquinixClient implements Service {
             this.secureCabinets = new SecureCabinetsImpl(this.customerPortalConfig.getSecureCabinetClient(), this);
         }
         return secureCabinets;
+    }
+
+    /**
+     * Returns the client for creating and managing support cases (the v2 Support tickets API).
+     * Support cases track non-incident requests and inquiries raised against the customer's
+     * Equinix services.
+     *
+     * @return the {@link SupportCases} client for support case operations
+     */
+    public SupportCases supportCases() {
+        if (this.supportCases == null) {
+            this.supportCases = new SupportCasesImpl(this.customerPortalConfig.getSupportCasesClient(), this);
+        }
+        return supportCases;
+    }
+
+    /**
+     * Returns the client for searching unified notifications (the {@code /notifications/v2} events
+     * API). Unified notifications aggregate IBX and network events into a single searchable feed.
+     *
+     * @return the {@link UnifiedNotifications} client for unified notification operations
+     */
+    public UnifiedNotifications unifiedNotifications() {
+        if (this.unifiedNotifications == null) {
+            this.unifiedNotifications = new UnifiedNotificationsImpl(this.customerPortalConfig.getUnifiedNotificationsClient(), this);
+        }
+        return unifiedNotifications;
+    }
+
+    /**
+     * Returns the client for managing Digital Letters of Authorization (DiLOAs). DiLOAs authorize
+     * third parties to provision cross-connects to the customer's assets.
+     *
+     * @return the {@link DigitalLoas} client for digital LOA operations
+     */
+    public DigitalLoas digitalLoas() {
+        if (this.digitalLoas == null) {
+            this.digitalLoas = new DigitalLoasImpl(this.customerPortalConfig.getDigitalLoasClient(), this);
+        }
+        return digitalLoas;
+    }
+
+    /**
+     * Returns the client for placing trouble-ticket orders (the v1 trouble-ticket order API).
+     * Provides the supported types, permitted locations and order placement for reporting
+     * infrastructure issues as orders.
+     *
+     * @return the {@link TroubleTicketOrders} client for trouble-ticket order operations
+     */
+    public TroubleTicketOrders troubleTicketOrders() {
+        if (this.troubleTicketOrders == null) {
+            this.troubleTicketOrders = new TroubleTicketOrdersImpl(this.customerPortalConfig.getTroubleTicketOrderClient(), this);
+        }
+        return troubleTicketOrders;
+    }
+
+    /**
+     * Returns the client for accessing finance billing-account summaries and downloading invoice
+     * documents (the v1 finance API).
+     *
+     * @return the {@link BillingAccounts} client for billing-account operations
+     */
+    public BillingAccounts billingAccounts() {
+        if (this.billingAccounts == null) {
+            this.billingAccounts = new BillingAccountsImpl(this.customerPortalConfig.getBillingAccountClient(), this);
+        }
+        return billingAccounts;
+    }
+
+    /**
+     * Returns the client for searching billing accounts and looking them up by number or id
+     * (the billing v2 billing-accounts API).
+     *
+     * @return the {@link BillingAccountsSearch} client for billing-account search operations
+     */
+    public BillingAccountsSearch billingAccountsSearch() {
+        if (this.billingAccountsSearch == null) {
+            this.billingAccountsSearch = new BillingAccountsSearchImpl(this.customerPortalConfig.getBillingAccountSearchClient(), this);
+        }
+        return billingAccountsSearch;
     }
 }

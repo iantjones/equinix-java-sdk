@@ -44,9 +44,13 @@ public class AttachmentsImpl implements Attachments {
         return new PaginatedList<>(attachmentList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    public Attachment getByUuid(String uuid) {
-        AttachmentJson attachmentJson = this.serviceClient.getByUuid(uuid);
+    public Attachment getByUuid(String attachmentId) {
+        AttachmentJson attachmentJson = this.serviceClient.getByUuid(attachmentId);
         return new AttachmentWrapper(attachmentJson, this.serviceClient);
+    }
+
+    public byte[] download(String attachmentId) {
+        return this.serviceClient.download(attachmentId);
     }
 
     public AttachmentOperator.AttachmentBuilder define() {

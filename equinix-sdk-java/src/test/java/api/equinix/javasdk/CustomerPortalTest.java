@@ -3,6 +3,9 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.*;
+import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -51,29 +54,19 @@ class CustomerPortalTest {
 
     @Test
     void crossConnects() {
-        try {
-            PaginatedList<CrossConnect> crossConnects = customerPortal.crossConnects().list();
-            assertNotNull(crossConnects);
-            assertTrue(crossConnects.size() >= 0);
-
-            if (crossConnects.size() > 0) {
-                CrossConnect crossConnect = customerPortal.crossConnects().getByUuid(crossConnects.get(0).getUuid());
-                assertNotNull(crossConnect);
-                assertEquals(crossConnects.get(0).getUuid(), crossConnect.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Cross connects test skipped: " + e.getMessage());
-        }
+        // Cross-connects are ordered (POST/PATCH/deinstall), not listed; nothing read-only to call.
+        assertNotNull(customerPortal.crossConnects());
     }
 
     @Test
     void orders() {
         try {
-            // Orders v2 has no list/create; discover an order id via order history.
-            PaginatedList<OrderHistoryItem> history = customerPortal.orderHistory().list();
+            // Orders v2 has no list/create; discover an order id via order history search.
+            List<? extends OrderHistoryItem> history = customerPortal.orderHistory()
+                    .search(OrderHistorySearchRequest.builder().build());
             assertNotNull(history);
 
-            if (history.size() > 0) {
+            if (!history.isEmpty()) {
                 String orderId = history.get(0).getOrderNumber();
                 Order order = customerPortal.orders().getByUuid(orderId);
                 assertNotNull(order);
@@ -87,36 +80,14 @@ class CustomerPortalTest {
 
     @Test
     void troubleTickets() {
-        try {
-            PaginatedList<TroubleTicket> tickets = customerPortal.troubleTickets().list();
-            assertNotNull(tickets);
-            assertTrue(tickets.size() >= 0);
-
-            if (tickets.size() > 0) {
-                TroubleTicket ticket = customerPortal.troubleTickets().getByUuid(tickets.get(0).getUuid());
-                assertNotNull(ticket);
-                assertEquals(tickets.get(0).getUuid(), ticket.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Trouble tickets test skipped: " + e.getMessage());
-        }
+        // Tickets v2 has no collection listing; create/getByUuid/update/notes/cancel only.
+        assertNotNull(customerPortal.troubleTickets());
     }
 
     @Test
     void workVisits() {
-        try {
-            PaginatedList<WorkVisit> workVisits = customerPortal.workVisits().list();
-            assertNotNull(workVisits);
-            assertTrue(workVisits.size() >= 0);
-
-            if (workVisits.size() > 0) {
-                WorkVisit workVisit = customerPortal.workVisits().getByUuid(workVisits.get(0).getUuid());
-                assertNotNull(workVisit);
-                assertEquals(workVisits.get(0).getUuid(), workVisit.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Work visits test skipped: " + e.getMessage());
-        }
+        // Work visits are scheduled (POST/PATCH), not listed; nothing read-only to call.
+        assertNotNull(customerPortal.workVisits());
     }
 
     @Test
@@ -134,27 +105,20 @@ class CustomerPortalTest {
 
     @Test
     void shipments() {
-        try {
-            PaginatedList<Shipment> shipments = customerPortal.shipments().list();
-            assertNotNull(shipments);
-            assertTrue(shipments.size() >= 0);
-
-            if (shipments.size() > 0) {
-                Shipment shipment = customerPortal.shipments().getByUuid(shipments.get(0).getUuid());
-                assertNotNull(shipment);
-                assertEquals(shipments.get(0).getUuid(), shipment.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Shipments test skipped: " + e.getMessage());
-        }
+        // Shipments are scheduled (POST/PATCH), not listed; nothing read-only to call.
+        assertNotNull(customerPortal.shipments());
     }
 
     @Test
     void notifications() {
         try {
-            PaginatedList<Notification> notifications = customerPortal.notifications().list();
-            assertNotNull(notifications);
-            assertTrue(notifications.size() >= 0);
+            List<? extends Notification> ibx = customerPortal.notifications()
+                    .searchIbx(new NotificationSearchRequest(java.util.Map.of()));
+            assertNotNull(ibx);
+
+            List<? extends Notification> network = customerPortal.notifications()
+                    .searchNetwork(new NotificationSearchRequest(java.util.Map.of()));
+            assertNotNull(network);
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Notifications test skipped: " + e.getMessage());
         }
@@ -163,7 +127,8 @@ class CustomerPortalTest {
     @Test
     void assets() {
         try {
-            PaginatedList<Asset> assets = customerPortal.assets().list();
+            PaginatedList<Asset> assets = customerPortal.assets()
+                    .search(new AssetSearchRequest(java.util.Map.of()));
             assertNotNull(assets);
             assertTrue(assets.size() >= 0);
 
@@ -179,19 +144,8 @@ class CustomerPortalTest {
 
     @Test
     void quotes() {
-        try {
-            PaginatedList<Quote> quotes = customerPortal.quotes().list();
-            assertNotNull(quotes);
-            assertTrue(quotes.size() >= 0);
-
-            if (quotes.size() > 0) {
-                Quote quote = customerPortal.quotes().getByUuid(quotes.get(0).getUuid());
-                assertNotNull(quote);
-                assertEquals(quotes.get(0).getUuid(), quote.getUuid());
-            }
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Quotes test skipped: " + e.getMessage());
-        }
+        // Quotes expose only getByUuid; without a known quote id there is nothing to list.
+        assertNotNull(customerPortal.quotes());
     }
 
     @Test
@@ -200,12 +154,6 @@ class CustomerPortalTest {
             PaginatedList<SupportPlan> supportPlans = customerPortal.supportPlans().list();
             assertNotNull(supportPlans);
             assertTrue(supportPlans.size() >= 0);
-
-            if (supportPlans.size() > 0) {
-                SupportPlan supportPlan = customerPortal.supportPlans().getByUuid(supportPlans.get(0).getUuid());
-                assertNotNull(supportPlan);
-                assertEquals(supportPlans.get(0).getUuid(), supportPlan.getUuid());
-            }
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Support plans test skipped: " + e.getMessage());
         }
@@ -214,15 +162,11 @@ class CustomerPortalTest {
     @Test
     void orderHistory() {
         try {
-            PaginatedList<OrderHistoryItem> orderHistory = customerPortal.orderHistory().list();
+            List<? extends OrderHistoryItem> orderHistory = customerPortal.orderHistory()
+                    .search(OrderHistorySearchRequest.builder().build());
             assertNotNull(orderHistory);
-            assertTrue(orderHistory.size() >= 0);
 
-            if (orderHistory.size() > 0) {
-                OrderHistoryItem item = customerPortal.orderHistory().getByUuid(orderHistory.get(0).getUuid());
-                assertNotNull(item);
-                assertEquals(orderHistory.get(0).getUuid(), item.getUuid());
-            }
+            assertNotNull(customerPortal.orderHistory().listLocations());
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Order history test skipped: " + e.getMessage());
         }
@@ -231,9 +175,8 @@ class CustomerPortalTest {
     @Test
     void lookups() {
         try {
-            PaginatedList<LookupLocation> locations = customerPortal.lookups().listLocations();
+            List<? extends LookupLocation> locations = customerPortal.lookups().listLocations("CROSS_CONNECT");
             assertNotNull(locations);
-            assertTrue(locations.size() >= 0);
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Lookups test skipped: " + e.getMessage());
         }
@@ -259,15 +202,11 @@ class CustomerPortalTest {
     @Test
     void reports() {
         try {
-            PaginatedList<Report> reports = customerPortal.reports().list();
+            PaginatedList<Report> reports = customerPortal.reports().getReports();
             assertNotNull(reports);
             assertTrue(reports.size() >= 0);
 
-            if (reports.size() > 0) {
-                Report report = customerPortal.reports().getByUuid(reports.get(0).getUuid());
-                assertNotNull(report);
-                assertEquals(reports.get(0).getUuid(), report.getUuid());
-            }
+            assertNotNull(customerPortal.reports().getScheduledReports());
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Reports test skipped: " + e.getMessage());
         }
@@ -276,15 +215,10 @@ class CustomerPortalTest {
     @Test
     void secureCabinets() {
         try {
-            PaginatedList<SecureCabinet> secureCabinets = customerPortal.secureCabinets().list();
-            assertNotNull(secureCabinets);
-            assertTrue(secureCabinets.size() >= 0);
-
-            if (secureCabinets.size() > 0) {
-                SecureCabinet secureCabinet = customerPortal.secureCabinets().getByUuid(secureCabinets.get(0).getUuid());
-                assertNotNull(secureCabinet);
-                assertEquals(secureCabinets.get(0).getUuid(), secureCabinet.getUuid());
-            }
+            // Secure cabinets are ordered, not listed; the readable op is availability lookup.
+            List<? extends ProductAvailability> availability =
+                    customerPortal.secureCabinets().getProductsAvailability("128745");
+            assertNotNull(availability);
         } catch (Exception e) {
             Assumptions.assumeTrue(false, "Secure cabinets test skipped: " + e.getMessage());
         }

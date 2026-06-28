@@ -16,19 +16,13 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.json.QuoteJson;
-import api.equinix.javasdk.customerportal.model.json.creators.QuoteCreatorJson;
 
 public interface QuoteClient<T> extends Pageable<T> {
 
-    Page<Quote, QuoteJson> list();
+    QuoteJson getByUuid(String quoteId);
 
-    QuoteJson getByUuid(String uuid);
-
-    QuoteJson create(QuoteCreatorJson quoteCreatorJson);
-
-    QuoteJson refresh(String uuid);
+    QuoteJson refresh(String quoteId);
 }

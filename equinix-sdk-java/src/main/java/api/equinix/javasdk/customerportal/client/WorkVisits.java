@@ -16,36 +16,40 @@
 
 package api.equinix.javasdk.customerportal.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
-import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOperator;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 
 /**
- * Client interface for managing work visit requests in the Equinix Customer Portal.
- * Provides operations to list, retrieve, and create work visit scheduling requests
- * for on-site access to IBX data centers.
+ * Client interface for scheduling work visits in the Equinix Customer Portal.
+ *
+ * <p>Backed by the Work Visits v2 order API at {@code /colocations/v2/orders/workVisits}. Work
+ * visits are scheduled and updated as orders; the resulting order is tracked through {@link Orders}
+ * and {@link OrderHistory}, and a work visit is cancelled via
+ * {@link Orders#cancel(String, String)}. Each operation returns the generated order id (parsed
+ * from the {@code Location} header).</p>
  */
 public interface WorkVisits {
 
     /**
-     * Lists all work visits for the current account.
+     * Schedules a work visit.
      *
-     * @return a paginated list of work visits
+     * <p>Maps to {@code POST /colocations/v2/orders/workVisits} ({@code Schedule Work Visit Services}).</p>
+     *
+     * @param request the work visit order request body
+     * @return the order submission result carrying the generated order id
      */
-    PaginatedList<WorkVisit> list();
+    OrderResponse order(WorkVisitOrderRequest request);
 
     /**
-     * Retrieves a specific work visit by its unique identifier.
+     * Updates a pending work visit order.
      *
-     * @param uuid the unique identifier of the work visit
-     * @return the matching work visit
-     */
-    WorkVisit getByUuid(String uuid);
-
-    /**
-     * Returns a builder for defining a new work visit request.
+     * <p>Maps to {@code PATCH /colocations/v2/orders/workVisits/{orderId}}
+     * ({@code Update a work visit order}).</p>
      *
-     * @return a new WorkVisitBuilder instance
+     * @param orderId the identifier of the work visit order
+     * @param request the update request body
+     * @return the order submission result carrying the order id
      */
-    WorkVisitOperator.WorkVisitBuilder define();
+    OrderResponse update(String orderId, WorkVisitUpdateRequest request);
 }

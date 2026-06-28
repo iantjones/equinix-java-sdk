@@ -16,21 +16,15 @@
 
 package api.equinix.javasdk.customerportal.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.customerportal.model.SecureCabinet;
-import api.equinix.javasdk.customerportal.model.json.SecureCabinetJson;
-import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetCreatorJson;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.ProductAvailability;
+import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOrderRequest;
 
-public interface SecureCabinetClient<T> extends Pageable<T> {
+import java.util.List;
 
-    Page<SecureCabinet, SecureCabinetJson> list();
+public interface SecureCabinetClient {
 
-    SecureCabinetJson getByUuid(String uuid);
+    OrderResponse createOrder(SecureCabinetOrderRequest request);
 
-    SecureCabinetJson create(SecureCabinetCreatorJson secureCabinetCreatorJson);
-
-    SecureCabinetJson update(String uuid, SecureCabinetCreatorJson secureCabinetCreatorJson);
-
-    SecureCabinetJson refresh(String uuid);
+    List<? extends ProductAvailability> getProductsAvailability(String accountNumber);
 }

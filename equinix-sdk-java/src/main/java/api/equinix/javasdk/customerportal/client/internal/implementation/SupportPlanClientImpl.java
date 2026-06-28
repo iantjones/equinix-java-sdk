@@ -23,6 +23,9 @@ import api.equinix.javasdk.customerportal.client.internal.SupportPlanClient;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.json.SupportPlanJson;
 
+import java.util.List;
+import java.util.Map;
+
 public class SupportPlanClientImpl extends ResourceClientBase<SupportPlan, SupportPlanJson> implements SupportPlanClient<SupportPlan> {
 
     public SupportPlanClientImpl(CustomerPortalConfigImpl configClient) {
@@ -34,11 +37,10 @@ public class SupportPlanClientImpl extends ResourceClientBase<SupportPlan, Suppo
         return json;
     }
 
-    public Page<SupportPlan, SupportPlanJson> list() {
-        return listPage("ListSupportPlans");
-    }
-
-    public SupportPlanJson getByUuid(String uuid) {
-        return getOne("GetSupportPlan", uuid);
+    public Page<SupportPlan, SupportPlanJson> list(Map<String, List<String>> queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return listPage("ListSupportPlans");
+        }
+        return listPage("ListSupportPlans", queryParams);
     }
 }

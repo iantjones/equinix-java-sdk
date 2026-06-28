@@ -17,39 +17,28 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.WorkVisits;
 import api.equinix.javasdk.customerportal.client.internal.WorkVisitClient;
-import api.equinix.javasdk.customerportal.model.WorkVisit;
-import api.equinix.javasdk.customerportal.model.json.WorkVisitJson;
-import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOperator;
-import api.equinix.javasdk.customerportal.model.wrappers.WorkVisitWrapper;
+import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 
 public class WorkVisitsImpl implements WorkVisits {
 
     private final CustomerPortal serviceManager;
 
-    private final WorkVisitClient<WorkVisit> serviceClient;
+    private final WorkVisitClient serviceClient;
 
-    public WorkVisitsImpl(WorkVisitClient<WorkVisit> serviceClient, CustomerPortal serviceManager) {
+    public WorkVisitsImpl(WorkVisitClient serviceClient, CustomerPortal serviceManager) {
         this.serviceClient = serviceClient;
         this.serviceManager = serviceManager;
     }
 
-    public PaginatedList<WorkVisit> list() {
-        Page<WorkVisit, WorkVisitJson> responsePage = this.serviceClient.list();
-        PaginatedList<WorkVisit> workVisitList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, WorkVisitWrapper::new);
-        return new PaginatedList<>(workVisitList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    public OrderResponse order(WorkVisitOrderRequest request) {
+        return this.serviceClient.order(request);
     }
 
-    public WorkVisit getByUuid(String uuid) {
-        WorkVisitJson workVisitJson = this.serviceClient.getByUuid(uuid);
-        return new WorkVisitWrapper(workVisitJson, this.serviceClient);
-    }
-
-    public WorkVisitOperator.WorkVisitBuilder define() {
-        return new WorkVisitOperator(this.serviceClient).create();
+    public OrderResponse update(String orderId, WorkVisitUpdateRequest request) {
+        return this.serviceClient.update(orderId, request);
     }
 }

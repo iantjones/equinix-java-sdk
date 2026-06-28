@@ -16,33 +16,47 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
-import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.LookupClient;
+import api.equinix.javasdk.core.client.ClientBase;
+import api.equinix.javasdk.customerportal.model.ConnectionService;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
-import api.equinix.javasdk.customerportal.model.json.LookupLocationJson;
+import api.equinix.javasdk.customerportal.model.PatchPanel;
+import api.equinix.javasdk.customerportal.model.Provider;
+import api.equinix.javasdk.customerportal.model.json.ConnectionServiceJson;
+import api.equinix.javasdk.customerportal.model.json.LocationsDetailsResponseJson;
+import api.equinix.javasdk.customerportal.model.json.PatchPanelJson;
+import api.equinix.javasdk.customerportal.model.json.ProviderJson;
 
-public class LookupClientImpl extends ResourceClientBase<LookupLocation, LookupLocationJson> implements LookupClient<LookupLocation> {
+import java.util.List;
+import java.util.Map;
+
+public class LookupClientImpl extends ClientBase implements LookupClient {
 
     public LookupClientImpl(CustomerPortalConfigImpl configClient) {
-        super(configClient, "CustomerPortal", "Lookup", LookupLocationJson.class);
+        super(configClient, "CustomerPortal", "Lookup");
     }
 
-    @Override
-    protected LookupLocation wrap(LookupLocationJson json) {
-        return json;
+    public List<? extends LookupLocation> listLocations(String permissionCode) {
+        LocationsDetailsResponseJson response = getAs("ListLocations", null,
+                Map.of("permissionCode", List.of(permissionCode)), LocationsDetailsResponseJson.class);
+        return response.getCrossConnects();
     }
 
-    public Page<LookupLocation, LookupLocationJson> listLocations() {
-        return listPage("ListLocations");
+    public List<? extends PatchPanel> listPatchPanels(String cabinetId) {
+        return listAs("ListPatchPanels", null, Map.of("cabinetId", List.of(cabinetId)), PatchPanelJson.class);
     }
 
-    public LookupLocationJson getLocationByUuid(String uuid) {
-        return getOne("GetLocation", uuid);
+    public PatchPanelJson getPatchPanelById(String patchPanelId) {
+        return getAs("GetPatchPanel", Map.of("patchPanelId", patchPanelId), null, PatchPanelJson.class);
     }
 
-    public Page<LookupLocation, LookupLocationJson> listPatchPanels() {
-        return listPage("ListPatchPanels");
+    public List<? extends Provider> listProviders(String cageId, String accountNumber) {
+        return listAs("ListProviders", null,
+                Map.of("cageId", List.of(cageId), "accountNumber", List.of(accountNumber)), ProviderJson.class);
+    }
+
+    public List<? extends ConnectionService> listConnectionServices(String ibx) {
+        return listAs("ListConnectionServices", null, Map.of("ibx", List.of(ibx)), ConnectionServiceJson.class);
     }
 }
