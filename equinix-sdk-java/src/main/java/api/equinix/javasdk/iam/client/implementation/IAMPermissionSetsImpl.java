@@ -1,0 +1,61 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package api.equinix.javasdk.iam.client.implementation;
+
+import api.equinix.javasdk.IAM;
+import api.equinix.javasdk.iam.client.IAMPermissionSets;
+import api.equinix.javasdk.iam.client.internal.PermissionSetClient;
+import api.equinix.javasdk.iam.model.PermissionSet;
+import api.equinix.javasdk.iam.model.json.PermissionSetList;
+import api.equinix.javasdk.iam.model.json.creators.CreatePermissionSetRequest;
+import api.equinix.javasdk.iam.model.json.creators.UpdatePermissionSetRequest;
+
+public class IAMPermissionSetsImpl implements IAMPermissionSets {
+
+    private final IAM serviceManager;
+
+    private final PermissionSetClient permissionSetClient;
+
+    public IAMPermissionSetsImpl(PermissionSetClient permissionSetClient, IAM serviceManager) {
+        this.serviceManager = serviceManager;
+        this.permissionSetClient = permissionSetClient;
+    }
+
+    public PermissionSetList list(String projectId) {
+        return this.permissionSetClient.list(projectId, null, null);
+    }
+
+    public PermissionSetList list(String projectId, String pageToken, Integer pageSize) {
+        return this.permissionSetClient.list(projectId, pageToken, pageSize);
+    }
+
+    public PermissionSet create(String projectId, CreatePermissionSetRequest request) {
+        return this.permissionSetClient.create(projectId, request);
+    }
+
+    public PermissionSet getByUuid(String projectId, String permissionSetId) {
+        return this.permissionSetClient.getByUuid(projectId, permissionSetId);
+    }
+
+    public PermissionSet update(String projectId, String permissionSetId, UpdatePermissionSetRequest request) {
+        return this.permissionSetClient.update(projectId, permissionSetId, request);
+    }
+
+    public Boolean delete(String projectId, String permissionSetId) {
+        return this.permissionSetClient.delete(projectId, permissionSetId);
+    }
+}

@@ -1,0 +1,87 @@
+{
+  "functionalAreas": {
+    "IAM": {
+      "uriFormat": "v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Roles": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListRoles": { "httpMethod": "GET", "requestUri": "roles" },
+          "ListRolesByProjectId": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/roles" }
+        }
+      },
+      "RoleAssignments": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListRoleAssignments": { "httpMethod": "GET", "requestUri": "roleAssignments" },
+          "CreateRoleAssignment": { "httpMethod": "POST", "requestUri": "roleAssignments" },
+          "GetRoleAssignment": { "httpMethod": "GET", "requestUri": "roleAssignments/{$roleAssignmentId}" },
+          "DeleteRoleAssignment": { "httpMethod": "DELETE", "requestUri": "roleAssignments/{$roleAssignmentId}" }
+        }
+      },
+      "AccessPolicies": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListAccessPolicies": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/accessPolicies" },
+          "CreateAccessPolicy": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/accessPolicies" },
+          "GetAccessPolicy": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}" },
+          "UpdateAccessPolicy": { "httpMethod": "PATCH", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}" },
+          "DeleteAccessPolicy": { "httpMethod": "DELETE", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}" },
+          "EnableAccessPolicy": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}/enable" },
+          "DisableAccessPolicy": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}/disable" },
+          "ListGrants": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}/grants" },
+          "AddGrant": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}/grants" },
+          "RemoveGrant": { "httpMethod": "DELETE", "requestUri": "projects/{$projectId}/accessPolicies/{$accessPolicyId}/grants/{$grantId}" }
+        }
+      },
+      "PermissionSets": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListPermissionSets": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/permissionSets" },
+          "CreatePermissionSet": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/permissionSets" },
+          "GetPermissionSet": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/permissionSets/{$permissionSetId}" },
+          "UpdatePermissionSet": { "httpMethod": "PATCH", "requestUri": "projects/{$projectId}/permissionSets/{$permissionSetId}" },
+          "DeletePermissionSet": { "httpMethod": "DELETE", "requestUri": "projects/{$projectId}/permissionSets/{$permissionSetId}" }
+        }
+      },
+      "PrincipalPolicies": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListPrincipalPolicies": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/principalPolicies" },
+          "GetPrincipalPolicy": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/principalPolicies/{$userPrincipal}" },
+          "UpdatePrincipalPolicy": { "httpMethod": "PATCH", "requestUri": "projects/{$projectId}/principalPolicies/{$userPrincipal}" },
+          "EnablePrincipalPolicy": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/principalPolicies/{$userPrincipal}/enable" },
+          "DisablePrincipalPolicy": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/principalPolicies/{$userPrincipal}/disable" }
+        }
+      },
+      "PolicyMasks": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListPolicyMasks": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/policyMasks" },
+          "CreatePolicyMask": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/policyMasks" },
+          "GetPolicyMask": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/policyMasks/{$policyMaskId}" },
+          "UpdatePolicyMask": { "httpMethod": "PATCH", "requestUri": "projects/{$projectId}/policyMasks/{$policyMaskId}" },
+          "DeletePolicyMask": { "httpMethod": "DELETE", "requestUri": "projects/{$projectId}/policyMasks/{$policyMaskId}" },
+          "EnablePolicyMask": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/policyMasks/{$policyMaskId}/enable" },
+          "DisablePolicyMask": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/policyMasks/{$policyMaskId}/disable" }
+        }
+      },
+      "EffectivePermissions": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "GetEffectivePermissions": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/effectivePermissions" }
+        }
+      },
+      "ResourceTypes": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "ListResourceTypes": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/resourceTypes" },
+          "ListActions": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/actions" },
+          "ListActionSets": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/actionSets" },
+          "PageResourceTypeActions": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/resourceTypeActions" },
+          "GetServicePolicySchema": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/servicePolicySchemas" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "functionalAreas": {
+    "STS": {
+      "uriFormat": "v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Tokens": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "GenerateStsToken": { "httpMethod": "POST", "requestUri": "token" },
+          "ListAccessPoliciesGranted": { "httpMethod": "POST", "requestUri": "accessPoliciesGranted" }
+        }
+      },
+      "OidcProviders": {
+        "overrideUriFormat": "v{$version}/{$requestUri}",
+        "serviceEndpoints": {
+          "PageOidcProviders": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/oidcProviders" },
+          "CreateOidcProvider": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/oidcProviders" },
+          "PatchOidcProvider": { "httpMethod": "PATCH", "requestUri": "projects/{$projectId}/oidcProviders/{$idpId}" },
+          "DeleteOidcProvider": { "httpMethod": "DELETE", "requestUri": "projects/{$projectId}/oidcProviders/{$idpId}" },
+          "SuspendOidcProvider": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/oidcProviders/{$idpId}/suspend" },
+          "ResumeOidcProvider": { "httpMethod": "POST", "requestUri": "projects/{$projectId}/oidcProviders/{$idpId}/resume" }
+        }
+      },
+      "Discovery": {
+        "overrideUriFormat": "{$requestUri}",
+        "serviceEndpoints": {
+          "GetJwks": { "httpMethod": "GET", "requestUri": "jwks" },
+          "GetOpenIdConfiguration": { "httpMethod": "GET", "requestUri": ".well-known/openid-configuration" }
+        }
+      }
+    }
+  }
+}
