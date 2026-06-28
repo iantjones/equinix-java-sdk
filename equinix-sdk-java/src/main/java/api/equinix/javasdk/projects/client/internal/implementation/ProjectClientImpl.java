@@ -17,14 +17,26 @@
 package api.equinix.javasdk.projects.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.projects.client.implementation.ProjectsConfigImpl;
 import api.equinix.javasdk.projects.client.internal.ProjectClient;
 import api.equinix.javasdk.projects.model.Project;
 import api.equinix.javasdk.projects.model.json.ProjectJson;
-import api.equinix.javasdk.projects.model.json.creators.ProjectCreatorJson;
-import api.equinix.javasdk.projects.model.wrappers.ProjectWrapper;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Internal client for the read-only Equinix Resource Manager projects endpoint
+ * ({@code GET /resourceManager/v2/projects}). The JSON model implements the public interface
+ * directly, so {@link #wrap(ProjectJson)} is the identity. The {@code limit}/{@code offset}
+ * pagination parameters are supplied automatically by the SDK's paging machinery.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
 public class ProjectClientImpl extends ResourceClientBase<Project, ProjectJson> implements ProjectClient<Project> {
 
     public ProjectClientImpl(ProjectsConfigImpl configClient) {
@@ -33,30 +45,17 @@ public class ProjectClientImpl extends ResourceClientBase<Project, ProjectJson> 
 
     @Override
     protected Project wrap(ProjectJson json) {
-        return new ProjectWrapper(json, this);
+        return json;
     }
 
-    public Page<Project, ProjectJson> list() {
-        return listPage("ListProjects");
-    }
-
-    public ProjectJson getByUuid(String uuid) {
-        return getOne("GetProject", uuid);
-    }
-
-    public ProjectJson create(ProjectCreatorJson projectCreatorJson) {
-        return postOne("CreateProject", projectCreatorJson);
-    }
-
-    public ProjectJson update(String uuid, ProjectCreatorJson projectCreatorJson) {
-        return updateOne("UpdateProject", uuid, projectCreatorJson);
-    }
-
-    public ProjectJson delete(String uuid) {
-        return deleteOne("DeleteProject", uuid);
-    }
-
-    public ProjectJson refresh(String uuid) {
-        return getByUuid(uuid);
+    public Page<Project, ProjectJson> list(Boolean includePermissions, Boolean includeInbox) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (includePermissions != null) {
+            queryParams.put("includePermissions", Utils.singleParamList(includePermissions));
+        }
+        if (includeInbox != null) {
+            queryParams.put("includeInbox", Utils.singleParamList(includeInbox));
+        }
+        return listPage("ListProjects", queryParams.isEmpty() ? null : queryParams);
     }
 }

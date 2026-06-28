@@ -15,11 +15,11 @@
  */
 
 /**
- * Projects client interfaces for the Equinix Java SDK. Provides typed access
- * to Equinix project management, enabling listing, retrieving, creating, and
- * updating project resources. Projects serve as organizational containers that
- * group related Equinix infrastructure resources across domains for unified
- * management and billing.
+ * Projects client interfaces for the Equinix Java SDK. Provides typed, read-only
+ * access to the Equinix Resource Manager projects endpoint, enabling listing of the
+ * projects associated with a root organization. Projects serve as organizational
+ * containers that group related Equinix infrastructure resources across domains for
+ * unified management and billing.
  *
  * @see api.equinix.javasdk.projects.client.ProjectsConfig
  * @see api.equinix.javasdk.Projects

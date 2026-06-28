@@ -24,7 +24,7 @@ class ProjectsIntegrationTest extends IntegrationTestBase {
     class ReadonlyTests {
 
         @Test
-        @DisplayName("List projects and get by UUID")
+        @DisplayName("List projects")
         void listProjects() {
             try {
                 PaginatedList<Project> items = timedCall("Projects", "list", "Project", "GET",
@@ -33,11 +33,9 @@ class ProjectsIntegrationTest extends IntegrationTestBase {
                 assertTrue(items.size() >= 0);
 
                 if (items.size() > 0) {
-                    Project item = timedCall("Projects", "getByUuid", "Project", "GET",
-                            items.get(0).getUuid(),
-                            () -> client.projects().getByUuid(items.get(0).getUuid()));
+                    Project item = items.get(0);
                     assertNotNull(item);
-                    assertEquals(items.get(0).getUuid(), item.getUuid());
+                    assertNotNull(item.getProjectId());
                 }
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Projects test skipped: " + e.getMessage());

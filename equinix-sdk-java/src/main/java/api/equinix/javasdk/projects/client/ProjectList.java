@@ -18,34 +18,28 @@ package api.equinix.javasdk.projects.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.projects.model.Project;
-import api.equinix.javasdk.projects.model.json.creators.ProjectOperator;
 
 /**
- * Client interface for managing Equinix projects. Provides methods to list, retrieve,
- * and create projects that serve as organizational containers for grouping related
- * Equinix resources and services.
+ * Client interface for the read-only Equinix Resource Manager projects endpoint. Projects are
+ * organizational containers associated with a root organization that group related Equinix
+ * resources and services.
  */
 public interface ProjectList {
 
     /**
-     * Lists all projects for the current account.
+     * Lists the projects of the root organization based on the user's permissions.
      *
      * @return a paginated list of projects
      */
     PaginatedList<Project> list();
 
     /**
-     * Retrieves a specific project by its unique identifier.
+     * Lists the projects of the root organization, optionally including per-project user
+     * permissions and inbox-classified projects.
      *
-     * @param uuid the unique identifier of the project
-     * @return the project
+     * @param includePermissions whether to include the user permissions on each project, or {@code null} for the default
+     * @param includeInbox whether to include inbox-classified projects, or {@code null} for the default
+     * @return a paginated list of projects
      */
-    Project getByUuid(String uuid);
-
-    /**
-     * Returns a builder for defining and creating a new project.
-     *
-     * @return a project builder
-     */
-    ProjectOperator.ProjectBuilder define();
+    PaginatedList<Project> list(Boolean includePermissions, Boolean includeInbox);
 }

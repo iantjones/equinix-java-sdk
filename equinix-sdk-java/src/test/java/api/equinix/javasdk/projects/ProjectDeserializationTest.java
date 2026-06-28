@@ -22,38 +22,47 @@ class ProjectDeserializationTest {
     static void setUp() throws Exception {
         objectMapper = Constants.objectMapper;
         InputStream is = ProjectDeserializationTest.class
-                .getResourceAsStream("/json/projects/project_response.json");
-        assertNotNull(is, "project_response.json fixture not found on classpath");
+                .getResourceAsStream("/json/projects/project_single.json");
+        assertNotNull(is, "project_single.json fixture not found on classpath");
         project = objectMapper.readValue(is, ProjectJson.class);
     }
 
     @Test
-    void uuid_isDeserialized() {
-        assertNotNull(project.getUuid());
+    void projectId_isDeserialized() {
+        assertEquals("1234", project.getProjectId());
     }
 
     @Test
-    void name_isDeserialized() {
-        assertNotNull(project.getName());
+    void projectName_isDeserialized() {
+        assertEquals("Default project", project.getProjectName());
     }
 
     @Test
-    void description_isDeserialized() {
-        assertNotNull(project.getDescription());
+    void inboxResource_isDeserialized() {
+        assertTrue(project.getInboxResource());
     }
 
     @Test
-    void status_isDeserialized() {
-        assertNotNull(project.getStatus());
+    void parentOrganizationId_isDeserialized() {
+        assertEquals("5678", project.getParentOrganizationId());
     }
 
     @Test
-    void createdDate_isDeserialized() {
-        assertNotNull(project.getCreatedDate());
+    void labels_isDeserialized() {
+        assertNotNull(project.getLabels());
+        assertEquals("Network Edge", project.getLabels().get("application"));
     }
 
     @Test
-    void updatedDate_isDeserialized() {
-        assertNotNull(project.getUpdatedDate());
+    void silentProject_isDeserialized() {
+        assertFalse(project.getSilentProject());
+    }
+
+    @Test
+    void permissions_isDeserialized() {
+        assertNotNull(project.getPermissions());
+        assertEquals(1, project.getPermissions().size());
+        assertEquals("L2_CONNECTION", project.getPermissions().get(0).getResourceType());
+        assertTrue(project.getPermissions().get(0).getActions().contains("resourcemanager.project.read"));
     }
 }

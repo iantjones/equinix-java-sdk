@@ -16,39 +16,47 @@
 
 package api.equinix.javasdk.projects.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.projects.enums.ProjectStatus;
 import api.equinix.javasdk.projects.model.Project;
+import api.equinix.javasdk.projects.model.implementation.ProjectPermission;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
+/**
+ * JSON model for a project (read-only). Implements the public {@link Project} interface directly,
+ * so the internal client's {@code wrap} factory is the identity.
+ *
+ * @author ianjones
+ * @version $Id: $Id
+ */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProjectJson {
+public final class ProjectJson implements Project {
 
     @Getter static TypeReference<List<ProjectJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("projectId")
+    private String projectId;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("projectName")
+    private String projectName;
 
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("inboxResource")
+    private Boolean inboxResource;
 
-    @JsonProperty("status")
-    private ProjectStatus status;
+    @JsonProperty("parentOrganizationId")
+    private String parentOrganizationId;
 
-    @JsonProperty("createdDate")
-    private String createdDate;
+    @JsonProperty("labels")
+    private Map<String, String> labels;
 
-    @JsonProperty("updatedDate")
-    private String updatedDate;
+    @JsonProperty("silentProject")
+    private Boolean silentProject;
+
+    @JsonProperty("permissions")
+    private List<ProjectPermission> permissions;
 }

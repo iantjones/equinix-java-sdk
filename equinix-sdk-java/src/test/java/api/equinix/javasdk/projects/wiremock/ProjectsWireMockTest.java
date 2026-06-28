@@ -3,6 +3,8 @@ package api.equinix.javasdk.projects.wiremock;
 import api.equinix.javasdk.Projects;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.projects.model.Project;
 import org.junit.jupiter.api.*;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
@@ -10,7 +12,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for Projects domain.
+ * WireMock-based API tests for the read-only Projects domain
+ * ({@code GET /resourceManager/v2/projects}).
  */
 class ProjectsWireMockTest extends WireMockTestBase {
 
@@ -34,27 +37,41 @@ class ProjectsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("getByUuid()")
-    class GetByUuid {
+    @DisplayName("list()")
+    class ListProjects {
 
         @Test
-        @DisplayName("returns project for valid UUID")
-        void returnsProject() {
-            stubSingleton(wireMock, "/projects/v2/projects/prj-f1e2d3c4-b5a6-9807-fedc-ba9876543210",
+        @DisplayName("returns a paginated list of projects")
+        void returnsProjects() {
+            stubPaginatedGet(wireMock, "/resourceManager/v2/projects",
                     "/json/projects/project_response.json");
 
-            var project = projects.projects().getByUuid("prj-f1e2d3c4-b5a6-9807-fedc-ba9876543210");
-            assertNotNull(project);
+            PaginatedList<Project> projectList = projects.projects().list();
+
+            assertNotNull(projectList);
+            assertEquals(2, projectList.size());
+            Project first = projectList.get(0);
+            assertEquals("1234", first.getProjectId());
+            assertEquals("Default project", first.getProjectName());
+            assertTrue(first.getInboxResource());
+            assertEquals("5678", first.getParentOrganizationId());
+            assertEquals("Network Edge", first.getLabels().get("application"));
+            assertEquals(1, first.getPermissions().size());
+            assertEquals("L2_CONNECTION", first.getPermissions().get(0).getResourceType());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/resourceManager/v2/projects")));
         }
 
         @Test
-        @DisplayName("404 throws EquinixNotFoundException")
-        void notFound() {
-            stubErrorInline(wireMock, "/projects/v2/projects/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Project not found\"}]");
+        @DisplayName("passes includePermissions and includeInbox query params")
+        void passesQueryParams() {
+            stubPaginatedGet(wireMock, "/resourceManager/v2/projects",
+                    "/json/projects/project_response.json");
 
-            assertThrows(EquinixNotFoundException.class,
-                    () -> projects.projects().getByUuid("invalid-uuid"));
+            projects.projects().list(true, false);
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/resourceManager/v2/projects"))
+                    .withQueryParam("includePermissions", equalTo("true"))
+                    .withQueryParam("includeInbox", equalTo("false")));
         }
     }
 
@@ -65,11 +82,11 @@ class ProjectsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
-            stubErrorInline(wireMock, "/projects/v2/projects/.*",
+            stubErrorInline(wireMock, "/resourceManager/v2/projects.*",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,
-                    () -> projects.projects().getByUuid("test-uuid"));
+                    () -> projects.projects().list());
         }
     }
 }
