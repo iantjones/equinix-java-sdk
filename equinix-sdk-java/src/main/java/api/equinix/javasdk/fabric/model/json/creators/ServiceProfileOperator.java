@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.fabric.enums.PortType;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ServiceProfileClientImpl;
@@ -46,6 +47,16 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
     public ServiceProfileBuilder create(ServiceProfileType type) {
         return new ServiceProfileBuilder(type);
+    }
+
+    /**
+     * Begins a fluent PATCH update of an existing service profile, identified by uuid.
+     *
+     * @param uuid the uuid of the service profile to update
+     * @return a {@link ServiceProfileUpdater}
+     */
+    public ServiceProfileUpdater update(String uuid) {
+        return new ServiceProfileUpdater(uuid);
     }
 
     @Getter(AccessLevel.PACKAGE)
@@ -168,6 +179,57 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
         public ServiceProfile create() {
             ServiceProfileCreatorJson serviceProfileCreatorJson = new ServiceProfileCreatorJson(this);
             ServiceProfileJson serviceProfileJson = ((ServiceProfileClientImpl) ServiceProfileOperator.this.getServiceClient()).create(serviceProfileCreatorJson);
+            return new ServiceProfileWrapper(serviceProfileJson, ServiceProfileOperator.this.getServiceClient());
+        }
+
+        /**
+         * Fully replaces (PUT) the service profile identified by {@code uuid} with the attributes
+         * configured on this builder, and returns the refreshed model.
+         *
+         * @param uuid the uuid of the service profile to replace
+         * @return the updated {@link ServiceProfile}
+         */
+        public ServiceProfile replace(String uuid) {
+            ServiceProfileCreatorJson serviceProfileCreatorJson = new ServiceProfileCreatorJson(this);
+            ServiceProfileJson serviceProfileJson = ((ServiceProfileClientImpl) ServiceProfileOperator.this.getServiceClient()).put(uuid, serviceProfileCreatorJson);
+            return new ServiceProfileWrapper(serviceProfileJson, ServiceProfileOperator.this.getServiceClient());
+        }
+    }
+
+    /**
+     * Fluent builder for PATCH-updating an existing service profile. Each typed setter records a
+     * {@code replace} change operation; {@link #save()} sends them as one {@code PATCH} and returns
+     * the refreshed model.
+     */
+    public class ServiceProfileUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected ServiceProfileUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public ServiceProfileUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        public ServiceProfileUpdater description(String description) {
+            operations.add(PatchOperation.replace("/description", description));
+            return this;
+        }
+
+        public ServiceProfileUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        public ServiceProfile save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            ServiceProfileJson serviceProfileJson = ((ServiceProfileClientImpl) ServiceProfileOperator.this.getServiceClient()).update(uuid, operations);
             return new ServiceProfileWrapper(serviceProfileJson, ServiceProfileOperator.this.getServiceClient());
         }
     }

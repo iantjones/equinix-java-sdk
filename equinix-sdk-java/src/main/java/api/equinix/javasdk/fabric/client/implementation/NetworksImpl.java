@@ -19,23 +19,31 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.Networks;
+import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
 import api.equinix.javasdk.fabric.client.internal.NetworkClient;
 import api.equinix.javasdk.fabric.enums.NetworkType;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
+import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
 
 public class NetworksImpl implements Networks {
 
     private final NetworkClient<Network> serviceClient;
 
-    public NetworksImpl(NetworkClient<Network> serviceClient) {
+    private final ConnectionClient<Connection> connectionClient;
+
+    public NetworksImpl(NetworkClient<Network> serviceClient, ConnectionClient<Connection> connectionClient) {
         this.serviceClient = serviceClient;
+        this.connectionClient = connectionClient;
     }
 
     public PaginatedFilteredList<Network> search() {
@@ -63,5 +71,11 @@ public class NetworksImpl implements Networks {
 
     public NetworkOperator.NetworkBuilder define(NetworkType networkType) {
         return new NetworkOperator(this.serviceClient).create(networkType);
+    }
+
+    public PaginatedList<Connection> getConnections(String networkId) {
+        Page<Connection, ConnectionJson> responsePage = this.serviceClient.getConnections(networkId);
+        PaginatedList<Connection> connectionList = Utils.mapPaginatedList(responsePage.getItems(), this.connectionClient, ConnectionWrapper::new);
+        return new PaginatedList<>(connectionList, this.connectionClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

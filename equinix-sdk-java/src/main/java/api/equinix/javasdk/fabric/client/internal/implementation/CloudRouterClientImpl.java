@@ -23,13 +23,17 @@ import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.CloudRouterClient;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.RoutingProtocolValidation;
+import api.equinix.javasdk.fabric.model.implementation.ConnectionValidationRequest;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudRouterJson;
+import api.equinix.javasdk.fabric.model.json.RoutingProtocolValidationJson;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
 
 import java.util.List;
+import java.util.Map;
 
 public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, CloudRouterJson> implements CloudRouterClient<CloudRouter> {
 
@@ -64,5 +68,10 @@ public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, Cloud
 
     public CloudRouterJson refresh(String uuid) {
         return getByUuid(uuid);
+    }
+
+    public RoutingProtocolValidation validateRoutingProtocol(String routerId, FilterPropertyList filter) {
+        return postForType("ValidateRoutingProtocol", Map.of("uuid", routerId),
+                new ConnectionValidationRequest(filter), RoutingProtocolValidationJson.getSingleTypeRef());
     }
 }

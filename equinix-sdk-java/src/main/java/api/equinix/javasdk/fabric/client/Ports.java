@@ -16,13 +16,16 @@
 
 package api.equinix.javasdk.fabric.client;
 
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
+import api.equinix.javasdk.fabric.model.PortVlan;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,12 +47,52 @@ public interface Ports {
     PaginatedList<Port> list();
 
     /**
+     * Searches for ports using default filter and sort criteria.
+     *
+     * @return a paginated, filtered list of matching ports
+     */
+    PaginatedFilteredList<Port> search();
+
+    /**
+     * Searches for ports matching the specified filter criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @return a paginated, filtered list of matching ports
+     */
+    PaginatedFilteredList<Port> search(FilterPropertyList filter);
+
+    /**
+     * Searches for ports with the specified sort order.
+     *
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching ports
+     */
+    PaginatedFilteredList<Port> search(SortPropertyList sort);
+
+    /**
+     * Searches for ports matching the specified filter and sort criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching ports
+     */
+    PaginatedFilteredList<Port> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
      * Retrieves a single port by its unique identifier.
      *
      * @param uuid the unique identifier of the port
      * @return the port matching the given UUID
      */
     Port getByUuid(String uuid);
+
+    /**
+     * Lists the VLANs (link protocols) configured on a port.
+     *
+     * @param portUuid the unique identifier of the port
+     * @return the list of VLANs configured on the port
+     */
+    List<PortVlan> getVlans(String portUuid);
 
     /**
      * Retrieves bandwidth statistics for a port over the specified time range.

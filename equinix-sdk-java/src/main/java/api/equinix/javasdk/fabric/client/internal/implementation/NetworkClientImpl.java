@@ -17,19 +17,25 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.NetworkClient;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
 
 import java.util.List;
+import java.util.Map;
 
 public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> implements NetworkClient<Network> {
 
@@ -44,6 +50,12 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
 
     public Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchNetworks", new FilteredSortedPaginatedPost<>(filter, sort));
+    }
+
+    public Page<Connection, ConnectionJson> getConnections(String networkId) {
+        EquinixRequest<Connection> request = buildRequestWithPathParams("GetNetworkConnections", RequestType.PAGINATED,
+                Map.of("networkId", networkId), ConnectionJson.class);
+        return Utils.handlePaginatedListResponse(invoke(request), request);
     }
 
     public NetworkJson getByUuid(String uuid) {

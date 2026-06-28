@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.ServiceProfileAction;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileOperator;
@@ -85,4 +86,23 @@ public interface ServiceProfiles {
      * @return a builder for configuring the new service profile
      */
     ServiceProfileOperator.ServiceProfileBuilder define(ServiceProfileType serviceProfileType);
+
+    /**
+     * Begins a fluent PATCH update of an existing service profile, e.g.
+     * {@code serviceProfiles.update(uuid).name("New-Name").save()}.
+     *
+     * @param uuid the unique identifier of the service profile to update
+     * @return a fluent updater
+     */
+    ServiceProfileOperator.ServiceProfileUpdater update(String uuid);
+
+    /**
+     * Accepts or rejects a pending update on a service profile.
+     *
+     * @param uuid the unique identifier of the service profile
+     * @param type the action type (for example {@code PROFILE_UPDATE_ACCEPTANCE} or {@code PROFILE_UPDATE_REJECTION})
+     * @param description an optional description for the action (may be {@code null})
+     * @return the action result
+     */
+    ServiceProfileAction createAction(String uuid, String type, String description);
 }

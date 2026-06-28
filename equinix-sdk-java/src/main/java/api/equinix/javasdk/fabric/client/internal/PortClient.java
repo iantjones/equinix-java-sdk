@@ -17,9 +17,14 @@
 package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.Port;
+import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.PortJson;
+
+import java.util.List;
 
 /**
  * <p>PortsClient interface.</p>
@@ -27,7 +32,7 @@ import api.equinix.javasdk.fabric.model.json.PortJson;
  * @author ianjones
  * @version $Id: $Id
  */
-public interface PortClient<T> extends Pageable<T> {
+public interface PortClient<T> extends PageablePost<T> {
 
     /**
      * <p>list.</p>
@@ -35,6 +40,10 @@ public interface PortClient<T> extends Pageable<T> {
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     Page<Port, PortJson> list();
+
+    Page<Port, PortJson> search(FilterPropertyList filter, SortPropertyList sort);
+
+    List<PortVlan> getVlans(String portUuid);
 
     /**
      * <p>getByUuid.</p>

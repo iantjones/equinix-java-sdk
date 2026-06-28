@@ -18,11 +18,16 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.ServiceTokens;
 import api.equinix.javasdk.fabric.client.internal.ServiceTokenClient;
+import api.equinix.javasdk.fabric.enums.ServiceTokenAction;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
@@ -66,5 +71,32 @@ public class ServiceTokensImpl implements ServiceTokens {
     /** {@inheritDoc} */
     public ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide) {
         return new ServiceTokenOperator(this.serviceClient).create(issuerSide);
+    }
+
+    public PaginatedFilteredList<ServiceToken> search() {
+        return search(Filter.filter().empty());
+    }
+
+    public PaginatedFilteredList<ServiceToken> search(FilterPropertyList filter) {
+        return search(filter, null);
+    }
+
+    public PaginatedFilteredList<ServiceToken> search(SortPropertyList sort) {
+        return search(null, sort);
+    }
+
+    public PaginatedFilteredList<ServiceToken> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<ServiceToken, ServiceTokenJson> responsePage = this.serviceClient.search(filter, sort);
+        PaginatedFilteredList<ServiceToken> serviceTokenList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ServiceTokenWrapper::new);
+        return new PaginatedFilteredList<>(serviceTokenList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public ServiceTokenOperator.ServiceTokenUpdater update(String uuid) {
+        return new ServiceTokenOperator(this.serviceClient).update(uuid);
+    }
+
+    public ServiceToken createAction(String uuid, ServiceTokenAction type) {
+        ServiceTokenJson serviceTokenJson = this.serviceClient.createAction(uuid, type);
+        return new ServiceTokenWrapper(serviceTokenJson, this.serviceClient);
     }
 }

@@ -18,7 +18,10 @@ package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.fabric.enums.BGPActionType;
+import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
+import api.equinix.javasdk.fabric.model.json.BGPActionJson;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
 import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolCreatorJson;
 
@@ -35,4 +38,8 @@ public interface RoutingProtocolClient<T> extends Pageable<T> {
     RoutingProtocolJson delete(String connectionId, String uuid);
 
     RoutingProtocolJson refresh(String connectionId, String uuid);
+
+    java.util.List<BGPAction> getBgpActions(String connectionId, String routingProtocolId);
+
+    BGPActionJson createBgpAction(String connectionId, String routingProtocolId, BGPActionType type);
 }

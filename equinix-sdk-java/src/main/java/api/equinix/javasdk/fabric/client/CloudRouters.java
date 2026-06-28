@@ -20,9 +20,13 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.CloudRouterCommand;
 import api.equinix.javasdk.fabric.model.CloudRouterPackage;
+import api.equinix.javasdk.fabric.model.RouteTableEntry;
+import api.equinix.javasdk.fabric.model.RoutingProtocolValidation;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCommandOperator;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator;
 
 /**
@@ -93,4 +97,65 @@ public interface CloudRouters {
      * @return the cloud router package matching the given code
      */
     CloudRouterPackage routerPackageByCode(CloudRouterPackageCode packageCode);
+
+    /**
+     * Searches the route table of a Fabric Cloud Router using default filter and sort criteria.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @return a paginated, filtered list of route table entries
+     */
+    PaginatedFilteredList<RouteTableEntry> searchRoutes(String routerId);
+
+    /**
+     * Searches the route table of a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of route table entries
+     */
+    PaginatedFilteredList<RouteTableEntry> searchRoutes(String routerId, FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Validates all subnets associated with the connections on a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param filter the validation filter (for example a direct interface IP and connection uuid)
+     * @return the validation result
+     */
+    RoutingProtocolValidation validateRoutingProtocol(String routerId, FilterPropertyList filter);
+
+    /**
+     * Lists all diagnostic commands (ping / traceroute) issued against a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @return a paginated list of cloud router commands
+     */
+    PaginatedList<CloudRouterCommand> commands(String routerId);
+
+    /**
+     * Retrieves a single Fabric Cloud Router diagnostic command by its unique identifier.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param commandId the unique identifier of the command
+     * @return the cloud router command matching the given UUID
+     */
+    CloudRouterCommand getCommand(String routerId, String commandId);
+
+    /**
+     * Begins the fluent builder for issuing a new Fabric Cloud Router diagnostic command.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @return a builder for configuring the new command
+     */
+    CloudRouterCommandOperator.CloudRouterCommandBuilder defineCommand(String routerId);
+
+    /**
+     * Deletes a Fabric Cloud Router diagnostic command by its unique identifier.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param commandId the unique identifier of the command
+     * @return {@code true} if the command was deleted
+     */
+    Boolean deleteCommand(String routerId, String commandId);
 }

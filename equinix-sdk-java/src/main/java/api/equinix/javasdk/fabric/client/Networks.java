@@ -17,7 +17,9 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.NetworkType;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -77,4 +79,12 @@ public interface Networks {
      * @return a builder for configuring the new network
      */
     NetworkOperator.NetworkBuilder define(NetworkType networkType);
+
+    /**
+     * Lists the connections that belong to a network.
+     *
+     * @param networkId the unique identifier of the network
+     * @return a paginated list of the network's connections
+     */
+    PaginatedList<Connection> getConnections(String networkId);
 }

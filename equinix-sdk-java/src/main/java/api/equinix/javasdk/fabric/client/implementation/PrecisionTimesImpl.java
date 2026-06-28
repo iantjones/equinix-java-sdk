@@ -21,10 +21,15 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.PrecisionTimes;
 import api.equinix.javasdk.fabric.client.internal.PrecisionTimeClient;
+import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
+import api.equinix.javasdk.fabric.model.TimeServiceConnection;
+import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
+
+import java.util.List;
 
 public class PrecisionTimesImpl implements PrecisionTimes {
 
@@ -47,5 +52,17 @@ public class PrecisionTimesImpl implements PrecisionTimes {
 
     public PrecisionTimeOperator.PrecisionTimeBuilder define() {
         return new PrecisionTimeOperator(this.serviceClient).create();
+    }
+
+    public List<TimeServicePackage> packages() {
+        return this.serviceClient.getPackages();
+    }
+
+    public TimeServicePackage packageByCode(PrecisionTimePackageCode packageCode) {
+        return this.serviceClient.getPackageByCode(packageCode);
+    }
+
+    public List<TimeServiceConnection> getConnections(String serviceId) {
+        return this.serviceClient.getConnections(serviceId);
     }
 }
