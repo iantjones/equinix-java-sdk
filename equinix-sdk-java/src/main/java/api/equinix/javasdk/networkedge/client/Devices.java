@@ -21,8 +21,11 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceType;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 
 import java.util.List;
 
@@ -101,4 +104,70 @@ public interface Devices {
      * @return {@link java.lang.String} the fileId of the uploaded license file.
      */
     String postLicenseFile(MetroCode metroCode, String deviceTypeCode, LicenseType licenseType, String fileContents);
+
+    /**
+     * Triggers a soft reboot of the specified device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @return {@link java.lang.Boolean} {@code true} if the reboot request was accepted.
+     */
+    Boolean softReboot(String uuid);
+
+    /**
+     * Triggers an RMA (Return Merchandise Authorization) of the specified device. The required payload
+     * fields vary by vendor; refer to the API reference for the exact payload per device type.
+     *
+     * @param uuid the unique identifier of the device.
+     * @param deviceRMARequest the {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest} describing the RMA.
+     * @return {@link java.lang.Boolean} {@code true} if the RMA request was accepted.
+     */
+    Boolean createRMA(String uuid, DeviceRMARequest deviceRMARequest);
+
+    /**
+     * Returns the ACL templates currently associated with the specified device, including each
+     * template's provisioning status on the device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL}
+     */
+    DeviceACL getDeviceAcl(String uuid);
+
+    /**
+     * Associates ACL templates with the specified device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @param deviceACLRequest the {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} describing the ACLs to apply.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} the updated device ACL state.
+     */
+    DeviceACL addDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest);
+
+    /**
+     * Associates ACL templates with the specified device on behalf of a customer account (reseller flow).
+     *
+     * @param uuid the unique identifier of the device.
+     * @param deviceACLRequest the {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} describing the ACLs to apply.
+     * @param accountUcmId the customer account UCM id.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} the updated device ACL state.
+     */
+    DeviceACL addDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId);
+
+    /**
+     * Updates or removes the ACL templates associated with the specified device.
+     *
+     * @param uuid the unique identifier of the device.
+     * @param deviceACLRequest the {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} describing the desired ACLs.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} the updated device ACL state.
+     */
+    DeviceACL updateDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest);
+
+    /**
+     * Updates or removes the ACL templates associated with the specified device on behalf of a
+     * customer account (reseller flow).
+     *
+     * @param uuid the unique identifier of the device.
+     * @param deviceACLRequest the {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} describing the desired ACLs.
+     * @param accountUcmId the customer account UCM id.
+     * @return {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} the updated device ACL state.
+     */
+    DeviceACL updateDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId);
 }

@@ -39,34 +39,10 @@ public interface PublicKeyClient<T> extends Pageable<T> {
     List<PublicKeyJson> list(String accountUcmId);
 
     /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.PublicKeyJson} object.
-     */
-    PublicKeyJson getByUuid(String uuid);
-
-    /**
      * <p>create.</p>
      *
      * @param publicKeyCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.PublicKeyCreatorJson} object.
      * @return a {@link api.equinix.javasdk.networkedge.model.json.PublicKeyJson} object.
      */
     PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson);
-
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
-    Boolean delete(String uuid);
-
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.PublicKeyJson} object.
-     */
-    PublicKeyJson refresh(String uuid);
 }

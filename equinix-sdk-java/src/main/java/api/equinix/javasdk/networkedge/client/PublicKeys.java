@@ -16,10 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client;
 
-import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.PublicKey;
-import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.PublicKeyOperator;
 
 import java.util.List;
@@ -48,14 +45,6 @@ public interface PublicKeys {
      * @return {@link api.equinix.javasdk.core.http.response.PaginatedList}
      */
     List<PublicKey> list(String accountUcmId);
-
-    /**
-     * Gets the specified Public Key.
-     *
-     * @param uuid the unique identifier of the Public Key.
-     * @return {@link api.equinix.javasdk.networkedge.model.PublicKey}
-     */
-    PublicKey getByUuid(String uuid);
 
     /**
      * Returns an instance of PublicKeyBuilder for defining a new Public Key.

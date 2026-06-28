@@ -19,7 +19,6 @@ package api.equinix.javasdk.networkedge.client;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
-import api.equinix.javasdk.networkedge.model.SSHUser;
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator;
 

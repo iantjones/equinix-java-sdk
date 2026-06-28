@@ -17,16 +17,16 @@
           "ListPublicKeys": {
             "httpMethod": "GET"
           },
-          "GetPublicKey": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
           "CreatePublicKey": {
             "httpMethod": "POST"
-          },
-          "DeletePublicKey": {
-            "httpMethod": "DELETE",
-            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Files": {
+        "rootUri": "files",
+        "serviceEndpoints": {
+          "UploadFile": {
+            "httpMethod": "POST"
           }
         }
       },
@@ -103,6 +103,26 @@
           "UpdateAdditionalBandwidth": {
             "httpMethod": "PUT",
             "requestUri": "{$uuid}/additionalBandwidths"
+          },
+          "SoftRebootDevice": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/softReboot"
+          },
+          "CreateDeviceRMA": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/rma"
+          },
+          "GetDeviceACL": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/acl"
+          },
+          "AddDeviceACL": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/acl"
+          },
+          "UpdateDeviceACL": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}/acl"
           },
           "PingDevice": {
             "httpMethod": "GET",
@@ -228,45 +248,6 @@
           "DeleteACLTemplate": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
-          }
-        }
-      },
-      "DNS": {
-        "rootUri": "dnsLookup",
-        "serviceEndpoints": {
-          "DNSLookup": {
-            "httpMethod": "POST"
-          }
-        }
-      },
-      "SSHUsers": {
-        "rootUri": "sshUsers",
-        "serviceEndpoints": {
-          "ListSSHUsers": {
-            "httpMethod": "GET"
-          },
-          "GetSSHUser": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "GetSSHUsernameAvailability": {
-            "httpMethod": "GET",
-            "requestUri": "availability"
-          },
-          "CreateSSHUser": {
-            "httpMethod": "POST"
-          },
-          "SSHUserAddDevice": {
-            "httpMethod": "POST",
-            "requestUri": "{$uuid}/devices/{$deviceUuid}"
-          },
-          "UpdateSSHUserPassword": {
-            "httpMethod": "PUT",
-            "requestUri": "{$uuid}"
-          },
-          "DeleteSSHUser": {
-            "httpMethod": "DELETE",
-            "requestUri": "{$uuid}/devices/{$deviceUuid}"
           }
         }
       },

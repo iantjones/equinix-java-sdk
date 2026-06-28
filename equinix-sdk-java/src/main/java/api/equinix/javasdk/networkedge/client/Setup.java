@@ -19,20 +19,20 @@ package api.equinix.javasdk.networkedge.client;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
+import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
+import api.equinix.javasdk.networkedge.enums.FileProcessType;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Account;
 import api.equinix.javasdk.networkedge.model.Metro;
 import api.equinix.javasdk.networkedge.model.implementation.AgreementStatus;
-import api.equinix.javasdk.networkedge.model.implementation.DNSLookup;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Client interface for Network Edge setup and configuration operations. Provides access to
- * account listings, metro availability, DNS lookups, agreement management, vendor terms,
- * order terms, and pricing information.
+ * account listings, metro availability, agreement management, vendor terms, order terms,
+ * pricing information, and generic file uploads.
  *
  * @author ianjones
  * @version $Id: $Id
@@ -69,14 +69,6 @@ public interface Setup {
      * @return {@link api.equinix.javasdk.core.http.response.PaginatedList}
      */
     PaginatedList<Metro> listMetrosByRegion(Region region);
-
-    /**
-     * Returns DNS Lookup information.
-     *
-     * @param requestBuilder the desired query parameters.
-     * @return {@link java.util.Map}
-     */
-    Map<String, DNSLookup> dnsLookup(RequestBuilder.DNSLookup requestBuilder);
 
     /**
      * Returns the Agreement Status for the provided account number.
@@ -134,4 +126,20 @@ public interface Setup {
      * @return the order summary as a byte array.
      */
     byte[] getOrderSummary(RequestBuilder.OrderSummary requestBuilder);
+
+    /**
+     * Uploads a generic file (a license file or a cloud-init / bootstrap file) and returns the
+     * unique id of the uploaded file. The returned file id can subsequently be referenced when
+     * creating a device or triggering an RMA (e.g. as {@code cloudInitFileId} or {@code licenseFileId}).
+     *
+     * @param metroCode the {@link api.equinix.javasdk.core.enums.MetroCode} the file applies to.
+     * @param deviceTypeCode the device type code the file applies to (e.g. {@code C8000V}).
+     * @param processType whether the file is a {@code LICENSE} or {@code CLOUD_INIT} file.
+     * @param deviceManagementType the {@link api.equinix.javasdk.networkedge.enums.DeviceManagementType}, or {@code null}.
+     * @param licenseType the {@link api.equinix.javasdk.networkedge.enums.LicenseType}, or {@code null}.
+     * @param fileContents the contents of the file to upload.
+     * @return {@link java.lang.String} the unique id of the uploaded file.
+     */
+    String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
+                      DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents);
 }

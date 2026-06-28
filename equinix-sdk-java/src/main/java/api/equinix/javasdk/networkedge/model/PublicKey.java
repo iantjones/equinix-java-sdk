@@ -51,18 +51,4 @@ public interface PublicKey {
      * @return a {@link java.lang.String} object.
      */
     String getCustOrgId();
-
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    Boolean delete();
-
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
-    Boolean refresh();
 }

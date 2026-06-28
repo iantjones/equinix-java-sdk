@@ -16,7 +16,7 @@
 
 /**
  * Network Edge model interfaces for the Equinix Java SDK. Defines data access
- * contracts for virtual network devices including Device, DeviceLink, SSHUser,
+ * contracts for virtual network devices including Device, DeviceLink,
  * VPN, BGPPeering, ACLTemplate, Backup, PublicKey, DeviceType, Account, and
  * Metro resources. Mutable resources expose update and delete operations through
  * their wrapper implementations, while read-only resources implement their

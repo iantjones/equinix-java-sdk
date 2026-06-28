@@ -163,10 +163,8 @@ class NetworkEdgeDeviceScenarioTest extends IntegrationTestBase {
             publicKeyUuid = key.getUuid();
             assertNotNull(publicKeyUuid, "Public key UUID should not be null");
 
-            registerCleanup("PublicKey", publicKeyUuid, id -> {
-                PublicKey toDelete = networkEdge.publicKeys().getByUuid(id);
-                toDelete.delete();
-            });
+            // Note: the Network Edge API exposes no delete endpoint for public keys,
+            // so there is no cleanup action to register.
             System.out.printf("  Public key created: %s%n", publicKeyUuid);
         } catch (Exception e) {
             Assumptions.assumeTrue(false,
@@ -176,7 +174,7 @@ class NetworkEdgeDeviceScenarioTest extends IntegrationTestBase {
 
     @Test
     @Order(5)
-    @DisplayName("Verify public key via GET")
+    @DisplayName("Verify public key via list")
     void verifyPublicKey() {
         Assumptions.assumeTrue(isFullCrudEnabled(),
                 "Skipped: full CRUD mode not enabled");
@@ -184,12 +182,17 @@ class NetworkEdgeDeviceScenarioTest extends IntegrationTestBase {
                 "Skipped: no public key was created");
         initClient();
 
-        PublicKey key = timedCall("NetworkEdge", "get", "PublicKey", "GET",
-                publicKeyUuid, () ->
-                        networkEdge.publicKeys().getByUuid(publicKeyUuid)
+        // The Network Edge API has no get-by-id endpoint for public keys, so verify via the list.
+        List<PublicKey> keys = timedCall("NetworkEdge", "list", "PublicKey", "GET", () ->
+                networkEdge.publicKeys().list()
         );
 
-        assertNotNull(key, "Public key should be retrievable");
+        assertNotNull(keys, "Public key list should be retrievable");
+        PublicKey key = keys.stream()
+                .filter(k -> publicKeyUuid.equals(k.getUuid()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(key, "Created public key should be present in the list");
         assertNotNull(key.getKeyName(), "Public key name should not be null");
         System.out.printf("  Public key verified: %s%n", key.getKeyName());
     }
@@ -211,23 +214,15 @@ class NetworkEdgeDeviceScenarioTest extends IntegrationTestBase {
 
     @Test
     @Order(7)
-    @DisplayName("Teardown public key")
+    @DisplayName("Teardown public key (no-op: API has no delete endpoint)")
     void teardownPublicKey() {
+        // The Network Edge API exposes no delete endpoint for public keys, so there is
+        // nothing to tear down. Kept for ordering/documentation purposes.
         Assumptions.assumeTrue(isFullCrudEnabled(),
                 "Skipped: full CRUD mode not enabled");
         Assumptions.assumeTrue(publicKeyUuid != null,
-                "Skipped: no public key to delete");
-        initClient();
-
-        try {
-            PublicKey key = networkEdge.publicKeys().getByUuid(publicKeyUuid);
-            Boolean deleted = timedCall("NetworkEdge", "delete", "PublicKey", "DELETE",
-                    publicKeyUuid, key::delete);
-            assertNotNull(deleted, "Delete should return a result");
-            System.out.printf("  Public key deleted: %s%n", publicKeyUuid);
-        } catch (Exception e) {
-            System.err.printf("  Public key teardown failed (cleanup will retry): %s%n", e.getMessage());
-        }
+                "Skipped: no public key was created");
+        System.out.printf("  Public key %s left in place (no delete endpoint available)%n", publicKeyUuid);
     }
 
     @Test

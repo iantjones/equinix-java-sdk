@@ -23,7 +23,6 @@ import api.equinix.javasdk.networkedge.client.BGPPeerings;
 import api.equinix.javasdk.networkedge.client.Backups;
 import api.equinix.javasdk.networkedge.client.DeviceLinks;
 import api.equinix.javasdk.networkedge.client.PublicKeys;
-import api.equinix.javasdk.networkedge.client.SSHUsers;
 import api.equinix.javasdk.networkedge.client.Setup;
 import api.equinix.javasdk.networkedge.client.VPNs;
 import api.equinix.javasdk.networkedge.client.implementation.ACLTemplatesImpl;
@@ -35,7 +34,6 @@ import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigIm
 import api.equinix.javasdk.networkedge.client.Devices;
 import api.equinix.javasdk.networkedge.client.NetworkEdgeConfig;
 import api.equinix.javasdk.networkedge.client.implementation.PublicKeysImpl;
-import api.equinix.javasdk.networkedge.client.implementation.SSHUsersImpl;
 import api.equinix.javasdk.networkedge.client.implementation.SetupImpl;
 import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
 
@@ -45,7 +43,7 @@ import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
  * <p>Network Edge provides virtual network devices deployed at Equinix data centers,
  * enabling customers to run network functions (routers, firewalls, SD-WAN) without
  * physical hardware. This class offers typed access to all Network Edge resources
- * including virtual devices, SSH users, ACL templates, VPN connections, BGP peerings,
+ * including virtual devices, ACL templates, VPN connections, BGP peerings,
  * device links, public keys, and backups.</p>
  *
  * <p>All resource accessors use lazy initialization — internal clients are created on first access
@@ -67,8 +65,7 @@ import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
  *     .withDeviceType("CSR1000V")
  *     .create();
  *
- * // Manage SSH users and ACL templates
- * PaginatedList<SSHUser> sshUsers = networkEdge.sshUsers().list();
+ * // Manage ACL templates
  * PaginatedList<ACLTemplate> templates = networkEdge.aclTemplates().list();
  * }</pre>
  *
@@ -76,7 +73,7 @@ import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
  * @version $Id: $Id
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  * @see api.equinix.javasdk.networkedge.client.Devices
- * @see api.equinix.javasdk.networkedge.client.SSHUsers
+ * @see api.equinix.javasdk.networkedge.client.ACLTemplates
  */
 public final class NetworkEdge extends EquinixClient implements Service {
 
@@ -84,7 +81,6 @@ public final class NetworkEdge extends EquinixClient implements Service {
     private Devices devices;
     private PublicKeys publicKeys;
     private DeviceLinks deviceLinks;
-    private SSHUsers sshUsers;
     private ACLTemplates aclTemplates;
     private VPNs vpns;
     private BGPPeerings bgpPeerings;
@@ -119,16 +115,16 @@ public final class NetworkEdge extends EquinixClient implements Service {
 
     /**
      * Returns the client for Network Edge setup and provisioning operations.
-     * Provides access to account settings, metro availability, DNS configuration,
-     * license agreements, and pricing for virtual network devices.
+     * Provides access to account settings, metro availability, license agreements,
+     * pricing, and generic file uploads for virtual network devices.
      *
      * @return the {@link Setup} client for managing setup-related resources
      */
     public Setup setup() {
         if (this.setup == null) {
             this.setup = new SetupImpl(this.networkEdgeConfig.getAccountsClient(),
-                    this.networkEdgeConfig.getMetrosClient(), this.networkEdgeConfig.getDNSClient(),
-                    this.networkEdgeConfig.getAgreementsClient(), this.networkEdgeConfig.getPricingClient(), this);
+                    this.networkEdgeConfig.getMetrosClient(), this.networkEdgeConfig.getAgreementsClient(),
+                    this.networkEdgeConfig.getPricingClient(), this.networkEdgeConfig.getFilesClient(), this);
         }
         return this.setup;
     }
@@ -175,20 +171,6 @@ public final class NetworkEdge extends EquinixClient implements Service {
             this.deviceLinks = new DeviceLinksImpl(this.networkEdgeConfig.getDeviceLinksClient(), this);
         }
         return this.deviceLinks;
-    }
-
-    /**
-     * Returns the client for managing SSH user accounts on virtual devices.
-     * SSH users define the credentials used to access virtual devices for
-     * configuration and management via SSH.
-     *
-     * @return the {@link SSHUsers} client for managing SSH user accounts
-     */
-    public SSHUsers sshUsers() {
-        if (this.sshUsers == null) {
-            this.sshUsers = new SSHUsersImpl(this.networkEdgeConfig.getSSHUserClient(), this);
-        }
-        return this.sshUsers;
     }
 
     /**

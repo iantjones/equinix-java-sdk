@@ -16,18 +16,28 @@
 
 package api.equinix.javasdk.networkedge.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 /**
- * <p>SSHUserStatus class.</p>
+ * <p>The ACL templates associated with a virtual device, returned by the device-level ACL
+ * read operation. Exposes both the WAN-facing {@code aclTemplate} and the management-facing
+ * {@code mgmtAclTemplate}, each as a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACLDetail}.</p>
  *
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
-public class SSHUserStatus {
+public class DeviceACL {
 
-    @JsonProperty("status")
-    private SSHUserStatus status;
+    @Getter static TypeReference<DeviceACL> singleTypeRef = new TypeReference<>() {};
+
+    @JsonProperty("aclTemplate")
+    private DeviceACLDetail aclTemplate;
+
+    @JsonProperty("mgmtAclTemplate")
+    private DeviceACLDetail mgmtAclTemplate;
 }

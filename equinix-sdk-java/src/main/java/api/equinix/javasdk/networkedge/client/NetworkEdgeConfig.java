@@ -26,9 +26,7 @@ import api.equinix.javasdk.networkedge.model.DeviceLink;
 import api.equinix.javasdk.networkedge.model.DeviceType;
 import api.equinix.javasdk.networkedge.model.Metro;
 import api.equinix.javasdk.networkedge.model.PublicKey;
-import api.equinix.javasdk.networkedge.model.SSHUser;
 import api.equinix.javasdk.networkedge.model.VPN;
-import api.equinix.javasdk.networkedge.model.implementation.DNSLookup;
 
 /**
  * <p>NetworkEdgeConfig interface.</p>
@@ -88,13 +86,6 @@ public interface NetworkEdgeConfig {
     DeviceLinkClient<DeviceLink> getDeviceLinksClient();
 
     /**
-     * <p>getSSHUserClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.SSHUserClient} object.
-     */
-    SSHUserClient<SSHUser> getSSHUserClient();
-
-    /**
      * <p>getACLTemplateClient.</p>
      *
      * @return a {@link api.equinix.javasdk.networkedge.client.internal.ACLTemplateClient} object.
@@ -107,13 +98,6 @@ public interface NetworkEdgeConfig {
      * @return a {@link api.equinix.javasdk.networkedge.client.internal.VPNClient} object.
      */
     VPNClient<VPN> getVPNClient();
-
-    /**
-     * <p>getDNSClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.DNSClient} object.
-     */
-    DNSClient<DNSLookup> getDNSClient();
 
     /**
      * <p>getBGPClient.</p>
@@ -135,4 +119,11 @@ public interface NetworkEdgeConfig {
      * @return a {@link api.equinix.javasdk.networkedge.client.internal.PricingClient} object.
      */
     PricingClient getPricingClient();
+
+    /**
+     * <p>getFilesClient.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.client.internal.FilesClient} object.
+     */
+    FilesClient getFilesClient();
 }

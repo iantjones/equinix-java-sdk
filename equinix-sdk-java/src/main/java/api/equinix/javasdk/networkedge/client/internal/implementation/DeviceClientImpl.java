@@ -26,11 +26,14 @@ import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigIm
 import api.equinix.javasdk.networkedge.client.internal.DeviceClient;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceCreatorJson;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceUpdaterJson;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceWrapper;
 
@@ -91,6 +94,35 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
         voidOp("UpdateAdditionalBandwidth", RequestType.SINGLE, Map.of("uuid", uuid), null,
                 Utils.singlePropertyBody("additionalBandwidth", additionalBandwidth));
         return getByUuid(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public Boolean softReboot(String uuid) {
+        return booleanOp("SoftRebootDevice", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
+    }
+
+    /** {@inheritDoc} */
+    public Boolean createRMA(String uuid, DeviceRMARequest deviceRMARequest) {
+        return booleanOp("CreateDeviceRMA", RequestType.SINGLE, Map.of("uuid", uuid), null, deviceRMARequest);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL getACL(String uuid) {
+        return getAs("GetDeviceACL", Map.of("uuid", uuid), null, DeviceACL.class);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL addACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
+        voidOp("AddDeviceACL", RequestType.SINGLE, Map.of("uuid", uuid),
+                Utils.singleParamMap("accountUcmId", accountUcmId), deviceACLRequest);
+        return getACL(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL updateACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
+        voidOp("UpdateDeviceACL", RequestType.SINGLE, Map.of("uuid", uuid),
+                Utils.singleParamMap("accountUcmId", accountUcmId), deviceACLRequest);
+        return getACL(uuid);
     }
 
     /** {@inheritDoc} */

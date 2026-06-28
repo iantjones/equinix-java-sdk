@@ -14,14 +14,18 @@
  * governing permissions and limitations under the License.
  */
 
+package api.equinix.javasdk.networkedge.enums;
+
+import api.equinix.javasdk.core.model.APIParam;
+
 /**
- * Network Edge client interfaces for the Equinix Java SDK. Provides typed access
- * to virtual network device management including Devices, DeviceLinks,
- * VPNs, BGPPeerings, ACLTemplates, Backups, PublicKeys, DeviceTypes, Accounts,
- * and Metros. Each interface defines CRUD operations appropriate for the resource,
- * enabling provisioning and lifecycle management of Network Edge appliances.
+ * <p>The interface an ACL template applies to when associating it with a virtual device,
+ * either the management ({@code MGMT}) or WAN ({@code WAN}) interface.</p>
  *
- * @see api.equinix.javasdk.networkedge.client.NetworkEdgeConfig
- * @see api.equinix.javasdk.NetworkEdge
+ * @author ianjones
+ * @version $Id: $Id
  */
-package api.equinix.javasdk.networkedge.client;
+public enum ACLInterfaceType implements APIParam {
+    MGMT,
+    WAN
+}

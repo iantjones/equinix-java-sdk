@@ -28,10 +28,13 @@ import api.equinix.javasdk.networkedge.client.internal.DeviceTypeClient;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceType;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
 import api.equinix.javasdk.networkedge.model.json.DeviceTypeJson;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator;
+import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceTypeWrapper;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceWrapper;
 import lombok.Getter;
@@ -131,5 +134,40 @@ public class DevicesImpl implements Devices {
     /** {@inheritDoc} */
     public String postLicenseFile(MetroCode metroCode, String deviceTypeCode, LicenseType licenseType, String fileContents) {
         return this.serviceClient.postLicenseFile(metroCode, deviceTypeCode, licenseType, fileContents);
+    }
+
+    /** {@inheritDoc} */
+    public Boolean softReboot(String uuid) {
+        return this.serviceClient.softReboot(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public Boolean createRMA(String uuid, DeviceRMARequest deviceRMARequest) {
+        return this.serviceClient.createRMA(uuid, deviceRMARequest);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL getDeviceAcl(String uuid) {
+        return this.serviceClient.getACL(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL addDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest) {
+        return this.serviceClient.addACL(uuid, deviceACLRequest, null);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL addDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
+        return this.serviceClient.addACL(uuid, deviceACLRequest, accountUcmId);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL updateDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest) {
+        return this.serviceClient.updateACL(uuid, deviceACLRequest, null);
+    }
+
+    /** {@inheritDoc} */
+    public DeviceACL updateDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
+        return this.serviceClient.updateACL(uuid, deviceACLRequest, accountUcmId);
     }
 }
