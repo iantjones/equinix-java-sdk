@@ -74,16 +74,16 @@ public interface BGPPeering {
     /**
      * <p>getLocalAsn.</p>
      *
-     * @return a {@link java.lang.Integer} object.
+     * @return a {@link java.lang.Long} object.
      */
-    Integer getLocalAsn();
+    Long getLocalAsn();
 
     /**
      * <p>getRemoteAsn.</p>
      *
-     * @return a {@link java.lang.Integer} object.
+     * @return a {@link java.lang.Long} object.
      */
-    Integer getRemoteAsn();
+    Long getRemoteAsn();
 
     /**
      * <p>getAuthenticationKey.</p>

@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.networkedge.enums.Connectivity;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
@@ -65,7 +66,43 @@ public class DeviceCreatorJson {
     private LicenseType licenseType;
 
     @JsonProperty("accountNumber")
-    private Integer accountNumber;
+    private String accountNumber;
+
+    @JsonProperty("agreeOrderTerms")
+    private Boolean agreeOrderTerms;
+
+    @JsonProperty("projectId")
+    private String projectId;
+
+    @JsonProperty("tier")
+    private Integer tier;
+
+    @JsonProperty("termlength")
+    private String termlength;
+
+    @JsonProperty("connectivity")
+    private Connectivity connectivity;
+
+    @JsonProperty("clusterDetails")
+    private ClusterConfig clusterDetails;
+
+    @JsonProperty("day0TextFileId")
+    private String day0TextFileId;
+
+    @JsonProperty("cloudInitFileId")
+    private String cloudInitFileId;
+
+    @JsonProperty("purchaseOrderNumber")
+    private String purchaseOrderNumber;
+
+    @JsonProperty("orderReference")
+    private String orderReference;
+
+    @JsonProperty("channelPartner")
+    private String channelPartner;
+
+    @JsonProperty("licenseCategory")
+    private String licenseCategory;
 
     @JsonProperty("notifications")
     private ArrayList<String> notifications;
@@ -94,8 +131,8 @@ public class DeviceCreatorJson {
     @JsonProperty("siteId")
     private String siteId;
 
-    @JsonProperty("aclTemplateUuid")
-    private String aclTemplateUuid;
+    @JsonProperty("aclDetails")
+    private List<ACLDetail> aclDetails;
 
     @JsonProperty("core")
     private Integer core;
@@ -117,9 +154,6 @@ public class DeviceCreatorJson {
 
     @JsonProperty("diverseFromDeviceUuid")
     private String diverseFromDeviceUuid;
-
-    @JsonProperty("diverseFromDeviceName")
-    private String diverseFromDeviceName;
 
     @JsonProperty("primaryDeviceUuid")
     private String primaryDeviceUuid;
@@ -155,10 +189,12 @@ public class DeviceCreatorJson {
         this.licenseFileId = deviceBuilderSecondary.getLicenseFileId();
         this.licenseToken = deviceBuilderSecondary.getLicenseToken();
         this.smartLicenseUrl = deviceBuilderSecondary.getSmartLicenseUrl();
-        this.aclTemplateUuid = deviceBuilderSecondary.getAclTemplateUuid();
+        this.aclDetails = deviceBuilderSecondary.getAclDetails();
         this.siteId = deviceBuilderSecondary.getSiteId();
         this.systemIpAddress = deviceBuilderSecondary.getSystemIpAddress();
         this.additionalBandwidth = deviceBuilderSecondary.getAdditionalBandwidth();
+        this.day0TextFileId = deviceBuilderSecondary.getDay0TextFileId();
+        this.cloudInitFileId = deviceBuilderSecondary.getCloudInitFileId();
     }
 
     /**
@@ -190,12 +226,25 @@ public class DeviceCreatorJson {
         this.licenseToken = deviceBuilder.getLicenseToken();
         this.smartLicenseUrl = deviceBuilder.getSmartLicenseUrl();
         this.orderingContact = deviceBuilder.getOrderingContact();
-        this.aclTemplateUuid = deviceBuilder.getAclTemplateUuid();
+        this.aclDetails = deviceBuilder.getAclDetails();
         this.siteId = deviceBuilder.getSiteId();
         this.ipType = deviceBuilder.getIpType();
         this.systemIpAddress = deviceBuilder.getSystemIpAddress();
         this.sshInterfaceId = deviceBuilder.getSshInterfaceId();
         this.interfaceCount = deviceBuilder.getInterfaceCount();
         this.additionalBandwidth = deviceBuilder.getAdditionalBandwidth();
+
+        this.agreeOrderTerms = deviceBuilder.getAgreeOrderTerms();
+        this.projectId = deviceBuilder.getProjectId();
+        this.tier = deviceBuilder.getTier();
+        this.termlength = deviceBuilder.getTermlength();
+        this.connectivity = deviceBuilder.getConnectivity();
+        this.clusterDetails = deviceBuilder.getClusterDetails();
+        this.day0TextFileId = deviceBuilder.getDay0TextFileId();
+        this.cloudInitFileId = deviceBuilder.getCloudInitFileId();
+        this.purchaseOrderNumber = deviceBuilder.getPurchaseOrderNumber();
+        this.orderReference = deviceBuilder.getOrderReference();
+        this.channelPartner = deviceBuilder.getChannelPartner();
+        this.licenseCategory = deviceBuilder.getLicenseCategory();
     }
 }

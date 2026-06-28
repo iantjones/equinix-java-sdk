@@ -19,9 +19,9 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.model.ResourceImpl;
-import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.internal.implementation.DeviceLinkClientImpl;
+import api.equinix.javasdk.networkedge.enums.RedundancyType;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceLink;
 import api.equinix.javasdk.networkedge.model.json.DeviceLinkJson;
@@ -77,7 +77,8 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
     public class DeviceLinkBuilder {
         private final String groupName;
         private String subnet;
-        private List<DeviceLinkCreatorJson.Link> links;
+        private RedundancyType redundancyType;
+        private List<DeviceLinkCreatorJson.Link> metroLinks;
         private List<DeviceLinkCreatorJson.LinkDevice> linkDevices;
 
         protected DeviceLinkBuilder(String groupName) {
@@ -89,7 +90,12 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             return this;
         }
 
-        public DeviceLinkBuilder forDevice(String deviceUuid, Integer asn, Integer interfaceId) {
+        public DeviceLinkBuilder withRedundancyType(RedundancyType redundancyType) {
+            this.redundancyType = redundancyType;
+            return this;
+        }
+
+        public DeviceLinkBuilder forDevice(String deviceUuid, Long asn, Integer interfaceId) {
             if(this.linkDevices == null) {
                 this.linkDevices = new ArrayList<>();
             }
@@ -97,15 +103,15 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             return this;
         }
 
-        public DeviceLinkBuilder forDevice(Device device, Integer asn, Integer interfaceId) {
+        public DeviceLinkBuilder forDevice(Device device, Long asn, Integer interfaceId) {
             return forDevice(device.getUuid(), asn, interfaceId);
         }
 
-        public DeviceLinkBuilder withLink(Integer accountNumber, Integer throughput, BandwidthUnit throughputUnit, MetroCode sourceMetroCode, MetroCode destinationMetroCode) {
-            if(this.links == null) {
-                this.links = new ArrayList<>();
+        public DeviceLinkBuilder withLink(String accountNumber, String throughput, String throughputUnit, MetroCode metroCode) {
+            if(this.metroLinks == null) {
+                this.metroLinks = new ArrayList<>();
             }
-            this.links.add(new DeviceLinkCreatorJson.Link(accountNumber, sourceMetroCode, destinationMetroCode, throughput.doubleValue(), throughputUnit));
+            this.metroLinks.add(new DeviceLinkCreatorJson.Link(accountNumber, throughput, throughputUnit, metroCode));
             return this;
         }
 
@@ -136,7 +142,12 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             return this;
         }
 
-        public DeviceLinkOperator.DeviceLinkUpdater addDevice(String deviceUuid, Integer asn, Integer interfaceId) {
+        public DeviceLinkUpdater withRedundancyType(RedundancyType redundancyType) {
+            this.updaterJson.setRedundancyType(redundancyType);
+            return this;
+        }
+
+        public DeviceLinkOperator.DeviceLinkUpdater addDevice(String deviceUuid, Long asn, Integer interfaceId) {
             List<DeviceLinkUpdaterJson.LinkDevice> linkDevices = updaterJson.getLinkDevices();
             if(linkDevices == null) {
                 linkDevices = new ArrayList<>();
@@ -146,21 +157,21 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             return this;
         }
 
-        public DeviceLinkOperator.DeviceLinkUpdater addDevice(Device device, Integer asn, Integer interfaceId) {
+        public DeviceLinkOperator.DeviceLinkUpdater addDevice(Device device, Long asn, Integer interfaceId) {
             return addDevice(device.getUuid(), asn, interfaceId);
         }
 
-        public DeviceLinkOperator.DeviceLinkUpdater addLink(Integer accountNumber, Integer throughput, BandwidthUnit throughputUnit, MetroCode sourceMetroCode, MetroCode destinationMetroCode) {
-            List<DeviceLinkUpdaterJson.Link> links = updaterJson.getLinks();
-            if(links == null) {
-                links = new ArrayList<>();
+        public DeviceLinkOperator.DeviceLinkUpdater addLink(String accountNumber, String throughput, String throughputUnit, MetroCode metroCode) {
+            List<DeviceLinkUpdaterJson.Link> metroLinks = updaterJson.getMetroLinks();
+            if(metroLinks == null) {
+                metroLinks = new ArrayList<>();
             }
-            links.add(new DeviceLinkUpdaterJson.Link(accountNumber, sourceMetroCode, destinationMetroCode, throughput, throughputUnit));
-            updaterJson.setLinks(links);
+            metroLinks.add(new DeviceLinkUpdaterJson.Link(accountNumber, throughput, throughputUnit, metroCode));
+            updaterJson.setMetroLinks(metroLinks);
             return this;
         }
 
-        public DeviceLinkOperator.DeviceLinkUpdater removeDevice(String deviceUuid, Integer asn, Integer interfaceId) {
+        public DeviceLinkOperator.DeviceLinkUpdater removeDevice(String deviceUuid, Long asn, Integer interfaceId) {
             List<DeviceLinkUpdaterJson.LinkDevice> linkDevices = updaterJson.getLinkDevices();
 
             if(linkDevices == null) {
@@ -168,25 +179,25 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
             }
 
             updaterJson.setLinkDevices(
-                    linkDevices.stream().filter(Predicate.not(linkDevice -> linkDevice.getDeviceUuid().equals(deviceUuid) && linkDevice.getAsn().equals(asn)
+                    linkDevices.stream().filter(Predicate.not(linkDevice -> linkDevice.getDeviceUuid().equals(deviceUuid) && java.util.Objects.equals(linkDevice.getAsn(), asn)
                             && linkDevice.getInterfaceId().equals(interfaceId))).collect(Collectors.toList()));
             return this;
         }
 
-        public DeviceLinkOperator.DeviceLinkUpdater removeDevice(Device device, Integer asn, Integer interfaceId) {
+        public DeviceLinkOperator.DeviceLinkUpdater removeDevice(Device device, Long asn, Integer interfaceId) {
             return removeDevice(device.getUuid(), asn, interfaceId);
         }
 
-        public DeviceLinkOperator.DeviceLinkUpdater removeLink(Integer accountNumber, Integer throughput, BandwidthUnit throughputUnit, MetroCode sourceMetroCode, MetroCode destinationMetroCode) {
-            List<DeviceLinkUpdaterJson.Link> links = updaterJson.getLinks();
+        public DeviceLinkOperator.DeviceLinkUpdater removeLink(String accountNumber, String throughput, String throughputUnit, MetroCode metroCode) {
+            List<DeviceLinkUpdaterJson.Link> metroLinks = updaterJson.getMetroLinks();
 
-            if(links == null) {
+            if(metroLinks == null) {
                 return this;
             }
 
-            updaterJson.setLinks(
-                    links.stream().filter(Predicate.not(link -> link.getAccountNumber().equals(accountNumber) && link.getThroughput().equals(throughput) && link.getThroughputUnit() == throughputUnit
-                        && link.getSourceMetroCode() == sourceMetroCode && link.getDestinationMetroCode() == destinationMetroCode)).collect(Collectors.toList()));
+            updaterJson.setMetroLinks(
+                    metroLinks.stream().filter(Predicate.not(link -> java.util.Objects.equals(link.getAccountNumber(), accountNumber) && java.util.Objects.equals(link.getThroughput(), throughput)
+                        && java.util.Objects.equals(link.getThroughputUnit(), throughputUnit) && link.getMetroCode() == metroCode)).collect(Collectors.toList()));
             return this;
         }
 

@@ -19,18 +19,22 @@ package api.equinix.javasdk.networkedge.model;
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
+import api.equinix.javasdk.networkedge.enums.Connectivity;
 import api.equinix.javasdk.networkedge.enums.DeviceCategory;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
+import api.equinix.javasdk.networkedge.enums.DevicePlane;
 import api.equinix.javasdk.networkedge.enums.DeviceStatus;
 import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseStatus;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.enums.NetworkScope;
 import api.equinix.javasdk.networkedge.enums.RedundancyType;
+import api.equinix.javasdk.networkedge.enums.SshIpFqdnStatus;
 import api.equinix.javasdk.networkedge.enums.Vendor;
 import api.equinix.javasdk.networkedge.model.implementation.ClusterDetail;
 import api.equinix.javasdk.networkedge.model.implementation.Contact;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceCore;
+import api.equinix.javasdk.networkedge.model.implementation.DevicePricingDetail;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceVendorConfig;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.implementation.SupportDetail;
@@ -328,9 +332,9 @@ public interface Device {
     /**
      * <p>getAccountNumber.</p>
      *
-     * @return a {@link java.lang.Integer} object.
+     * @return a {@link java.lang.String} object.
      */
-    Integer getAccountNumber();
+    String getAccountNumber();
 
     /**
      * <p>getAccountName.</p>
@@ -557,6 +561,55 @@ public interface Device {
     String getDiverseFromDeviceName();
 
     /**
+     * <p>getExpiry.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    String getExpiry();
+
+    /**
+     * <p>getSshIpFqdnStatus.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.enums.SshIpFqdnStatus} object.
+     */
+    SshIpFqdnStatus getSshIpFqdnStatus();
+
+    /**
+     * <p>getConnectivity.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.enums.Connectivity} object.
+     */
+    Connectivity getConnectivity();
+
+    /**
+     * <p>getPricingDetails.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DevicePricingDetail} object.
+     */
+    DevicePricingDetail getPricingDetails();
+
+    /**
+     * <p>getPlane.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.enums.DevicePlane} object.
+     */
+    DevicePlane getPlane();
+
+    /**
+     * <p>getNewTermLength.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    String getNewTermLength();
+
+    /**
+     * <p>getChannelPartner.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    String getChannelPartner();
+
+    /**
      * <p>getPricing.</p>
      *
      * @return a {@link api.equinix.javasdk.networkedge.model.json.Pricing} object.
@@ -575,9 +628,10 @@ public interface Device {
      * <p>restoreFromBackup.</p>
      *
      * @param backupUuid a {@link java.lang.String} object.
+     * @param backupName the name of the backup ({@code DeviceBackupUpdateRequest.name}), required by the API.
      * @return a {@link java.lang.Boolean} object.
      */
-    Boolean restoreFromBackup(String backupUuid);
+    Boolean restoreFromBackup(String backupUuid, String backupName);
 
     /**
      * <p>updateAdditionalBandwidth.</p>

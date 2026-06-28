@@ -38,10 +38,10 @@ public class BGPPeeringCreatorJson {
     private String remoteIpAddress;
 
     @JsonProperty("localAsn")
-    private Integer localAsn;
+    private Long localAsn;
 
     @JsonProperty("remoteAsn")
-    private Integer remoteAsn;
+    private Long remoteAsn;
 
     @JsonProperty("authenticationKey")
     private String authenticationKey;

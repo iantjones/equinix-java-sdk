@@ -69,6 +69,116 @@ public class RequestBuilder {
         return new OrderSummary();
     }
 
+    /**
+     * <p>allowedInterfaces.</p>
+     *
+     * @param deviceType the device type code (path parameter).
+     * @param deviceManagementType the required device management type.
+     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.AllowedInterfaces} object.
+     */
+    public static AllowedInterfaces allowedInterfaces(String deviceType, DeviceManagementType deviceManagementType) {
+        return new AllowedInterfaces(deviceType, deviceManagementType);
+    }
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class AllowedInterfaces extends RequestBuilderBase<AllowedInterfaces> {
+
+        private String deviceType;
+        private DeviceManagementType deviceManagementType;
+        private LicenseType mode;
+        private Boolean cluster;
+        private Boolean sdwan;
+        private Connectivity connectivity;
+        private Integer core;
+        private Integer memory;
+        private String unit;
+        private String flavor;
+        private String version;
+        private String softwarePkg;
+
+        protected AllowedInterfaces(String deviceType, DeviceManagementType deviceManagementType) {
+            this.deviceType = deviceType;
+            this.deviceManagementType = deviceManagementType;
+        }
+
+        protected AllowedInterfaces builder() {
+            return new AllowedInterfaces();
+        }
+
+        public String getDeviceType() {
+            return deviceType;
+        }
+
+        public AllowedInterfaces withMode(LicenseType mode) {
+            this.mode = mode;
+            return this;
+        }
+
+        public AllowedInterfaces withCluster(Boolean cluster) {
+            this.cluster = cluster;
+            return this;
+        }
+
+        public AllowedInterfaces withSdwan(Boolean sdwan) {
+            this.sdwan = sdwan;
+            return this;
+        }
+
+        public AllowedInterfaces withConnectivity(Connectivity connectivity) {
+            this.connectivity = connectivity;
+            return this;
+        }
+
+        public AllowedInterfaces withCore(Integer core) {
+            this.core = core;
+            return this;
+        }
+
+        public AllowedInterfaces withMemory(Integer memory) {
+            this.memory = memory;
+            return this;
+        }
+
+        public AllowedInterfaces withUnit(String unit) {
+            this.unit = unit;
+            return this;
+        }
+
+        public AllowedInterfaces withFlavor(String flavor) {
+            this.flavor = flavor;
+            return this;
+        }
+
+        public AllowedInterfaces withVersion(String version) {
+            this.version = version;
+            return this;
+        }
+
+        public AllowedInterfaces withSoftwarePkg(String softwarePkg) {
+            this.softwarePkg = softwarePkg;
+            return this;
+        }
+
+        public AllowedInterfaces build() {
+            this.queryParameters = new HashMap<>();
+
+            this.queryParameters.put("deviceManagementType", ModelUtils.singleValueList(this.deviceManagementType.getJsonValue()));
+            this.queryParameters.put("mode", ModelUtils.singleValueList(this.mode));
+            this.queryParameters.put("cluster", ModelUtils.singleValueList(this.cluster));
+            this.queryParameters.put("sdwan", ModelUtils.singleValueList(this.sdwan));
+            this.queryParameters.put("connectivity", ModelUtils.singleValueList(this.connectivity));
+            this.queryParameters.put("core", ModelUtils.singleValueList(this.core));
+            this.queryParameters.put("memory", ModelUtils.singleValueList(this.memory));
+            this.queryParameters.put("unit", ModelUtils.singleValueList(this.unit));
+            this.queryParameters.put("flavor", ModelUtils.singleValueList(this.flavor));
+            this.queryParameters.put("version", ModelUtils.singleValueList(this.version));
+            this.queryParameters.put("softwarePkg", ModelUtils.singleValueList(this.softwarePkg));
+
+            this.wasBuilt = true;
+            return this;
+        }
+    }
+
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Device extends RequestBuilderBase<Device> {
 

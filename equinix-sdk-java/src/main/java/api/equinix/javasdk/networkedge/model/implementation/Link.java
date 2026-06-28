@@ -30,26 +30,17 @@ import lombok.Getter;
 @Getter
 public class Link {
 
-    @JsonProperty("accountNumber")
-    private Integer accountNumber;
-
     @JsonProperty("accountName")
     private String accountName;
 
-    @JsonProperty("sourceMetroCode")
-    private MetroCode sourceMetroCode;
+    @JsonProperty("metroCode")
+    private MetroCode metroCode;
 
-    @JsonProperty("sourceMetroName")
-    private String sourceMetroName;
-
-    @JsonProperty("destinationMetroCode")
-    private MetroCode destinationMetroCode;
-
-    @JsonProperty("destinationMetroName")
-    private String destinationMetroName;
+    @JsonProperty("metroName")
+    private String metroName;
 
     @JsonProperty("throughput")
-    private Double throughput;
+    private String throughput;
 
     @JsonProperty("throughputUnit")
     private BandwidthUnit throughputUnit;

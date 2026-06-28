@@ -68,9 +68,11 @@ public class BackupClientImpl extends ResourceClientBase<Backup, BackupJson> imp
                 Map.of("backupUuid", Utils.singleParamList(uuid)), RestoreFeasibilityJson.class);
     }
 
-    public Boolean restore(String uuid, String deviceUuid) {
-        return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("deviceUuid", deviceUuid),
-                Map.of("backupUuid", Utils.singleParamList(uuid)), null);
+    public Boolean restore(String uuid, String name) {
+        // Per spec restoreDeviceBackupByUuid: PATCH /ne/v1/devices/{uuid}/restore where {uuid} is the
+        // BACKUP uuid; the body is DeviceBackupUpdateRequest (required name). No query parameter.
+        return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("backupUuid", uuid),
+                null, Utils.singlePropertyBody("name", name));
     }
 
     public String download(String uuid) {

@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.networkedge.client.internal.implementation.PublicKeyClientImpl;
+import api.equinix.javasdk.networkedge.enums.KeyType;
 import api.equinix.javasdk.networkedge.model.PublicKey;
 import api.equinix.javasdk.networkedge.model.json.PublicKeyJson;
 import api.equinix.javasdk.networkedge.model.wrappers.PublicKeyWrapper;
@@ -59,6 +60,7 @@ public class PublicKeyOperator {
 
         private final String keyName;
         private final String keyValue;
+        private KeyType keyType;
         private String accountUcmId;
 
         public PublicKeyBuilder(String keyName, String keyValue) {
@@ -68,6 +70,11 @@ public class PublicKeyOperator {
 
         public PublicKeyBuilder forAccount(String accountUcmId) {
             this.accountUcmId = accountUcmId;
+            return this;
+        }
+
+        public PublicKeyBuilder withKeyType(KeyType keyType) {
+            this.keyType = keyType;
             return this;
         }
 

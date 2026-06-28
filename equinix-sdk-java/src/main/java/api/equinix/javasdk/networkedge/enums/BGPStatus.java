@@ -26,5 +26,8 @@ import api.equinix.javasdk.core.model.APIParam;
  */
 public enum BGPStatus implements APIParam  {
     PROVISIONED,
-    DEPROVISIONED
+    PROVISIONING,
+    DEPROVISIONED,
+    DEPROVISIONING,
+    FAILED
 }

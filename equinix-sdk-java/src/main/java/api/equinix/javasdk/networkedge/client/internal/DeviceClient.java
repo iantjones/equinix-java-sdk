@@ -22,7 +22,13 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
+import api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceReboot;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgrade;
+import api.equinix.javasdk.networkedge.model.implementation.DownloadableImage;
+import api.equinix.javasdk.networkedge.model.implementation.ImageDownload;
+import api.equinix.javasdk.networkedge.model.implementation.InterfaceStats;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
@@ -31,6 +37,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceUpdaterJson;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>DeviceClient interface.</p>
@@ -65,13 +72,67 @@ public interface DeviceClient<T> extends Pageable<T> {
     List<NetworkInterface> listInterfaces(String uuid);
 
     /**
-     * <p>restore.</p>
+     * <p>getAllowedInterfaces.</p>
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @param backupUuid a {@link java.lang.String} object.
+     * @param deviceType the device type code.
+     * @param queryParams the configuration query parameters.
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse} object.
+     */
+    AllowedInterfaceResponse getAllowedInterfaces(String deviceType, Map<String, List<String>> queryParams);
+
+    /**
+     * <p>listReloadHistory.</p>
+     *
+     * @param uuid the device uuid.
+     * @return a {@link java.util.List} object.
+     */
+    List<DeviceReboot> listReloadHistory(String uuid);
+
+    /**
+     * <p>listUpgradeHistory.</p>
+     *
+     * @param uuid the device uuid.
+     * @return a {@link java.util.List} object.
+     */
+    List<DeviceUpgrade> listUpgradeHistory(String uuid);
+
+    /**
+     * <p>getInterfaceStatistics.</p>
+     *
+     * @param uuid the device uuid.
+     * @param interfaceId the interface id.
+     * @param startDateTime the start of the stats window (ISO-8601), or {@code null}.
+     * @param endDateTime the end of the stats window (ISO-8601), or {@code null}.
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.InterfaceStats} object.
+     */
+    InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime);
+
+    /**
+     * <p>listDownloadableImages.</p>
+     *
+     * @param deviceType the device type code.
+     * @return a {@link java.util.List} object.
+     */
+    List<DownloadableImage> listDownloadableImages(String deviceType);
+
+    /**
+     * <p>requestImageDownload.</p>
+     *
+     * @param deviceType the device type code.
+     * @param version the device version.
+     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.ImageDownload} object.
+     */
+    ImageDownload requestImageDownload(String deviceType, String version);
+
+    /**
+     * <p>restore. Restores the backup identified by {@code backupUuid}. Per the spec the backup
+     * name is required in the request body.</p>
+     *
+     * @param backupUuid the unique identifier of the backup to restore.
+     * @param backupName the name of the backup ({@code DeviceBackupUpdateRequest.name}).
      * @return a {@link java.lang.Boolean} object.
      */
-    Boolean restore(String uuid, String backupUuid);
+    Boolean restore(String backupUuid, String backupName);
 
     /**
      * <p>updateAdditionalBandwidth.</p>

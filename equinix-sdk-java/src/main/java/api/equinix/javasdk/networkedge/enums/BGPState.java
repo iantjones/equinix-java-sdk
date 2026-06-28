@@ -16,8 +16,6 @@
 
 package api.equinix.javasdk.networkedge.enums;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * <p>BGPState class.</p>
  *
@@ -26,12 +24,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public enum BGPState {
 
-    @JsonProperty("Established")
-    ESTABLISHED,
-    @JsonProperty("Active")
-    ACTIVE,
-    @JsonProperty("Connect")
+    IDLE,
     CONNECT,
-    @JsonProperty("Idle")
-    IDLE
+    ACTIVE,
+    OPENSENT,
+    OPENCONFIRM,
+    ESTABLISHED
 }

@@ -87,8 +87,8 @@ class CrossDomainBGPScenarioTest extends IntegrationTestBase {
                             .forConnection(connectionUuid)
                             .withLocalIpAddress("169.254.0.1")
                             .withRemoteIpAddress("169.254.0.2")
-                            .withLocalAsn(65000)
-                            .withRemoteAsn(65001)
+                            .withLocalAsn(65000L)
+                            .withRemoteAsn(65001L)
                             .withAuthenticationKey("sdk-test-key")
                             .save()
             );
@@ -128,9 +128,9 @@ class CrossDomainBGPScenarioTest extends IntegrationTestBase {
                 "Local IP should match");
         assertEquals("169.254.0.2", peering.getRemoteIpAddress(),
                 "Remote IP should match");
-        assertEquals(65000, peering.getLocalAsn(),
+        assertEquals(65000L, peering.getLocalAsn(),
                 "Local ASN should match");
-        assertEquals(65001, peering.getRemoteAsn(),
+        assertEquals(65001L, peering.getRemoteAsn(),
                 "Remote ASN should match");
         System.out.printf("  BGP peering verified: local=%s remote=%s%n",
                 peering.getLocalIpAddress(), peering.getRemoteIpAddress());

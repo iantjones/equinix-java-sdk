@@ -41,6 +41,9 @@ public class ACLTemplateCreatorJson {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("projectId")
+    private String projectId;
+
     @JsonProperty("inboundRules")
     List<InboundRule> inboundRules;
 
@@ -65,11 +68,15 @@ public class ACLTemplateCreatorJson {
 
         @JsonProperty("seqNo")
         private Integer seqNo;
+
+        @JsonProperty("description")
+        private String description;
     }
 
     ACLTemplateCreatorJson(ACLTemplateOperator.ACLTemplateBuilder deviceLinkBuilder) {
         this.name = deviceLinkBuilder.getName();
         this.description = deviceLinkBuilder.getDescription();
+        this.projectId = deviceLinkBuilder.getProjectId();
         this.inboundRules = deviceLinkBuilder.getInboundRules();
         // accountUcmId is @JsonIgnore (sent as a query param, not in the body) but must be carried
         // through so create()/getByUuid() can attach it; it was previously dropped here.

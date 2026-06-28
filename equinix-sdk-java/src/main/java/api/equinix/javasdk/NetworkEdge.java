@@ -124,7 +124,8 @@ public final class NetworkEdge extends EquinixClient implements Service {
         if (this.setup == null) {
             this.setup = new SetupImpl(this.networkEdgeConfig.getAccountsClient(),
                     this.networkEdgeConfig.getMetrosClient(), this.networkEdgeConfig.getAgreementsClient(),
-                    this.networkEdgeConfig.getPricingClient(), this.networkEdgeConfig.getFilesClient(), this);
+                    this.networkEdgeConfig.getPricingClient(), this.networkEdgeConfig.getFilesClient(),
+                    this.networkEdgeConfig.getNotificationClient(), this);
         }
         return this.setup;
     }

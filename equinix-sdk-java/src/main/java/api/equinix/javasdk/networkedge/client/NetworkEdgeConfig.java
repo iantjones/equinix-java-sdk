@@ -126,4 +126,11 @@ public interface NetworkEdgeConfig {
      * @return a {@link api.equinix.javasdk.networkedge.client.internal.FilesClient} object.
      */
     FilesClient getFilesClient();
+
+    /**
+     * <p>getNotificationClient.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.client.internal.NotificationClient} object.
+     */
+    NotificationClient getNotificationClient();
 }

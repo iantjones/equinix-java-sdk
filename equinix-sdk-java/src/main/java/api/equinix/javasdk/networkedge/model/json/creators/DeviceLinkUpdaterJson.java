@@ -16,8 +16,8 @@
 
 package api.equinix.javasdk.networkedge.model.json.creators;
 
-import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.networkedge.enums.RedundancyType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -43,8 +43,11 @@ public class DeviceLinkUpdaterJson {
     @JsonProperty("subnet")
     private String subnet;
 
-    @JsonProperty("links")
-    private List<Link> links;
+    @JsonProperty("redundancyType")
+    private RedundancyType redundancyType;
+
+    @JsonProperty("metroLinks")
+    private List<Link> metroLinks;
 
     @JsonProperty("linkDevices")
     private List<LinkDevice> linkDevices;
@@ -54,19 +57,16 @@ public class DeviceLinkUpdaterJson {
     @Getter(AccessLevel.PACKAGE)
     static class Link {
         @JsonProperty("accountNumber")
-        private Integer accountNumber;
-
-        @JsonProperty("sourceMetroCode")
-        private MetroCode sourceMetroCode;
-
-        @JsonProperty("destinationMetroCode")
-        private MetroCode destinationMetroCode;
+        private String accountNumber;
 
         @JsonProperty("throughput")
-        private Integer throughput;
+        private String throughput;
 
         @JsonProperty("throughputUnit")
-        private BandwidthUnit throughputUnit;
+        private String throughputUnit;
+
+        @JsonProperty("metroCode")
+        private MetroCode metroCode;
     }
 
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -77,7 +77,7 @@ public class DeviceLinkUpdaterJson {
         private String deviceUuid;
 
         @JsonProperty("asn")
-        private Integer asn;
+        private Long asn;
 
         @JsonProperty("interfaceId")
         private Integer interfaceId;

@@ -22,6 +22,8 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.internal.implementation.DeviceClientImpl;
+import api.equinix.javasdk.networkedge.enums.ACLInterfaceType;
+import api.equinix.javasdk.networkedge.enums.Connectivity;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
@@ -96,7 +98,7 @@ public class DeviceOperator extends ResourceImpl<Device> {
     public class DeviceBuilder {
 
         private String deviceName;
-        private Integer accountNumber;
+        private String accountNumber;
         private String accountReferenceId;
         private String deviceTypeCode;
         private MetroCode metroCode;
@@ -116,13 +118,26 @@ public class DeviceOperator extends ResourceImpl<Device> {
         private String licenseToken;
         private String smartLicenseUrl;
         private String orderingContact;
-        private String aclTemplateUuid;
+        private List<ACLDetail> aclDetails;
         private String siteId;
         private IPAssignment ipType;
         private String systemIpAddress;
         private Integer sshInterfaceId;
         private Integer interfaceCount;
         private Integer additionalBandwidth;
+
+        private Boolean agreeOrderTerms;
+        private String projectId;
+        private Integer tier;
+        private String termlength;
+        private Connectivity connectivity;
+        private ClusterConfig clusterDetails;
+        private String day0TextFileId;
+        private String cloudInitFileId;
+        private String purchaseOrderNumber;
+        private String orderReference;
+        private String channelPartner;
+        private String licenseCategory;
 
         private DeviceVendorConfig vendorConfig;
         private List<SSHUserJson> sshUsers;
@@ -132,8 +147,73 @@ public class DeviceOperator extends ResourceImpl<Device> {
             this.deviceName = deviceName;
         }
 
-        public DeviceBuilder withAccountNumber(Integer accountNumber) {
+        public DeviceBuilder withAccountNumber(String accountNumber) {
             this.accountNumber = accountNumber;
+            return this;
+        }
+
+        public DeviceBuilder agreeToOrderTerms() {
+            this.agreeOrderTerms = true;
+            return this;
+        }
+
+        public DeviceBuilder withAgreeOrderTerms(Boolean agreeOrderTerms) {
+            this.agreeOrderTerms = agreeOrderTerms;
+            return this;
+        }
+
+        public DeviceBuilder withProjectId(String projectId) {
+            this.projectId = projectId;
+            return this;
+        }
+
+        public DeviceBuilder withTier(Integer tier) {
+            this.tier = tier;
+            return this;
+        }
+
+        public DeviceBuilder withTermLength(String termlength) {
+            this.termlength = termlength;
+            return this;
+        }
+
+        public DeviceBuilder withConnectivity(Connectivity connectivity) {
+            this.connectivity = connectivity;
+            return this;
+        }
+
+        public DeviceBuilder withClusterDetails(ClusterConfig clusterDetails) {
+            this.clusterDetails = clusterDetails;
+            return this;
+        }
+
+        public DeviceBuilder withDay0TextFileId(String day0TextFileId) {
+            this.day0TextFileId = day0TextFileId;
+            return this;
+        }
+
+        public DeviceBuilder withCloudInitFileId(String cloudInitFileId) {
+            this.cloudInitFileId = cloudInitFileId;
+            return this;
+        }
+
+        public DeviceBuilder withPurchaseOrderNumber(String purchaseOrderNumber) {
+            this.purchaseOrderNumber = purchaseOrderNumber;
+            return this;
+        }
+
+        public DeviceBuilder withOrderReference(String orderReference) {
+            this.orderReference = orderReference;
+            return this;
+        }
+
+        public DeviceBuilder withChannelPartner(String channelPartner) {
+            this.channelPartner = channelPartner;
+            return this;
+        }
+
+        public DeviceBuilder withLicenseCategory(String licenseCategory) {
+            this.licenseCategory = licenseCategory;
             return this;
         }
 
@@ -239,12 +319,19 @@ public class DeviceOperator extends ResourceImpl<Device> {
         }
 
         public DeviceBuilder withAclTemplateUuid(String aclTemplateUuid) {
-            this.aclTemplateUuid = aclTemplateUuid;
-            return this;
+            return withAclDetail(ACLInterfaceType.WAN, aclTemplateUuid);
         }
 
         public DeviceBuilder withAclTemplate(ACLTemplate aclTemplate) {
             return withAclTemplateUuid(aclTemplate.getUuid());
+        }
+
+        public DeviceBuilder withAclDetail(ACLInterfaceType interfaceType, String aclTemplateUuid) {
+            if (this.aclDetails == null) {
+                this.aclDetails = new ArrayList<>();
+            }
+            this.aclDetails.add(new ACLDetail(interfaceType, aclTemplateUuid));
+            return this;
         }
 
         public DeviceBuilder withSiteId(String siteId) {
@@ -327,14 +414,14 @@ public class DeviceOperator extends ResourceImpl<Device> {
         private DeviceCreatorJson deviceCreatorJson;
         private String deviceName;
         private String primaryDeviceUuid;
-        private Integer accountNumber;
+        private String accountNumber;
         private String accountReferenceId;
         private Integer additionalBandwidth;
         private String licenseFileId;
         private String licenseToken;
         private MetroCode metroCode;
         private ArrayList<String> notifications;
-        private String aclTemplateUuid;
+        private List<ACLDetail> aclDetails;
         private List<SSHUserJson> sshUsers;
         private String hostNamePrefix;
         private String siteId;
@@ -342,6 +429,8 @@ public class DeviceOperator extends ResourceImpl<Device> {
         private DeviceVendorConfig vendorConfig;
         private Integer sshInterfaceId;
         private String smartLicenseUrl;
+        private String day0TextFileId;
+        private String cloudInitFileId;
 
         protected DeviceBuilderSecondary(String secondaryDeviceName, DeviceCreatorJson deviceCreatorJson) {
             this.deviceName = secondaryDeviceName;
@@ -358,7 +447,7 @@ public class DeviceOperator extends ResourceImpl<Device> {
             return this;
         }
 
-        public DeviceBuilderSecondary withAccountNumber(Integer accountNumber) {
+        public DeviceBuilderSecondary withAccountNumber(String accountNumber) {
             this.accountNumber = accountNumber;
             return this;
         }
@@ -407,12 +496,29 @@ public class DeviceOperator extends ResourceImpl<Device> {
         }
 
         public DeviceBuilderSecondary withAclTemplateUuid(String aclTemplateUuid) {
-            this.aclTemplateUuid = aclTemplateUuid;
-            return this;
+            return withAclDetail(ACLInterfaceType.WAN, aclTemplateUuid);
         }
 
         public DeviceBuilderSecondary withAclTemplate(ACLTemplate aclTemplate) {
             return withAclTemplateUuid(aclTemplate.getUuid());
+        }
+
+        public DeviceBuilderSecondary withAclDetail(ACLInterfaceType interfaceType, String aclTemplateUuid) {
+            if (this.aclDetails == null) {
+                this.aclDetails = new ArrayList<>();
+            }
+            this.aclDetails.add(new ACLDetail(interfaceType, aclTemplateUuid));
+            return this;
+        }
+
+        public DeviceBuilderSecondary withDay0TextFileId(String day0TextFileId) {
+            this.day0TextFileId = day0TextFileId;
+            return this;
+        }
+
+        public DeviceBuilderSecondary withCloudInitFileId(String cloudInitFileId) {
+            this.cloudInitFileId = cloudInitFileId;
+            return this;
         }
 
         public DeviceBuilderSecondary withSiteId(String siteId) {
@@ -497,6 +603,26 @@ public class DeviceOperator extends ResourceImpl<Device> {
 
         public DeviceOperator.DeviceUpdater increaseTermLength(Integer termLength) {
             this.updaterJson.setTermLength(termLength);
+            return this;
+        }
+
+        public DeviceOperator.DeviceUpdater withCore(Integer core) {
+            this.updaterJson.setCore(core);
+            return this;
+        }
+
+        public DeviceOperator.DeviceUpdater withTermLengthEffectiveImmediate(Boolean termLengthEffectiveImmediate) {
+            this.updaterJson.setTermLengthEffectiveImmediate(termLengthEffectiveImmediate);
+            return this;
+        }
+
+        public DeviceOperator.DeviceUpdater withAutoRenewalOptOut(Boolean autoRenewalOptOut) {
+            this.updaterJson.setAutoRenewalOptOut(autoRenewalOptOut);
+            return this;
+        }
+
+        public DeviceOperator.DeviceUpdater withDisablePassword(Boolean disablePassword) {
+            this.updaterJson.setVendorConfig(new DeviceUpdaterJson.VendorConfigPatch(disablePassword));
             return this;
         }
 

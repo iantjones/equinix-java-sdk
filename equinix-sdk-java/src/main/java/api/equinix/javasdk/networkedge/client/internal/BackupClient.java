@@ -59,13 +59,14 @@ public interface BackupClient<T> extends Pageable<T> {
     RestoreFeasibilityJson checkRestoreFeasibility(String uuid, String deviceUuid);
 
     /**
-     * <p>restore.</p>
+     * <p>restore. Restores the backup identified by {@code uuid} (the backup uuid). The
+     * spec requires the backup {@code name} in the request body.</p>
      *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceUuid a {@link java.lang.String} object.
+     * @param uuid the unique identifier of the backup to restore.
+     * @param name the name of the backup ({@code DeviceBackupUpdateRequest.name}).
      * @return a {@link java.lang.Boolean} object.
      */
-    Boolean restore(String uuid, String deviceUuid);
+    Boolean restore(String uuid, String name);
 
     /**
      * <p>download.</p>

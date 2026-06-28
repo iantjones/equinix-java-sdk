@@ -78,10 +78,10 @@ public class VPNOperator extends ResourceImpl<VPN> {
         private String configName;
         private String peerIp;
         private String peerSharedKey;
-        private Integer remoteAsn;
+        private Long remoteAsn;
         private String remoteIpAddress;
         private String password;
-        private Integer localAsn;
+        private Long localAsn;
         private String tunnelIp;
         private Boolean useNetworkServiceConnection;
 
@@ -113,7 +113,7 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
-         public VPNBuilder withRemoteAsn(Integer remoteAsn) {
+         public VPNBuilder withRemoteAsn(Long remoteAsn) {
             this.remoteAsn = remoteAsn;
             return this;
         }
@@ -128,7 +128,7 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
-         public VPNBuilder withLocalAsn(Integer localAsn) {
+         public VPNBuilder withLocalAsn(Long localAsn) {
             this.localAsn = localAsn;
             return this;
         }
@@ -175,7 +175,7 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
-        public VPNUpdater withRemoteAsn(Integer remoteAsn) {
+        public VPNUpdater withRemoteAsn(Long remoteAsn) {
             this.updaterJson.setRemoteAsn(remoteAsn);
             return this;
         }
@@ -190,7 +190,7 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
-        public VPNUpdater withLocalAsn(Integer localAsn) {
+        public VPNUpdater withLocalAsn(Long localAsn) {
             this.updaterJson.setLocalAsn(localAsn);
             return this;
         }

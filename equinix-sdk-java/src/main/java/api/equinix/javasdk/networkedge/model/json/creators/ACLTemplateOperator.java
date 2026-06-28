@@ -76,6 +76,7 @@ public class ACLTemplateOperator extends ResourceImpl<ACLTemplate> {
         private String accountUcmId;
         private String name;
         private String description;
+        private String projectId;
         private List<ACLTemplateCreatorJson.InboundRule> inboundRules;
 
         protected ACLTemplateBuilder(String name) {
@@ -92,11 +93,20 @@ public class ACLTemplateOperator extends ResourceImpl<ACLTemplate> {
             return this;
         }
 
+        public ACLTemplateBuilder forProject(String projectId) {
+            this.projectId = projectId;
+            return this;
+        }
+
         public ACLTemplateBuilder withRule(Protocol protocol, String srcPort, String dstPort, String subnet, Integer seqNo) {
+            return withRule(protocol, srcPort, dstPort, subnet, seqNo, null);
+        }
+
+        public ACLTemplateBuilder withRule(Protocol protocol, String srcPort, String dstPort, String subnet, Integer seqNo, String description) {
             if(this.inboundRules == null) {
                 this.inboundRules = new ArrayList<>();
             }
-            this.inboundRules.add(new ACLTemplateCreatorJson.InboundRule(protocol, srcPort, dstPort, subnet, seqNo));
+            this.inboundRules.add(new ACLTemplateCreatorJson.InboundRule(protocol, srcPort, dstPort, subnet, seqNo, description));
             return this;
         }
 
@@ -133,11 +143,16 @@ public class ACLTemplateOperator extends ResourceImpl<ACLTemplate> {
         }
 
         public ACLTemplateUpdater addRule(Protocol protocol, String srcPort, String dstPort, String subnet, Integer seqNo) {
+            return addRule(protocol, srcPort, dstPort, subnet, seqNo, null);
+        }
+
+        public ACLTemplateUpdater addRule(Protocol protocol, String srcPort, String dstPort, String subnet, Integer seqNo, String description) {
             List<ACLTemplateUpdaterJson.InboundRule> inboundRules = updaterJson.getInboundRules();
             if(inboundRules == null) {
                 inboundRules = new ArrayList<>();
             }
-            inboundRules.add(new ACLTemplateUpdaterJson.InboundRule(protocol, srcPort, dstPort, subnet, seqNo));
+            inboundRules.add(new ACLTemplateUpdaterJson.InboundRule(protocol, srcPort, dstPort, subnet, seqNo, description));
+            updaterJson.setInboundRules(inboundRules);
             return this;
         }
 

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.networkedge.enums.KeyType;
 import api.equinix.javasdk.networkedge.model.PublicKey;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -43,6 +44,9 @@ public class PublicKeyJson {
 
     @JsonProperty("keyValue")
     private String keyValue;
+
+    @JsonProperty("keyType")
+    private KeyType keyType;
 
     @JsonProperty("custOrgId")
     private String custOrgId;

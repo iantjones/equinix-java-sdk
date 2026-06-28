@@ -45,4 +45,7 @@ public class InboundRule {
 
     @JsonProperty("seqNo")
     private Integer seqNo;
+
+    @JsonProperty("description")
+    private String description;
 }

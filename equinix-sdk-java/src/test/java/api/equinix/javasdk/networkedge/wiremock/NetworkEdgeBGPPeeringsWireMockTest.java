@@ -84,8 +84,8 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
                     .forConnection("conn-aaaa-bbbb-cccc-ddddeeeeffff")
                     .withLocalIpAddress("169.254.0.1/30")
                     .withRemoteIpAddress("169.254.0.2")
-                    .withLocalAsn(65000)
-                    .withRemoteAsn(65001)
+                    .withLocalAsn(65000L)
+                    .withRemoteAsn(65001L)
                     .save();
 
             assertNotNull(peering);

@@ -28,7 +28,13 @@ import api.equinix.javasdk.networkedge.client.internal.DeviceTypeClient;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.DeviceType;
+import api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceReboot;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgrade;
+import api.equinix.javasdk.networkedge.model.implementation.DownloadableImage;
+import api.equinix.javasdk.networkedge.model.implementation.ImageDownload;
+import api.equinix.javasdk.networkedge.model.implementation.InterfaceStats;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.json.DeviceJson;
 import api.equinix.javasdk.networkedge.model.json.DeviceTypeJson;
@@ -105,6 +111,36 @@ public class DevicesImpl implements Devices {
     /** {@inheritDoc} */
     public List<NetworkInterface> listInterfaces(String uuid) {
         return serviceClient.listInterfaces(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public AllowedInterfaceResponse listAllowedInterfaces(RequestBuilder.AllowedInterfaces requestBuilder) {
+        return serviceClient.getAllowedInterfaces(requestBuilder.getDeviceType(), Utils.newMap(requestBuilder));
+    }
+
+    /** {@inheritDoc} */
+    public List<DeviceReboot> listReloadHistory(String uuid) {
+        return serviceClient.listReloadHistory(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public List<DeviceUpgrade> listUpgradeHistory(String uuid) {
+        return serviceClient.listUpgradeHistory(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime) {
+        return serviceClient.getInterfaceStatistics(uuid, interfaceId, startDateTime, endDateTime);
+    }
+
+    /** {@inheritDoc} */
+    public List<DownloadableImage> listDownloadableImages(String deviceType) {
+        return serviceClient.listDownloadableImages(deviceType);
+    }
+
+    /** {@inheritDoc} */
+    public ImageDownload requestImageDownload(String deviceType, String version) {
+        return serviceClient.requestImageDownload(deviceType, version);
     }
 
     /** {@inheritDoc} */

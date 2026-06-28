@@ -73,8 +73,8 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
         private String connectionUuid;
         private String localIpAddress;
         private String remoteIpAddress;
-        private Integer localAsn;
-        private Integer remoteAsn;
+        private Long localAsn;
+        private Long remoteAsn;
         private String authenticationKey;
 
         protected BGPPeeringBuilder() {
@@ -99,12 +99,12 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
             return this;
         }
 
-         public BGPPeeringBuilder withLocalAsn(Integer localAsn) {
+         public BGPPeeringBuilder withLocalAsn(Long localAsn) {
             this.localAsn = localAsn;
             return this;
         }
 
-         public BGPPeeringBuilder withRemoteAsn(Integer remoteAsn) {
+         public BGPPeeringBuilder withRemoteAsn(Long remoteAsn) {
             this.remoteAsn = remoteAsn;
             return this;
         }
@@ -141,12 +141,12 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
             return this;
         }
 
-        public BGPPeeringUpdater withLocalAsn(Integer localAsn) {
+        public BGPPeeringUpdater withLocalAsn(Long localAsn) {
             this.updaterJson.setLocalAsn(localAsn);
             return this;
         }
 
-        public BGPPeeringUpdater withRemoteAsn(Integer remoteAsn) {
+        public BGPPeeringUpdater withRemoteAsn(Long remoteAsn) {
             this.updaterJson.setRemoteAsn(remoteAsn);
             return this;
         }

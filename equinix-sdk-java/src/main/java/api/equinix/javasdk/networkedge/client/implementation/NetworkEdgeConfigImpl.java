@@ -64,6 +64,8 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
 
     private final FilesClientImpl filesClient;
 
+    private final NotificationClientImpl notificationClient;
+
     /**
      * <p>Constructor for NetworkEdgeConfigImpl.</p>
      *
@@ -84,6 +86,7 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
         this.backupClient = new BackupClientImpl(this);
         this.pricingClient = new PricingClientImpl(this);
         this.filesClient = new FilesClientImpl(this);
+        this.notificationClient = new NotificationClientImpl(this);
     }
 
     /** {@inheritDoc} */

@@ -19,6 +19,7 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 import api.equinix.javasdk.networkedge.enums.LicenseStatus;
 import api.equinix.javasdk.networkedge.model.implementation.ClusterDetail;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.AccessLevel;
@@ -47,7 +48,34 @@ public class DeviceUpdaterJson {
     @JsonProperty("clusterName")
     private String clusterName;
 
+    // READ_ONLY (serialize-only): DeviceJson.core is a DeviceCore object, so it must not be
+    // mapped into this Integer when an updater is built from an existing device via convertValue.
+    @JsonProperty(value = "core", access = JsonProperty.Access.READ_ONLY)
+    private Integer core;
+
+    @JsonProperty("termLengthEffectiveImmediate")
+    private Boolean termLengthEffectiveImmediate;
+
+    @JsonProperty("autoRenewalOptOut")
+    private Boolean autoRenewalOptOut;
+
+    @JsonProperty("vendorConfig")
+    private VendorConfigPatch vendorConfig;
+
     private LicenseStatus status;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    static class VendorConfigPatch {
+        @JsonProperty("disablePassword")
+        private Boolean disablePassword;
+
+        VendorConfigPatch() {
+        }
+
+        VendorConfigPatch(Boolean disablePassword) {
+            this.disablePassword = disablePassword;
+        }
+    }
 
     @JsonProperty("clusterDetails")
     void setClusterDetail(ClusterDetail clusterDetail) {

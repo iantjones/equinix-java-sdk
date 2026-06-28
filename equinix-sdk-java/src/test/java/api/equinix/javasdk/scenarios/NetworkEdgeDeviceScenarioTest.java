@@ -64,7 +64,7 @@ class NetworkEdgeDeviceScenarioTest extends IntegrationTestBase {
             String deviceName = testResourceName("device-draft");
             Device draft = timedCall("NetworkEdge", "createDraft", "Device", "POST", () ->
                     networkEdge.devices().define(deviceName)
-                            .withAccountNumber(1)
+                            .withAccountNumber("1")
                             .withMetroCode(MetroCode.SV)
                             .withDeviceTypeCode("CSR1000V")
                             .withDeviceManagementType(DeviceManagementType.EQUINIX_CONFIGURED)
