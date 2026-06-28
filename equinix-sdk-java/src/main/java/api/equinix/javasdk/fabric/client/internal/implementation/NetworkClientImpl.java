@@ -27,6 +27,7 @@ import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.NetworkClient;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
@@ -34,6 +35,7 @@ import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +58,17 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
         EquinixRequest<Connection> request = buildRequestWithPathParams("GetNetworkConnections", RequestType.PAGINATED,
                 Map.of("networkId", networkId), ConnectionJson.class);
         return Utils.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    public List<Change> getChanges(String uuid) {
+        EquinixRequest<Change> request = buildRequestWithPathParams("GetNetworkChanges", RequestType.PAGINATED,
+                Map.of("uuid", uuid), Change.class);
+        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Change getChange(String uuid, String changeId) {
+        return getAs("GetNetworkChange", Map.of("uuid", uuid, "changeId", changeId), null, Change.class);
     }
 
     public NetworkJson getByUuid(String uuid) {

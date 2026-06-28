@@ -1,0 +1,34 @@
+{
+  "type": "ROUTE_TABLE_ENTRY_UPDATE",
+  "uuid": "557400f8-d360-11e9-bb65-2a2ae2dbcce4",
+  "description": "description",
+  "state": "SUCCEEDED",
+  "href": "https://api.equinix.com//fabric/v4/routers/a1c6b7fd-aead-410a-96b4-b1dfa1071700/actions/1e9414f1-763e-4c0a-86c6-0bc8336048d9",
+  "connection": {
+    "uuid": "557400f8-d360-11e9-bb65-2a2ae2dbcce4",
+    "href": "https://api.equinix.com/fabric/v4/connections/557400f8-d360-11e9-bb65-2a2ae2dbcce4",
+    "type": "IP_VC",
+    "operation": {
+      "bgpIpv4RoutesCount": 6,
+      "bgpIpv6RoutesCount": 6,
+      "distinctIpv4PrefixesCount": 4,
+      "distinctIpv6PrefixesCount": 4
+    }
+  },
+  "router": {
+    "uuid": "a1c6b7fd-aead-410a-96b4-b1dfa1071700",
+    "href": "https://api.equinix.com/fabric/v4/routers/a1c6b7fd-aead-410a-96b4-b1dfa1071700",
+    "type": "XF_ROUTER",
+    "operation": {
+      "bgpIpv4RoutesCount": 12,
+      "bgpIpv6RoutesCount": 0,
+      "distinctIpv4PrefixesCount": 8,
+      "distinctIpv6PrefixesCount": 0
+    }
+  },
+  "changeLog": {
+    "createdBy": "testuser",
+    "createdByFullName": "Test User",
+    "createdDateTime": "2021-10-20T15:30:00.000Z"
+  }
+}

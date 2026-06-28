@@ -1,0 +1,27 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "a9b8c7d6-e5f4-3210-abcd-fedcba987654",
+      "type": "PREFIX_AGGREGATION_UPDATE",
+      "status": "COMPLETED",
+      "information": "Added new aggregation rules for expanded network range",
+      "createdDateTime": "2024-10-18T15:00:00.000Z",
+      "updatedDateTime": "2024-10-18T15:01:00.000Z"
+    },
+    {
+      "uuid": "c1d2e3f4-a5b6-7890-cdef-1234567890ab",
+      "type": "PREFIX_AGGREGATION_RULE_UPDATE",
+      "status": "SUBMITTED_FOR_APPROVAL",
+      "information": "Pending approval for route aggregation change",
+      "createdDateTime": "2024-11-01T09:00:00.000Z",
+      "updatedDateTime": "2024-11-01T09:05:00.000Z"
+    }
+  ]
+}

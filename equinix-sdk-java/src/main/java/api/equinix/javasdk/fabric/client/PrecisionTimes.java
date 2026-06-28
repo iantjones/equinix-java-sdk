@@ -76,4 +76,14 @@ public interface PrecisionTimes {
      * @return the list of connection links
      */
     List<TimeServiceConnection> getConnections(String serviceId);
+
+    /**
+     * Fulfills (provisions) an existing precision time service by attaching the given Fabric
+     * connections to it.
+     *
+     * @param uuid the unique identifier of the precision time service
+     * @param connectionUuids the Fabric connection UUIDs to attach
+     * @return the updated precision time service
+     */
+    PrecisionTime fulfill(String uuid, List<String> connectionUuids);
 }

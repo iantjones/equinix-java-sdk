@@ -22,12 +22,17 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.CompanyProfiles;
 import api.equinix.javasdk.fabric.client.internal.CompanyProfileClient;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.PrivateService;
+import api.equinix.javasdk.fabric.model.Tag;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CompanyProfileJson;
 import api.equinix.javasdk.fabric.model.json.creators.CompanyProfileOperator;
 import api.equinix.javasdk.fabric.model.wrappers.CompanyProfileWrapper;
+
+import java.util.List;
 
 public class CompanyProfilesImpl implements CompanyProfiles {
 
@@ -81,6 +86,37 @@ public class CompanyProfilesImpl implements CompanyProfiles {
 
     public Boolean detachTag(String companyProfileId, String tagId) {
         this.serviceClient.detachTag(companyProfileId, tagId);
+        return true;
+    }
+
+    public List<CompanyServiceProfile> getServiceProfiles(String companyProfileId) {
+        return this.serviceClient.getServiceProfiles(companyProfileId);
+    }
+
+    public List<Tag> getTags(String companyProfileId) {
+        return this.serviceClient.getTags(companyProfileId);
+    }
+
+    public List<PrivateService> getPrivateServices(String companyProfileId) {
+        return this.serviceClient.getPrivateServices(companyProfileId);
+    }
+
+    public Boolean attachPrivateService(String companyProfileId, String privateServiceId) {
+        this.serviceClient.attachPrivateService(companyProfileId, privateServiceId);
+        return true;
+    }
+
+    public Boolean detachPrivateService(String companyProfileId, String privateServiceId) {
+        this.serviceClient.detachPrivateService(companyProfileId, privateServiceId);
+        return true;
+    }
+
+    public byte[] getLogo(String uuid) {
+        return this.serviceClient.getLogo(uuid);
+    }
+
+    public Boolean deleteLogo(String uuid) {
+        this.serviceClient.deleteLogo(uuid);
         return true;
     }
 }

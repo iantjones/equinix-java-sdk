@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "uuid": "a9b8c7d6-e5f4-3210-abcd-fedcba987654",
+      "type": "ROUTING_PROTOCOL_UPDATE",
+      "status": "COMPLETED",
+      "information": "Updated routing protocol configuration",
+      "createdDateTime": "2024-10-18T15:00:00.000Z",
+      "updatedDateTime": "2024-10-18T15:01:00.000Z"
+    },
+    {
+      "uuid": "b8c7d6e5-f4a3-2109-bcde-aabbccddeeff",
+      "type": "ROUTING_PROTOCOL_CREATION",
+      "status": "COMPLETED",
+      "information": "Created routing protocol configuration",
+      "createdDateTime": "2024-09-01T10:00:00.000Z",
+      "updatedDateTime": "2024-09-01T10:02:00.000Z"
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  }
+}

@@ -61,6 +61,8 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final RouteFilterClientImpl routeFiltersClient;
 
+    private final EiaServiceClientImpl eiaServicesClient;
+
     private final RouteFilterRuleClientImpl routeFilterRulesClient;
 
     private final RouteAggregationClientImpl routeAggregationsClient;
@@ -119,6 +121,7 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.connectionRoutesClient = new RouteTableEntryClientImpl(this, "Connections");
         this.cloudRouterRoutesClient = new RouteTableEntryClientImpl(this, "CloudRouters");
         this.routeFiltersClient = new RouteFilterClientImpl(this);
+        this.eiaServicesClient = new EiaServiceClientImpl(this);
         this.routeFilterRulesClient = new RouteFilterRuleClientImpl(this);
         this.routeAggregationsClient = new RouteAggregationClientImpl(this);
         this.routeAggregationRulesClient = new RouteAggregationRuleClientImpl(this);

@@ -21,9 +21,12 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceProfileAction;
+import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric service profiles. Service profiles define the
@@ -105,4 +108,12 @@ public interface ServiceProfiles {
      * @return the action result
      */
     ServiceProfileAction createAction(String uuid, String type, String description);
+
+    /**
+     * Lists the metros in which a service profile is available.
+     *
+     * @param uuid the unique identifier of the service profile
+     * @return the list of service metros
+     */
+    List<ServiceMetro> getMetros(String uuid);
 }

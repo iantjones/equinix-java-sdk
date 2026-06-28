@@ -26,6 +26,7 @@ import api.equinix.javasdk.fabric.client.internal.NetworkClient;
 import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -34,6 +35,8 @@ import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
+
+import java.util.List;
 
 public class NetworksImpl implements Networks {
 
@@ -77,5 +80,13 @@ public class NetworksImpl implements Networks {
         Page<Connection, ConnectionJson> responsePage = this.serviceClient.getConnections(networkId);
         PaginatedList<Connection> connectionList = Utils.mapPaginatedList(responsePage.getItems(), this.connectionClient, ConnectionWrapper::new);
         return new PaginatedList<>(connectionList, this.connectionClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public List<Change> getChanges(String uuid) {
+        return this.serviceClient.getChanges(uuid);
+    }
+
+    public Change getChange(String uuid, String changeId) {
+        return this.serviceClient.getChange(uuid, changeId);
     }
 }

@@ -93,7 +93,7 @@ class FabricStreamingScenarioTest extends IntegrationTestBase {
                         .withName(subName)
                         .withDescription("SDK test subscription")
                         .withEnabled(true)
-                        .withSinkType(StreamSubscriptionSinkType.CUSTOM)
+                        .withSinkType(StreamSubscriptionSinkType.WEBHOOK)
                         .withSinkUri("https://example.com/webhook")
                         .create());
 

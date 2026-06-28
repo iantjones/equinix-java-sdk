@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/423af68b-42f0-4f2e-9c5c-2fbd44b4b387",
+      "uuid": "423af68b-42f0-4f2e-9c5c-2fbd44b4b387"
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/523af68b-42f0-4f2e-9c5c-2fbd44b4b388",
+      "uuid": "523af68b-42f0-4f2e-9c5c-2fbd44b4b388"
+    }
+  ]
+}

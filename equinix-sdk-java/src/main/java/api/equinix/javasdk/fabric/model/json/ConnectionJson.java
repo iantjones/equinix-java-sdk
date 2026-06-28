@@ -21,7 +21,9 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.KeyValuePair;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.Direction;
+import api.equinix.javasdk.fabric.enums.GeoScopeType;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -52,8 +54,14 @@ public final class ConnectionJson {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("state")
     private ConnectionState state;
+
+    @JsonProperty("geoScope")
+    private GeoScopeType geoScope;
 
     @JsonProperty("order")
     private Order order;
@@ -90,6 +98,12 @@ public final class ConnectionJson {
 
     @JsonProperty("additionalInfo")
     private List<KeyValuePair> additionalInfo;
+
+    @JsonProperty("marketplaceSubscription")
+    private MarketplaceSubscriptionRef marketplaceSubscription;
+
+    @JsonProperty("project")
+    private Project project;
 
     @JsonProperty("change")
     private Change change;

@@ -17,24 +17,37 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteFilterClient;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteFilter;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.RouteFilterJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterCreatorJson;
+import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterWrapper;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, RouteFilterJson> implements RouteFilterClient<RouteFilter> {
 
+    private final FabricConfigImpl configClient;
+
     public RouteFilterClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "RouteFilters", RouteFilterJson.class);
+        this.configClient = configClient;
     }
 
     @Override
@@ -66,5 +79,28 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
 
     public RouteFilterJson refresh(String uuid) {
         return getByUuid(uuid);
+    }
+
+    public List<Change> getChanges(String uuid) {
+        EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteFilterChanges", RequestType.PAGINATED,
+                Map.of("uuid", uuid), Change.class);
+        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Change getChange(String uuid, String changeId) {
+        return getAs("GetRouteFilterChange", Map.of("uuid", uuid, "changeId", changeId), null, Change.class);
+    }
+
+    public List<Connection> getConnections(String uuid) {
+        EquinixRequest<Connection> request = buildRequestWithPathParams("GetRouteFilterConnections", RequestType.PAGINATED,
+                Map.of("uuid", uuid), ConnectionJson.class);
+        Page<Connection, ConnectionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        if (page == null || page.getItems() == null) {
+            return Collections.emptyList();
+        }
+        return page.getItems().stream()
+                .map(json -> (Connection) new ConnectionWrapper(json, this.configClient.getConnectionsClient()))
+                .collect(Collectors.toList());
     }
 }

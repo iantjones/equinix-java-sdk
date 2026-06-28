@@ -28,6 +28,7 @@ import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceProfileAction;
+import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -39,6 +40,8 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileOperator;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.PricingWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
+
+import java.util.List;
 
 /**
  * <p>ServiceProfilesImpl class.</p>
@@ -94,5 +97,9 @@ public class ServiceProfilesImpl implements ServiceProfiles {
 
     public ServiceProfileAction createAction(String uuid, String type, String description) {
         return this.serviceClient.createAction(uuid, type, description);
+    }
+
+    public List<ServiceMetro> getMetros(String uuid) {
+        return this.serviceClient.getMetros(uuid);
     }
 }

@@ -185,4 +185,58 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
 
         wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/ports/port-uuid/metrics")));
     }
+
+    @Test
+    @DisplayName("metrics().getMetricsByName() GETs /metrics with name+value query params")
+    void getMetricsByName_returnsDataList() {
+        String responseBody = "{"
+                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
+                + "\"data\":[{"
+                + "  \"type\":\"equinix.fabric.metro\","
+                + "  \"name\":\"equinix.fabric.metro.sv_dc.latency\","
+                + "  \"unit\":\"ms\","
+                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":3.14}]"
+                + "}]}";
+
+        wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/metrics"))
+                .willReturn(okJson(responseBody)));
+
+        List<Metric> metrics = fabric.metrics().getMetricsByName(
+                "equinix.fabric.metro.*.latency", "last", null, null);
+
+        assertNotNull(metrics);
+        assertEquals(1, metrics.size());
+        assertEquals("equinix.fabric.metro.sv_dc.latency", metrics.get(0).getName());
+        assertEquals(3.14, metrics.get(0).getDatapoints().get(0).getValue());
+
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metrics"))
+                .withQueryParam("name", equalTo("equinix.fabric.metro.*.latency"))
+                .withQueryParam("value", equalTo("last")));
+    }
+
+    @Test
+    @DisplayName("metrics().getMetricsByAssetId() GETs /{asset}/{assetId}/metrics with name query param")
+    void getMetricsByAssetId_returnsDataList() {
+        String responseBody = "{"
+                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
+                + "\"data\":[{"
+                + "  \"type\":\"equinix.fabric.port\","
+                + "  \"name\":\"equinix.fabric.port.bandwidth_rx.usage\","
+                + "  \"unit\":\"bps\","
+                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":99.0}]"
+                + "}]}";
+
+        wireMock.stubFor(get(urlPathMatching("/fabric/v4/ports/.*/metrics"))
+                .willReturn(okJson(responseBody)));
+
+        List<Metric> metrics = fabric.metrics().getMetricsByAssetId(
+                "ports", "asset-uuid", "equinix.fabric.port.bandwidth_rx.usage", null, null);
+
+        assertNotNull(metrics);
+        assertEquals(1, metrics.size());
+        assertEquals("equinix.fabric.port.bandwidth_rx.usage", metrics.get(0).getName());
+
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/asset-uuid/metrics"))
+                .withQueryParam("name", equalTo("equinix.fabric.port.bandwidth_rx.usage")));
+    }
 }

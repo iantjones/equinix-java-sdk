@@ -18,11 +18,16 @@ package api.equinix.javasdk.fabric.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
 public class Project {
 
     @JsonProperty("projectId")
     private String projectId;
 
+    public Project(String projectId) {
+        this.projectId = projectId;
+    }
 }

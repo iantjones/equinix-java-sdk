@@ -18,9 +18,14 @@ package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.PrivateService;
+import api.equinix.javasdk.fabric.model.Tag;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.CompanyProfileOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric company profiles and their service-profile / tag
@@ -111,4 +116,62 @@ public interface CompanyProfiles {
      * @return {@code true} if the detach was accepted
      */
     Boolean detachTag(String companyProfileId, String tagId);
+
+    /**
+     * Lists the service profiles attached to a company profile.
+     *
+     * @param companyProfileId the company profile uuid
+     * @return the attached service profiles (href / uuid references)
+     */
+    List<CompanyServiceProfile> getServiceProfiles(String companyProfileId);
+
+    /**
+     * Lists the tags attached to a company profile.
+     *
+     * @param companyProfileId the company profile uuid
+     * @return the attached tags
+     */
+    List<Tag> getTags(String companyProfileId);
+
+    /**
+     * Lists the private services attached to a company profile.
+     *
+     * @param companyProfileId the company profile uuid
+     * @return the attached private services (href / uuid references)
+     */
+    List<PrivateService> getPrivateServices(String companyProfileId);
+
+    /**
+     * Attaches a private service to a company profile.
+     *
+     * @param companyProfileId the company profile uuid
+     * @param privateServiceId the private service uuid
+     * @return {@code true} if the attach was accepted
+     */
+    Boolean attachPrivateService(String companyProfileId, String privateServiceId);
+
+    /**
+     * Detaches a private service from a company profile.
+     *
+     * @param companyProfileId the company profile uuid
+     * @param privateServiceId the private service uuid
+     * @return {@code true} if the detach was accepted
+     */
+    Boolean detachPrivateService(String companyProfileId, String privateServiceId);
+
+    /**
+     * Downloads the raw bytes of a company profile logo.
+     *
+     * @param uuid the logo uuid
+     * @return the logo image content
+     */
+    byte[] getLogo(String uuid);
+
+    /**
+     * Deletes a company profile logo.
+     *
+     * @param uuid the logo uuid
+     * @return {@code true} if the delete was accepted
+     */
+    Boolean deleteLogo(String uuid);
 }

@@ -17,24 +17,37 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteAggregationClient;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.RouteAggregationJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationCreatorJson;
+import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationWrapper;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregation, RouteAggregationJson> implements RouteAggregationClient<RouteAggregation> {
 
+    private final FabricConfigImpl configClient;
+
     public RouteAggregationClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "RouteAggregations", RouteAggregationJson.class);
+        this.configClient = configClient;
     }
 
     @Override
@@ -64,5 +77,28 @@ public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregat
 
     public RouteAggregationJson refresh(String uuid) {
         return getByUuid(uuid);
+    }
+
+    public List<Change> getChanges(String uuid) {
+        EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteAggregationChanges", RequestType.PAGINATED,
+                Map.of("uuid", uuid), Change.class);
+        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Change getChange(String uuid, String changeId) {
+        return getAs("GetRouteAggregationChange", Map.of("uuid", uuid, "changeId", changeId), null, Change.class);
+    }
+
+    public List<Connection> getConnections(String uuid) {
+        EquinixRequest<Connection> request = buildRequestWithPathParams("GetRouteAggregationConnections", RequestType.PAGINATED,
+                Map.of("uuid", uuid), ConnectionJson.class);
+        Page<Connection, ConnectionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        if (page == null || page.getItems() == null) {
+            return Collections.emptyList();
+        }
+        return page.getItems().stream()
+                .map(json -> (Connection) new ConnectionWrapper(json, this.configClient.getConnectionsClient()))
+                .collect(Collectors.toList());
     }
 }

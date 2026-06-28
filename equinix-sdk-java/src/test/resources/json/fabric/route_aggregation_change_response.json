@@ -1,0 +1,8 @@
+{
+  "uuid": "a9b8c7d6-e5f4-3210-abcd-fedcba987654",
+  "type": "PREFIX_AGGREGATION_UPDATE",
+  "status": "COMPLETED",
+  "information": "Added new aggregation rules for expanded network range",
+  "createdDateTime": "2024-10-18T15:00:00.000Z",
+  "updatedDateTime": "2024-10-18T15:01:00.000Z"
+}

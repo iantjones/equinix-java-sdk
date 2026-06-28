@@ -24,11 +24,14 @@ import api.equinix.javasdk.fabric.client.internal.RoutingProtocolClient;
 import api.equinix.javasdk.fabric.enums.BGPActionType;
 import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
+import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolCreatorJson;
 import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RoutingProtocolWrapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RoutingProtocolsImpl implements RoutingProtocols {
 
@@ -53,11 +56,35 @@ public class RoutingProtocolsImpl implements RoutingProtocols {
         return new RoutingProtocolOperator(this.serviceClient).create();
     }
 
+    public RoutingProtocol replace(String connectionId, String uuid, RoutingProtocolOperator.RoutingProtocolBuilder builder) {
+        RoutingProtocolJson routingProtocolJson = this.serviceClient.replace(connectionId, uuid, new RoutingProtocolCreatorJson(builder));
+        return new RoutingProtocolWrapper(routingProtocolJson, this.serviceClient);
+    }
+
+    public List<RoutingProtocol> createBulk(String connectionId, List<RoutingProtocolOperator.RoutingProtocolBuilder> builders) {
+        List<RoutingProtocolCreatorJson> creators = builders.stream()
+                .map(RoutingProtocolCreatorJson::new)
+                .collect(Collectors.toList());
+        return this.serviceClient.createBulk(connectionId, creators);
+    }
+
     public List<BGPAction> getBgpActions(String connectionId, String routingProtocolId) {
         return this.serviceClient.getBgpActions(connectionId, routingProtocolId);
     }
 
     public BGPAction createBgpAction(String connectionId, String routingProtocolId, BGPActionType type) {
         return this.serviceClient.createBgpAction(connectionId, routingProtocolId, type);
+    }
+
+    public BGPAction getBgpAction(String connectionId, String routingProtocolId, String actionId) {
+        return this.serviceClient.getBgpAction(connectionId, routingProtocolId, actionId);
+    }
+
+    public List<Change> getChanges(String connectionId, String routingProtocolId) {
+        return this.serviceClient.getChanges(connectionId, routingProtocolId);
+    }
+
+    public Change getChange(String connectionId, String routingProtocolId, String changeId) {
+        return this.serviceClient.getChange(connectionId, routingProtocolId, changeId);
     }
 }

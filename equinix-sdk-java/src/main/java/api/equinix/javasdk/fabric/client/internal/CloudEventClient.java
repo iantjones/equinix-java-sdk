@@ -23,9 +23,13 @@ import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
+import java.util.List;
+
 public interface CloudEventClient<T> extends PageablePost<T> {
 
     Page<CloudEvent, CloudEventJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     CloudEventJson getByUuid(String uuid);
+
+    List<CloudEvent> getByAssetId(String asset, String assetId);
 }

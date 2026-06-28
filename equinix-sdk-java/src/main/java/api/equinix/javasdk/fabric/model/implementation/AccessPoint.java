@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.Side;
+import api.equinix.javasdk.fabric.enums.AccessPointRole;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.PeeringType;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -73,4 +74,25 @@ public class AccessPoint {
 
     @JsonProperty("peeringType")
     private PeeringType peeringType;
+
+    @JsonProperty("router")
+    private SimplifiedRouter router;
+
+    @JsonProperty("network")
+    private SimplifiedNetwork network;
+
+    @JsonProperty("environment")
+    private ProviderEnvironment environment;
+
+    @JsonProperty("activationKey")
+    private String activationKey;
+
+    @JsonProperty("virtualNetwork")
+    private VirtualNetwork virtualNetwork;
+
+    @JsonProperty("interconnection")
+    private MetalInterconnection interconnection;
+
+    @JsonProperty("role")
+    private AccessPointRole role;
 }

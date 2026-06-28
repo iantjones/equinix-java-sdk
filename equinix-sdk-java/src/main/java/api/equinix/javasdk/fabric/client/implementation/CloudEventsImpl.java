@@ -27,6 +27,8 @@ import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
+import java.util.List;
+
 public class CloudEventsImpl implements CloudEvents {
 
     private final CloudEventClient<CloudEvent> serviceClient;
@@ -55,5 +57,9 @@ public class CloudEventsImpl implements CloudEvents {
 
     public CloudEvent getByUuid(String uuid) {
         return this.serviceClient.getByUuid(uuid);
+    }
+
+    public List<CloudEvent> getByAssetId(String asset, String assetId) {
+        return this.serviceClient.getByAssetId(asset, assetId);
     }
 }

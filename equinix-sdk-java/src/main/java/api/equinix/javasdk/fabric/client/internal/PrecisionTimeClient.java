@@ -23,6 +23,7 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceFulfillRequest;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.json.TimeServicePackageJson;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeCreatorJson;
@@ -36,6 +37,8 @@ public interface PrecisionTimeClient<T> extends Pageable<T> {
     PrecisionTimeJson getByUuid(String uuid);
 
     PrecisionTimeJson create(PrecisionTimeCreatorJson precisionTimeCreatorJson);
+
+    PrecisionTimeJson fulfill(String uuid, TimeServiceFulfillRequest request);
 
     PrecisionTimeJson update(String uuid, List<PatchOperation> operations);
 

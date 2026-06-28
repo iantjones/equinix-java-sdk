@@ -6,6 +6,8 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import org.junit.jupiter.api.*;
 
+import java.util.List;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,6 +84,30 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
             PrecisionTime ts = fabric.precisionTimes().getByUuid("f6a7b8c9-d0e1-2345-fabc-567890123def");
             assertThrows(IllegalStateException.class, () -> ts.update().save());
             wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/timeServices/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("fulfill()")
+    class Fulfill {
+
+        @Test
+        @DisplayName("PUTs the connections body to {uuid} and returns the updated service")
+        void fulfillsTimeService() {
+            wireMock.stubFor(put(urlPathMatching("/fabric/v4/timeServices/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/precision_time_response.json"))));
+
+            PrecisionTime ts = fabric.precisionTimes().fulfill(
+                    "f6a7b8c9-d0e1-2345-fabc-567890123def",
+                    List.of("095be615-a8ad-4c33-8e9c-c7612fbf6c9f"));
+
+            assertNotNull(ts);
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", ts.getUuid());
+
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.connections[0].uuid",
+                            equalTo("095be615-a8ad-4c33-8e9c-c7612fbf6c9f"))));
         }
     }
 

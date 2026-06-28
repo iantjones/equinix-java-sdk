@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * <p>ConnectionType class.</p>
  *
@@ -25,12 +27,24 @@ package api.equinix.javasdk.fabric.enums;
 public enum ConnectionType {
     EVPL_VC,
     EPL_VC,
+    EC_VC,
+    IP_VC,
     ACCESS_EPL_VC,
-    IP_VC;
+    EIA_VC,
+    EVPLAN_VC,
+    EPLAN_VC,
+    EVPTREE_VC,
+    EPTREE_VC,
+    IPWAN_VC,
+    IA_VC,
+    MC_VC,
+    IX_VC,
+    IC_VC,
+    UNKNOWN;
 
-//    VG_VC,
-//    EVPL_VC,
-//    EPL_VC,
-//    EC_VC,
-//    GW_VC;
+    @JsonCreator
+    public static ConnectionType fromString(String value) {
+        try { return ConnectionType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

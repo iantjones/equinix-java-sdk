@@ -23,6 +23,10 @@ import api.equinix.javasdk.fabric.client.internal.implementation.IpBlockClientIm
 import api.equinix.javasdk.fabric.enums.IpBlockProductType;
 import api.equinix.javasdk.fabric.model.IpBlock;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockAccount;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockLocation;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockOrder;
+import api.equinix.javasdk.fabric.model.implementation.IpBlockRegulations;
 import api.equinix.javasdk.fabric.model.json.IpBlockJson;
 import api.equinix.javasdk.fabric.model.wrappers.IpBlockWrapper;
 import lombok.AccessLevel;
@@ -58,6 +62,10 @@ public class IpBlockOperator extends ResourceImpl<IpBlock> {
 
         private IpBlockProductType type;
         private Project project;
+        private IpBlockLocation location;
+        private IpBlockAccount account;
+        private IpBlockOrder order;
+        private IpBlockRegulations regulations;
         private Integer prefixLength;
         private String prefix;
 
@@ -71,6 +79,31 @@ public class IpBlockOperator extends ResourceImpl<IpBlock> {
 
         public IpBlockBuilder withProject(Project project) {
             this.project = project;
+            return this;
+        }
+
+        public IpBlockBuilder inMetro(String metroCode) {
+            this.location = new IpBlockLocation(metroCode);
+            return this;
+        }
+
+        public IpBlockBuilder withLocation(IpBlockLocation location) {
+            this.location = location;
+            return this;
+        }
+
+        public IpBlockBuilder withAccount(IpBlockAccount account) {
+            this.account = account;
+            return this;
+        }
+
+        public IpBlockBuilder withOrder(IpBlockOrder order) {
+            this.order = order;
+            return this;
+        }
+
+        public IpBlockBuilder withRegulations(IpBlockRegulations regulations) {
+            this.regulations = regulations;
             return this;
         }
 

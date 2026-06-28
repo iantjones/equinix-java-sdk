@@ -1,0 +1,27 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "4b17da68-3d6b-436d-9c8f-2105f3b950d9",
+      "type": "NETWORK_UPDATE",
+      "status": "COMPLETED",
+      "information": "Network name updated",
+      "createdDateTime": "2024-11-06T07:00:00.000Z",
+      "updatedDateTime": "2024-11-06T07:01:00.000Z"
+    },
+    {
+      "uuid": "6d500177-9404-41f2-99e8-2bf1a84d8db5",
+      "type": "NETWORK_CREATION",
+      "status": "COMPLETED",
+      "information": "Network created",
+      "createdDateTime": "2024-10-01T09:00:00.000Z",
+      "updatedDateTime": "2024-10-01T09:05:00.000Z"
+    }
+  ]
+}

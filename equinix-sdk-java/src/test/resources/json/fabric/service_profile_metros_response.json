@@ -1,0 +1,38 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "code": "SV",
+      "name": "Silicon Valley",
+      "vcBandwidthMax": 10000,
+      "ibxs": [
+        "SV1",
+        "SV5"
+      ],
+      "inTrail": true,
+      "displayName": "Silicon Valley (SV)",
+      "sellerRegions": {
+        "us-west-1": "US West"
+      }
+    },
+    {
+      "code": "DC",
+      "name": "Washington DC",
+      "vcBandwidthMax": 50000,
+      "ibxs": [
+        "DC1"
+      ],
+      "inTrail": false,
+      "displayName": "Washington DC (DC)",
+      "sellerRegions": {
+        "us-east-1": "US East"
+      }
+    }
+  ]
+}

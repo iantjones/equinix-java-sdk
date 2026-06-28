@@ -17,14 +17,18 @@
 package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.CloudRouterCommand;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudRouterCommandJson;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCommandCreatorJson;
 
-public interface CloudRouterCommandClient<T> extends Pageable<T> {
+public interface CloudRouterCommandClient<T> extends PageablePost<T> {
 
     Page<CloudRouterCommand, CloudRouterCommandJson> list(String routerId);
+
+    Page<CloudRouterCommand, CloudRouterCommandJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort);
 
     CloudRouterCommandJson getByUuid(String routerId, String uuid);
 

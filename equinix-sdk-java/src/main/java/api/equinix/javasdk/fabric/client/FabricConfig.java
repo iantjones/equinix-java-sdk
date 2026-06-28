@@ -92,6 +92,8 @@ public interface FabricConfig {
 
     RouteFilterClient<RouteFilter> getRouteFiltersClient();
 
+    EiaServiceClient<EiaService> getEiaServicesClient();
+
     RouteFilterRuleClient<RouteFilterRule> getRouteFilterRulesClient();
 
     RouteAggregationClient<RouteAggregation> getRouteAggregationsClient();

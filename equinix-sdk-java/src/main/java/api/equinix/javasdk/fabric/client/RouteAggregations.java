@@ -17,10 +17,14 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric route aggregations. Route aggregations
@@ -76,4 +80,29 @@ public interface RouteAggregations {
      * @return a builder for configuring the new route aggregation
      */
     RouteAggregationOperator.RouteAggregationBuilder define();
+
+    /**
+     * Retrieves the change history for a route aggregation.
+     *
+     * @param uuid the unique identifier of the route aggregation
+     * @return the list of changes applied to the route aggregation
+     */
+    List<Change> getChanges(String uuid);
+
+    /**
+     * Retrieves a single change applied to a route aggregation by its change identifier.
+     *
+     * @param uuid the unique identifier of the route aggregation
+     * @param changeId the unique identifier of the change
+     * @return the matching change
+     */
+    Change getChange(String uuid, String changeId);
+
+    /**
+     * Retrieves the connections currently using a route aggregation.
+     *
+     * @param uuid the unique identifier of the route aggregation
+     * @return the list of connections attached to the route aggregation
+     */
+    List<Connection> getConnections(String uuid);
 }

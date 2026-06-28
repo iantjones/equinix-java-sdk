@@ -24,12 +24,17 @@ import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
+import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
+import api.equinix.javasdk.fabric.client.internal.RouteAggregationAttachmentClient;
+import api.equinix.javasdk.fabric.client.internal.RouteFilterAttachmentClient;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Metric;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.ConnectionValidationRequest;
 import api.equinix.javasdk.fabric.model.implementation.ManageConnection;
@@ -57,8 +62,14 @@ import java.util.Map;
  */
 public class ConnectionClientImpl extends ResourceClientBase<Connection, ConnectionJson> implements ConnectionClient<Connection> {
 
+    private final RouteFilterAttachmentClient<RouteFilterAttachment> routeFilterAttachmentsClient;
+
+    private final RouteAggregationAttachmentClient<RouteAggregationAttachment> routeAggregationAttachmentsClient;
+
     public ConnectionClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "Connections", ConnectionJson.class);
+        this.routeFilterAttachmentsClient = new RouteFilterAttachmentClientImpl(configClient, "Connections");
+        this.routeAggregationAttachmentsClient = new RouteAggregationAttachmentClientImpl(configClient, "Connections");
     }
 
     @Override
@@ -142,5 +153,37 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
         EquinixResponse<Metric> equinixResponse = invoke(equinixRequest);
         Page<Metric, MetricJson> page = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public List<RouteAggregationAttachment> getRouteAggregations(String connectionId) {
+        return this.routeAggregationAttachmentsClient.getConnectionRouteAggregations(connectionId);
+    }
+
+    public RouteAggregationAttachment getRouteAggregation(String connectionId, String routeAggregationId) {
+        return this.routeAggregationAttachmentsClient.getConnectionRouteAggregation(connectionId, routeAggregationId);
+    }
+
+    public RouteAggregationAttachment attachRouteAggregation(String connectionId, String routeAggregationId) {
+        return this.routeAggregationAttachmentsClient.attachConnectionRouteAggregation(connectionId, routeAggregationId);
+    }
+
+    public Boolean detachRouteAggregation(String connectionId, String routeAggregationId) {
+        return this.routeAggregationAttachmentsClient.detachConnectionRouteAggregation(connectionId, routeAggregationId);
+    }
+
+    public List<RouteFilterAttachment> getRouteFilters(String connectionId) {
+        return this.routeFilterAttachmentsClient.getConnectionRouteFilters(connectionId);
+    }
+
+    public RouteFilterAttachment getRouteFilter(String connectionId, String routeFilterId) {
+        return this.routeFilterAttachmentsClient.getConnectionRouteFilter(connectionId, routeFilterId);
+    }
+
+    public RouteFilterAttachment attachRouteFilter(String connectionId, String routeFilterId, Direction direction) {
+        return this.routeFilterAttachmentsClient.attachConnectionRouteFilter(connectionId, routeFilterId, direction);
+    }
+
+    public Boolean detachRouteFilter(String connectionId, String routeFilterId) {
+        return this.routeFilterAttachmentsClient.detachConnectionRouteFilter(connectionId, routeFilterId);
     }
 }

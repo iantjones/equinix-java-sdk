@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
@@ -30,6 +31,8 @@ import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
@@ -148,5 +151,53 @@ public class ConnectionsImpl implements Connections {
         Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchReceivedRoutes(uuid, filter, sort);
         PaginatedFilteredList<RouteTableEntry> routes = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
         return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<RouteAggregationAttachment> getRouteAggregations(String connectionId) {
+        return this.serviceClient.getRouteAggregations(connectionId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RouteAggregationAttachment getRouteAggregation(String connectionId, String routeAggregationId) {
+        return this.serviceClient.getRouteAggregation(connectionId, routeAggregationId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RouteAggregationAttachment attachRouteAggregation(String connectionId, String routeAggregationId) {
+        return this.serviceClient.attachRouteAggregation(connectionId, routeAggregationId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Boolean detachRouteAggregation(String connectionId, String routeAggregationId) {
+        return this.serviceClient.detachRouteAggregation(connectionId, routeAggregationId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<RouteFilterAttachment> getRouteFilters(String connectionId) {
+        return this.serviceClient.getRouteFilters(connectionId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RouteFilterAttachment getRouteFilter(String connectionId, String routeFilterId) {
+        return this.serviceClient.getRouteFilter(connectionId, routeFilterId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RouteFilterAttachment attachRouteFilter(String connectionId, String routeFilterId, Direction direction) {
+        return this.serviceClient.attachRouteFilter(connectionId, routeFilterId, direction);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Boolean detachRouteFilter(String connectionId, String routeFilterId) {
+        return this.serviceClient.detachRouteFilter(connectionId, routeFilterId);
     }
 }

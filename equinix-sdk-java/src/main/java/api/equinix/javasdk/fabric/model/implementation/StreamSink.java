@@ -31,6 +31,21 @@ public class StreamSink {
     @JsonProperty("uri")
     private String uri;
 
+    @JsonProperty("host")
+    private String host;
+
+    @JsonProperty("batchEnabled")
+    private Boolean batchEnabled;
+
+    @JsonProperty("batchSizeMax")
+    private Integer batchSizeMax;
+
+    @JsonProperty("batchWaitTimeMax")
+    private Integer batchWaitTimeMax;
+
+    @JsonProperty("settings")
+    private StreamSinkSetting settings;
+
     @JsonProperty("credential")
     private StreamSinkCredential credential;
 }

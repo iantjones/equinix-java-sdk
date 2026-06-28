@@ -21,6 +21,8 @@ import api.equinix.javasdk.fabric.model.CloudEvent;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 
+import java.util.List;
+
 /**
  * Client interface for accessing Equinix Fabric cloud events. Cloud events provide
  * notifications about changes and activities across Fabric resources.
@@ -69,4 +71,13 @@ public interface CloudEvents {
      * @return the cloud event matching the given UUID
      */
     CloudEvent getByUuid(String uuid);
+
+    /**
+     * Retrieves the cloud events recorded for a specific asset.
+     *
+     * @param asset the asset type (for example {@code connections}, {@code routers})
+     * @param assetId the unique identifier of the asset
+     * @return the list of cloud events for the asset
+     */
+    List<CloudEvent> getByAssetId(String asset, String assetId);
 }

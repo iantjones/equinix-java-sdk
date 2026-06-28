@@ -18,6 +18,8 @@ package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
+import api.equinix.javasdk.fabric.model.implementation.StreamSinkSetting;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -39,6 +41,12 @@ public class StreamSubscriptionCreatorJson {
     @JsonProperty("enabled")
     private Boolean enabled;
 
+    @JsonProperty("metricSelector")
+    private StreamSubscriptionSelector metricSelector;
+
+    @JsonProperty("eventSelector")
+    private StreamSubscriptionSelector eventSelector;
+
     @JsonProperty("sink")
     private Sink sink;
 
@@ -52,6 +60,21 @@ public class StreamSubscriptionCreatorJson {
 
         @JsonProperty("uri")
         private String uri;
+
+        @JsonProperty("host")
+        private String host;
+
+        @JsonProperty("batchEnabled")
+        private Boolean batchEnabled;
+
+        @JsonProperty("batchSizeMax")
+        private Integer batchSizeMax;
+
+        @JsonProperty("batchWaitTimeMax")
+        private Integer batchWaitTimeMax;
+
+        @JsonProperty("settings")
+        private StreamSinkSetting settings;
 
         @JsonProperty("credential")
         private Credential credential;
@@ -69,6 +92,15 @@ public class StreamSubscriptionCreatorJson {
 
         @JsonProperty("integrationKey")
         private String integrationKey;
+
+        @JsonProperty("apiKey")
+        private String apiKey;
+
+        @JsonProperty("username")
+        private String username;
+
+        @JsonProperty("password")
+        private String password;
     }
 
     /**
@@ -81,16 +113,26 @@ public class StreamSubscriptionCreatorJson {
         this.name = streamSubscriptionBuilder.getName();
         this.description = streamSubscriptionBuilder.getDescription();
         this.enabled = streamSubscriptionBuilder.getEnabled();
+        this.metricSelector = streamSubscriptionBuilder.getMetricSelector();
+        this.eventSelector = streamSubscriptionBuilder.getEventSelector();
 
         Credential credential = new Credential(
                 streamSubscriptionBuilder.getCredentialType(),
                 streamSubscriptionBuilder.getAccessToken(),
-                streamSubscriptionBuilder.getIntegrationKey()
+                streamSubscriptionBuilder.getIntegrationKey(),
+                streamSubscriptionBuilder.getApiKey(),
+                streamSubscriptionBuilder.getUsername(),
+                streamSubscriptionBuilder.getPassword()
         );
 
         this.sink = new Sink(
                 streamSubscriptionBuilder.getSinkType(),
                 streamSubscriptionBuilder.getSinkUri(),
+                streamSubscriptionBuilder.getSinkHost(),
+                streamSubscriptionBuilder.getBatchEnabled(),
+                streamSubscriptionBuilder.getBatchSizeMax(),
+                streamSubscriptionBuilder.getBatchWaitTimeMax(),
+                streamSubscriptionBuilder.getSinkSettings(),
                 credential
         );
     }

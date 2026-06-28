@@ -17,10 +17,14 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteFilter;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric route filters. Route filters control which
@@ -75,4 +79,29 @@ public interface RouteFilters {
      * @return a builder for configuring the new route filter
      */
     RouteFilterOperator.RouteFilterBuilder define();
+
+    /**
+     * Retrieves the change history for a route filter.
+     *
+     * @param uuid the unique identifier of the route filter
+     * @return the list of changes applied to the route filter
+     */
+    List<Change> getChanges(String uuid);
+
+    /**
+     * Retrieves a single change applied to a route filter by its change identifier.
+     *
+     * @param uuid the unique identifier of the route filter
+     * @param changeId the unique identifier of the change
+     * @return the matching change
+     */
+    Change getChange(String uuid, String changeId);
+
+    /**
+     * Retrieves the connections currently using a route filter.
+     *
+     * @param uuid the unique identifier of the route filter
+     * @return the list of connections attached to the route filter
+     */
+    List<Connection> getConnections(String uuid);
 }

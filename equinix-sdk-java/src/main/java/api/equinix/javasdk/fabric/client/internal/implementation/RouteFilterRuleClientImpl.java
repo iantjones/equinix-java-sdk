@@ -17,15 +17,24 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RouteFilterRuleClient;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
+import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.RouteFilterRulesBulkRequest;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteFilterRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterRuleWrapper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -64,5 +73,39 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
 
     public RouteFilterRuleJson refresh(String routeFilterId, String uuid) {
         return getByUuid(routeFilterId, uuid);
+    }
+
+    public RouteFilterRuleJson replace(String routeFilterId, String uuid, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson) {
+        // PUT /routeFilters/{routeFilterId}/routeFilterRules/{uuid} replaces the rule's configuration.
+        return updateOne("ReplaceRouteFilterRule", Map.of("routeFilterId", routeFilterId, "uuid", uuid), routeFilterRuleCreatorJson);
+    }
+
+    public List<RouteFilterRuleJson> createBulk(String routeFilterId, List<RouteFilterRuleCreatorJson> routeFilterRuleCreatorJsonList) {
+        EquinixRequest<RouteFilterRule> request = buildRequestWithPathParams("PostRouteFilterRulesBulk", RequestType.PAGINATED_POST,
+                Map.of("routeFilterId", routeFilterId), RouteFilterRuleJson.class);
+        Utils.serializeJson(request, new RouteFilterRulesBulkRequest(routeFilterRuleCreatorJsonList));
+        Page<RouteFilterRule, RouteFilterRuleJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Page<RouteFilterRule, RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort) {
+        // POST /routeFilters/{routeFilterId}/routeFilterRules/search — searchPage cannot carry path
+        // params, so build the paginated-post request manually (mirrors RouteFilter.search otherwise).
+        EquinixRequest<RouteFilterRule> request = buildRequestWithPathParams("SearchRouteFilterRules", RequestType.PAGINATED_POST,
+                Map.of("routeFilterId", routeFilterId), RouteFilterRuleJson.class);
+        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return Utils.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    public List<Change> getChanges(String routeFilterId, String uuid) {
+        EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteFilterRuleChanges", RequestType.PAGINATED,
+                Map.of("routeFilterId", routeFilterId, "uuid", uuid), Change.class);
+        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Change getChange(String routeFilterId, String uuid, String changeId) {
+        return getAs("GetRouteFilterRuleChange",
+                Map.of("routeFilterId", routeFilterId, "uuid", uuid, "changeId", changeId), null, Change.class);
     }
 }

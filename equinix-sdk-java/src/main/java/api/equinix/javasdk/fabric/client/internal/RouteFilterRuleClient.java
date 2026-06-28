@@ -18,12 +18,17 @@ package api.equinix.javasdk.fabric.client.internal;
 
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
+import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.RouteFilterRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleCreatorJson;
 
-public interface RouteFilterRuleClient<T> extends Pageable<T> {
+import java.util.List;
+
+public interface RouteFilterRuleClient<T> extends PageablePost<T> {
 
     Page<RouteFilterRule, RouteFilterRuleJson> list(String routeFilterId);
 
@@ -31,9 +36,19 @@ public interface RouteFilterRuleClient<T> extends Pageable<T> {
 
     RouteFilterRuleJson create(String routeFilterId, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson);
 
-    RouteFilterRuleJson update(String routeFilterId, String uuid, java.util.List<PatchOperation> operations);
+    RouteFilterRuleJson update(String routeFilterId, String uuid, List<PatchOperation> operations);
 
     RouteFilterRuleJson delete(String routeFilterId, String uuid);
 
     RouteFilterRuleJson refresh(String routeFilterId, String uuid);
+
+    RouteFilterRuleJson replace(String routeFilterId, String uuid, RouteFilterRuleCreatorJson routeFilterRuleCreatorJson);
+
+    List<RouteFilterRuleJson> createBulk(String routeFilterId, List<RouteFilterRuleCreatorJson> routeFilterRuleCreatorJsonList);
+
+    Page<RouteFilterRule, RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort);
+
+    List<Change> getChanges(String routeFilterId, String uuid);
+
+    Change getChange(String routeFilterId, String uuid, String changeId);
 }

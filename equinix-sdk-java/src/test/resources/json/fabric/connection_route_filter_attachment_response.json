@@ -1,0 +1,12 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeFilters/695a8471-6595-4ac6-a2f4-b3d96ed3a59d",
+  "type": "BGP_IPv4_PREFIX_FILTER",
+  "uuid": "695a8471-6595-4ac6-a2f4-b3d96ed3a59d",
+  "attachmentStatus": "ATTACHED",
+  "direction": "INBOUND",
+  "changeLog": {
+    "createdBy": "testuser",
+    "createdByFullName": "Test User",
+    "createdDateTime": "2021-10-20T15:30:00.000Z"
+  }
+}

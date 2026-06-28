@@ -27,8 +27,11 @@ import api.equinix.javasdk.fabric.client.internal.CloudRouterPackageClient;
 import api.equinix.javasdk.fabric.client.internal.RouteTableEntryClient;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.CloudRouterAction;
 import api.equinix.javasdk.fabric.model.CloudRouterCommand;
 import api.equinix.javasdk.fabric.model.CloudRouterPackage;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.RoutingProtocolValidation;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
@@ -41,6 +44,8 @@ import api.equinix.javasdk.fabric.model.json.RouteTableEntryJson;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCommandOperator;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator;
 import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
+
+import java.util.List;
 
 public class CloudRoutersImpl implements CloudRouters {
 
@@ -130,5 +135,31 @@ public class CloudRoutersImpl implements CloudRouters {
     public Boolean deleteCommand(String routerId, String commandId) {
         this.commandsClient.delete(routerId, commandId);
         return true;
+    }
+
+    public List<CloudRouterAction> getActions(String routerId) {
+        return this.serviceClient.getActions(routerId);
+    }
+
+    public CloudRouterAction getAction(String routerId, String uuid) {
+        return this.serviceClient.getAction(routerId, uuid);
+    }
+
+    public PaginatedFilteredList<CloudRouterAction> searchActions(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+        return this.serviceClient.searchActions(routerId, filter, sort);
+    }
+
+    public PaginatedFilteredList<CloudRouterCommand> searchCommands(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+        Page<CloudRouterCommand, CloudRouterCommandJson> responsePage = this.commandsClient.search(routerId, filter, sort);
+        PaginatedFilteredList<CloudRouterCommand> commands = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.commandsClient, (json, client) -> json);
+        return new PaginatedFilteredList<>(commands, this.commandsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public PaginatedFilteredList<RouteFilterAttachment> searchRouteFilterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+        return this.serviceClient.searchRouteFilterAttachments(routerId, filter, sort);
+    }
+
+    public PaginatedFilteredList<RouteAggregationAttachment> searchRouteAggregationAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+        return this.serviceClient.searchRouteAggregationAttachments(routerId, filter, sort);
     }
 }

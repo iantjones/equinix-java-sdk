@@ -20,14 +20,19 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.CloudRouterAction;
 import api.equinix.javasdk.fabric.model.CloudRouterCommand;
 import api.equinix.javasdk.fabric.model.CloudRouterPackage;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.RoutingProtocolValidation;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCommandOperator;
 import api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric Cloud Routers. Provides operations for searching,
@@ -158,4 +163,61 @@ public interface CloudRouters {
      * @return {@code true} if the command was deleted
      */
     Boolean deleteCommand(String routerId, String commandId);
+
+    /**
+     * Lists all route-table / BGP-session actions issued against a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @return the list of cloud router actions
+     */
+    List<CloudRouterAction> getActions(String routerId);
+
+    /**
+     * Retrieves a single Fabric Cloud Router action by its unique identifier.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param uuid the unique identifier of the action
+     * @return the cloud router action matching the given UUID
+     */
+    CloudRouterAction getAction(String routerId, String uuid);
+
+    /**
+     * Searches the route-table / BGP-session actions issued against a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of cloud router actions
+     */
+    PaginatedFilteredList<CloudRouterAction> searchActions(String routerId, FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Searches the diagnostic commands (ping / traceroute) issued against a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of cloud router commands
+     */
+    PaginatedFilteredList<CloudRouterCommand> searchCommands(String routerId, FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Searches the Route Filter attachments for a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of route filter attachments
+     */
+    PaginatedFilteredList<RouteFilterAttachment> searchRouteFilterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Searches the Route Aggregation attachments for a Fabric Cloud Router.
+     *
+     * @param routerId the unique identifier of the cloud router
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of route aggregation attachments
+     */
+    PaginatedFilteredList<RouteAggregationAttachment> searchRouteAggregationAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
 }

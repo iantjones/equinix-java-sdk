@@ -30,11 +30,14 @@ import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.PhysicalPortsResponseJson;
 import api.equinix.javasdk.fabric.model.json.PortJson;
 import api.equinix.javasdk.fabric.model.json.PortStatisticJson;
+import api.equinix.javasdk.fabric.model.json.creators.PortOperator;
 import api.equinix.javasdk.fabric.model.wrappers.PortStatisticWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.PortWrapper;
 
@@ -130,5 +133,26 @@ public class PortsImpl implements Ports {
         Page<PortStatistic, PortStatisticJson> responsePage = statisticServiceClient.getTopStatistics(duration, sortable, requestBuilder);
         PaginatedList<PortStatistic> portStatisticsList = Utils.mapPaginatedList(responsePage.getItems(), this.statisticServiceClient, PortStatisticWrapper::new);
         return new PaginatedList<>(portStatisticsList, this.statisticServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    /** {@inheritDoc} */
+    public PortOperator.PortBuilder define() {
+        return new PortOperator(this.serviceClient).create();
+    }
+
+    /** {@inheritDoc} */
+    public Port delete(String uuid) {
+        PortJson portJson = this.serviceClient.delete(uuid);
+        return new PortWrapper(portJson, this.serviceClient);
+    }
+
+    /** {@inheritDoc} */
+    public PortOperator.PortUpdater update(String uuid) {
+        return new PortOperator(this.serviceClient).update(uuid);
+    }
+
+    /** {@inheritDoc} */
+    public PhysicalPortsResponseJson addToLag(String portId, List<PhysicalPort> physicalPorts) {
+        return this.serviceClient.addToLag(portId, physicalPorts);
     }
 }

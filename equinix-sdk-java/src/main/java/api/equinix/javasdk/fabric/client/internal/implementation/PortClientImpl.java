@@ -20,14 +20,18 @@ import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PortClient;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
+import api.equinix.javasdk.fabric.model.implementation.PortCreatorJson;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.PhysicalPortsResponseJson;
 import api.equinix.javasdk.fabric.model.json.PortJson;
 import api.equinix.javasdk.fabric.model.json.PortVlanJson;
 import api.equinix.javasdk.fabric.model.wrappers.PortWrapper;
@@ -74,5 +78,28 @@ public class PortClientImpl extends ResourceClientBase<Port, PortJson> implement
 
     public PortJson refresh(String uuid) {
         return getByUuid(uuid);
+    }
+
+    public PortJson create(PortCreatorJson body) {
+        return postOne("CreatePort", body);
+    }
+
+    public PortJson delete(String uuid) {
+        return deleteOne("DeletePort", uuid);
+    }
+
+    public PortJson update(String uuid, List<PatchOperation> operations) {
+        // PATCH /ports/{uuid} with an op/path/value array sent as application/json
+        // (not json-patch+json), so updateOne (default content-type) is correct here.
+        return updateOne("UpdatePort", uuid, operations);
+    }
+
+    public PhysicalPortsResponseJson addToLag(String portId, List<PhysicalPort> physicalPorts) {
+        // POST /ports/{portId}/physicalPorts/bulk with a BulkPhysicalPort body ({"data": [...]}),
+        // returning an AllPhysicalPortsResponse.
+        EquinixRequest<PhysicalPortsResponseJson> request = buildRequestWithPathParams("AddToLag",
+                RequestType.SINGLE, Map.of("portId", portId), PhysicalPortsResponseJson.class);
+        Utils.serializeJson(request, Map.of("data", physicalPorts != null ? physicalPorts : Collections.emptyList()));
+        return Utils.handleSingletonResponse(invoke(request), request);
     }
 }

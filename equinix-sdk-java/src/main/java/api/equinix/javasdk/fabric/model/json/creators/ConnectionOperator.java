@@ -26,6 +26,7 @@ import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceToken;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
@@ -72,6 +73,11 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         private MinimalServiceToken aSideServiceToken;
         private MinimalServiceToken zSideServiceToken;
         private List<Notification> notifications = Collections.singletonList(new Notification(NotificationType.ALL, new ArrayList<>()));
+        private GeoScopeType geoScope;
+        private Project project;
+        private List<ConnectionSideAdditionalInfo> additionalInfo;
+        private MarketplaceSubscriptionRef marketplaceSubscription;
+        private EndCustomer endCustomer;
         private boolean dryRun;
 
         protected ConnectionBuilder(ConnectionType type) {
@@ -156,6 +162,34 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
             return aSideAccessPoint(cloudRouter.getUuid(), linkProtocol, interfaceType, interfaceId);
         }
 
+        /**
+         * Configures the A-side access point to target a Fabric Cloud Router (by uuid).
+         *
+         * @param cloudRouterUuid the Cloud Router uuid
+         * @return this builder for chaining
+         */
+        public ConnectionBuilder aSideAccessPointCloudRouter(String cloudRouterUuid) {
+            this.aSideAccessPoint = SimpleAccessPoint.define(AccessPointType.CLOUD_ROUTER)
+                    .cloudRouter(cloudRouterUuid).create();
+            return this;
+        }
+
+        public ConnectionBuilder aSideAccessPointCloudRouter(CloudRouter cloudRouter) {
+            return aSideAccessPointCloudRouter(cloudRouter.getUuid());
+        }
+
+        /**
+         * Configures the A-side access point to target a Fabric Network (by uuid).
+         *
+         * @param networkUuid the network uuid
+         * @return this builder for chaining
+         */
+        public ConnectionBuilder aSideAccessPointNetwork(String networkUuid) {
+            this.aSideAccessPoint = SimpleAccessPoint.define(AccessPointType.NETWORK)
+                    .network(networkUuid).create();
+            return this;
+        }
+
         public ConnectionBuilder zSideServiceToken(String serviceTokenUuid) {
             this.zSideServiceToken = new MinimalServiceToken(serviceTokenUuid);
             return this;
@@ -207,6 +241,34 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
 
         public ConnectionBuilder zSideAccessPoint(CloudRouter cloudRouter, LinkProtocol linkProtocol, InterfaceType interfaceType, Integer interfaceId) {
             return zSideAccessPoint(cloudRouter.getUuid(), linkProtocol, interfaceType, interfaceId);
+        }
+
+        /**
+         * Configures the Z-side access point to target a Fabric Cloud Router (by uuid).
+         *
+         * @param cloudRouterUuid the Cloud Router uuid
+         * @return this builder for chaining
+         */
+        public ConnectionBuilder zSideAccessPointCloudRouter(String cloudRouterUuid) {
+            this.zSideAccessPoint = SimpleAccessPoint.define(AccessPointType.CLOUD_ROUTER)
+                    .cloudRouter(cloudRouterUuid).create();
+            return this;
+        }
+
+        public ConnectionBuilder zSideAccessPointCloudRouter(CloudRouter cloudRouter) {
+            return zSideAccessPointCloudRouter(cloudRouter.getUuid());
+        }
+
+        /**
+         * Configures the Z-side access point to target a Fabric Network (by uuid).
+         *
+         * @param networkUuid the network uuid
+         * @return this builder for chaining
+         */
+        public ConnectionBuilder zSideAccessPointNetwork(String networkUuid) {
+            this.zSideAccessPoint = SimpleAccessPoint.define(AccessPointType.NETWORK)
+                    .network(networkUuid).create();
+            return this;
         }
 
         /**
@@ -279,6 +341,39 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
                     .fromCloudProvider(adapter)
                     .linkProtocol(linkProtocol)
                     .create();
+            return this;
+        }
+
+        public ConnectionBuilder geoScope(GeoScopeType geoScope) {
+            this.geoScope = geoScope;
+            return this;
+        }
+
+        public ConnectionBuilder project(String projectId) {
+            this.project = new Project(projectId);
+            return this;
+        }
+
+        public ConnectionBuilder additionalInfo(List<ConnectionSideAdditionalInfo> additionalInfo) {
+            this.additionalInfo = additionalInfo;
+            return this;
+        }
+
+        public ConnectionBuilder additionalInfo(String key, String value) {
+            if (this.additionalInfo == null) {
+                this.additionalInfo = new ArrayList<>();
+            }
+            this.additionalInfo.add(new ConnectionSideAdditionalInfo(key, value));
+            return this;
+        }
+
+        public ConnectionBuilder marketplaceSubscription(String subscriptionUuid) {
+            this.marketplaceSubscription = new MarketplaceSubscriptionRef(subscriptionUuid);
+            return this;
+        }
+
+        public ConnectionBuilder endCustomer(EndCustomer endCustomer) {
+            this.endCustomer = endCustomer;
             return this;
         }
 

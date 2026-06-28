@@ -19,10 +19,15 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.fabric.enums.NetworkScope;
 import api.equinix.javasdk.fabric.enums.NetworkState;
 import api.equinix.javasdk.fabric.enums.NetworkType;
+import api.equinix.javasdk.fabric.model.implementation.Account;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.Link;
 import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.implementation.NetworkOperation;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
+
+import java.util.List;
 
 public interface Network {
 
@@ -42,9 +47,15 @@ public interface Network {
 
     Project getProject();
 
+    Account getAccount();
+
+    NetworkOperation getOperation();
+
     ChangeLog getChangeLog();
 
     Change getChange();
+
+    List<Link> getLinks();
 
     Integer getConnectionsCount();
 

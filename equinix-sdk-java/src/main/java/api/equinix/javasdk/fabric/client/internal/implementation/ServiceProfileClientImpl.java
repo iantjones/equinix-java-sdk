@@ -17,6 +17,9 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
@@ -24,6 +27,7 @@ import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ServiceProfileClient;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceProfileAction;
+import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
 import api.equinix.javasdk.fabric.model.implementation.ServiceProfileActionRequest;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -32,6 +36,7 @@ import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -86,6 +91,13 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
     public ServiceProfileAction createAction(String uuid, String type, String description) {
         return postForType("PostServiceProfileAction", Map.of("uuid", uuid),
                 new ServiceProfileActionRequest(type, description), ServiceProfileActionJson.getSingleTypeRef());
+    }
+
+    public List<ServiceMetro> getMetros(String uuid) {
+        EquinixRequest<ServiceMetro> request = buildRequestWithPathParams("GetServiceProfileMetros", RequestType.PAGINATED,
+                Map.of("uuid", uuid), ServiceMetro.class);
+        Page<ServiceMetro, ServiceMetro> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
     public ServiceProfileJson refresh(String uuid) {

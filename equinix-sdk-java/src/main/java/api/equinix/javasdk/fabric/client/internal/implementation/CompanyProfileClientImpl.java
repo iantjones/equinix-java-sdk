@@ -23,12 +23,20 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.CompanyProfileClient;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.PrivateService;
+import api.equinix.javasdk.fabric.model.Tag;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CompanyProfileJson;
+import api.equinix.javasdk.fabric.model.json.CompanyServiceProfileListResponseJson;
+import api.equinix.javasdk.fabric.model.json.PrivateServiceListResponseJson;
+import api.equinix.javasdk.fabric.model.json.TagListResponseJson;
 import api.equinix.javasdk.fabric.model.json.creators.CompanyProfileCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.CompanyProfileWrapper;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class CompanyProfileClientImpl extends ResourceClientBase<CompanyProfile, CompanyProfileJson> implements CompanyProfileClient<CompanyProfile> {
@@ -76,6 +84,51 @@ public class CompanyProfileClientImpl extends ResourceClientBase<CompanyProfile,
     public void detachTag(String companyProfileId, String tagId) {
         booleanOp("DetachTag", RequestType.SINGLE,
                 Map.of("companyProfileId", companyProfileId, "tagId", tagId), null, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<CompanyServiceProfile> getServiceProfiles(String companyProfileId) {
+        CompanyServiceProfileListResponseJson response = getAs("GetCompanyProfileServiceProfiles",
+                Map.of("companyProfileId", companyProfileId), null, CompanyServiceProfileListResponseJson.class);
+        return (response != null && response.getData() != null)
+                ? (List<CompanyServiceProfile>) (List<?>) response.getData()
+                : Collections.emptyList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Tag> getTags(String companyProfileId) {
+        TagListResponseJson response = getAs("GetCompanyProfileTags",
+                Map.of("companyProfileId", companyProfileId), null, TagListResponseJson.class);
+        return (response != null && response.getData() != null)
+                ? (List<Tag>) (List<?>) response.getData()
+                : Collections.emptyList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<PrivateService> getPrivateServices(String companyProfileId) {
+        PrivateServiceListResponseJson response = getAs("GetCompanyProfilePrivateServices",
+                Map.of("companyProfileId", companyProfileId), null, PrivateServiceListResponseJson.class);
+        return (response != null && response.getData() != null)
+                ? (List<PrivateService>) (List<?>) response.getData()
+                : Collections.emptyList();
+    }
+
+    public void attachPrivateService(String companyProfileId, String privateServiceId) {
+        booleanOp("AttachPrivateService", RequestType.SINGLE,
+                Map.of("companyProfileId", companyProfileId, "privateServiceId", privateServiceId), null, null);
+    }
+
+    public void detachPrivateService(String companyProfileId, String privateServiceId) {
+        booleanOp("DetachPrivateService", RequestType.SINGLE,
+                Map.of("companyProfileId", companyProfileId, "privateServiceId", privateServiceId), null, null);
+    }
+
+    public byte[] getLogo(String uuid) {
+        return bytesOp("GetLogo", Map.of("uuid", uuid), null);
+    }
+
+    public void deleteLogo(String uuid) {
+        booleanOp("DeleteLogo", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
     public CompanyProfileJson refresh(String uuid) {

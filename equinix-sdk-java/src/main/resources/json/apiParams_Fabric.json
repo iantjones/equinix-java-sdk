@@ -53,6 +53,10 @@
             "httpMethod": "POST",
             "requestUri": "{$uuid}/actions"
           },
+          "GetServiceProfileMetros": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/metros"
+          },
           "DeleteServiceProfile": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
@@ -72,6 +76,21 @@
           "SearchPorts": {
             "httpMethod": "POST",
             "requestUri": "search"
+          },
+          "CreatePort": {
+            "httpMethod": "POST"
+          },
+          "DeletePort": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "UpdatePort": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "AddToLag": {
+            "httpMethod": "POST",
+            "requestUri": "{$portId}/physicalPorts/bulk"
           },
           "GetVlans": {
             "httpMethod": "GET",
@@ -136,6 +155,38 @@
           "GetMetrics": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}/metrics"
+          },
+          "GetConnectionRouteAggregations": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routeAggregations"
+          },
+          "GetConnectionRouteAggregation": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routeAggregations/{$routeAggregationId}"
+          },
+          "AttachConnectionRouteAggregation": {
+            "httpMethod": "PUT",
+            "requestUri": "{$connectionId}/routeAggregations/{$routeAggregationId}"
+          },
+          "DetachConnectionRouteAggregation": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$connectionId}/routeAggregations/{$routeAggregationId}"
+          },
+          "GetConnectionRouteFilters": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routeFilters"
+          },
+          "GetConnectionRouteFilter": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routeFilters/{$routeFilterId}"
+          },
+          "AttachConnectionRouteFilter": {
+            "httpMethod": "PUT",
+            "requestUri": "{$connectionId}/routeFilters/{$routeFilterId}"
+          },
+          "DetachConnectionRouteFilter": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$connectionId}/routeFilters/{$routeFilterId}"
           }
         }
       },
@@ -145,6 +196,14 @@
           "SearchMetrics": {
             "httpMethod": "POST",
             "requestUri": "search"
+          },
+          "GetMetricByName": {
+            "httpMethod": "GET"
+          },
+          "GetMetricByAssetId": {
+            "httpMethod": "GET",
+            "requestUri": "{$asset}/{$assetId}/metrics",
+            "overrideRootUri": true
           }
         }
       },
@@ -238,6 +297,30 @@
           "DeleteCloudRouterCommand": {
             "httpMethod": "DELETE",
             "requestUri": "{$routerId}/commands/{$uuid}"
+          },
+          "GetCloudRouterActions": {
+            "httpMethod": "GET",
+            "requestUri": "{$routerId}/actions"
+          },
+          "GetCloudRouterAction": {
+            "httpMethod": "GET",
+            "requestUri": "{$routerId}/actions/{$uuid}"
+          },
+          "SearchRouterActions": {
+            "httpMethod": "POST",
+            "requestUri": "{$routerId}/actions/search"
+          },
+          "SearchCloudRouterCommands": {
+            "httpMethod": "POST",
+            "requestUri": "{$routerId}/commands/search"
+          },
+          "SearchCloudRouterRouteFilterAttachments": {
+            "httpMethod": "POST",
+            "requestUri": "{$routerId}/routeFilters/search"
+          },
+          "SearchCloudRouterRouteAggregationAttachments": {
+            "httpMethod": "POST",
+            "requestUri": "{$routerId}/routeAggregations/search"
           }
         }
       },
@@ -264,6 +347,14 @@
             "httpMethod": "DELETE",
             "requestUri": "{$connectionId}/routingProtocols/{$uuid}"
           },
+          "ReplaceRoutingProtocol": {
+            "httpMethod": "PUT",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}"
+          },
+          "PostRoutingProtocolsBulk": {
+            "httpMethod": "POST",
+            "requestUri": "{$connectionId}/routingProtocols/bulk"
+          },
           "GetBGPActions": {
             "httpMethod": "GET",
             "requestUri": "{$connectionId}/routingProtocols/{$uuid}/actions"
@@ -271,6 +362,18 @@
           "PostBGPAction": {
             "httpMethod": "POST",
             "requestUri": "{$connectionId}/routingProtocols/{$uuid}/actions"
+          },
+          "GetBGPAction": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/actions/{$actionId}"
+          },
+          "GetRoutingProtocolChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/changes"
+          },
+          "GetRoutingProtocolChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$connectionId}/routingProtocols/{$uuid}/changes/{$changeId}"
           }
         }
       },
@@ -295,6 +398,18 @@
           "DeleteRouteFilter": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
+          },
+          "GetRouteFilterChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes"
+          },
+          "GetRouteFilterChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes/{$changeId}"
+          },
+          "GetRouteFilterConnections": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/connections"
           }
         }
       },
@@ -320,6 +435,26 @@
           "DeleteRouteFilterRule": {
             "httpMethod": "DELETE",
             "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}"
+          },
+          "ReplaceRouteFilterRule": {
+            "httpMethod": "PUT",
+            "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}"
+          },
+          "PostRouteFilterRulesBulk": {
+            "httpMethod": "POST",
+            "requestUri": "{$routeFilterId}/routeFilterRules/bulk"
+          },
+          "SearchRouteFilterRules": {
+            "httpMethod": "POST",
+            "requestUri": "{$routeFilterId}/routeFilterRules/search"
+          },
+          "GetRouteFilterRuleChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}/changes"
+          },
+          "GetRouteFilterRuleChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeFilterId}/routeFilterRules/{$uuid}/changes/{$changeId}"
           }
         }
       },
@@ -344,6 +479,18 @@
           "DeleteRouteAggregation": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
+          },
+          "GetRouteAggregationChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes"
+          },
+          "GetRouteAggregationChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes/{$changeId}"
+          },
+          "GetRouteAggregationConnections": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/connections"
           }
         }
       },
@@ -369,6 +516,26 @@
           "DeleteRouteAggregationRule": {
             "httpMethod": "DELETE",
             "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}"
+          },
+          "ReplaceRouteAggregationRule": {
+            "httpMethod": "PUT",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}"
+          },
+          "PostRouteAggregationRulesBulk": {
+            "httpMethod": "POST",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/bulk"
+          },
+          "SearchRouteAggregationRules": {
+            "httpMethod": "POST",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/search"
+          },
+          "GetRouteAggregationRuleChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}/changes"
+          },
+          "GetRouteAggregationRuleChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$routeAggregationId}/routeAggregationRules/{$uuid}/changes/{$changeId}"
           }
         }
       },
@@ -397,6 +564,14 @@
           "DeleteNetwork": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
+          },
+          "GetNetworkChanges": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes"
+          },
+          "GetNetworkChange": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/changes/{$changeId}"
           }
         }
       },
@@ -465,6 +640,10 @@
           "PostTimeService": {
             "httpMethod": "POST"
           },
+          "FulfillTimeService": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
           "UpdateTimeService": {
             "httpMethod": "PATCH",
             "requestUri": "{$uuid}"
@@ -495,6 +674,11 @@
           "GetCloudEvent": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
+          },
+          "GetCloudEventByAssetId": {
+            "httpMethod": "GET",
+            "requestUri": "{$asset}/{$assetId}/cloudevents",
+            "overrideRootUri": true
           }
         }
       },
@@ -611,6 +795,36 @@
           "DetachTag": {
             "httpMethod": "DELETE",
             "requestUri": "{$companyProfileId}/tags/{$tagId}"
+          },
+          "GetCompanyProfileServiceProfiles": {
+            "httpMethod": "GET",
+            "requestUri": "{$companyProfileId}/serviceProfiles"
+          },
+          "GetCompanyProfileTags": {
+            "httpMethod": "GET",
+            "requestUri": "{$companyProfileId}/tags"
+          },
+          "GetCompanyProfilePrivateServices": {
+            "httpMethod": "GET",
+            "requestUri": "{$companyProfileId}/privateServices"
+          },
+          "AttachPrivateService": {
+            "httpMethod": "PUT",
+            "requestUri": "{$companyProfileId}/privateServices/{$privateServiceId}"
+          },
+          "DetachPrivateService": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$companyProfileId}/privateServices/{$privateServiceId}"
+          },
+          "GetLogo": {
+            "httpMethod": "GET",
+            "requestUri": "logos/{$uuid}",
+            "overrideRootUri": true
+          },
+          "DeleteLogo": {
+            "httpMethod": "DELETE",
+            "requestUri": "logos/{$uuid}",
+            "overrideRootUri": true
           }
         }
       },
@@ -664,6 +878,30 @@
           "DeleteStreamAlertRule": {
             "httpMethod": "DELETE",
             "requestUri": "{$streamId}/alertRules/{$uuid}"
+          }
+        }
+      },
+      "EiaServices": {
+        "rootUri": "internetAccessServices",
+        "serviceEndpoints": {
+          "CreateEiaService": {
+            "httpMethod": "POST"
+          },
+          "SearchEiaServices": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetEiaService": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteEiaService": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "PatchEiaService": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
           }
         }
       },

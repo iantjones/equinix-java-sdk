@@ -16,10 +16,12 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.ChangeStatus;
 import api.equinix.javasdk.fabric.enums.ChangeType;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
@@ -33,6 +35,8 @@ import java.time.LocalDateTime;
  */
 @Getter
 public class Change {
+
+    @Getter static TypeReference<Page<Change, Change>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

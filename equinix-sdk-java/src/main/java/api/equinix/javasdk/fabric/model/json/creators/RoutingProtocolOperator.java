@@ -78,6 +78,9 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
         private Long customerAsn;
         private Long equinixAsn;
 
+        private String bgpAuthKey;
+        private Boolean asOverrideEnabled;
+
         protected RoutingProtocolBuilder() {
         }
 
@@ -128,6 +131,28 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
 
         public RoutingProtocolOperator.RoutingProtocolBuilder withEquinixAsn(Long equinixAsn) {
             this.equinixAsn = equinixAsn;
+            return this;
+        }
+
+        /**
+         * Sets the BGP authorization key (MD5 peering password) for a BGP routing protocol.
+         *
+         * @param bgpAuthKey the BGP authorization key
+         * @return this builder
+         */
+        public RoutingProtocolOperator.RoutingProtocolBuilder withBgpAuthKey(String bgpAuthKey) {
+            this.bgpAuthKey = bgpAuthKey;
+            return this;
+        }
+
+        /**
+         * Enables or disables AS number override on a BGP routing protocol.
+         *
+         * @param asOverrideEnabled whether to enable AS number override
+         * @return this builder
+         */
+        public RoutingProtocolOperator.RoutingProtocolBuilder withAsOverrideEnabled(Boolean asOverrideEnabled) {
+            this.asOverrideEnabled = asOverrideEnabled;
             return this;
         }
 

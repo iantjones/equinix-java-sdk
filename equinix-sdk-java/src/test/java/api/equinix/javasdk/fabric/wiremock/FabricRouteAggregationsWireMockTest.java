@@ -5,8 +5,12 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.RouteAggregationType;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
+import api.equinix.javasdk.fabric.model.implementation.Change;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -133,6 +137,70 @@ class FabricRouteAggregationsWireMockTest extends WireMockTestBase {
             RouteAggregation ra = fabric.routeAggregations().getByUuid("b1c2d3e4-f5a6-7890-bcde-f01234567890");
             assertThrows(IllegalStateException.class, () -> ra.update().save());
             wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/routeAggregations/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getChanges()")
+    class GetChanges {
+
+        @Test
+        @DisplayName("GETs {uuid}/changes and returns the list of changes")
+        void returnsChanges() {
+            stubPaginatedGet(wireMock, "/fabric/v4/routeAggregations/.*/changes",
+                    "/json/fabric/route_aggregation_changes_response.json");
+
+            List<Change> changes = fabric.routeAggregations().getChanges("b1c2d3e4-f5a6-7890-bcde-f01234567890");
+
+            assertNotNull(changes);
+            assertEquals(2, changes.size());
+            assertEquals("a9b8c7d6-e5f4-3210-abcd-fedcba987654", changes.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathMatching(
+                    "/fabric/v4/routeAggregations/b1c2d3e4-f5a6-7890-bcde-f01234567890/changes")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getChange()")
+    class GetChange {
+
+        @Test
+        @DisplayName("GETs {uuid}/changes/{changeId} and returns the single change")
+        void returnsChange() {
+            stubSingleton(wireMock, "/fabric/v4/routeAggregations/.*/changes/.*",
+                    "/json/fabric/route_aggregation_change_response.json");
+
+            Change change = fabric.routeAggregations().getChange(
+                    "b1c2d3e4-f5a6-7890-bcde-f01234567890", "a9b8c7d6-e5f4-3210-abcd-fedcba987654");
+
+            assertNotNull(change);
+            assertEquals("a9b8c7d6-e5f4-3210-abcd-fedcba987654", change.getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathMatching(
+                    "/fabric/v4/routeAggregations/b1c2d3e4-f5a6-7890-bcde-f01234567890/changes/a9b8c7d6-e5f4-3210-abcd-fedcba987654")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getConnections()")
+    class GetConnections {
+
+        @Test
+        @DisplayName("GETs {uuid}/connections and returns the attached connections")
+        void returnsConnections() {
+            stubPaginatedGet(wireMock, "/fabric/v4/routeAggregations/.*/connections",
+                    "/json/fabric/paginated_connections.json");
+
+            List<Connection> connections = fabric.routeAggregations().getConnections("b1c2d3e4-f5a6-7890-bcde-f01234567890");
+
+            assertNotNull(connections);
+            assertEquals(2, connections.size());
+            assertEquals("3a58dd05-f46d-4b1d-a154-2e85c396ea85", connections.get(0).getUuid());
+            assertEquals("Connection-One", connections.get(0).getName());
+
+            wireMock.verify(getRequestedFor(urlPathMatching(
+                    "/fabric/v4/routeAggregations/b1c2d3e4-f5a6-7890-bcde-f01234567890/connections")));
         }
     }
 
