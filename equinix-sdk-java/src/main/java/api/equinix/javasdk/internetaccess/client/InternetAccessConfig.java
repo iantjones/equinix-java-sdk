@@ -16,9 +16,15 @@
 
 package api.equinix.javasdk.internetaccess.client;
 
+import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
+import api.equinix.javasdk.internetaccess.client.internal.PriceClient;
 
 public interface InternetAccessConfig {
 
     InternetAccessServiceClient getInternetAccessServiceClient();
+
+    IbxClient getIbxClient();
+
+    PriceClient getPriceClient();
 }

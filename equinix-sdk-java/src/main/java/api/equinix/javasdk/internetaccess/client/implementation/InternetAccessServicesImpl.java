@@ -17,9 +17,18 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessServices;
 import api.equinix.javasdk.internetaccess.client.internal.InternetAccessServiceClient;
+import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.model.json.InternetAccessServiceJson;
+import api.equinix.javasdk.internetaccess.model.json.creators.ChangeOperationUpdate;
 import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServiceOperator;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceSearchRequest;
+
+import java.util.List;
 
 public class InternetAccessServicesImpl implements InternetAccessServices {
 
@@ -34,5 +43,22 @@ public class InternetAccessServicesImpl implements InternetAccessServices {
 
     public InternetAccessServiceOperator.InternetAccessServiceBuilder define() {
         return new InternetAccessServiceOperator(this.serviceClient).create();
+    }
+
+    public InternetAccessService getByUuid(String serviceId) {
+        return this.serviceClient.getByUuid(serviceId);
+    }
+
+    public InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations) {
+        return this.serviceClient.update(serviceId, operations);
+    }
+
+    public Boolean delete(String serviceId) {
+        return this.serviceClient.delete(serviceId);
+    }
+
+    public PaginatedFilteredList<InternetAccessService> search(ServiceSearchRequest searchRequest) {
+        Page<InternetAccessService, InternetAccessServiceJson> responsePage = this.serviceClient.search(searchRequest);
+        return Utils.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

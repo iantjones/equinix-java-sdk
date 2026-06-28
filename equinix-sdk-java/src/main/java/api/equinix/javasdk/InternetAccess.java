@@ -19,20 +19,25 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.internetaccess.client.InternetAccessConfig;
+import api.equinix.javasdk.internetaccess.client.InternetAccessIbxs;
+import api.equinix.javasdk.internetaccess.client.InternetAccessPrices;
 import api.equinix.javasdk.internetaccess.client.InternetAccessServices;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
+import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessIbxsImpl;
+import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessPricesImpl;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessServicesImpl;
 
 /**
  * The primary entry point for accessing the Equinix Internet Access (EIA) v2 API.
  *
  * <p>Equinix Internet Access provides managed internet connectivity services through Equinix
- * data centers. EIA v2 exposes a single operation — creating a service via
- * {@code POST /internetAccess/v2/services} — where the IP blocks and routing configuration are
- * all supplied as a single nested request body.</p>
+ * data centers. The {@link #services()} accessor exposes the full EIA v2 service lifecycle
+ * (create / get / update / delete / search), the {@link #ibxs()} accessor exposes the EIA v2
+ * product-availability lookup ({@code GET /internetAccess/v2/ibxs}), and the {@link #prices()}
+ * accessor exposes the EIA v1 price search ({@code POST /internetAccess/v1/prices/search}).</p>
  *
- * <p>The {@link #services()} accessor uses lazy initialization — the internal client is created
- * on first access and reused for subsequent calls.</p>
+ * <p>Each accessor uses lazy initialization — the internal client is created on first access and
+ * reused for subsequent calls.</p>
  *
  * <h3>Quick Start</h3>
  * <pre>{@code
@@ -56,6 +61,10 @@ import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessSe
 public final class InternetAccess extends EquinixClient implements Service {
 
     private InternetAccessServices services;
+
+    private InternetAccessIbxs ibxs;
+
+    private InternetAccessPrices prices;
 
     final private InternetAccessConfig internetAccessConfig;
 
@@ -85,7 +94,8 @@ public final class InternetAccess extends EquinixClient implements Service {
     }
 
     /**
-     * Returns the client for creating Equinix Internet Access v2 service instances.
+     * Returns the client for managing the Equinix Internet Access v2 service lifecycle
+     * (create / get / update / delete / search).
      *
      * @return the {@link InternetAccessServices} client
      */
@@ -94,5 +104,31 @@ public final class InternetAccess extends EquinixClient implements Service {
             this.services = new InternetAccessServicesImpl(this.internetAccessConfig.getInternetAccessServiceClient(), this);
         }
         return services;
+    }
+
+    /**
+     * Returns the client for the Equinix Internet Access v2 product-availability lookup —
+     * the IBXs where EIA is available ({@code GET /internetAccess/v2/ibxs}).
+     *
+     * @return the {@link InternetAccessIbxs} client
+     */
+    public InternetAccessIbxs ibxs() {
+        if (this.ibxs == null) {
+            this.ibxs = new InternetAccessIbxsImpl(this.internetAccessConfig.getIbxClient(), this);
+        }
+        return ibxs;
+    }
+
+    /**
+     * Returns the client for the Equinix Internet Access v1 price search
+     * ({@code POST /internetAccess/v1/prices/search}).
+     *
+     * @return the {@link InternetAccessPrices} client
+     */
+    public InternetAccessPrices prices() {
+        if (this.prices == null) {
+            this.prices = new InternetAccessPricesImpl(this.internetAccessConfig.getPriceClient(), this);
+        }
+        return prices;
     }
 }

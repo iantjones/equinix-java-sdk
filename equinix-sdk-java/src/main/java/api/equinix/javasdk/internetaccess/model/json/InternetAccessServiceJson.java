@@ -36,6 +36,15 @@ public class InternetAccessServiceJson implements InternetAccessService {
     @JsonProperty("uuid")
     private String uuid;
 
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("type")
     private ServiceTypeV2 type;
 
