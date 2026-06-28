@@ -5,13 +5,13 @@
 [![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.eqixiac.equinix/equinix-sdk-java.svg)](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)
 
-> A comprehensive Java SDK for the Equinix Platform APIs, providing typed access to Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, and Projects services — plus value-add `Design` (metro optimizer, deployment wizard, peering intelligence) and `Mcp` modules.
+> A comprehensive Java SDK for the Equinix Platform APIs, providing typed access to Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS services — plus value-add `Design` (metro optimizer, deployment wizard, peering intelligence) and `Mcp` modules.
 
 **[View Full API Documentation (Javadoc)](https://iantjones.github.io/equinix-java-sdk/)** · **[Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)**
 
 ## Features
 
-- **7 API domains** with 58 resource types and 310+ API methods
+- **8 API domains** spanning the full Equinix API catalog — 80+ resource types and 500+ API methods
 - **Fluent builder pattern** for creating and updating resources
 - **Cloud provider SDK interoperability** via adapter pattern (AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect, Oracle FastConnect)
 - **Automatic pagination** with `PaginatedList<T>` and `PaginatedFilteredList<T>`
@@ -84,12 +84,14 @@ class MyService {
 
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
-| **Fabric** | `new Fabric(creds)` | 20 | Connections, Ports, Service Tokens, Cloud Routers, Networks, Streams, Stream Subscriptions, Precision Time, Route Filters (+Rules), Route Aggregations (+Rules), Routing Protocols, Service Profiles, Prices, Health — all mutable resources support fluent `update()` |
-| **Network Edge** | `new NetworkEdge(creds)` | 12 | Virtual Devices, SSH Users, ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
-| **Customer Portal** | `new CustomerPortal(creds)` | 17 | Cross-Connects, Trouble Tickets, Work Visits, Smart Hands, Shipments, Invoices, Orders, Resellers, Quotes, Assets, Reports, Secure Cabinets |
-| **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Events, System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
-| **Internet Access** | `new InternetAccess(creds)` | 1 | Internet Access Services |
-| **Projects** | `new Projects(creds)` | 1 | Project Management |
+| **Fabric** | `new Fabric(creds)` | 28 | Connections (+ advertised/received routes), Ports (+ search/VLANs), Service Tokens, Cloud Routers (+ route search/commands/validate), Networks, Streams (+ Subscriptions/Alert Rules/Assets), Precision Time (+ packages), Route Filters/Aggregations (+Rules), Routing Protocols (+ BGP actions), Service Profiles, Prices, Metrics, Cloud Events, Marketplace Subscriptions, IP Blocks, Agents (+Templates), Company Profiles (+Tags), Port Packages, Health — all mutable resources support fluent `update()` |
+| **Network Edge** | `new NetworkEdge(creds)` | 10 | Virtual Devices (+ soft-reboot/RMA/ACL/file upload), ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
+| **Customer Portal** | `new CustomerPortal(creds)` | 23 | Orders, Order History, Cross-Connects, Trouble Tickets (+ Ticket Orders), Work Visits, Smart Hands, Shipments, Secure Cabinets, Invoices, Billing Accounts, Quotes, Assets, Attachments, Reports, Notifications, Unified Notifications, Support Cases, Support Plans, Digital LOAs, Resellers, Lookups |
+| **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Events (`dcim/v3`), System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
+| **Internet Access** | `new InternetAccess(creds)` | 3 | EIA v2 Services (full lifecycle), IBX availability, EIA v1 Prices |
+| **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
+| **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
+| **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
 | **Design** (value-add) | `Fabric.optimizeMetros()` / `.deploymentWizard()` / `.peeringIntelligence()` | — | Metro Optimizer, Deployment Wizard, Peering Intelligence (`api.equinix.javasdk.design.*`) |
 | **Mcp** (value-add) | `Fabric.mcp()` | — | MCP JSON-RPC bridge (`api.equinix.javasdk.mcp.*`) |
 
