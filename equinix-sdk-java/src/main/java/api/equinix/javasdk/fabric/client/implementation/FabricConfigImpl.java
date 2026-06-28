@@ -47,10 +47,6 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final ServiceProfileClientImpl serviceProfilesClient;
 
-    private final FabricGatewayClientImpl fabricGatewaysClient;
-
-    private final GatewayPackageClientImpl gatewayPackageClient;
-
     private final CloudRouterClientImpl cloudRoutersClient;
 
     private final CloudRouterPackageClientImpl cloudRouterPackagesClient;
@@ -94,8 +90,6 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.metricsClient = new MetricClientImpl(this);
         this.pricingClient = new PricingClientImpl(this);
         this.serviceProfilesClient = new ServiceProfileClientImpl(this);
-        this.fabricGatewaysClient = new FabricGatewayClientImpl(this);
-        this.gatewayPackageClient = new GatewayPackageClientImpl(this);
         this.cloudRoutersClient = new CloudRouterClientImpl(this);
         this.cloudRouterPackagesClient = new CloudRouterPackageClientImpl(this);
         this.routingProtocolsClient = new RoutingProtocolClientImpl(this);

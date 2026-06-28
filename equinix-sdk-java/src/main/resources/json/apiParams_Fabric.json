@@ -139,36 +139,6 @@
           }
         }
       },      
-      "FabricGateways": {
-        "rootUri": "gateways",
-        "serviceEndpoints": {
-          "SearchFabricGateways": {
-            "httpMethod": "POST",
-            "requestUri": "search"
-          },
-          "GetFabricGateway": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}"
-          },
-          "PostFabricGateway": {
-            "httpMethod": "POST"
-          },
-          "DeleteFabricGateway": {
-            "httpMethod": "DELETE",
-            "requestUri": "{$uuid}"
-          },
-          "GetGatewayPackages": {
-            "httpMethod": "GET",
-            "requestUri": "gatewayPackages",
-            "overrideRootUri": true
-          },
-          "GetGatewayPackage": {
-            "httpMethod": "GET",
-            "requestUri": "gatewayPackages/{$gatewayPackageCode}",
-            "overrideRootUri": true
-          }
-        }
-      },
       "CloudRouters": {
         "rootUri": "routers",
         "serviceEndpoints": {

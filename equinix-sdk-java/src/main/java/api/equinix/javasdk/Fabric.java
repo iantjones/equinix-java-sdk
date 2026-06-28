@@ -95,8 +95,6 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
 
     private ServiceProfiles serviceProfiles;
 
-    private FabricGateways fabricGateways;
-
     private CloudRouters cloudRouters;
 
     private RoutingProtocols routingProtocols;
@@ -247,20 +245,6 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
             this.serviceProfiles = new ServiceProfilesImpl(this.fabricConfig.getServiceProfilesClient());
         }
         return serviceProfiles;
-    }
-
-    /**
-     * Returns the client for managing Fabric gateways (also known as Fabric Cloud Routers).
-     * Gateways provide Layer 3 routing capabilities for Fabric connections,
-     * with associated gateway packages defining performance tiers.
-     *
-     * @return the {@link FabricGateways} client for creating and managing gateways
-     */
-    public FabricGateways fabricGateways() {
-        if (this.fabricGateways == null) {
-            this.fabricGateways = new FabricGatewaysImpl(this.fabricConfig.getFabricGatewaysClient(), this.fabricConfig.getGatewayPackageClient());
-        }
-        return fabricGateways;
     }
 
     /**
