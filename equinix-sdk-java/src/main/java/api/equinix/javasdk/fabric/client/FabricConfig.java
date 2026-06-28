@@ -78,10 +78,6 @@ public interface FabricConfig {
      */
     ServiceProfileClient<ServiceProfile> getServiceProfilesClient();
 
-    FabricGatewayClient<FabricGateway> getFabricGatewaysClient();
-
-    GatewayPackageClient<GatewayPackage> getGatewayPackageClient();
-
     CloudRouterClient<CloudRouter> getCloudRoutersClient();
 
     CloudRouterPackageClient<CloudRouterPackage> getCloudRouterPackagesClient();
