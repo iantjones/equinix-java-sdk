@@ -68,7 +68,9 @@ public class RequestFactory {
         switch (request.getHttpMethod()) {
             case GET: httpRequestBase = new HttpGet(uri);
                 break;
-            case DELETE: httpRequestBase = new HttpDelete(uri);
+            case DELETE: httpRequestBase = request.getContent() != null
+                    ? wrapEntity(request, new HttpDeleteWithBody(uri), encodedParams)
+                    : new HttpDelete(uri);
                 break;
             case POST: httpRequestBase = wrapEntity(request, new HttpPost(uri), encodedParams);
                 break;
