@@ -77,7 +77,11 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
             String keyValue = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQTestKeyValue test@example.com";
 
             // POST /ne/v1/publicKeys -> 201 with the created object in the body.
-            stubSingleton(wireMock, "/ne/v1/publicKeys/?", "/json/networkedge/publickey_response.json");
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .willReturn(okJson("{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
+                            + "\"keyName\":\"test-public-key\","
+                            + "\"keyValue\":\"" + keyValue + "\","
+                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}")));
 
             PublicKey publicKey = networkEdge.publicKeys()
                     .define("test-public-key", keyValue)
