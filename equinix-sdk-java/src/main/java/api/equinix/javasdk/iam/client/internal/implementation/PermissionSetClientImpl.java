@@ -25,6 +25,7 @@ import api.equinix.javasdk.iam.model.PermissionSet;
 import api.equinix.javasdk.iam.model.json.PermissionSetJson;
 import api.equinix.javasdk.iam.model.json.PermissionSetList;
 import api.equinix.javasdk.iam.model.json.creators.CreatePermissionSetRequest;
+import api.equinix.javasdk.iam.model.json.creators.LastRevRequest;
 import api.equinix.javasdk.iam.model.json.creators.UpdatePermissionSetRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -72,8 +73,11 @@ public class PermissionSetClientImpl extends ClientBase implements PermissionSet
     }
 
     @Override
-    public Boolean delete(String projectId, String permissionSetId) {
+    public Boolean delete(String projectId, String permissionSetId, String lastRev) {
+        // The spec requires the LastRevBody {lastRev} on the DELETE for optimistic concurrency.
+        // The body is serialized here; the core HTTP layer must enclose entities on DELETE for it
+        // to reach the wire (see RequestFactory).
         return booleanOp("DeletePermissionSet", RequestType.SINGLE,
-                Map.of("projectId", projectId, "permissionSetId", permissionSetId), null, null);
+                Map.of("projectId", projectId, "permissionSetId", permissionSetId), null, new LastRevRequest(lastRev));
     }
 }

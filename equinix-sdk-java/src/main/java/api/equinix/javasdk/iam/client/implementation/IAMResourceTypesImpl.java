@@ -36,36 +36,43 @@ public class IAMResourceTypesImpl implements IAMResourceTypes {
         this.resourceTypeClient = resourceTypeClient;
     }
 
-    public ResourceTypeList listResourceTypes(String projectId) {
-        return this.resourceTypeClient.listResourceTypes(projectId, null, null);
+    public ResourceTypeList listResourceTypes(String projectId, String serviceId) {
+        return this.resourceTypeClient.listResourceTypes(projectId, serviceId, null, null, null);
     }
 
-    public ResourceTypeList listResourceTypes(String projectId, String pageToken, Integer pageSize) {
-        return this.resourceTypeClient.listResourceTypes(projectId, pageToken, pageSize);
+    public ResourceTypeList listResourceTypes(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                              String projectErn) {
+        return this.resourceTypeClient.listResourceTypes(projectId, serviceId, pageToken, pageSize, projectErn);
     }
 
-    public ActionList listActions(String projectId) {
-        return this.resourceTypeClient.listActions(projectId, null, null);
+    public ActionList listActions(String projectId, String serviceId) {
+        return this.resourceTypeClient.listActions(projectId, serviceId, null, null, null);
     }
 
-    public ActionList listActions(String projectId, String pageToken, Integer pageSize) {
-        return this.resourceTypeClient.listActions(projectId, pageToken, pageSize);
+    public ActionList listActions(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                  String projectErn) {
+        return this.resourceTypeClient.listActions(projectId, serviceId, pageToken, pageSize, projectErn);
     }
 
     public ServiceActionSetList listActionSets(String projectId, String serviceId) {
-        return this.resourceTypeClient.listActionSets(projectId, serviceId, null, null);
+        return this.resourceTypeClient.listActionSets(projectId, serviceId, null, null, null);
     }
 
-    public ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize) {
-        return this.resourceTypeClient.listActionSets(projectId, serviceId, pageToken, pageSize);
+    public ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize,
+                                               String projectErn) {
+        return this.resourceTypeClient.listActionSets(projectId, serviceId, pageToken, pageSize, projectErn);
     }
 
-    public ResourceTypeActionPage pageResourceTypeActions(String projectId) {
-        return this.resourceTypeClient.pageResourceTypeActions(projectId, null, null);
+    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType) {
+        return this.resourceTypeClient.pageResourceTypeActions(projectId, serviceId, resourceType, null, null, null,
+                null);
     }
 
-    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String pageToken, Integer pageSize) {
-        return this.resourceTypeClient.pageResourceTypeActions(projectId, pageToken, pageSize);
+    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+                                                          String resourceTypeServiceId, String lastAction,
+                                                          Integer pageSize, String projectErn) {
+        return this.resourceTypeClient.pageResourceTypeActions(projectId, serviceId, resourceType,
+                resourceTypeServiceId, lastAction, pageSize, projectErn);
     }
 
     public ServicePolicySchema getServicePolicySchema(String projectId, String serviceId) {

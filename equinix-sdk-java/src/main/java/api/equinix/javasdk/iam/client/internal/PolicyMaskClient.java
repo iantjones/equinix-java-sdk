@@ -43,7 +43,7 @@ public interface PolicyMaskClient {
     PolicyMask update(String projectId, String policyMaskId, UpdatePolicyMaskRequest request);
 
     /** {@code deletePolicyMask} */
-    Boolean delete(String projectId, String policyMaskId);
+    Boolean delete(String projectId, String policyMaskId, String lastRev);
 
     /** {@code enablePolicyMask} */
     PolicyMask enable(String projectId, String policyMaskId, String lastRev);

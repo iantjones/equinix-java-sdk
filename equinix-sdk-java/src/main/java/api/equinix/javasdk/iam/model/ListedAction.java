@@ -42,17 +42,44 @@ public interface ListedAction {
     Map<String, String> getTags();
 
     /**
-     * @return the RBAC permission associated with the action, as raw deserialized JSON
+     * @return the RBAC permission associated with the action (may be {@code null})
      */
-    Object getRbacPermission();
+    RbacPermission getRbacPermission();
 
     /**
-     * @return the permission codes associated with the action, as raw deserialized JSON map
+     * @return the permission codes associated with the action, keyed by permission code (may be {@code null})
      */
-    Object getPermissionCodes();
+    Map<String, PermissionCode> getPermissionCodes();
 
     /**
      * @return the action attributes, as raw deserialized JSON
      */
     List<Object> getAttributes();
+
+    /**
+     * The action mapping to access-management permissions, used when performing authorization via
+     * role-assignment token scope (spec schema {@code RBACPermission}).
+     */
+    interface RbacPermission {
+
+        /**
+         * @return the permission name (e.g. {@code fabric.port.read})
+         */
+        String getPermission();
+
+        /**
+         * @return the resource type the permission applies to (e.g. {@code PROJECT})
+         */
+        String getPermissionResourceType();
+    }
+
+    /** A single entry in an action's {@code permissionCodes} map. */
+    interface PermissionCode {
+
+        /**
+         * @return {@code true} when the action is only allowed if the permission code is granted
+         *         unconditionally at the top level of the asset hierarchy
+         */
+        Boolean getRequiresAll();
+    }
 }

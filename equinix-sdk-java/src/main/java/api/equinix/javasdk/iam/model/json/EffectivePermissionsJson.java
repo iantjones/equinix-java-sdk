@@ -19,9 +19,16 @@ package api.equinix.javasdk.iam.model.json;
 import api.equinix.javasdk.iam.model.EffectivePermissions;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,5 +53,101 @@ public class EffectivePermissionsJson implements EffectivePermissions {
     private List<String> accessPolicyIds;
 
     @JsonProperty("permissions")
-    private List<Object> permissions;
+    private List<PermissionJson> permissions;
+
+    @Override
+    public List<EffectivePermissions.Permission> getPermissions() {
+        if (permissions == null) {
+            return null;
+        }
+        return java.util.Collections.unmodifiableList(new ArrayList<EffectivePermissions.Permission>(permissions));
+    }
+
+    /** Read-only JSON model for a single {@link EffectivePermissions.Permission} entry. */
+    @Getter
+    @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PermissionJson implements EffectivePermissions.Permission {
+
+        @JsonProperty("actions")
+        private List<String> actions;
+
+        @JsonProperty("resources")
+        private ResourceSelectorJson resources;
+
+        @JsonProperty("metroCodes")
+        private ResourceSelectorJson metroCodes;
+
+        @JsonProperty("ibxIds")
+        private ResourceSelectorJson ibxIds;
+
+        @JsonProperty("cageIds")
+        private ResourceSelectorJson cageIds;
+
+        @JsonProperty("condition")
+        private String condition;
+
+        @Override
+        public EffectivePermissions.ResourceSelector getResources() {
+            return resources;
+        }
+
+        @Override
+        public EffectivePermissions.ResourceSelector getMetroCodes() {
+            return metroCodes;
+        }
+
+        @Override
+        public EffectivePermissions.ResourceSelector getIbxIds() {
+            return ibxIds;
+        }
+
+        @Override
+        public EffectivePermissions.ResourceSelector getCageIds() {
+            return cageIds;
+        }
+    }
+
+    /**
+     * Read-only JSON model for the {@code anyOf} resource selector, which is either a bare array of
+     * values (inclusion) or an object {@code {except: [...]}} (exclusion). A custom deserializer
+     * normalizes both wire shapes into {@link #getInclude()} / {@link #getExcept()}.
+     */
+    @Getter
+    @Setter
+    @JsonDeserialize(using = ResourceSelectorJson.Deserializer.class)
+    public static class ResourceSelectorJson implements EffectivePermissions.ResourceSelector {
+
+        private List<String> include;
+
+        private List<String> except;
+
+        /** Jackson deserializer handling both the array and {@code {except:[]}} forms. */
+        public static class Deserializer extends JsonDeserializer<ResourceSelectorJson> {
+
+            @Override
+            public ResourceSelectorJson deserialize(JsonParser parser, DeserializationContext context)
+                    throws IOException {
+                JsonNode node = parser.getCodec().readTree(parser);
+                ResourceSelectorJson selector = new ResourceSelectorJson();
+                if (node.isArray()) {
+                    selector.setInclude(readStrings(node));
+                } else if (node.isObject() && node.has("except")) {
+                    selector.setExcept(readStrings(node.get("except")));
+                }
+                return selector;
+            }
+
+            private List<String> readStrings(JsonNode arrayNode) {
+                if (arrayNode == null || !arrayNode.isArray()) {
+                    return null;
+                }
+                List<String> values = new ArrayList<>();
+                for (JsonNode element : arrayNode) {
+                    values.add(element.asText());
+                }
+                return values;
+            }
+        }
+    }
 }

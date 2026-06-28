@@ -41,7 +41,7 @@ public interface AccessPolicyClient {
 
     AccessPolicy update(String projectId, String accessPolicyId, UpdateAccessPolicyRequest request);
 
-    Boolean delete(String projectId, String accessPolicyId);
+    Boolean delete(String projectId, String accessPolicyId, String lastRev);
 
     AccessPolicy enable(String projectId, String accessPolicyId, String lastRev);
 

@@ -100,4 +100,14 @@ public interface AccessPolicy {
      * @return the last-updated timestamp
      */
     String getUpdatedAt();
+
+    /**
+     * @return the approval timestamp (may be {@code null})
+     */
+    String getApprovedAt();
+
+    /**
+     * @return the principal that approved the policy (may be {@code null})
+     */
+    String getApprovedBy();
 }

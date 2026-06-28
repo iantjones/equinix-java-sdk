@@ -42,5 +42,5 @@ public interface PermissionSetClient {
     PermissionSet update(String projectId, String permissionSetId, UpdatePermissionSetRequest request);
 
     /** {@code deletePermissionSet} */
-    Boolean delete(String projectId, String permissionSetId);
+    Boolean delete(String projectId, String permissionSetId, String lastRev);
 }

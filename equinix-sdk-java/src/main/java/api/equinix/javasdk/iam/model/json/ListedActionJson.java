@@ -44,11 +44,48 @@ public class ListedActionJson implements ListedAction {
     private Map<String, String> tags;
 
     @JsonProperty("rbacPermission")
-    private Object rbacPermission;
+    private RbacPermissionJson rbacPermission;
 
     @JsonProperty("permissionCodes")
-    private Object permissionCodes;
+    private Map<String, PermissionCodeJson> permissionCodes;
 
     @JsonProperty("attributes")
     private List<Object> attributes;
+
+    @Override
+    public ListedAction.RbacPermission getRbacPermission() {
+        return rbacPermission;
+    }
+
+    @Override
+    public Map<String, ListedAction.PermissionCode> getPermissionCodes() {
+        if (permissionCodes == null) {
+            return null;
+        }
+        Map<String, ListedAction.PermissionCode> result = new java.util.LinkedHashMap<>(permissionCodes);
+        return java.util.Collections.unmodifiableMap(result);
+    }
+
+    /** Read-only JSON model for a {@link ListedAction.RbacPermission}. */
+    @Getter
+    @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class RbacPermissionJson implements ListedAction.RbacPermission {
+
+        @JsonProperty("permission")
+        private String permission;
+
+        @JsonProperty("permissionResourceType")
+        private String permissionResourceType;
+    }
+
+    /** Read-only JSON model for a {@link ListedAction.PermissionCode}. */
+    @Getter
+    @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PermissionCodeJson implements ListedAction.PermissionCode {
+
+        @JsonProperty("requiresAll")
+        private Boolean requiresAll;
+    }
 }

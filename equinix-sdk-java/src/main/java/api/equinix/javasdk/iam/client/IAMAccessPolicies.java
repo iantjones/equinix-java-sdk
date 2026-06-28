@@ -83,11 +83,15 @@ public interface IAMAccessPolicies {
     /**
      * Deletes an access policy.
      *
+     * <p>The spec requires the policy's last-known revision in the request body for
+     * optimistic-concurrency-controlled deletion.</p>
+     *
      * @param projectId the project identifier
      * @param accessPolicyId the access policy identifier
+     * @param lastRev the last-known revision of the policy (required; from {@link AccessPolicy#getRev()})
      * @return {@code true} if the deletion request was accepted
      */
-    Boolean delete(String projectId, String accessPolicyId);
+    Boolean delete(String projectId, String accessPolicyId, String lastRev);
 
     /**
      * Enables a previously disabled access policy.

@@ -55,7 +55,7 @@ public class IAMPermissionSetsImpl implements IAMPermissionSets {
         return this.permissionSetClient.update(projectId, permissionSetId, request);
     }
 
-    public Boolean delete(String projectId, String permissionSetId) {
-        return this.permissionSetClient.delete(projectId, permissionSetId);
+    public Boolean delete(String projectId, String permissionSetId, String lastRev) {
+        return this.permissionSetClient.delete(projectId, permissionSetId, lastRev);
     }
 }
