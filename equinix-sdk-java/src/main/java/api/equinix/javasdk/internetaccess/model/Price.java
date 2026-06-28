@@ -18,8 +18,11 @@ package api.equinix.javasdk.internetaccess.model;
 
 import api.equinix.javasdk.internetaccess.enums.PriceCategory;
 import api.equinix.javasdk.internetaccess.enums.ProductType;
-import api.equinix.javasdk.internetaccess.model.implementation.PriceCharge;
+import api.equinix.javasdk.internetaccess.model.implementation.CustomerAccount;
+import api.equinix.javasdk.internetaccess.model.implementation.IpBlockProductPrice;
 import api.equinix.javasdk.internetaccess.model.implementation.PriceSummary;
+import api.equinix.javasdk.internetaccess.model.implementation.ProductPriceCharge;
+import api.equinix.javasdk.internetaccess.model.implementation.ServicePrice;
 
 import java.util.List;
 
@@ -68,12 +71,28 @@ public interface Price {
     PriceCategory getCategory();
 
     /**
-     * @return the collection of individual product price charges
+     * @return the collection of individual product price charges, each carrying its product
+     *         attribution
      */
-    List<PriceCharge> getCharges();
+    List<ProductPriceCharge> getCharges();
 
     /**
      * @return the summarized pricing (charges plus roll-up total charge)
      */
     PriceSummary getSummary();
+
+    /**
+     * @return the customer billing account associated with the price, if present
+     */
+    CustomerAccount getAccount();
+
+    /**
+     * @return the internet access service product breakdown, present for service price results
+     */
+    ServicePrice getService();
+
+    /**
+     * @return the IP block product breakdown, present for IP-block price results
+     */
+    IpBlockProductPrice getIpBlock();
 }

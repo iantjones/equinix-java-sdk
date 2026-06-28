@@ -1,6 +1,112 @@
 {
+  "href": "https://api.equinix.com/internetAccess/v1/services/e1f2a3b4-c5d6-4e7f-8091-021324354657",
   "uuid": "e1f2a3b4-c5d6-4e7f-8091-021324354657",
+  "name": "WebServers",
+  "description": "Customer facing web servers",
   "type": "SINGLE",
   "bandwidth": 1000,
-  "state": "ACTIVE"
+  "state": "ACTIVE",
+  "useCase": "MAIN",
+  "billing": "FIXED",
+  "billingEnabled": true,
+  "billingStartDate": "2026-01-15",
+  "tags": ["tag1", "tag2"],
+  "account": {
+    "href": "https://api.equinix.com/internetAccess/v1/accounts/1234",
+    "accountNumber": "1234533211",
+    "accountName": "Company account",
+    "orgId": "1232",
+    "organizationName": "Equinix, Inc."
+  },
+  "project": {
+    "href": "https://api.equinix.com/resourceManager/v1/projects/371",
+    "projectId": "9713123422221",
+    "projectName": "US Office",
+    "parentOrganizationId": "22331",
+    "parentOrganizationName": "ABC Company"
+  },
+  "change": {
+    "uuid": "c1d2e3f4-a5b6-4c7d-8e9f-001122334455",
+    "type": "SERVICE_CREATION",
+    "status": "COMPLETED",
+    "createdDateTime": "2026-01-10T07:00:00Z",
+    "data": {
+      "service": { "uuid": "e1f2a3b4-c5d6-4e7f-8091-021324354657" },
+      "request": "{}"
+    }
+  },
+  "changeLog": {
+    "createdBy": "1232",
+    "createdByFullName": "John Doe",
+    "createdByEmail": "john.doe@company.com",
+    "createdDateTime": "2026-01-10T07:00:00Z",
+    "updatedBy": "1234",
+    "updatedByFullName": "Ryan Einstein",
+    "updatedByEmail": "ryan.einstein@company.com",
+    "updatedDateTime": "2026-01-11T07:00:00Z"
+  },
+  "order": {
+    "href": "https://api.equinix.com/internetAccess/v1/orders/cd67f685-41b0-1b07-6de0-320a5c00abee",
+    "uuid": "cd67f685-41b0-1b07-6de0-320a5c00abee",
+    "type": "NEW",
+    "status": "COMPLETED",
+    "number": "1-9234239473",
+    "referenceNumber": "239384723943",
+    "purchaseOrder": {
+      "type": "STANDARD_PURCHASE_ORDER",
+      "number": "129105284100",
+      "amount": 100.5
+    },
+    "signature": {
+      "signatory": "SELF"
+    },
+    "contacts": [
+      {
+        "type": "ORDERING",
+        "registeredUser": "john_doe",
+        "firstName": "John",
+        "lastName": "Doe",
+        "availability": "WORK_HOURS",
+        "details": [
+          { "type": "EMAIL", "value": "john.doe@nowhere.com" }
+        ]
+      }
+    ]
+  },
+  "connections": [
+    {
+      "uuid": "9b8c5042-b553-4d5e-a2ac-c73bf6d4fd81",
+      "href": "https://api.equinix.com/internetAccess/v1/services/df043001-bf0a-446b-a48f-bcdcca68a9f3/connections/9b8c5042-b553-4d5e-a2ac-c73bf6d4fd81",
+      "type": "IA_C",
+      "aSide": {
+        "type": "COLO",
+        "service": { "uuid": "38a1eb68-4daf-4ef0-bd7f-6970727b6fc1" }
+      }
+    }
+  ],
+  "routingProtocol": {
+    "href": "https://api.equinix.com/internetAccess/v1/services/df043001-bf0a-446b-a48f-bcdcca68a9f3/routingProtocols/9b8c5042-b553-4d5e-a2ac-c73bf6d4fd81",
+    "uuid": "9b8c5042-b553-4d5e-a2ac-c73bf6d4fd81",
+    "type": "BGP",
+    "name": "WebServers Routes",
+    "customerAsn": 16220,
+    "customerAsnRange": "BITS_32",
+    "equinixAsn": 65000,
+    "exportPolicy": "FULL",
+    "ipv4": {
+      "customerRoutes": [
+        { "importPolicy": "PI", "prefix": "198.51.100.0/24" }
+      ],
+      "peerings": [
+        {
+          "equinixPeerIps": ["7.7.7.1"],
+          "vrrpEnabled": true,
+          "peerSubnet": { "prefix": "7.7.7.0/30", "prefixLength": 30 }
+        }
+      ]
+    }
+  },
+  "locations": [
+    { "metroCode": "WA", "ibxCode": "WA1", "region": "EMEA" }
+  ]
 }

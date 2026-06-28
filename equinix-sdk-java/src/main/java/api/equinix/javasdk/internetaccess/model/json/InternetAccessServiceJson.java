@@ -16,17 +16,30 @@
 
 package api.equinix.javasdk.internetaccess.model.json;
 
+import api.equinix.javasdk.internetaccess.enums.ServiceBilling;
 import api.equinix.javasdk.internetaccess.enums.ServiceState;
 import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
+import api.equinix.javasdk.internetaccess.enums.UseCase;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.model.implementation.Account;
+import api.equinix.javasdk.internetaccess.model.implementation.Change;
+import api.equinix.javasdk.internetaccess.model.implementation.ChangeLog;
+import api.equinix.javasdk.internetaccess.model.implementation.Location;
+import api.equinix.javasdk.internetaccess.model.implementation.ProjectReadModel;
+import api.equinix.javasdk.internetaccess.model.implementation.RoutingProtocolReadModel;
+import api.equinix.javasdk.internetaccess.model.implementation.ServiceConnection;
+import api.equinix.javasdk.internetaccess.model.implementation.ServiceOrderReadModel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
- * Read-only JSON model for the {@code ServiceV2} response returned when creating an Equinix
- * Internet Access (EIA) v2 service. Implements {@link InternetAccessService} directly.
+ * Read-only JSON model for the {@code ServiceReadModel} / {@code ServiceCreateResponse} returned by
+ * the Equinix Internet Access (EIA) v2 service create, get-details, update and search operations.
+ * Implements {@link InternetAccessService} directly.
  */
 @Getter
 @Setter
@@ -53,4 +66,43 @@ public class InternetAccessServiceJson implements InternetAccessService {
 
     @JsonProperty("state")
     private ServiceState state;
+
+    @JsonProperty("useCase")
+    private UseCase useCase;
+
+    @JsonProperty("billing")
+    private ServiceBilling billing;
+
+    @JsonProperty("billingEnabled")
+    private Boolean billingEnabled;
+
+    @JsonProperty("billingStartDate")
+    private String billingStartDate;
+
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("project")
+    private ProjectReadModel project;
+
+    @JsonProperty("change")
+    private Change change;
+
+    @JsonProperty("changeLog")
+    private ChangeLog changeLog;
+
+    @JsonProperty("order")
+    private ServiceOrderReadModel order;
+
+    @JsonProperty("connections")
+    private List<ServiceConnection> connections;
+
+    @JsonProperty("routingProtocol")
+    private RoutingProtocolReadModel routingProtocol;
+
+    @JsonProperty("locations")
+    private List<Location> locations;
+
+    @JsonProperty("tags")
+    private List<String> tags;
 }

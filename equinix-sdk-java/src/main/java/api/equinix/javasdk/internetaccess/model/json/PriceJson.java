@@ -19,8 +19,11 @@ package api.equinix.javasdk.internetaccess.model.json;
 import api.equinix.javasdk.internetaccess.enums.PriceCategory;
 import api.equinix.javasdk.internetaccess.enums.ProductType;
 import api.equinix.javasdk.internetaccess.model.Price;
-import api.equinix.javasdk.internetaccess.model.implementation.PriceCharge;
+import api.equinix.javasdk.internetaccess.model.implementation.CustomerAccount;
+import api.equinix.javasdk.internetaccess.model.implementation.IpBlockProductPrice;
 import api.equinix.javasdk.internetaccess.model.implementation.PriceSummary;
+import api.equinix.javasdk.internetaccess.model.implementation.ProductPriceCharge;
+import api.equinix.javasdk.internetaccess.model.implementation.ServicePrice;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -60,8 +63,17 @@ public class PriceJson implements Price {
     private PriceCategory category;
 
     @JsonProperty("charges")
-    private List<PriceCharge> charges;
+    private List<ProductPriceCharge> charges;
 
     @JsonProperty("summary")
     private PriceSummary summary;
+
+    @JsonProperty("account")
+    private CustomerAccount account;
+
+    @JsonProperty("service")
+    private ServicePrice service;
+
+    @JsonProperty("ipBlock")
+    private IpBlockProductPrice ipBlock;
 }

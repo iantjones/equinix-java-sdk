@@ -7,10 +7,17 @@ import api.equinix.javasdk.internetaccess.enums.ExportPolicy;
 import api.equinix.javasdk.internetaccess.enums.ServiceState;
 import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 import api.equinix.javasdk.internetaccess.model.InternetAccessService;
+import api.equinix.javasdk.internetaccess.enums.ContactType;
+import api.equinix.javasdk.internetaccess.enums.OrderSignatory;
+import api.equinix.javasdk.internetaccess.enums.PurchaseOrderType;
 import api.equinix.javasdk.internetaccess.model.json.creators.BgpRoutingProtocolRequest;
+import api.equinix.javasdk.internetaccess.model.json.creators.ContactItemRequest;
 import api.equinix.javasdk.internetaccess.model.json.creators.CustomerRouteIpv4Request;
 import api.equinix.javasdk.internetaccess.model.json.creators.IpBlockIpv4Request;
+import api.equinix.javasdk.internetaccess.model.json.creators.OrderSignatureRequest;
 import api.equinix.javasdk.internetaccess.model.json.creators.RoutingProtocolIpv4Request;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServiceOrderRequest;
+import api.equinix.javasdk.internetaccess.model.json.creators.ServicePurchaseOrderRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,5 +134,50 @@ class InternetAccessServiceCreateWireMockTest extends WireMockTestBase {
                 // Explicitly assert the discriminator is nested under routingProtocol.
                 .withRequestBody(matchingJsonPath("$.routingProtocol[?(@.type == 'BGP')]"))
                 .withRequestBody(matchingJsonPath("$.routingProtocol.ipv4.customerRoutes[0].ipBlock.prefixLength")));
+    }
+
+    @Test
+    void create_withV2Order_serializesContactsPurchaseOrderAndSignature() {
+        wireMock.stubFor(post(urlEqualTo(SERVICE_PATH))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"uuid\": \"7a4f6c1e-2b3d-4e5f-8a9b-0c1d2e3f4a5b\", \"type\": \"SINGLE\", \"state\": \"PROVISIONING\" }")));
+
+        ServiceOrderRequest order = ServiceOrderRequest.builder()
+                .referenceNumber("239384723943")
+                .contact(ContactItemRequest.builder()
+                        .type(ContactType.ORDERING)
+                        .registeredUser("john_doe")
+                        .build())
+                .purchaseOrder(ServicePurchaseOrderRequest.builder()
+                        .type(PurchaseOrderType.STANDARD_PURCHASE_ORDER)
+                        .number("129105284100")
+                        .build())
+                .signature(OrderSignatureRequest.builder()
+                        .signatory(OrderSignatory.SELF)
+                        .build())
+                .build();
+
+        internetAccess.services().define()
+                .name("WebServers")
+                .type(ServiceTypeV2.SINGLE)
+                .connection(CONNECTION_UUID)
+                .routingProtocol(BgpRoutingProtocolRequest.builder()
+                        .customerAsn(16220L)
+                        .exportPolicy(ExportPolicy.FULL)
+                        .build())
+                .order(order)
+                .create();
+
+        wireMock.verify(postRequestedFor(urlEqualTo(SERVICE_PATH))
+                .withRequestBody(matchingJsonPath("$.order.referenceNumber"))
+                .withRequestBody(matchingJsonPath("$.order.contacts[?(@.type == 'ORDERING')]"))
+                .withRequestBody(matchingJsonPath("$.order.contacts[0].registeredUser"))
+                .withRequestBody(matchingJsonPath("$.order.purchaseOrder.number"))
+                .withRequestBody(matchingJsonPath("$.order.purchaseOrder[?(@.type == 'STANDARD_PURCHASE_ORDER')]"))
+                .withRequestBody(matchingJsonPath("$.order.signature[?(@.signatory == 'SELF')]"))
+                // The v1-only draft/tags order fields must NOT be present in the v2 body.
+                .withRequestBody(matchingJsonPath("$.order[?(!@.draft)]")));
     }
 }

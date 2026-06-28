@@ -39,6 +39,24 @@ import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessSe
  * <p>Each accessor uses lazy initialization — the internal client is created on first access and
  * reused for subsequent calls.</p>
  *
+ * <h3>Scope (v1 selective)</h3>
+ * <p>This domain intentionally surfaces only the EIA v2 service lifecycle plus a selective subset of
+ * the EIA v1 read API — the {@link #ibxs() IBX} product-availability lookup and the
+ * {@link #prices() price search}. The remaining EIA v1 read/lookup operations are deliberately
+ * out of scope and are <strong>not</strong> exposed by the SDK, namely: accounts and account
+ * agreements ({@code GET /internetAccess/v1/accounts}, {@code .../{accountNumber}},
+ * {@code .../agreements}); terms and conditions ({@code GET /internetAccess/v1/terms}); operational
+ * units and signature policies ({@code GET /internetAccess/v1/operationalUnits},
+ * {@code .../signaturePolicies}); the default/product-configuration lookups
+ * ({@code routingProtocolConfigurations}, dedicated/virtual bandwidth configurations, virtual
+ * connection default configurations, customer route configurations, dedicated port default
+ * configurations, port configurations); purchase orders
+ * ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders}, {@code .../{number}});
+ * the product-availability inventory ({@code cages}, {@code cabinets}, {@code patchPanels},
+ * {@code connectionServices}); and order history ({@code GET /internetAccess/v1/orders/{orderUUID}}).
+ * A single-IBX get ({@code GET /internetAccess/v1/ibxs/{ibx}}) is likewise not exposed; use the v2
+ * {@link #ibxs() IBX list} instead.</p>
+ *
  * <h3>Quick Start</h3>
  * <pre>{@code
  * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
