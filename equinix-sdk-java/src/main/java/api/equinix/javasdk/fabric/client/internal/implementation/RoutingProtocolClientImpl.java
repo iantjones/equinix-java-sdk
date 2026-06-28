@@ -17,15 +17,24 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.RoutingProtocolClient;
+import api.equinix.javasdk.fabric.enums.BGPActionType;
+import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
+import api.equinix.javasdk.fabric.model.implementation.BGPActionRequest;
+import api.equinix.javasdk.fabric.model.json.BGPActionJson;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
 import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.RoutingProtocolWrapper;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtocol, RoutingProtocolJson> implements RoutingProtocolClient<RoutingProtocol> {
@@ -63,5 +72,17 @@ public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtoco
 
     public RoutingProtocolJson refresh(String connectionId, String uuid) {
         return getByUuid(connectionId, uuid);
+    }
+
+    public List<BGPAction> getBgpActions(String connectionId, String routingProtocolId) {
+        EquinixRequest<BGPAction> request = buildRequestWithPathParams("GetBGPActions", RequestType.PAGINATED,
+                Map.of("connectionId", connectionId, "uuid", routingProtocolId), BGPActionJson.getPagedTypeRef());
+        Page<BGPAction, BGPActionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public BGPActionJson createBgpAction(String connectionId, String routingProtocolId, BGPActionType type) {
+        return postForType("PostBGPAction", Map.of("connectionId", connectionId, "uuid", routingProtocolId),
+                new BGPActionRequest(type), BGPActionJson.getSingleTypeRef());
     }
 }

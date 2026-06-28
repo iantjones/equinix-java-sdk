@@ -17,8 +17,13 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
+import api.equinix.javasdk.fabric.model.TimeServiceConnection;
+import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing Equinix Fabric Precision Time services. Precision Time provides
@@ -48,4 +53,27 @@ public interface PrecisionTimes {
      * @return a builder for configuring the new precision time service
      */
     PrecisionTimeOperator.PrecisionTimeBuilder define();
+
+    /**
+     * Lists the available precision time service packages (NTP/PTP, standard/enterprise).
+     *
+     * @return the list of time service packages
+     */
+    List<TimeServicePackage> packages();
+
+    /**
+     * Retrieves a single precision time service package by its package code.
+     *
+     * @param packageCode the package code
+     * @return the time service package matching the given code
+     */
+    TimeServicePackage packageByCode(PrecisionTimePackageCode packageCode);
+
+    /**
+     * Lists the L2 connections associated with a precision time service instance.
+     *
+     * @param serviceId the unique identifier of the precision time service
+     * @return the list of connection links
+     */
+    List<TimeServiceConnection> getConnections(String serviceId);
 }

@@ -119,6 +119,22 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
 
     private MarketplaceSubscriptions marketplaceSubscriptions;
 
+    private IpBlocks ipBlocks;
+
+    private PortPackages portPackages;
+
+    private StreamAlertRules streamAlertRules;
+
+    private StreamAssets streamAssets;
+
+    private Agents agents;
+
+    private AgentTemplates agentTemplates;
+
+    private CompanyProfiles companyProfiles;
+
+    private Tags tags;
+
     private HealthStatus healthStatus;
 
     private McpBridge mcpBridge;
@@ -201,7 +217,7 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public Connections connections() {
         if (this.connections == null) {
-            this.connections = new ConnectionsImpl(this.fabricConfig.getConnectionsClient());
+            this.connections = new ConnectionsImpl(this.fabricConfig.getConnectionsClient(), this.fabricConfig.getConnectionRoutesClient());
         }
         return connections;
     }
@@ -255,7 +271,8 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public CloudRouters cloudRouters() {
         if (this.cloudRouters == null) {
-            this.cloudRouters = new CloudRoutersImpl(this.fabricConfig.getCloudRoutersClient(), this.fabricConfig.getCloudRouterPackagesClient());
+            this.cloudRouters = new CloudRoutersImpl(this.fabricConfig.getCloudRoutersClient(), this.fabricConfig.getCloudRouterPackagesClient(),
+                    this.fabricConfig.getCloudRouterRoutesClient(), this.fabricConfig.getCloudRouterCommandsClient());
         }
         return cloudRouters;
     }
@@ -338,7 +355,7 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public Networks networks() {
         if (this.networks == null) {
-            this.networks = new NetworksImpl(this.fabricConfig.getNetworksClient());
+            this.networks = new NetworksImpl(this.fabricConfig.getNetworksClient(), this.fabricConfig.getConnectionsClient());
         }
         return networks;
     }
@@ -410,6 +427,102 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
             this.marketplaceSubscriptions = new MarketplaceSubscriptionsImpl(this.fabricConfig.getMarketplaceSubscriptionsClient());
         }
         return marketplaceSubscriptions;
+    }
+
+    /**
+     * Returns the client for managing Fabric IP blocks (BYOIP / Equinix-owned IPv4 and IPv6 prefixes).
+     *
+     * @return the {@link IpBlocks} client for submitting, searching, and managing IP blocks
+     */
+    public IpBlocks ipBlocks() {
+        if (this.ipBlocks == null) {
+            this.ipBlocks = new IpBlocksImpl(this.fabricConfig.getIpBlocksClient());
+        }
+        return ipBlocks;
+    }
+
+    /**
+     * Returns the client for querying Fabric port packages.
+     *
+     * @return the {@link PortPackages} client for listing port packages
+     */
+    public PortPackages portPackages() {
+        if (this.portPackages == null) {
+            this.portPackages = new PortPackagesImpl(this.fabricConfig.getPortPackagesClient());
+        }
+        return portPackages;
+    }
+
+    /**
+     * Returns the client for managing alert rules attached to Fabric streams.
+     *
+     * @return the {@link StreamAlertRules} client for creating and managing stream alert rules
+     */
+    public StreamAlertRules streamAlertRules() {
+        if (this.streamAlertRules == null) {
+            this.streamAlertRules = new StreamAlertRulesImpl(this.fabricConfig.getStreamAlertRulesClient());
+        }
+        return streamAlertRules;
+    }
+
+    /**
+     * Returns the client for attaching and detaching assets to and from Fabric streams.
+     *
+     * @return the {@link StreamAssets} client for managing stream asset attachments
+     */
+    public StreamAssets streamAssets() {
+        if (this.streamAssets == null) {
+            this.streamAssets = new StreamAssetsImpl(this.fabricConfig.getStreamAssetsClient());
+        }
+        return streamAssets;
+    }
+
+    /**
+     * Returns the client for managing Fabric agents (for example Autonomous Network Operations agents).
+     *
+     * @return the {@link Agents} client for creating, listing, and managing agents
+     */
+    public Agents agents() {
+        if (this.agents == null) {
+            this.agents = new AgentsImpl(this.fabricConfig.getAgentsClient());
+        }
+        return agents;
+    }
+
+    /**
+     * Returns the client for querying Fabric agent templates.
+     *
+     * @return the {@link AgentTemplates} client for listing agent templates
+     */
+    public AgentTemplates agentTemplates() {
+        if (this.agentTemplates == null) {
+            this.agentTemplates = new AgentTemplatesImpl(this.fabricConfig.getAgentTemplatesClient());
+        }
+        return agentTemplates;
+    }
+
+    /**
+     * Returns the client for managing Fabric company profiles and their service-profile / tag attachments.
+     *
+     * @return the {@link CompanyProfiles} client for creating, searching, and managing company profiles
+     */
+    public CompanyProfiles companyProfiles() {
+        if (this.companyProfiles == null) {
+            this.companyProfiles = new CompanyProfilesImpl(this.fabricConfig.getCompanyProfilesClient());
+        }
+        return companyProfiles;
+    }
+
+    /**
+     * Returns the client for managing Fabric resource tags.
+     *
+     * @return the {@link Tags} client for listing and creating tags
+     */
+    public Tags tags() {
+        if (this.tags == null) {
+            this.tags = new TagsImpl(this.fabricConfig.getTagsClient());
+        }
+        return tags;
     }
 
     /**

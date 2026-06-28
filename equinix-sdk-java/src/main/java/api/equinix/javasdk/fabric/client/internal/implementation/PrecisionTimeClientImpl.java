@@ -17,16 +17,26 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PrecisionTimeClient;
+import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
+import api.equinix.javasdk.fabric.model.TimeServiceConnection;
+import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
+import api.equinix.javasdk.fabric.model.json.TimeServiceConnectionJson;
+import api.equinix.javasdk.fabric.model.json.TimeServicePackageJson;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, PrecisionTimeJson> implements PrecisionTimeClient<PrecisionTime> {
 
@@ -57,6 +67,23 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
 
     public PrecisionTimeJson delete(String uuid) {
         return deleteOne("DeleteTimeService", uuid);
+    }
+
+    public List<TimeServicePackage> getPackages() {
+        EquinixRequest<TimeServicePackage> request = buildRequest("GetTimeServicePackages", RequestType.PAGINATED, TimeServicePackageJson.class);
+        Page<TimeServicePackage, TimeServicePackageJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public TimeServicePackageJson getPackageByCode(PrecisionTimePackageCode packageCode) {
+        return getAs("GetTimeServicePackage", Map.of("packageCode", packageCode.toString()), null, TimeServicePackageJson.class);
+    }
+
+    public List<TimeServiceConnection> getConnections(String serviceId) {
+        EquinixRequest<TimeServiceConnection> request = buildRequestWithPathParams("GetTimeServiceConnections", RequestType.PAGINATED,
+                Map.of("serviceId", serviceId), TimeServiceConnectionJson.class);
+        Page<TimeServiceConnection, TimeServiceConnectionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
     public PrecisionTimeJson refresh(String uuid) {

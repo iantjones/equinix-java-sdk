@@ -16,11 +16,17 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.http.response.PageablePost;
+import api.equinix.javasdk.fabric.enums.ServiceTokenAction;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
+
+import java.util.List;
 
 /**
  * <p>ServiceTokensClient interface.</p>
@@ -28,7 +34,7 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
  * @author ianjones
  * @version $Id: $Id
  */
-public interface ServiceTokenClient<T> extends Pageable<T> {
+public interface ServiceTokenClient<T> extends PageablePost<T> {
 
     /**
      * <p>list.</p>
@@ -36,6 +42,12 @@ public interface ServiceTokenClient<T> extends Pageable<T> {
      * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     Page<ServiceToken, ServiceTokenJson> list();
+
+    Page<ServiceToken, ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort);
+
+    ServiceTokenJson update(String uuid, List<PatchOperation> operations);
+
+    ServiceTokenJson createAction(String uuid, ServiceTokenAction type);
 
     /**
      * <p>getByUuid.</p>

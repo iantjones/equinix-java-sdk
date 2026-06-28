@@ -16,9 +16,13 @@
 
 package api.equinix.javasdk.fabric.client;
 
+import api.equinix.javasdk.fabric.enums.ServiceTokenAction;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
 
 /**
@@ -53,4 +57,54 @@ public interface ServiceTokens {
      * @return a builder for configuring the new service token
      */
     ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide);
+
+    /**
+     * Searches for service tokens using default filter and sort criteria.
+     *
+     * @return a paginated, filtered list of matching service tokens
+     */
+    PaginatedFilteredList<ServiceToken> search();
+
+    /**
+     * Searches for service tokens matching the specified filter criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @return a paginated, filtered list of matching service tokens
+     */
+    PaginatedFilteredList<ServiceToken> search(FilterPropertyList filter);
+
+    /**
+     * Searches for service tokens with the specified sort order.
+     *
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching service tokens
+     */
+    PaginatedFilteredList<ServiceToken> search(SortPropertyList sort);
+
+    /**
+     * Searches for service tokens matching the specified filter and sort criteria.
+     *
+     * @param filter the filter criteria to apply
+     * @param sort the sort criteria to apply
+     * @return a paginated, filtered list of matching service tokens
+     */
+    PaginatedFilteredList<ServiceToken> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Begins a fluent PATCH update of an existing service token, e.g.
+     * {@code serviceTokens.update(uuid).name("New-Name").save()}.
+     *
+     * @param uuid the unique identifier of the service token to update
+     * @return a fluent updater
+     */
+    ServiceTokenOperator.ServiceTokenUpdater update(String uuid);
+
+    /**
+     * Issues an action against a service token (for example resending the email notification).
+     *
+     * @param uuid the unique identifier of the service token
+     * @param type the action type
+     * @return the service token after the action
+     */
+    ServiceToken createAction(String uuid, ServiceTokenAction type);
 }

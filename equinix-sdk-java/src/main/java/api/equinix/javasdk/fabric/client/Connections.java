@@ -24,6 +24,7 @@ import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -147,4 +148,42 @@ public interface Connections {
      * @return the list of metrics for the connection over the specified time range
      */
     List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
+
+    /**
+     * Searches the routes a connection's Cloud Router is advertising to the customer, with default
+     * filter and sort criteria.
+     *
+     * @param uuid the unique identifier of the connection
+     * @return a paginated, filtered list of advertised route table entries
+     */
+    PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid);
+
+    /**
+     * Searches the routes a connection's Cloud Router is advertising to the customer.
+     *
+     * @param uuid the unique identifier of the connection
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of advertised route table entries
+     */
+    PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Searches the routes a connection's Cloud Router has received from the customer, with default
+     * filter and sort criteria.
+     *
+     * @param uuid the unique identifier of the connection
+     * @return a paginated, filtered list of received route table entries
+     */
+    PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid);
+
+    /**
+     * Searches the routes a connection's Cloud Router has received from the customer.
+     *
+     * @param uuid the unique identifier of the connection
+     * @param filter the filter criteria to apply (may be {@code null})
+     * @param sort the sort criteria to apply (may be {@code null})
+     * @return a paginated, filtered list of received route table entries
+     */
+    PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort);
 }

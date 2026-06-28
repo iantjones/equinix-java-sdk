@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum BGPActionType {
     CLEAR_BGPIPV4,
     CLEAR_BGPIPV6,
+    CLEAR_BGPIPV4_INBOUND,
+    CLEAR_BGPIPV6_INBOUND,
     RESET_BGPIPV4,
     RESET_BGPIPV6,
     UNKNOWN;

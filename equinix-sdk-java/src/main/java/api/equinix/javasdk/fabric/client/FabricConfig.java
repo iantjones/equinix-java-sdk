@@ -82,7 +82,13 @@ public interface FabricConfig {
 
     CloudRouterPackageClient<CloudRouterPackage> getCloudRouterPackagesClient();
 
+    CloudRouterCommandClient<CloudRouterCommand> getCloudRouterCommandsClient();
+
     RoutingProtocolClient<RoutingProtocol> getRoutingProtocolsClient();
+
+    RouteTableEntryClient<RouteTableEntry> getConnectionRoutesClient();
+
+    RouteTableEntryClient<RouteTableEntry> getCloudRouterRoutesClient();
 
     RouteFilterClient<RouteFilter> getRouteFiltersClient();
 
@@ -105,4 +111,20 @@ public interface FabricConfig {
     MarketplaceSubscriptionClient<MarketplaceSubscription> getMarketplaceSubscriptionsClient();
 
     HealthClient<HealthStatus> getHealthClient();
+
+    IpBlockClient<IpBlock> getIpBlocksClient();
+
+    PortPackageClient<PortPackage> getPortPackagesClient();
+
+    StreamAlertRuleClient<StreamAlertRule> getStreamAlertRulesClient();
+
+    StreamAssetClient<StreamAsset> getStreamAssetsClient();
+
+    AgentClient<Agent> getAgentsClient();
+
+    AgentTemplateClient<AgentTemplate> getAgentTemplatesClient();
+
+    CompanyProfileClient<CompanyProfile> getCompanyProfilesClient();
+
+    TagClient<Tag> getTagsClient();
 }

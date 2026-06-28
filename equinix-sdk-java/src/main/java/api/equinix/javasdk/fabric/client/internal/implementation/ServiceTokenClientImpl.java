@@ -17,16 +17,25 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.ServiceTokenClient;
+import api.equinix.javasdk.fabric.enums.ServiceTokenAction;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.fabric.model.implementation.ServiceTokenActionRequest;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.SerializationFilters;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Internal client for Fabric Service Tokens. Standard plumbing/paging come from
@@ -55,8 +64,21 @@ public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, Ser
         return listPage("GetServiceTokens");
     }
 
+    public Page<ServiceToken, ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage("SearchServiceTokens", new FilteredSortedPaginatedPost<>(filter, sort));
+    }
+
     public ServiceTokenJson getByUuid(String uuid) {
         return getOne("GetServiceToken", uuid);
+    }
+
+    public ServiceTokenJson update(String uuid, List<PatchOperation> operations) {
+        // PATCH /serviceTokens/{uuid} with an op/path/value array sent as application/json.
+        return updateOne("UpdateServiceToken", uuid, operations);
+    }
+
+    public ServiceTokenJson createAction(String uuid, ServiceTokenAction type) {
+        return postOne("PostServiceTokenAction", Map.of("uuid", uuid), new ServiceTokenActionRequest(type));
     }
 
     public ServiceTokenJson create(ServiceTokenCreatorJson serviceTokenCreatorJson) {

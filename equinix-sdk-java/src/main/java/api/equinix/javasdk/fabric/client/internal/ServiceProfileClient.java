@@ -16,13 +16,18 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.ServiceProfileAction;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
+import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileCreatorJson;
+
+import java.util.List;
 
 /**
  * <p>ServiceProfilesClient interface.</p>
@@ -48,6 +53,16 @@ public interface ServiceProfileClient<T> extends PageablePost<T> {
      * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceProfileJson} object.
      */
     ServiceProfileJson getByUuid(String uuid);
+
+    ServiceProfileJson create(ServiceProfileCreatorJson serviceProfileCreatorJson);
+
+    ServiceProfileJson update(String uuid, List<PatchOperation> operations);
+
+    ServiceProfileJson put(String uuid, ServiceProfileCreatorJson serviceProfileCreatorJson);
+
+    ServiceProfileJson delete(String uuid);
+
+    ServiceProfileAction createAction(String uuid, String type, String description);
 
     /**
      * <p>refreshServiceProfile.</p>

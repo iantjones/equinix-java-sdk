@@ -17,12 +17,24 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
+import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PortClient;
 import api.equinix.javasdk.fabric.model.Port;
+import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.PortJson;
+import api.equinix.javasdk.fabric.model.json.PortVlanJson;
 import api.equinix.javasdk.fabric.model.wrappers.PortWrapper;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Internal client for Fabric Ports (read-only). Plumbing/paging provided by {@link ResourceClientBase}.
@@ -45,8 +57,19 @@ public class PortClientImpl extends ResourceClientBase<Port, PortJson> implement
         return listPage("GetPorts");
     }
 
+    public Page<Port, PortJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage("SearchPorts", new FilteredSortedPaginatedPost<>(filter, sort));
+    }
+
     public PortJson getByUuid(String uuid) {
         return getOne("GetPort", uuid);
+    }
+
+    public List<PortVlan> getVlans(String portUuid) {
+        EquinixRequest<PortVlan> request = buildRequestWithPathParams("GetVlans", RequestType.PAGINATED,
+                Map.of("portUuid", portUuid), PortVlanJson.class);
+        Page<PortVlan, PortVlanJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
     public PortJson refresh(String uuid) {

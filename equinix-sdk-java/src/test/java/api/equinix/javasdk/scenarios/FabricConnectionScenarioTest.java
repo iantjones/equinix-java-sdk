@@ -8,6 +8,7 @@ import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.*;
 import api.equinix.javasdk.fabric.model.implementation.LinkProtocol;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -41,6 +41,18 @@
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
           },
+          "PutServiceProfile": {
+            "httpMethod": "PUT",
+            "requestUri": "{$uuid}"
+          },
+          "UpdateServiceProfile": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "PostServiceProfileAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/actions"
+          },
           "DeleteServiceProfile": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
@@ -56,6 +68,14 @@
           "GetPort": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
+          },
+          "SearchPorts": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetVlans": {
+            "httpMethod": "GET",
+            "requestUri": "{$portUuid}/linkProtocols"
           },
           "GetStatistics": {
             "httpMethod": "GET",
@@ -101,6 +121,14 @@
             "httpMethod": "PATCH",
             "requestUri": "{$uuid}"
           },
+          "SearchAdvertisedRoutes": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/advertisedRoutes/search"
+          },
+          "SearchReceivedRoutes": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/receivedRoutes/search"
+          },
           "GetStatistics": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}/stats"
@@ -130,15 +158,27 @@
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
           },
+          "SearchServiceTokens": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
           "PostServiceToken": {
             "httpMethod": "POST"
+          },
+          "UpdateServiceToken": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "PostServiceTokenAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/actions"
           },
           "DeleteServiceToken": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
           }
         }
-      },      
+      },
       "CloudRouters": {
         "rootUri": "routers",
         "serviceEndpoints": {
@@ -174,6 +214,30 @@
             "httpMethod": "GET",
             "requestUri": "routerPackages/{$routerPackageCode}",
             "overrideRootUri": true
+          },
+          "SearchCloudRouterRoutes": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/routes/search"
+          },
+          "ValidateRoutingProtocol": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/validate"
+          },
+          "GetCloudRouterCommands": {
+            "httpMethod": "GET",
+            "requestUri": "{$routerId}/commands"
+          },
+          "PostCloudRouterCommand": {
+            "httpMethod": "POST",
+            "requestUri": "{$routerId}/commands"
+          },
+          "GetCloudRouterCommand": {
+            "httpMethod": "GET",
+            "requestUri": "{$routerId}/commands/{$uuid}"
+          },
+          "DeleteCloudRouterCommand": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$routerId}/commands/{$uuid}"
           }
         }
       },
@@ -319,6 +383,10 @@
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
           },
+          "GetNetworkConnections": {
+            "httpMethod": "GET",
+            "requestUri": "{$networkId}/connections"
+          },
           "PostNetwork": {
             "httpMethod": "POST"
           },
@@ -390,6 +458,10 @@
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
           },
+          "GetTimeServiceConnections": {
+            "httpMethod": "GET",
+            "requestUri": "{$serviceId}/connections"
+          },
           "PostTimeService": {
             "httpMethod": "POST"
           },
@@ -400,6 +472,16 @@
           "DeleteTimeService": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
+          },
+          "GetTimeServicePackages": {
+            "httpMethod": "GET",
+            "requestUri": "timeServicePackages",
+            "overrideRootUri": true
+          },
+          "GetTimeServicePackage": {
+            "httpMethod": "GET",
+            "requestUri": "timeServicePackages/{$packageCode}",
+            "overrideRootUri": true
           }
         }
       },
@@ -422,6 +504,166 @@
           "GetMarketplaceSubscription": {
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "IpBlocks": {
+        "rootUri": "ipBlocks",
+        "serviceEndpoints": {
+          "SubmitIpBlock": {
+            "httpMethod": "POST"
+          },
+          "GetIpBlock": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PatchIpBlock": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteIpBlock": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "SearchIpBlocks": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "PortPackages": {
+        "rootUri": "portPackages",
+        "serviceEndpoints": {
+          "GetPortPackages": {
+            "httpMethod": "GET"
+          }
+        }
+      },
+      "Agents": {
+        "rootUri": "agents",
+        "serviceEndpoints": {
+          "GetAgents": {
+            "httpMethod": "GET"
+          },
+          "GetAgent": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "PostAgent": {
+            "httpMethod": "POST"
+          },
+          "PatchAgent": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteAgent": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "GetAgentActivities": {
+            "httpMethod": "GET",
+            "requestUri": "{$agentId}/activities"
+          }
+        }
+      },
+      "AgentTemplates": {
+        "rootUri": "agentTemplates",
+        "serviceEndpoints": {
+          "GetAgentTemplates": {
+            "httpMethod": "GET"
+          },
+          "GetAgentTemplate": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "CompanyProfiles": {
+        "rootUri": "companyProfiles",
+        "serviceEndpoints": {
+          "PostCompanyProfile": {
+            "httpMethod": "POST"
+          },
+          "GetCompanyProfile": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteCompanyProfile": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          },
+          "SearchCompanyProfiles": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "AttachServiceProfile": {
+            "httpMethod": "PUT",
+            "requestUri": "{$companyProfileId}/serviceProfiles/{$serviceProfileId}"
+          },
+          "DetachServiceProfile": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$companyProfileId}/serviceProfiles/{$serviceProfileId}"
+          },
+          "AttachTag": {
+            "httpMethod": "PUT",
+            "requestUri": "{$companyProfileId}/tags/{$tagId}"
+          },
+          "DetachTag": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$companyProfileId}/tags/{$tagId}"
+          }
+        }
+      },
+      "Tags": {
+        "rootUri": "tags",
+        "serviceEndpoints": {
+          "GetTags": {
+            "httpMethod": "GET"
+          },
+          "PostTag": {
+            "httpMethod": "POST"
+          }
+        }
+      },
+      "StreamAssets": {
+        "rootUri": "streams",
+        "serviceEndpoints": {
+          "GetStreamAsset": {
+            "httpMethod": "GET",
+            "requestUri": "{$streamId}/{$asset}/{$assetId}"
+          },
+          "UpdateStreamAsset": {
+            "httpMethod": "PUT",
+            "requestUri": "{$streamId}/{$asset}/{$assetId}"
+          },
+          "DeleteStreamAsset": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$streamId}/{$asset}/{$assetId}"
+          }
+        }
+      },
+      "StreamAlertRules": {
+        "rootUri": "streams",
+        "serviceEndpoints": {
+          "GetStreamAlertRules": {
+            "httpMethod": "GET",
+            "requestUri": "{$streamId}/alertRules"
+          },
+          "GetStreamAlertRule": {
+            "httpMethod": "GET",
+            "requestUri": "{$streamId}/alertRules/{$uuid}"
+          },
+          "PostStreamAlertRule": {
+            "httpMethod": "POST",
+            "requestUri": "{$streamId}/alertRules"
+          },
+          "UpdateStreamAlertRule": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$streamId}/alertRules/{$uuid}"
+          },
+          "DeleteStreamAlertRule": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$streamId}/alertRules/{$uuid}"
           }
         }
       },

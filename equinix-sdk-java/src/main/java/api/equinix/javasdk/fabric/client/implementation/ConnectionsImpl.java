@@ -24,11 +24,13 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.internal.ConnectionClient;
+import api.equinix.javasdk.fabric.client.internal.RouteTableEntryClient;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
+import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
@@ -36,6 +38,7 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.PricingJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson;
+import api.equinix.javasdk.fabric.model.json.RouteTableEntryJson;
 import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 import api.equinix.javasdk.fabric.model.wrappers.PricingWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.ConnectionStatisticWrapper;
@@ -54,8 +57,11 @@ public class ConnectionsImpl implements Connections {
 
     private final ConnectionClient<Connection> serviceClient;
 
-    public ConnectionsImpl(ConnectionClient<Connection> serviceClient) {
+    private final RouteTableEntryClient<RouteTableEntry> routesClient;
+
+    public ConnectionsImpl(ConnectionClient<Connection> serviceClient, RouteTableEntryClient<RouteTableEntry> routesClient) {
         this.serviceClient = serviceClient;
+        this.routesClient = routesClient;
     }
 
     public PaginatedFilteredList<Connection> search() {
@@ -114,5 +120,33 @@ public class ConnectionsImpl implements Connections {
     @Override
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         return this.serviceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid) {
+        return searchAdvertisedRoutes(uuid, null, null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort) {
+        Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchAdvertisedRoutes(uuid, filter, sort);
+        PaginatedFilteredList<RouteTableEntry> routes = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
+        return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid) {
+        return searchReceivedRoutes(uuid, null, null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort) {
+        Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchReceivedRoutes(uuid, filter, sort);
+        PaginatedFilteredList<RouteTableEntry> routes = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
+        return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

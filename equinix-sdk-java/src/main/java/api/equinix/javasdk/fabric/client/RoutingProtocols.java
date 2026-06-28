@@ -17,8 +17,12 @@
 package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.BGPActionType;
+import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator;
+
+import java.util.List;
 
 /**
  * Client interface for managing routing protocols on Equinix Fabric connections.
@@ -50,4 +54,23 @@ public interface RoutingProtocols {
      * @return a builder for configuring the new routing protocol
      */
     RoutingProtocolOperator.RoutingProtocolBuilder define();
+
+    /**
+     * Lists the BGP clear/reset actions issued against a routing protocol on a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routingProtocolId the unique identifier of the routing protocol
+     * @return the list of BGP actions
+     */
+    List<BGPAction> getBgpActions(String connectionId, String routingProtocolId);
+
+    /**
+     * Issues a BGP clear/reset action against a routing protocol on a connection.
+     *
+     * @param connectionId the unique identifier of the connection
+     * @param routingProtocolId the unique identifier of the routing protocol
+     * @param type the BGP action type (clear/reset, IPv4/IPv6, inbound)
+     * @return the created BGP action
+     */
+    BGPAction createBgpAction(String connectionId, String routingProtocolId, BGPActionType type);
 }

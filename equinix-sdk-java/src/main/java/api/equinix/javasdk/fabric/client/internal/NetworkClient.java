@@ -19,9 +19,11 @@ package api.equinix.javasdk.fabric.client.internal;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PageablePost;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkCreatorJson;
 
@@ -30,6 +32,8 @@ import java.util.List;
 public interface NetworkClient<T> extends PageablePost<T> {
 
     Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort);
+
+    Page<Connection, ConnectionJson> getConnections(String networkId);
 
     NetworkJson getByUuid(String uuid);
 

@@ -27,6 +27,7 @@ import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.ServiceProfileAction;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
@@ -85,5 +86,13 @@ public class ServiceProfilesImpl implements ServiceProfiles {
 
     public ServiceProfileOperator.ServiceProfileBuilder define(ServiceProfileType serviceProfileType) {
         return new ServiceProfileOperator(this.serviceClient).create(serviceProfileType);
+    }
+
+    public ServiceProfileOperator.ServiceProfileUpdater update(String uuid) {
+        return new ServiceProfileOperator(this.serviceClient).update(uuid);
+    }
+
+    public ServiceProfileAction createAction(String uuid, String type, String description) {
+        return this.serviceClient.createAction(uuid, type, description);
     }
 }

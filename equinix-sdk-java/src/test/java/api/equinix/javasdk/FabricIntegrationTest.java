@@ -9,6 +9,7 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.*;
 import api.equinix.javasdk.fabric.model.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 
 import java.time.LocalDateTime;
 

@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.client.Ports;
@@ -28,6 +29,10 @@ import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
+import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.PortJson;
 import api.equinix.javasdk.fabric.model.json.PortStatisticJson;
 import api.equinix.javasdk.fabric.model.wrappers.PortStatisticWrapper;
@@ -70,10 +75,33 @@ public class PortsImpl implements Ports {
         return new PaginatedList<>(portList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
+    public PaginatedFilteredList<Port> search() {
+        return search(Filter.filter().empty());
+    }
+
+    public PaginatedFilteredList<Port> search(FilterPropertyList filter) {
+        return search(filter, null);
+    }
+
+    public PaginatedFilteredList<Port> search(SortPropertyList sort) {
+        return search(null, sort);
+    }
+
+    public PaginatedFilteredList<Port> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<Port, PortJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<Port> portList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
+        return new PaginatedFilteredList<>(portList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
     /** {@inheritDoc} */
     public Port getByUuid(String uuid) {
         PortJson portJson = serviceClient.getByUuid(uuid);
         return new PortWrapper(portJson, this.serviceClient);
+    }
+
+    /** {@inheritDoc} */
+    public List<PortVlan> getVlans(String portUuid) {
+        return serviceClient.getVlans(portUuid);
     }
 
     /** {@inheritDoc} */

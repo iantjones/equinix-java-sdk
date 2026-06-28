@@ -51,7 +51,13 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final CloudRouterPackageClientImpl cloudRouterPackagesClient;
 
+    private final CloudRouterCommandClientImpl cloudRouterCommandsClient;
+
     private final RoutingProtocolClientImpl routingProtocolsClient;
+
+    private final RouteTableEntryClientImpl connectionRoutesClient;
+
+    private final RouteTableEntryClientImpl cloudRouterRoutesClient;
 
     private final RouteFilterClientImpl routeFiltersClient;
 
@@ -75,6 +81,22 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final HealthClientImpl healthClient;
 
+    private final IpBlockClientImpl ipBlocksClient;
+
+    private final PortPackageClientImpl portPackagesClient;
+
+    private final StreamAlertRuleClientImpl streamAlertRulesClient;
+
+    private final StreamAssetClientImpl streamAssetsClient;
+
+    private final AgentClientImpl agentsClient;
+
+    private final AgentTemplateClientImpl agentTemplatesClient;
+
+    private final CompanyProfileClientImpl companyProfilesClient;
+
+    private final TagClientImpl tagsClient;
+
     /**
      * <p>Constructor for FabricConfigImpl.</p>
      *
@@ -92,7 +114,10 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.serviceProfilesClient = new ServiceProfileClientImpl(this);
         this.cloudRoutersClient = new CloudRouterClientImpl(this);
         this.cloudRouterPackagesClient = new CloudRouterPackageClientImpl(this);
+        this.cloudRouterCommandsClient = new CloudRouterCommandClientImpl(this);
         this.routingProtocolsClient = new RoutingProtocolClientImpl(this);
+        this.connectionRoutesClient = new RouteTableEntryClientImpl(this, "Connections");
+        this.cloudRouterRoutesClient = new RouteTableEntryClientImpl(this, "CloudRouters");
         this.routeFiltersClient = new RouteFilterClientImpl(this);
         this.routeFilterRulesClient = new RouteFilterRuleClientImpl(this);
         this.routeAggregationsClient = new RouteAggregationClientImpl(this);
@@ -104,5 +129,13 @@ public class FabricConfigImpl extends Config implements FabricConfig {
         this.cloudEventsClient = new CloudEventClientImpl(this);
         this.marketplaceSubscriptionsClient = new MarketplaceSubscriptionClientImpl(this);
         this.healthClient = new HealthClientImpl(this);
+        this.ipBlocksClient = new IpBlockClientImpl(this);
+        this.portPackagesClient = new PortPackageClientImpl(this);
+        this.streamAlertRulesClient = new StreamAlertRuleClientImpl(this);
+        this.streamAssetsClient = new StreamAssetClientImpl(this);
+        this.agentsClient = new AgentClientImpl(this);
+        this.agentTemplatesClient = new AgentTemplateClientImpl(this);
+        this.companyProfilesClient = new CompanyProfileClientImpl(this);
+        this.tagsClient = new TagClientImpl(this);
     }
 }

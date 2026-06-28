@@ -21,10 +21,14 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.RoutingProtocols;
 import api.equinix.javasdk.fabric.client.internal.RoutingProtocolClient;
+import api.equinix.javasdk.fabric.enums.BGPActionType;
+import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.json.RoutingProtocolJson;
 import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RoutingProtocolWrapper;
+
+import java.util.List;
 
 public class RoutingProtocolsImpl implements RoutingProtocols {
 
@@ -47,5 +51,13 @@ public class RoutingProtocolsImpl implements RoutingProtocols {
 
     public RoutingProtocolOperator.RoutingProtocolBuilder define() {
         return new RoutingProtocolOperator(this.serviceClient).create();
+    }
+
+    public List<BGPAction> getBgpActions(String connectionId, String routingProtocolId) {
+        return this.serviceClient.getBgpActions(connectionId, routingProtocolId);
+    }
+
+    public BGPAction createBgpAction(String connectionId, String routingProtocolId, BGPActionType type) {
+        return this.serviceClient.createBgpAction(connectionId, routingProtocolId, type);
     }
 }

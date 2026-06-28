@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.enums.Side;
@@ -58,6 +59,59 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
      */
     public ServiceTokenBuilder create(Side issuerSide) {
         return new ServiceTokenBuilder(issuerSide);
+    }
+
+    /**
+     * Begins a fluent PATCH update of an existing service token, identified by uuid.
+     *
+     * @param uuid the uuid of the service token to update
+     * @return a {@link ServiceTokenUpdater}
+     */
+    public ServiceTokenUpdater update(String uuid) {
+        return new ServiceTokenUpdater(uuid);
+    }
+
+    /**
+     * Fluent builder for PATCH-updating an existing service token. Each typed setter records a
+     * {@code replace} change operation; {@link #save()} sends them as one {@code PATCH} and returns
+     * the refreshed model.
+     */
+    public class ServiceTokenUpdater {
+
+        private final String uuid;
+        private final List<PatchOperation> operations = new ArrayList<>();
+
+        protected ServiceTokenUpdater(String uuid) {
+            this.uuid = uuid;
+        }
+
+        public ServiceTokenUpdater name(String name) {
+            operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        public ServiceTokenUpdater description(String description) {
+            operations.add(PatchOperation.replace("/description", description));
+            return this;
+        }
+
+        public ServiceTokenUpdater expiry(Integer expiry) {
+            operations.add(PatchOperation.replace("/expiry", expiry));
+            return this;
+        }
+
+        public ServiceTokenUpdater patch(PatchOperation operation) {
+            operations.add(operation);
+            return this;
+        }
+
+        public ServiceToken save() {
+            if (operations.isEmpty()) {
+                throw new IllegalStateException("No changes specified; set at least one field before calling save().");
+            }
+            ServiceTokenJson serviceTokenJson = ((ServiceTokenClientImpl) ServiceTokenOperator.this.getServiceClient()).update(uuid, operations);
+            return new ServiceTokenWrapper(serviceTokenJson, ServiceTokenOperator.this.getServiceClient());
+        }
     }
 
     @Getter
