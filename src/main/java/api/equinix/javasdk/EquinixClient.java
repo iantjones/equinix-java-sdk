@@ -17,6 +17,7 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.client.CoreConfigImpl;
 import api.equinix.javasdk.core.client.CoreImpl;
 import api.equinix.javasdk.core.client.interfaces.Core;
@@ -97,6 +98,30 @@ public class EquinixClient implements Service, Closeable {
      */
     public EquinixClient(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
         equinixClient = new api.equinix.javasdk.core.client.EquinixClient(equinixCredentials, isSandBoxed);
+        this.coreConfig = new CoreConfigImpl(equinixClient);
+        this.ownsCore = true;
+        equinixClient.setAuthenticator(() -> core().authenticate());
+    }
+
+    /**
+     * Creates a new Equinix client that resolves its credentials through the given provider.
+     * Authentication occurs automatically on the first API call, consulting the provider each
+     * time (including re-auth on expiry) so credentials can be rotated at runtime.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     */
+    public EquinixClient(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Creates a new Equinix client over a custom credentials provider, with optional sandbox mode.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
+     */
+    public EquinixClient(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        equinixClient = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, isSandBoxed);
         this.coreConfig = new CoreConfigImpl(equinixClient);
         this.ownsCore = true;
         equinixClient.setAuthenticator(() -> core().authenticate());

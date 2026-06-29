@@ -17,6 +17,8 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.iam.client.IAMAccessPolicies;
 import api.equinix.javasdk.iam.client.IAMConfig;
@@ -121,7 +123,27 @@ public final class IAM extends EquinixClient implements Service {
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public IAM(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
-        super(equinixCredentials, isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
+    }
+
+    /**
+     * Creates a new IAM client whose credentials are resolved through the given provider.
+     * Authentication occurs automatically on the first API call.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     */
+    public IAM(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Creates a new IAM client over a custom credentials provider, with optional sandbox mode.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
+     */
+    public IAM(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        super(credentialsProvider, isSandBoxed);
 
         String paramFile = "json/apiParams_IAM.json";
         equinixClient.appendApiParams(paramFile);

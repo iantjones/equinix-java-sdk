@@ -17,6 +17,8 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.networkedge.client.ACLTemplates;
 import api.equinix.javasdk.networkedge.client.BGPPeerings;
@@ -104,7 +106,27 @@ public final class NetworkEdge extends EquinixClient implements Service {
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public NetworkEdge(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
-        super(equinixCredentials, isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
+    }
+
+    /**
+     * Creates a new Network Edge client whose credentials are resolved through the given provider.
+     * Authentication occurs automatically on the first API call.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     */
+    public NetworkEdge(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Creates a new Network Edge client over a custom credentials provider, with optional sandbox mode.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
+     */
+    public NetworkEdge(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        super(credentialsProvider, isSandBoxed);
 
         String paramFile = "json/apiParams_NetworkEdge.json";
         equinixClient.appendApiParams(paramFile);

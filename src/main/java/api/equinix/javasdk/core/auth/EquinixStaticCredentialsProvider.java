@@ -18,23 +18,22 @@ package api.equinix.javasdk.core.auth;
 
 import api.equinix.javasdk.core.util.ValidationUtils;
 import lombok.Getter;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 
 /**
+ * The default {@link EquinixCredentialsProvider}: holds a single, fixed {@link EquinixCredentials}
+ * instance supplied at construction and returns it on every {@link #getCredentials()} call. This is
+ * what the credentials-taking client and session constructors wrap their argument in. Supply a
+ * custom {@link EquinixCredentialsProvider} instead when credentials need to be resolved or rotated
+ * at runtime.
  *
  * @author ianjones
  */
 @Getter
-public class EquinixStaticCredentialsProvider extends BasicCredentialsProvider {
+public class EquinixStaticCredentialsProvider implements EquinixCredentialsProvider {
 
-    private EquinixCredentials credentials;
+    private final EquinixCredentials credentials;
 
     public EquinixStaticCredentialsProvider(EquinixCredentials credentials) {
         this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
-    }
-
-    public void setCredentials(AuthScope authScope, EquinixCredentials credentials) {
-        this.credentials = credentials;
     }
 }

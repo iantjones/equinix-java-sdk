@@ -17,6 +17,8 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.ibxsmartview.client.Environmentals;
 import api.equinix.javasdk.ibxsmartview.client.Hierarchy;
@@ -109,7 +111,27 @@ public final class IBXSmartView extends EquinixClient implements Service {
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public IBXSmartView(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
-        super(equinixCredentials, isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
+    }
+
+    /**
+     * Creates a new IBX SmartView client whose credentials are resolved through the given provider.
+     * Authentication occurs automatically on the first API call.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     */
+    public IBXSmartView(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Creates a new IBX SmartView client over a custom credentials provider, with optional sandbox mode.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
+     */
+    public IBXSmartView(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        super(credentialsProvider, isSandBoxed);
 
         String paramFile = "json/apiParams_IBXSmartView.json";
         equinixClient.appendApiParams(paramFile);

@@ -17,6 +17,8 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.internetaccess.client.InternetAccessAccounts;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCabinets;
@@ -159,7 +161,27 @@ public final class InternetAccess extends EquinixClient implements Service {
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public InternetAccess(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
-        super(equinixCredentials, isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
+    }
+
+    /**
+     * Creates a new Internet Access client whose credentials are resolved through the given provider.
+     * Authentication occurs automatically on the first API call.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     */
+    public InternetAccess(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Creates a new Internet Access client over a custom credentials provider, with optional sandbox mode.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
+     */
+    public InternetAccess(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        super(credentialsProvider, isSandBoxed);
 
         String paramFile = "json/apiParams_InternetAccess.json";
         equinixClient.appendApiParams(paramFile);

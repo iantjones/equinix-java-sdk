@@ -17,6 +17,8 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.exception.EquinixClientException;
 
 import java.io.Closeable;
@@ -53,7 +55,7 @@ import java.io.IOException;
  */
 public final class Equinix implements Closeable {
 
-    private final EquinixCredentials credentials;
+    private final EquinixCredentialsProvider credentialsProvider;
     private final api.equinix.javasdk.core.client.EquinixClient core;
 
     private Fabric fabric;
@@ -82,8 +84,29 @@ public final class Equinix implements Closeable {
      * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
      */
     public Equinix(EquinixCredentials credentials, boolean isSandBoxed) {
-        this.credentials = credentials;
-        this.core = new api.equinix.javasdk.core.client.EquinixClient(credentials, isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(credentials), isSandBoxed);
+    }
+
+    /**
+     * Opens a session whose credentials are resolved through the given provider — consulted on each
+     * authentication, so the whole session (every domain client over the shared core) can rotate
+     * credentials at runtime.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
+     */
+    public Equinix(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Opens a session over a custom credentials provider, optionally against the sandbox environment.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
+     * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
+     */
+    public Equinix(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        this.credentialsProvider = credentialsProvider;
+        this.core = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, isSandBoxed);
     }
 
     public Fabric fabric() {
@@ -156,7 +179,7 @@ public final class Equinix implements Closeable {
      */
     public Mcp mcp() {
         if (mcp == null) {
-            mcp = new Mcp(credentials);
+            mcp = new Mcp(credentialsProvider.getCredentials());
         }
         return mcp;
     }
