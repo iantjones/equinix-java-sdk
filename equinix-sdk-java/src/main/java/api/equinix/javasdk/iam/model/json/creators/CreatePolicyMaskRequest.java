@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json.creators;
 
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -26,9 +27,13 @@ import java.util.Map;
  * /v1/projects/{projectId}/policyMasks} (operationId {@code createPolicyMask}, spec schema
  * {@code CreatePolicyMaskBody}).
  *
- * <p>The {@code managedPolicies}, {@code managedPermissionSets} and {@code subtract} fields are
- * {@code oneOf} scalar-or-array references and are therefore typed loosely as {@code Object};
- * callers may pass a single id string or a list of id strings.</p>
+ * <p>The {@code managedPolicies}/{@code managedPermissionSets} fields are a {@code oneOf} of the
+ * literal string {@code "none"} or an array of ids, and {@code subtract} is a structured object;
+ * each is a {@link PolicyExpression} that losslessly preserves whichever form is supplied — use
+ * {@link PolicyExpression#of(String)} for {@code "none"},
+ * {@link PolicyExpression#ofStrings(java.util.List)} for an id array, or
+ * {@link PolicyExpression#of(com.fasterxml.jackson.databind.JsonNode)} for the {@code subtract}
+ * object.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreatePolicyMaskRequest {
@@ -43,13 +48,13 @@ public class CreatePolicyMaskRequest {
     private Map<String, String> tags;
 
     @JsonProperty("managedPolicies")
-    private Object managedPolicies;
+    private PolicyExpression managedPolicies;
 
     @JsonProperty("managedPermissionSets")
-    private Object managedPermissionSets;
+    private PolicyExpression managedPermissionSets;
 
     @JsonProperty("subtract")
-    private Object subtract;
+    private PolicyExpression subtract;
 
     /**
      * Sets the policy mask identifier (required), e.g. {@code policymask:my-mask}.
@@ -85,34 +90,35 @@ public class CreatePolicyMaskRequest {
     }
 
     /**
-     * Sets the managed policies ({@code oneOf} scalar-or-array reference).
+     * Sets the managed policies — either {@code "none"} or an array of {@code managedpolicy:} ids.
      *
-     * @param managedPolicies the managed policies (id string or list of id strings)
+     * @param managedPolicies the managed policies as a {@link PolicyExpression}
      * @return this request for chaining
      */
-    public CreatePolicyMaskRequest managedPolicies(Object managedPolicies) {
+    public CreatePolicyMaskRequest managedPolicies(PolicyExpression managedPolicies) {
         this.managedPolicies = managedPolicies;
         return this;
     }
 
     /**
-     * Sets the managed permission sets ({@code oneOf} scalar-or-array reference).
+     * Sets the managed permission sets — either {@code "none"} or an array of {@code managedset:} ids.
      *
-     * @param managedPermissionSets the managed permission sets (id string or list of id strings)
+     * @param managedPermissionSets the managed permission sets as a {@link PolicyExpression}
      * @return this request for chaining
      */
-    public CreatePolicyMaskRequest managedPermissionSets(Object managedPermissionSets) {
+    public CreatePolicyMaskRequest managedPermissionSets(PolicyExpression managedPermissionSets) {
         this.managedPermissionSets = managedPermissionSets;
         return this;
     }
 
     /**
-     * Sets the {@code subtract} references ({@code oneOf} scalar-or-array reference).
+     * Sets the {@code subtract} object (carrying nested {@code managedPolicies}/
+     * {@code managedPermissionSets} arrays).
      *
-     * @param subtract the subtract references (id string or list of id strings)
+     * @param subtract the subtract object as a {@link PolicyExpression}
      * @return this request for chaining
      */
-    public CreatePolicyMaskRequest subtract(Object subtract) {
+    public CreatePolicyMaskRequest subtract(PolicyExpression subtract) {
         this.subtract = subtract;
         return this;
     }
@@ -129,15 +135,15 @@ public class CreatePolicyMaskRequest {
         return tags;
     }
 
-    public Object getManagedPolicies() {
+    public PolicyExpression getManagedPolicies() {
         return managedPolicies;
     }
 
-    public Object getManagedPermissionSets() {
+    public PolicyExpression getManagedPermissionSets() {
         return managedPermissionSets;
     }
 
-    public Object getSubtract() {
+    public PolicyExpression getSubtract() {
         return subtract;
     }
 }

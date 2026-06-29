@@ -26,7 +26,9 @@ import java.util.Map;
  * {@code updateAccessPolicy}, {@code enableAccessPolicy}, {@code disableAccessPolicy}).
  *
  * <p>This is a read-only response view (spec schema {@code AccessPolicy}). The polymorphic
- * permission set entries are exposed as raw deserialized JSON via {@link #getPermissions()}.</p>
+ * {@code UserRectSet} permission entries are exposed as {@link PolicyExpression} values, each of
+ * which losslessly preserves whichever {@code oneOf} form (bare string id/ERN or structured
+ * inline-permission / reference object) was returned.</p>
  */
 public interface AccessPolicy {
 
@@ -51,20 +53,22 @@ public interface AccessPolicy {
     Map<String, String> getTags();
 
     /**
-     * @return the policy's permission set entries, as raw deserialized JSON (polymorphic
-     *         {@code UserRectSet} entries)
+     * @return the policy's permission set entries (polymorphic {@code UserRectSet} members), each as
+     *         a lossless {@link PolicyExpression}
      */
-    List<Object> getPermissions();
+    List<PolicyExpression> getPermissions();
 
     /**
-     * @return the policy's {@code intersect} permission entries, as raw deserialized JSON
+     * @return the policy's {@code intersect} permission entries, each as a lossless
+     *         {@link PolicyExpression}
      */
-    List<Object> getIntersect();
+    List<PolicyExpression> getIntersect();
 
     /**
-     * @return the policy's {@code subtract} permission entries, as raw deserialized JSON
+     * @return the policy's {@code subtract} permission entries, each as a lossless
+     *         {@link PolicyExpression}
      */
-    List<Object> getSubtract();
+    List<PolicyExpression> getSubtract();
 
     /**
      * @return the opaque revision of the policy (used as {@code lastRev} for concurrency control)

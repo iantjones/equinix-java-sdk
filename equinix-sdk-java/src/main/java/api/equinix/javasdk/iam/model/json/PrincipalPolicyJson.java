@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json;
 
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import api.equinix.javasdk.iam.model.PrincipalPolicy;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,7 +45,7 @@ public class PrincipalPolicyJson implements PrincipalPolicy {
     private Map<String, String> tags;
 
     @JsonProperty("permissions")
-    private List<Object> permissions;
+    private List<PolicyExpression> permissions;
 
     @JsonProperty("rev")
     private String rev;

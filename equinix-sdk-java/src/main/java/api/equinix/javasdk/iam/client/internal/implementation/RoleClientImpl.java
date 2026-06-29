@@ -39,10 +39,11 @@ public class RoleClientImpl extends ClientBase implements RoleClient {
     }
 
     @Override
-    public RoleList listRoles(String pageToken, Integer pageSize, String projectErn) {
+    public RoleList listRoles(String pageToken, Integer pageSize, String projectId, String projectErn) {
         Map<String, List<String>> queryParams = IamQueryParams.builder()
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
+                .add("projectId", projectId)
                 .add("projectErn", projectErn)
                 .build();
         return getAs("ListRoles", null, queryParams, RoleList.class);

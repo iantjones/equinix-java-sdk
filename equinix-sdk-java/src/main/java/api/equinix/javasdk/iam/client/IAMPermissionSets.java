@@ -28,6 +28,16 @@ import api.equinix.javasdk.iam.model.json.creators.UpdatePermissionSetRequest;
  * <p>Provides the permission set lifecycle — list / create / get / update / delete. A permission
  * set groups the granular permissions that a role or access policy confers. All operations are
  * scoped to a {@code projectId}.</p>
+ *
+ * <p><b>ERN addressing.</b> {@code getPermissionSet} additionally accepts the spec's ERN-addressing
+ * form, where {@code projectId} is the literal {@code "*"} and {@code permissionSetId} is an Equinix
+ * Resource Name (ERN) — or a managed-permission-set id — rather than a local {@code permissionset:}
+ * id. Because an ERN contains reserved characters ({@code :} and {@code /}), the API requires it to
+ * be URL-encoded when used as a path segment. This SDK does not provide a dedicated {@code byErn}
+ * overload: the shared core path-substitution layer does not percent-encode individual path
+ * segments, and adding that encoding would require a core change. Callers needing ERN addressing
+ * must therefore pass a pre-URL-encoded ERN as the {@code permissionSetId} argument together with
+ * {@code projectId == "*"}.</p>
  */
 public interface IAMPermissionSets {
 

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json.creators;
 
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -28,9 +29,9 @@ import java.util.Map;
  * {@code CreatePermissionSetBody}).
  *
  * <p>The {@code permissions}, {@code intersect} and {@code subtract} fields carry the polymorphic
- * {@code UserRectSet}/{@code InlinePermission} entries and are therefore typed loosely as
- * {@code List<Object>}; callers may pass inline-permission maps, permission-set id strings, ERNs
- * or foreign-access-policy reference maps.</p>
+ * {@code UserRectSet}/{@code InlinePermission} entries; each entry is a {@link PolicyExpression}
+ * that losslessly represents whichever {@code oneOf} form is supplied — a bare permission-set id /
+ * ERN string or a structured inline-permission / reference object.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreatePermissionSetRequest {
@@ -45,13 +46,13 @@ public class CreatePermissionSetRequest {
     private Map<String, String> tags;
 
     @JsonProperty("permissions")
-    private List<Object> permissions;
+    private List<PolicyExpression> permissions;
 
     @JsonProperty("intersect")
-    private List<Object> intersect;
+    private List<PolicyExpression> intersect;
 
     @JsonProperty("subtract")
-    private List<Object> subtract;
+    private List<PolicyExpression> subtract;
 
     @JsonProperty("allowBadRefs")
     private String allowBadRefs;
@@ -95,7 +96,7 @@ public class CreatePermissionSetRequest {
      * @param permissions the permission entries
      * @return this request for chaining
      */
-    public CreatePermissionSetRequest permissions(List<Object> permissions) {
+    public CreatePermissionSetRequest permissions(List<PolicyExpression> permissions) {
         this.permissions = permissions;
         return this;
     }
@@ -106,7 +107,7 @@ public class CreatePermissionSetRequest {
      * @param intersect the intersect entries
      * @return this request for chaining
      */
-    public CreatePermissionSetRequest intersect(List<Object> intersect) {
+    public CreatePermissionSetRequest intersect(List<PolicyExpression> intersect) {
         this.intersect = intersect;
         return this;
     }
@@ -117,7 +118,7 @@ public class CreatePermissionSetRequest {
      * @param subtract the subtract entries
      * @return this request for chaining
      */
-    public CreatePermissionSetRequest subtract(List<Object> subtract) {
+    public CreatePermissionSetRequest subtract(List<PolicyExpression> subtract) {
         this.subtract = subtract;
         return this;
     }
@@ -145,15 +146,15 @@ public class CreatePermissionSetRequest {
         return tags;
     }
 
-    public List<Object> getPermissions() {
+    public List<PolicyExpression> getPermissions() {
         return permissions;
     }
 
-    public List<Object> getIntersect() {
+    public List<PolicyExpression> getIntersect() {
         return intersect;
     }
 
-    public List<Object> getSubtract() {
+    public List<PolicyExpression> getSubtract() {
         return subtract;
     }
 
