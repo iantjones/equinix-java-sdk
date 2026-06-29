@@ -157,8 +157,10 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
 - Operator builders that initialized accumulator lists with an immutable `singletonList` then
   mutated them (`UnsupportedOperationException`); `ResellerWrapper` getters returning `null`
   and defeating `@Delegate`; `MetrosImpl.list(presence)` ignoring its argument.
-- Corrected the unverifiable "60+ MCP tools" claim; removed the dead `PeeringIntelligence
-  .withMcpEnrichment()` no-op.
+- Corrected the unverifiable "60+ MCP tools" claim; removed the dead `withMcpEnrichment(McpBridge)`
+  levers on `PeeringIntelligence.Builder` and `MetroOptimizer.Builder` — both fetched MCP data the
+  engines then discarded. (`DeploymentWizard.Builder.withMcpValidation(...)` is unaffected; it
+  remains a real, wired MCP integration.)
 
 ### Removed (breaking)
 - **Fictional/misattributed surface**: the entire `Messaging` domain (covered by Fabric Stream
