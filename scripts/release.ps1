@@ -278,9 +278,9 @@ try {
         }
 
         # Verify all 3 JARs exist
-        $jarPath = "$ProjectRoot\equinix-sdk-java\target\$JarName"
-        $sourcesPath = "$ProjectRoot\equinix-sdk-java\target\$SourcesJar"
-        $javadocPath = "$ProjectRoot\equinix-sdk-java\target\$JavadocJar"
+        $jarPath = "$ProjectRoot\target\$JarName"
+        $sourcesPath = "$ProjectRoot\target\$SourcesJar"
+        $javadocPath = "$ProjectRoot\target\$JavadocJar"
 
         if (Test-Path $jarPath) { Write-Success "Built: $JarName ($('{0:N1} MB' -f ((Get-Item $jarPath).Length / 1MB)))" }
         else { Write-Fail "Missing: $jarPath"; exit 1 }
@@ -349,9 +349,9 @@ try {
 
         if (-not $DryRun) {
             & gh release create $TagName `
-                "$ProjectRoot\equinix-sdk-java\target\$JarName" `
-                "$ProjectRoot\equinix-sdk-java\target\$SourcesJar" `
-                "$ProjectRoot\equinix-sdk-java\target\$JavadocJar" `
+                "$ProjectRoot\target\$JarName" `
+                "$ProjectRoot\target\$SourcesJar" `
+                "$ProjectRoot\target\$JavadocJar" `
                 --title "Equinix Java SDK $Version" `
                 --notes $releaseNotes
 
