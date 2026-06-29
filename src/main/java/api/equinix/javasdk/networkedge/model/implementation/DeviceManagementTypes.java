@@ -22,10 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * <p>DeviceManagementTypes class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
@@ -37,12 +35,6 @@ public class DeviceManagementTypes {
     @JsonProperty("SELF-CONFIGURED")
     DeviceManagement selfConfigured;
 
-    /**
-     * <p>byValue.</p>
-     *
-     * @param deviceManagementType a {@link api.equinix.javasdk.networkedge.enums.DeviceManagementType} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceManagement} object.
-     */
     public DeviceManagement byValue(DeviceManagementType deviceManagementType) {
         DeviceManagement deviceManagement = null;
 

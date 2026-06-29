@@ -42,6 +42,5 @@ public class IpBlockIpv4Request {
     @Singular("question")
     @JsonProperty("questions") private List<IpBlockQuestion> questions;
 
-    /** Length of the IP block, number after the / (slash). Range 24-30. */
     @JsonProperty("prefixLength") private Integer prefixLength;
 }

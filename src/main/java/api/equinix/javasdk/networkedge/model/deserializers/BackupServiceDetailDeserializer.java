@@ -30,14 +30,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 
 /**
- * <p>BackupServiceDetailDeserializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class BackupServiceDetailDeserializer extends JsonDeserializer<GenericDataObject<?>> {
 
-    /** {@inheritDoc} */
     @Override
     public GenericDataObject<?> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();

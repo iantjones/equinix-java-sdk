@@ -21,10 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * <p>APIConfig class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

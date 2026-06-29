@@ -24,50 +24,18 @@ import api.equinix.javasdk.networkedge.model.json.DeviceLinkJson;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkCreatorJson;
 
 /**
- * <p>DeviceLinkClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface DeviceLinkClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.DeviceLink} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<DeviceLink, DeviceLinkJson> list(RequestBuilder.DeviceLink requestBuilder);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
-     */
     DeviceLinkJson getByUuid(String uuid);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param deviceLinkCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkCreatorJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
-     */
     DeviceLinkJson create(DeviceLinkCreatorJson deviceLinkCreatorJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete(String uuid);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
-     */
     DeviceLinkJson refresh(String uuid);
 }

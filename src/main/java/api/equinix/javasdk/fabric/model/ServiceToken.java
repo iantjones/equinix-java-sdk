@@ -27,92 +27,32 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>ServiceToken interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ServiceToken {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ServiceTokenType} object.
-     */
     ServiceTokenType getType();
 
-    /**
-     * <p>getHref.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getHref();
 
-    /**
-     * <p>getState.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ServiceTokenState} object.
-     */
     ServiceTokenState getState();
 
-    /**
-     * <p>getExpiry.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getExpiry();
 
-    /**
-     * <p>getExpirationDateTime.</p>
-     *
-     * @return a {@link java.time.LocalDateTime} object.
-     */
     LocalDateTime getExpirationDateTime();
 
-    /**
-     * <p>getConnection.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.Connection} object.
-     */
     Connection getConnection();
 
-    /**
-     * <p>getNotifications.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<Notification> getNotifications();
 
-    /**
-     * <p>getAccount.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.BasicAccount} object.
-     */
     BasicAccount getAccount();
 
-    /**
-     * <p>getChangeLog.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ChangeLog} object.
-     */
     ChangeLog getChangeLog();
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete();
 
-    /**
-     * <p>refresh.</p>
-     */
     void refresh();
 }

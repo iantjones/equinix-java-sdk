@@ -29,10 +29,8 @@ import lombok.Getter;
 import java.util.ArrayList;
 
 /**
- * <p>DeviceTypeJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

@@ -33,42 +33,28 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
 
 /**
- * <p>ServiceTokensImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ServiceTokensImpl implements ServiceTokens {
 
     private final ServiceTokenClient<ServiceToken> serviceClient;
 
-    /**
-     * <p>Constructor for ServiceTokensImpl.</p>
-     *
-     * @param serviceClient a {@link ServiceTokenClient} object.
-     */
     public ServiceTokensImpl(ServiceTokenClient<ServiceToken> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<ServiceToken> list() {
         Page<ServiceToken, ServiceTokenJson> responsePage = this.serviceClient.list();
         PaginatedList<ServiceToken> serviceTokenList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, ServiceTokenWrapper::new);
         return new PaginatedList<>(serviceTokenList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public ServiceToken getByUuid(String uuid) {
         ServiceTokenJson serviceTokenJson = this.serviceClient.getByUuid(uuid);
         return new ServiceTokenWrapper(serviceTokenJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide) {
         return new ServiceTokenOperator(this.serviceClient).create(issuerSide);
     }

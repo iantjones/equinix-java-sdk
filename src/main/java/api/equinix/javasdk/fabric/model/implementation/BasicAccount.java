@@ -22,10 +22,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * <p>BasicAccount class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @NoArgsConstructor

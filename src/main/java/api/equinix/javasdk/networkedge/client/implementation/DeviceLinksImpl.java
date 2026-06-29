@@ -30,10 +30,8 @@ import api.equinix.javasdk.networkedge.model.wrappers.DeviceLinkWrapper;
 import lombok.Getter;
 
 /**
- * <p>DeviceLinksImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class DeviceLinksImpl implements DeviceLinks {
@@ -42,22 +40,11 @@ public class DeviceLinksImpl implements DeviceLinks {
 
     private final DeviceLinkClient<DeviceLink> serviceClient;
 
-    /**
-     * <p>Constructor for DeviceLinksImpl.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.networkedge.client.internal.DeviceLinkClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
-     */
     public DeviceLinksImpl(DeviceLinkClient<DeviceLink> serviceClient, NetworkEdge serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<DeviceLink> list() {
         return list(null);
     }
@@ -65,7 +52,6 @@ public class DeviceLinksImpl implements DeviceLinks {
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public PaginatedList<DeviceLink> list(RequestBuilder.DeviceLink requestBuilder) {
         Page<DeviceLink, DeviceLinkJson> responsePage = serviceClient.list(requestBuilder);
@@ -73,13 +59,11 @@ public class DeviceLinksImpl implements DeviceLinks {
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public DeviceLink getByUuid(String uuid) {
         DeviceLinkJson deviceLinkJson = serviceClient.getByUuid(uuid);
         return new DeviceLinkWrapper(deviceLinkJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public DeviceLinkOperator.DeviceLinkBuilder define(String groupName) {
         return new DeviceLinkOperator(this.serviceClient).create(groupName);
     }

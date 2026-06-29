@@ -64,7 +64,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class AzureRetailPricesRateCard implements RateCard {
 
-    /** The public Azure Retail Prices endpoint. */
     public static final String DEFAULT_ENDPOINT = "https://prices.azure.com/api/retail/prices";
 
     private static final Currency USD = Currency.getInstance("USD");
@@ -78,7 +77,6 @@ public final class AzureRetailPricesRateCard implements RateCard {
         this.http = new ProviderPricingHttpClient();
     }
 
-    /** Creates an adapter against the public Azure Retail Prices endpoint. */
     public static AzureRetailPricesRateCard create() {
         return new AzureRetailPricesRateCard(DEFAULT_ENDPOINT);
     }

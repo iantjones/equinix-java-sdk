@@ -27,10 +27,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>ACLTemplateWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ACLTemplateWrapper extends ResourceImpl<ACLTemplate> implements ACLTemplate {
 
@@ -39,56 +37,32 @@ public class ACLTemplateWrapper extends ResourceImpl<ACLTemplate> implements ACL
     @Getter
     private final Pageable<ACLTemplate> serviceClient;
 
-    /**
-     * <p>Constructor for ACLTemplateWrapper.</p>
-     *
-     * @param sshUserJson a {@link api.equinix.javasdk.networkedge.model.json.ACLTemplateJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ACLTemplateWrapper(ACLTemplateJson sshUserJson, Pageable<ACLTemplate> serviceClient) {
         this.json = sshUserJson;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator.ACLTemplateUpdater} object.
-     */
     public ACLTemplateOperator.ACLTemplateUpdater update() {
         return new ACLTemplateOperator(this.serviceClient).update(this.json);
     }
 
-    /** {@inheritDoc} */
     public Boolean save(ACLTemplateUpdaterJson updaterJson) {
         this.json = ((ACLTemplateClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
         return true;
     }
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean delete() {
         return delete(null);
     }
 
-    /** {@inheritDoc} */
     public Boolean delete(String accountUcmId) {
         return ((ACLTemplateClientImpl)this.serviceClient).delete(this.getUuid(), accountUcmId);
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean refresh() {
         return refresh(null);
     }
 
-    /** {@inheritDoc} */
     public Boolean refresh(String accountUcmId) {
         this.json = ((ACLTemplateClientImpl)this.serviceClient).refresh(this.getUuid(), accountUcmId);
         return true;

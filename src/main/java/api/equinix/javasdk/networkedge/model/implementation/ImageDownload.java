@@ -25,7 +25,6 @@ import lombok.Getter;
  * <p>ImageDownload class. The download link returned by getDownloadImageByDeviceType.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

@@ -47,10 +47,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * <p>EquinixClient class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixClient implements Closeable {
 
@@ -96,12 +94,6 @@ public class EquinixClient implements Closeable {
 
     private final EquinixHttpClient equinixHttpClient;
 
-    /**
-     * <p>Constructor for EquinixClient.</p>
-     *
-     * @param equinixCredentials a {@link api.equinix.javasdk.core.auth.EquinixCredentials} object.
-     * @param isSandBoxed a {@link java.lang.Boolean} object.
-     */
     public EquinixClient(EquinixCredentials equinixCredentials, Boolean isSandBoxed) {
         this.equinixCredentialsProvider = new EquinixStaticCredentialsProvider(equinixCredentials);
         this.isSandBoxed = isSandBoxed;
@@ -132,9 +124,7 @@ public class EquinixClient implements Closeable {
     }
 
     /**
-     * <p>Setter for the field <code>endPoint</code>.</p>
      *
-     * @param endPoint a {@link java.lang.String} object.
      * @throws java.lang.IllegalArgumentException if any.
      */
     public void setEndPoint(String endPoint) throws IllegalArgumentException {
@@ -150,11 +140,6 @@ public class EquinixClient implements Closeable {
         equinixHttpClient.setRetryPolicy(retryPolicy);
     }
 
-    /**
-     * <p>appendApiParams.</p>
-     *
-     * @param fileName a {@link java.lang.String} object.
-     */
     public void appendApiParams(String fileName) throws EquinixClientException {
         try {
             JsonNode additionalResourceFile = ResourceFileUtils.loadResourceFileJson(fileName);
@@ -174,11 +159,7 @@ public class EquinixClient implements Closeable {
     }
 
     /**
-     * <p>invoke.</p>
      *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     public <T> EquinixResponse<T> invoke(EquinixRequest<T> equinixRequest) {
@@ -207,7 +188,6 @@ public class EquinixClient implements Closeable {
     }
 
     /**
-     * <p>isSandBoxed.</p>
      *
      * @return a boolean.
      */

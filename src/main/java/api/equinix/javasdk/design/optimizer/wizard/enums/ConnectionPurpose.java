@@ -11,12 +11,9 @@ package api.equinix.javasdk.design.optimizer.wizard.enums;
  */
 public enum ConnectionPurpose {
 
-    /** Cloud Router to cloud/service provider (e.g., AWS, Azure). */
     PROVIDER,
 
-    /** Inter-metro backbone link between two Cloud Routers. */
     BACKBONE,
 
-    /** Cloud Router to on-premises or network edge device. */
     DEVICE
 }

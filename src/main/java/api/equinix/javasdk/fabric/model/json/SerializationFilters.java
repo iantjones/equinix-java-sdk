@@ -28,14 +28,11 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import java.util.Arrays;
 
 /**
- * <p>SerializationFilters class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class SerializationFilters {
 
-    /** Constant <code>createServiceTokenFilter</code> */
     public final static PropertyFilter createServiceTokenFilter = new SimpleBeanPropertyFilter() {
         @Override
         public void serializeAsField(Object pojo, JsonGenerator generator, SerializerProvider provider, PropertyWriter writer)

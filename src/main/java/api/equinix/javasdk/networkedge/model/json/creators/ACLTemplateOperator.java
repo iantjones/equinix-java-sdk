@@ -32,41 +32,22 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * <p>ACLTemplateOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ACLTemplateOperator extends ResourceImpl<ACLTemplate> {
 
     @Getter
     private final Pageable<ACLTemplate> serviceClient;
 
-    /**
-     * <p>Constructor for ACLTemplateOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ACLTemplateOperator(Pageable<ACLTemplate> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param aclTemplateName a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator.ACLTemplateBuilder} object.
-     */
     public ACLTemplateBuilder create(String aclTemplateName) {
         return new ACLTemplateBuilder(aclTemplateName);
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.ACLTemplateJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator.ACLTemplateUpdater} object.
-     */
     public ACLTemplateUpdater update(ACLTemplateJson json) {
         return new ACLTemplateUpdater(json);
     }

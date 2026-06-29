@@ -42,7 +42,6 @@ import java.util.Map;
  * implements {@link Metric} directly, {@link #wrap(MetricJson)} is the identity.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> implements MetricClient<Metric> {
 
@@ -59,7 +58,6 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
         return searchPage("SearchMetrics", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetricsByName(String name, String value) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {
@@ -74,7 +72,6 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
         return toMetricList(request);
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {

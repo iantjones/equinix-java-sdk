@@ -38,19 +38,14 @@ import java.util.stream.Collectors;
 @Builder
 public class MetroPresenceReport {
 
-    /** The metro this report covers. */
     MetroCode metro;
 
-    /** Human-readable metro name (e.g., "Ashburn"). */
     String metroName;
 
-    /** Number of Equinix IXes operating in this metro. */
     int ixCount;
 
-    /** Number of Equinix facilities in this metro. */
     int facilityCount;
 
-    /** All presence cells for ASNs at this metro. */
     List<PresenceCell> asnPresence;
 
     /**

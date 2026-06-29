@@ -17,38 +17,16 @@
 package api.equinix.javasdk.networkedge.model;
 
 /**
- * <p>PublicKey interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PublicKey {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getKeyName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getKeyName();
 
-    /**
-     * <p>getKeyValue.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getKeyValue();
 
-    /**
-     * <p>getCustOrgId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getCustOrgId();
 }

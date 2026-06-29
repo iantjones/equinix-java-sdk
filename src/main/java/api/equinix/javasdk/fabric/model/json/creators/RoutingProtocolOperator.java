@@ -49,7 +49,6 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
      *
      * @param connectionId the uuid of the parent connection
      * @param uuid the uuid of the routing protocol to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolOperator.RoutingProtocolUpdater} object.
      */
     public RoutingProtocolUpdater update(String connectionId, String uuid) {
         return new RoutingProtocolUpdater(connectionId, uuid);

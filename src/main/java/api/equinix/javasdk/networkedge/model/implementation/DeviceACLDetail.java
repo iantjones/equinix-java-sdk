@@ -28,7 +28,6 @@ import java.util.List;
  * provisioning {@link api.equinix.javasdk.networkedge.enums.DeviceACLStatus} on the device.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

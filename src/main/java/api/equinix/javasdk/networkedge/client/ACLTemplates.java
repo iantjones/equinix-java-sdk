@@ -28,7 +28,6 @@ import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
  * outbound traffic rules.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ACLTemplates {
 

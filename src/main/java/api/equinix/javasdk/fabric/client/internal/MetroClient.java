@@ -24,41 +24,16 @@ import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.json.MetroJson;
 
 /**
- * <p>MetrosClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface MetroClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<Metro, MetroJson> list();
 
-    /**
-     * <p>list.</p>
-     *
-     * @param metroPresence a {@link api.equinix.javasdk.fabric.enums.MetroPresence} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<Metro, MetroJson> list(MetroPresence metroPresence);
 
-    /**
-     * <p>getByMetroCode.</p>
-     *
-     * @param metroCode a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.MetroJson} object.
-     */
     MetroJson getByMetroCode(MetroCode metroCode);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param code a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.MetroJson} object.
-     */
     MetroJson refresh(MetroCode code);
 }

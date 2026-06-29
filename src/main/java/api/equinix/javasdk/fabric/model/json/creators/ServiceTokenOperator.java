@@ -32,31 +32,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>ServiceTokenOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
 
     @Getter
     private final Pageable<ServiceToken> serviceClient;
 
-    /**
-     * <p>Constructor for ServiceTokenOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ServiceTokenOperator(Pageable<ServiceToken> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param issuerSide a {@link api.equinix.javasdk.fabric.enums.Side} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator.ServiceTokenBuilder} object.
-     */
     public ServiceTokenBuilder create(Side issuerSide) {
         return new ServiceTokenBuilder(issuerSide);
     }

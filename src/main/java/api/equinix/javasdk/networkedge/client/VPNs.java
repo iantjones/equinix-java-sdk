@@ -25,7 +25,6 @@ import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
  * operations to list, retrieve, and create site-to-site VPN connections.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface VPNs {
 

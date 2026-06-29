@@ -31,10 +31,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>MetricsImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MetricsImpl implements Metrics {
 
@@ -57,12 +55,10 @@ public class MetricsImpl implements Metrics {
         return Utils.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetricsByName(String name, String value) {
         return serviceClient.getMetricsByName(name, value);
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         return serviceClient.getMetricsByAssetId(asset, assetId, name, fromDateTime, toDateTime);
     }

@@ -29,10 +29,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>PublicKeysImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class PublicKeysImpl implements PublicKeys {
@@ -41,34 +39,21 @@ public class PublicKeysImpl implements PublicKeys {
 
     private final PublicKeyClient<PublicKey> serviceClient;
 
-    /**
-     * <p>Constructor for PublicKeysImpl.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.networkedge.client.internal.PublicKeyClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
-     */
     public PublicKeysImpl(PublicKeyClient<PublicKey> serviceClient,
                           NetworkEdge serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     public List<PublicKey> list() {
         return list(null);
     }
 
-    /** {@inheritDoc} */
     public List<PublicKey> list(String accountUcmId) {
         List<PublicKeyJson> publicKeyList = serviceClient.list(accountUcmId);
         return Utils.mapList(publicKeyList, this.serviceClient, PublicKeyWrapper::new);
     }
 
-    /** {@inheritDoc} */
     public PublicKeyOperator.PublicKeyBuilder define(String keyName, String keyValue) {
         return new PublicKeyOperator(this.serviceClient).create(keyName, keyValue);
     }

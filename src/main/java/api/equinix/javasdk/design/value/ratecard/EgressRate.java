@@ -17,16 +17,12 @@ import java.util.Currency;
 @Builder
 public class EgressRate {
 
-    /** Price per gigabyte of egress. */
     BigDecimal pricePerGb;
 
-    /** Currency of {@link #pricePerGb}. */
     Currency currency;
 
-    /** Where this rate came from. */
     PriceSource source;
 
-    /** Optional note (e.g. the source tier or a staleness caveat). */
     String note;
 
     /**
@@ -45,7 +41,6 @@ public class EgressRate {
                 .build();
     }
 
-    /** Returns a copy of this rate with the supplied note attached. */
     public EgressRate withNote(String note) {
         return EgressRate.builder()
                 .pricePerGb(pricePerGb)

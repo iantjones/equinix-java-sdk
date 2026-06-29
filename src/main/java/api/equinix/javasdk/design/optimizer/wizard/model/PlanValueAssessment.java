@@ -37,7 +37,6 @@ public final class PlanValueAssessment {
         this.plan = plan;
     }
 
-    /** Declares a monthly egress volume for a cloud provider reached by this plan. */
     public PlanValueAssessment egress(CloudProviderType provider, double amount, DataUnit unit) {
         if (amount < 0) {
             throw new IllegalArgumentException("egress amount must be non-negative: " + amount);
@@ -46,18 +45,15 @@ public final class PlanValueAssessment {
         return this;
     }
 
-    /** Declares a monthly egress volume in terabytes for a cloud provider. */
     public PlanValueAssessment egressTerabytes(CloudProviderType provider, double terabytes) {
         return egress(provider, terabytes, DataUnit.TERABYTE);
     }
 
-    /** Overrides the rate card used for egress rates. Defaults to live Equinix + bundled reference. */
     public PlanValueAssessment rateCard(RateCard rateCard) {
         this.rateCard = rateCard;
         return this;
     }
 
-    /** Sets the commitment term used for rate lookups. Defaults to {@link Term#MONTH_12}. */
     public PlanValueAssessment term(Term term) {
         this.term = term;
         return this;

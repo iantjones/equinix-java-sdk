@@ -11,18 +11,13 @@ import lombok.Value;
 @Builder
 public class ProvisionedResource {
 
-    /** The type of resource (e.g., "CloudRouter", "Connection", "RoutingProtocol"). */
     String resourceType;
 
-    /** The display name of the resource. */
     String name;
 
-    /** The UUID assigned by the Fabric API after creation. */
     String uuid;
 
-    /** The metro where this resource was provisioned (if applicable). */
     MetroCode metroCode;
 
-    /** The current provisioning status. */
     String status;
 }

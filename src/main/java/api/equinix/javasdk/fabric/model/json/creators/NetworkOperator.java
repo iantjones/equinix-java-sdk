@@ -37,31 +37,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * <p>NetworkOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class NetworkOperator extends ResourceImpl<Network> {
 
     @Getter
     private final PageablePost<Network> serviceClient;
 
-    /**
-     * <p>Constructor for NetworkOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.PageablePost} object.
-     */
     public NetworkOperator(PageablePost<Network> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param type a {@link api.equinix.javasdk.fabric.enums.NetworkType} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.NetworkOperator.NetworkBuilder} object.
-     */
     public NetworkBuilder create(NetworkType type) {
         return new NetworkBuilder(type);
     }
@@ -70,7 +57,6 @@ public class NetworkOperator extends ResourceImpl<Network> {
      * <p>Begins a fluent update of an existing network, identified by uuid.</p>
      *
      * @param uuid the uuid of the network to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.NetworkOperator.NetworkUpdater} object.
      */
     public NetworkUpdater update(String uuid) {
         return new NetworkUpdater(uuid);

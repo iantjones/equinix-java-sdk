@@ -35,27 +35,20 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum DiversityRating {
 
-    /** Different continent/region. Maximum independence from shared failure domains. */
     EXCELLENT("Excellent", 1.0, 3000),
 
-    /** Same continent but different sub-region (e.g., US East Coast vs US West Coast). */
     GOOD("Good", 0.75, 1500),
 
-    /** Same sub-region but different metro area (e.g., DC vs NY). */
     MODERATE("Moderate", 0.5, 500),
 
-    /** Nearby metros with likely shared infrastructure (e.g., DC vs PH). */
     POOR("Poor", 0.25, 150),
 
-    /** Same metro or extremely close — provides minimal geographic diversity. */
     CRITICAL("Critical", 0.0, 0);
 
     private final String displayName;
 
-    /** Diversity score (0.0 = no diversity, 1.0 = maximum diversity). */
     private final double score;
 
-    /** Minimum distance in kilometers between primary and backup for this rating. */
     private final int minDistanceKm;
 
     /**

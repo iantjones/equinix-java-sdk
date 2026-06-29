@@ -30,20 +30,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>ApacheUtils class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ApacheUtils {
 
-    /**
-     * <p>toUri.</p>
-     *
-     * @param endPoint a {@link java.lang.String} object.
-     * @param protocol a {@link api.equinix.javasdk.core.enums.Protocol} object.
-     * @return a {@link java.net.URI} object.
-     */
     public static URI toUri(String endPoint, Protocol protocol) {
 
         if (!endPoint.contains("://")) {
@@ -58,12 +49,8 @@ public class ApacheUtils {
     }
 
     /**
-     * <p>appendUri.</p>
      *
-     * @param baseUri a {@link java.lang.String} object.
-     * @param path a {@link java.lang.String} object.
      * @param escapeDoubleSlash a boolean.
-     * @return a {@link java.lang.String} object.
      */
     public static String appendUri(final String baseUri, String path, final boolean escapeDoubleSlash) {
         String resultUri = baseUri;
@@ -87,13 +74,6 @@ public class ApacheUtils {
         return resultUri;
     }
 
-    /**
-     * <p>encodeParameters.</p>
-     *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @return a {@link java.lang.String} object.
-     */
     public static <T> String encodeParameters(EquinixRequest<T> equinixRequest) {
 
         final Map<String, List<String>> requestParams = equinixRequest.getQueryParameters();

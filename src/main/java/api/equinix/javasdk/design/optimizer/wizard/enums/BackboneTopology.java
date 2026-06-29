@@ -12,12 +12,9 @@ package api.equinix.javasdk.design.optimizer.wizard.enums;
  */
 public enum BackboneTopology {
 
-    /** Every metro pair connected directly. Highest redundancy, highest cost. */
     FULL_MESH,
 
-    /** Primary (top-ranked) metro acts as hub; all others connect to it. */
     HUB_SPOKE,
 
-    /** Metros connected in a ring. Balanced cost and redundancy. */
     RING
 }

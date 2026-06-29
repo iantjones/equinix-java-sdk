@@ -22,31 +22,18 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 
 /**
- * <p>EquinixStaticCredentialsProvider class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class EquinixStaticCredentialsProvider extends BasicCredentialsProvider {
 
     private EquinixCredentials credentials;
 
-    /**
-     * <p>Constructor for EquinixStaticCredentialsProvider.</p>
-     *
-     * @param credentials a {@link api.equinix.javasdk.core.auth.EquinixCredentials} object.
-     */
     public EquinixStaticCredentialsProvider(EquinixCredentials credentials) {
         this.credentials = ValidationUtils.assertNotNull(credentials, "credentials");
     }
 
-    /**
-     * <p>Setter for the field <code>credentials</code>.</p>
-     *
-     * @param authScope a {@link org.apache.http.auth.AuthScope} object.
-     * @param credentials a {@link api.equinix.javasdk.core.auth.EquinixCredentials} object.
-     */
     public void setCredentials(AuthScope authScope, EquinixCredentials credentials) {
         this.credentials = credentials;
     }

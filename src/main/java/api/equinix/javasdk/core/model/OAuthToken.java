@@ -25,7 +25,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * <p>OAuthToken class.</p>
  *
  * <h3>Concurrency contract</h3>
  * <p>An {@code OAuthToken} instance is effectively immutable once populated by
@@ -38,7 +37,6 @@ import java.time.LocalDateTime;
  * partially-constructed view. The getters and setters are retained unchanged.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter
@@ -67,7 +65,6 @@ public class OAuthToken {
     private volatile LocalDateTime sessionStart = LocalDateTime.now();
 
     /**
-     * <p>validSession.</p>
      *
      * @return a boolean.
      */

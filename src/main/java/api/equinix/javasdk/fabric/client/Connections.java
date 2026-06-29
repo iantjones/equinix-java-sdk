@@ -41,7 +41,6 @@ import java.util.List;
  * retrieving, creating, and monitoring connections between Fabric endpoints.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Connections {
 

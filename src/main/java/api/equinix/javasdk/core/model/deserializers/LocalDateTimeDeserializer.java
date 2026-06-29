@@ -26,14 +26,11 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 /**
- * <p>LocalDateTimeDeserializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
 
-    /** {@inheritDoc} */
     @Override
     public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         String string = jsonParser.getText().trim();

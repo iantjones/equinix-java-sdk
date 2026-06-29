@@ -24,36 +24,19 @@ package api.equinix.javasdk.core.exception;
  * <p>For errors returned by the Equinix API, see {@link EquinixServiceException} and its subclasses.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see EquinixServiceException
  */
 public class EquinixClientException extends BaseException {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * <p>Constructor for EquinixClientException.</p>
-     *
-     * @param message a {@link java.lang.String} object.
-     * @param t a {@link java.lang.Throwable} object.
-     */
     public EquinixClientException(String message, Throwable t) {
         super(message, t);
     }
 
-    /**
-     * <p>Constructor for EquinixClientException.</p>
-     *
-     * @param message a {@link java.lang.String} object.
-     */
     public EquinixClientException(String message) {
         super(message);
     }
 
-    /**
-     * <p>Constructor for EquinixClientException.</p>
-     *
-     * @param t a {@link java.lang.Throwable} object.
-     */
     public EquinixClientException(Throwable t) {
         super(t);
     }

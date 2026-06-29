@@ -38,39 +38,27 @@ import lombok.Value;
 @Builder
 public class PeeringOpportunity {
 
-    /** The customer's ASN. */
     long customerAsn;
 
-    /** The target ASN. */
     long targetAsn;
 
-    /** Human-readable label for the target. */
     String targetLabel;
 
-    /** The metro where both ASNs are present at an Equinix IX. */
     MetroCode metro;
 
-    /** The Equinix IX name where both are present. */
     String ixName;
 
-    /** The PeeringDB IX ID. */
     int ixId;
 
-    /** The target's peering policy. */
     PeeringPolicy targetPolicy;
 
-    /** Whether the target participates in route servers at this IX. */
     boolean targetUsesRouteServer;
 
-    /** The target's IX port speed in Mbps at this location. */
     int targetSpeedMbps;
 
-    /** Feasibility score (0.0 - 1.0) based on policy and route server availability. */
     double feasibility;
 
-    /** Estimated complexity: "Automatic" (route server), "Simple" (bilateral, open policy), "Negotiation Required" (selective/restrictive). */
     String complexity;
 
-    /** Human-readable recommendation. */
     String recommendation;
 }

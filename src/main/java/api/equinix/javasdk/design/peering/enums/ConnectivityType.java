@@ -34,19 +34,14 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ConnectivityType {
 
-    /** Present at an Equinix IX (peering via route server or bilateral BGP). */
     IX_PEERING("IX Peering", "Reachable via Equinix Internet Exchange peering"),
 
-    /** Available as a Fabric service profile (private connection via cloud router or port). */
     FABRIC_CONNECTION("Fabric Connection", "Reachable via Equinix Fabric private connectivity"),
 
-    /** Reachable through both IX peering and Fabric private connections. */
     BOTH("IX + Fabric", "Reachable via both IX peering and Fabric private connectivity"),
 
-    /** Present in the facility (colocation) but not at the IX and not on Fabric. */
     FACILITY_ONLY("Facility Only", "Present in Equinix facility but not at IX or on Fabric"),
 
-    /** Not reachable at this metro through any Equinix path. */
     NONE("None", "Not reachable at this metro through Equinix");
 
     private final String displayName;

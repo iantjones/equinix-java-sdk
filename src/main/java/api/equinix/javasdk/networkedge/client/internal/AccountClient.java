@@ -24,19 +24,11 @@ import api.equinix.javasdk.networkedge.model.json.AccountJson;
 import java.util.List;
 
 /**
- * <p>AccountClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface AccountClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param metroCode a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @return a {@link java.util.List} object.
-     */
     List<AccountJson> list(MetroCode metroCode);
 
     byte[] getOrderSummary(RequestBuilder.OrderSummary requestBuilder);

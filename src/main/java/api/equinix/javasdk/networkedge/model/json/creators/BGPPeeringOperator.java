@@ -29,10 +29,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>BGPPeeringOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Setter(AccessLevel.PRIVATE)
 public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
@@ -40,30 +38,14 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
     @Getter
     private final Pageable<BGPPeering> serviceClient;
 
-    /**
-     * <p>Constructor for BGPPeeringOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public BGPPeeringOperator(Pageable<BGPPeering> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator.BGPPeeringBuilder} object.
-     */
     public BGPPeeringBuilder create() {
         return new BGPPeeringBuilder();
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.BGPPeeringJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator.BGPPeeringUpdater} object.
-     */
     public BGPPeeringUpdater update(BGPPeeringJson json) {
         return new BGPPeeringUpdater(json);
     }

@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
  * {@link api.equinix.javasdk.fabric.model.Metric}.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

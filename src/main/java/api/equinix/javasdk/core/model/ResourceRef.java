@@ -25,7 +25,6 @@ import lombok.NoArgsConstructor;
  * <p>Base class for minimal resource references that contain only a UUID identifier.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @AllArgsConstructor

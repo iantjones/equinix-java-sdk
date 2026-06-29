@@ -21,10 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * <p>UserPublicKey class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

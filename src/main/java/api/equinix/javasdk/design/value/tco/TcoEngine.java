@@ -220,7 +220,6 @@ final class TcoEngine {
                 .build();
     }
 
-    /** Returns a copy of a priced breakdown with the caller's additional line items folded in. */
     private static CostBreakdown withAdditional(CostBreakdown cb, Map<String, BigDecimal> extra) {
         if (!cb.isPriced()) {
             return cb;

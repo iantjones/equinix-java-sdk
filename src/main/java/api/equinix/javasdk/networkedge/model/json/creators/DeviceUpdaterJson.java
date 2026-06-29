@@ -29,10 +29,8 @@ import lombok.Setter;
 import java.util.ArrayList;
 
 /**
- * <p>DeviceUpdaterJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)

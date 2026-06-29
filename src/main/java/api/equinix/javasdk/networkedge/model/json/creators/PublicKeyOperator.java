@@ -25,32 +25,18 @@ import api.equinix.javasdk.networkedge.model.wrappers.PublicKeyWrapper;
 import lombok.Getter;
 
 /**
- * <p>PublicKeyOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PublicKeyOperator {
 
     @Getter
     private final Pageable<PublicKey> serviceClient;
 
-    /**
-     * <p>Constructor for PublicKeyOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public PublicKeyOperator(Pageable<PublicKey> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param keyName a {@link java.lang.String} object.
-     * @param keyValue a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.PublicKeyOperator.PublicKeyBuilder} object.
-     */
     public PublicKeyBuilder create(String keyName, String keyValue) {
         return new PublicKeyOperator.PublicKeyBuilder(keyName, keyValue);
     }

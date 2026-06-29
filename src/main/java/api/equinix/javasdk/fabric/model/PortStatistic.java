@@ -20,45 +20,18 @@ import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.model.implementation.PortStat;
 
 /**
- * <p>PortStatistic interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PortStatistic {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.PortType} object.
-     */
     PortType getType();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getBandwidth.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getBandwidth();
 
-    /**
-     * <p>getStats.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.PortStat} object.
-     */
     PortStat getStats();
 }

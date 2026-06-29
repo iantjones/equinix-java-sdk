@@ -23,7 +23,6 @@ import api.equinix.javasdk.core.model.APIParam;
  * either the management ({@code MGMT}) or WAN ({@code WAN}) interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ACLInterfaceType implements APIParam {
     MGMT,

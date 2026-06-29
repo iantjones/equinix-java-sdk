@@ -109,7 +109,6 @@ class PaginatedListIterableTest {
 
     // --- auto-paging (next()/loadAll()) — previously untested ---
 
-    /** First page is non-last (limit 1 of total 2); the stub client returns the last page. */
     private static PaginatedList<String> twoPageList() throws Exception {
         Pagination notLast = Constants.objectMapper.readValue("{\"offset\":0,\"limit\":1,\"total\":2}", Pagination.class);
         Pagination last = Constants.objectMapper.readValue("{\"offset\":1,\"limit\":1,\"total\":2}", Pagination.class);

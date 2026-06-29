@@ -20,7 +20,6 @@ package api.equinix.javasdk.networkedge.enums;
  * <p>UpgradeStatus class. The status of a device resource upgrade.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum UpgradeStatus {
     REQUEST_ACCEPTED,

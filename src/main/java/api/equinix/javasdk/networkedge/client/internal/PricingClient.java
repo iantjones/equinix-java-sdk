@@ -20,26 +20,12 @@ import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
 
 /**
- * <p>PricingClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PricingClient {
 
-    /**
-     * <p>getPricing.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Pricing} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.Pricing} object.
-     */
     Pricing getPricing(RequestBuilder.Pricing requestBuilder);
 
-    /**
-     * <p>getPricing.</p>
-     *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.Pricing} object.
-     */
     Pricing getPricing(String deviceUuid);
 }

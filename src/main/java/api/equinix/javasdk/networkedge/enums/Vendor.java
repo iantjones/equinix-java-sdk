@@ -19,10 +19,8 @@ package api.equinix.javasdk.networkedge.enums;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * <p>Vendor class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Vendor {
     CISCO("Cisco"),
@@ -42,11 +40,6 @@ public enum Vendor {
         this.formatted = formatted;
     }
 
-    /**
-     * <p>getJsonValue.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @JsonValue
     public String getJsonValue() {
         return formatted;

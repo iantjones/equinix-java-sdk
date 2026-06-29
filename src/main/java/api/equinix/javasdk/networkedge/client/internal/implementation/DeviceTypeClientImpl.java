@@ -25,33 +25,20 @@ import api.equinix.javasdk.networkedge.model.json.DeviceTypeJson;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceTypeWrapper;
 
 /**
- * <p>DeviceTypeClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class DeviceTypeClientImpl extends ResourceClientBase<DeviceType, DeviceTypeJson> implements DeviceTypeClient<DeviceType> {
 
-    /**
-     * <p>Constructor for DeviceTypeClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public DeviceTypeClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Devices", DeviceTypeJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected DeviceType wrap(DeviceTypeJson json) {
         return new DeviceTypeWrapper(json, this);
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     public Page<DeviceType, DeviceTypeJson> list() {
         return listPage("ListDeviceTypes");
     }

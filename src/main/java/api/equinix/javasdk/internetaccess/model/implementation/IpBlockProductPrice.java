@@ -31,7 +31,6 @@ public class IpBlockProductPrice {
     @JsonProperty("uuid")
     private String uuid;
 
-    /** IP block type ({@code IA_IP_BLOCK}). */
     @JsonProperty("type")
     private String type;
 

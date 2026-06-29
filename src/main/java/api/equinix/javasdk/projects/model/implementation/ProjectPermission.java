@@ -27,7 +27,6 @@ import java.util.List;
  * with the {@code includePermissions} query parameter enabled.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

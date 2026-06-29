@@ -38,7 +38,6 @@ import java.util.List;
  * retrieving, and monitoring port bandwidth statistics.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Ports {
 

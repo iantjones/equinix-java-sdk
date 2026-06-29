@@ -24,7 +24,6 @@ import lombok.Getter;
  * <p>InterfaceDetail class. A single interface within an allowed-interface profile.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

@@ -20,7 +20,6 @@ package api.equinix.javasdk.networkedge.enums;
  * <p>NotificationType class. Whether a downtime notification is planned or unplanned.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum NotificationType {
     PLANNED,

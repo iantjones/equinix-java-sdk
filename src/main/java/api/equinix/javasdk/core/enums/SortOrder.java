@@ -17,10 +17,8 @@
 package api.equinix.javasdk.core.enums;
 
 /**
- * <p>SortOrder class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum SortOrder {
     ASC,

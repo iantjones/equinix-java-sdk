@@ -36,10 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>DeviceJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

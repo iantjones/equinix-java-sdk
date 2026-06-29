@@ -33,23 +33,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>VPNClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class VPNClientImpl extends ResourceClientBase<VPN, VPNJson> implements VPNClient<VPN> {
 
-    /**
-     * <p>Constructor for VPNClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public VPNClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "VPNs", VPNJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected VPN wrap(VPNJson json) {
         return new VPNWrapper(json, this);
@@ -58,35 +50,29 @@ public class VPNClientImpl extends ResourceClientBase<VPN, VPNJson> implements V
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public Page<VPN, VPNJson> list(RequestBuilder.VPN requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         return listPage("ListVPNs", qParams);
     }
 
-    /** {@inheritDoc} */
     public VPNJson getByUuid(String uuid) {
         return getOne("GetVPN", uuid);
     }
 
-    /** {@inheritDoc} */
     public VPNJson create(VPNCreatorJson vpnCreatorJson) {
         return getByUuid(createReturningLocationUuid("CreateVPN", null, null, vpnCreatorJson));
     }
 
-    /** {@inheritDoc} */
     public VPNJson update(String uuid, VPNUpdaterJson vpnUpdaterJson) {
         voidOp("UpdateVPN", RequestType.SINGLE, Map.of("uuid", uuid), null, vpnUpdaterJson);
         return getByUuid(uuid);
     }
 
-    /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         return booleanOp("DeleteVPN", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
-    /** {@inheritDoc} */
     public VPNJson refresh(String uuid) {
         return this.getByUuid(uuid);
     }

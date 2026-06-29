@@ -35,7 +35,6 @@ import java.util.Map;
  * pagination parameters are supplied automatically by the SDK's paging machinery.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ProjectClientImpl extends ResourceClientBase<Project, ProjectJson> implements ProjectClient<Project> {
 

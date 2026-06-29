@@ -20,10 +20,8 @@ import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * <p>SharedPortProduct class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum SharedPortProduct implements APIParam {
     @JsonProperty("NA")

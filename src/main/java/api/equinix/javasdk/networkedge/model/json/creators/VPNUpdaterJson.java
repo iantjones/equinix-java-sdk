@@ -22,10 +22,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>VPNUpdaterJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)

@@ -35,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class PatchOperation {
 
-    /** Content-type required by Equinix JSON Patch endpoints. */
     public static final String CONTENT_TYPE = "application/json-patch+json";
 
     @JsonProperty("op")
@@ -48,7 +47,6 @@ public final class PatchOperation {
     private final Object value;
 
     /**
-     * <p>Constructor for PatchOperation.</p>
      *
      * @param op the operation name ({@code replace}, {@code add}, or {@code remove})
      * @param path the JSON Pointer to the target member (e.g. {@code /name})
@@ -93,7 +91,6 @@ public final class PatchOperation {
     }
 
     /**
-     * <p>Getter for the field <code>op</code>.</p>
      *
      * @return the operation name
      */
@@ -102,7 +99,6 @@ public final class PatchOperation {
     }
 
     /**
-     * <p>Getter for the field <code>path</code>.</p>
      *
      * @return the JSON Pointer path
      */
@@ -111,7 +107,6 @@ public final class PatchOperation {
     }
 
     /**
-     * <p>Getter for the field <code>value</code>.</p>
      *
      * @return the operation value, or {@code null} for {@code remove}
      */

@@ -241,7 +241,6 @@ final class MetroOptimizerEngine {
     //  Latency Map
     // ══════════════════════════════════════════════
 
-    /** Builds a bidirectional metro-to-metro latency lookup from Fabric connected metro data. */
     private static Map<MetroCode, Map<MetroCode, Double>> buildLatencyMap(List<Metro> metros) {
         Map<MetroCode, Map<MetroCode, Double>> map = new HashMap<>();
         for (Metro metro : metros) {
@@ -262,7 +261,6 @@ final class MetroOptimizerEngine {
     //  Provider Metro Map
     // ══════════════════════════════════════════════
 
-    /** Maps each provider requirement to the metros where matching service profiles are available. */
     private static Map<String, Map<MetroCode, ProviderAvailability>> buildProviderMetroMap(
             List<ProviderRequirement> requirements, List<ServiceProfile> profiles) {
 
@@ -312,7 +310,6 @@ final class MetroOptimizerEngine {
     //  Candidate Filtering
     // ══════════════════════════════════════════════
 
-    /** Filters metros against hard constraints: excluded metros/regions, compliance zones, required providers. */
     private static List<Metro> filterCandidates(List<Metro> allMetros, OptimizationRequest request,
                                                  Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap) {
         OptimizationConstraints c = request.getConstraints();
@@ -381,7 +378,6 @@ final class MetroOptimizerEngine {
     //  Latency Scoring
     // ══════════════════════════════════════════════
 
-    /** Scores a candidate metro on latency using weighted average distance to all user sites. */
     private static double scoreLatency(Metro candidate, OptimizationRequest request,
                                        Map<MetroCode, Metro> metroMap,
                                        Map<MetroCode, Map<MetroCode, Double>> latencyMap,
@@ -482,7 +478,6 @@ final class MetroOptimizerEngine {
         return 150.0;
     }
 
-    /** Computes great-circle distance in kilometers between two geographic coordinates. */
     private static double haversine(double lat1, double lon1, double lat2, double lon2) {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
@@ -497,7 +492,6 @@ final class MetroOptimizerEngine {
     //  Provider Coverage Scoring
     // ══════════════════════════════════════════════
 
-    /** Scores a candidate metro on provider coverage, weighting required providers more heavily. */
     private static double scoreProviderCoverage(Metro candidate, OptimizationRequest request,
                                                 Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap,
                                                 ScoringWeights weights) {
@@ -546,7 +540,6 @@ final class MetroOptimizerEngine {
     //  Cost Scoring
     // ══════════════════════════════════════════════
 
-    /** Scores a candidate metro on cost using a simplified regional pricing model. */
     private static double scoreCost(Metro candidate, OptimizationRequest request) {
         // Cost scoring uses a simplified model based on region.
         // AMER metros are baseline, EMEA and APAC carry a regional premium.
@@ -565,7 +558,6 @@ final class MetroOptimizerEngine {
     //  Compliance Scoring
     // ══════════════════════════════════════════════
 
-    /** Scores a candidate metro on compliance zone alignment (0 if any zone is violated, 100 otherwise). */
     private static double scoreCompliance(Metro candidate, OptimizationRequest request) {
         OptimizationConstraints c = request.getConstraints();
         if (c.getComplianceZones() == null || c.getComplianceZones().isEmpty()) return 100.0;
@@ -583,7 +575,6 @@ final class MetroOptimizerEngine {
     //  Redundancy Refinement
     // ══════════════════════════════════════════════
 
-    /** Refines redundancy scores for the selected metro set based on actual geographic diversity. */
     private static List<ScoredMetro> refineRedundancyScores(List<ScoredMetro> selected,
                                                              OptimizationRequest request,
                                                              double wRedundancy) {
@@ -738,7 +729,6 @@ final class MetroOptimizerEngine {
     //  Topology Assembly
     // ══════════════════════════════════════════════
 
-    /** Assigns workloads to metros using a greedy strategy: DR to alternate regions, latency-critical to lowest-latency, provider-dependent to best match. */
     private static DeploymentTopology assembleTopology(List<ScoredMetro> selected, OptimizationRequest request,
                                                        Map<MetroCode, Metro> metroMap,
                                                        Map<MetroCode, Map<MetroCode, Double>> latencyMap,
@@ -822,7 +812,6 @@ final class MetroOptimizerEngine {
     //  Risk Analysis
     // ══════════════════════════════════════════════
 
-    /** Identifies deployment risks: single points of failure, single-region concentration, latency violations, provider concentration, redundancy gaps. */
     private static RiskAssessment analyzeRisks(List<ScoredMetro> selected, DeploymentTopology topology,
                                                OptimizationRequest request,
                                                Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap,
@@ -1026,7 +1015,6 @@ final class MetroOptimizerEngine {
     //  Explanation
     // ══════════════════════════════════════════════
 
-    /** Builds a human-readable explanation of the optimization methodology and assumptions. */
     private static OptimizationExplanation buildExplanation(OptimizationRequest request,
                                                              int totalMetros, int candidateMetros) {
         String methodology = "The optimizer evaluates all " + totalMetros + " Equinix metros, filtering to "

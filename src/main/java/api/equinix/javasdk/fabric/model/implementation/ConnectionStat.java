@@ -26,10 +26,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * <p>ConnectionStat class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -26,10 +26,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>ConnectionStatisticWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ConnectionStatisticWrapper extends ResourceImpl<Connection> implements ConnectionStatistic {
 
@@ -38,22 +36,11 @@ public class ConnectionStatisticWrapper extends ResourceImpl<Connection> impleme
     @Getter
     private final PageablePost<Connection> serviceClient;
 
-    /**
-     * <p>Constructor for ConnectionStatisticWrapper.</p>
-     *
-     * @param connectionStatisticJson a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ConnectionStatisticWrapper(ConnectionStatisticJson connectionStatisticJson, PageablePost<Connection> serviceClient) {
         this.jsonObject = connectionStatisticJson;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.ConnectionStatistic} object.
-     */
     public ConnectionStatistic refresh() {
         this.jsonObject = ((ConnectionClientImpl)this.serviceClient).refreshStatistics(this.getUuid(),
                 this.getStats().getStartDateTime(), this.getStats().getEndDateTime(), this.getStats().getViewPoint());

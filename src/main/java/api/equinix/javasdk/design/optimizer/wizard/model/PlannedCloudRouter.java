@@ -12,21 +12,15 @@ import lombok.Value;
 @Builder
 public class PlannedCloudRouter {
 
-    /** The metro where this Cloud Router will be deployed. */
     MetroCode metroCode;
 
-    /** The display name for this Cloud Router (e.g., "FCR-DC"). */
     String name;
 
-    /** The Cloud Router package code (e.g., "STANDARD"). */
     String packageCode;
 
-    /** Optional account number for billing. */
     Long accountNumber;
 
-    /** Optional project UUID for resource grouping. */
     String projectId;
 
-    /** Notification email for provisioning updates. */
     String notificationEmail;
 }

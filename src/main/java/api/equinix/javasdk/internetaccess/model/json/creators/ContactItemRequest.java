@@ -36,7 +36,6 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ContactItemRequest {
 
-    /** Contact type (required). */
     @JsonProperty("type") private ContactType type;
 
     @JsonProperty("registeredUser") private String registeredUser;
@@ -57,7 +56,6 @@ public class ContactItemRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ContactItemDetailRequest {
 
-        /** One of {@code EMAIL}, {@code PHONE}, {@code MOBILE} or {@code SECONDARY_EMAIL}. */
         @JsonProperty("type") private String type;
         @JsonProperty("value") private String value;
         @JsonProperty("notes") private String notes;

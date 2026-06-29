@@ -32,31 +32,18 @@ import api.equinix.javasdk.fabric.model.wrappers.StreamSubscriptionWrapper;
 import lombok.Getter;
 
 /**
- * <p>StreamSubscriptionOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription> {
 
     @Getter
     private final Pageable<StreamSubscription> serviceClient;
 
-    /**
-     * <p>Constructor for StreamSubscriptionOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public StreamSubscriptionOperator(Pageable<StreamSubscription> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param streamId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator.StreamSubscriptionBuilder} object.
-     */
     public StreamSubscriptionBuilder create(String streamId) {
         return new StreamSubscriptionBuilder(streamId);
     }

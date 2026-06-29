@@ -17,10 +17,8 @@
 package api.equinix.javasdk.core.enums;
 
 /**
- * <p>JsonOperation class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum JsonOperation {
     CREATE,

@@ -19,10 +19,8 @@ package api.equinix.javasdk.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * <p>ServiceTokenType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ServiceTokenType {
     VC_TOKEN,

@@ -68,7 +68,6 @@ public class ServiceSearchRequest {
     }
 
     /**
-     * <p>Getter for the field <code>filter</code>.</p>
      *
      * @return the filter
      */
@@ -76,7 +75,6 @@ public class ServiceSearchRequest {
         return filter;
     }
 
-    /** The {@code filter} object of an EIA v2 service search. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Filter {
 
@@ -84,7 +82,6 @@ public class ServiceSearchRequest {
         private final List<Expression> and = new ArrayList<>();
 
         /**
-         * <p>Getter for the field <code>and</code>.</p>
          *
          * @return the list of AND expressions
          */
@@ -93,7 +90,6 @@ public class ServiceSearchRequest {
         }
     }
 
-    /** A single equality expression in an EIA v2 service search filter. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Expression {
 
@@ -112,7 +108,6 @@ public class ServiceSearchRequest {
         }
 
         /**
-         * <p>Getter for the field <code>property</code>.</p>
          *
          * @return the property pointer
          */
@@ -121,7 +116,6 @@ public class ServiceSearchRequest {
         }
 
         /**
-         * <p>Getter for the field <code>operator</code>.</p>
          *
          * @return the operator (always {@code =})
          */
@@ -130,7 +124,6 @@ public class ServiceSearchRequest {
         }
 
         /**
-         * <p>Getter for the field <code>values</code>.</p>
          *
          * @return the values to match
          */

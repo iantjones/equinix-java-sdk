@@ -40,10 +40,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>ConnectionsClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ConnectionClient<T> extends PageablePost<T> {
 
@@ -52,7 +50,6 @@ public interface ConnectionClient<T> extends PageablePost<T> {
     /**
      * <p>Validates connections against the supplied filter (auth key or VLAN availability).</p>
      *
-     * @param filter a {@link api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList} object.
      * @return a {@link java.util.List} of {@link api.equinix.javasdk.fabric.model.ValidateConnectionResult} objects.
      */
     List<ValidateConnectionResult> validate(FilterPropertyList filter);
@@ -69,37 +66,16 @@ public interface ConnectionClient<T> extends PageablePost<T> {
 
     List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList);
 
-    /**
-     * <p>getStatistics.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @param viewPoint a {@link api.equinix.javasdk.fabric.enums.Side} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
-     */
     ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
 
     /**
      * <p>Retrieves metrics for a single connection over the supplied time range.</p>
      *
-     * @param uuid a {@link java.lang.String} object.
      * @param name the metric name to retrieve, or {@code null} for all metrics.
-     * @param fromDateTime a {@link java.time.LocalDateTime} object.
-     * @param toDateTime a {@link java.time.LocalDateTime} object.
      * @return a {@link java.util.List} of {@link api.equinix.javasdk.fabric.model.Metric} objects.
      */
     List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 
-    /**
-     * <p>refreshStatistics.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @param viewPoint a {@link api.equinix.javasdk.fabric.enums.Side} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson} object.
-     */
     ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
 
     List<RouteAggregationAttachment> getRouteAggregations(String connectionId);

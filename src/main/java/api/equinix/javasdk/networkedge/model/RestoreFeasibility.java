@@ -24,38 +24,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>RestoreFeasibility interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface RestoreFeasibility {
 
-    /**
-     * <p>getDeviceBackup.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     */
     BackupJson getDeviceBackup();
 
-    /**
-     * <p>getServices.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
     Map<ServiceType, List<BackupService>> getServices();
 
-    /**
-     * <p>getRestoreAllowedAfterDeleteOrEdit.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean getRestoreAllowedAfterDeleteOrEdit();
 
-    /**
-     * <p>getRestoreAllowed.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean getRestoreAllowed();
 }

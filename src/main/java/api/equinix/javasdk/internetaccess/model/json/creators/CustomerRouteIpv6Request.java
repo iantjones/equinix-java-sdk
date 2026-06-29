@@ -31,6 +31,5 @@ public class CustomerRouteIpv6Request {
 
     @JsonProperty("ipBlock") private IpBlockIpv6Request ipBlock;
 
-    /** Subnet prefix, e.g. {@code 2001:db8::/64}. */
     @JsonProperty("prefix") private String prefix;
 }

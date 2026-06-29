@@ -40,30 +40,21 @@ import java.util.List;
 @Builder
 public class CorrelatedFailure {
 
-    /** The failure scope that creates the correlation. */
     FailureScope scope;
 
-    /** The specific entity that is the shared failure domain (metro code, IX name, etc.). */
     String failureDomain;
 
-    /** The metro affected by this correlated failure. */
     MetroCode affectedMetro;
 
-    /** ASNs whose connectivity would be simultaneously affected. */
     List<Long> affectedAsns;
 
-    /** Human-readable labels for affected ASNs. */
     List<String> affectedLabels;
 
-    /** Types of connectivity affected (e.g., "IX Peering to AWS", "Fabric Connection to Azure"). */
     List<String> affectedPaths;
 
-    /** Percentage of total analyzed connectivity affected by this failure (0.0 - 1.0). */
     double impactRatio;
 
-    /** Severity: CRITICAL if > 80% impact, HIGH if > 50%, MEDIUM if > 25%, LOW otherwise. */
     String severity;
 
-    /** Recommended mitigation strategy. */
     String recommendation;
 }

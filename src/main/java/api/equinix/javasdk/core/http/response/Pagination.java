@@ -29,7 +29,6 @@ import lombok.Setter;
  * first/last pages.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see PaginatedList
  */
 @Getter

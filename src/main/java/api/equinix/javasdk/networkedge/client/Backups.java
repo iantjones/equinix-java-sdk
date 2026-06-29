@@ -28,7 +28,6 @@ import api.equinix.javasdk.networkedge.model.json.creators.BackupOperator;
  * list, retrieve, download, and create device backups, as well as check restore feasibility.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Backups {
 

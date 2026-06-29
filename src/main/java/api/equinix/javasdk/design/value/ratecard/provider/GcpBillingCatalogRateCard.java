@@ -58,10 +58,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class GcpBillingCatalogRateCard implements RateCard {
 
-    /** The public Cloud Billing Catalog endpoint root. */
     public static final String DEFAULT_ENDPOINT = "https://cloudbilling.googleapis.com";
 
-    /** Google's Compute Engine service id, under which network-egress SKUs are published. */
     public static final String COMPUTE_ENGINE_SERVICE = "6F81-5844-456A";
 
     private static final Currency USD = Currency.getInstance("USD");
@@ -171,7 +169,6 @@ public final class GcpBillingCatalogRateCard implements RateCard {
         return false;
     }
 
-    /** The first paid pricing tier's per-GB USD price (units + nanos), or null. */
     private static BigDecimal firstPaidTier(JsonNode sku) {
         for (JsonNode info : sku.path("pricingInfo")) {
             JsonNode tiers = info.path("pricingExpression").path("tieredRates");

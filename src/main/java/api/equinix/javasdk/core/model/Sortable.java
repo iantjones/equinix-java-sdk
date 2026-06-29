@@ -23,10 +23,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 /**
- * <p>Sortable class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter
@@ -37,28 +35,14 @@ public class Sortable implements APIParam {
 
     final private SortOrder sortOrder;
 
-    /**
-     * <p>build.</p>
-     *
-     * @param propertyName a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.core.model.Sortable} object.
-     */
     public static Sortable build(String propertyName) {
         return new Sortable(propertyName, SortOrder.ASC);
     }
 
-    /**
-     * <p>build.</p>
-     *
-     * @param propertyName a {@link java.lang.String} object.
-     * @param sortOrder a {@link api.equinix.javasdk.core.enums.SortOrder} object.
-     * @return a {@link api.equinix.javasdk.core.model.Sortable} object.
-     */
     public static Sortable build(String propertyName, SortOrder sortOrder) {
         return new Sortable(propertyName, sortOrder);
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
         return (sortOrder == SortOrder.DESC ? "-" : "").concat(propertyName);

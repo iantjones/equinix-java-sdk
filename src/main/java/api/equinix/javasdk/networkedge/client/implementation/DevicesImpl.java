@@ -48,10 +48,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>DevicesImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class DevicesImpl implements Devices {
@@ -62,13 +60,6 @@ public class DevicesImpl implements Devices {
 
     private final DeviceTypeClient<DeviceType> deviceTypesServiceClient;
 
-    /**
-     * <p>Constructor for DevicesImpl.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.networkedge.client.internal.DeviceClient} object.
-     * @param deviceTypesServiceClient a {@link api.equinix.javasdk.networkedge.client.internal.DeviceTypeClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
-     */
     public DevicesImpl(DeviceClient<Device> serviceClient,
                        DeviceTypeClient<DeviceType> deviceTypesServiceClient,
                        NetworkEdge serviceManager) {
@@ -77,11 +68,6 @@ public class DevicesImpl implements Devices {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<Device> list() {
         return list(null);
     }
@@ -89,7 +75,6 @@ public class DevicesImpl implements Devices {
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public PaginatedList<Device> list(RequestBuilder.Device requestBuilder) {
         Page<Device, DeviceJson> responsePage = serviceClient.list(requestBuilder);
@@ -97,53 +82,40 @@ public class DevicesImpl implements Devices {
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /**
-     * <p>listDeviceTypes.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<DeviceType> listDeviceTypes() {
         Page<DeviceType, DeviceTypeJson> responsePage = deviceTypesServiceClient.list();
         PaginatedList<DeviceType> deviceTypeList = Utils.mapPaginatedList(responsePage.getItems(), this.deviceTypesServiceClient, DeviceTypeWrapper::new);
         return new PaginatedList<>(deviceTypeList, this.deviceTypesServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public List<NetworkInterface> listInterfaces(String uuid) {
         return serviceClient.listInterfaces(uuid);
     }
 
-    /** {@inheritDoc} */
     public AllowedInterfaceResponse listAllowedInterfaces(RequestBuilder.AllowedInterfaces requestBuilder) {
         return serviceClient.getAllowedInterfaces(requestBuilder.getDeviceType(), Utils.newMap(requestBuilder));
     }
 
-    /** {@inheritDoc} */
     public List<DeviceReboot> listReloadHistory(String uuid) {
         return serviceClient.listReloadHistory(uuid);
     }
 
-    /** {@inheritDoc} */
     public List<DeviceUpgrade> listUpgradeHistory(String uuid) {
         return serviceClient.listUpgradeHistory(uuid);
     }
 
-    /** {@inheritDoc} */
     public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime) {
         return serviceClient.getInterfaceStatistics(uuid, interfaceId, startDateTime, endDateTime);
     }
 
-    /** {@inheritDoc} */
     public List<DownloadableImage> listDownloadableImages(String deviceType) {
         return serviceClient.listDownloadableImages(deviceType);
     }
 
-    /** {@inheritDoc} */
     public ImageDownload requestImageDownload(String deviceType, String version) {
         return serviceClient.requestImageDownload(deviceType, version);
     }
 
-    /** {@inheritDoc} */
     public Device getByUuid(String uuid) {
         DeviceJson deviceJson = serviceClient.getByUuid(uuid);
         return new DeviceWrapper(deviceJson, this.serviceClient);
@@ -152,7 +124,6 @@ public class DevicesImpl implements Devices {
     /**
      * {@inheritDoc}
      *
-     * <p>define.</p>
      */
     public DeviceOperator.DeviceBuilder define(String deviceName) {
         return new DeviceOperator(this.serviceClient).create(deviceName);
@@ -161,48 +132,39 @@ public class DevicesImpl implements Devices {
     /**
      * {@inheritDoc}
      *
-     * <p>define.</p>
      */
     public DeviceOperator.DeviceBuilderSecondary defineSecondary(String secondaryDeviceName, String primaryDeviceUuid) {
         return new DeviceOperator(this.serviceClient).createRedundantDevice(secondaryDeviceName, primaryDeviceUuid);
     }
 
-    /** {@inheritDoc} */
     public String postLicenseFile(MetroCode metroCode, String deviceTypeCode, LicenseType licenseType, String fileContents) {
         return this.serviceClient.postLicenseFile(metroCode, deviceTypeCode, licenseType, fileContents);
     }
 
-    /** {@inheritDoc} */
     public Boolean softReboot(String uuid) {
         return this.serviceClient.softReboot(uuid);
     }
 
-    /** {@inheritDoc} */
     public Boolean createRMA(String uuid, DeviceRMARequest deviceRMARequest) {
         return this.serviceClient.createRMA(uuid, deviceRMARequest);
     }
 
-    /** {@inheritDoc} */
     public DeviceACL getDeviceAcl(String uuid) {
         return this.serviceClient.getACL(uuid);
     }
 
-    /** {@inheritDoc} */
     public DeviceACL addDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest) {
         return this.serviceClient.addACL(uuid, deviceACLRequest, null);
     }
 
-    /** {@inheritDoc} */
     public DeviceACL addDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
         return this.serviceClient.addACL(uuid, deviceACLRequest, accountUcmId);
     }
 
-    /** {@inheritDoc} */
     public DeviceACL updateDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest) {
         return this.serviceClient.updateACL(uuid, deviceACLRequest, null);
     }
 
-    /** {@inheritDoc} */
     public DeviceACL updateDeviceAcl(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
         return this.serviceClient.updateACL(uuid, deviceACLRequest, accountUcmId);
     }

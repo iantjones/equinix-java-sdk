@@ -19,24 +19,12 @@ package api.equinix.javasdk.core.client.interfaces;
 import api.equinix.javasdk.core.client.EquinixClient;
 
 /**
- * <p>CoreConfig interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface CoreConfig {
 
-    /**
-     * <p>getCoreClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.client.interfaces.CoreClient} object.
-     */
     CoreClient getCoreClient();
 
-    /**
-     * <p>getEquinixClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.client.EquinixClient} object.
-     */
     EquinixClient getEquinixClient();
 }

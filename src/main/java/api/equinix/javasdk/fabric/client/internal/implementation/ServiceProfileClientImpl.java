@@ -46,7 +46,6 @@ import java.util.Map;
  * factory, and the per-operation endpoint names.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile, ServiceProfileJson>
         implements ServiceProfileClient<ServiceProfile> {

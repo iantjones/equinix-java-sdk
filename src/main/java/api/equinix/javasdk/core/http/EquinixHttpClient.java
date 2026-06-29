@@ -60,27 +60,19 @@ public class EquinixHttpClient implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(EquinixHttpClient.class);
 
-    /** Response header carrying a server-requested retry delay. */
     private static final String RETRY_AFTER_HEADER = "Retry-After";
 
-    /** Maximum time (ms) to wait for a connection to be established. */
     private static final int DEFAULT_CONNECT_TIMEOUT_MS = 10_000;
-    /** Maximum time (ms) to wait for data between packets once connected. */
     private static final int DEFAULT_SOCKET_TIMEOUT_MS = 60_000;
-    /** Maximum time (ms) to wait for a connection lease from the pool. */
     private static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 5_000;
-    /** Maximum total pooled connections across all routes. */
     private static final int DEFAULT_MAX_TOTAL_CONNECTIONS = 50;
-    /** Maximum pooled connections per route (the Equinix API host). */
     private static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 20;
 
     private final CloseableHttpClient httpClient;
     private final RequestFactory requestFactory = new RequestFactory();
     private final Protocol protocol = Protocol.HTTPS;
-    /** When true, the request body is logged at DEBUG level for diagnostics. */
     private volatile boolean outputRequestJson = true;
 
-    /** Automatic retry behavior for transient failures; defaults to {@link RetryPolicy#defaultPolicy()}. */
     private volatile RetryPolicy retryPolicy = RetryPolicy.defaultPolicy();
 
     /**
@@ -93,7 +85,6 @@ public class EquinixHttpClient implements Closeable {
     }
 
     /**
-     * <p>Constructor for EquinixHttpClient.</p>
      *
      * <p>Builds a connection-pooled, timeout-bounded HTTP client. Without explicit
      * timeouts a stalled server can block a calling thread indefinitely; without a
@@ -130,12 +121,7 @@ public class EquinixHttpClient implements Closeable {
     }
 
     /**
-     * <p>executeSingleRequest.</p>
      *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param singleRequestParams a {@link api.equinix.javasdk.core.http.EquinixHttpClient.SingleRequestParams} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     public <T> EquinixResponse<T> executeSingleRequest(EquinixRequest<T> equinixRequest, SingleRequestParams singleRequestParams)
@@ -319,11 +305,6 @@ public class EquinixHttpClient implements Closeable {
         return (status / 100 == HttpStatus.SC_OK / 100);
     }
 
-    /**
-     * <p>Getter for the field <code>protocol</code>.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.Protocol} object.
-     */
     public Protocol getProtocol() {
         return protocol;
     }

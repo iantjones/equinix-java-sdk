@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>ClientBase class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ClientBase {
 
@@ -41,35 +39,16 @@ public class ClientBase {
 
     private final String requestParent;
 
-    /**
-     * <p>Constructor for ClientBase.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.core.client.Config} object.
-     * @param functionalArea a {@link java.lang.String} object.
-     * @param requestParent a {@link java.lang.String} object.
-     */
     protected ClientBase(Config configClient, String functionalArea, String requestParent) {
         this.configClient = configClient;
         this.functionalArea = functionalArea;
         this.requestParent = requestParent;
     }
 
-    /**
-     * <p>Getter for the field <code>configClient</code>.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.client.Config} object.
-     */
     protected Config getConfigClient() {
         return this.configClient;
     }
 
-    /**
-     * <p>invoke.</p>
-     *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     */
     protected <T> EquinixResponse<T> invoke(EquinixRequest<T> equinixRequest) {
         return this.getConfigClient().getEquinixClient().invoke(equinixRequest);
     }
@@ -215,19 +194,16 @@ public class ClientBase {
     // one-liners without forcing a model/wrapper that does not exist.
     // -----------------------------------------------------------------------
 
-    /** GET a single response of an explicit type. */
     protected <R> R getAs(String serviceEndpoint, Class<R> responseType) {
         return getAs(serviceEndpoint, null, null, responseType);
     }
 
-    /** GET a single response of an explicit type, addressed by path and/or query parameters. */
     protected <R> R getAs(String serviceEndpoint, Map<String, String> pathParams,
                           Map<String, List<String>> queryParams, Class<R> responseType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, responseType);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** POST a body and read a single response of an explicit type. */
     protected <R> R postAs(String serviceEndpoint, Object body, Class<R> responseType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, responseType);
         if (body != null) {
@@ -236,7 +212,6 @@ public class ClientBase {
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** POST a body and deserialize a response of an explicit {@link TypeReference} (e.g. a bulk {@code List<M>}). */
     protected <R> R postForType(String serviceEndpoint, Object body, TypeReference<?> typeReference) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, typeReference);
         if (body != null) {
@@ -245,14 +220,12 @@ public class ClientBase {
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** GET a non-paginated list of an explicit element type. */
     protected <R> List<R> listAs(String serviceEndpoint, Map<String, String> pathParams,
                                  Map<String, List<String>> queryParams, Class<R> elementType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.LIST, pathParams, queryParams, elementType);
         return Utils.handleListResponse(invoke(request), request);
     }
 
-    /** POST a body and read a non-paginated list of an explicit element type. */
     protected <R> List<R> postListAs(String serviceEndpoint, Object body, Class<R> elementType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.LIST, elementType);
         if (body != null) {
@@ -261,7 +234,6 @@ public class ClientBase {
         return Utils.handleListResponse(invoke(request), request);
     }
 
-    /** Execute a request whose response is a flat {@code Map<String,String>} (e.g. terms/options endpoints). */
     protected Map<String, String> mapOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
                                         Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
@@ -271,7 +243,6 @@ public class ClientBase {
         return Utils.handleMapResponse(request, invoke(request));
     }
 
-    /** Execute a request whose success is conveyed only by the HTTP status (returns {@code true} on 2xx). */
     protected boolean booleanOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
                                 Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
@@ -281,7 +252,6 @@ public class ClientBase {
         return Utils.handleBooleanResponse(invoke(request), request);
     }
 
-    /** Execute a request whose response body is returned verbatim as a string. */
     protected String stringOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
                               Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
@@ -291,7 +261,6 @@ public class ClientBase {
         return Utils.handleStringResponse(invoke(request));
     }
 
-    /** GET a binary response (e.g. a document download). */
     protected byte[] bytesOp(String serviceEndpoint, Map<String, String> pathParams, Map<String, List<String>> queryParams) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, Object.class);
         return Utils.handleByteResponse(invoke(request));
@@ -311,7 +280,6 @@ public class ClientBase {
         Utils.handleBooleanResponse(invoke(request), request);
     }
 
-    /** POST a body under path parameters and deserialize a response of an explicit {@link TypeReference}. */
     protected <R> R postForType(String serviceEndpoint, Map<String, String> pathParams, Object body, TypeReference<?> typeReference) {
         EquinixRequest<R> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, typeReference);
         if (body != null) {
@@ -320,7 +288,6 @@ public class ClientBase {
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** POST a body under path + query parameters and deserialize a response of an explicit {@link TypeReference}. */
     protected <R> R postForType(String serviceEndpoint, Map<String, String> pathParams,
                                 Map<String, List<String>> queryParams, Object body, TypeReference<?> typeReference) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, typeReference);

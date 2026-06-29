@@ -87,7 +87,6 @@ public final class CustomRateCard implements RateCard {
                 : PriceQuote.of(b.defaultRouterMonthly, b.defaultRouterSetup, currency, PriceSource.CUSTOM);
     }
 
-    /** Starts a new custom rate-card builder. */
     public static Builder builder() {
         return new Builder();
     }
@@ -149,7 +148,6 @@ public final class CustomRateCard implements RateCard {
                 + "|" + (term == null ? WILDCARD : term.name());
     }
 
-    /** Candidate connection keys from most to least specific, so the closest declared rate wins. */
     private static List<String> connKeyCandidates(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
         List<String> keys = new ArrayList<>(4);
         keys.add(connKey(type, bandwidthMbps, metro, term));
@@ -165,7 +163,6 @@ public final class CustomRateCard implements RateCard {
                 + "|" + (term == null ? WILDCARD : term.name());
     }
 
-    /** Candidate router keys from most to least specific. */
     private static List<String> routerKeyCandidates(String packageCode, MetroCode metro, Term term) {
         List<String> keys = new ArrayList<>(4);
         keys.add(routerKey(packageCode, metro, term));
@@ -185,7 +182,6 @@ public final class CustomRateCard implements RateCard {
                 + "|" + (term == null ? WILDCARD : term.name());
     }
 
-    /** Candidate colocation keys from most to least specific. */
     private static List<String> coloKeyCandidates(ColocationItem item, MetroCode metro, Term term) {
         List<String> keys = new ArrayList<>(4);
         keys.add(coloKey(item, metro, term));
@@ -197,7 +193,6 @@ public final class CustomRateCard implements RateCard {
 
     // ── Builder ──
 
-    /** Fluent builder for {@link CustomRateCard}. */
     public static final class Builder {
 
         private Currency currency = Currency.getInstance("USD");
@@ -210,24 +205,20 @@ public final class CustomRateCard implements RateCard {
         private BigDecimal defaultRouterMonthly;
         private BigDecimal defaultRouterSetup = BigDecimal.ZERO;
 
-        /** Sets the currency for all rates on this card. Defaults to USD. */
         public Builder currency(Currency currency) {
             this.currency = currency;
             return this;
         }
 
-        /** Sets the currency by ISO 4217 code (e.g. {@code "USD"}, {@code "EUR"}). */
         public Builder currency(String currencyCode) {
             this.currency = Currency.getInstance(currencyCode);
             return this;
         }
 
-        /** Declares a metro/term-agnostic monthly-only rate for a connection of the given type and bandwidth. */
         public Builder connectionRate(ConnectionType type, int bandwidthMbps, BigDecimal monthly) {
             return connectionRate(type, bandwidthMbps, null, null, monthly, BigDecimal.ZERO);
         }
 
-        /** Declares a metro/term-agnostic monthly + one-time setup rate for a connection of the given type and bandwidth. */
         public Builder connectionRate(ConnectionType type, int bandwidthMbps, BigDecimal monthly, BigDecimal setup) {
             return connectionRate(type, bandwidthMbps, null, null, monthly, setup);
         }
@@ -253,24 +244,20 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
-        /** Fallback monthly rate used for any connection without a more specific entry. */
         public Builder defaultConnectionRate(BigDecimal monthly) {
             return defaultConnectionRate(monthly, BigDecimal.ZERO);
         }
 
-        /** Fallback monthly + setup rate used for any connection without a more specific entry. */
         public Builder defaultConnectionRate(BigDecimal monthly, BigDecimal setup) {
             this.defaultConnectionMonthly = monthly;
             this.defaultConnectionSetup = setup;
             return this;
         }
 
-        /** Declares a metro/term-agnostic monthly-only rate for a Cloud Router package. */
         public Builder cloudRouterRate(String packageCode, BigDecimal monthly) {
             return cloudRouterRate(packageCode, null, null, monthly, BigDecimal.ZERO);
         }
 
-        /** Declares a metro/term-agnostic monthly + one-time setup rate for a Cloud Router package. */
         public Builder cloudRouterRate(String packageCode, BigDecimal monthly, BigDecimal setup) {
             return cloudRouterRate(packageCode, null, null, monthly, setup);
         }
@@ -294,12 +281,10 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
-        /** Fallback monthly rate used for any Cloud Router package without a more specific entry. */
         public Builder defaultCloudRouterRate(BigDecimal monthly) {
             return defaultCloudRouterRate(monthly, BigDecimal.ZERO);
         }
 
-        /** Fallback monthly + setup rate used for any Cloud Router package without a more specific entry. */
         public Builder defaultCloudRouterRate(BigDecimal monthly, BigDecimal setup) {
             this.defaultRouterMonthly = monthly;
             this.defaultRouterSetup = setup;
@@ -329,7 +314,6 @@ public final class CustomRateCard implements RateCard {
             return colocationRate(item, null, null, monthly, BigDecimal.ZERO);
         }
 
-        /** Declares a metro/term-agnostic monthly + one-time setup rate for a colocation primitive. */
         public Builder colocationRate(ColocationItem item, BigDecimal monthly, BigDecimal setup) {
             return colocationRate(item, null, null, monthly, setup);
         }
@@ -352,7 +336,6 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
-        /** Builds the immutable {@link CustomRateCard}. */
         public CustomRateCard build() {
             return new CustomRateCard(this);
         }

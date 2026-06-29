@@ -42,22 +42,16 @@ import java.util.stream.Collectors;
 @Builder
 public class UnifiedConnectivityView {
 
-    /** The target ASN. */
     long asn;
 
-    /** Human-readable label for the target. */
     String label;
 
-    /** Per-metro connectivity entries. */
     List<MetroConnectivity> metroConnectivity;
 
-    /** Total number of metros where this ASN is reachable via any Equinix path. */
     int reachableMetroCount;
 
-    /** Total IX capacity across all metros in Mbps. */
     long totalIxCapacityMbps;
 
-    /** Whether Fabric private connections are available at any metro. */
     boolean fabricAvailableAnywhere;
 
     /**

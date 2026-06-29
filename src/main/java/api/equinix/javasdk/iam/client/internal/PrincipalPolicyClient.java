@@ -29,18 +29,13 @@ import api.equinix.javasdk.iam.model.json.creators.UpdatePrincipalPolicyRequest;
  */
 public interface PrincipalPolicyClient {
 
-    /** {@code listPrincipalPolicies} */
     PrincipalPolicyList list(String projectId, String pageToken, Integer pageSize);
 
-    /** {@code getPrincipalPolicy} */
     PrincipalPolicy getByUuid(String projectId, String userPrincipal);
 
-    /** {@code updatePrincipalPolicy} */
     PrincipalPolicy update(String projectId, String userPrincipal, UpdatePrincipalPolicyRequest request);
 
-    /** {@code enablePrincipalPolicy} */
     PrincipalPolicy enable(String projectId, String userPrincipal, String lastRev);
 
-    /** {@code disablePrincipalPolicy} */
     PrincipalPolicy disable(String projectId, String userPrincipal, String lastRev);
 }

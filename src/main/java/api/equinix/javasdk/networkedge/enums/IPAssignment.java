@@ -19,10 +19,8 @@ package api.equinix.javasdk.networkedge.enums;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * <p>IPAssignment class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum IPAssignment {
     DHCP,

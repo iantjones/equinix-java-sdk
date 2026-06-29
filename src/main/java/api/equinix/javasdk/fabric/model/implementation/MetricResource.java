@@ -25,7 +25,6 @@ import lombok.Getter;
  * was collected for (the metric's subject resource).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -19,10 +19,8 @@ package api.equinix.javasdk.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * <p>AccessPointType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum AccessPointType {
     VD,

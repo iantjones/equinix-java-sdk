@@ -22,36 +22,26 @@ import java.util.Optional;
 @Builder
 public class TcoComparison {
 
-    /** Per-archetype cost breakdowns, in the order requested. */
     List<CostBreakdown> breakdowns;
 
-    /** The lowest-monthly-cost archetype among those that could be priced. */
     DeploymentArchetype recommended;
 
-    /** The baseline archetype savings are measured against (public cloud over internet). */
     DeploymentArchetype baseline;
 
-    /** Monthly saving of the recommended archetype versus the baseline; {@code null} if not computable. */
     BigDecimal monthlySavingsVsBaseline;
 
-    /** Annual saving of the recommended archetype versus the baseline; {@code null} if not computable. */
     BigDecimal annualSavingsVsBaseline;
 
-    /** Currency code (ISO 4217). */
     String currency;
 
-    /** Provenance/limitations disclaimer. */
     String disclaimer;
 
-    /** The reference-data as-of month (e.g. {@code "2026-06"}). */
     String asOf;
 
-    /** Returns the breakdown for a given archetype, if it was computed. */
     public Optional<CostBreakdown> breakdown(DeploymentArchetype archetype) {
         return breakdowns.stream().filter(b -> b.getArchetype() == archetype).findFirst();
     }
 
-    /** Returns the breakdown for the recommended archetype, if any. */
     public Optional<CostBreakdown> recommendedBreakdown() {
         return recommended == null ? Optional.empty() : breakdown(recommended);
     }

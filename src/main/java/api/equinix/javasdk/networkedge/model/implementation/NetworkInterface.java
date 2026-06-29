@@ -28,10 +28,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>NetworkInterface class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

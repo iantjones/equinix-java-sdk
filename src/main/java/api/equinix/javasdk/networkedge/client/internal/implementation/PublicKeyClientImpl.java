@@ -29,36 +29,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>PublicKeyClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKeyJson> implements PublicKeyClient<PublicKey> {
 
-    /**
-     * <p>Constructor for PublicKeyClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public PublicKeyClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "PublicKeys", PublicKeyJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected PublicKey wrap(PublicKeyJson json) {
         return new PublicKeyWrapper(json, this);
     }
 
-    /** {@inheritDoc} */
     public List<PublicKeyJson> list(String accountUcmId) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
         PublicKeyJson.NestedList nestedList = getAs("ListPublicKeys", null, qParams, PublicKeyJson.NestedList.class);
         return nestedList.getData();
     }
 
-    /** {@inheritDoc} */
     public PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson) {
         return postOne("CreatePublicKey", publicKeyCreatorJson);
     }

@@ -22,7 +22,6 @@ package api.equinix.javasdk.core.exception;
  * typically transient and may succeed on retry.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixServerException extends EquinixServiceException {
 

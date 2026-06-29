@@ -24,10 +24,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>DeviceTypeWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class DeviceTypeWrapper extends ResourceImpl<DeviceType> implements DeviceType {
 
@@ -36,12 +34,6 @@ public class DeviceTypeWrapper extends ResourceImpl<DeviceType> implements Devic
     @Getter
     private final Pageable<DeviceType> serviceClient;
 
-    /**
-     * <p>Constructor for DeviceTypeWrapper.</p>
-     *
-     * @param deviceTypeJson a {@link api.equinix.javasdk.networkedge.model.json.DeviceTypeJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public DeviceTypeWrapper(DeviceTypeJson deviceTypeJson, Pageable<DeviceType> serviceClient) {
         this.jsonObject = deviceTypeJson;
         this.serviceClient = serviceClient;

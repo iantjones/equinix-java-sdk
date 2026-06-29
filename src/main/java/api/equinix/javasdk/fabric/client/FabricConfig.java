@@ -20,62 +20,25 @@ import api.equinix.javasdk.fabric.client.internal.*;
 import api.equinix.javasdk.fabric.model.*;
 
 /**
- * <p>FabricConfig interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface FabricConfig {
 
-    /**
-     * <p>getMetrosClient.</p>
-     *
-     * @return a {@link MetroClient} object.
-     */
     MetroClient<Metro> getMetrosClient();
 
-    /**
-     * <p>getServiceTokensClient.</p>
-     *
-     * @return a {@link ServiceTokenClient} object.
-     */
     ServiceTokenClient<ServiceToken> getServiceTokensClient();
 
-    /**
-     * <p>getPortsClient.</p>
-     *
-     * @return a {@link PortClient} object.
-     */
     PortClient<Port> getPortsClient();
 
-    /**
-     * <p>getPortStatisticsClient.</p>
-     *
-     * @return a {@link PortStatisticClient} object.
-     */
     PortStatisticClient<PortStatistic> getPortStatisticsClient();
 
-    /**
-     * <p>getConnectionsClient.</p>
-     *
-     * @return a {@link ConnectionClient} object.
-     */
     ConnectionClient<Connection> getConnectionsClient();
 
-    /**
-     * <p>getMetricsClient.</p>
-     *
-     * @return a {@link MetricClient} object.
-     */
     MetricClient<Metric> getMetricsClient();
 
     PricingClient<Pricing> getPricingClient();
 
-    /**
-     * <p>getServiceProfilesClient.</p>
-     *
-     * @return a {@link ServiceProfileClient} object.
-     */
     ServiceProfileClient<ServiceProfile> getServiceProfilesClient();
 
     CloudRouterClient<CloudRouter> getCloudRoutersClient();

@@ -24,10 +24,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>CustomField class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -37,21 +37,15 @@ import lombok.Value;
 @Builder
 public class DiversityScore {
 
-    /** The primary metro being protected. */
     MetroCode primaryMetro;
 
-    /** The backup/failover metro. */
     MetroCode backupMetro;
 
-    /** Straight-line distance between the two metros in kilometers. */
     double distanceKm;
 
-    /** Whether the two metros are in the same Equinix region (AMER/EMEA/APAC). */
     boolean sameRegion;
 
-    /** The diversity rating based on distance and regional separation. */
     DiversityRating rating;
 
-    /** Human-readable explanation of the diversity assessment. */
     String explanation;
 }

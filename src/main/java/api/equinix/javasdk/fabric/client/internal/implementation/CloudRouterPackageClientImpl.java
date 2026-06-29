@@ -31,7 +31,6 @@ import java.util.Map;
  * public interface directly, so {@link #wrap(CloudRouterPackageJson)} is the identity.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class CloudRouterPackageClientImpl extends ResourceClientBase<CloudRouterPackage, CloudRouterPackageJson> implements CloudRouterPackageClient<CloudRouterPackage> {
 

@@ -40,87 +40,55 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>DeviceClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface DeviceClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Device} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<Device, DeviceJson> list(RequestBuilder.Device requestBuilder);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
-     */
     DeviceJson getByUuid(String uuid);
 
-    /**
-     * <p>listInterfaces.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.util.List} object.
-     */
     List<NetworkInterface> listInterfaces(String uuid);
 
     /**
-     * <p>getAllowedInterfaces.</p>
      *
      * @param deviceType the device type code.
      * @param queryParams the configuration query parameters.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse} object.
      */
     AllowedInterfaceResponse getAllowedInterfaces(String deviceType, Map<String, List<String>> queryParams);
 
     /**
-     * <p>listReloadHistory.</p>
      *
      * @param uuid the device uuid.
-     * @return a {@link java.util.List} object.
      */
     List<DeviceReboot> listReloadHistory(String uuid);
 
     /**
-     * <p>listUpgradeHistory.</p>
      *
      * @param uuid the device uuid.
-     * @return a {@link java.util.List} object.
      */
     List<DeviceUpgrade> listUpgradeHistory(String uuid);
 
     /**
-     * <p>getInterfaceStatistics.</p>
      *
      * @param uuid the device uuid.
      * @param interfaceId the interface id.
      * @param startDateTime the start of the stats window (ISO-8601), or {@code null}.
      * @param endDateTime the end of the stats window (ISO-8601), or {@code null}.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.InterfaceStats} object.
      */
     InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime);
 
     /**
-     * <p>listDownloadableImages.</p>
      *
      * @param deviceType the device type code.
-     * @return a {@link java.util.List} object.
      */
     List<DownloadableImage> listDownloadableImages(String deviceType);
 
     /**
-     * <p>requestImageDownload.</p>
      *
      * @param deviceType the device type code.
      * @param version the device version.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.ImageDownload} object.
      */
     ImageDownload requestImageDownload(String deviceType, String version);
 
@@ -130,132 +98,34 @@ public interface DeviceClient<T> extends Pageable<T> {
      *
      * @param backupUuid the unique identifier of the backup to restore.
      * @param backupName the name of the backup ({@code DeviceBackupUpdateRequest.name}).
-     * @return a {@link java.lang.Boolean} object.
      */
     Boolean restore(String backupUuid, String backupName);
 
-    /**
-     * <p>updateAdditionalBandwidth.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param additionalBandwidth a {@link java.lang.Integer} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
-     */
     DeviceJson updateAdditionalBandwidth(String uuid, Integer additionalBandwidth);
 
-    /**
-     * <p>softReboot.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean softReboot(String uuid);
 
-    /**
-     * <p>createRMA.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceRMARequest a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean createRMA(String uuid, DeviceRMARequest deviceRMARequest);
 
-    /**
-     * <p>getACL.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} object.
-     */
     DeviceACL getACL(String uuid);
 
-    /**
-     * <p>addACL.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceACLRequest a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} object.
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} object.
-     */
     DeviceACL addACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId);
 
-    /**
-     * <p>updateACL.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceACLRequest a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest} object.
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACL} object.
-     */
     DeviceACL updateACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId);
 
-    /**
-     * <p>ping.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean ping(String uuid);
 
-    /**
-     * <p>postLicenseFile.</p>
-     *
-     * @param metroCode a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @param deviceTypeCode a {@link java.lang.String} object.
-     * @param licenseType a {@link api.equinix.javasdk.networkedge.enums.LicenseType} object.
-     * @param fileContents a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     String postLicenseFile(MetroCode metroCode, String deviceTypeCode, LicenseType licenseType, String fileContents);
 
-    /**
-     * <p>postLicenseFile.</p>
-     *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @param fileContents a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     String postLicenseFile(String deviceUuid, String fileContents);
 
-    /**
-     * <p>updateLicenseToken.</p>
-     *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @param licenseToken a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     String updateLicenseToken(String deviceUuid, String licenseToken);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param deviceCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceCreatorJson} object.
-     * @param draft a {@link java.lang.Boolean} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
-     */
     DeviceJson create(DeviceCreatorJson deviceCreatorJson, Boolean draft);
 
-    /**
-     * <p>update.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceUpdaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceUpdaterJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
-     */
     DeviceJson update(String uuid, DeviceUpdaterJson deviceUpdaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete(String uuid);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
-     */
     DeviceJson refresh(String uuid);
 }

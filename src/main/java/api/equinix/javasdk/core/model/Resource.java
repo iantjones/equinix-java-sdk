@@ -19,17 +19,10 @@ package api.equinix.javasdk.core.model;
 import api.equinix.javasdk.core.http.response.Pageable;
 
 /**
- * <p>Resource interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Resource<T> {
 
-    /**
-     * <p>getServiceClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     Pageable<T> getServiceClient();
 }

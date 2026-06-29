@@ -31,7 +31,6 @@ import java.util.List;
  * {@code fabric.connections().getMetrics(...)} and {@code fabric.ports().getMetrics(...)}.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see api.equinix.javasdk.fabric.client.Metrics
  */
 public interface Metric {
@@ -39,42 +38,36 @@ public interface Metric {
     /**
      * <p>The Equinix supported metric type.</p>
      *
-     * @return a {@link java.lang.String} object.
      */
     String getType();
 
     /**
      * <p>The metric name (for example {@code equinix.fabric.connection.bandwidth_tx.usage}).</p>
      *
-     * @return a {@link java.lang.String} object.
      */
     String getName();
 
     /**
      * <p>The unit the metric values are expressed in.</p>
      *
-     * @return a {@link java.lang.String} object.
      */
     String getUnit();
 
     /**
      * <p>The metric interval, set automatically based on the search range.</p>
      *
-     * @return a {@link java.lang.String} object.
      */
     String getInterval();
 
     /**
      * <p>The asset (resource) the metric was collected for.</p>
      *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.MetricResource} object.
      */
     MetricResource getResource();
 
     /**
      * <p>A human-readable summary of the metric.</p>
      *
-     * @return a {@link java.lang.String} object.
      */
     String getSummary();
 

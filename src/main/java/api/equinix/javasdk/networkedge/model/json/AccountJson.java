@@ -26,10 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>AccountJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

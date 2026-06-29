@@ -26,10 +26,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * <p>ChangeLog class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @NoArgsConstructor

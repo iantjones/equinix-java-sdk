@@ -10,9 +10,7 @@ package api.equinix.javasdk.design.value.ratecard;
  */
 public enum EgressPath {
 
-    /** Data egress to the public internet (the expensive default). */
     INTERNET,
 
-    /** Data egress over a dedicated/private interconnect (DX / ExpressRoute / Interconnect). */
     PRIVATE
 }

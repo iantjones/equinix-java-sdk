@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>SSHUserAction class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum SSHUserAction {
     CREATE,

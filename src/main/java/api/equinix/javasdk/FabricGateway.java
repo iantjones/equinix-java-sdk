@@ -38,21 +38,15 @@ import api.equinix.javasdk.fabric.client.ServiceProfiles;
  */
 public interface FabricGateway {
 
-    /** @return the Metros resource client. */
     Metros metros();
 
-    /** @return the Service Profiles resource client. */
     ServiceProfiles serviceProfiles();
 
-    /** @return the Cloud Routers resource client. */
     CloudRouters cloudRouters();
 
-    /** @return the Connections resource client. */
     Connections connections();
 
-    /** @return the Routing Protocols resource client. */
     RoutingProtocols routingProtocols();
 
-    /** @return the Pricing resource client, used by the value-realization cost and savings models. */
     Prices prices();
 }

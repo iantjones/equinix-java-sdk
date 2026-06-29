@@ -28,12 +28,6 @@ public class AsyncException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * <p>Constructor for AsyncException.</p>
-     *
-     * @param message a {@link java.lang.String} object.
-     * @param cause a {@link java.lang.Throwable} object.
-     */
     public AsyncException(String message, Throwable cause) {
         super(message, cause);
     }

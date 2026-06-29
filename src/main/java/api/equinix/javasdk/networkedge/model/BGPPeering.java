@@ -22,116 +22,38 @@ import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringUpdaterJson;
 
 /**
- * <p>BGPPeering interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface BGPPeering {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getConnectionUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getConnectionUuid();
 
-    /**
-     * <p>getConnectionName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getConnectionName();
 
-    /**
-     * <p>getVirtualDeviceUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getVirtualDeviceUuid();
 
-    /**
-     * <p>getLocalIpAddress.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getLocalIpAddress();
 
-    /**
-     * <p>getRemoteIpAddress.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getRemoteIpAddress();
 
-    /**
-     * <p>getLocalAsn.</p>
-     *
-     * @return a {@link java.lang.Long} object.
-     */
     Long getLocalAsn();
 
-    /**
-     * <p>getRemoteAsn.</p>
-     *
-     * @return a {@link java.lang.Long} object.
-     */
     Long getRemoteAsn();
 
-    /**
-     * <p>getAuthenticationKey.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getAuthenticationKey();
 
-    /**
-     * <p>getProvisioningStatus.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BGPStatus} object.
-     */
     BGPStatus getProvisioningStatus();
 
-    /**
-     * <p>getState.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BGPState} object.
-     */
     BGPState getState();
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator.BGPPeeringUpdater} object.
-     */
     BGPPeeringOperator.BGPPeeringUpdater update();
 
-    /**
-     * <p>save.</p>
-     *
-     * @param updaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringUpdaterJson} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean save(BGPPeeringUpdaterJson updaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete();
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean refresh();
 }

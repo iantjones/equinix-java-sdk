@@ -24,62 +24,20 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateCreatorJso
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJson;
 
 /**
- * <p>ACLTemplateClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ACLTemplateClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<ACLTemplate, ACLTemplateJson> list(String accountUcmId);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.ACLTemplateJson} object.
-     */
     ACLTemplateJson getByUuid(String uuid, String accountUcmId);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param aclTemplateCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateCreatorJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.ACLTemplateJson} object.
-     */
     ACLTemplateJson create(ACLTemplateCreatorJson aclTemplateCreatorJson);
 
-    /**
-     * <p>update.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param aclTemplateUpdaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.ACLTemplateJson} object.
-     */
     ACLTemplateJson update(String uuid, ACLTemplateUpdaterJson aclTemplateUpdaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete(String uuid, String accountUcmId);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.ACLTemplateJson} object.
-     */
     ACLTemplateJson refresh(String uuid, String accountUcmId);
 }

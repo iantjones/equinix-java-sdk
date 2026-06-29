@@ -56,11 +56,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class AwsPriceListRateCard implements RateCard {
 
-    /** The public AWS data-transfer bulk offer file (internet egress). */
     public static final String DEFAULT_OFFER_URL =
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDataTransfer/current/index.json";
 
-    /** The public AWS Direct Connect bulk offer file (private-path egress). */
     public static final String DEFAULT_DIRECT_CONNECT_OFFER_URL =
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDirectConnect/current/index.json";
 
@@ -81,7 +79,6 @@ public final class AwsPriceListRateCard implements RateCard {
         this.http = new ProviderPricingHttpClient();
     }
 
-    /** Creates an adapter against the public AWS data-transfer + Direct Connect bulk offers. */
     public static AwsPriceListRateCard create() {
         return new AwsPriceListRateCard(DEFAULT_OFFER_URL, DEFAULT_DIRECT_CONNECT_OFFER_URL);
     }
@@ -190,7 +187,6 @@ public final class AwsPriceListRateCard implements RateCard {
                 .withNote("AWS Price List: Direct Connect data transfer out, " + region));
     }
 
-    /** Returns the SKU of the internet-egress product for the region, or null. */
     private static String internetSku(JsonNode products, String region) {
         for (Iterator<Map.Entry<String, JsonNode>> it = products.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> entry = it.next();
@@ -204,7 +200,6 @@ public final class AwsPriceListRateCard implements RateCard {
         return null;
     }
 
-    /** The lowest-volume paid on-demand tier's per-GB USD rate for a SKU's terms, or null. */
     private static BigDecimal firstPaidTier(JsonNode skuTerms) {
         if (!skuTerms.isObject()) {
             return null;
@@ -227,7 +222,6 @@ public final class AwsPriceListRateCard implements RateCard {
         return best;
     }
 
-    /** The minimum positive per-GB USD rate across a SKU's on-demand price dimensions, or null. */
     private static BigDecimal minPositiveRate(JsonNode skuTerms) {
         if (!skuTerms.isObject()) {
             return null;
@@ -244,7 +238,6 @@ public final class AwsPriceListRateCard implements RateCard {
         return best;
     }
 
-    /** Parses a positive USD per-unit price from a price dimension, or null. */
     private static BigDecimal usd(JsonNode dim) {
         try {
             BigDecimal price = new BigDecimal(dim.path("pricePerUnit").path("USD").asText("0"));

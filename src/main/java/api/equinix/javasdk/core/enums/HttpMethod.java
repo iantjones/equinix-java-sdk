@@ -17,10 +17,8 @@
 package api.equinix.javasdk.core.enums;
 
 /**
- * <p>HttpMethod class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum HttpMethod {
     GET, POST, PUT, DELETE, PATCH

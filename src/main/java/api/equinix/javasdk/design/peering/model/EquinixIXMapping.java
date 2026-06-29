@@ -40,7 +40,6 @@ import java.util.*;
  */
 public class EquinixIXMapping {
 
-    /** City name (lowercase) → MetroCode for known Equinix IX cities. */
     private static final Map<String, MetroCode> CITY_TO_METRO;
 
     static {

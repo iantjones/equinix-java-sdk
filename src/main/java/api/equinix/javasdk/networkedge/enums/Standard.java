@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>Standard class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Standard {
     STD

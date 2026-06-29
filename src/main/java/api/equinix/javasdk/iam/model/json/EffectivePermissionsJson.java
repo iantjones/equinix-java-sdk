@@ -63,7 +63,6 @@ public class EffectivePermissionsJson implements EffectivePermissions {
         return java.util.Collections.unmodifiableList(new ArrayList<EffectivePermissions.Permission>(permissions));
     }
 
-    /** Read-only JSON model for a single {@link EffectivePermissions.Permission} entry. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -122,7 +121,6 @@ public class EffectivePermissionsJson implements EffectivePermissions {
 
         private List<String> except;
 
-        /** Jackson deserializer handling both the array and {@code {except:[]}} forms. */
         public static class Deserializer extends JsonDeserializer<ResourceSelectorJson> {
 
             @Override

@@ -38,10 +38,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>DeviceLinkJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

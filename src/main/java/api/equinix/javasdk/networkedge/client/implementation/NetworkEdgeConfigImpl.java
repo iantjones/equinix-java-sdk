@@ -30,10 +30,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * <p>NetworkEdgeConfigImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
@@ -66,11 +64,6 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
 
     private final NotificationClientImpl notificationClient;
 
-    /**
-     * <p>Constructor for NetworkEdgeConfigImpl.</p>
-     *
-     * @param equinixClient a {@link api.equinix.javasdk.core.client.EquinixClient} object.
-     */
     public NetworkEdgeConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
         this.metrosClient = new MetroClientImpl(this);
@@ -89,21 +82,18 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
         this.notificationClient = new NotificationClientImpl(this);
     }
 
-    /** {@inheritDoc} */
     @Override
     @JsonProperty("aCLTemplateClient")
     public ACLTemplateClient<ACLTemplate> getACLTemplateClient() {
         return aclTemplateClient;
     }
 
-    /** {@inheritDoc} */
     @Override
     @JsonProperty("vPNClient")
     public VPNClient<VPN> getVPNClient() {
         return vpnClient;
     }
 
-    /** {@inheritDoc} */
     @Override
     @JsonProperty("bGPPeeringClient")
     public BGPPeeringClient<BGPPeering> getBGPClient() {

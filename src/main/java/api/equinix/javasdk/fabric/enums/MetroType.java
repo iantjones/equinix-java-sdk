@@ -17,10 +17,8 @@
 package api.equinix.javasdk.fabric.enums;
 
 /**
- * <p>MetroType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum MetroType {
     XF_METRO;

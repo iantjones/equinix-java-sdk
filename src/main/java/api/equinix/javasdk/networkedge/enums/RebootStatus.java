@@ -20,7 +20,6 @@ package api.equinix.javasdk.networkedge.enums;
  * <p>RebootStatus class. The status of a device soft-reboot.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum RebootStatus {
     SUCCESS,

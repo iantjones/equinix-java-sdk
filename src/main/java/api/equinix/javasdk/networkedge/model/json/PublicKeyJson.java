@@ -25,10 +25,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>PublicKeyJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

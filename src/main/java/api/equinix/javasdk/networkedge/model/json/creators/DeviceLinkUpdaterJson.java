@@ -28,10 +28,8 @@ import lombok.Setter;
 import java.util.List;
 
 /**
- * <p>DeviceLinkUpdaterJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)

@@ -18,30 +18,21 @@ import java.util.List;
 @Builder
 public class OptimizationRequest {
 
-    /** User-defined locations (workforce hubs, customer markets, operational sites). */
     List<UserSite> sites;
 
-    /** Cloud providers and service profiles that must or should be reachable. */
     List<ProviderRequirement> providers;
 
-    /** Workloads to be placed in the recommended metros. */
     List<WorkloadSpec> workloads;
 
-    /** Hard and soft constraints bounding the optimization search space. */
     OptimizationConstraints constraints;
 
-    /** The scoring weight distribution strategy (e.g., BALANCED, LATENCY_FIRST). */
     OptimizationStrategy strategy;
 
-    /** Optional user-overridable scoring weights and latency thresholds. */
     ScoringWeights scoringWeights;
 
-    /** Optional MCP bridge for real-time data enrichment. Null when MCP is not configured. */
     McpBridge mcpBridge;
 
-    /** Optional rate card for cost estimation. When null, the engine defaults to live Equinix pricing. */
     RateCard rateCard;
 
-    /** Commitment term used for rate-card lookups. When null, the engine defaults to {@link Term#MONTH_12}. */
     Term term;
 }

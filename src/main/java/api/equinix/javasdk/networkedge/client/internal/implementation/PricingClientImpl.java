@@ -27,10 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>PricingClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PricingClientImpl extends ClientBase implements PricingClient {
 
@@ -38,18 +36,11 @@ public class PricingClientImpl extends ClientBase implements PricingClient {
         super(configClient, "NetworkEdge", "Pricing");
     }
 
-    /** {@inheritDoc} */
     public Pricing getPricing(RequestBuilder.Pricing requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         return getAs("GetPricing", null, qParams, Pricing.class);
     }
 
-    /**
-     * <p>getPricing.</p>
-     *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.Pricing} object.
-     */
     public Pricing getPricing(String deviceUuid) {
         return getAs("GetPricing", null, Utils.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
     }

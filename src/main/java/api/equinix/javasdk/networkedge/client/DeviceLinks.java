@@ -29,7 +29,6 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator;
  * virtual devices across metros.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface DeviceLinks {
 

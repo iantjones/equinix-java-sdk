@@ -26,10 +26,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>Operation class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortOperation {

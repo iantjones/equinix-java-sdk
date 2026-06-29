@@ -23,10 +23,8 @@ import api.equinix.javasdk.fabric.client.internal.implementation.*;
 import lombok.Getter;
 
 /**
- * <p>FabricConfigImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class FabricConfigImpl extends Config implements FabricConfig {
@@ -99,11 +97,6 @@ public class FabricConfigImpl extends Config implements FabricConfig {
 
     private final TagClientImpl tagsClient;
 
-    /**
-     * <p>Constructor for FabricConfigImpl.</p>
-     *
-     * @param equinixClient a {@link api.equinix.javasdk.core.client.EquinixClient} object.
-     */
     public FabricConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
         this.metrosClient = new MetroClientImpl(this);

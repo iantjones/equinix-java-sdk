@@ -23,7 +23,6 @@ import api.equinix.javasdk.core.model.APIParam;
  * cloud-init / bootstrap file ({@code CLOUD_INIT}).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum FileProcessType implements APIParam {
     LICENSE,

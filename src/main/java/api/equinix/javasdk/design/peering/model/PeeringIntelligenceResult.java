@@ -62,34 +62,24 @@ import java.util.Map;
 @Builder
 public class PeeringIntelligenceResult {
 
-    /** The original analysis request. */
     PeeringRequest request;
 
-    /** The ASN × Metro presence matrix. */
     PresenceMatrix presenceMatrix;
 
-    /** Per-ASN network presence data (ASN → presence). */
     Map<Long, NetworkPresence> networkPresences;
 
-    /** Per-metro presence reports. */
     Map<MetroCode, MetroPresenceReport> metroReports;
 
-    /** Resiliency assessment (null if not requested). */
     ResiliencyAssessment resiliency;
 
-    /** Unified connectivity views per ASN (null if Fabric integration not requested). */
     Map<Long, UnifiedConnectivityView> unifiedViews;
 
-    /** Mutual peering opportunities (empty if customer ASN not provided). */
     List<PeeringOpportunity> peeringOpportunities;
 
-    /** Timestamp when this analysis was computed. */
     Instant computedAt;
 
-    /** Time taken to compute the analysis in milliseconds. */
     long computeTimeMs;
 
-    /** Data sources used (e.g., "PeeringDB", "Equinix Fabric API"). */
     List<String> dataSources;
 
     /**

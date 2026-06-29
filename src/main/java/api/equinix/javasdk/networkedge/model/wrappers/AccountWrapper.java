@@ -24,10 +24,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>AccountWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class AccountWrapper extends ResourceImpl<Account> implements Account {
 
@@ -36,12 +34,6 @@ public class AccountWrapper extends ResourceImpl<Account> implements Account {
     @Getter
     private final Pageable<Account> serviceClient;
 
-    /**
-     * <p>Constructor for AccountWrapper.</p>
-     *
-     * @param accountJson a {@link api.equinix.javasdk.networkedge.model.json.AccountJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public AccountWrapper(AccountJson accountJson, Pageable<Account> serviceClient) {
         this.jsonObject = accountJson;
         this.serviceClient = serviceClient;

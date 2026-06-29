@@ -27,7 +27,6 @@ import java.util.List;
  * (GetDeviceReloadResponse) returned by getDeviceReloadByUuid.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

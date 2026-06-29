@@ -36,7 +36,6 @@ import java.util.List;
  * pricing information, and generic file uploads.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Setup {
 

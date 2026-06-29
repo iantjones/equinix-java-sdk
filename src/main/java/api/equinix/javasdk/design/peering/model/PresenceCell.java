@@ -39,37 +39,26 @@ import java.util.List;
 @Builder
 public class PresenceCell {
 
-    /** The ASN this cell represents. */
     long asn;
 
-    /** The metro this cell represents. */
     MetroCode metro;
 
-    /** The type of connectivity available at this metro for this ASN. */
     ConnectivityType connectivityType;
 
-    /** Whether the ASN peers at an Equinix IX in this metro. */
     boolean ixPresent;
 
-    /** Whether the ASN is colocated in an Equinix facility in this metro. */
     boolean facilityPresent;
 
-    /** Whether the ASN is available via Equinix Fabric service profile at this metro. */
     boolean fabricAvailable;
 
-    /** Number of IX peering sessions at this metro (may be > 1 if multiple IXes). */
     int ixSessionCount;
 
-    /** Total IX port capacity at this metro in Mbps. */
     int totalIxCapacityMbps;
 
-    /** Whether any IX session uses route servers (MLPE). */
     boolean routeServerPeer;
 
-    /** Whether any IX session supports BFD. */
     boolean bfdSupported;
 
-    /** Detailed IX sessions at this metro. */
     List<IxPresenceDetail> ixSessions;
 
     /**

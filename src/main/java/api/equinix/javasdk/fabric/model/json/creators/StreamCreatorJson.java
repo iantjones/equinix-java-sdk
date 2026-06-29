@@ -40,11 +40,6 @@ public class StreamCreatorJson {
     @JsonProperty("enabled")
     private Boolean enabled;
 
-    /**
-     * <p>Constructor for StreamCreatorJson.</p>
-     *
-     * @param streamBuilder a {@link api.equinix.javasdk.fabric.model.json.creators.StreamOperator.StreamBuilder} object.
-     */
     public StreamCreatorJson(StreamOperator.StreamBuilder streamBuilder) {
         this.type = streamBuilder.getType();
         this.name = streamBuilder.getName();

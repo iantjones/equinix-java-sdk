@@ -22,10 +22,8 @@ import api.equinix.javasdk.core.client.interfaces.CoreClient;
 import api.equinix.javasdk.core.model.OAuthToken;
 
 /**
- * <p>CoreImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class CoreImpl implements Core {
 
@@ -33,39 +31,20 @@ public class CoreImpl implements Core {
 
     private final CoreClient serviceClient;
 
-    /**
-     * <p>Constructor for CoreImpl.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.client.interfaces.CoreClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.EquinixClient} object.
-     */
     public CoreImpl(CoreClient serviceClient, EquinixClient serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>authenticate.</p>
-     */
     public void authenticate() {
         OAuthToken oAuthToken = getServiceClient().authenticate();
         this.serviceManager.getEquinixClient().setOAuthToken(oAuthToken);
     }
 
-    /**
-     * <p>Getter for the field <code>serviceManager</code>.</p>
-     *
-     * @return a {@link api.equinix.javasdk.EquinixClient} object.
-     */
     public EquinixClient getServiceManager() {
         return serviceManager;
     }
 
-    /**
-     * <p>Getter for the field <code>serviceClient</code>.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.client.interfaces.CoreClient} object.
-     */
     public CoreClient getServiceClient() {
         return serviceClient;
     }

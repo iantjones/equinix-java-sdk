@@ -23,18 +23,10 @@ import api.equinix.javasdk.networkedge.model.Metro;
 import api.equinix.javasdk.networkedge.model.json.MetroJson;
 
 /**
- * <p>MetroClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface MetroClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param region a {@link api.equinix.javasdk.core.enums.Region} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<Metro, MetroJson> list(Region region);
 }

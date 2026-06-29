@@ -16,26 +16,19 @@ import java.util.Map;
 @Builder
 public class PlanPricing {
 
-    /** Total estimated monthly recurring cost for the full deployment. */
     BigDecimal monthlyTotal;
 
-    /** Total estimated one-time setup cost. */
     BigDecimal setupTotal;
 
-    /** Currency code (default: USD). */
     @Builder.Default
     String currency = "USD";
 
-    /** Monthly cost for all Cloud Routers. */
     BigDecimal routerMonthlyCost;
 
-    /** Monthly cost for all provider connections. */
     BigDecimal providerConnectionMonthlyCost;
 
-    /** Monthly cost for all backbone links. */
     BigDecimal backboneMonthlyCost;
 
-    /** Per-connection cost breakdown: connection name to monthly cost. */
     Map<String, BigDecimal> perConnectionCost;
 
     /**
@@ -46,7 +39,6 @@ public class PlanPricing {
     @Builder.Default
     PriceSource source = PriceSource.ESTIMATE;
 
-    /** Pricing disclaimer, reflecting the actual {@link #source}. */
     @Builder.Default
     String disclaimer = "Estimates based on published Fabric pricing. Actual costs may vary based on contract terms, volume discounts, and promotional offers.";
 }

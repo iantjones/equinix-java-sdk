@@ -27,7 +27,6 @@ import api.equinix.javasdk.fabric.model.json.MarketplaceSubscriptionJson;
  * public interface directly, so {@link #wrap(MarketplaceSubscriptionJson)} is the identity.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MarketplaceSubscriptionClientImpl extends ResourceClientBase<MarketplaceSubscription, MarketplaceSubscriptionJson> implements MarketplaceSubscriptionClient<MarketplaceSubscription> {
 

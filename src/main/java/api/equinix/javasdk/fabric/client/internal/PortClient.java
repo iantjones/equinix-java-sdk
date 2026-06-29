@@ -31,38 +31,19 @@ import api.equinix.javasdk.fabric.model.json.PortJson;
 import java.util.List;
 
 /**
- * <p>PortsClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PortClient<T> extends PageablePost<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<Port, PortJson> list();
 
     Page<Port, PortJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     List<PortVlan> getVlans(String portUuid);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.PortJson} object.
-     */
     PortJson getByUuid(String uuid);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.PortJson} object.
-     */
     PortJson refresh(String uuid);
 
     /**

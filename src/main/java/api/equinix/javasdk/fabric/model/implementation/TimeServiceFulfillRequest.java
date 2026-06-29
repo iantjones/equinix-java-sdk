@@ -34,7 +34,6 @@ public class TimeServiceFulfillRequest {
     private final List<Connection> connections;
 
     /**
-     * <p>Constructor for TimeServiceFulfillRequest.</p>
      *
      * @param connectionUuids the Fabric connection UUIDs to attach to the service
      */

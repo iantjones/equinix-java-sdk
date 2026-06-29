@@ -40,7 +40,6 @@ import java.net.UnknownHostException;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter
@@ -85,7 +84,6 @@ public class IPAddress {
     }
 
     /**
-     * <p>getHostAddress.</p>
      *
      * @return the numeric host address, or {@code null} if unset
      */
@@ -93,7 +91,6 @@ public class IPAddress {
         return this.ipAddress == null ? null : this.ipAddress.getHostAddress();
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
         return getHostAddress();

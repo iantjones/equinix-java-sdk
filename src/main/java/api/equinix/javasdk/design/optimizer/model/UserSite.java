@@ -13,7 +13,6 @@ import lombok.Value;
 @Builder
 public class UserSite {
 
-    /** A descriptive name for this site (e.g., "NYC Headquarters"). */
     String label;
 
     /**
@@ -36,7 +35,6 @@ public class UserSite {
      */
     Double longitude;
 
-    /** The business role of this site, which influences its importance multiplier in scoring. */
     SiteRole role;
 
     /**

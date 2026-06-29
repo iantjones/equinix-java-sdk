@@ -33,30 +33,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>RouteFilterOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class RouteFilterOperator extends ResourceImpl<RouteFilter> {
 
     @Getter
     private final PageablePost<RouteFilter> serviceClient;
 
-    /**
-     * <p>Constructor for RouteFilterOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.PageablePost} object.
-     */
     public RouteFilterOperator(PageablePost<RouteFilter> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator.RouteFilterBuilder} object.
-     */
     public RouteFilterBuilder create() {
         return new RouteFilterBuilder();
     }
@@ -65,7 +53,6 @@ public class RouteFilterOperator extends ResourceImpl<RouteFilter> {
      * <p>Begins a fluent update of an existing route filter, identified by uuid.</p>
      *
      * @param uuid the uuid of the route filter to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator.RouteFilterUpdater} object.
      */
     public RouteFilterUpdater update(String uuid) {
         return new RouteFilterUpdater(uuid);

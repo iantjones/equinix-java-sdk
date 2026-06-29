@@ -21,19 +21,14 @@ import java.util.Objects;
 @Builder
 public class PriceQuote {
 
-    /** Monthly recurring charge. */
     BigDecimal monthlyRecurring;
 
-    /** One-time, non-recurring charge (e.g. installation / setup). */
     BigDecimal nonRecurring;
 
-    /** Currency of both amounts. */
     Currency currency;
 
-    /** Where this quote came from. */
     PriceSource source;
 
-    /** Optional human-readable note (e.g. the matched price code, or why a fallback was used). */
     String note;
 
     /**
@@ -55,17 +50,14 @@ public class PriceQuote {
                 .build();
     }
 
-    /** Creates a monthly-only quote with no setup charge. */
     public static PriceQuote monthly(BigDecimal monthlyRecurring, Currency currency, PriceSource source) {
         return of(monthlyRecurring, BigDecimal.ZERO, currency, source);
     }
 
-    /** Creates a zero-cost quote in the given currency and source (useful as an aggregation seed). */
     public static PriceQuote zero(Currency currency, PriceSource source) {
         return of(BigDecimal.ZERO, BigDecimal.ZERO, currency, source);
     }
 
-    /** Returns a copy of this quote with the supplied note attached. */
     public PriceQuote withNote(String note) {
         return PriceQuote.builder()
                 .monthlyRecurring(monthlyRecurring)
@@ -76,12 +68,10 @@ public class PriceQuote {
                 .build();
     }
 
-    /** First-year total cost: twelve monthly charges plus the one-time setup. */
     public BigDecimal annualizedTotal() {
         return monthlyRecurring.multiply(BigDecimal.valueOf(12)).add(nonRecurring);
     }
 
-    /** Total cost across the full {@code term}: ({@code term.months()} × MRC) + NRC. */
     public BigDecimal totalOverTerm(Term term) {
         return monthlyRecurring.multiply(BigDecimal.valueOf(term.months())).add(nonRecurring);
     }

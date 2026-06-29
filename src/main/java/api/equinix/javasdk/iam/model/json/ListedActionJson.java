@@ -66,7 +66,6 @@ public class ListedActionJson implements ListedAction {
         return java.util.Collections.unmodifiableMap(result);
     }
 
-    /** Read-only JSON model for a {@link ListedAction.RbacPermission}. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -79,7 +78,6 @@ public class ListedActionJson implements ListedAction {
         private String permissionResourceType;
     }
 
-    /** Read-only JSON model for a {@link ListedAction.PermissionCode}. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)

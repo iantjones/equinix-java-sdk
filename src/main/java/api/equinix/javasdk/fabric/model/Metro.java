@@ -25,61 +25,24 @@ import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import java.util.List;
 
 /**
- * <p>Metro interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Metro {
 
-    /**
-     * <p>getCode.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     */
     MetroCode getCode();
 
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.MetroType} object.
-     */
     MetroType getType();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getHref.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getHref();
 
-    /**
-     * <p>getRegion.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.Region} object.
-     */
     Region getRegion();
 
     GeoCoordinate geoCoordinates();
 
-    /**
-     * <p>getConnectedMetros.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<ConnectedMetro> getConnectedMetros();
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.Metro} object.
-     */
     Metro refresh();
 }

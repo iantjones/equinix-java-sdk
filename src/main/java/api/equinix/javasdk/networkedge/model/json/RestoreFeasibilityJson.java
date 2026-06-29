@@ -35,10 +35,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>RestoreFeasibilityJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

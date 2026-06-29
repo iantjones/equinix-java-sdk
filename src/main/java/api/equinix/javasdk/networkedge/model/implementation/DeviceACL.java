@@ -27,7 +27,6 @@ import lombok.Getter;
  * {@code mgmtAclTemplate}, each as a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceACLDetail}.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

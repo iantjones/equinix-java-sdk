@@ -17,10 +17,8 @@
 package api.equinix.javasdk.core.enums;
 
 /**
- * <p>GrantType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum GrantType {
 
@@ -32,7 +30,6 @@ public enum GrantType {
         this.grantType = grantType;
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
         return grantType;

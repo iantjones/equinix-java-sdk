@@ -27,7 +27,6 @@ import java.util.List;
  * virtual devices.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PublicKeys {
 

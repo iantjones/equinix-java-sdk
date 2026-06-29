@@ -34,10 +34,8 @@ public class DirectPeeringIpv4Request {
 
     @JsonProperty("connection") private PeeringConnection connection;
 
-    /** Peering IP addresses in Version 4 (IPv4). */
     @Singular("equinixPeerIp")
     @JsonProperty("equinixPeerIps") private List<String> equinixPeerIps;
 
-    /** Virtual router group IP address in Version 4 (IPv4). */
     @JsonProperty("equinixVRRPIp") private String equinixVRRPIp;
 }

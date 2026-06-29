@@ -25,30 +25,19 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
 /**
- * <p>MetroCodeDeserializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MetroCodeDeserializer extends StdDeserializer<MetroCode> {
 
-    /**
-     * <p>Constructor for MetroCodeDeserializer.</p>
-     */
     public MetroCodeDeserializer() {
         this(null);
     }
 
-    /**
-     * <p>Constructor for MetroCodeDeserializer.</p>
-     *
-     * @param vc a {@link java.lang.Class} object.
-     */
     public MetroCodeDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    /** {@inheritDoc} */
     @Override
     public MetroCode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {

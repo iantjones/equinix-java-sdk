@@ -37,7 +37,6 @@ import java.util.function.Consumer;
  */
 public abstract class IntegrationTestBase {
 
-    /** Test mode: readonly, dryrun, or full. */
     public enum TestMode {
         READONLY, DRYRUN, FULL
     }
@@ -47,7 +46,6 @@ public abstract class IntegrationTestBase {
     protected static String secretKey;
     protected static IntegrationTestReport report;
 
-    /** LIFO stack of cleanup actions — executed in reverse order in @AfterAll. */
     private static final Deque<CleanupAction> cleanupStack = new ArrayDeque<>();
 
     @BeforeAll
@@ -110,12 +108,10 @@ public abstract class IntegrationTestBase {
 
     // ── Mode Checks ────────────────────────────────────────────────────
 
-    /** Returns true if dry-run or full CRUD tests should run. */
     protected static boolean isDryRunEnabled() {
         return testMode == TestMode.DRYRUN || testMode == TestMode.FULL;
     }
 
-    /** Returns true if full CRUD (create/update/delete) tests should run. */
     protected static boolean isFullCrudEnabled() {
         return testMode == TestMode.FULL;
     }
@@ -199,7 +195,6 @@ public abstract class IntegrationTestBase {
 
     // ── Naming Convention ──────────────────────────────────────────────
 
-    /** Generate a test resource name with sdk-test prefix and timestamp. */
     protected static String testResourceName(String suffix) {
         return "sdk-test-" + suffix + "-" + System.currentTimeMillis();
     }

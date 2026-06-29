@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * <p>Connectivity class. Specifies the connectivity on a virtual device.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Connectivity implements APIParam {
     @JsonProperty("INTERNET-ACCESS")
@@ -39,7 +38,6 @@ public enum Connectivity implements APIParam {
         this.formatted = formatted;
     }
 
-    /** Returns the wire value (used for query parameters). */
     @Override
     public String toString() {
         return formatted;

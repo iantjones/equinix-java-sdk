@@ -51,10 +51,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>ConnectionsImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ConnectionsImpl implements Connections {
 
@@ -85,7 +83,6 @@ public class ConnectionsImpl implements Connections {
         return new PaginatedFilteredList<>(connectionList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<ValidateConnectionResult> validate(FilterPropertyList filter) {
         return this.serviceClient.validate(filter);
@@ -104,7 +101,6 @@ public class ConnectionsImpl implements Connections {
         return new ConnectionOperator(this.serviceClient).batch();
     }
 
-    /** {@inheritDoc} */
     @Deprecated
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
@@ -112,26 +108,22 @@ public class ConnectionsImpl implements Connections {
         return new ConnectionStatisticWrapper(connectionStatisticJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     @Deprecated
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return getStatistics(uuid, startDateTime, endDateTime, Side.A_Side);
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         return this.serviceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
     }
 
-    /** {@inheritDoc} */
     @Override
     public PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid) {
         return searchAdvertisedRoutes(uuid, null, null);
     }
 
-    /** {@inheritDoc} */
     @Override
     public PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort) {
         Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchAdvertisedRoutes(uuid, filter, sort);
@@ -139,13 +131,11 @@ public class ConnectionsImpl implements Connections {
         return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     @Override
     public PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid) {
         return searchReceivedRoutes(uuid, null, null);
     }
 
-    /** {@inheritDoc} */
     @Override
     public PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort) {
         Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchReceivedRoutes(uuid, filter, sort);
@@ -153,49 +143,41 @@ public class ConnectionsImpl implements Connections {
         return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<RouteAggregationAttachment> getRouteAggregations(String connectionId) {
         return this.serviceClient.getRouteAggregations(connectionId);
     }
 
-    /** {@inheritDoc} */
     @Override
     public RouteAggregationAttachment getRouteAggregation(String connectionId, String routeAggregationId) {
         return this.serviceClient.getRouteAggregation(connectionId, routeAggregationId);
     }
 
-    /** {@inheritDoc} */
     @Override
     public RouteAggregationAttachment attachRouteAggregation(String connectionId, String routeAggregationId) {
         return this.serviceClient.attachRouteAggregation(connectionId, routeAggregationId);
     }
 
-    /** {@inheritDoc} */
     @Override
     public Boolean detachRouteAggregation(String connectionId, String routeAggregationId) {
         return this.serviceClient.detachRouteAggregation(connectionId, routeAggregationId);
     }
 
-    /** {@inheritDoc} */
     @Override
     public List<RouteFilterAttachment> getRouteFilters(String connectionId) {
         return this.serviceClient.getRouteFilters(connectionId);
     }
 
-    /** {@inheritDoc} */
     @Override
     public RouteFilterAttachment getRouteFilter(String connectionId, String routeFilterId) {
         return this.serviceClient.getRouteFilter(connectionId, routeFilterId);
     }
 
-    /** {@inheritDoc} */
     @Override
     public RouteFilterAttachment attachRouteFilter(String connectionId, String routeFilterId, Direction direction) {
         return this.serviceClient.attachRouteFilter(connectionId, routeFilterId, direction);
     }
 
-    /** {@inheritDoc} */
     @Override
     public Boolean detachRouteFilter(String connectionId, String routeFilterId) {
         return this.serviceClient.detachRouteFilter(connectionId, routeFilterId);

@@ -48,7 +48,6 @@ public class RouteAggregationRuleOperator extends ResourceImpl<RouteAggregationR
      * <p>Begins a fluent update of an existing route aggregation rule, identified by uuid.</p>
      *
      * @param uuid the uuid of the route aggregation rule to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteAggregationRuleOperator.RouteAggregationRuleUpdater} object.
      */
     public RouteAggregationRuleUpdater update(String uuid) {
         return new RouteAggregationRuleUpdater(uuid);

@@ -29,50 +29,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>PortStatisticsClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PortStatisticClient<T> extends Pageable<T> {
 
-    /**
-     * <p>getStatistics.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.PortStatisticJson} object.
-     */
     PortStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
-    /**
-     * <p>getTopStatistics.</p>
-     *
-     * @param duration a {@link api.equinix.javasdk.fabric.enums.StatisticDuration} object.
-     * @param sortable a {@link api.equinix.javasdk.core.model.Sortable} object.
-     * @param requestBuilder a {@link api.equinix.javasdk.fabric.client.RequestBuilder.TopPortStatistics} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<PortStatistic, PortStatisticJson> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder);
 
-    /**
-     * <p>refreshStatistics.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param startDateTime a {@link java.time.LocalDateTime} object.
-     * @param endDateTime a {@link java.time.LocalDateTime} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.PortStatisticJson} object.
-     */
     PortStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     /**
      * <p>Retrieves metrics for a single port over the supplied time range.</p>
      *
-     * @param uuid a {@link java.lang.String} object.
      * @param name the metric name to retrieve, or {@code null} for all metrics.
-     * @param fromDateTime a {@link java.time.LocalDateTime} object.
-     * @param toDateTime a {@link java.time.LocalDateTime} object.
      * @return a {@link java.util.List} of {@link api.equinix.javasdk.fabric.model.Metric} objects.
      */
     List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);

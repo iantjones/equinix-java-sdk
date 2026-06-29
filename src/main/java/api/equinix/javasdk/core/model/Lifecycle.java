@@ -24,10 +24,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * <p>Lifecycle class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class Lifecycle {

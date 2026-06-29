@@ -23,45 +23,18 @@ import api.equinix.javasdk.networkedge.model.implementation.Zone;
 import java.util.ArrayList;
 
 /**
- * <p>Metro interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Metro {
 
-    /**
-     * <p>getMetroCode.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     */
     MetroCode getMetroCode();
 
-    /**
-     * <p>getRegion.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.enums.Region} object.
-     */
     Region getRegion();
 
-    /**
-     * <p>getAvailableZones.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
     ArrayList<Zone> getAvailableZones();
 
-    /**
-     * <p>getClusterSupported.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean getClusterSupported();
 
-    /**
-     * <p>getMetroDescription.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getMetroDescription();
 }

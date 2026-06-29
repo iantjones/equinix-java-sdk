@@ -22,34 +22,24 @@ import java.util.List;
 @Builder
 public class PlanValueRealization {
 
-    /** The plan's actual monthly interconnect cost (from live/reference pricing). */
     BigDecimal planMonthlyCost;
 
-    /** The plan's one-time setup cost. */
     BigDecimal planSetupCost;
 
-    /** Total monthly egress saving across all declared providers (internet − private). */
     BigDecimal totalMonthlyEgressSavings;
 
-    /** Net monthly saving: egress saving − plan monthly cost. */
     BigDecimal netMonthlySavings;
 
-    /** Steady-state annual net saving. */
     BigDecimal annualNetSavings;
 
-    /** First-year net saving (annual − setup). */
     BigDecimal firstYearNetSavings;
 
-    /** Per-provider egress saving breakdown. */
     List<ProviderEgressSaving> perProvider;
 
-    /** Currency code (ISO 4217). */
     String currency;
 
-    /** Provenance/limitations disclaimer. */
     String disclaimer;
 
-    /** A single provider's egress saving line. */
     @Value
     @Builder
     public static class ProviderEgressSaving {

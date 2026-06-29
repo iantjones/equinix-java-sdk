@@ -20,10 +20,8 @@ import api.equinix.javasdk.core.model.APIParam;
 import lombok.Getter;
 
 /**
- * <p>BandwidthUnit class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public enum BandwidthUnit implements APIParam {

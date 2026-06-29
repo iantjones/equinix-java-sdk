@@ -19,10 +19,8 @@ package api.equinix.javasdk.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * <p>ConnectionType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ConnectionType {
     EVPL_VC,

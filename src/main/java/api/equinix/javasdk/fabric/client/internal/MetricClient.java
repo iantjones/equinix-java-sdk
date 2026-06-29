@@ -31,16 +31,12 @@ import java.util.List;
  * ({@code POST /fabric/v4/metrics/search}).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface MetricClient<T> extends PageablePost<T> {
 
     /**
      * <p>Searches metrics matching the supplied filter and sort criteria.</p>
      *
-     * @param filter a {@link api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList} object.
-     * @param sort a {@link api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      */
     Page<Metric, MetricJson> search(FilterPropertyList filter, SortPropertyList sort);
 

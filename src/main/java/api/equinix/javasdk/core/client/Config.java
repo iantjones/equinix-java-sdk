@@ -19,21 +19,14 @@ package api.equinix.javasdk.core.client;
 import lombok.Getter;
 
 /**
- * <p>Config class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class Config {
 
     @Getter
     final private EquinixClient equinixClient;
 
-    /**
-     * <p>Constructor for Config.</p>
-     *
-     * @param equinixClient a {@link api.equinix.javasdk.core.client.EquinixClient} object.
-     */
     public Config(EquinixClient equinixClient) {
         this.equinixClient = equinixClient;
     }

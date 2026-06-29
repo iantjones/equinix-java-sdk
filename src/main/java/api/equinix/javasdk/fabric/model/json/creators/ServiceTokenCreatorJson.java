@@ -119,11 +119,6 @@ public class ServiceTokenCreatorJson {
         private Integer vlanSTag;
     }
 
-    /**
-     * <p>Constructor for ServiceTokenCreatorJson.</p>
-     *
-     * @param serviceTokenBuilder a {@link api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator.ServiceTokenBuilder} object.
-     */
     public ServiceTokenCreatorJson(ServiceTokenOperator.ServiceTokenBuilder serviceTokenBuilder) {
         this.type = serviceTokenBuilder.getServiceTokenType();
         this.expiry = serviceTokenBuilder.getExpiry();

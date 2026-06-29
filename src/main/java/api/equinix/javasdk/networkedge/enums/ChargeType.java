@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>ChargeType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ChargeType {
     VIRTUAL_DEVICE,

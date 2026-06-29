@@ -24,27 +24,15 @@ import api.equinix.javasdk.core.model.OAuthToken;
 import api.equinix.javasdk.core.enums.RequestType;
 
 /**
- * <p>CoreClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class CoreClientImpl extends ClientBase implements CoreClient {
 
-    /**
-     * <p>Constructor for CoreClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.core.client.CoreConfigImpl} object.
-     */
     public CoreClientImpl(CoreConfigImpl configClient) {
         super(configClient, "Authentication", "OAuth");
     }
 
-    /**
-     * <p>authenticate.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.model.OAuthToken} object.
-     */
     public OAuthToken authenticate() {
         EquinixRequest<OAuthToken> equinixRequest = this.buildRequest("Authenticate", RequestType.SINGLE, OAuthToken.class);
         Utils.serializeJson(equinixRequest, getConfigClient().getEquinixClient().getEquinixCredentialsProvider().getCredentials());

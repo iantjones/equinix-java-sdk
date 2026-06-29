@@ -21,10 +21,8 @@ import api.equinix.javasdk.networkedge.model.deserializers.LicenseTypeDeserializ
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
- * <p>LicenseType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonDeserialize(using = LicenseTypeDeserializer.class)
 public enum LicenseType implements APIParam {
@@ -43,7 +41,6 @@ public enum LicenseType implements APIParam {
      * from the enum name / body serialization, where the device-create {@code licenseMode}/
      * {@code licenseType} body fields use {@code SUB} / {@code BYOL}.
      *
-     * @return a {@link java.lang.String} object.
      */
     public String getQueryValue() {
         return queryValue;

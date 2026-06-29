@@ -38,7 +38,6 @@ public class NotificationSearchRequest {
     @JsonProperty("filter")
     private final Filter filter;
 
-    /** Sort fields (forwarded as the {@code sorts} query parameter); not serialized in the body. */
     @JsonIgnore
     private final List<String> sorts;
 

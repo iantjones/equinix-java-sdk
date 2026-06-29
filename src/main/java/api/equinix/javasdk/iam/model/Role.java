@@ -52,7 +52,6 @@ public interface Role {
      */
     List<Role.Permission> getPermissions();
 
-    /** A single permission entry of a {@link Role}. */
     interface Permission {
 
         /**

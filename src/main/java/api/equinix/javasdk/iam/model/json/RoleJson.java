@@ -52,7 +52,6 @@ public class RoleJson implements Role {
         return permissions == null ? null : List.copyOf(permissions);
     }
 
-    /** Read-only JSON model for a single {@link Role.Permission}. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)

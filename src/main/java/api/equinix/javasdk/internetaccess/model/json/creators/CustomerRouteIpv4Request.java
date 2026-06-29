@@ -31,6 +31,5 @@ public class CustomerRouteIpv4Request {
 
     @JsonProperty("ipBlock") private IpBlockIpv4Request ipBlock;
 
-    /** Subnet prefix, e.g. {@code 198.51.100.0/24}. */
     @JsonProperty("prefix") private String prefix;
 }

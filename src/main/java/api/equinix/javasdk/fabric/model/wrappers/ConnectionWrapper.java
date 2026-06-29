@@ -27,10 +27,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>ConnectionWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ConnectionWrapper extends ResourceImpl<Connection> implements Connection {
 
@@ -39,12 +37,6 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
     @Getter
     private final Pageable<Connection> serviceClient;
 
-    /**
-     * <p>Constructor for ConnectionWrapper.</p>
-     *
-     * @param portJson a {@link api.equinix.javasdk.fabric.model.json.ConnectionJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ConnectionWrapper(ConnectionJson portJson, Pageable<Connection> serviceClient) {
         this.jsonObject = portJson;
         this.serviceClient = serviceClient;

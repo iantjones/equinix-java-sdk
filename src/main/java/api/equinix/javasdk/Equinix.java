@@ -86,7 +86,6 @@ public final class Equinix implements Closeable {
         this.core = new api.equinix.javasdk.core.client.EquinixClient(credentials, isSandBoxed);
     }
 
-    /** @return the Fabric client, sharing this session's core. */
     public Fabric fabric() {
         if (fabric == null) {
             fabric = new Fabric(core);
@@ -94,7 +93,6 @@ public final class Equinix implements Closeable {
         return fabric;
     }
 
-    /** @return the Network Edge client, sharing this session's core. */
     public NetworkEdge networkEdge() {
         if (networkEdge == null) {
             networkEdge = new NetworkEdge(core);
@@ -102,7 +100,6 @@ public final class Equinix implements Closeable {
         return networkEdge;
     }
 
-    /** @return the Customer Portal client, sharing this session's core. */
     public CustomerPortal customerPortal() {
         if (customerPortal == null) {
             customerPortal = new CustomerPortal(core);
@@ -110,7 +107,6 @@ public final class Equinix implements Closeable {
         return customerPortal;
     }
 
-    /** @return the IBX SmartView client, sharing this session's core. */
     public IBXSmartView ibxSmartView() {
         if (ibxSmartView == null) {
             ibxSmartView = new IBXSmartView(core);
@@ -118,7 +114,6 @@ public final class Equinix implements Closeable {
         return ibxSmartView;
     }
 
-    /** @return the Internet Access (EIA) client, sharing this session's core. */
     public InternetAccess internetAccess() {
         if (internetAccess == null) {
             internetAccess = new InternetAccess(core);
@@ -126,7 +121,6 @@ public final class Equinix implements Closeable {
         return internetAccess;
     }
 
-    /** @return the Projects client, sharing this session's core. */
     public Projects projects() {
         if (projects == null) {
             projects = new Projects(core);
@@ -134,7 +128,6 @@ public final class Equinix implements Closeable {
         return projects;
     }
 
-    /** @return the IAM client, sharing this session's core. */
     public IAM iam() {
         if (iam == null) {
             iam = new IAM(core);
@@ -142,7 +135,6 @@ public final class Equinix implements Closeable {
         return iam;
     }
 
-    /** @return the STS client, sharing this session's core. */
     public STS sts() {
         if (sts == null) {
             sts = new STS(core);

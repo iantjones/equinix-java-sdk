@@ -80,46 +80,39 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
 
     // ---- standard operation helpers (endpoint name is the only per-call input) ----
 
-    /** GET a paginated collection. */
     protected Page<M, J> listPage(String serviceEndpoint) {
         EquinixRequest<M> request = buildRequest(serviceEndpoint, RequestType.PAGINATED, jsonClass);
         return Utils.handlePaginatedListResponse(invoke(request), request);
     }
 
-    /** GET a paginated collection with query parameters. */
     protected Page<M, J> listPage(String serviceEndpoint, Map<String, java.util.List<String>> queryParams) {
         EquinixRequest<M> request = buildRequestWithQueryParams(serviceEndpoint, RequestType.PAGINATED, queryParams, jsonClass);
         return Utils.handlePaginatedListResponse(invoke(request), request);
     }
 
-    /** POST a filter/sort body to a search endpoint and read the paginated result. */
     protected Page<M, J> searchPage(String serviceEndpoint, Object filterSortBody) {
         EquinixRequest<M> request = buildRequest(serviceEndpoint, RequestType.PAGINATED_POST, jsonClass);
         Utils.serializeJson(request, filterSortBody);
         return Utils.handlePaginatedListResponse(invoke(request), request);
     }
 
-    /** GET a single resource by uuid. */
     protected J getOne(String serviceEndpoint, String uuid) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** POST a creator body and read the created resource. */
     protected J postOne(String serviceEndpoint, Object creatorBody) {
         EquinixRequest<J> request = buildRequest(serviceEndpoint, RequestType.SINGLE, jsonClass);
         Utils.serializeJson(request, creatorBody);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** PUT/PATCH a body to update an existing resource by uuid. */
     protected J updateOne(String serviceEndpoint, String uuid, Object body) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
         Utils.serializeJson(request, body);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** DELETE a resource by uuid. */
     protected J deleteOne(String serviceEndpoint, String uuid) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
         return Utils.handleSingletonResponse(invoke(request), request);
@@ -139,7 +132,6 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
 
     // ---- specialized operation helpers (filtered create, dry-run, bulk, secondary response types) ----
 
-    /** POST a creator body applying a Jackson serialization filter. */
     protected J postOne(String serviceEndpoint, Object body, FilterProvider filters) {
         EquinixRequest<J> request = buildRequest(serviceEndpoint, RequestType.SINGLE, jsonClass);
         if (filters != null) {
@@ -149,12 +141,10 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** POST a creator body in dry-run mode (server-side validation only, no resource created). */
     protected J dryRunCreate(String serviceEndpoint, Object body) {
         return dryRunCreate(serviceEndpoint, body, null);
     }
 
-    /** POST a creator body in dry-run mode, applying a Jackson serialization filter. */
     protected J dryRunCreate(String serviceEndpoint, Object body, FilterProvider filters) {
         EquinixRequest<J> request = buildRequest(serviceEndpoint, RequestType.SINGLE, jsonClass);
         request.addSingleQueryParameter("dryRun", "true");
@@ -169,39 +159,33 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
 
     // ---- path-parameter variants (for sub-resources nested under a parent id, or code-keyed gets) ----
 
-    /** GET a paginated collection scoped by path parameters (e.g. a parent id). */
     protected Page<M, J> listPagePath(String serviceEndpoint, Map<String, String> pathParams) {
         EquinixRequest<M> request = buildRequestWithPathParams(serviceEndpoint, RequestType.PAGINATED, pathParams, jsonClass);
         return Utils.handlePaginatedListResponse(invoke(request), request);
     }
 
-    /** GET a single resource identified by arbitrary path parameters. */
     protected J getOne(String serviceEndpoint, Map<String, String> pathParams) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** POST a creator body under arbitrary path parameters (e.g. create a child of a parent id). */
     protected J postOne(String serviceEndpoint, Map<String, String> pathParams, Object body) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
         Utils.serializeJson(request, body);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** PUT/PATCH a body to update a resource identified by arbitrary path parameters. */
     protected J updateOne(String serviceEndpoint, Map<String, String> pathParams, Object body) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
         Utils.serializeJson(request, body);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** DELETE a resource identified by arbitrary path parameters. */
     protected J deleteOne(String serviceEndpoint, Map<String, String> pathParams) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
         return Utils.handleSingletonResponse(invoke(request), request);
     }
 
-    /** PATCH a resource identified by arbitrary path parameters with a JSON Patch operations array. */
     protected J patchOne(String serviceEndpoint, Map<String, String> pathParams, List<PatchOperation> operations) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, jsonClass);
         request.setContentType(PatchOperation.CONTENT_TYPE);
@@ -211,14 +195,12 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
 
     // ---- paging (provided once for all resources) ----
 
-    /** {@inheritDoc} */
     @Override
     public PaginatedList<M> nextPage(PaginatedRequest<M> equinixRequest) {
         Page<M, J> page = Utils.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
         return Utils.toPaginatedList(page, this, (j, client) -> wrap(j));
     }
 
-    /** {@inheritDoc} */
     @Override
     public PaginatedFilteredList<M> nextPage(PaginatedPostRequest<M> equinixRequest) {
         Utils.serializeJson(equinixRequest, equinixRequest.getObjectToSerialize());

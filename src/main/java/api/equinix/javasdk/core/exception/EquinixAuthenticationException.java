@@ -22,7 +22,6 @@ package api.equinix.javasdk.core.exception;
  * Verify your Client ID and Client Secret from the Equinix Developer Portal.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixAuthenticationException extends EquinixServiceException {
 

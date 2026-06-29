@@ -20,10 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * <p>ExceptionAdditionalInfo class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class ExceptionAdditionalInfo {

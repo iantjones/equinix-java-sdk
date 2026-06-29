@@ -23,10 +23,8 @@ import lombok.Getter;
 import java.util.ArrayList;
 
 /**
- * <p>DefaultACL class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

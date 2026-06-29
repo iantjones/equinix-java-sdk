@@ -30,35 +30,25 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>AccountClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class AccountClientImpl extends ResourceClientBase<Account, AccountJson> implements AccountClient<Account> {
 
-    /**
-     * <p>Constructor for AccountClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public AccountClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Accounts", AccountJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected Account wrap(AccountJson json) {
         return new AccountWrapper(json, this);
     }
 
-    /** {@inheritDoc} */
     public List<AccountJson> list(MetroCode metroCode) {
         AccountJson.NestedList nestedList = getAs("ListAccounts", Map.of("metroCode", metroCode.toString()), null, AccountJson.NestedList.class);
         return nestedList.getData();
     }
 
-    /** {@inheritDoc} */
     public byte[] getOrderSummary(RequestBuilder.OrderSummary requestBuilder) {
         return bytesOp("GetOrderSummary", null, Utils.newMap(requestBuilder));
     }

@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>RequiredBackupOperation class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum RequiredBackupOperation {
     NONE,

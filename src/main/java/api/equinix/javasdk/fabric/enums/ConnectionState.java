@@ -20,10 +20,8 @@ import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * <p>ConnectionState class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ConnectionState implements APIParam {
     ACTIVE,

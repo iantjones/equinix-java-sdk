@@ -27,10 +27,8 @@ import api.equinix.javasdk.fabric.model.implementation.*;
 import java.util.List;
 
 /**
- * <p>Connection interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Connection {
 

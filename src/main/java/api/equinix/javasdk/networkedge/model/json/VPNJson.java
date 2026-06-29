@@ -33,10 +33,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * <p>VPNJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

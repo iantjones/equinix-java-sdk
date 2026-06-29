@@ -37,7 +37,6 @@ import java.util.Map;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -62,7 +61,6 @@ public class DeviceRMARequest {
     private UserPublicKeyRequest userPublicKey;
 
     /**
-     * <p>Constructor for DeviceRMARequest.</p>
      *
      * @param version any version you want to associate with the RMA (required).
      */
@@ -158,7 +156,6 @@ public class DeviceRMARequest {
         private final String keyName;
 
         /**
-         * <p>Constructor for UserPublicKeyRequest.</p>
          *
          * @param username the username.
          * @param keyName the name of an existing public key.

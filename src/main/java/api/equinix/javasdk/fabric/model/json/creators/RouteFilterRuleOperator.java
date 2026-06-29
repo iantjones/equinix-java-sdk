@@ -31,10 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>RouteFilterRuleOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class RouteFilterRuleOperator extends ResourceImpl<RouteFilterRule> {
 
@@ -43,22 +41,11 @@ public class RouteFilterRuleOperator extends ResourceImpl<RouteFilterRule> {
 
     private final String routeFilterId;
 
-    /**
-     * <p>Constructor for RouteFilterRuleOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     * @param routeFilterId a {@link java.lang.String} object.
-     */
     public RouteFilterRuleOperator(Pageable<RouteFilterRule> serviceClient, String routeFilterId) {
         this.serviceClient = serviceClient;
         this.routeFilterId = routeFilterId;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleOperator.RouteFilterRuleBuilder} object.
-     */
     public RouteFilterRuleBuilder create() {
         return new RouteFilterRuleBuilder();
     }
@@ -67,7 +54,6 @@ public class RouteFilterRuleOperator extends ResourceImpl<RouteFilterRule> {
      * <p>Begins a fluent update of an existing route filter rule, identified by uuid.</p>
      *
      * @param uuid the uuid of the route filter rule to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.RouteFilterRuleOperator.RouteFilterRuleUpdater} object.
      */
     public RouteFilterRuleUpdater update(String uuid) {
         return new RouteFilterRuleUpdater(uuid);

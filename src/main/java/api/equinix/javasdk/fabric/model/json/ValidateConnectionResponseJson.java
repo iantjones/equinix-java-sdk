@@ -29,7 +29,6 @@ import lombok.Getter;
  * directly, so no wrapper is required.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -36,7 +36,6 @@ import java.util.List;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class DeviceACLRequest {
