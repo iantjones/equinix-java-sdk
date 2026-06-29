@@ -72,11 +72,6 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   from a `DeploymentPlan` or `OptimizationResult`.
 - **Async / virtual-thread client facade** (`core.async.EquinixAsync`): run any SDK call on a
   Java 21 virtual thread, returning a `CompletableFuture`, without mirroring the API surface.
-- **Spring Boot starter** (`equinix-spring-boot-starter`): auto-configures a `Fabric` (and
-  credentials) bean from `equinix.client-id` / `equinix.client-secret` / `equinix.sandbox`
-  properties — add the one dependency and inject `Fabric`.
-- **Samples module** (`equinix-sdk-samples`, not published): runnable examples — create a
-  connection, optimize→plan→Terraform/Mermaid export, paginate, and async.
 - **Value realization — cost / savings / TCO modeling** (`design.value`, `fabric.savingsCalculator()`,
   `fabric.tcoComparison()`, `plan.valueRealization()`): quantify the cost case for interconnection.
   - **Layered, provenance-tagged rate cards** (`design.value.ratecard.RateCard`, combined in a
@@ -115,10 +110,6 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
 - **`RouteAggregations.list()` → `search()`** (breaking): route aggregations are exposed via
   `POST /routeAggregations/search` (the only endpoint the API provides), returning a
   `PaginatedFilteredList`; the old `list()` targeted a non-existent GET path and threw at runtime.
-- **Multi-module build** (not a source change): the project is now a Maven reactor — parent
-  `equinix-sdk-parent` aggregating `equinix-sdk-java` (the SDK, **same coordinate**
-  `com.eqixiac.equinix:equinix-sdk-java`), `equinix-spring-boot-starter`, and `samples`. Existing
-  consumers depend on `equinix-sdk-java` exactly as before.
 - **JSON Patch support in core**: per-request content-type + `PatchOperation` model + `patchOne`.
 - **Connection `update()`** exposed (`PATCH /connections/{uuid}`, JSON Patch) — previously
   plumbed but unreachable.

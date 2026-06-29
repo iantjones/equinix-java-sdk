@@ -50,36 +50,6 @@ Fabric fabric = new Fabric(credentials);
 // Authentication happens automatically on first API call
 ```
 
-### Spring Boot
-
-For Spring Boot applications, use the starter instead — it auto-configures a `Fabric` bean from
-your configuration:
-
-```xml
-<dependency>
-    <groupId>com.eqixiac.equinix</groupId>
-    <artifactId>equinix-spring-boot-starter</artifactId>
-    <version>2.0.0</version>
-</dependency>
-```
-
-```properties
-equinix.client-id=YOUR_CLIENT_ID
-equinix.client-secret=YOUR_CLIENT_SECRET
-equinix.sandbox=false
-```
-
-```java
-@Service
-class MyService {
-    private final Fabric fabric;
-    MyService(Fabric fabric) { this.fabric = fabric; } // injected, ready to use
-}
-```
-
-> **Project layout.** This is a Maven multi-module build: `equinix-sdk-java` (the SDK — depend on
-> this), `equinix-spring-boot-starter`, and `samples` (runnable examples, not published).
-
 ## Domain Overview
 
 | Domain | Entry Point | Resources | Description |
