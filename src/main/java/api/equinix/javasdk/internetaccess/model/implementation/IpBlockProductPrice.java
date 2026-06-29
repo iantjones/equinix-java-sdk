@@ -35,7 +35,7 @@ public class IpBlockProductPrice {
     private String type;
 
     @JsonProperty("location")
-    private AssetLocation location;
+    private IbxLocation location;
 
     @JsonProperty("ipv4")
     private CustomerIpBlock ipv4;

@@ -17,8 +17,8 @@
 package api.equinix.javasdk.internetaccess.model.json;
 
 import api.equinix.javasdk.internetaccess.model.Cage;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 import api.equinix.javasdk.internetaccess.model.implementation.SecureCageAccount;
-import api.equinix.javasdk.internetaccess.model.implementation.SpaceLocation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -44,7 +44,7 @@ public class CageJson implements Cage {
     private Integer cabinetsCount;
 
     @JsonProperty("location")
-    private SpaceLocation location;
+    private IbxLocation location;
 
     @JsonProperty("account")
     private SecureCageAccount account;

@@ -21,7 +21,7 @@ import api.equinix.javasdk.internetaccess.model.implementation.CabinetRef;
 import api.equinix.javasdk.internetaccess.model.implementation.CageRef;
 import api.equinix.javasdk.internetaccess.model.implementation.PatchPanelOwnedPort;
 import api.equinix.javasdk.internetaccess.model.implementation.SecureCageAccount;
-import api.equinix.javasdk.internetaccess.model.implementation.SpaceLocation;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 
 import java.util.List;
 
@@ -96,7 +96,7 @@ public interface PatchPanel {
     /**
      * @return the IBX location of the patch panel
      */
-    SpaceLocation getLocation();
+    IbxLocation getLocation();
 
     /**
      * @return the customer billing account that owns the patch panel

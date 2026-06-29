@@ -28,7 +28,7 @@ import lombok.Getter;
 public class PortConfigPort {
 
     @JsonProperty("location")
-    private PortConfigLocation location;
+    private IbxLocation location;
 
     @JsonProperty("physicalPort")
     private PortConfigPhysicalPort physicalPort;

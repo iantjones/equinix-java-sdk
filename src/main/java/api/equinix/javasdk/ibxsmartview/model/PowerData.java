@@ -39,7 +39,7 @@ public interface PowerData {
     /**
      * The {@code payLoad} of a {@link PowerData} response.
      */
-    interface Payload {
+    interface Payload extends PowerReadingData {
 
         String getIbx();
 

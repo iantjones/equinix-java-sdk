@@ -92,7 +92,7 @@ public class ServicePrice {
         private String type;
 
         @JsonProperty("location")
-        private AssetLocation location;
+        private IbxLocation location;
 
         @JsonProperty("port")
         private PortPrice port;

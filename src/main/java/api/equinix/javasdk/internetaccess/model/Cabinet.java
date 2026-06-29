@@ -17,8 +17,8 @@
 package api.equinix.javasdk.internetaccess.model;
 
 import api.equinix.javasdk.internetaccess.model.implementation.CageRef;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 import api.equinix.javasdk.internetaccess.model.implementation.SecureCageAccount;
-import api.equinix.javasdk.internetaccess.model.implementation.SpaceLocation;
 
 /**
  * A cabinet in an Equinix IBX data center, as returned by the Equinix Internet Access (EIA) v1
@@ -51,7 +51,7 @@ public interface Cabinet {
     /**
      * @return the IBX location of the cabinet
      */
-    SpaceLocation getLocation();
+    IbxLocation getLocation();
 
     /**
      * @return the customer billing account that owns the cabinet

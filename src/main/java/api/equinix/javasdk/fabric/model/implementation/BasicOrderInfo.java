@@ -14,20 +14,29 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.model.implementation;
+package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * Connection A-side location of an Equinix Internet Access (EIA) v1 dedicated-port default
- * configuration.
+ * Common order details shared by Fabric order references: the order resource {@code href}, the
+ * customer purchase-order number, and the resolved order number / order line.
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DedicatedPortLocation {
+public abstract class BasicOrderInfo {
 
-    @JsonProperty("ibx")
-    private String ibx;
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("purchaseOrderNumber")
+    private String purchaseOrderNumber;
+
+    @JsonProperty("orderNumber")
+    private String orderNumber;
+
+    @JsonProperty("orderLine")
+    private String orderLine;
 }

@@ -14,19 +14,19 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.model.implementation;
+package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * The location a set of Equinix Internet Access (EIA) terms and conditions applies to.
+ * Common change-reference details shared by Fabric change objects: the change resource {@code href}.
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TermsLocation {
+public abstract class BasicChangeInfo {
 
-    @JsonProperty("ibx")
-    private String ibx;
+    @JsonProperty("href")
+    private String href;
 }

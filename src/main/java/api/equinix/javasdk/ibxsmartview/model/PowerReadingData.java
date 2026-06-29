@@ -19,10 +19,12 @@ package api.equinix.javasdk.ibxsmartview.model;
 import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonData;
 
 /**
- * A single power data entry within the {@code payLoad.data} array returned by the legacy
- * {@code /power/v1/current} POST endpoint ({@code PowerData_IBX} in the spec).
+ * The shared power-reading shape for a single hierarchy node, common to both the
+ * {@code payLoad} of a GET {@code /power/v1/current} response ({@link PowerData.Payload})
+ * and an entry in the {@code payLoad.data} array of a POST {@code /power/v1/current}
+ * response ({@link PowerDataIBX}).
  */
-public interface PowerDataIBX extends PowerReadingData {
+public interface PowerReadingData {
 
     String getIbx();
 

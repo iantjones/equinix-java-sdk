@@ -17,9 +17,6 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -27,21 +24,7 @@ import lombok.NoArgsConstructor;
  * may be supplied; the response additionally carries the order {@code href} and resolved order
  * number.
  */
-@Getter
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class IpBlockOrder {
-
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("purchaseOrderNumber")
-    private String purchaseOrderNumber;
-
-    @JsonProperty("orderNumber")
-    private String orderNumber;
-
-    @JsonProperty("orderLine")
-    private String orderLine;
+public class IpBlockOrder extends BasicOrderInfo {
 }
