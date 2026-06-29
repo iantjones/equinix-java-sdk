@@ -1,6 +1,6 @@
 package api.equinix.javasdk.mcp.bridge;
 
-import api.equinix.javasdk.mcp.McpClient;
+import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolResult;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -18,9 +18,9 @@ import java.util.Map;
  */
 public class McpMetroBridge {
 
-    private final McpClient client;
+    private final Mcp client;
 
-    McpMetroBridge(McpClient client) {
+    McpMetroBridge(Mcp client) {
         this.client = client;
     }
 

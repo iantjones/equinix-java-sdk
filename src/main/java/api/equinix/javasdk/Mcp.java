@@ -1,8 +1,11 @@
-package api.equinix.javasdk.mcp;
+package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.exception.EquinixRateLimitException;
 import api.equinix.javasdk.core.exception.EquinixServerException;
+import api.equinix.javasdk.mcp.McpClientConfig;
+import api.equinix.javasdk.mcp.McpException;
+import api.equinix.javasdk.mcp.McpTokenManager;
 import api.equinix.javasdk.mcp.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -22,7 +25,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * JSON-RPC 2.0 client for Equinix MCP (Model Context Protocol) servers.
+ * JSON-RPC 2.0 client for Equinix MCP (Model Context Protocol) servers — the root-level
+ * entry point for MCP, alongside {@link Fabric}, {@link NetworkEdge}, {@link IAM}, and the
+ * other domain clients.
  *
  * <p>Provides programmatic access to the Equinix Fabric and Peering Insights MCP servers,
  * enabling tool invocation via the standard MCP protocol. This client handles JSON-RPC
@@ -32,17 +37,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@link api.equinix.javasdk.design.peering.client.PeeringDbClient}, using Apache HttpClient
  * and Jackson independently from the SDK's core HTTP infrastructure.</p>
  *
+ * <p>To expose <em>this SDK's</em> Fabric resources as MCP tools (the server/bridge side)
+ * rather than consume an external MCP server, use {@code Fabric.mcp()} instead.</p>
+ *
  * <h3>Usage</h3>
  * <pre>{@code
  * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
- * McpClient client = new McpClient(credentials);
- * client.initialize();
+ * Mcp mcp = new Mcp(credentials);
+ * mcp.initialize();
  *
  * // List available tools
- * Map<String, McpToolDefinition> tools = client.listTools();
+ * Map<String, McpToolDefinition> tools = mcp.listTools();
  *
  * // Invoke a tool
- * McpToolResult result = client.callTool("list_metro", Map.of());
+ * McpToolResult result = mcp.callTool("list_metro", Map.of());
  * System.out.println(result.getTextContent());
  * }</pre>
  *
@@ -50,7 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see McpClientConfig
  * @see McpToolResult
  */
-public class McpClient implements Closeable {
+public class Mcp implements Closeable {
 
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -65,7 +73,7 @@ public class McpClient implements Closeable {
      *
      * @param credentials the OAuth2 credentials for authenticating with Equinix APIs
      */
-    public McpClient(EquinixCredentials credentials) {
+    public Mcp(EquinixCredentials credentials) {
         this(credentials, McpClientConfig.defaults());
     }
 
@@ -75,7 +83,7 @@ public class McpClient implements Closeable {
      * @param credentials the OAuth2 credentials for authenticating with Equinix APIs
      * @param config the client configuration
      */
-    public McpClient(EquinixCredentials credentials, McpClientConfig config) {
+    public Mcp(EquinixCredentials credentials, McpClientConfig config) {
         this.config = config;
         this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -91,17 +99,6 @@ public class McpClient implements Closeable {
 
         this.tokenManager = new McpTokenManager(credentials, config.getTokenEndpoint(),
                 this.httpClient, this.objectMapper);
-    }
-
-    /**
-     * Package-private constructor for testing with injected dependencies.
-     */
-    McpClient(CloseableHttpClient httpClient, ObjectMapper objectMapper,
-              McpClientConfig config, McpTokenManager tokenManager) {
-        this.httpClient = httpClient;
-        this.objectMapper = objectMapper;
-        this.config = config;
-        this.tokenManager = tokenManager;
     }
 
     /**
@@ -231,7 +228,7 @@ public class McpClient implements Closeable {
             HttpPost httpPost = new HttpPost(endpoint);
             httpPost.setHeader("Content-Type", "application/json");
             httpPost.setHeader("Accept", "application/json");
-            httpPost.setHeader("User-Agent", "equinix-java-sdk/McpClient");
+            httpPost.setHeader("User-Agent", "equinix-java-sdk/Mcp");
             httpPost.setHeader("Authorization", "Bearer " + tokenManager.getToken());
 
             String body = objectMapper.writeValueAsString(rpcRequest);
@@ -283,7 +280,7 @@ public class McpClient implements Closeable {
 
     private void ensureInitialized() {
         if (!initialized) {
-            throw new McpException("McpClient not initialized. Call initialize() before invoking tools.");
+            throw new McpException("Mcp not initialized. Call initialize() before invoking tools.");
         }
     }
 }

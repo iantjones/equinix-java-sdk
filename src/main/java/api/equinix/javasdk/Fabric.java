@@ -21,7 +21,6 @@ import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 import api.equinix.javasdk.fabric.model.HealthStatus;
-import api.equinix.javasdk.mcp.McpClient;
 import api.equinix.javasdk.mcp.McpClientConfig;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.MetroOptimizer;
@@ -700,7 +699,7 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public McpBridge mcp() {
         if (this.mcpBridge == null) {
-            McpClient mcpClient = new McpClient(
+            Mcp mcpClient = new Mcp(
                     this.equinixClient.getEquinixCredentialsProvider().getCredentials());
             mcpClient.initialize();
             this.mcpBridge = new McpBridge(mcpClient);
@@ -716,7 +715,7 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      */
     public McpBridge mcp(McpClientConfig config) {
         if (this.mcpBridge == null) {
-            McpClient mcpClient = new McpClient(
+            Mcp mcpClient = new Mcp(
                     this.equinixClient.getEquinixCredentialsProvider().getCredentials(), config);
             mcpClient.initialize();
             this.mcpBridge = new McpBridge(mcpClient);
