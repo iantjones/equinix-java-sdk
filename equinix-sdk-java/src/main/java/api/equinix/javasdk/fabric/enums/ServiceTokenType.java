@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * <p>ServiceTokenType class.</p>
  *
@@ -23,6 +25,13 @@ package api.equinix.javasdk.fabric.enums;
  * @version $Id: $Id
  */
 public enum ServiceTokenType {
-    A_SIDE_TOKEN,
-    VC_TOKEN;
+    VC_TOKEN,
+    EPL_TOKEN,
+    UNKNOWN;
+
+    @JsonCreator
+    public static ServiceTokenType fromString(String value) {
+        try { return ServiceTokenType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

@@ -16,8 +16,16 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum RouteFilterType {
     BGP_IPv4_PREFIX_FILTER,
     BGP_IPv6_PREFIX_FILTER,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static RouteFilterType fromString(String value) {
+        try { return RouteFilterType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

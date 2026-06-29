@@ -47,15 +47,13 @@ public interface MetricClient<T> extends PageablePost<T> {
     /**
      * Retrieves metrics by wildcard metric name ({@code GET /fabric/v4/metrics}). Only the
      * wildcard metro metric types are supported by this endpoint (for example
-     * {@code equinix.fabric.metro.*.latency}).
+     * {@code equinix.fabric.metro.*.latency}). This endpoint does not support time-range filtering.
      *
      * @param name the wildcard metric name (required)
      * @param value which value to retrieve (for example {@code last}; required)
-     * @param fromDateTime optional start of the time range, or {@code null}
-     * @param toDateTime optional end of the time range, or {@code null}
      * @return the matching metrics
      */
-    List<Metric> getMetricsByName(String name, String value, LocalDateTime fromDateTime, LocalDateTime toDateTime);
+    List<Metric> getMetricsByName(String name, String value);
 
     /**
      * Retrieves metrics for a specific asset ({@code GET /fabric/v4/{asset}/{assetId}/metrics}).

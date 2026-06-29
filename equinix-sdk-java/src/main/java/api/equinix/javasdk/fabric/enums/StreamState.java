@@ -16,10 +16,18 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum StreamState {
     PROVISIONING,
     PROVISIONED,
     DEPROVISIONING,
     DEPROVISIONED,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static StreamState fromString(String value) {
+        try { return StreamState.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

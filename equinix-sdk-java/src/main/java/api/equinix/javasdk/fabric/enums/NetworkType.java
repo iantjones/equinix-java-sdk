@@ -16,9 +16,19 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum NetworkType {
     EVPLAN,
     EPLAN,
     IPWAN,
-    UNKNOWN
+    EVPTREE,
+    EPTREE,
+    UNKNOWN;
+
+    @JsonCreator
+    public static NetworkType fromString(String value) {
+        try { return NetworkType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

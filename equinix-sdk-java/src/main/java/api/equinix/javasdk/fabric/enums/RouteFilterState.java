@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum RouteFilterState {
     PROVISIONING,
     PROVISIONED,
@@ -24,5 +26,11 @@ public enum RouteFilterState {
     REPROVISIONING,
     NOT_PROVISIONED,
     NOT_DEPROVISIONED,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static RouteFilterState fromString(String value) {
+        try { return RouteFilterState.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

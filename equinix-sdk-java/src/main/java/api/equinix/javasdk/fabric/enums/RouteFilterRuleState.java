@@ -16,11 +16,19 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum RouteFilterRuleState {
     PROVISIONING,
     PROVISIONED,
     DEPROVISIONING,
     DEPROVISIONED,
     REPROVISIONING,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static RouteFilterRuleState fromString(String value) {
+        try { return RouteFilterRuleState.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

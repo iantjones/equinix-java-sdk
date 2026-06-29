@@ -17,15 +17,26 @@
 package api.equinix.javasdk.fabric.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  * <p>PortType class.</p>
+ *
+ * <p>{@code XF_PORT} is the sole {@code PortType} value defined by the Fabric spec. {@code XF_PHYSICAL_PORT}
+ * is retained because the same enum backs the {@code type} attribute of a physical port read response,
+ * whose spec value is {@code XF_PHYSICAL_PORT}.</p>
  *
  * @author ianjones
  * @version $Id: $Id
  */
 public enum PortType implements APIParam {
     XF_PORT,
-    EPL,
-    XF_PHYSICAL_PORT
+    XF_PHYSICAL_PORT,
+    UNKNOWN;
+
+    @JsonCreator
+    public static PortType fromString(String value) {
+        try { return PortType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

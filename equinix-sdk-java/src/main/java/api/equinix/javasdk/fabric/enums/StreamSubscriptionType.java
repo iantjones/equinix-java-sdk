@@ -16,7 +16,15 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum StreamSubscriptionType {
     STREAM_SUBSCRIPTION,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static StreamSubscriptionType fromString(String value) {
+        try { return StreamSubscriptionType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }
