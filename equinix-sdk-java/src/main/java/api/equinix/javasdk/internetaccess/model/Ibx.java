@@ -53,6 +53,12 @@ public interface Ibx {
     String getMetroCode();
 
     /**
+     * @return the metro name of the IBX (e.g. {@code Warsaw}); populated by the v1 single-IBX
+     *         lookup ({@code GET /internetAccess/v1/ibxs/{ibx}}), {@code null} from the v2 list
+     */
+    String getMetroName();
+
+    /**
      * @return the IBX data center code (e.g. {@code WA1})
      */
     String getIbxCode();

@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.internetaccess.model.implementation;
 
+import api.equinix.javasdk.internetaccess.enums.PriceChargeType;
+import api.equinix.javasdk.internetaccess.enums.PriceChargeUnit;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -33,11 +35,11 @@ import java.math.BigDecimal;
 public class PriceCharge {
 
     @JsonProperty("type")
-    private String type;
+    private PriceChargeType type;
 
     @JsonProperty("price")
     private BigDecimal price;
 
     @JsonProperty("unit")
-    private String unit;
+    private PriceChargeUnit unit;
 }

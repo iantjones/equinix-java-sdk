@@ -47,4 +47,27 @@ public interface InternetAccessIbxs {
      * @return a paginated list of matching IBXs
      */
     PaginatedList<Ibx> availability(ConnectionType connectionType, String accessPointType, String assetType);
+
+    /**
+     * Returns the detail for a single IBX where Equinix Internet Access is available, via the v1
+     * single-IBX get ({@code GET /internetAccess/v1/ibxs/{ibx}}).
+     *
+     * @param ibx the IBX data center code (e.g. {@code WA1})
+     * @return the matching IBX
+     */
+    Ibx getByCode(String ibx);
+
+    /**
+     * Returns the detail for a single IBX where Equinix Internet Access is available, via the v1
+     * single-IBX get ({@code GET /internetAccess/v1/ibxs/{ibx}}), narrowed by service connection
+     * type and connection access point type.
+     *
+     * @param ibx the IBX data center code (e.g. {@code WA1})
+     * @param connectionType the service connection type ({@code IA_C} physical or {@code IA_VC}
+     *                       virtual), or {@code null} for no constraint
+     * @param accessPointType the connection A-side access point type (e.g. {@code COLO},
+     *                        {@code VD}), or {@code null} for no constraint
+     * @return the matching IBX
+     */
+    Ibx getByCode(String ibx, ConnectionType connectionType, String accessPointType);
 }

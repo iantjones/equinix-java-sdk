@@ -22,7 +22,6 @@ import api.equinix.javasdk.core.model.APIParam;
  * Lifecycle state of an Equinix Internet Access (EIA) v2 service.
  */
 public enum ServiceState implements APIParam {
-    DRAFT,
     PENDING,
     PROVISIONING,
     ACTIVE,
