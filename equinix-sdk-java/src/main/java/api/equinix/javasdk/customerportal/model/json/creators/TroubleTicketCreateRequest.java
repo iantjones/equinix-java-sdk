@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json.creators;
 
+import api.equinix.javasdk.customerportal.enums.TicketCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -37,7 +38,7 @@ import java.util.List;
 public class TroubleTicketCreateRequest {
 
     @JsonProperty("code")
-    private final String code;
+    private final TicketCode code;
 
     @JsonProperty("description")
     private final String description;
@@ -74,18 +75,18 @@ public class TroubleTicketCreateRequest {
     /**
      * Returns a new builder for a trouble ticket create request.
      *
-     * @param code             the trouble ticket code (required)
+     * @param code             the trouble ticket problem code (required)
      * @param description      the issue description (required)
      * @param occurredDateTime when the issue occurred (required)
      * @param primaryId        the primary identifier (e.g. asset/cage id) (required)
      * @return a new builder
      */
-    public static Builder builder(String code, String description, String occurredDateTime, String primaryId) {
+    public static Builder builder(TicketCode code, String description, String occurredDateTime, String primaryId) {
         return new Builder(code, description, occurredDateTime, primaryId);
     }
 
     public static class Builder {
-        private final String code;
+        private final TicketCode code;
         private final String description;
         private final String occurredDateTime;
         private final String primaryId;
@@ -94,7 +95,7 @@ public class TroubleTicketCreateRequest {
         private List<OrderContact> contacts;
         private List<OrderAttachment> attachments;
 
-        private Builder(String code, String description, String occurredDateTime, String primaryId) {
+        private Builder(TicketCode code, String description, String occurredDateTime, String primaryId) {
             this.code = code;
             this.description = description;
             this.occurredDateTime = occurredDateTime;

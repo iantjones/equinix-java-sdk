@@ -23,6 +23,8 @@ import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.json.QuoteJson;
 import api.equinix.javasdk.customerportal.model.wrappers.QuoteWrapper;
 
+import java.util.List;
+
 public class QuotesImpl implements Quotes {
 
     private final CustomerPortal serviceManager;
@@ -36,6 +38,11 @@ public class QuotesImpl implements Quotes {
 
     public Quote getByUuid(String quoteId) {
         QuoteJson quoteJson = this.serviceClient.getByUuid(quoteId);
+        return new QuoteWrapper(quoteJson, this.serviceClient);
+    }
+
+    public Quote getByUuid(String quoteId, List<String> ibxs) {
+        QuoteJson quoteJson = this.serviceClient.getByUuid(quoteId, ibxs);
         return new QuoteWrapper(quoteJson, this.serviceClient);
     }
 }

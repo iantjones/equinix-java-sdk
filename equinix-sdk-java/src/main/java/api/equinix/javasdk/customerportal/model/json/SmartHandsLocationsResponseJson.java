@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -25,6 +26,7 @@ import java.util.List;
  * Envelope for the smart hands locations reference endpoint, wrapping the list of locations.
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SmartHandsLocationsResponseJson {
 
     @JsonProperty("locations")

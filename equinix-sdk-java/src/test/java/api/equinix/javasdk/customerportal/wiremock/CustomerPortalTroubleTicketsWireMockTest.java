@@ -3,6 +3,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.TicketCode;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
@@ -53,7 +54,7 @@ class CustomerPortalTroubleTicketsWireMockTest extends WireMockTestBase {
                             .withHeader("Location", "/tickets/1-34891")));
 
             String ticketId = customerPortal.troubleTickets().create(
-                    TroubleTicketCreateRequest.builder("0001-0000",
+                    TroubleTicketCreateRequest.builder(TicketCode.CODE_0001_0000,
                                     "Intermittent packet loss on cross-connect XC-1042",
                                     "2024-11-10T03:00:00Z", "SV5:01:000ABC")
                             .customerReferenceId("REF-9981")

@@ -23,6 +23,7 @@ import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.json.QuoteJson;
 import api.equinix.javasdk.customerportal.model.wrappers.QuoteWrapper;
 
+import java.util.List;
 import java.util.Map;
 
 public class QuoteClientImpl extends ResourceClientBase<Quote, QuoteJson> implements QuoteClient<Quote> {
@@ -38,6 +39,13 @@ public class QuoteClientImpl extends ResourceClientBase<Quote, QuoteJson> implem
 
     public QuoteJson getByUuid(String quoteId) {
         return getOne("GetQuote", Map.of("quoteId", quoteId));
+    }
+
+    public QuoteJson getByUuid(String quoteId, List<String> ibxs) {
+        if (ibxs == null || ibxs.isEmpty()) {
+            return getByUuid(quoteId);
+        }
+        return getAs("GetQuote", Map.of("quoteId", quoteId), Map.of("ibxs", ibxs), QuoteJson.class);
     }
 
     public QuoteJson refresh(String quoteId) {

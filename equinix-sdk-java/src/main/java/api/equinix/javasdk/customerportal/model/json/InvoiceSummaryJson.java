@@ -25,6 +25,7 @@ import api.equinix.javasdk.customerportal.model.implementation.CustomerDetail;
 import api.equinix.javasdk.customerportal.model.implementation.PaymentInstructions;
 import api.equinix.javasdk.customerportal.model.implementation.PriorAdjustmentInfo;
 import api.equinix.javasdk.customerportal.model.implementation.TaxInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -36,6 +37,7 @@ import java.util.Currency;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InvoiceSummaryJson {
 
 

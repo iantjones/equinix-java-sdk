@@ -47,6 +47,11 @@ public class OrdersImpl implements Orders {
         return new OrderWrapper(orderJson, this.serviceClient);
     }
 
+    public Order getByUuid(String orderId, List<String> ibxs) {
+        OrderJson orderJson = this.serviceClient.getByUuid(orderId, ibxs);
+        return new OrderWrapper(orderJson, this.serviceClient);
+    }
+
     public List<? extends OrderNegotiation> getNegotiations(String orderId) {
         return this.serviceClient.getNegotiations(orderId);
     }

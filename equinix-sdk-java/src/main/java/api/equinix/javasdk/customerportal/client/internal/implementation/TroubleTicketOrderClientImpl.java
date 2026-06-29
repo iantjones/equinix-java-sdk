@@ -28,7 +28,9 @@ import api.equinix.javasdk.customerportal.model.json.TroubleTicketOrderResultJso
 import api.equinix.javasdk.customerportal.model.json.TroubleTicketTypesResponseJson;
 import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketOrderRequest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TroubleTicketOrderClientImpl extends ClientBase implements TroubleTicketOrderClient {
 
@@ -36,13 +38,29 @@ public class TroubleTicketOrderClientImpl extends ClientBase implements TroubleT
         super(configClient, "CustomerPortal", "TroubleTicketOrders");
     }
 
-    public List<? extends TroubleTicketType> getTypes() {
-        TroubleTicketTypesResponseJson response = getAs("GetTroubleTicketTypes", TroubleTicketTypesResponseJson.class);
+    public List<? extends TroubleTicketType> getTypes(String category) {
+        Map<String, List<String>> queryParams = null;
+        if (category != null) {
+            queryParams = Map.of("category", List.of(category));
+        }
+        TroubleTicketTypesResponseJson response = getAs("GetTroubleTicketTypes", null, queryParams,
+                TroubleTicketTypesResponseJson.class);
         return response.getTroubleTicketTypes();
     }
 
-    public List<? extends TroubleTicketOrderLocation> getLocations() {
-        TroubleTicketLocationsResponseJson response = getAs("GetTroubleTicketLocations", TroubleTicketLocationsResponseJson.class);
+    public List<? extends TroubleTicketOrderLocation> getLocations(Boolean detail, String ibxs, String cages) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (detail != null) {
+            queryParams.put("detail", List.of(String.valueOf(detail)));
+        }
+        if (ibxs != null) {
+            queryParams.put("ibxs", List.of(ibxs));
+        }
+        if (cages != null) {
+            queryParams.put("cages", List.of(cages));
+        }
+        TroubleTicketLocationsResponseJson response = getAs("GetTroubleTicketLocations", null,
+                queryParams.isEmpty() ? null : queryParams, TroubleTicketLocationsResponseJson.class);
         return response.getLocations();
     }
 

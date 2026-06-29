@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.CarrierType;
 import api.equinix.javasdk.customerportal.enums.ShipmentStatus;
 import api.equinix.javasdk.customerportal.enums.ShipmentType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -27,6 +28,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ShipmentJson {
 
     @Getter static TypeReference<List<ShipmentJson>> listTypeRef = new TypeReference<>() {};

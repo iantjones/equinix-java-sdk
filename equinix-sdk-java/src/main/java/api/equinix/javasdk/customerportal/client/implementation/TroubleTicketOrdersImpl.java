@@ -38,11 +38,19 @@ public class TroubleTicketOrdersImpl implements TroubleTicketOrders {
     }
 
     public List<? extends TroubleTicketType> getTypes() {
-        return this.serviceClient.getTypes();
+        return this.serviceClient.getTypes(null);
+    }
+
+    public List<? extends TroubleTicketType> getTypes(String category) {
+        return this.serviceClient.getTypes(category);
     }
 
     public List<? extends TroubleTicketOrderLocation> getLocations() {
-        return this.serviceClient.getLocations();
+        return this.serviceClient.getLocations(null, null, null);
+    }
+
+    public List<? extends TroubleTicketOrderLocation> getLocations(Boolean detail, String ibxs, String cages) {
+        return this.serviceClient.getLocations(detail, ibxs, cages);
     }
 
     public OrderResponse placeOrder(TroubleTicketOrderRequest request) {

@@ -41,10 +41,15 @@ public class SupportPlansImpl implements SupportPlans {
     }
 
     public PaginatedList<SupportPlan> list() {
-        return list(null, null, null);
+        return list(null, null, null, null);
     }
 
     public PaginatedList<SupportPlan> list(List<String> accountNumbers, List<String> ibxs, List<String> planIds) {
+        return list(accountNumbers, ibxs, planIds, null);
+    }
+
+    public PaginatedList<SupportPlan> list(List<String> accountNumbers, List<String> ibxs, List<String> planIds,
+                                           List<String> sorts) {
         Map<String, List<String>> queryParams = new HashMap<>();
         if (accountNumbers != null && !accountNumbers.isEmpty()) {
             queryParams.put("accountNumbers", accountNumbers);
@@ -54,6 +59,9 @@ public class SupportPlansImpl implements SupportPlans {
         }
         if (planIds != null && !planIds.isEmpty()) {
             queryParams.put("planIds", planIds);
+        }
+        if (sorts != null && !sorts.isEmpty()) {
+            queryParams.put("sorts", sorts);
         }
         Page<SupportPlan, SupportPlanJson> responsePage = this.serviceClient.list(queryParams);
         PaginatedList<SupportPlan> supportPlanList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);

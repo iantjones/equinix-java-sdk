@@ -5,6 +5,7 @@ import api.equinix.javasdk.customerportal.enums.AccountStatus;
 import api.equinix.javasdk.customerportal.enums.Service;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.implementation.Address;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResellerCustomerJson {
 
 

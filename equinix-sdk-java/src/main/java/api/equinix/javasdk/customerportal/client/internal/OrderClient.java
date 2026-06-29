@@ -29,6 +29,8 @@ public interface OrderClient<T> extends Pageable<T> {
 
     OrderJson getByUuid(String orderId);
 
+    OrderJson getByUuid(String orderId, List<String> ibxs);
+
     OrderJson refresh(String orderId);
 
     List<? extends OrderNegotiation> getNegotiations(String orderId);

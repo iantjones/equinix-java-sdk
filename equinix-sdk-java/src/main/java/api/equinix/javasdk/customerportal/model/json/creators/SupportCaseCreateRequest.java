@@ -26,8 +26,11 @@ import java.util.Map;
 /**
  * Request body for creating a trouble ticket / support case. The ticket {@code code} (identifying
  * the support category) and a {@code description} of the issue are required; all other fields are
- * optional. {@code attachments} reference previously uploaded files by id; the {@code details} and
- * {@code contacts} blocks, whose shape varies by ticket code, are modelled as free-form maps.
+ * optional. {@code attachments} reference previously uploaded files by id; each {@code contacts}
+ * entry is a typed registered-user or non-registered contact (build with
+ * {@link OrderContact#registered} / {@link OrderContact#nonRegistered}, matching the
+ * {@code TroubleTicketOrCase.contacts} oneOf). The {@code details} block, whose shape varies across
+ * the many per-category schemas, remains a free-form map.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -55,7 +58,7 @@ public class SupportCaseCreateRequest {
     private final Map<String, Object> details;
 
     @JsonProperty("contacts")
-    private final List<Map<String, Object>> contacts;
+    private final List<OrderContact> contacts;
 
     @JsonProperty("attachments")
     private final List<SupportCaseAttachment> attachments;
@@ -91,7 +94,7 @@ public class SupportCaseCreateRequest {
         private String occurredDateTime;
         private String customerReferenceId;
         private Map<String, Object> details;
-        private List<Map<String, Object>> contacts;
+        private List<OrderContact> contacts;
         private List<SupportCaseAttachment> attachments;
 
         private Builder(String code, String description) {
@@ -124,7 +127,7 @@ public class SupportCaseCreateRequest {
             return this;
         }
 
-        public Builder contacts(List<Map<String, Object>> contacts) {
+        public Builder contacts(List<OrderContact> contacts) {
             this.contacts = contacts;
             return this;
         }

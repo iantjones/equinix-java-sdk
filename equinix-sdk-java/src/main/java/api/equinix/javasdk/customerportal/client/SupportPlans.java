@@ -50,4 +50,20 @@ public interface SupportPlans {
      * @return a paginated list of matching support plans
      */
     PaginatedList<SupportPlan> list(List<String> accountNumbers, List<String> ibxs, List<String> planIds);
+
+    /**
+     * Lists support plans filtered by account numbers, IBXs and/or plan ids, sorted by the supplied
+     * sort specifiers.
+     *
+     * <p>Maps to {@code GET /colocations/v2/supportPlans} ({@code Retrieve Smart Hands support plans})
+     * with the {@code sorts} query parameter.</p>
+     *
+     * @param accountNumbers the account numbers to filter by, or {@code null}
+     * @param ibxs           the IBX codes to filter by, or {@code null}
+     * @param planIds        the plan ids to filter by, or {@code null}
+     * @param sorts          the sort specifiers, or {@code null}
+     * @return a paginated list of matching support plans
+     */
+    PaginatedList<SupportPlan> list(List<String> accountNumbers, List<String> ibxs, List<String> planIds,
+                                    List<String> sorts);
 }
