@@ -1,0 +1,63 @@
+{
+  "formatVersion": "v1.0",
+  "offerCode": "AWSDataTransfer",
+  "products": {
+    "SKU-INET-USE1": {
+      "sku": "SKU-INET-USE1",
+      "productFamily": "Data Transfer",
+      "attributes": {
+        "servicecode": "AWSDataTransfer",
+        "transferType": "AWS Outbound",
+        "fromLocation": "US East (N. Virginia)",
+        "fromRegionCode": "us-east-1",
+        "toLocation": "External",
+        "toRegionCode": ""
+      }
+    },
+    "SKU-INBOUND-USE1": {
+      "sku": "SKU-INBOUND-USE1",
+      "productFamily": "Data Transfer",
+      "attributes": {
+        "servicecode": "AWSDataTransfer",
+        "transferType": "AWS Inbound",
+        "fromLocation": "External",
+        "fromRegionCode": "",
+        "toLocation": "US East (N. Virginia)",
+        "toRegionCode": "us-east-1"
+      }
+    }
+  },
+  "terms": {
+    "OnDemand": {
+      "SKU-INET-USE1": {
+        "SKU-INET-USE1.JRTCKXETXF": {
+          "offerTermCode": "JRTCKXETXF",
+          "sku": "SKU-INET-USE1",
+          "priceDimensions": {
+            "SKU-INET-USE1.JRTCKXETXF.free": {
+              "beginRange": "0",
+              "endRange": "1",
+              "unit": "GB",
+              "pricePerUnit": { "USD": "0.0000000000" },
+              "description": "$0.00 per GB - first 1 GB free"
+            },
+            "SKU-INET-USE1.JRTCKXETXF.tier1": {
+              "beginRange": "1",
+              "endRange": "10240",
+              "unit": "GB",
+              "pricePerUnit": { "USD": "0.0900000000" },
+              "description": "$0.09 per GB - up to 10 TB / month"
+            },
+            "SKU-INET-USE1.JRTCKXETXF.tier2": {
+              "beginRange": "10240",
+              "endRange": "51200",
+              "unit": "GB",
+              "pricePerUnit": { "USD": "0.0850000000" },
+              "description": "$0.085 per GB - next 40 TB / month"
+            }
+          }
+        }
+      }
+    }
+  }
+}

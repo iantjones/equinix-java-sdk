@@ -1,0 +1,17 @@
+{
+  "BillingCurrency": "USD",
+  "Count": 1,
+  "Items": [
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.025,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Metered Egress Data Transfer Out",
+      "productName": "ExpressRoute - Metered",
+      "serviceName": "ExpressRoute",
+      "serviceFamily": "Networking"
+    }
+  ],
+  "NextPageLink": null
+}
