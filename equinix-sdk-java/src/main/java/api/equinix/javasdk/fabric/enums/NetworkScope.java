@@ -16,9 +16,17 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum NetworkScope {
     REGIONAL,
     LOCAL,
     GLOBAL,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static NetworkScope fromString(String value) {
+        try { return NetworkScope.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

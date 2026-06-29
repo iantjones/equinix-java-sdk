@@ -16,8 +16,16 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum PrecisionTimeType {
     NTP,
     PTP,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static PrecisionTimeType fromString(String value) {
+        try { return PrecisionTimeType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

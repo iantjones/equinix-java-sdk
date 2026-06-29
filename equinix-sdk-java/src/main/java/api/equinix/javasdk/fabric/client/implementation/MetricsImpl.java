@@ -58,8 +58,8 @@ public class MetricsImpl implements Metrics {
     }
 
     /** {@inheritDoc} */
-    public List<Metric> getMetricsByName(String name, String value, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
-        return serviceClient.getMetricsByName(name, value, fromDateTime, toDateTime);
+    public List<Metric> getMetricsByName(String name, String value) {
+        return serviceClient.getMetricsByName(name, value);
     }
 
     /** {@inheritDoc} */

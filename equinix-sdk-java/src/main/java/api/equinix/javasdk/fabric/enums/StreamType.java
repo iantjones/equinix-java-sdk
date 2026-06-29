@@ -16,7 +16,15 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum StreamType {
     TELEMETRY_STREAM,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static StreamType fromString(String value) {
+        try { return StreamType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

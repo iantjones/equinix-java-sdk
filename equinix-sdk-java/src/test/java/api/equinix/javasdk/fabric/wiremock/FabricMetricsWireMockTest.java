@@ -202,16 +202,20 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
                 .willReturn(okJson(responseBody)));
 
         List<Metric> metrics = fabric.metrics().getMetricsByName(
-                "equinix.fabric.metro.*.latency", "last", null, null);
+                "equinix.fabric.metro.*.latency", "last");
 
         assertNotNull(metrics);
         assertEquals(1, metrics.size());
         assertEquals("equinix.fabric.metro.sv_dc.latency", metrics.get(0).getName());
         assertEquals(3.14, metrics.get(0).getDatapoints().get(0).getValue());
 
+        // The by-name metrics endpoint defines only name/value/offset/limit query params; it does
+        // not support date-range filtering, so fromDateTime/toDateTime must not be sent.
         wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metrics"))
                 .withQueryParam("name", equalTo("equinix.fabric.metro.*.latency"))
-                .withQueryParam("value", equalTo("last")));
+                .withQueryParam("value", equalTo("last"))
+                .withQueryParam("fromDateTime", absent())
+                .withQueryParam("toDateTime", absent()));
     }
 
     @Test

@@ -62,15 +62,13 @@ public interface Metrics {
     /**
      * Retrieves metrics by wildcard metric name ({@code GET /fabric/v4/metrics}). Only the wildcard
      * metro metric types are supported (for example {@code equinix.fabric.metro.*.latency} or
-     * {@code equinix.fabric.metro.*.jitter_avg}).
+     * {@code equinix.fabric.metro.*.jitter_avg}). This endpoint does not support time-range filtering.
      *
      * @param name the wildcard metric name (required)
      * @param value which value to retrieve (for example {@code last}; required)
-     * @param fromDateTime the start of the metrics time range, or {@code null}
-     * @param toDateTime the end of the metrics time range, or {@code null}
      * @return the list of matching metrics
      */
-    List<Metric> getMetricsByName(String name, String value, LocalDateTime fromDateTime, LocalDateTime toDateTime);
+    List<Metric> getMetricsByName(String name, String value);
 
     /**
      * Retrieves metrics for a specific asset ({@code GET /fabric/v4/{asset}/{assetId}/metrics}).

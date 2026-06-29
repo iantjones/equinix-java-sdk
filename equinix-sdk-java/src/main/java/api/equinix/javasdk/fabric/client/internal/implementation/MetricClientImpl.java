@@ -60,7 +60,7 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
     }
 
     /** {@inheritDoc} */
-    public List<Metric> getMetricsByName(String name, String value, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
+    public List<Metric> getMetricsByName(String name, String value) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {
             Utils.addAdditionalValue(qParams, "name", name);
@@ -68,7 +68,6 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
         if (value != null) {
             Utils.addAdditionalValue(qParams, "value", value);
         }
-        addDateRange(qParams, fromDateTime, toDateTime);
 
         EquinixRequest<Metric> request = buildRequestWithQueryParams("GetMetricByName", RequestType.PAGINATED,
                 qParams, MetricJson.getPagedTypeRef());

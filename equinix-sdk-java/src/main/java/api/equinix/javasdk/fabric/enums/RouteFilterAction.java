@@ -16,8 +16,16 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum RouteFilterAction {
     PERMIT,
     DENY,
-    UNKNOWN
+    UNKNOWN;
+
+    @JsonCreator
+    public static RouteFilterAction fromString(String value) {
+        try { return RouteFilterAction.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }
