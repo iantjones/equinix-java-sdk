@@ -25,6 +25,7 @@ import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.networkedge.enums.*;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.implementation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -40,6 +41,7 @@ import java.util.List;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class DeviceJson extends Lifecycle {
 

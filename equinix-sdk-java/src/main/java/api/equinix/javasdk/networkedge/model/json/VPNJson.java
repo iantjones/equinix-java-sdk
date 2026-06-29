@@ -21,8 +21,10 @@ import api.equinix.javasdk.core.model.Lifecycle;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.networkedge.enums.BGPState;
+import api.equinix.javasdk.networkedge.enums.UserStatus;
 import api.equinix.javasdk.networkedge.enums.VPNStatus;
 import api.equinix.javasdk.networkedge.model.VPN;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -37,6 +39,7 @@ import java.time.LocalDateTime;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VPNJson extends Lifecycle {
 
 
@@ -118,6 +121,67 @@ public class VPNJson extends Lifecycle {
     @JsonProperty("deletedDateTime")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime deletedDateTime;
+
+    // VpnResponse expanded audit block (created-by / updated-by user metadata).
+    @JsonProperty("createdByFirstName")
+    private String createdByFirstName;
+
+    @JsonProperty("createdByLastName")
+    private String createdByLastName;
+
+    @JsonProperty("createdByEmail")
+    private String createdByEmail;
+
+    @JsonProperty("createdByUserKey")
+    private Long createdByUserKey;
+
+    @JsonProperty("createdByAccountUcmId")
+    private Long createdByAccountUcmId;
+
+    @JsonProperty("createdByUserName")
+    private String createdByUserName;
+
+    @JsonProperty("createdByCustOrgId")
+    private Long createdByCustOrgId;
+
+    @JsonProperty("createdByCustOrgName")
+    private String createdByCustOrgName;
+
+    @JsonProperty("createdByUserStatus")
+    private UserStatus createdByUserStatus;
+
+    @JsonProperty("createdByCompanyName")
+    private String createdByCompanyName;
+
+    @JsonProperty("updatedByFirstName")
+    private String updatedByFirstName;
+
+    @JsonProperty("updatedByLastName")
+    private String updatedByLastName;
+
+    @JsonProperty("updatedByEmail")
+    private String updatedByEmail;
+
+    @JsonProperty("updatedByUserKey")
+    private Long updatedByUserKey;
+
+    @JsonProperty("updatedByAccountUcmId")
+    private Long updatedByAccountUcmId;
+
+    @JsonProperty("updatedByUserName")
+    private String updatedByUserName;
+
+    @JsonProperty("updatedByCustOrgId")
+    private Long updatedByCustOrgId;
+
+    @JsonProperty("updatedByCustOrgName")
+    private String updatedByCustOrgName;
+
+    @JsonProperty("updatedByUserStatus")
+    private UserStatus updatedByUserStatus;
+
+    @JsonProperty("updatedByCompanyName")
+    private String updatedByCompanyName;
 
     @Override
     public LocalDateTime getCreatedDate() {

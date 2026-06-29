@@ -17,11 +17,13 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.networkedge.enums.EtfStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class Etf {
 

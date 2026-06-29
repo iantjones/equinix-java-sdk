@@ -21,6 +21,7 @@ import api.equinix.javasdk.networkedge.enums.DeviceCategory;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.DeviceStatus;
 import api.equinix.javasdk.networkedge.enums.NetworkScope;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -30,6 +31,7 @@ import lombok.Getter;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class LinkDevice {
 

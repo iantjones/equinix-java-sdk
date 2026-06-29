@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class PricingDetail {
 

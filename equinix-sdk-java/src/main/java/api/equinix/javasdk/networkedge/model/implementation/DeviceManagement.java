@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -28,6 +29,7 @@ import java.util.ArrayList;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class DeviceManagement {
 

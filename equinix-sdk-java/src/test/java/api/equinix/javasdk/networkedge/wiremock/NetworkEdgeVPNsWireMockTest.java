@@ -3,6 +3,7 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.networkedge.enums.UserStatus;
 import api.equinix.javasdk.networkedge.model.VPN;
 import org.junit.jupiter.api.*;
 
@@ -48,6 +49,42 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
             assertNotNull(vpn);
             assertEquals("vpn-1111-2222-3333-444455556666", vpn.getUuid());
             assertEquals("test-vpn-config", vpn.getConfigName());
+        }
+
+        @Test
+        @DisplayName("deserializes the expanded VpnResponse audit / org metadata block")
+        void deserializesAuditBlock() {
+            stubSingleton(wireMock, "/ne/v1/vpn/.*",
+                    "/json/networkedge/vpn_response.json");
+
+            VPN vpn = networkEdge.vpns().getByUuid("vpn-1111-2222-3333-444455556666");
+
+            // 4-byte ASNs / org id modelled as Long.
+            assertEquals(65555L, vpn.getCustOrgId());
+
+            // created-by audit block
+            assertEquals("John", vpn.getCreatedByFirstName());
+            assertEquals("Smith", vpn.getCreatedByLastName());
+            assertEquals("alpha@beta.com", vpn.getCreatedByEmail());
+            assertEquals(123L, vpn.getCreatedByUserKey());
+            assertEquals(456L, vpn.getCreatedByAccountUcmId());
+            assertEquals("jsmith", vpn.getCreatedByUserName());
+            assertEquals(7863L, vpn.getCreatedByCustOrgId());
+            assertEquals("My Awesome Org", vpn.getCreatedByCustOrgName());
+            assertEquals(UserStatus.ACTIVATED, vpn.getCreatedByUserStatus());
+            assertEquals("My Awesome Company", vpn.getCreatedByCompanyName());
+
+            // updated-by audit block
+            assertEquals("Jane", vpn.getUpdatedByFirstName());
+            assertEquals("Doe", vpn.getUpdatedByLastName());
+            assertEquals("gamma@delta.com", vpn.getUpdatedByEmail());
+            assertEquals(789L, vpn.getUpdatedByUserKey());
+            assertEquals(1011L, vpn.getUpdatedByAccountUcmId());
+            assertEquals("jdoe", vpn.getUpdatedByUserName());
+            assertEquals(7863L, vpn.getUpdatedByCustOrgId());
+            assertEquals("My Awesome Org", vpn.getUpdatedByCustOrgName());
+            assertEquals(UserStatus.DEACTIVATED, vpn.getUpdatedByUserStatus());
+            assertEquals("My Awesome Company", vpn.getUpdatedByCompanyName());
         }
 
         @Test

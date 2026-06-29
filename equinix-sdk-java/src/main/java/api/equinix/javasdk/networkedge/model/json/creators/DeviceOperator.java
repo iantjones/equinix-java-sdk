@@ -601,9 +601,13 @@ public class DeviceOperator extends ResourceImpl<Device> {
             return this;
         }
 
-        public DeviceOperator.DeviceUpdater increaseTermLength(Integer termLength) {
+        public DeviceOperator.DeviceUpdater increaseTermLength(String termLength) {
             this.updaterJson.setTermLength(termLength);
             return this;
+        }
+
+        public DeviceOperator.DeviceUpdater increaseTermLength(Integer termLength) {
+            return increaseTermLength(termLength != null ? termLength.toString() : null);
         }
 
         public DeviceOperator.DeviceUpdater withCore(Integer core) {

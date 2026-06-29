@@ -19,6 +19,7 @@ package api.equinix.javasdk.networkedge.model.implementation;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.networkedge.enums.NetworkInterfaceStatus;
 import api.equinix.javasdk.networkedge.enums.NetworkInterfaceType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
@@ -32,6 +33,7 @@ import java.util.List;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class NetworkInterface {
 
