@@ -32,8 +32,14 @@ import api.equinix.javasdk.ibxsmartview.model.wrappers.StreamingSubscriptionWrap
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class StreamingSubscriptionClientImpl extends ResourceClientBase<StreamingSubscription, StreamingSubscriptionJson> implements StreamingSubscriptionClient<StreamingSubscription> {
+
+    // Subscription ids are Mongo ObjectIds (e.g. 607460b4e4a78360425bca56), not dashed UUIDs, so
+    // Constants.UUID_PATTERN does not match the create-response Location header. Capture the
+    // trailing path segment instead (e.g. /smartview/v2/streaming/subscriptions/{id}).
+    private static final Pattern LOCATION_ID_PATTERN = Pattern.compile(".*/([^/]+)/?$");
 
     public StreamingSubscriptionClientImpl(IBXSmartViewConfigImpl configClient) {
         super(configClient, "IBXSmartView", "StreamingSubscriptions", StreamingSubscriptionJson.class);
@@ -54,16 +60,27 @@ public class StreamingSubscriptionClientImpl extends ResourceClientBase<Streamin
         return getOne("GetSubscription", uuid);
     }
 
+    // POST /smartview/v2/streaming/subscriptions returns 201 with only a Location header (no body),
+    // so we parse the new subscription id from Location and re-fetch the created resource.
     public StreamingSubscriptionJson create(StreamingSubscriptionCreatorJson creatorJson) {
-        return postOne("CreateSubscription", creatorJson);
+        EquinixRequest<Object> request = buildRequest("CreateSubscription", RequestType.SINGLE, Object.class);
+        Utils.serializeJson(request, creatorJson);
+        String id = Utils.extractFromHeader(invoke(request), "Location", LOCATION_ID_PATTERN);
+        return getByUuid(id);
     }
 
+    // PUT /smartview/v2/streaming/subscriptions/{id} returns 204 No Content, so we drain/validate the
+    // response and re-fetch the updated resource rather than deserialize an empty body.
     public StreamingSubscriptionJson update(String uuid, StreamingSubscriptionCreatorJson creatorJson) {
-        return updateOne("UpdateSubscription", uuid, creatorJson);
+        voidOp("UpdateSubscription", RequestType.SINGLE, Map.of("uuid", uuid), null, creatorJson);
+        return getByUuid(uuid);
     }
 
+    // DELETE /smartview/v2/streaming/subscriptions/{id} returns 204 No Content; drain/validate the
+    // response and return null (no resource to deserialize).
     public StreamingSubscriptionJson delete(String uuid) {
-        return deleteOne("DeleteSubscription", uuid);
+        voidOp("DeleteSubscription", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
+        return null;
     }
 
     public StreamingSubscriptionJson refresh(String uuid) {

@@ -15,10 +15,8 @@
  */
 
 /**
- * IBX SmartView enumerations for the Equinix Java SDK. Defines typed constants
- * for level types that categorize hierarchy nodes, alert statuses for monitoring
- * thresholds, channel types for sensor classification, data point types for
- * environmental and power measurements, reading granularity intervals, and other
- * IBX SmartView domain values used throughout the monitoring and alerting system.
+ * IBX SmartView enumerations for the Equinix Java SDK. Defines typed constants such as
+ * streaming subscription status and delivery channel type, power level type, and sensor reading
+ * units used throughout the monitoring and alerting APIs.
  */
 package api.equinix.javasdk.ibxsmartview.enums;

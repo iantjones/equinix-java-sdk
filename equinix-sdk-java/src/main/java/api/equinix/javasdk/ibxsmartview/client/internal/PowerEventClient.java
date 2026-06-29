@@ -38,6 +38,8 @@ public interface PowerEventClient<T> extends Pageable<T> {
 
     Page<PowerAlertConfiguration, PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit);
 
+    Pageable<PowerAlertConfiguration> alertConfigurationPageable();
+
     void pauseAlertConfiguration(String alertConfigurationUid);
 
     void resumeAlertConfiguration(String alertConfigurationUid);

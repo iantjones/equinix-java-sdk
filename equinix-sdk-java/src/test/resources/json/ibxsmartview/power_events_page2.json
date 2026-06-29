@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": 1043,
+      "alertUid": "SV5.CABINET-DRAW#EXCEEDS:90",
+      "status": "INACTIVE",
+      "asset": {
+        "ibx": "SV5",
+        "assetUid": "SV5:01:B5678"
+      },
+      "category": "POWER",
+      "eventType": "CABINET_DRAW_TO_USABLE_KVA",
+      "conditionType": "EXCEEDS",
+      "triggerValue": "90",
+      "currentValue": "91.0",
+      "accountNo": "123456"
+    }
+  ],
+  "limit": 100,
+  "offset": 100,
+  "totalCount": 101
+}

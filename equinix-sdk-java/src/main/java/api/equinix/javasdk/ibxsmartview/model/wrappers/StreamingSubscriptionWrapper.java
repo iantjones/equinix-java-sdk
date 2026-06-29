@@ -37,7 +37,9 @@ public class StreamingSubscriptionWrapper extends ResourceImpl<StreamingSubscrip
     }
 
     public Boolean delete() {
-        this.jsonObject = ((StreamingSubscriptionClientImpl)this.serviceClient).delete(this.getId());
+        // DELETE returns 204 No Content; the call validates the status (throwing on API error) and
+        // returns null, so we do not reassign jsonObject — just report success.
+        ((StreamingSubscriptionClientImpl)this.serviceClient).delete(this.getId());
         return true;
     }
 

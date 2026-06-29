@@ -56,6 +56,11 @@ class IBXSmartViewSensorReadingsWireMockTest extends WireMockTestBase {
         assertEquals(22.5, first.getTemperature().getValue());
         assertEquals(SensorUnit.CELSIUS, first.getTemperature().getUnit());
         assertEquals(SensorUnit.PERCENT, first.getHumidity().getUnit());
+
+        // A FAHRENHEIT temperature unit must be preserved (not silently deserialized to null).
+        SensorReading second = readings.get(1);
+        assertEquals(73.6, second.getTemperature().getValue());
+        assertEquals(SensorUnit.FAHRENHEIT, second.getTemperature().getUnit());
     }
 
     @Test

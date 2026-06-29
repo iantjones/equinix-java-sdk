@@ -23,8 +23,8 @@
       "zoneId": "ZONE-B",
       "ibx": "SV5",
       "temperature": {
-        "value": 23.1,
-        "unit": "CELSIUS"
+        "value": 73.6,
+        "unit": "FAHRENHEIT"
       },
       "humidity": {
         "value": 48.2,

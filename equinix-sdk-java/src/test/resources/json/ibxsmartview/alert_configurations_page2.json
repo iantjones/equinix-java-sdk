@@ -1,0 +1,15 @@
+{
+  "data": [
+    {
+      "alertConfigurationUid": "cfg-0002",
+      "ibx": "SV5",
+      "state": "PAUSED",
+      "section": "POWER"
+    }
+  ],
+  "pagination": {
+    "offset": 100,
+    "limit": 100,
+    "total": 101
+  }
+}

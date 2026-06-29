@@ -24,6 +24,7 @@ import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.json.SystemAlertJson;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,13 +40,20 @@ public class SystemAlertClientImpl extends ResourceClientBase<SystemAlert, Syste
     }
 
     public Page<SystemAlert, SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit) {
-        Map<String, List<String>> qParams = Map.of(
-                "status", List.of(status),
-                "assetClassification", List.of(assetClassification),
-                "edgeCollectedOn", List.of(edgeCollectedOn),
-                "offset", List.of(String.valueOf(offset)),
-                "limit", List.of(String.valueOf(limit))
-        );
+        // status, assetClassification and edgeCollectedOn are optional (required:false in the spec);
+        // only add them when non-null so an unfiltered search(null, null, null, ...) does not NPE.
+        Map<String, List<String>> qParams = new HashMap<>();
+        if (status != null) {
+            qParams.put("status", List.of(status));
+        }
+        if (assetClassification != null) {
+            qParams.put("assetClassification", List.of(assetClassification));
+        }
+        if (edgeCollectedOn != null) {
+            qParams.put("edgeCollectedOn", List.of(edgeCollectedOn));
+        }
+        qParams.put("offset", List.of(String.valueOf(offset)));
+        qParams.put("limit", List.of(String.valueOf(limit)));
         return listPage("SearchAlertsGet", qParams);
     }
 
