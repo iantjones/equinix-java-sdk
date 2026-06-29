@@ -92,6 +92,12 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   tracked follow-up.
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
   instead of silently dispatching a malformed request.
+- **`CustomerRoute` interface** (`internetaccess.model`): a shared read-only view of the EIA v1
+  customer-route shape (`importPolicy` + `prefixLength`) now implemented by both
+  `DedicatedPortCustomerRoute` and `VirtualConnectionCustomerRoute`. Additive (existing getters
+  unchanged). This was the only model-consolidation found safe to apply without a public-surface
+  change in a full model-layer near-duplicate audit; the remaining candidates are genuinely distinct
+  wire contracts or would re-type public getters (a 2.0 break) and were left as-is.
 - **WireMock coverage** for 30+ previously-untested resources (request-contract `verify(...)`).
 - **Fabric Connection validation**: `Connections.validate(FilterPropertyList)` →
   `POST /connections/validate` (validate a provider auth key or VLAN availability before creating).

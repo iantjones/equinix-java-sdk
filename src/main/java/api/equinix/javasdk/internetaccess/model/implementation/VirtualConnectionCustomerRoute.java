@@ -17,6 +17,7 @@
 package api.equinix.javasdk.internetaccess.model.implementation;
 
 import api.equinix.javasdk.internetaccess.enums.ImportPolicy;
+import api.equinix.javasdk.internetaccess.model.CustomerRoute;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -27,7 +28,7 @@ import lombok.Getter;
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VirtualConnectionCustomerRoute {
+public class VirtualConnectionCustomerRoute implements CustomerRoute {
 
     @JsonProperty("importPolicy")
     private ImportPolicy importPolicy;
