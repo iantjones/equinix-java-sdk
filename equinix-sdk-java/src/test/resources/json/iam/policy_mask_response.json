@@ -1,0 +1,23 @@
+{
+  "policyMaskId": "policymask:my-mask",
+  "ern": "ern:access:us-west:proj-123:policymask/my-mask",
+  "description": "A description string.",
+  "tags": {
+    "team": "platform"
+  },
+  "managedPolicies": "none",
+  "managedPermissionSets": [
+    "managedset:reader",
+    "managedset:writer"
+  ],
+  "subtract": {
+    "managedPolicies": ["managedpolicy:dangerous"],
+    "managedPermissionSets": ["managedset:admin"]
+  },
+  "rev": "rev-1",
+  "disabledPolicy": true,
+  "createdBy": "user:alice",
+  "createdAt": "2024-01-15T12:00:00Z",
+  "updatedBy": "user:bob",
+  "updatedAt": "2024-02-15T12:00:00Z"
+}
