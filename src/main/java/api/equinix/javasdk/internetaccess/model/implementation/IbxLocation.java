@@ -21,11 +21,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * Geographic data for a product in an Equinix Internet Access (EIA) v1 price entry.
+ * An IBX location reference holding only the IBX code, as used throughout the Equinix Internet
+ * Access (EIA) v1 lookups (terms, colocation spaces, price entries, port/dedicated-port
+ * configurations, and connection-service connector types).
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AssetLocation {
+public class IbxLocation {
 
     @JsonProperty("ibx")
     private String ibx;

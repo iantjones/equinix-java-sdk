@@ -19,9 +19,9 @@ package api.equinix.javasdk.internetaccess.model.json;
 import api.equinix.javasdk.internetaccess.enums.TermsProduct;
 import api.equinix.javasdk.internetaccess.enums.TermsType;
 import api.equinix.javasdk.internetaccess.model.TermsAndConditions;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 import api.equinix.javasdk.internetaccess.model.implementation.TermsAccount;
 import api.equinix.javasdk.internetaccess.model.implementation.TermsConnectivitySource;
-import api.equinix.javasdk.internetaccess.model.implementation.TermsLocation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -44,7 +44,7 @@ public class TermsAndConditionsJson implements TermsAndConditions {
     private String version;
 
     @JsonProperty("location")
-    private TermsLocation location;
+    private IbxLocation location;
 
     @JsonProperty("account")
     private TermsAccount account;

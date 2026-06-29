@@ -20,7 +20,7 @@ import api.equinix.javasdk.internetaccess.enums.TermsProduct;
 import api.equinix.javasdk.internetaccess.enums.TermsType;
 import api.equinix.javasdk.internetaccess.model.implementation.TermsAccount;
 import api.equinix.javasdk.internetaccess.model.implementation.TermsConnectivitySource;
-import api.equinix.javasdk.internetaccess.model.implementation.TermsLocation;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 
 /**
  * A set of Equinix Internet Access (EIA) terms and conditions, as returned by the v1 terms lookup
@@ -43,7 +43,7 @@ public interface TermsAndConditions {
     /**
      * @return the location the terms and conditions apply to
      */
-    TermsLocation getLocation();
+    IbxLocation getLocation();
 
     /**
      * @return the account the terms and conditions apply to

@@ -22,7 +22,7 @@ import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonData;
  * A single power data entry within the {@code payLoad.data} array returned by the legacy
  * {@code /power/v1/current} POST endpoint ({@code PowerData_IBX} in the spec).
  */
-public interface PowerDataIBX {
+public interface PowerDataIBX extends PowerReadingData {
 
     String getIbx();
 

@@ -17,27 +17,12 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * Order details of an Equinix Internet Access (EIA) service.
  */
-@Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EiaServiceOrder {
-
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("purchaseOrderNumber")
-    private String purchaseOrderNumber;
-
-    @JsonProperty("orderNumber")
-    private String orderNumber;
-
-    @JsonProperty("orderLine")
-    private String orderLine;
+public class EiaServiceOrder extends BasicOrderInfo {
 }

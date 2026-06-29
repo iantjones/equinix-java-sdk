@@ -14,20 +14,23 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.model.implementation;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+package api.equinix.javasdk.ibxsmartview.model;
 
 /**
- * IBX location where a connector type is available, in the Equinix Internet Access (EIA) v1
- * connection-services lookup ({@code GET /internetAccess/v1/connectionServices}).
+ * The streaming envelope shared by every IBX SmartView message type, carrying the
+ * message {@code type} discriminator and its typed {@code data} payload.
+ *
+ * @param <T> the type of the wrapped {@code data} payload
  */
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ConnectorTypeLocation {
+public interface MessageData<T> {
 
-    @JsonProperty("ibx")
-    private String ibx;
+    /**
+     * @return the message type discriminator
+     */
+    String getType();
+
+    /**
+     * @return the wrapped data payload
+     */
+    T getData();
 }

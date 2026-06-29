@@ -40,5 +40,5 @@ public class ConnectionConnectorType {
     private Integer optionalPorts;
 
     @JsonProperty("locations")
-    private List<ConnectorTypeLocation> locations;
+    private List<IbxLocation> locations;
 }

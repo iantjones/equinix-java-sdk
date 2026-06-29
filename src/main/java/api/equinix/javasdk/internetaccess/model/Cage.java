@@ -16,8 +16,8 @@
 
 package api.equinix.javasdk.internetaccess.model;
 
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 import api.equinix.javasdk.internetaccess.model.implementation.SecureCageAccount;
-import api.equinix.javasdk.internetaccess.model.implementation.SpaceLocation;
 
 /**
  * A cage in an Equinix IBX data center, as returned by the Equinix Internet Access (EIA) v1
@@ -45,7 +45,7 @@ public interface Cage {
     /**
      * @return the IBX location of the cage
      */
-    SpaceLocation getLocation();
+    IbxLocation getLocation();
 
     /**
      * @return the customer billing account that owns the cage

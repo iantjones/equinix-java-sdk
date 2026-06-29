@@ -20,9 +20,9 @@ import api.equinix.javasdk.internetaccess.enums.PatchPanelType;
 import api.equinix.javasdk.internetaccess.model.PatchPanel;
 import api.equinix.javasdk.internetaccess.model.implementation.CabinetRef;
 import api.equinix.javasdk.internetaccess.model.implementation.CageRef;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 import api.equinix.javasdk.internetaccess.model.implementation.PatchPanelOwnedPort;
 import api.equinix.javasdk.internetaccess.model.implementation.SecureCageAccount;
-import api.equinix.javasdk.internetaccess.model.implementation.SpaceLocation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -77,7 +77,7 @@ public class PatchPanelJson implements PatchPanel {
     private CabinetRef cabinet;
 
     @JsonProperty("location")
-    private SpaceLocation location;
+    private IbxLocation location;
 
     @JsonProperty("account")
     private SecureCageAccount account;

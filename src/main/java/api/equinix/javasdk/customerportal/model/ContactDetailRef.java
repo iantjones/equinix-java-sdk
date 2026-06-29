@@ -14,20 +14,17 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.model.implementation;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+package api.equinix.javasdk.customerportal.model;
 
 /**
- * IBX location of a colocation space (cage/cabinet/patch panel) in the Equinix Internet Access
- * (EIA) v1 product-availability lookups.
+ * A single string-typed communications detail of a contact: a {@code type} (such as
+ * {@code PHONE}, {@code EMAIL} or {@code MOBILE}) and its {@code value}. Implemented by the
+ * order, quote, support-case, trouble-ticket and unified-notification contact-detail models,
+ * all of which carry the identical untyped {@code {type, value}} shape.
  */
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class SpaceLocation {
+public interface ContactDetailRef {
 
-    @JsonProperty("ibx")
-    private String ibx;
+    String getType();
+
+    String getValue();
 }

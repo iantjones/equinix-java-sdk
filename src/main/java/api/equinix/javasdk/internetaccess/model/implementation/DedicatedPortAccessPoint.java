@@ -29,7 +29,7 @@ import lombok.Getter;
 public class DedicatedPortAccessPoint {
 
     @JsonProperty("location")
-    private DedicatedPortLocation location;
+    private IbxLocation location;
 
     @JsonProperty("port")
     private DedicatedPortPort port;

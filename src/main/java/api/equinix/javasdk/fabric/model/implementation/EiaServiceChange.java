@@ -17,18 +17,12 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * Reference to the change object of an Equinix Internet Access (EIA) service.
  */
-@Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EiaServiceChange {
-
-    @JsonProperty("href")
-    private String href;
+public class EiaServiceChange extends BasicChangeInfo {
 }

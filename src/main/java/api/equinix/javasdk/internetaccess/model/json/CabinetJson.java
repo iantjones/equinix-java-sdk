@@ -18,8 +18,8 @@ package api.equinix.javasdk.internetaccess.model.json;
 
 import api.equinix.javasdk.internetaccess.model.Cabinet;
 import api.equinix.javasdk.internetaccess.model.implementation.CageRef;
+import api.equinix.javasdk.internetaccess.model.implementation.IbxLocation;
 import api.equinix.javasdk.internetaccess.model.implementation.SecureCageAccount;
-import api.equinix.javasdk.internetaccess.model.implementation.SpaceLocation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -48,7 +48,7 @@ public class CabinetJson implements Cabinet {
     private CageRef cage;
 
     @JsonProperty("location")
-    private SpaceLocation location;
+    private IbxLocation location;
 
     @JsonProperty("account")
     private SecureCageAccount account;

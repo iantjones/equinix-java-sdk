@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.implementation;
 
+import api.equinix.javasdk.ibxsmartview.model.MessageData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EnvironmentMessageData {
+public class EnvironmentMessageData implements MessageData<Environment> {
 
     @JsonProperty("type")
     private String type;
