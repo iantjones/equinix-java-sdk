@@ -41,6 +41,38 @@ public class PaginatedRequest<T> extends EquinixRequest<T> {
     }
 
     /**
+     * Seeds {@link #pageNumber}/{@link #pageSize} from any caller-supplied {@code offset}/{@code limit}
+     * query parameters, so {@link #setPagination()} (invoked at dispatch) preserves the requested window
+     * and {@link #nextPage()} advances by the requested page size. Without this, {@code setPagination()}
+     * would overwrite caller-supplied {@code offset}/{@code limit} with the defaults (offset 0,
+     * limit {@code PAGE_LIMIT}).
+     */
+    public void seedPagingFromQueryParams() {
+        java.util.List<String> limitVals = getQueryParameters().get("limit");
+        if (limitVals != null && !limitVals.isEmpty()) {
+            try {
+                int l = Integer.parseInt(limitVals.get(0));
+                if (l > 0) {
+                    this.pageSize = l;
+                }
+            } catch (NumberFormatException ignored) {
+                // keep default page size
+            }
+        }
+        java.util.List<String> offsetVals = getQueryParameters().get("offset");
+        if (offsetVals != null && !offsetVals.isEmpty() && this.pageSize > 0) {
+            try {
+                int o = Integer.parseInt(offsetVals.get(0));
+                if (o >= 0) {
+                    this.pageNumber = o / this.pageSize;
+                }
+            } catch (NumberFormatException ignored) {
+                // keep default page number
+            }
+        }
+    }
+
+    /**
      * <p>setPagination.</p>
      */
     public void setPagination() {

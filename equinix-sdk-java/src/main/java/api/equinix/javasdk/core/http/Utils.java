@@ -108,6 +108,10 @@ public class Utils {
             equinixRequest.setQueryParameters(queryParams);
         }
 
+        if(requestType == RequestType.PAGINATED) {
+            ((PaginatedRequest<T>) equinixRequest).seedPagingFromQueryParams();
+        }
+
         equinixRequest.setTypeReference(typeReference);
 
         equinixRequest.setFunctionalAreaJson(equinixClient.getClientResourceFile().path("functionalAreas").get(functionalArea));
@@ -620,6 +624,14 @@ public class Utils {
     public static <S, T> S handleSingletonResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         try {
             return readResponseBody(equinixResponse, equinixRequest);
+        }
+        catch (com.fasterxml.jackson.databind.exc.MismatchedInputException mie) {
+            // An empty 2xx body (e.g. a DELETE/action that returns 202/204 with no content) has
+            // nothing to map — treat as success with no object rather than a deserialization error.
+            if (mie.getMessage() != null && mie.getMessage().contains("No content to map")) {
+                return null;
+            }
+            throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, mie);
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);

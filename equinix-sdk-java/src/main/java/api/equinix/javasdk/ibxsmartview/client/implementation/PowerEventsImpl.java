@@ -61,7 +61,9 @@ public class PowerEventsImpl implements PowerEvents {
         // ClassCastException on the deserialized PowerAlertConfigurationJson items. The dedicated
         // pageable deserializes the nested AlertPaginatedResponse and wraps with identity.
         Pageable<PowerAlertConfiguration> pageableClient = serviceClient.alertConfigurationPageable();
-        PaginatedList<PowerAlertConfiguration> configList = Utils.mapPaginatedList(responsePage.getItems(), pageableClient, (json, client) -> json);
+        java.util.ArrayList<PowerAlertConfigurationJson> items = responsePage.getItems() != null
+                ? responsePage.getItems() : new java.util.ArrayList<>();
+        PaginatedList<PowerAlertConfiguration> configList = Utils.mapPaginatedList(items, pageableClient, (json, client) -> json);
         return new PaginatedList<>(configList, pageableClient, responsePage.getAssociatedRequest(),
                 responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
