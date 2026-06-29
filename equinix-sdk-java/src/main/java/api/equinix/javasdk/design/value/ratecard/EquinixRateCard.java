@@ -38,11 +38,10 @@ import java.util.Optional;
  * another rate card or a heuristic rather than failing. Every quote it does
  * produce is tagged {@link PriceSource#EQUINIX_LIVE}.</p>
  *
- * <p><strong>P1 scope:</strong> the catalogue fetch reads the first page of
- * {@code prices/search}. Targeted server-side filtering and full pagination are
- * a planned hardening step once the prices filter fields are confirmed against
- * the Fabric spec; until then a miss simply defers to the fallback, never a
- * wrong number.</p>
+ * <p>The catalogue fetch pages through all of {@code prices/search} and caches the
+ * result for the card's lifetime. Targeted server-side filtering by price type/bandwidth
+ * is a further optimization once those prices filter fields are confirmed against the
+ * Fabric spec; until then a miss simply defers to the fallback, never a wrong number.</p>
  */
 public final class EquinixRateCard implements RateCard {
 
@@ -132,7 +131,10 @@ public final class EquinixRateCard implements RateCard {
         try {
             PaginatedFilteredList<Pricing> page = fabric.prices().list(null);
             if (page != null) {
-                return new ArrayList<>(page.toList());
+                // Page through the entire catalogue (not just the first page) so a match is never
+                // missed when the catalogue exceeds one page; fetched once and cached for the
+                // card's lifetime.
+                return new ArrayList<>(page.loadAll().toList());
             }
         } catch (RuntimeException e) {
             log.debug("Could not fetch Equinix price catalogue; live rate card will yield no prices", e);
