@@ -33,13 +33,10 @@ public class ProviderRequirement {
      */
     String serviceProfileUuid;
 
-    /** Custom display label. If {@code null}, derived from the provider name or profile. */
     String label;
 
-    /** Preferred seller regions (e.g., "us-east-1"). Metros matching these receive a scoring bonus. */
     List<String> preferredSellerRegions;
 
-    /** If {@code true}, metros without this provider are excluded. If {@code false}, it is a soft preference. */
     boolean required;
 
     /**

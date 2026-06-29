@@ -117,7 +117,6 @@ public final class RetryPolicy {
     }
 
     /**
-     * <p>Getter for the field <code>maxRetries</code>.</p>
      *
      * @return the maximum number of retries
      */

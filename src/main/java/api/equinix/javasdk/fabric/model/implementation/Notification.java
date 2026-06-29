@@ -27,10 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>Notification class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @AllArgsConstructor
@@ -44,11 +42,6 @@ public class Notification {
     @JsonProperty("emails")
     private List<String> emails;
 
-    /**
-     * <p>addEmail.</p>
-     *
-     * @param email a {@link java.lang.String} object.
-     */
     public void addEmail(String email) {
         if(this.emails == null) {
             this.emails = new ArrayList<>();

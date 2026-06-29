@@ -21,37 +21,20 @@ package api.equinix.javasdk.core.exception;
  * Extends {@link RuntimeException} so that SDK exceptions are unchecked.
  *
  * @author ianjones
- * @version $Id: $Id
  * @see EquinixClientException
  * @see EquinixServiceException
  */
 public class BaseException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * <p>Constructor for BaseException.</p>
-     *
-     * @param message a {@link java.lang.String} object.
-     * @param t a {@link java.lang.Throwable} object.
-     */
     public BaseException(String message, Throwable t) {
         super(message, t);
     }
 
-    /**
-     * <p>Constructor for BaseException.</p>
-     *
-     * @param message a {@link java.lang.String} object.
-     */
     public BaseException(String message) {
         super(message);
     }
 
-    /**
-     * <p>Constructor for BaseException.</p>
-     *
-     * @param t a {@link java.lang.Throwable} object.
-     */
     public BaseException(Throwable t) {
         super(t);
     }

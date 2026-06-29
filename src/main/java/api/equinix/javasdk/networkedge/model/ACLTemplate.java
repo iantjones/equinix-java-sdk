@@ -23,83 +23,28 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJso
 import java.util.List;
 
 /**
- * <p>ACLTemplate interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ACLTemplate {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getDescription.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getDescription();
 
-    /**
-     * <p>getInboundRules.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<InboundRule> getInboundRules();
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator.ACLTemplateUpdater} object.
-     */
     ACLTemplateOperator.ACLTemplateUpdater update();
 
-    /**
-     * <p>save.</p>
-     *
-     * @param updaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJson} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean save(ACLTemplateUpdaterJson updaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete();
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete(String accountUcmId);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean refresh();
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean refresh(String accountUcmId);
 }

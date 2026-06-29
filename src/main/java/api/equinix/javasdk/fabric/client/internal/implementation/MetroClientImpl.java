@@ -34,7 +34,6 @@ import java.util.Map;
  * Internal client for Fabric Metros (read-only). Plumbing/paging provided by {@link ResourceClientBase}.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MetroClientImpl extends ResourceClientBase<Metro, MetroJson> implements MetroClient<Metro> {
 

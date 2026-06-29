@@ -17,10 +17,8 @@
 package api.equinix.javasdk.fabric.enums;
 
 /**
- * <p>Direction class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Direction {
     INTERNAL,

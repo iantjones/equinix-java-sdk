@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>IpBlockOperator class.</p>
  *
  * @author ianjones
  */

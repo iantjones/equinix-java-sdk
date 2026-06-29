@@ -17,10 +17,8 @@
 package api.equinix.javasdk.core.enums;
 
 /**
- * <p>Protocol class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Protocol {
 
@@ -33,7 +31,6 @@ public enum Protocol {
         this.protocol = protocol;
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
         return protocol;

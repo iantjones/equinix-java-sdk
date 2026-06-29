@@ -36,12 +36,6 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
     @Getter
     private final Pageable<ServiceProfile> serviceClient;
 
-    /**
-     * <p>Constructor for ServiceProfileWrapper.</p>
-     *
-     * @param jsonObject a {@link api.equinix.javasdk.fabric.model.json.ServiceProfileJson} object.
-     * @param serviceProfileClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ServiceProfileWrapper(ServiceProfileJson jsonObject, Pageable<ServiceProfile> serviceProfileClient) {
         this.jsonObject = jsonObject;
         this.serviceClient = serviceProfileClient;

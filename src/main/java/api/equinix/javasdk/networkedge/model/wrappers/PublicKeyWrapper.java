@@ -24,10 +24,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>PublicKeyWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PublicKeyWrapper extends ResourceImpl<PublicKey> implements PublicKey {
 
@@ -36,12 +34,6 @@ public class PublicKeyWrapper extends ResourceImpl<PublicKey> implements PublicK
     @Getter
     private final Pageable<PublicKey> serviceClient;
 
-    /**
-     * <p>Constructor for PublicKeyWrapper.</p>
-     *
-     * @param publicKeyJson a {@link api.equinix.javasdk.networkedge.model.json.PublicKeyJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public PublicKeyWrapper(PublicKeyJson publicKeyJson, Pageable<PublicKey> serviceClient) {
         this.jsonObject = publicKeyJson;
         this.serviceClient = serviceClient;

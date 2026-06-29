@@ -20,21 +20,14 @@ import api.equinix.javasdk.core.client.interfaces.CoreConfig;
 import lombok.Getter;
 
 /**
- * <p>CoreConfigImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class CoreConfigImpl extends Config implements CoreConfig {
 
     private final CoreClientImpl coreClient;
 
-    /**
-     * <p>Constructor for CoreConfigImpl.</p>
-     *
-     * @param equinixClient a {@link api.equinix.javasdk.core.client.EquinixClient} object.
-     */
     public CoreConfigImpl(EquinixClient equinixClient) {
         super(equinixClient);
         this.coreClient = new CoreClientImpl(this);

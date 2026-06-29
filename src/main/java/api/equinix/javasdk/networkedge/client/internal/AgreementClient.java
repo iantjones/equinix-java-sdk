@@ -20,43 +20,16 @@ import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.implementation.AgreementStatus;
 
 /**
- * <p>AgreementClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface AgreementClient {
 
-    /**
-     * <p>getAgreementStatus.</p>
-     *
-     * @param accountNumber a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.AgreementStatus} object.
-     */
     AgreementStatus getAgreementStatus(String accountNumber);
 
-    /**
-     * <p>createAgreement.</p>
-     *
-     * @param accountNumber a {@link java.lang.String} object.
-     * @param termsVersionId a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.AgreementStatus} object.
-     */
     AgreementStatus createAgreement(String accountNumber, String termsVersionId);
 
-    /**
-     * <p>getVendorsTerms.</p>
-     *
-     * @param vendorPackage a {@link java.lang.String} object.
-     * @param licenseType a {@link api.equinix.javasdk.networkedge.enums.LicenseType} object.
-     * @return a {@link java.lang.String} object.
-     */
     String getVendorsTerms(String vendorPackage, LicenseType licenseType);
 
-    /**
-     * <p>getOrderTerms.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getOrderTerms();
 }

@@ -25,7 +25,6 @@ import lombok.Getter;
  * device (the {@code clusterDetails} field of the create request).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)

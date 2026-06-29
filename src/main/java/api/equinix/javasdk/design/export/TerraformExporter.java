@@ -327,12 +327,10 @@ public class TerraformExporter {
 
     // ---- HCL formatting helpers ----
 
-    /** Emits a quoted string attribute: {@code key = "value"}. */
     private String attr(int depth, String key, String value) {
         return indent(depth) + key + " = " + quote(value) + "\n";
     }
 
-    /** Emits a raw (unquoted) attribute for numbers, booleans, lists, or expressions. */
     private String rawAttr(int depth, String key, String value) {
         return indent(depth) + key + " = " + value + "\n";
     }

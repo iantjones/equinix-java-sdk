@@ -53,7 +53,6 @@ import java.util.Map;
  */
 public final class OracleCloudPriceListRateCard implements RateCard {
 
-    /** The public OCI Price List products endpoint. */
     public static final String DEFAULT_ENDPOINT =
             "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/";
 
@@ -70,7 +69,6 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         this.http = new ProviderPricingHttpClient();
     }
 
-    /** Creates an adapter against the public OCI Price List endpoint. */
     public static OracleCloudPriceListRateCard create() {
         return new OracleCloudPriceListRateCard(DEFAULT_ENDPOINT);
     }
@@ -134,7 +132,6 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         return Optional.empty();
     }
 
-    /** Maps an OCI region (or null) to the source geography used in the egress SKU names. */
     private static String geographyFor(String region) {
         if (region == null || region.isEmpty()) {
             return "north america"; // default to the most common geography
@@ -149,7 +146,6 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         return "north america"; // us-, ca-, eu-, uk-, and anything else
     }
 
-    /** The first positive per-GB price across an item's USD localization, or null. */
     private static BigDecimal firstPaidPrice(JsonNode item) {
         for (JsonNode loc : item.path("currencyCodeLocalizations")) {
             if (loc.has("currencyCode") && !"USD".equalsIgnoreCase(loc.path("currencyCode").asText())) {

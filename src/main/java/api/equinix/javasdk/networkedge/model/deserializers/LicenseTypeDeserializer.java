@@ -26,30 +26,19 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
 /**
- * <p>LicenseTypeDeserializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class LicenseTypeDeserializer extends StdDeserializer<LicenseType> {
 
-    /**
-     * <p>Constructor for LicenseTypeDeserializer.</p>
-     */
     public LicenseTypeDeserializer() {
         this(null);
     }
 
-    /**
-     * <p>Constructor for LicenseTypeDeserializer.</p>
-     *
-     * @param vc a {@link java.lang.Class} object.
-     */
     public LicenseTypeDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    /** {@inheritDoc} */
     @Override
     public LicenseType deserialize(JsonParser jsonParser, DeserializationContext context)
             throws IOException {

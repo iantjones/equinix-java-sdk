@@ -13,30 +13,21 @@ import lombok.Value;
 @Builder
 public class PlannedRoutingProtocol {
 
-    /** The protocol type (BGP, DIRECT). */
     RoutingProtocolType type;
 
-    /** Display name for this protocol instance. */
     String name;
 
-    /** The planned connection this protocol will be attached to. */
     String connectionName;
 
-    /** Customer-side peer IPv4 address (for BGP). */
     String customerPeerIpv4;
 
-    /** Equinix-side peer IPv4 address (for BGP). */
     String equinixPeerIpv4;
 
-    /** Equinix interface IPv4 address (for DIRECT). */
     String equinixIfaceIpv4;
 
-    /** Customer ASN for BGP peering. */
     Long customerAsn;
 
-    /** Whether BFD (Bidirectional Forwarding Detection) is enabled. */
     boolean bfdEnabled;
 
-    /** BFD interval in milliseconds. */
     int bfdInterval;
 }

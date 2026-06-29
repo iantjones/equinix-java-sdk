@@ -41,11 +41,6 @@ public class PrecisionTimeCreatorJson {
     @JsonProperty("project")
     private Project project;
 
-    /**
-     * <p>Constructor for PrecisionTimeCreatorJson.</p>
-     *
-     * @param precisionTimeBuilder a {@link api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator.PrecisionTimeBuilder} object.
-     */
     public PrecisionTimeCreatorJson(PrecisionTimeOperator.PrecisionTimeBuilder precisionTimeBuilder) {
         this.type = precisionTimeBuilder.getType();
         this.name = precisionTimeBuilder.getName();

@@ -49,7 +49,6 @@ public final class ChangeOperationUpdate {
     private final ServiceOrderRequest order;
 
     /**
-     * <p>Constructor for ChangeOperationUpdate.</p>
      *
      * @param op the operation name ({@code replace}, {@code add}, or {@code remove})
      * @param path the path to the updated parameter (e.g. {@code /bandwidth})
@@ -96,7 +95,6 @@ public final class ChangeOperationUpdate {
     }
 
     /**
-     * <p>Getter for the field <code>op</code>.</p>
      *
      * @return the operation name
      */
@@ -105,7 +103,6 @@ public final class ChangeOperationUpdate {
     }
 
     /**
-     * <p>Getter for the field <code>path</code>.</p>
      *
      * @return the path to the updated parameter
      */
@@ -114,7 +111,6 @@ public final class ChangeOperationUpdate {
     }
 
     /**
-     * <p>Getter for the field <code>value</code>.</p>
      *
      * @return the new value, or {@code null} for {@code remove}
      */
@@ -123,7 +119,6 @@ public final class ChangeOperationUpdate {
     }
 
     /**
-     * <p>Getter for the field <code>order</code>.</p>
      *
      * @return the associated service order, or {@code null}
      */

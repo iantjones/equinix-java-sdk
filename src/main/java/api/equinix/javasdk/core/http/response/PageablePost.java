@@ -21,18 +21,10 @@ import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
 
 /**
- * <p>Pageable interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PageablePost<T> extends Pageable<T> {
 
-    /**
-     * <p>nextPage.</p>
-     *
-     * @param equinixRequest a {@link PaginatedRequest} object.
-     * @return a {@link PaginatedList} object.
-     */
     PaginatedFilteredList<T> nextPage(PaginatedPostRequest<T> equinixRequest);
 }

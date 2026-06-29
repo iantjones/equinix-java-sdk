@@ -20,10 +20,8 @@ import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * <p>DeviceManagementType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum DeviceManagementType implements APIParam {
     EQUINIX_CONFIGURED("EQUINIX-CONFIGURED"),
@@ -35,11 +33,6 @@ public enum DeviceManagementType implements APIParam {
         this.formatted = formatted;
     }
 
-    /**
-     * <p>getJsonValue.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @JsonValue
     public String getJsonValue() {
         return formatted;

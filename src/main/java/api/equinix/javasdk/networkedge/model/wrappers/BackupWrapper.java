@@ -28,10 +28,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>BackupWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
 
@@ -41,12 +39,6 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
     @Getter
     private final Pageable<Backup> serviceClient;
 
-    /**
-     * <p>Constructor for BackupWrapper.</p>
-     *
-     * @param deviceLinkJson a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public BackupWrapper(BackupJson deviceLinkJson, Pageable<Backup> serviceClient) {
         this.json = deviceLinkJson;
         this.serviceClient = serviceClient;
@@ -62,7 +54,6 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
         return ((BackupClientImpl)this.serviceClient).restore(this.getUuid(), this.getName());
     }
 
-    /** {@inheritDoc} */
     @Deprecated
     public Boolean restoreToDevice(Device device){
         return restore();
@@ -75,43 +66,25 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
      * backup), so the supplied {@code deviceUuid} is ignored; the backup name is sent in the body
      * as required by the API. Prefer {@link #restore()}.</p>
      *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
      */
     @Deprecated
     public Boolean restoreToDevice(String deviceUuid){
         return restore();
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupOperator.BackupUpdater} object.
-     */
     public BackupOperator.BackupUpdater update() {
         return new BackupOperator(this.serviceClient).update(this.json);
     }
 
-    /** {@inheritDoc} */
     public Boolean save(BackupUpdaterJson updaterJson) {
         this.json = ((BackupClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
         return true;
     }
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean delete() {
         return ((BackupClientImpl)this.serviceClient).delete(this.getUuid());
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean refresh() {
         this.json = ((BackupClientImpl)this.serviceClient).refresh(this.getUuid());
         return true;

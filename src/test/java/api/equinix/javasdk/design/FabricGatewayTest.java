@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class FabricGatewayTest {
 
-    /** Minimal stand-in proving the engines no longer require a concrete {@code Fabric}. */
     private static final FabricGateway STUB_GATEWAY = new FabricGateway() {
         public Metros metros() { return null; }
         public ServiceProfiles serviceProfiles() { return null; }

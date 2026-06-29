@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
  * <p>DeviceUpgrade class. A single device resource-upgrade history entry.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

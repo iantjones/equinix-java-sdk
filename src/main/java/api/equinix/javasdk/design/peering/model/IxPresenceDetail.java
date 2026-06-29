@@ -36,31 +36,22 @@ import lombok.Value;
 @Builder
 public class IxPresenceDetail {
 
-    /** The Equinix metro where this IX is located. */
     MetroCode metro;
 
-    /** The PeeringDB IX ID. */
     int ixId;
 
-    /** The IX name (e.g., "Equinix Ashburn"). */
     String ixName;
 
-    /** Port speed in Mbps (e.g., 10000 for 10G, 100000 for 100G). */
     int speedMbps;
 
-    /** IPv4 peering address at this IX, or {@code null} if IPv4 not configured. */
     String ipv4Address;
 
-    /** IPv6 peering address at this IX, or {@code null} if IPv6 not configured. */
     String ipv6Address;
 
-    /** Whether this network peers via the IX route servers (Equinix MLPE). */
     boolean routeServerPeer;
 
-    /** Whether BFD (Bidirectional Forwarding Detection) is supported. */
     boolean bfdSupport;
 
-    /** Whether this peering session is operational. */
     boolean operational;
 
     /**

@@ -20,38 +20,16 @@ import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.ConnectionStat;
 
 /**
- * <p>ConnectionStatistic interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ConnectionStatistic {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.enums.ConnectionType} object.
-     */
     ConnectionType getType();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getStats.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ConnectionStat} object.
-     */
     ConnectionStat getStats();
 }

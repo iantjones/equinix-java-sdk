@@ -23,10 +23,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 /**
- * <p>Pricing class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

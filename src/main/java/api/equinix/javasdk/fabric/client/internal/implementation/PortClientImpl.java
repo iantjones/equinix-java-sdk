@@ -44,7 +44,6 @@ import java.util.Map;
  * Internal client for Fabric Ports (read-only). Plumbing/paging provided by {@link ResourceClientBase}.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PortClientImpl extends ResourceClientBase<Port, PortJson> implements PortClient<Port> {
 

@@ -13,12 +13,9 @@ package api.equinix.javasdk.design.optimizer.wizard.enums;
  */
 public enum BandwidthStrategy {
 
-    /** Size each provider connection to the sum of its dependent workload bandwidths. */
     PER_WORKLOAD,
 
-    /** Size all connections at a metro to the total metro bandwidth. */
     AGGREGATED,
 
-    /** User-supplied bandwidth values per connection. */
     CUSTOM
 }

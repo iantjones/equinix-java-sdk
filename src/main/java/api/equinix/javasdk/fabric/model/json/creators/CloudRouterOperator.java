@@ -47,7 +47,6 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
      * <p>Begins a fluent JSON Patch update of an existing cloud router, identified by uuid.</p>
      *
      * @param uuid the uuid of the cloud router to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator.CloudRouterUpdater} object.
      */
     public CloudRouterUpdater update(String uuid) {
         return new CloudRouterUpdater(uuid);

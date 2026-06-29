@@ -23,26 +23,12 @@ import api.equinix.javasdk.networkedge.model.json.creators.PublicKeyCreatorJson;
 import java.util.List;
 
 /**
- * <p>PublicKeyClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface PublicKeyClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param accountUcmId a {@link java.lang.String} object.
-     * @return a {@link java.util.List} object.
-     */
     List<PublicKeyJson> list(String accountUcmId);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param publicKeyCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.PublicKeyCreatorJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.PublicKeyJson} object.
-     */
     PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson);
 }

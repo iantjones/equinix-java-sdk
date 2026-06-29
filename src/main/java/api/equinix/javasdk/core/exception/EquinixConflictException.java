@@ -23,7 +23,6 @@ package api.equinix.javasdk.core.exception;
  * resource that has been concurrently updated.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixConflictException extends EquinixServiceException {
 

@@ -34,23 +34,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>BGPPeeringClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeeringJson> implements BGPPeeringClient<BGPPeering> {
 
-    /**
-     * <p>Constructor for BGPPeeringClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public BGPPeeringClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "BGPPeering", BGPPeeringJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected BGPPeering wrap(BGPPeeringJson json) {
         return new BGPPeeringWrapper(json, this);
@@ -59,19 +51,16 @@ public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeer
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public Page<BGPPeering, BGPPeeringJson> list(RequestBuilder.BGP requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         return listPage("ListBGP", qParams);
     }
 
-    /** {@inheritDoc} */
     public BGPPeeringJson getByUuid(String uuid) {
         return getOne("GetBGP", uuid);
     }
 
-    /** {@inheritDoc} */
     public BGPPeeringJson create(BGPPeeringCreatorJson bgpPeeringCreatorJson) {
         // createBgpConfiguration returns 202 Accepted with a BgpAsyncResponse body ({uuid:...}),
         // not a Location header, so the new uuid is parsed from the response body (as for
@@ -80,18 +69,15 @@ public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeer
         return getByUuid(uuidResult.getUuid());
     }
 
-    /** {@inheritDoc} */
     public BGPPeeringJson update(String uuid, BGPPeeringUpdaterJson bgpPeeringUpdaterJson) {
         voidOp("UpdateBGP", RequestType.SINGLE, Map.of("uuid", uuid), null, bgpPeeringUpdaterJson);
         return getByUuid(uuid);
     }
 
-    /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         return booleanOp("DeleteBGP", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
-    /** {@inheritDoc} */
     public BGPPeeringJson refresh(String uuid) {
         return this.getByUuid(uuid);
     }

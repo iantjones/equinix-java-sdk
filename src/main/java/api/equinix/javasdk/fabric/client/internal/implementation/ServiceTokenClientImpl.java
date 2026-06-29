@@ -43,11 +43,9 @@ import java.util.Map;
  * the {@code createServiceTokenFilter} Jackson serialization filter.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, ServiceTokenJson> implements ServiceTokenClient<ServiceToken> {
 
-    /** Serialization filter applied when creating service tokens. */
     private static final FilterProvider CREATE_FILTER =
             new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter);
 

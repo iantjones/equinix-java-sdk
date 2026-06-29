@@ -31,28 +31,15 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceProfileCreatorJson;
 import java.util.List;
 
 /**
- * <p>ServiceProfilesClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ServiceProfileClient<T> extends PageablePost<T> {
 
-    /**
-     * <p>listServiceProfiles.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<ServiceProfile, ServiceProfileJson> list();
 
     Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort);
 
-    /**
-     * <p>getServiceProfileByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceProfileJson} object.
-     */
     ServiceProfileJson getByUuid(String uuid);
 
     ServiceProfileJson create(ServiceProfileCreatorJson serviceProfileCreatorJson);
@@ -67,11 +54,5 @@ public interface ServiceProfileClient<T> extends PageablePost<T> {
 
     List<ServiceMetro> getMetros(String uuid);
 
-    /**
-     * <p>refreshServiceProfile.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceProfileJson} object.
-     */
     ServiceProfileJson refresh(String uuid);
 }

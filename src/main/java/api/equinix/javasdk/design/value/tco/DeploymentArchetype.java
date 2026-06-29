@@ -6,13 +6,10 @@ package api.equinix.javasdk.design.value.tco;
  */
 public enum DeploymentArchetype {
 
-    /** Public cloud with traffic egressing over the public internet (the do-nothing baseline). */
     PUBLIC_CLOUD_INTERNET("Public cloud over internet"),
 
-    /** Self-managed on-premises / colocation deployment with carrier transit. */
     ON_PREM("On-premises / self-managed"),
 
-    /** Equinix-interconnected: colocation + Fabric + cloud on-ramps with discounted private egress. */
     EQUINIX_INTERCONNECT("Equinix interconnected");
 
     private final String displayName;
@@ -21,7 +18,6 @@ public enum DeploymentArchetype {
         this.displayName = displayName;
     }
 
-    /** A human-readable label for reports. */
     public String getDisplayName() {
         return displayName;
     }

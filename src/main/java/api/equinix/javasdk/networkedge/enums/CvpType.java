@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * <p>CvpType class. The Arista CloudVision deployment type, either As-a-Service or On-Premise.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum CvpType {
     @JsonProperty("As-a-Service")

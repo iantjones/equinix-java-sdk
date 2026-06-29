@@ -17,20 +17,13 @@
 package api.equinix.javasdk.core.util;
 
 /**
- * <p>ValidationUtils class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ValidationUtils {
 
     /**
-     * <p>assertNotNull.</p>
      *
-     * @param object a T object.
-     * @param fieldName a {@link java.lang.String} object.
-     * @param <T> a T object.
-     * @return a T object.
      * @throws java.lang.IllegalArgumentException if any.
      */
     public static <T> T assertNotNull(T object, String fieldName) throws IllegalArgumentException {

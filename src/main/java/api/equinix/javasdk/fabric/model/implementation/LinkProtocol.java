@@ -26,10 +26,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 /**
- * <p>LinkProtocol class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter(AccessLevel.PRIVATE)

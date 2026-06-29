@@ -62,15 +62,12 @@ public class PeeringDbOrg {
     @JsonProperty("status")
     private String status;
 
-    /** Internet exchanges operated by this organization (populated at depth >= 1). */
     @JsonProperty("ix_set")
     private List<PeeringDbIx> ixSet;
 
-    /** Facilities operated by this organization (populated at depth >= 1). */
     @JsonProperty("fac_set")
     private List<PeeringDbFacility> facSet;
 
-    /** Networks operated by this organization (populated at depth >= 1). */
     @JsonProperty("net_set")
     private List<PeeringDbNetwork> netSet;
 }

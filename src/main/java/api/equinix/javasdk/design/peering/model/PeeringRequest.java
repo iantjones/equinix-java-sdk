@@ -39,26 +39,19 @@ import java.util.Set;
 @Builder
 public class PeeringRequest {
 
-    /** Target ASNs to analyze, mapped to human-readable labels (e.g., 16509 → "AWS"). */
     @Singular
     Map<Long, String> targetAsns;
 
-    /** Customer's metro locations for resiliency analysis (optional). */
     @Singular("customerMetro")
     Set<MetroCode> customerMetros;
 
-    /** Customer's own ASN for mutual peering opportunity discovery (optional, 0 if not set). */
     long customerAsn;
 
-    /** Whether to include IX port speed/capacity in the analysis. */
     boolean includeCapacity;
 
-    /** Whether to include peering policy feasibility in the analysis. */
     boolean includePolicies;
 
-    /** Whether to cross-reference Equinix Fabric service profile availability. */
     boolean includeFabricConnections;
 
-    /** Whether to perform resiliency and blast radius analysis. */
     boolean includeResiliency;
 }

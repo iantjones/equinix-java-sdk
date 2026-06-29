@@ -41,7 +41,6 @@ import java.util.List;
  * interfaces, and license files.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Devices {
 
@@ -140,7 +139,6 @@ public interface Devices {
      * Returns an instance of DeviceBuilder for defining a new device.
      *
      * @return {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceBuilder}
-     * @param deviceName a {@link java.lang.String} object.
      */
     DeviceOperator.DeviceBuilder define(String deviceName);
 
@@ -148,8 +146,6 @@ public interface Devices {
      * Returns an instance of DeviceBuilderSecondary for defining a secondary device.
      *
      * @return {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceBuilderSecondary}
-     * @param secondaryDeviceName a {@link java.lang.String} object.
-     * @param primaryDeviceUuid a {@link java.lang.String} object.
      */
     DeviceOperator.DeviceBuilderSecondary defineSecondary(String secondaryDeviceName, String primaryDeviceUuid);
 

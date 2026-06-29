@@ -8,16 +8,12 @@ package api.equinix.javasdk.design.value.ratecard;
  */
 public enum Term {
 
-    /** Month-to-month, no commitment. */
     MONTH_1(1),
 
-    /** 12-month commitment. */
     MONTH_12(12),
 
-    /** 24-month commitment. */
     MONTH_24(24),
 
-    /** 36-month commitment. */
     MONTH_36(36);
 
     private final int months;
@@ -26,7 +22,6 @@ public enum Term {
         this.months = months;
     }
 
-    /** Returns the term length in months. */
     public int months() {
         return months;
     }

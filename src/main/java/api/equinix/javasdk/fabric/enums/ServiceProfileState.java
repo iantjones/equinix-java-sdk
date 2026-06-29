@@ -23,10 +23,8 @@ package api.equinix.javasdk.fabric.enums;
 import api.equinix.javasdk.core.model.APIParam;
 
 /**
- * <p>ServiceProfileState class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ServiceProfileState implements APIParam {
     ACTIVE,

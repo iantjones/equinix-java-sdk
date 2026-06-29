@@ -17,16 +17,9 @@
 package api.equinix.javasdk.core.model;
 
 /**
- * <p>APIParam interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface APIParam {
-    /**
-     * <p>toString.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String toString();
 }

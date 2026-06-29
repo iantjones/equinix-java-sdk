@@ -27,7 +27,6 @@ import java.util.List;
  * the virtual device detail response.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

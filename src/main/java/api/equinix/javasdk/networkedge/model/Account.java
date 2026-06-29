@@ -21,80 +21,28 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import java.util.ArrayList;
 
 /**
- * <p>Account interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Account {
 
-    /**
-     * <p>getAccountName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getAccountName();
 
-    /**
-     * <p>getAccountNumber.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getAccountNumber();
 
-    /**
-     * <p>getAccountUcmId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getAccountUcmId();
 
-    /**
-     * <p>getAccountStatus.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getAccountStatus();
 
-    /**
-     * <p>getPortalOrgId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getPortalOrgId();
 
-    /**
-     * <p>getPortalOrgName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getPortalOrgName();
 
-    /**
-     * <p>getReferenceId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getReferenceId();
 
-    /**
-     * <p>getMetros.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
     ArrayList<MetroCode> getMetros();
 
-    /**
-     * <p>getSiblingCustOrgFlag.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean getSiblingCustOrgFlag();
 
-    /**
-     * <p>getCreditHold.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean getCreditHold();
 }

@@ -92,7 +92,6 @@ public enum MetroCode implements APIParam {
         WI,
         ZH,
 
-        /** Sentinel for a metro code the API returned that is not (yet) a named constant here. */
         @JsonEnumDefaultValue
         UNKNOWN
 }

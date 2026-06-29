@@ -25,10 +25,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>ServiceTokenWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements ServiceToken {
 
@@ -37,30 +35,16 @@ public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements S
     @Getter
     private final Pageable<ServiceToken> serviceClient;
 
-    /**
-     * <p>Constructor for ServiceTokenWrapper.</p>
-     *
-     * @param serviceTokenJson a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public ServiceTokenWrapper(ServiceTokenJson serviceTokenJson, Pageable<ServiceToken> serviceClient) {
         this.jsonObject = serviceTokenJson;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean delete() {
         this.jsonObject = ((ServiceTokenClientImpl)this.serviceClient).delete(this.getUuid());
         return true;
     }
 
-    /**
-     * <p>refresh.</p>
-     */
     public void refresh() {
         this.jsonObject = ((ServiceTokenClientImpl)this.serviceClient).refresh(this.getUuid());
     }

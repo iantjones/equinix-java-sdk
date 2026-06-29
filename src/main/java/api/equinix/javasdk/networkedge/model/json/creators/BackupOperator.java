@@ -29,10 +29,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>BackupOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Setter(AccessLevel.PRIVATE)
 public class BackupOperator extends ResourceImpl<Backup> {
@@ -40,22 +38,10 @@ public class BackupOperator extends ResourceImpl<Backup> {
     @Getter
     private final Pageable<Backup> serviceClient;
 
-    /**
-     * <p>Constructor for BackupOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public BackupOperator(Pageable<Backup> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @param backupName a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupOperator.BackupBuilder} object.
-     */
     public BackupBuilder create(String deviceUuid, String backupName) {
         return new BackupBuilder(deviceUuid, backupName);
     }
@@ -64,12 +50,6 @@ public class BackupOperator extends ResourceImpl<Backup> {
         return create(device.getUuid(), backupName);
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupOperator.BackupUpdater} object.
-     */
     public BackupUpdater update(BackupJson json) {
         return new BackupUpdater(json);
     }

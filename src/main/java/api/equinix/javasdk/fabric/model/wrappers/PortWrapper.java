@@ -28,10 +28,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>PortWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PortWrapper extends ResourceImpl<Port> implements Port {
 
@@ -40,31 +38,15 @@ public class PortWrapper extends ResourceImpl<Port> implements Port {
     @Getter
     private final Pageable<Port> serviceClient;
 
-    /**
-     * <p>Constructor for PortWrapper.</p>
-     *
-     * @param portJson a {@link api.equinix.javasdk.fabric.model.json.PortJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public PortWrapper(PortJson portJson, Pageable<Port> serviceClient) {
         this.jsonObject = portJson;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>getOperation.</p>
-     *
-     * @return a {@link PortOperation} object.
-     */
     public PortOperation getOperation() {
         return this.jsonObject.getPortOperation();
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.Port} object.
-     */
     public Port refresh() {
         this.jsonObject = ((PortClientImpl)this.serviceClient).refresh(this.getUuid());
         return this;

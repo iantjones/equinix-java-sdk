@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SavingsCalculatorTest {
 
-    /** A complete card: AWS internet/private egress + an Equinix connection price. */
     private static CustomRateCard fullCard() {
         return CustomRateCard.builder()
                 .currency("USD")

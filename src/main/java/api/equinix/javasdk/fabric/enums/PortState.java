@@ -17,10 +17,8 @@
 package api.equinix.javasdk.fabric.enums;
 
 /**
- * <p>PortState class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum PortState {
     ACTIVE,

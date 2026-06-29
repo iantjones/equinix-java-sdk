@@ -457,7 +457,6 @@ final class DeploymentWizardEngine {
                 .build();
     }
 
-    /** Collapses the set of per-line price sources to a single dominant provenance. */
     private static PriceSource dominantSource(Set<PriceSource> sources) {
         if (sources.isEmpty()) {
             return PriceSource.ESTIMATE;

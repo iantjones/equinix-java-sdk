@@ -31,36 +31,19 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * <p>RequestBuilder class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class RequestBuilder {
 
-    /**
-     * <p>device.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Device} object.
-     */
     public static RequestBuilder.Device device() {
         return new RequestBuilder.Device();
     }
 
-    /**
-     * <p>vpn.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.VPN} object.
-     */
     public static VPN vpn() {
         return new VPN();
     }
     
-    /**
-     * <p>backup.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Backup} object.
-     */
     public static Backup backup() {
         return new Backup();
     }
@@ -69,39 +52,22 @@ public class RequestBuilder {
         return new OrderSummary();
     }
 
-    /**
-     * <p>pricing.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Pricing} object.
-     */
     public static Pricing pricing() {
         return new Pricing();
     }
 
-    /**
-     * <p>bgp.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.BGP} object.
-     */
     public static BGP bgp() {
         return new BGP();
     }
 
-    /**
-     * <p>deviceLink.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.DeviceLink} object.
-     */
     public static DeviceLink deviceLink() {
         return new DeviceLink();
     }
 
     /**
-     * <p>allowedInterfaces.</p>
      *
      * @param deviceType the device type code (path parameter).
      * @param deviceManagementType the required device management type.
-     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.AllowedInterfaces} object.
      */
     public static AllowedInterfaces allowedInterfaces(String deviceType, DeviceManagementType deviceManagementType) {
         return new AllowedInterfaces(deviceType, deviceManagementType);

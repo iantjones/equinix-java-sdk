@@ -40,7 +40,6 @@ import java.util.Map;
  * String download, secondary restore-analysis type) use the generic helpers on {@code ClientBase}.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class BackupClientImpl extends ResourceClientBase<Backup, BackupJson> implements BackupClient<Backup> {
 

@@ -29,10 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * <p>RequestBuilder class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class RequestBuilder {
 

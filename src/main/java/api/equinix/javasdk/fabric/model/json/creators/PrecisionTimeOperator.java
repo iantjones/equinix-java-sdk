@@ -32,30 +32,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>PrecisionTimeOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PrecisionTimeOperator extends ResourceImpl<PrecisionTime> {
 
     @Getter
     private final Pageable<PrecisionTime> serviceClient;
 
-    /**
-     * <p>Constructor for PrecisionTimeOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public PrecisionTimeOperator(Pageable<PrecisionTime> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator.PrecisionTimeBuilder} object.
-     */
     public PrecisionTimeBuilder create() {
         return new PrecisionTimeBuilder();
     }
@@ -64,7 +52,6 @@ public class PrecisionTimeOperator extends ResourceImpl<PrecisionTime> {
      * <p>Begins a fluent JSON Patch update of an existing precision time service, identified by uuid.</p>
      *
      * @param uuid the uuid of the time service to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator.PrecisionTimeUpdater} object.
      */
     public PrecisionTimeUpdater update(String uuid) {
         return new PrecisionTimeUpdater(uuid);

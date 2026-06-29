@@ -12,12 +12,9 @@ package api.equinix.javasdk.design.value.ratecard;
  */
 public enum ColocationItem {
 
-    /** A cabinet / rack — priced per cabinet, per month. */
     CABINET,
 
-    /** Power — priced per kW, per month. */
     POWER_PER_KW,
 
-    /** A cross-connect — priced per cross-connect, per month. */
     CROSS_CONNECT
 }

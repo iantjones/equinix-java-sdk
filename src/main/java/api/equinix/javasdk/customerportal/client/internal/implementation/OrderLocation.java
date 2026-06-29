@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
  */
 final class OrderLocation {
 
-    /** Captures the order id segment following {@code /orders/} in a Location header. */
     static final Pattern ORDER_ID_PATTERN = Pattern.compile(".*/orders/([^/\\s?]+)");
 
     /**

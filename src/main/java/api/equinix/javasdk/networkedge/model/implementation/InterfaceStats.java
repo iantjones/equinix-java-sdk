@@ -29,7 +29,6 @@ import java.util.List;
  * <p>InterfaceStats class. Interface throughput statistics returned by getInterfaceStatisticsByUuid.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

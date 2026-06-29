@@ -26,7 +26,6 @@ import java.util.List;
  * <p>AllowedInterfaceProfile class. An allowed interface count option for a device type/config.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

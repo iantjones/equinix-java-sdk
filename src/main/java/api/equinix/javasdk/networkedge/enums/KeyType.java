@@ -20,7 +20,6 @@ package api.equinix.javasdk.networkedge.enums;
  * <p>KeyType class. The algorithm of an SSH public key, either RSA (default) or DSA.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum KeyType {
     RSA,

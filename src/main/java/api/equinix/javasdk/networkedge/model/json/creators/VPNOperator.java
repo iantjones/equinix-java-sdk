@@ -31,10 +31,8 @@ import lombok.Setter;
 
 //TODO Add Secondary VPN
 /**
- * <p>VPNOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Setter(AccessLevel.PRIVATE)
 public class VPNOperator extends ResourceImpl<VPN> {
@@ -42,31 +40,14 @@ public class VPNOperator extends ResourceImpl<VPN> {
     @Getter
     private final Pageable<VPN> serviceClient;
 
-    /**
-     * <p>Constructor for VPNOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public VPNOperator(Pageable<VPN> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param configName a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.VPNOperator.VPNBuilder} object.
-     */
     public VPNBuilder create(String configName) {
         return new VPNBuilder(configName);
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.VPNJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.VPNOperator.VPNUpdater} object.
-     */
     public VPNUpdater update(VPNJson json) {
         return new VPNUpdater(json);
     }

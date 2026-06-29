@@ -4,10 +4,8 @@ import api.equinix.javasdk.networkedge.enums.KeyType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * <p>PublicKeyCreatorJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PublicKeyCreatorJson {
 
@@ -23,11 +21,6 @@ public class PublicKeyCreatorJson {
     @JsonProperty("accountUcmId")
     private String accountUcmId;
 
-    /**
-     * <p>Constructor for PublicKeyCreatorJson.</p>
-     *
-     * @param publicKeyBuilder a {@link api.equinix.javasdk.networkedge.model.json.creators.PublicKeyOperator.PublicKeyBuilder} object.
-     */
     public PublicKeyCreatorJson(PublicKeyOperator.PublicKeyBuilder publicKeyBuilder) {
         this.keyName = publicKeyBuilder.getKeyName();
         this.keyValue = publicKeyBuilder.getKeyValue();

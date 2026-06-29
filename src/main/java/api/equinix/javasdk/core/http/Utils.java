@@ -56,10 +56,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * <p>Utils class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class Utils {
 
@@ -71,20 +69,6 @@ public class Utils {
     private static final java.util.concurrent.ConcurrentMap<Class<?>, Map<String, Method>> GETTER_CACHE =
             new java.util.concurrent.ConcurrentHashMap<>();
 
-    /**
-     * <p>buildRequest.</p>
-     *
-     * @param functionalArea a {@link java.lang.String} object.
-     * @param requestParent a {@link java.lang.String} object.
-     * @param serviceEndpoint a {@link java.lang.String} object.
-     * @param requestType a {@link api.equinix.javasdk.core.enums.RequestType} object.
-     * @param equinixClient a {@link api.equinix.javasdk.core.client.EquinixClient} object.
-     * @param pathParams a {@link java.util.Map} object.
-     * @param queryParams a {@link java.util.Map} object.
-     * @param typeReference a {@link com.fasterxml.jackson.core.type.TypeReference} object.
-     * @param <T> a T object.
-     * @return a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     */
     public static <T> EquinixRequest<T> buildRequest(String functionalArea, String requestParent,
                                                      String serviceEndpoint, RequestType requestType,
                                                      EquinixClient equinixClient, Map<String, String> pathParams,
@@ -180,35 +164,14 @@ public class Utils {
                 : (X) Constants.objectMapper.readValue(equinixResponse.getContent(), equinixRequest.getTypeReference());
     }
 
-    /**
-     * <p>newMap.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.core.model.OptionalRequestBuilder} object.
-     * @param <R> a R object.
-     * @return a {@link java.util.Map} object.
-     */
     public static <R> Map<String, List<String>> newMap(OptionalRequestBuilder<R> requestBuilder) {
         return requestBuilder != null ? Utils.processRequestBuilder(requestBuilder) : new HashMap<>();
     }
 
-    /**
-     * <p>addAdditionalValue.</p>
-     *
-     * @param queryParameters a {@link java.util.Map} object.
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link api.equinix.javasdk.core.model.APIParam} object.
-     */
     public static void addAdditionalValue(Map<String, List<String>> queryParameters, String parameterName, APIParam parameterValue) {
         addAdditionalValue(queryParameters, parameterName, parameterValue.toString());
     }
 
-    /**
-     * <p>addAdditionalValue.</p>
-     *
-     * @param queryParameters a {@link java.util.Map} object.
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link java.lang.String} object.
-     */
     public static void addAdditionalValue(Map<String, List<String>> queryParameters, String parameterName, String parameterValue) {
         if(queryParameters.containsKey(parameterName)) {
             if(!queryParameters.get(parameterName).contains(parameterValue)) {
@@ -220,34 +183,14 @@ public class Utils {
         }
     }
 
-    /**
-     * <p>singlePropertyBody.</p>
-     *
-     * @param propertyName a {@link java.lang.String} object.
-     * @param propertyValue a {@link java.lang.Integer} object.
-     * @return a {@link java.util.Map} object.
-     */
     public static Map<String, Integer> singlePropertyBody(String propertyName, Integer propertyValue) {
         return (propertyName != null && propertyValue != null) ? Map.of(propertyName, propertyValue) : null;
     }
 
-    /**
-     * <p>singlePropertyBody.</p>
-     *
-     * @param propertyName a {@link java.lang.String} object.
-     * @param propertyValue a {@link java.lang.String} object.
-     * @return a {@link java.util.Map} object.
-     */
     public static Map<String, String> singlePropertyBody(String propertyName, String propertyValue) {
         return (propertyName != null && propertyValue != null) ? Map.of(propertyName, propertyValue) : null;
     }
 
-    /**
-     * <p>concatStringMaps.</p>
-     *
-     * @param maps a {@link java.util.Map} object.
-     * @return a {@link java.util.Map} object.
-     */
     @SafeVarargs
     public static Map<String, String> concatStringMaps(Map<String, String>... maps) {
 
@@ -261,97 +204,38 @@ public class Utils {
     }
 
 
-    /**
-     * <p>singleParamList.</p>
-     *
-     * @param parameterValue a {@link java.lang.String} object.
-     * @return a {@link java.util.List} object.
-     */
     public static List<String> singleParamList(String parameterValue) {
         return parameterValue != null ? List.of(parameterValue) : null;
     }
 
-    /**
-     * <p>singleParamList.</p>
-     *
-     * @param parameterValue a {@link java.lang.Boolean} object.
-     * @return a {@link java.util.List} object.
-     */
     public static List<String> singleParamList(Boolean parameterValue) {
         return singleParamList(parameterValue != null ? parameterValue.toString() : null);
     }
 
-    /**
-     * <p>singleParamList.</p>
-     *
-     * @param parameterValue a {@link java.lang.Integer} object.
-     * @return a {@link java.util.List} object.
-     */
     public static List<String> singleParamList(Integer parameterValue) {
         return singleParamList(parameterValue != null ? parameterValue.toString() : null);
     }
 
-    /**
-     * <p>singleParamList.</p>
-     *
-     * @param parameterValue a {@link api.equinix.javasdk.core.model.APIParam} object.
-     * @return a {@link java.util.List} object.
-     */
     public static List<String> singleParamList(APIParam parameterValue) {
         return singleParamList(parameterValue != null ? parameterValue.toString() : null);
     }
 
-    /**
-     * <p>singleParamMap.</p>
-     *
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link java.lang.String} object.
-     * @return a {@link java.util.Map} object.
-     */
     public static Map<String, List<String>> singleParamMap(String parameterName, String parameterValue) {
         return (parameterName != null && parameterValue != null) ? Map.of(parameterName, singleParamList(parameterValue)) : null;
     }
 
-    /**
-     * <p>singleParamMap.</p>
-     *
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link api.equinix.javasdk.core.model.APIParam} object.
-     * @return a {@link java.util.Map} object.
-     */
     public static Map<String, List<String>> singleParamMap(String parameterName, APIParam parameterValue) {
         return singleParamMap(parameterName, (parameterValue != null) ? parameterValue.toString() : null);
     }
 
-    /**
-     * <p>singleParamMap.</p>
-     *
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link java.lang.Boolean} object.
-     * @return a {@link java.util.Map} object.
-     */
     public static Map<String, List<String>> singleParamMap(String parameterName, Boolean parameterValue) {
         return singleParamMap(parameterName, (parameterValue != null) ? parameterValue.toString() : null);
     }
 
-    /**
-     * <p>singleParamMap.</p>
-     *
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link java.lang.Integer} object.
-     * @return a {@link java.util.Map} object.
-     */
     public static Map<String, List<String>> singleParamMap(String parameterName, Integer parameterValue) {
         return singleParamMap(parameterName, (parameterValue != null) ? parameterValue.toString() : null);
     }
 
-    /**
-     * <p>processRequestBuilder.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.core.model.OptionalRequestBuilder} object.
-     * @param <R> a R object.
-     * @return a {@link java.util.Map} object.
-     */
     public static <R> Map<String, List<String>> processRequestBuilder(OptionalRequestBuilder<R> requestBuilder) {
         if(requestBuilder != null) {
             if (!requestBuilder.wasBuilt()) {
@@ -365,23 +249,10 @@ public class Utils {
         return Collections.emptyMap();
     }
 
-    /**
-     * <p>dateTimeForQuery.</p>
-     *
-     * @param localDateTime a {@link java.time.LocalDateTime} object.
-     * @return a {@link java.lang.String} object.
-     */
     public static String dateTimeForQuery(LocalDateTime localDateTime) {
         return Constants.queryParamFormatter.format(localDateTime);
     }
 
-    /**
-     * <p>serializeJson.</p>
-     *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param objectToSerialize a {@link java.lang.Object} object.
-     * @param <T> a T object.
-     */
     public static <T> void serializeJson(EquinixRequest<T> equinixRequest, Object objectToSerialize) {
         equinixRequest.setObjectToSerialize(objectToSerialize);
         equinixRequest.setHttpEntity(serializeJson(equinixRequest.getObjectToSerialize(), equinixRequest.getFilters(), equinixRequest.getContentType()));
@@ -402,16 +273,6 @@ public class Utils {
         }
     }
 
-    /**
-     * <p>mapPaginatedList.</p>
-     *
-     * @param paginatedList a {@link java.util.ArrayList} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     * @param objectMapper a {@link java.util.function.BiFunction} object.
-     * @param <T> a T object.
-     * @param <S> a S object.
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public static <T, S> PaginatedList<T> mapPaginatedList(ArrayList<S> paginatedList, Pageable<T> serviceClient,
                                                            BiFunction<? super S, ? super Pageable<T>, ? extends T> objectMapper){
         List<T> mapped = paginatedList.stream()
@@ -463,16 +324,6 @@ public class Utils {
                 serviceClient, page.getAssociatedRequest(), page.getAssociatedResponse(), page.getPagination());
     }
 
-    /**
-     * <p>mapList.</p>
-     *
-     * @param itemList a {@link java.util.List} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     * @param objectMapper a {@link java.util.function.BiFunction} object.
-     * @param <T> a T object.
-     * @param <S> a S object.
-     * @return a {@link java.util.List} object.
-     */
     public static <T, S> List<T> mapList(List<S> itemList, Pageable<T> serviceClient,
                                                            BiFunction<? super S, ? super Pageable<T>, ? extends T> objectMapper){
         return itemList.stream()
@@ -481,10 +332,7 @@ public class Utils {
     }
 
     /**
-     * <p>addRequestParams.</p>
      *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     public static <T> void addRequestParams(EquinixRequest<T> equinixRequest) throws EquinixClientException {
@@ -581,13 +429,7 @@ public class Utils {
     }
 
     /**
-     * <p>handlePaginatedListResponse.</p>
      *
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @param <S> a S object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     @SuppressWarnings("unchecked")
@@ -604,13 +446,7 @@ public class Utils {
     }
 
     /**
-     * <p>handleListResponse.</p>
      *
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @param <S> a S object.
-     * @return a {@link java.util.List} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     @SuppressWarnings("unchecked")
@@ -624,13 +460,7 @@ public class Utils {
     }
 
     /**
-     * <p>handleSingletonResponse.</p>
      *
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <S> a S object.
-     * @param <T> a T object.
-     * @return a S object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     @SuppressWarnings("unchecked")
@@ -661,15 +491,6 @@ public class Utils {
         }
     }
 
-    /**
-     * <p>extractFromHeader.</p>
-     *
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param headerName a {@link java.lang.String} object.
-     * @param extractionPattern a {@link java.util.regex.Pattern} object.
-     * @param <T> a T object.
-     * @return a {@link java.lang.String} object.
-     */
     public static <T> String extractFromHeader(EquinixResponse<T> equinixResponse, String headerName, Pattern extractionPattern) {
         try {
             Header locationHeader = Arrays.stream(equinixResponse.getHttpResponse().getAllHeaders())
@@ -688,14 +509,6 @@ public class Utils {
         }
     }
 
-    /**
-     * <p>handleBooleanResponse.</p>
-     *
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     public static <T> Boolean handleBooleanResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) {
         boolean successful = isRequestSuccessful(equinixResponse.getHttpResponse());
         // This handler reads only the status line; drain the body so the pooled connection is released.
@@ -720,11 +533,7 @@ public class Utils {
     }
 
     /**
-     * <p>handleStringResponse.</p>
      *
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param <T> a T object.
-     * @return a {@link java.lang.String} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     public static <T> String handleStringResponse(EquinixResponse<T> equinixResponse) throws EquinixClientException  {
@@ -748,12 +557,7 @@ public class Utils {
     }
 
     /**
-     * <p>handleMapResponse.</p>
      *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param equinixResponse a {@link api.equinix.javasdk.core.http.response.EquinixResponse} object.
-     * @param <T> a T object.
-     * @return a {@link java.util.HashMap} object.
      * @throws api.equinix.javasdk.core.exception.EquinixClientException if any.
      */
     @SuppressWarnings("unchecked")

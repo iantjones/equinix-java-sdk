@@ -29,23 +29,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>FilesClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class FilesClientImpl extends ClientBase implements FilesClient {
 
-    /**
-     * <p>Constructor for FilesClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public FilesClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Files");
     }
 
-    /** {@inheritDoc} */
     public String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
                              DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents) {
         Map<String, Object> body = new HashMap<>();

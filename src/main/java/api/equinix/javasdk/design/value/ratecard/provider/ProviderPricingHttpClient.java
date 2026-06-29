@@ -56,12 +56,10 @@ final class ProviderPricingHttpClient {
                 .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
     }
 
-    /** Issues a GET and parses the body as a JSON tree, or empty on any failure. */
     Optional<JsonNode> getJson(String url) {
         return getJson(url, null);
     }
 
-    /** Issues a GET with the supplied request headers and parses the body as a JSON tree, or empty on any failure. */
     Optional<JsonNode> getJson(String url, Map<String, String> headers) {
         HttpGet request = new HttpGet(url);
         request.setHeader("Accept", "application/json");

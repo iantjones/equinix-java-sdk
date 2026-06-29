@@ -35,10 +35,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>ServiceTokenJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

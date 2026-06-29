@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * Unrecognized values deserialize to {@link #UNKNOWN}.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum PhysicalPortType {
 

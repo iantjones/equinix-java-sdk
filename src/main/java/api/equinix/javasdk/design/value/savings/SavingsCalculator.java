@@ -49,7 +49,6 @@ public final class SavingsCalculator {
         return new Builder(fabric);
     }
 
-    /** Fluent builder for a savings calculation. */
     public static final class Builder {
 
         private final FabricGateway fabric;
@@ -70,7 +69,6 @@ public final class SavingsCalculator {
             this.fabric = fabric;
         }
 
-        /** Sets the monthly egress volume in the given unit. */
         public Builder egress(double amount, DataUnit unit) {
             if (amount < 0) {
                 throw new IllegalArgumentException("egress amount must be non-negative: " + amount);
@@ -80,54 +78,45 @@ public final class SavingsCalculator {
             return this;
         }
 
-        /** Sets the monthly egress volume in gigabytes. */
         public Builder egressGigabytes(double gigabytes) {
             return egress(gigabytes, DataUnit.GIGABYTE);
         }
 
-        /** Sets the monthly egress volume in terabytes. */
         public Builder egressTerabytes(double terabytes) {
             return egress(terabytes, DataUnit.TERABYTE);
         }
 
-        /** Sets the cloud provider the data egresses from. */
         public Builder fromCloud(CloudProviderType provider) {
             this.provider = provider;
             return this;
         }
 
-        /** Sets the cloud provider region (e.g. {@code "us-east-1"}). */
         public Builder inRegion(String region) {
             this.region = region;
             return this;
         }
 
-        /** Sets the Equinix metro the interconnect lands in. */
         public Builder viaMetro(MetroCode metro) {
             this.metro = metro;
             return this;
         }
 
-        /** Sets the Fabric connection bandwidth in Mbps. Defaults to 1000. */
         public Builder bandwidthMbps(int bandwidthMbps) {
             this.bandwidthMbps = bandwidthMbps;
             return this;
         }
 
-        /** Sets the Fabric connection type. Defaults to {@code EVPL_VC}. */
         public Builder connectionType(ConnectionType connectionType) {
             this.connectionType = connectionType;
             return this;
         }
 
-        /** Includes a Fabric Cloud Router of the given package in the Equinix cost. */
         public Builder includeCloudRouter(String packageCode) {
             this.includeRouter = true;
             this.routerPackage = packageCode;
             return this;
         }
 
-        /** Sets the commitment term used for rate lookups. Defaults to {@link Term#MONTH_12}. */
         public Builder term(Term term) {
             this.term = term;
             return this;

@@ -41,25 +41,18 @@ import java.util.stream.Collectors;
 @Builder
 public class ResiliencyAssessment {
 
-    /** Overall resiliency score (0.0 = completely vulnerable, 1.0 = fully resilient). */
     double overallScore;
 
-    /** Human-readable overall rating. */
     String overallRating;
 
-    /** Failover paths per ASN per customer metro. */
     Map<MetroCode, List<FailoverPath>> failoverPaths;
 
-    /** Blast radius reports for each customer metro. */
     List<BlastRadiusReport> blastRadiusReports;
 
-    /** Detected correlated failures. */
     List<CorrelatedFailure> correlatedFailures;
 
-    /** Geographic diversity scores between customer metro pairs. */
     List<DiversityScore> diversityScores;
 
-    /** High-level findings and recommendations. */
     List<String> findings;
 
     /**

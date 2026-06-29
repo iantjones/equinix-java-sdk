@@ -17,16 +17,9 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 /**
- * <p>GenericDataObject interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface GenericDataObject<T> {
-    /**
-     * <p>getDataObject.</p>
-     *
-     * @return a T object.
-     */
     T getDataObject();
 }

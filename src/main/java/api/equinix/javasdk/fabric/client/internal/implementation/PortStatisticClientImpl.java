@@ -44,7 +44,6 @@ import java.util.Map;
  * single/paginated helpers from {@link ResourceClientBase}/{@code ClientBase}.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, PortStatisticJson> implements PortStatisticClient<PortStatistic> {
 
@@ -76,7 +75,6 @@ public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, P
         return getStatistics(uuid, startDateTime, endDateTime);
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {

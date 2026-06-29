@@ -30,20 +30,15 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 /**
- * <p>ResourceFileUtils class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ResourceFileUtils {
 
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     /**
-     * <p>loadResourceFileJson.</p>
      *
-     * @param fileName a {@link java.lang.String} object.
-     * @return a {@link com.fasterxml.jackson.databind.JsonNode} object.
      * @throws java.io.IOException if any.
      * @throws java.net.URISyntaxException if any.
      * @throws java.lang.NullPointerException if any.

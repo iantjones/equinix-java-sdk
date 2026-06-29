@@ -22,14 +22,8 @@ import api.equinix.javasdk.networkedge.model.implementation.DowntimeNotification
  * <p>NotificationClient interface. Reads planned/unplanned downtime notifications.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface NotificationClient {
 
-    /**
-     * <p>getDowntimeNotifications.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DowntimeNotification} object.
-     */
     DowntimeNotification getDowntimeNotifications();
 }

@@ -30,7 +30,6 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
  * parties to create connections to your assets without requiring direct account access.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ServiceTokens {
 

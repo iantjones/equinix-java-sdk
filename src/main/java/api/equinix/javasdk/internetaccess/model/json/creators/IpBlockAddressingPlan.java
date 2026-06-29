@@ -31,9 +31,7 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IpBlockAddressingPlan {
 
-    /** Number of addresses for this plan (required, minimum 1). */
     @JsonProperty("size") private Integer size;
 
-    /** Purpose of the provider-assigned (PA) IP block, supplied for regulatory reasons. */
     @JsonProperty("purpose") private PurposeOfIpBlock purpose;
 }

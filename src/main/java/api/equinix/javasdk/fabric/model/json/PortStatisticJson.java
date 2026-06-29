@@ -26,10 +26,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 /**
- * <p>PortStatisticJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

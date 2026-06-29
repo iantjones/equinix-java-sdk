@@ -13,12 +13,9 @@ import java.util.Map;
 @Builder
 public class BandwidthAllocation {
 
-    /** Total allocated bandwidth in Mbps. */
     int totalMbps;
 
-    /** Per-workload bandwidth breakdown: workload label to Mbps. */
     Map<String, Integer> perWorkload;
 
-    /** Human-readable explanation of the bandwidth sizing rationale. */
     String reasoning;
 }

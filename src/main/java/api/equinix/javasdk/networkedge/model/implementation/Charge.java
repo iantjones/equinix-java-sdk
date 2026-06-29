@@ -24,10 +24,8 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 /**
- * <p>Charge class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

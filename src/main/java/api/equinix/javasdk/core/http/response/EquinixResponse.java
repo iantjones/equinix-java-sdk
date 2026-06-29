@@ -29,10 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <p>EquinixResponse class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter
@@ -49,13 +47,6 @@ public class EquinixResponse<T> {
 
     private Map<String, String> headers = new HashMap<>();
 
-    /**
-     * <p>Constructor for EquinixResponse.</p>
-     *
-     * @param equinixRequest a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param httpRequest a {@link org.apache.http.client.methods.HttpRequestBase} object.
-     * @param httpResponse a {@link org.apache.http.HttpResponse} object.
-     */
     public EquinixResponse(EquinixRequest<T> equinixRequest, HttpRequestBase httpRequest, HttpResponse httpResponse) {
         this.equinixRequest = equinixRequest;
         this.httpRequest = httpRequest;

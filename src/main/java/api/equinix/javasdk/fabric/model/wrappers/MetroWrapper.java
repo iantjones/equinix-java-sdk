@@ -26,10 +26,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>MetroWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
 
@@ -38,12 +36,6 @@ public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
     @Getter
     private final Pageable<Metro> serviceClient;
 
-    /**
-     * <p>Constructor for MetroWrapper.</p>
-     *
-     * @param metroJson a {@link api.equinix.javasdk.fabric.model.json.MetroJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public MetroWrapper (MetroJson metroJson, Pageable<Metro> serviceClient) {
         this.jsonObject = metroJson;
         this.serviceClient = serviceClient;
@@ -53,11 +45,6 @@ public class MetroWrapper extends ResourceImpl<Metro> implements Metro {
         return this.jsonObject.getGeoCoordinates();
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.Metro} object.
-     */
     public Metro refresh() {
         this.jsonObject = ((MetroClientImpl)serviceClient).refresh(this.getCode());
         return this;

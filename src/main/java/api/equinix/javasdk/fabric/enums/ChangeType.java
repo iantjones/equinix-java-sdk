@@ -66,7 +66,6 @@ public enum ChangeType implements APIParam {
     ADVERTISED_ROUTE_ENTRY_UPDATE,
     RECEIVED_ROUTE_ENTRY_UPDATE,
     BGP_SESSION_STATUS_UPDATE,
-    /** Fallback for any change type not (yet) modelled by the SDK. */
     UNKNOWN;
 
     /**

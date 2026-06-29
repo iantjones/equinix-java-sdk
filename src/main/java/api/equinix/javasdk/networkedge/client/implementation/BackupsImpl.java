@@ -33,10 +33,8 @@ import api.equinix.javasdk.networkedge.model.wrappers.RestoreFeasibilityWrapper;
 import lombok.Getter;
 
 /**
- * <p>BackupsImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class BackupsImpl implements Backups {
@@ -45,18 +43,11 @@ public class BackupsImpl implements Backups {
 
     private final BackupClient<Backup> serviceClient;
 
-    /**
-     * <p>Constructor for BackupsImpl.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.networkedge.client.internal.BackupClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
-     */
     public BackupsImpl(BackupClient<Backup> serviceClient, NetworkEdge serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    /** {@inheritDoc} */
     public PaginatedList<Backup> list(String deviceUuid) {
         return list(deviceUuid, null);
     }
@@ -64,7 +55,6 @@ public class BackupsImpl implements Backups {
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public PaginatedList<Backup> list(String deviceUuid, RequestBuilder.Backup requestBuilder) {
         Page<Backup, BackupJson> responsePage = serviceClient.list(deviceUuid, requestBuilder);
@@ -72,24 +62,20 @@ public class BackupsImpl implements Backups {
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public Backup getByUuid(String uuid) {
         BackupJson deviceLinkJson = serviceClient.getByUuid(uuid);
         return new BackupWrapper(deviceLinkJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public String download(String uuid) {
         return serviceClient.download(uuid);
     }
 
-    /** {@inheritDoc} */
     public RestoreFeasibility checkRestoreFeasibility(String uuid, String deviceUuid) {
         RestoreFeasibilityJson restoreFeasibilityJson = serviceClient.checkRestoreFeasibility(uuid, deviceUuid);
         return new RestoreFeasibilityWrapper(restoreFeasibilityJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public BackupOperator.BackupBuilder define(String deviceUuid, String backupName) {
         return new BackupOperator(this.serviceClient).create(deviceUuid, backupName);
     }

@@ -50,7 +50,6 @@ public enum PeeringPolicy {
 
     private final String displayName;
 
-    /** Feasibility score (0.0 - 1.0) representing how likely peering can be established. */
     private final double feasibilityScore;
 
     private final String description;

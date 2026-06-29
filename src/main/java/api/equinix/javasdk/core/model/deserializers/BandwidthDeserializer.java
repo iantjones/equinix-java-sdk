@@ -25,30 +25,19 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
 /**
- * <p>BandwidthDeserializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class BandwidthDeserializer extends StdDeserializer<BandwidthUnit> {
 
-    /**
-     * <p>Constructor for BandwidthDeserializer.</p>
-     */
     public BandwidthDeserializer() {
         this(null);
     }
 
-    /**
-     * <p>Constructor for BandwidthDeserializer.</p>
-     *
-     * @param vc a {@link java.lang.Class} object.
-     */
     public BandwidthDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    /** {@inheritDoc} */
     @Override
     public BandwidthUnit deserialize(JsonParser jsonParser, DeserializationContext context)
             throws IOException {

@@ -44,20 +44,13 @@ import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
 import java.util.List;
 
 /**
- * <p>ServiceProfilesImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ServiceProfilesImpl implements ServiceProfiles {
 
     private final ServiceProfileClient<ServiceProfile> serviceClient;
 
-    /**
-     * <p>Constructor for ServiceProfilesImpl.</p>
-     *
-     * @param serviceClient a {@link ServiceProfileClient} object.
-     */
     public ServiceProfilesImpl(ServiceProfileClient<ServiceProfile> serviceClient) {
         this.serviceClient = serviceClient;
     }

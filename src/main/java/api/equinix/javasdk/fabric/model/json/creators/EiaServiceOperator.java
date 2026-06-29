@@ -33,30 +33,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>EiaServiceOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EiaServiceOperator extends ResourceImpl<EiaService> {
 
     @Getter
     private final PageablePost<EiaService> serviceClient;
 
-    /**
-     * <p>Constructor for EiaServiceOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.PageablePost} object.
-     */
     public EiaServiceOperator(PageablePost<EiaService> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.EiaServiceOperator.EiaServiceBuilder} object.
-     */
     public EiaServiceBuilder create() {
         return new EiaServiceBuilder();
     }
@@ -65,7 +53,6 @@ public class EiaServiceOperator extends ResourceImpl<EiaService> {
      * <p>Begins a fluent update of an existing EIA service, identified by uuid.</p>
      *
      * @param uuid the uuid of the EIA service to update
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.EiaServiceOperator.EiaServiceUpdater} object.
      */
     public EiaServiceUpdater update(String uuid) {
         return new EiaServiceUpdater(uuid);

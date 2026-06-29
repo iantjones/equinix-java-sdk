@@ -31,7 +31,6 @@ import java.net.URI;
  */
 public class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
 
-    /** The HTTP method name ({@code DELETE}). */
     public static final String METHOD_NAME = "DELETE";
 
     /**
@@ -44,7 +43,6 @@ public class HttpDeleteWithBody extends HttpEntityEnclosingRequestBase {
         setURI(URI.create(uri));
     }
 
-    /** {@inheritDoc} */
     @Override
     public String getMethod() {
         return METHOD_NAME;

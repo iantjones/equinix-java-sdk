@@ -31,7 +31,6 @@ import java.util.List;
  * key/value pairs.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

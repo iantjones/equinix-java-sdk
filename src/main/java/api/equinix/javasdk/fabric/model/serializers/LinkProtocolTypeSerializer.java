@@ -24,30 +24,19 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
 /**
- * <p>ViewPointSerializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class LinkProtocolTypeSerializer extends StdSerializer<LinkProtocolType> {
 
-    /**
-     * <p>Constructor for ViewPointSerializer.</p>
-     */
     public LinkProtocolTypeSerializer() {
         this(null);
     }
 
-    /**
-     * <p>Constructor for LinkProtocolTypeSerializer.</p>
-     *
-     * @param t a {@link java.lang.Class} object.
-     */
     public LinkProtocolTypeSerializer(Class<LinkProtocolType> t) {
         super(t);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void serialize(LinkProtocolType value, JsonGenerator jsonGenerator, SerializerProvider provider)
             throws IOException {

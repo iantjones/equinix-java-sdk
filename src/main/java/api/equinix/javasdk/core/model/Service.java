@@ -17,10 +17,8 @@
 package api.equinix.javasdk.core.model;
 
 /**
- * <p>Service interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Service {
 

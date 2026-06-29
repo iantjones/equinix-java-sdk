@@ -29,130 +29,42 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>DeviceLink interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface DeviceLink {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getSource.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.Source} object.
-     */
     Source getSource();
 
-    /**
-     * <p>getGroupName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getGroupName();
 
-    /**
-     * <p>getSubnet.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getSubnet();
 
-    /**
-     * <p>getRedundancyType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.RedundancyType} object.
-     */
     RedundancyType getRedundancyType();
 
-    /**
-     * <p>getStatus.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.DeviceLinkStatus} object.
-     */
     DeviceLinkStatus getStatus();
 
-    /**
-     * <p>getMetroLinks.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<Link> getMetroLinks();
 
-    /**
-     * <p>getLinkDevices.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<LinkDevice> getLinkDevices();
 
-    /**
-     * <p>getSupportDetails.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<DeviceLinkSupportDetail> getSupportDetails();
 
-    /**
-     * <p>getCreatedBy.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getCreatedBy();
 
-    /**
-     * <p>getCreatedDate.</p>
-     *
-     * @return a {@link java.time.LocalDateTime} object.
-     */
     LocalDateTime getCreatedDate();
 
-    /**
-     * <p>getLastUpdatedBy.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getLastUpdatedBy();
 
-    /**
-     * <p>getLastUpdatedDate.</p>
-     *
-     * @return a {@link java.time.LocalDateTime} object.
-     */
     LocalDateTime getLastUpdatedDate();
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator.DeviceLinkUpdater} object.
-     */
     DeviceLinkOperator.DeviceLinkUpdater update();
 
-    /**
-     * <p>save.</p>
-     *
-     * @param updaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkUpdaterJson} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean save(DeviceLinkUpdaterJson updaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete();
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean refresh();
 }

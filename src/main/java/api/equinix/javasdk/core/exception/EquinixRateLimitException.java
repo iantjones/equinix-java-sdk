@@ -22,7 +22,6 @@ package api.equinix.javasdk.core.exception;
  * exponential backoff and retry logic when catching this exception.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixRateLimitException extends EquinixServiceException {
 

@@ -38,7 +38,6 @@ import java.util.Map;
  * offset/limit paging and POST-search paging respectively.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter
@@ -92,13 +91,11 @@ public class EquinixRequest<T> implements Request<T> {
         this.queryParameters = (queryParameters == null) ? new HashMap<>() : new HashMap<>(queryParameters);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void addHeader(String headerName, String headerValue) {
         headers.put(headerName, headerValue);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void addQueryParameter(String parameterName, List<String> parameterValues) {
         List<String> parameterList = queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>());
@@ -106,21 +103,10 @@ public class EquinixRequest<T> implements Request<T> {
         queryParameters.put(parameterName, parameterList);
     }
 
-    /**
-     * <p>addQueryParameters.</p>
-     *
-     * @param parameterValues a {@link java.util.Map} object.
-     */
     public void addQueryParameters(Map<String, List<String>> parameterValues) {
         queryParameters.putAll(parameterValues);
     }
 
-    /**
-     * <p>replaceQueryParameter.</p>
-     *
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValues a {@link java.util.List} object.
-     */
     public void replaceQueryParameter(String parameterName, List<String> parameterValues) {
         queryParameters.remove(parameterName);
 
@@ -129,19 +115,12 @@ public class EquinixRequest<T> implements Request<T> {
         queryParameters.put(parameterName, parameterList);
     }
 
-    /**
-     * <p>addSingleQueryParameter.</p>
-     *
-     * @param parameterName a {@link java.lang.String} object.
-     * @param parameterValue a {@link java.lang.String} object.
-     */
     public void addSingleQueryParameter(String parameterName, String parameterValue) {
         List<String> parameterList = queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>());
         parameterList.add(parameterValue);
         queryParameters.put(parameterName, parameterList);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void addPathParameter(String parameterName, String parameterValue) {
         pathParameters.put(parameterName, parameterValue);

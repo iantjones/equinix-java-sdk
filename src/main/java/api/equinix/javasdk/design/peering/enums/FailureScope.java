@@ -34,19 +34,14 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum FailureScope {
 
-    /** Entire metro goes offline (power grid failure, natural disaster, conflict). */
     METRO("Metro", "All facilities and IXes in a metro are unavailable"),
 
-    /** A specific Equinix IX goes down (platform failure, maintenance). */
     IX("Internet Exchange", "A specific Equinix IX is unavailable; facilities remain operational"),
 
-    /** A specific Equinix facility loses connectivity (building-level outage). */
     FACILITY("Facility", "A specific Equinix IBX facility is unavailable"),
 
-    /** A specific provider/ASN becomes unreachable globally (provider outage). */
     PROVIDER("Provider", "A specific ASN is unreachable at all locations"),
 
-    /** An entire region goes offline (submarine cable cut, regional grid failure). */
     REGION("Region", "All metros in a geographic region are unavailable");
 
     private final String displayName;

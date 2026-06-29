@@ -75,7 +75,6 @@ import api.equinix.javasdk.design.value.tco.TcoCalculator;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  * @see api.equinix.javasdk.fabric.client.Connections
  * @see api.equinix.javasdk.fabric.client.Ports

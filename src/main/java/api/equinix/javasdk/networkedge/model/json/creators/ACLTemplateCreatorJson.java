@@ -27,10 +27,8 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * <p>ACLTemplateCreatorJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class ACLTemplateCreatorJson {

@@ -41,18 +41,12 @@ import java.util.List;
  * {@link #update(String)} accumulates JSON Patch operations for {@code PATCH /fabric/v4/ports/{uuid}}.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PortOperator extends ResourceImpl<Port> {
 
     @Getter
     private final PageablePost<Port> serviceClient;
 
-    /**
-     * <p>Constructor for PortOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.PageablePost} object.
-     */
     public PortOperator(PageablePost<Port> serviceClient) {
         this.serviceClient = serviceClient;
     }
@@ -60,7 +54,6 @@ public class PortOperator extends ResourceImpl<Port> {
     /**
      * Begins the fluent builder for creating a new port.
      *
-     * @return a {@link PortOperator.PortBuilder} object.
      */
     public PortBuilder create() {
         return new PortBuilder();
@@ -70,7 +63,6 @@ public class PortOperator extends ResourceImpl<Port> {
      * Begins a fluent update of an existing port, identified by uuid.
      *
      * @param uuid the uuid of the port to update
-     * @return a {@link PortOperator.PortUpdater} object.
      */
     public PortUpdater update(String uuid) {
         return new PortUpdater(uuid);

@@ -40,33 +40,23 @@ import java.util.List;
 @Builder
 public class FailoverPath {
 
-    /** The target ASN this failover path reaches. */
     long targetAsn;
 
-    /** Human-readable label for the target (e.g., "AWS"). */
     String targetLabel;
 
-    /** The primary metro being protected against failure. */
     MetroCode primaryMetro;
 
-    /** The alternative metro where the target ASN can be reached. */
     MetroCode failoverMetro;
 
-    /** The type of connectivity available at the failover metro. */
     ConnectivityType connectivityType;
 
-    /** IX port capacity at the failover metro in Mbps (0 if no IX peering). */
     int ixCapacityMbps;
 
-    /** Whether route server peering is available at the failover metro. */
     boolean routeServerAvailable;
 
-    /** Geographic diversity assessment between primary and failover metros. */
     DiversityScore diversity;
 
-    /** IX sessions available at the failover metro. */
     List<IxPresenceDetail> ixSessions;
 
-    /** Human-readable recommendation. */
     String recommendation;
 }

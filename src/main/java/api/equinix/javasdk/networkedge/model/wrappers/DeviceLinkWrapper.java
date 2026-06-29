@@ -27,10 +27,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>DeviceLinkWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements DeviceLink {
 
@@ -40,46 +38,24 @@ public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements Devic
     @Getter
     private final Pageable<DeviceLink> serviceClient;
 
-    /**
-     * <p>Constructor for DeviceLinkWrapper.</p>
-     *
-     * @param deviceLinkJson a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public DeviceLinkWrapper(DeviceLinkJson deviceLinkJson, Pageable<DeviceLink> serviceClient) {
         this.json = deviceLinkJson;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator.DeviceLinkUpdater} object.
-     */
     public DeviceLinkOperator.DeviceLinkUpdater update() {
         return new DeviceLinkOperator(this.serviceClient).update(this.json);
     }
 
-    /** {@inheritDoc} */
     public Boolean save(DeviceLinkUpdaterJson updaterJson) {
         this.json = ((DeviceLinkClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
         return true;
     }
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean delete() {
         return ((DeviceLinkClientImpl)this.serviceClient).delete(this.getUuid());
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     public Boolean refresh() {
         this.json = ((DeviceLinkClientImpl)this.serviceClient).refresh(this.getUuid());
         return true;

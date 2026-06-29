@@ -116,7 +116,6 @@ public class Mcp implements Closeable {
         this.initialized = true;
     }
 
-    /** The SDK version advertised in the MCP handshake, read from the jar manifest (dev fallback "2.0.0"). */
     private static String sdkVersion() {
         String version = Mcp.class.getPackage().getImplementationVersion();
         return version != null ? version : "2.0.0";

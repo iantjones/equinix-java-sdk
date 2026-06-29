@@ -25,10 +25,8 @@ import lombok.Getter;
 import lombok.experimental.Delegate;
 
 /**
- * <p>PortStatisticWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PortStatisticWrapper extends ResourceImpl<PortStatistic> implements PortStatistic {
 
@@ -37,22 +35,11 @@ public class PortStatisticWrapper extends ResourceImpl<PortStatistic> implements
     @Getter
     private final Pageable<PortStatistic> serviceClient;
 
-    /**
-     * <p>Constructor for PortStatisticWrapper.</p>
-     *
-     * @param portJson a {@link api.equinix.javasdk.fabric.model.json.PortStatisticJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public PortStatisticWrapper(PortStatisticJson portJson, Pageable<PortStatistic> serviceClient) {
         this.jsonObject = portJson;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.PortStatistic} object.
-     */
     public PortStatistic refresh() {
         this.jsonObject = ((PortStatisticClientImpl)this.serviceClient).refreshStatistics(this.getUuid(),
                 this.getStats().getStartDateTime(), this.getStats().getEndDateTime());

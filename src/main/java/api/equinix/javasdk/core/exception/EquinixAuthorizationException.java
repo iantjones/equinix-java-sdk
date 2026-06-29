@@ -22,7 +22,6 @@ package api.equinix.javasdk.core.exception;
  * to perform the requested operation on the target resource.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixAuthorizationException extends EquinixServiceException {
 

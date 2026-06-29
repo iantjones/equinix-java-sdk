@@ -34,10 +34,8 @@ public class DirectPeeringIpv6Request {
 
     @JsonProperty("connection") private PeeringConnection connection;
 
-    /** Peering IP addresses in Version 6 (IPv6). */
     @Singular("equinixPeerIp")
     @JsonProperty("equinixPeerIps") private List<String> equinixPeerIps;
 
-    /** Virtual router group IP address in Version 6 (IPv6). */
     @JsonProperty("equinixVRRPIp") private String equinixVRRPIp;
 }

@@ -55,7 +55,6 @@ import java.util.Map;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class EquinixServiceException extends BaseException {
@@ -65,21 +64,10 @@ public class EquinixServiceException extends BaseException {
     private final Map<String, String> httpHeaders;
     private final String path;
 
-    /**
-     * <p>Constructor for EquinixServiceException.</p>
-     *
-     * @param errorMessage a {@link java.lang.String} object.
-     */
     public EquinixServiceException(String errorMessage) {
         this(errorMessage, null, null, null, null);
     }
 
-    /**
-     * <p>Constructor for EquinixServiceException.</p>
-     *
-     * @param errorMessage a {@link java.lang.String} object.
-     * @param cause a {@link java.lang.Exception} object.
-     */
     public EquinixServiceException(String errorMessage, Exception cause) {
         super(errorMessage, cause);
         this.exceptionDetails = new ArrayList<>();
@@ -108,11 +96,6 @@ public class EquinixServiceException extends BaseException {
         this.exceptionDetails = (exceptionDetails != null) ? exceptionDetails : new ArrayList<>();
     }
 
-    /**
-     * <p>getMessage.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getMessage() {
         StringBuilder errorString = new StringBuilder();
 

@@ -42,7 +42,6 @@ public class GrantedAccessPolicyPage {
     @JsonProperty("nextPageToken")
     private String nextPageToken;
 
-    /** A single granted access policy entry, carrying the {@code accessPolicyId}. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)

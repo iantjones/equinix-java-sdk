@@ -19,10 +19,8 @@ package api.equinix.javasdk.fabric.enums;
 import api.equinix.javasdk.core.model.APIParam;
 
 /**
- * <p>PortType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ChangeStatus implements APIParam {
     COMPLETED,

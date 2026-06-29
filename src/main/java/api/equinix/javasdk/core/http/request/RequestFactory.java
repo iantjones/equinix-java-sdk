@@ -26,22 +26,13 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.*;
 
 /**
- * <p>RequestFactory class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class RequestFactory {
 
     private static final String DEFAULT_ENCODING = "UTF-8";
 
-    /**
-     * <p>create.</p>
-     *
-     * @param request a {@link api.equinix.javasdk.core.http.request.EquinixRequest} object.
-     * @param <T> a T object.
-     * @return a {@link org.apache.http.client.methods.HttpRequestBase} object.
-     */
     public <T> HttpRequestBase create(final EquinixRequest<T> request) {
 
         URI endpoint = request.getEndPoint();

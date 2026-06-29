@@ -58,7 +58,6 @@ import java.util.Map;
  * the Connection-specific operations (dry-run, actions, bulk, statistics) remain bespoke below.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class ConnectionClientImpl extends ResourceClientBase<Connection, ConnectionJson> implements ConnectionClient<Connection> {
 
@@ -135,7 +134,6 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
         return this.getStatistics(uuid, startDateTime, endDateTime, viewPoint);
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {

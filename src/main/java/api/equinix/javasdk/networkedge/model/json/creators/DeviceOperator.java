@@ -40,42 +40,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>DeviceOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class DeviceOperator extends ResourceImpl<Device> {
 
     @Getter
     private final Pageable<Device> serviceClient;
 
-    /**
-     * <p>Constructor for DeviceOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public DeviceOperator(Pageable<Device> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceBuilder} object.
-     * @param deviceName a {@link java.lang.String} object.
-     */
     public DeviceBuilder create(String deviceName) {
         return new DeviceBuilder(deviceName);
     }
 
-    /**
-     * <p>createRedundantDevice.</p>
-     *
-     * @param secondaryDeviceName a {@link java.lang.String} object.
-     * @param primaryDeviceUuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceBuilderSecondary} object.
-     */
     public DeviceBuilderSecondary createRedundantDevice(String secondaryDeviceName, String primaryDeviceUuid) {
         return new DeviceBuilderSecondary(secondaryDeviceName, primaryDeviceUuid);
     }
@@ -84,12 +64,6 @@ public class DeviceOperator extends ResourceImpl<Device> {
         return createRedundantDevice(secondaryDeviceName, primaryDevice.getUuid());
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.DeviceJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceUpdater} object.
-     */
     public DeviceOperator.DeviceUpdater update(DeviceJson json) {
         return new DeviceOperator.DeviceUpdater(json);
     }

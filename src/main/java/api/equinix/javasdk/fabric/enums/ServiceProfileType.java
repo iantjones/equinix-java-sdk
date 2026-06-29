@@ -19,10 +19,8 @@ package api.equinix.javasdk.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * <p>ServiceProfileType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ServiceProfileType {
     L2_PROFILE,

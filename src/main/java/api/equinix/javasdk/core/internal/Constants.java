@@ -38,19 +38,13 @@ import java.util.ServiceLoader;
 import java.util.regex.Pattern;
 
 /**
- * <p>Constants class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class Constants {
-    /** Constant <code>DEFAULT_ENCODING="UTF-8"</code> */
     public static final String DEFAULT_ENCODING = "UTF-8";
-    /** Constant <code>UTF8</code> */
     public static final Charset UTF8 = Charset.forName(DEFAULT_ENCODING);
-    /** Constant <code>RADIX=16</code> */
     public static final int RADIX = 16;
-    /** Constant <code>URL_ENCODER</code> */
     public static final BitSet URL_ENCODER = new BitSet(256);
 
     // Equinix list/search endpoints cap page size (Fabric v4 max = 100); 2000 was rejected on real calls.
@@ -58,16 +52,13 @@ public class Constants {
     public static final Integer PAGE_OFFSET = 0;
     public static final Integer PAGE_TOTAL = 0;
 
-    /** Constant <code>BANDWIDTH_CONVERSION_FACTOR</code> */
     public static final Integer BANDWIDTH_CONVERSION_FACTOR = 1000;
 
-    /** Constant <code>LIFECYCLE_DETAIL_FILTER</code> */
     public static final SimpleBeanPropertyFilter LIFECYCLE_DETAIL_FILTER =
             SimpleBeanPropertyFilter.serializeAllExcept("createdBy","createdByFullName","createdByEmail","createdDate",
                     "lastUpdatedBy","lastUpdatedByFullName","lastUpdatedByEmail","updatedByEmail","lastUpdatedDate",
                     "deletedBy","deletedByEmail","deletedDate");
 
-    /** Constant <code>JSON_CONVERTOR</code> */
     public static final ObjectMapper JSON_CONVERTOR = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final SimpleModule module = new SimpleModule()
@@ -75,7 +66,6 @@ public class Constants {
             .addDeserializer(OperationalStatus.class, new OperationalStatusDeserializer())
             .addDeserializer(MetroCode.class, new MetroCodeDeserializer());
 
-    /** Constant <code>objectMapper</code> */
     public static final ObjectMapper objectMapper = buildObjectMapper();
 
     /**
@@ -111,24 +101,18 @@ public class Constants {
         return mapper;
     }
 
-    /** Constant <code>queryParamFormatter</code> */
     public static final DateTimeFormatter queryParamFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    /** Constant <code>DATE_TIME_FORMAT</code> */
     public static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd['T'][' ']HH:mm:ss[.SSSSSS][.SSS][.SS][.S][X]");
-    /** Constant <code>COMMENCE_BILLING</code> */
     public static final DateTimeFormatter COMMENCE_BILLING = DateTimeFormatter.ofPattern("EEE LLL dd yyyy HH:mm:ss zzz");
-    /** Constant <code>COMMENCE_BILLING_SHORT</code> */
     public static final DateTimeFormatter COMMENCE_BILLING_SHORT = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss");
 
-    /** Constant <code>ALL_DATE_FORMATS</code> */
     public static final DateTimeFormatter ALL_DATE_FORMATS = new DateTimeFormatterBuilder()
             .appendOptional(COMMENCE_BILLING)
             .appendOptional(COMMENCE_BILLING_SHORT)
             .appendOptional(DATE_TIME_FORMAT)
             .toFormatter();
 
-    /** Constant <code>IP_SUBNET_PATTERN="^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([0"{trunked}</code> */
     public static final String IP_SUBNET_PATTERN =
             "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
                     "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
@@ -136,12 +120,9 @@ public class Constants {
                     "([01]?\\d\\d?|2[0-4]\\d|25[0-5])(\\/?)([1238]{1}[0-9]{1})?$";
 
     private static final String UUID_FORMAT = ".*[{\\[]?([0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12})[]}]?";
-    /** Constant <code>UUID_PATTERN</code> */
     public static final Pattern UUID_PATTERN = Pattern.compile(UUID_FORMAT);
 
-    /** Constant <code>JSON_DESERIALIZE_EXCEPTION="Error mapping EquinixResponse from Apac"{trunked}</code> */
     public static final String JSON_DESERIALIZE_EXCEPTION = "Error mapping EquinixResponse from Apache Response Content.";
-    /** Constant <code>JSON_SERIALIZE_EXCEPTION="Error serializing EquinixRequest to JSO"{trunked}</code> */
     public static final String JSON_SERIALIZE_EXCEPTION = "Error serializing EquinixRequest to JSON.";
 
 }

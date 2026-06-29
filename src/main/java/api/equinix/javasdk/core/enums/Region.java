@@ -21,10 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * <p>Region class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Region implements APIParam  {
 
@@ -45,39 +43,19 @@ public enum Region implements APIParam  {
         this.regionDesc = regionDesc;
     }
 
-    /**
-     * <p>Getter for the field <code>regionCode</code>.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @JsonValue
     public String getRegionCode() {
         return regionCode;
     }
 
-    /**
-     * <p>Setter for the field <code>regionCode</code>.</p>
-     *
-     * @param regionCode a {@link java.lang.String} object.
-     */
     public void setRegionCode(String regionCode) {
         this.regionCode = regionCode;
     }
 
-    /**
-     * <p>Getter for the field <code>regionDesc</code>.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getRegionDesc() {
         return regionDesc;
     }
 
-    /**
-     * <p>Setter for the field <code>regionDesc</code>.</p>
-     *
-     * @param regionDesc a {@link java.lang.String} object.
-     */
     public void setRegionDesc(String regionDesc) {
         this.regionDesc = regionDesc;
     }

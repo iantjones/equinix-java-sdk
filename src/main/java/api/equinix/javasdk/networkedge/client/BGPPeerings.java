@@ -27,7 +27,6 @@ import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator;
  * operations to list, retrieve, and create BGP peering configurations for dynamic routing.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface BGPPeerings {
 

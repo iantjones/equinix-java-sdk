@@ -25,59 +25,20 @@ import api.equinix.javasdk.networkedge.model.json.creators.VPNCreatorJson;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNUpdaterJson;
 
 /**
- * <p>VPNClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface VPNClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param requestBuilder a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.VPN} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<VPN, VPNJson> list(RequestBuilder.VPN requestBuilder);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.VPNJson} object.
-     */
     VPNJson getByUuid(String uuid);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param aclTemplateCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.VPNCreatorJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.VPNJson} object.
-     */
     VPNJson create(VPNCreatorJson aclTemplateCreatorJson);
 
-    /**
-     * <p>update.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param vpnUpdaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.VPNUpdaterJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.VPNJson} object.
-     */
     VPNJson update(String uuid, VPNUpdaterJson vpnUpdaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete(String uuid);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.VPNJson} object.
-     */
     VPNJson refresh(String uuid);
 }

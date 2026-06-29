@@ -30,7 +30,6 @@ import java.util.List;
  * deprecated per-asset {@code /stats} statistics endpoints.
  *
  * @author ianjones
- * @version $Id: $Id
  * @see api.equinix.javasdk.fabric.model.Metric
  */
 public interface Metrics {

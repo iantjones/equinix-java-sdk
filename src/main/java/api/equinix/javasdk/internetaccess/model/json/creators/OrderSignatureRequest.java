@@ -32,7 +32,6 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderSignatureRequest {
 
-    /** Signatory (required): {@code SELF}, {@code DELEGATE} or {@code SUPPORT}. */
     @JsonProperty("signatory") private OrderSignatory signatory;
 
     @JsonProperty("delegate") private Delegate delegate;
@@ -49,7 +48,6 @@ public class OrderSignatureRequest {
         @JsonProperty("firstName") private String firstName;
         @JsonProperty("lastName") private String lastName;
 
-        /** Email the signature request is sent to (required). */
         @JsonProperty("email") private String email;
     }
 }

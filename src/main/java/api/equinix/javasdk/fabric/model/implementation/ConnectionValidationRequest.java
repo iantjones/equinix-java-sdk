@@ -26,7 +26,6 @@ import lombok.Setter;
  * the SDK's existing Fabric search filter ({@link FilterPropertyList}).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter

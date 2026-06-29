@@ -20,7 +20,6 @@ package api.equinix.javasdk.core.model;
  * <p>Abstract ResourceImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public abstract class ResourceImpl<T> implements Resource<T> {
 

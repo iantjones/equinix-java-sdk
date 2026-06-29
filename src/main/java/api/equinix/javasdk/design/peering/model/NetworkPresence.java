@@ -41,49 +41,34 @@ import java.util.Set;
 @Builder
 public class NetworkPresence {
 
-    /** The autonomous system number. */
     long asn;
 
-    /** Human-readable label (e.g., "AWS" or PeeringDB network name). */
     String label;
 
-    /** PeeringDB network name. */
     String peeringDbName;
 
-    /** Peering policy from PeeringDB. */
     PeeringPolicy peeringPolicy;
 
-    /** Network type classification from PeeringDB. */
     NetworkType networkType;
 
-    /** Traffic volume descriptor (e.g., "100-200Gbps"). */
     String trafficVolume;
 
-    /** Traffic ratio (e.g., "Balanced", "Heavy Inbound"). */
     String trafficRatio;
 
-    /** Whether this network participates in any route servers. */
     boolean routeServerParticipant;
 
-    /** Whether BFD is supported at any IX. */
     boolean bfdSupported;
 
-    /** IPv6 capability. */
     boolean ipv6Capable;
 
-    /** Set of metros where this ASN has IX peering at Equinix. */
     Set<MetroCode> ixPeeringMetros;
 
-    /** Set of metros where this ASN has facility presence at Equinix. */
     Set<MetroCode> facilityMetros;
 
-    /** All metros where this ASN has any Equinix presence (IX or facility). */
     Set<MetroCode> allMetros;
 
-    /** Detailed IX presence per metro. */
     List<IxPresenceDetail> ixDetails;
 
-    /** Total IX port capacity across all Equinix IXes, in Mbps. */
     long totalIxCapacityMbps;
 
     /**

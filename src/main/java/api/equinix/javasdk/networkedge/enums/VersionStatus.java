@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>VersionStatus class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum VersionStatus {
     ACTIVE

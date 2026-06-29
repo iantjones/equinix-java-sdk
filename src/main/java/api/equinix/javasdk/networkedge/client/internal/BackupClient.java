@@ -25,37 +25,15 @@ import api.equinix.javasdk.networkedge.model.json.RestoreFeasibilityJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupCreatorJson;
 
 /**
- * <p>BackupClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface BackupClient<T> extends Pageable<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @param requestBuilder a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Backup} object.
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<Backup, BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     */
     BackupJson getByUuid(String uuid);
 
-    /**
-     * <p>checkRestoreFeasibility.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.RestoreFeasibilityJson} object.
-     */
     RestoreFeasibilityJson checkRestoreFeasibility(String uuid, String deviceUuid);
 
     /**
@@ -64,39 +42,14 @@ public interface BackupClient<T> extends Pageable<T> {
      *
      * @param uuid the unique identifier of the backup to restore.
      * @param name the name of the backup ({@code DeviceBackupUpdateRequest.name}).
-     * @return a {@link java.lang.Boolean} object.
      */
     Boolean restore(String uuid, String name);
 
-    /**
-     * <p>download.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     String download(String uuid);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param backupCreatorJson a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupCreatorJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     */
     BackupJson create(BackupCreatorJson backupCreatorJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete(String uuid);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.BackupJson} object.
-     */
     BackupJson refresh(String uuid);
 }

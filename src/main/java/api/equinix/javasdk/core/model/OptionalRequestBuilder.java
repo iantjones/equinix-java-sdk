@@ -20,31 +20,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>OptionalRequestBuilder interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface OptionalRequestBuilder<R> {
 
-    /**
-     * <p>build.</p>
-     *
-     * @return a R object.
-     */
     R build();
 
-    /**
-     * <p>wasBuilt.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean wasBuilt();
 
-    /**
-     * <p>getQueryParameters.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
     Map<String, List<String>> getQueryParameters();
 }

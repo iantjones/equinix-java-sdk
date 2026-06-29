@@ -56,7 +56,6 @@ public interface RoleAssignment {
      */
     RoleAssignment.AssignmentScope getAssignmentScope();
 
-    /** The scope to which a {@link RoleAssignment} applies (e.g. a project or organization). */
     interface AssignmentScope {
 
         /**
@@ -80,7 +79,6 @@ public interface RoleAssignment {
         Parent getParent();
     }
 
-    /** The owning project of a {@code PORT}-typed {@link AssignmentScope}. */
     interface Parent {
 
         /**

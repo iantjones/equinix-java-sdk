@@ -30,31 +30,22 @@ import java.util.stream.Collectors;
 @Builder
 public class DeploymentPlan {
 
-    /** The optimization result that drove this deployment plan. */
     OptimizationResult sourceOptimization;
 
-    /** Cloud Routers to be created (one per metro). */
     List<PlannedCloudRouter> cloudRouters;
 
-    /** Provider connections (Cloud Router to service profile). */
     List<PlannedConnection> providerConnections;
 
-    /** Inter-metro backbone links (Cloud Router to Cloud Router). */
     List<PlannedBackboneLink> backboneLinks;
 
-    /** Routing protocol configurations for all connections. */
     List<PlannedRoutingProtocol> routingProtocols;
 
-    /** Aggregated pricing for the full deployment. */
     PlanPricing pricing;
 
-    /** Whether the plan passed validation. */
     boolean valid;
 
-    /** Validation errors, if any. */
     List<String> validationErrors;
 
-    /** Reference to the Fabric client for execution. */
     @JsonIgnore
     FabricGateway fabric;
 

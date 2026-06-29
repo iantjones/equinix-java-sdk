@@ -26,74 +26,27 @@ import api.equinix.javasdk.networkedge.model.json.creators.BackupUpdaterJson;
 import java.util.List;
 
 /**
- * <p>Backup interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Backup {
 
-    /**
-     * <p>getUuid.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getUuid();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BackupType} object.
-     */
     BackupType getType();
 
-    /**
-     * <p>getStatus.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BackupStatus} object.
-     */
     BackupStatus getStatus();
 
-    /**
-     * <p>getRequestType.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.BackupRequestType} object.
-     */
     BackupRequestType getRequestType();
 
-    /**
-     * <p>getDownloadUrl.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getDownloadUrl();
 
-    /**
-     * <p>getVersion.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getVersion();
 
-    /**
-     * <p>getDeleteAllowed.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean getDeleteAllowed();
 
-    /**
-     * <p>getRestores.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     List<DeviceRestore> getRestores();
 
     /**
@@ -101,15 +54,11 @@ public interface Backup {
      * always targets the device this backup was taken from; there is no way to choose a different
      * target device.
      *
-     * @return a {@link java.lang.Boolean} object.
      */
     Boolean restore();
 
     /**
-     * <p>restoreToDevice.</p>
      *
-     * @param device a {@link api.equinix.javasdk.networkedge.model.Device} object.
-     * @return a {@link java.lang.Boolean} object.
      * @deprecated the restore endpoint is keyed by the backup uuid only; the supplied {@code device}
      *             is ignored. Use {@link #restore()} instead.
      */
@@ -117,42 +66,18 @@ public interface Backup {
     Boolean restoreToDevice(Device device);
 
     /**
-     * <p>restoreToDevice.</p>
      *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @return a {@link java.lang.Boolean} object.
      * @deprecated the restore endpoint is keyed by the backup uuid only; the supplied
      *             {@code deviceUuid} is ignored. Use {@link #restore()} instead.
      */
     @Deprecated
     Boolean restoreToDevice(String deviceUuid);
 
-    /**
-     * <p>update.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupOperator.BackupUpdater} object.
-     */
     BackupOperator.BackupUpdater update();
 
-    /**
-     * <p>save.</p>
-     *
-     * @param updaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupUpdaterJson} object.
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean save(BackupUpdaterJson updaterJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean delete();
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @return a {@link java.lang.Boolean} object.
-     */
     Boolean refresh();
 }

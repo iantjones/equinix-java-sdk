@@ -19,41 +19,25 @@ package api.equinix.javasdk.core.util;
 import java.util.Locale;
 
 /**
- * <p>StringUtils class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class StringUtils {
 
     private static final Locale LOCALE_ENGLISH = Locale.ENGLISH;
 
     /**
-     * <p>isNullOrEmpty.</p>
      *
-     * @param value a {@link java.lang.String} object.
      * @return a boolean.
      */
     public static boolean isNullOrEmpty(String value) {
         return "".equals(value) || value == null;
     }
 
-    /**
-     * <p>upperCase.</p>
-     *
-     * @param str a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     public static String upperCase(String str) {
         return isNullOrEmpty(str) ? str : str.toUpperCase(LOCALE_ENGLISH);
     }
 
-    /**
-     * <p>lowerCase.</p>
-     *
-     * @param str a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     public static String lowerCase(String str) {
         if(isNullOrEmpty(str)) {
             return str;

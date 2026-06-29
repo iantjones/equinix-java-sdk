@@ -49,10 +49,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * <p>SetupImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class SetupImpl implements Setup {
@@ -66,17 +64,6 @@ public class SetupImpl implements Setup {
     private final FilesClient serviceClientFiles;
     private final NotificationClient serviceClientNotifications;
 
-    /**
-     * <p>Constructor for SetupImpl.</p>
-     *
-     * @param serviceClientAccounts a {@link api.equinix.javasdk.networkedge.client.internal.AccountClient} object.
-     * @param serviceClientMetros a {@link api.equinix.javasdk.networkedge.client.internal.MetroClient} object.
-     * @param serviceClientAgreements a {@link api.equinix.javasdk.networkedge.client.internal.AgreementClient} object.
-     * @param serviceClientPricing a {@link api.equinix.javasdk.networkedge.client.internal.PricingClient} object.
-     * @param serviceClientFiles a {@link api.equinix.javasdk.networkedge.client.internal.FilesClient} object.
-     * @param serviceClientNotifications a {@link api.equinix.javasdk.networkedge.client.internal.NotificationClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
-     */
     public SetupImpl(AccountClient<Account> serviceClientAccounts, MetroClient<Metro> serviceClientMetros,
                      AgreementClient serviceClientAgreements, PricingClient serviceClientPricing,
                      FilesClient serviceClientFiles, NotificationClient serviceClientNotifications,
@@ -90,17 +77,11 @@ public class SetupImpl implements Setup {
         this.serviceClientNotifications = serviceClientNotifications;
     }
 
-    /** {@inheritDoc} */
     public List<Account> listAccounts(MetroCode metroCode) {
         List<AccountJson> publicKeyList = serviceClientAccounts.list(metroCode);
         return Utils.mapList(publicKeyList, this.serviceClientAccounts, AccountWrapper::new);
     }
 
-    /**
-     * <p>listAllAccounts.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     public List<Account> listAllAccounts() {
         PaginatedList<Metro> metrosList = listMetros().loadAll();
         List<Account> accountList = new ArrayList<>();
@@ -120,54 +101,33 @@ public class SetupImpl implements Setup {
         );
     }
 
-    /**
-     * <p>distinctByKey.</p>
-     *
-     * @param keyExtractor a {@link java.util.function.Function} object.
-     * @param <T> a T object.
-     * @return a {@link java.util.function.Predicate} object.
-     */
     public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
         Set<Object> seen = ConcurrentHashMap.newKeySet();
         return t -> seen.add(keyExtractor.apply(t));
     }
 
-    /**
-     * <p>listMetros.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<Metro> listMetros() {
         return listMetrosByRegion(null);
     }
 
-    /** {@inheritDoc} */
     public PaginatedList<Metro> listMetrosByRegion(Region region) {
         Page<Metro, MetroJson> responsePage = serviceClientMetros.list(region);
         PaginatedList<Metro> metroList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClientMetros, MetroWrapper::new);
         return new PaginatedList<>(metroList, this.serviceClientMetros, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public AgreementStatus getAgreementStatus(String accountNumber) {
         return serviceClientAgreements.getAgreementStatus(accountNumber);
     }
 
-    /** {@inheritDoc} */
     public AgreementStatus createAgreement(String accountNumber, String termsVersionId) {
         return serviceClientAgreements.createAgreement(accountNumber, termsVersionId);
     }
 
-    /** {@inheritDoc} */
     public String getVendorsTerms(String vendorPackage, LicenseType licenseType) {
         return serviceClientAgreements.getVendorsTerms(vendorPackage, licenseType);
     }
 
-    /**
-     * <p>getOrderTerms.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getOrderTerms() {
         return serviceClientAgreements.getOrderTerms();
     }
@@ -175,7 +135,6 @@ public class SetupImpl implements Setup {
     /**
      * {@inheritDoc}
      *
-     * <p>getPricing.</p>
      */
     public Pricing getPricing(RequestBuilder.Pricing requestBuilder) {
         return serviceClientPricing.getPricing(requestBuilder);
@@ -184,8 +143,6 @@ public class SetupImpl implements Setup {
     /**
      * {@inheritDoc}
      *
-     * @param deviceUuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.Pricing} object.
      */
     public Pricing getPricing(String deviceUuid) {
         return serviceClientPricing.getPricing(deviceUuid);
@@ -195,14 +152,12 @@ public class SetupImpl implements Setup {
         return serviceClientAccounts.getOrderSummary(requestBuilder);
     }
 
-    /** {@inheritDoc} */
     public String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
                              DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents) {
         return serviceClientFiles.uploadFile(metroCode, deviceTypeCode, processType,
                 deviceManagementType, licenseType, fileContents);
     }
 
-    /** {@inheritDoc} */
     public DowntimeNotification listDowntimeNotifications() {
         return serviceClientNotifications.getDowntimeNotifications();
     }

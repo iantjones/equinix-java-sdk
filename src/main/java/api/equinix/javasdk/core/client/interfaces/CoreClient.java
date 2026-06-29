@@ -19,17 +19,10 @@ package api.equinix.javasdk.core.client.interfaces;
 import api.equinix.javasdk.core.model.OAuthToken;
 
 /**
- * <p>CoreClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface CoreClient {
 
-    /**
-     * <p>authenticate.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.model.OAuthToken} object.
-     */
     OAuthToken authenticate();
 }

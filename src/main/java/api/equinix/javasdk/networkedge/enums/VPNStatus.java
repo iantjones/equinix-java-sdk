@@ -19,10 +19,8 @@ package api.equinix.javasdk.networkedge.enums;
 import api.equinix.javasdk.core.model.APIParam;
 
 /**
- * <p>VPNStatus class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum VPNStatus implements APIParam {
     PROVISIONED,

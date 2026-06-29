@@ -26,7 +26,6 @@ import java.util.Map;
  * <p>Abstract RequestBuilderBase class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public abstract class RequestBuilderBase<R> implements OptionalRequestBuilder<R> {
 

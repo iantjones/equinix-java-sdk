@@ -26,10 +26,8 @@ import lombok.Setter;
 import java.util.ArrayList;
 
 /**
- * <p>Page class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)

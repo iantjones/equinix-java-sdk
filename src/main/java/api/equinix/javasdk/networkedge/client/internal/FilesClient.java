@@ -22,24 +22,11 @@ import api.equinix.javasdk.networkedge.enums.FileProcessType;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 
 /**
- * <p>FilesClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface FilesClient {
 
-    /**
-     * <p>uploadFile.</p>
-     *
-     * @param metroCode a {@link api.equinix.javasdk.core.enums.MetroCode} object.
-     * @param deviceTypeCode a {@link java.lang.String} object.
-     * @param processType a {@link api.equinix.javasdk.networkedge.enums.FileProcessType} object.
-     * @param deviceManagementType a {@link api.equinix.javasdk.networkedge.enums.DeviceManagementType} object.
-     * @param licenseType a {@link api.equinix.javasdk.networkedge.enums.LicenseType} object.
-     * @param fileContents a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
                       DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents);
 }

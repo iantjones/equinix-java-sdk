@@ -23,10 +23,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>ClusterDetail class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

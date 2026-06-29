@@ -35,15 +35,12 @@ public class ServicePurchaseOrderRequest {
 
     @JsonProperty("type") private PurchaseOrderType type;
 
-    /** Purchase order number (required). */
     @JsonProperty("number") private String number;
 
     @JsonProperty("amount") private BigDecimal amount;
 
-    /** Start date in YYYY-MM-DD format. */
     @JsonProperty("startDate") private String startDate;
 
-    /** End date in YYYY-MM-DD format. */
     @JsonProperty("endDate") private String endDate;
 
     @JsonProperty("description") private String description;

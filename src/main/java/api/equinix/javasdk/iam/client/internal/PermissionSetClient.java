@@ -29,18 +29,13 @@ import api.equinix.javasdk.iam.model.json.creators.UpdatePermissionSetRequest;
  */
 public interface PermissionSetClient {
 
-    /** {@code listPermissionSets} */
     PermissionSetList list(String projectId, String pageToken, Integer pageSize);
 
-    /** {@code createPermissionSet} */
     PermissionSet create(String projectId, CreatePermissionSetRequest request);
 
-    /** {@code getPermissionSet} */
     PermissionSet getByUuid(String projectId, String permissionSetId);
 
-    /** {@code updatePermissionSet} */
     PermissionSet update(String projectId, String permissionSetId, UpdatePermissionSetRequest request);
 
-    /** {@code deletePermissionSet} */
     Boolean delete(String projectId, String permissionSetId, String lastRev);
 }

@@ -30,24 +30,17 @@ import api.equinix.javasdk.iam.model.json.creators.UpdatePolicyMaskRequest;
  */
 public interface PolicyMaskClient {
 
-    /** {@code listPolicyMasks} */
     PolicyMaskList list(String projectId, String pageToken, Integer pageSize);
 
-    /** {@code createPolicyMask} */
     PolicyMask create(String projectId, CreatePolicyMaskRequest request);
 
-    /** {@code getPolicyMask} */
     PolicyMask getByUuid(String projectId, String policyMaskId);
 
-    /** {@code updatePolicyMask} */
     PolicyMask update(String projectId, String policyMaskId, UpdatePolicyMaskRequest request);
 
-    /** {@code deletePolicyMask} */
     Boolean delete(String projectId, String policyMaskId, String lastRev);
 
-    /** {@code enablePolicyMask} */
     PolicyMask enable(String projectId, String policyMaskId, String lastRev);
 
-    /** {@code disablePolicyMask} */
     PolicyMask disable(String projectId, String policyMaskId, String lastRev);
 }

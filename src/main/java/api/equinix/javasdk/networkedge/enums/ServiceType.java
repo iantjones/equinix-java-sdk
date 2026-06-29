@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>ServiceType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum ServiceType {
     L3_CONNECTION,

@@ -26,10 +26,8 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * <p>DeviceRestore class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

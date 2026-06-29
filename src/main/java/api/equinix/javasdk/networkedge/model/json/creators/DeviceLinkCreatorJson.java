@@ -27,10 +27,8 @@ import lombok.Setter;
 import java.util.List;
 
 /**
- * <p>DeviceLinkCreatorJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Setter(AccessLevel.PRIVATE)
 public class DeviceLinkCreatorJson {

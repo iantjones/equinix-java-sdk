@@ -70,7 +70,6 @@ import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  * @see api.equinix.javasdk.networkedge.client.Devices
  * @see api.equinix.javasdk.networkedge.client.ACLTemplates

@@ -27,7 +27,6 @@ import java.util.List;
  * chosen configuration (returned by getAllowedInterfaces).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

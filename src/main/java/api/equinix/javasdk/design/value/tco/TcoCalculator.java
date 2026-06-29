@@ -49,7 +49,6 @@ public final class TcoCalculator {
         return new Builder(fabric);
     }
 
-    /** Fluent builder for a TCO comparison. */
     public static final class Builder {
 
         private final FabricGateway fabric;
@@ -82,7 +81,6 @@ public final class TcoCalculator {
             this.fabric = fabric;
         }
 
-        /** Sets the monthly egress volume in the given unit. */
         public Builder egress(double amount, DataUnit unit) {
             if (amount < 0) {
                 throw new IllegalArgumentException("egress amount must be non-negative: " + amount);
@@ -92,61 +90,51 @@ public final class TcoCalculator {
             return this;
         }
 
-        /** Sets the monthly egress volume in terabytes. */
         public Builder egressTerabytes(double terabytes) {
             return egress(terabytes, DataUnit.TERABYTE);
         }
 
-        /** Sets the cloud provider the data egresses from. */
         public Builder fromCloud(CloudProviderType provider) {
             this.provider = provider;
             return this;
         }
 
-        /** Sets the cloud provider region. */
         public Builder inRegion(String region) {
             this.region = region;
             return this;
         }
 
-        /** Sets the Equinix metro for the interconnect archetype. */
         public Builder viaMetro(MetroCode metro) {
             this.metro = metro;
             return this;
         }
 
-        /** Sets the connection / transit bandwidth in Mbps. Defaults to 1000. */
         public Builder bandwidthMbps(int bandwidthMbps) {
             this.bandwidthMbps = bandwidthMbps;
             return this;
         }
 
-        /** Sets the Fabric connection type for the interconnect archetype. Defaults to {@code EVPL_VC}. */
         public Builder connectionType(ConnectionType connectionType) {
             this.connectionType = connectionType;
             return this;
         }
 
-        /** Includes a Fabric Cloud Router of the given package in the interconnect archetype. */
         public Builder includeCloudRouter(String packageCode) {
             this.includeRouter = true;
             this.routerPackage = packageCode;
             return this;
         }
 
-        /** Sets the commitment term. Defaults to {@link Term#MONTH_12}. */
         public Builder term(Term term) {
             this.term = term;
             return this;
         }
 
-        /** Sets the rate card (egress + Equinix pricing). Defaults to live Equinix + bundled reference. */
         public Builder rateCard(RateCard rateCard) {
             this.rateCard = rateCard;
             return this;
         }
 
-        /** Restricts the comparison to the given archetypes. Defaults to all three. */
         public Builder archetypes(DeploymentArchetype... archetypes) {
             this.archetypes = EnumSet.noneOf(DeploymentArchetype.class);
             for (DeploymentArchetype a : archetypes) {
@@ -155,31 +143,26 @@ public final class TcoCalculator {
             return this;
         }
 
-        /** Sets the on-prem power draw in kW (drives the colocation power cost). Defaults to 5 kW. */
         public Builder powerKw(double powerKw) {
             this.powerKw = powerKw;
             return this;
         }
 
-        /** Overrides the on-prem IP-transit rate (USD per Mbps per month). */
         public Builder onPremTransitPerMbpsMonth(BigDecimal value) {
             this.onPremTransitPerMbpsMonth = value;
             return this;
         }
 
-        /** Overrides the on-prem amortized hardware monthly cost. */
         public Builder onPremHardwareMonthly(BigDecimal value) {
             this.onPremHardwareMonthly = value;
             return this;
         }
 
-        /** Overrides the on-prem cross-connect monthly cost. */
         public Builder onPremCrossConnectMonthly(BigDecimal value) {
             this.onPremCrossConnectMonthly = value;
             return this;
         }
 
-        /** Overrides the on-prem colocation power cost (USD per kW per month). */
         public Builder onPremPowerPerKwMonth(BigDecimal value) {
             this.onPremPowerPerKwMonth = value;
             return this;

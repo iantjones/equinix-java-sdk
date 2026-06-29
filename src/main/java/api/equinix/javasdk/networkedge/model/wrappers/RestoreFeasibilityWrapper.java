@@ -30,10 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>RestoreFeasibilityWrapper class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class RestoreFeasibilityWrapper extends ResourceImpl<Backup> implements RestoreFeasibility {
 
@@ -42,22 +40,11 @@ public class RestoreFeasibilityWrapper extends ResourceImpl<Backup> implements R
     @Getter
     private final Pageable<Backup> serviceClient;
 
-    /**
-     * <p>Constructor for RestoreFeasibilityWrapper.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.RestoreFeasibilityJson} object.
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public RestoreFeasibilityWrapper(RestoreFeasibilityJson json, Pageable<Backup> serviceClient) {
         this.json = json;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>getServices.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
     public Map<ServiceType, List<BackupService>> getServices() {
         return null;
     }

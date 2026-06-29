@@ -30,10 +30,8 @@ import api.equinix.javasdk.networkedge.model.wrappers.VPNWrapper;
 import lombok.Getter;
 
 /**
- * <p>VPNsImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class VPNsImpl implements VPNs {
@@ -42,22 +40,11 @@ public class VPNsImpl implements VPNs {
 
     private final VPNClient<VPN> serviceClient;
 
-    /**
-     * <p>Constructor for VPNsImpl.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.networkedge.client.internal.VPNClient} object.
-     * @param serviceManager a {@link api.equinix.javasdk.NetworkEdge} object.
-     */
     public VPNsImpl(VPNClient<VPN> serviceClient, NetworkEdge serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<VPN> list() {
         return list(null);
     }
@@ -65,7 +52,6 @@ public class VPNsImpl implements VPNs {
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public PaginatedList<VPN> list(RequestBuilder.VPN requestBuilder) {
         Page<VPN, VPNJson> responsePage = serviceClient.list(requestBuilder);
@@ -73,13 +59,11 @@ public class VPNsImpl implements VPNs {
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public VPN getByUuid(String uuid) {
         VPNJson deviceLinkJson = serviceClient.getByUuid(uuid);
         return new VPNWrapper(deviceLinkJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public VPNOperator.VPNBuilder define(String configName) {
         return new VPNOperator(this.serviceClient).create(configName);
     }

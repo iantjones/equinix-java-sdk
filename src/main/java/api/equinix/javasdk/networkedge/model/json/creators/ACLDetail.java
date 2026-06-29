@@ -26,7 +26,6 @@ import lombok.Getter;
  * interface ({@link api.equinix.javasdk.networkedge.enums.ACLInterfaceType}) it should be applied to.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -39,7 +38,6 @@ public class ACLDetail {
     private final String uuid;
 
     /**
-     * <p>Constructor for ACLDetail.</p>
      *
      * @param interfaceType the {@link api.equinix.javasdk.networkedge.enums.ACLInterfaceType} the ACL applies to.
      * @param uuid the unique identifier of the ACL template to associate.

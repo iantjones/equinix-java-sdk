@@ -29,108 +29,36 @@ import api.equinix.javasdk.networkedge.model.PublicKey;
 import api.equinix.javasdk.networkedge.model.VPN;
 
 /**
- * <p>NetworkEdgeConfig interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface NetworkEdgeConfig {
 
-    /**
-     * <p>getMetrosClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.MetroClient} object.
-     */
     MetroClient<Metro> getMetrosClient();
 
-    /**
-     * <p>getAccountsClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.AccountClient} object.
-     */
     AccountClient<Account> getAccountsClient();
 
-    /**
-     * <p>getAgreementsClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.AgreementClient} object.
-     */
     AgreementClient getAgreementsClient();
 
-    /**
-     * <p>getDevicesClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.DeviceClient} object.
-     */
     DeviceClient<Device> getDevicesClient();
 
-    /**
-     * <p>getDeviceTypesClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.DeviceTypeClient} object.
-     */
     DeviceTypeClient<DeviceType> getDeviceTypesClient();
 
-    /**
-     * <p>getPublicKeysClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.PublicKeyClient} object.
-     */
     PublicKeyClient<PublicKey> getPublicKeysClient();
     
-    /**
-     * <p>getDeviceLinksClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.DeviceLinkClient} object.
-     */
     DeviceLinkClient<DeviceLink> getDeviceLinksClient();
 
-    /**
-     * <p>getACLTemplateClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.ACLTemplateClient} object.
-     */
     ACLTemplateClient<ACLTemplate> getACLTemplateClient();
 
-    /**
-     * <p>getVPNClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.VPNClient} object.
-     */
     VPNClient<VPN> getVPNClient();
 
-    /**
-     * <p>getBGPClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.BGPPeeringClient} object.
-     */
     BGPPeeringClient<BGPPeering> getBGPClient();
 
-    /**
-     * <p>getBackupClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.BackupClient} object.
-     */
     BackupClient<Backup> getBackupClient();
 
-    /**
-     * <p>getPricingClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.PricingClient} object.
-     */
     PricingClient getPricingClient();
 
-    /**
-     * <p>getFilesClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.FilesClient} object.
-     */
     FilesClient getFilesClient();
 
-    /**
-     * <p>getNotificationClient.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.client.internal.NotificationClient} object.
-     */
     NotificationClient getNotificationClient();
 }

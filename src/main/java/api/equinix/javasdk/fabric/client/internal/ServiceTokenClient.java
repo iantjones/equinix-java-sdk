@@ -29,18 +29,11 @@ import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
 import java.util.List;
 
 /**
- * <p>ServiceTokensClient interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface ServiceTokenClient<T> extends PageablePost<T> {
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.Page} object.
-     */
     Page<ServiceToken, ServiceTokenJson> list();
 
     Page<ServiceToken, ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort);
@@ -49,43 +42,13 @@ public interface ServiceTokenClient<T> extends PageablePost<T> {
 
     ServiceTokenJson createAction(String uuid, ServiceTokenAction type);
 
-    /**
-     * <p>getByUuid.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     */
     ServiceTokenJson getByUuid(String uuid);
 
-    /**
-     * <p>create.</p>
-     *
-     * @param serviceTokenCreatorJson a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     */
     ServiceTokenJson create(ServiceTokenCreatorJson serviceTokenCreatorJson);
 
-    /**
-     * <p>dryRunCreate.</p>
-     *
-     * @param serviceTokenCreatorJson a {@link api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     */
     ServiceTokenJson dryRunCreate(ServiceTokenCreatorJson serviceTokenCreatorJson);
 
-    /**
-     * <p>delete.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     */
     ServiceTokenJson delete(String uuid);
 
-    /**
-     * <p>refresh.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.fabric.model.json.ServiceTokenJson} object.
-     */
     ServiceTokenJson refresh(String uuid);
 }

@@ -38,7 +38,6 @@ import java.util.Map;
  * interface directly, so {@link #wrap(CloudEventJson)} is the identity.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class CloudEventClientImpl extends ResourceClientBase<CloudEvent, CloudEventJson> implements CloudEventClient<CloudEvent> {
 

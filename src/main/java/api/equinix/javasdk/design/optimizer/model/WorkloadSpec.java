@@ -15,10 +15,8 @@ import java.util.List;
 @Builder
 public class WorkloadSpec {
 
-    /** A descriptive name for this workload (e.g., "ML Training Pipeline"). */
     String label;
 
-    /** The workload archetype, which determines default infrastructure requirements. */
     WorkloadType type;
 
     /**
@@ -34,10 +32,8 @@ public class WorkloadSpec {
      */
     LatencySensitivity latencySensitivity;
 
-    /** Required network bandwidth in megabits per second. Used in cost estimation. */
     int bandwidthMbps;
 
-    /** Providers that must be available at the metro where this workload is placed. */
     List<ProviderRequirement> dependsOnProviders;
 
     /**

@@ -28,7 +28,6 @@ import java.time.LocalDateTime;
  * <p>ImpactedService class. A service impacted by a downtime notification.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

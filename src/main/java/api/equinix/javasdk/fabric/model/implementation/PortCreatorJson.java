@@ -39,7 +39,6 @@ import lombok.Setter;
  * {@link PortOperator.PortBuilder}; null members are omitted from the JSON.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @Setter(AccessLevel.PRIVATE)

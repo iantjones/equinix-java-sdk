@@ -21,10 +21,8 @@ import lombok.AccessLevel;
 import lombok.Setter;
 
 /**
- * <p>BackupCreatorJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Setter(AccessLevel.PRIVATE)
 public class BackupCreatorJson {
@@ -35,11 +33,6 @@ public class BackupCreatorJson {
     @JsonProperty(value = "name")
     private String name;
 
-    /**
-     * <p>Constructor for BackupCreatorJson.</p>
-     *
-     * @param backupBuilder a {@link api.equinix.javasdk.networkedge.model.json.creators.BackupOperator.BackupBuilder} object.
-     */
     public BackupCreatorJson(BackupOperator.BackupBuilder backupBuilder) {
         this.deviceUuid = backupBuilder.getDeviceUuid();
         this.name = backupBuilder.getBackupName();

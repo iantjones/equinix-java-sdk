@@ -26,7 +26,6 @@ import api.equinix.javasdk.fabric.model.Metro;
  * geographic data center regions where Fabric resources can be provisioned.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface Metros {
 

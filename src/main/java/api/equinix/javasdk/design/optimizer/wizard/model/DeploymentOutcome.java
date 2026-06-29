@@ -14,19 +14,14 @@ import java.util.stream.Collectors;
 @Builder
 public class DeploymentOutcome {
 
-    /** The deployment plan that was executed. */
     DeploymentPlan plan;
 
-    /** All resources that were successfully provisioned. */
     List<ProvisionedResource> resources;
 
-    /** Whether all resources were provisioned without errors. */
     boolean fullySuccessful;
 
-    /** Errors encountered during provisioning. */
     List<ProvisioningError> errors;
 
-    /** Total execution time in milliseconds. */
     long executionTimeMs;
 
     /**

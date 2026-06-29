@@ -41,7 +41,6 @@ import java.util.stream.Stream;
  *
  * @param <T> the type of resource in the list
  * @author ianjones
- * @version $Id: $Id
  * @see PaginatedList
  * @see Pagination
  */
@@ -63,13 +62,8 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
     }
 
     /**
-     * <p>Constructor for PaginatedFilteredList.</p>
      *
      * @param initialItems the items for the current page (any iterable; copied in).
-     * @param pageableClient a {@link PageablePost} object.
-     * @param equinixRequest a {@link EquinixRequest} object.
-     * @param equinixResponse a {@link EquinixResponse} object.
-     * @param pagination a {@link Pagination} object.
      */
     public PaginatedFilteredList(Iterable<? extends T> initialItems, PageablePost<T> pageableClient,
                                  EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse, Pagination pagination) {
@@ -81,7 +75,6 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
         this.pagination = pagination;
     }
 
-    /** {@inheritDoc} Iterates the currently-loaded items. */
     @Override
     public Iterator<T> iterator() {
         return items.iterator();

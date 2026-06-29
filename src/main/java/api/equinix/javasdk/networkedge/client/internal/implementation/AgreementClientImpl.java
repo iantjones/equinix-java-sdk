@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>AgreementClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class AgreementClientImpl extends ClientBase implements AgreementClient {
 
@@ -39,12 +37,10 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
         super(configClient, "NetworkEdge", "Agreements");
     }
 
-    /** {@inheritDoc} */
     public AgreementStatus getAgreementStatus(String accountNumber) {
         return getAs("GetAgreementStatus", null, Utils.singleParamMap("accountNumber", accountNumber), AgreementStatus.class);
     }
 
-    /** {@inheritDoc} */
     public AgreementStatus createAgreement(String accountNumber, String termsVersionId) {
         Map<String, String> requestBody = Utils.concatStringMaps(Utils.singlePropertyBody("accountNumber", accountNumber),
                                                                  Utils.singlePropertyBody("apttusId", termsVersionId));
@@ -52,7 +48,6 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
         return getAgreementStatus(accountNumber);
     }
 
-    /** {@inheritDoc} */
     public String getVendorsTerms(String vendorPackage, LicenseType licenseType) {
         // The licenseType query parameter expects Subscription / BYOL (see LicenseType.getQueryValue),
         // not the SUB / BYOL body form.
@@ -61,7 +56,6 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
         return mapOp("GetVendorTerms", RequestType.SINGLE, null, qParams, null).get("terms");
     }
 
-    /** {@inheritDoc} */
     public String getOrderTerms() {
         return mapOp("GetOrderTerms", RequestType.SINGLE, null, null, null).get("terms");
     }

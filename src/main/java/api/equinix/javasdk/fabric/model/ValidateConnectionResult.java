@@ -26,7 +26,6 @@ import api.equinix.javasdk.fabric.model.implementation.Redundancy;
  * verify availability before creating a connection.
  *
  * @author ianjones
- * @version $Id: $Id
  * @see api.equinix.javasdk.fabric.client.Connections#validate(api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList)
  */
 public interface ValidateConnectionResult {
@@ -35,35 +34,30 @@ public interface ValidateConnectionResult {
      * <p>The Equinix-assigned connection identifier, when the validation matched an existing
      * connection.</p>
      *
-     * @return a {@link java.lang.String} object.
      */
     String getUuid();
 
     /**
      * <p>The connection bandwidth in Mbps.</p>
      *
-     * @return a {@link java.lang.Integer} object.
      */
     Integer getBandwidth();
 
     /**
      * <p>The connection redundancy configuration.</p>
      *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.Redundancy} object.
      */
     Redundancy getRedundancy();
 
     /**
      * <p>The A-side of the connection.</p>
      *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ConnectionSide} object.
      */
     ConnectionSide getASide();
 
     /**
      * <p>The Z-side of the connection.</p>
      *
-     * @return a {@link api.equinix.javasdk.fabric.model.implementation.ConnectionSide} object.
      */
     ConnectionSide getZSide();
 }

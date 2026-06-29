@@ -22,10 +22,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * <p>PaginatedRequest class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @NoArgsConstructor
@@ -33,9 +31,6 @@ public class PaginatedRequest<T> extends EquinixRequest<T> {
     protected Integer pageNumber = 0;
     protected Integer pageSize = Constants.PAGE_LIMIT;
 
-    /**
-     * <p>nextPage.</p>
-     */
     public void nextPage() {
         this.pageNumber++;
     }
@@ -72,9 +67,6 @@ public class PaginatedRequest<T> extends EquinixRequest<T> {
         }
     }
 
-    /**
-     * <p>setPagination.</p>
-     */
     public void setPagination() {
         replaceQueryParameter("offset", ModelUtils.process(Integer.toString(this.pageNumber * this.pageSize)));
         replaceQueryParameter("limit", ModelUtils.process(this.pageSize.toString()));

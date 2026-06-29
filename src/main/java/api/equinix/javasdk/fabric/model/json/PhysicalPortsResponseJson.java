@@ -30,7 +30,6 @@ import java.util.List;
  * the full list of physical ports backing the virtual port after the addition, with pagination.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

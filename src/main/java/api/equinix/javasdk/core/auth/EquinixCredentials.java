@@ -24,7 +24,6 @@ package api.equinix.javasdk.core.auth;
  * these credentials to obtain and manage OAuth2 access tokens automatically.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see BasicEquinixCredentials
  */
 public interface EquinixCredentials {

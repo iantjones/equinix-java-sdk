@@ -54,7 +54,6 @@ public class RoleAssignmentJson implements RoleAssignment {
         return assignmentScope;
     }
 
-    /** Read-only JSON model for a {@link RoleAssignment.AssignmentScope}. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -78,7 +77,6 @@ public class RoleAssignmentJson implements RoleAssignment {
         }
     }
 
-    /** Read-only JSON model for a {@link RoleAssignment.Parent}. */
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)

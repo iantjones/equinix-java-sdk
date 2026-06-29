@@ -22,7 +22,6 @@ import api.equinix.javasdk.core.model.APIParam;
  * <p>The provisioning status of an ACL template on a virtual device.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum DeviceACLStatus implements APIParam {
     PROVISIONED,

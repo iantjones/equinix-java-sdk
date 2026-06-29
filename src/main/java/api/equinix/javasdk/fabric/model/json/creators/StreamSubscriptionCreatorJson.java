@@ -103,11 +103,6 @@ public class StreamSubscriptionCreatorJson {
         private String password;
     }
 
-    /**
-     * <p>Constructor for StreamSubscriptionCreatorJson.</p>
-     *
-     * @param streamSubscriptionBuilder a {@link api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator.StreamSubscriptionBuilder} object.
-     */
     public StreamSubscriptionCreatorJson(StreamSubscriptionOperator.StreamSubscriptionBuilder streamSubscriptionBuilder) {
         this.type = streamSubscriptionBuilder.getType();
         this.name = streamSubscriptionBuilder.getName();

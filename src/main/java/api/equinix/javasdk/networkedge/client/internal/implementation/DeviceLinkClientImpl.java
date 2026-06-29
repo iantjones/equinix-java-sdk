@@ -34,23 +34,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>DeviceLinkClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class DeviceLinkClientImpl extends ResourceClientBase<DeviceLink, DeviceLinkJson> implements DeviceLinkClient<DeviceLink> {
 
-    /**
-     * <p>Constructor for DeviceLinkClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public DeviceLinkClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "DeviceLinks", DeviceLinkJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected DeviceLink wrap(DeviceLinkJson json) {
         return new DeviceLinkWrapper(json, this);
@@ -59,42 +51,30 @@ public class DeviceLinkClientImpl extends ResourceClientBase<DeviceLink, DeviceL
     /**
      * {@inheritDoc}
      *
-     * <p>list.</p>
      */
     public Page<DeviceLink, DeviceLinkJson> list(RequestBuilder.DeviceLink requestBuilder) {
         Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
         return listPage("ListDeviceLinks", qParams);
     }
 
-    /** {@inheritDoc} */
     public DeviceLinkJson getByUuid(String uuid) {
         return getOne("GetDeviceLink", uuid);
     }
 
-    /** {@inheritDoc} */
     public DeviceLinkJson create(DeviceLinkCreatorJson deviceLinkCreatorJson) {
         UUIDResult uuidResult = postForType("CreateDeviceLink", deviceLinkCreatorJson, DeviceLinkJson.getCreateTypeRef());
         return getByUuid(uuidResult.getUuid());
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param uuid a {@link java.lang.String} object.
-     * @param deviceLinkUpdaterJson a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkUpdaterJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
-     */
     public DeviceLinkJson update(String uuid, DeviceLinkUpdaterJson deviceLinkUpdaterJson) {
         voidOp("UpdateDeviceLink", RequestType.SINGLE, Map.of("uuid", uuid), null, deviceLinkUpdaterJson);
         return getByUuid(uuid);
     }
 
-    /** {@inheritDoc} */
     public Boolean delete(String uuid) {
         return booleanOp("DeleteDeviceLink", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
-    /** {@inheritDoc} */
     public DeviceLinkJson refresh(String uuid) {
         return this.getByUuid(uuid);
     }

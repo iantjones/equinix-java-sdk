@@ -25,10 +25,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 
 /**
- * <p>VersionDetail class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

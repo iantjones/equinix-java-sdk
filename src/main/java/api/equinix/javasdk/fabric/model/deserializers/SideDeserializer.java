@@ -25,30 +25,19 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
 /**
- * <p>SideDeserializer class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class SideDeserializer extends StdDeserializer<Side> {
 
-    /**
-     * <p>Constructor for SideDeserializer.</p>
-     */
     public SideDeserializer() {
         this(null);
     }
 
-    /**
-     * <p>Constructor for SideDeserializer.</p>
-     *
-     * @param vc a {@link java.lang.Class} object.
-     */
     public SideDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    /** {@inheritDoc} */
     @Override
     public Side deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {

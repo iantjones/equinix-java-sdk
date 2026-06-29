@@ -108,7 +108,6 @@ public final class ReferenceRateCard implements RateCard {
         });
     }
 
-    /** Reads a monetary field as BigDecimal, returning null when absent or non-numeric. */
     private static BigDecimal num(JsonNode parent, String field) {
         JsonNode n = parent.path(field);
         return n.isNumber() ? n.decimalValue() : null;
@@ -192,27 +191,22 @@ public final class ReferenceRateCard implements RateCard {
 
     // ── Reference accessors used by the TCO archetype models ──
 
-    /** The data the card was compiled as of (e.g. {@code "2026-06"}). */
     public String asOf() {
         return asOf;
     }
 
-    /** The reference-data disclaimer. */
     public String disclaimer() {
         return disclaimer;
     }
 
-    /** The ISO 4217 currency code of this card's figures (the reference data is USD). */
     public String currencyCode() {
         return currency.getCurrencyCode();
     }
 
-    /** A named on-prem reference figure (e.g. {@code "transitPerMbpsMonth"}, {@code "powerPerKwMonth"}). */
     public Optional<BigDecimal> onPrem(String key) {
         return Optional.ofNullable(onPrem.get(key));
     }
 
-    /** The indicative Equinix cross-connect monthly fee. */
     public Optional<BigDecimal> equinixCrossConnectMonthly() {
         return Optional.ofNullable(equinixCrossConnectMonthly);
     }

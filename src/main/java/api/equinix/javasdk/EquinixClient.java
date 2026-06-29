@@ -56,7 +56,6 @@ import java.io.IOException;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  * @see Fabric
  * @see NetworkEdge
  * @see CustomerPortal

@@ -30,10 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>MetroJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

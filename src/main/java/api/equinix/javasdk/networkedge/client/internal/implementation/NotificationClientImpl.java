@@ -22,10 +22,8 @@ import api.equinix.javasdk.networkedge.client.internal.NotificationClient;
 import api.equinix.javasdk.networkedge.model.implementation.DowntimeNotification;
 
 /**
- * <p>NotificationClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class NotificationClientImpl extends ClientBase implements NotificationClient {
 
@@ -33,7 +31,6 @@ public class NotificationClientImpl extends ClientBase implements NotificationCl
         super(configClient, "NetworkEdge", "Notifications");
     }
 
-    /** {@inheritDoc} */
     public DowntimeNotification getDowntimeNotifications() {
         return getAs("ListDowntimeNotifications", DowntimeNotification.class);
     }

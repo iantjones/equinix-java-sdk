@@ -45,34 +45,24 @@ import java.util.Map;
 @Builder
 public class BlastRadiusReport {
 
-    /** The metro being evaluated for failure impact. */
     MetroCode metro;
 
-    /** The failure scope being simulated. */
     FailureScope scope;
 
-    /** ASNs whose IX peering would be lost in this scenario. */
     List<Long> lostIxPeeringAsns;
 
-    /** ASNs whose Fabric connections would be lost in this scenario. */
     List<Long> lostFabricAsns;
 
-    /** Human-readable labels for lost IX peering. */
     List<String> lostIxPeeringLabels;
 
-    /** Human-readable labels for lost Fabric connections. */
     List<String> lostFabricLabels;
 
-    /** Total IX capacity lost in Mbps. */
     long lostIxCapacityMbps;
 
-    /** Percentage of total analyzed ASN connectivity affected (0.0 - 1.0). */
     double impactRatio;
 
-    /** Severity based on impact ratio. */
     String severity;
 
-    /** Recommended mitigations for this failure scenario. */
     List<String> mitigations;
 
     /**

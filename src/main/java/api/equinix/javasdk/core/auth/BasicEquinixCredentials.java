@@ -34,7 +34,6 @@ import lombok.Getter;
  * }</pre>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class BasicEquinixCredentials implements EquinixCredentials {

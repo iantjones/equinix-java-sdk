@@ -23,10 +23,8 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * <p>ServiceTokenConnectionSide class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

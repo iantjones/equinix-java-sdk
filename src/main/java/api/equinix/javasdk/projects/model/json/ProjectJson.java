@@ -31,7 +31,6 @@ import java.util.Map;
  * so the internal client's {@code wrap} factory is the identity.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

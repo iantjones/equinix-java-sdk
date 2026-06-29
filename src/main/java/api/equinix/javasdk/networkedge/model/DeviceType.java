@@ -25,94 +25,32 @@ import api.equinix.javasdk.networkedge.model.implementation.SoftwarePackage;
 import java.util.ArrayList;
 
 /**
- * <p>DeviceType interface.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public interface DeviceType {
 
-    /**
-     * <p>getDeviceTypeCode.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getDeviceTypeCode();
 
-    /**
-     * <p>getName.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getName();
 
-    /**
-     * <p>getDescription.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     String getDescription();
 
-    /**
-     * <p>getVendor.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.Vendor} object.
-     */
     Vendor getVendor();
 
-    /**
-     * <p>getCategory.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.enums.DeviceCategory} object.
-     */
     DeviceCategory getCategory();
 
-    /**
-     * <p>getMaxInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getMaxInterfaceCount();
 
-    /**
-     * <p>getDefaultInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getDefaultInterfaceCount();
 
-    /**
-     * <p>getClusterMaxInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getClusterMaxInterfaceCount();
 
-    /**
-     * <p>getClusterDefaultInterfaceCount.</p>
-     *
-     * @return a {@link java.lang.Integer} object.
-     */
     Integer getClusterDefaultInterfaceCount();
 
-    /**
-     * <p>getAvailableMetros.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
     ArrayList<MetroJson> getAvailableMetros();
 
-    /**
-     * <p>getSoftwarePackages.</p>
-     *
-     * @return a {@link java.util.ArrayList} object.
-     */
     ArrayList<SoftwarePackage> getSoftwarePackages();
 
-    /**
-     * <p>getDeviceManagementTypes.</p>
-     *
-     * @return a {@link api.equinix.javasdk.networkedge.model.implementation.DeviceManagementTypes} object.
-     */
     DeviceManagementTypes getDeviceManagementTypes();
 }

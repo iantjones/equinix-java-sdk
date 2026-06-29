@@ -31,7 +31,6 @@ import java.util.List;
  * Edge APIs and infrastructure (returned by getNotifications).</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

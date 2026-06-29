@@ -17,10 +17,8 @@
 package api.equinix.javasdk.fabric.enums;
 
 /**
- * <p>PortAssignmentStrategy class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum PortAssignmentStrategy {
     BEST_FIT

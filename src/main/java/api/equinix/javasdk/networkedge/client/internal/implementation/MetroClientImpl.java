@@ -30,29 +30,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>MetroClientImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class MetroClientImpl extends ResourceClientBase<Metro, MetroJson> implements MetroClient<Metro> {
 
-    /**
-     * <p>Constructor for MetroClientImpl.</p>
-     *
-     * @param configClient a {@link api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl} object.
-     */
     public MetroClientImpl(NetworkEdgeConfigImpl configClient) {
         super(configClient, "NetworkEdge", "Metros", MetroJson.class);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected Metro wrap(MetroJson json) {
         return new MetroWrapper(json, this);
     }
 
-    /** {@inheritDoc} */
     public Page<Metro, MetroJson> list(Region region) {
         Map<String, List<String>> qParams = Utils.singleParamMap("region" , region);
         return listPage("ListMetros", qParams);

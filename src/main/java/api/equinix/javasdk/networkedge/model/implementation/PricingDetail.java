@@ -26,10 +26,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
- * <p>PricingDetail class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

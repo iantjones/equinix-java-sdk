@@ -17,24 +17,17 @@ import java.util.Map;
 @Builder
 public class CostBreakdown {
 
-    /** The archetype this breakdown describes. */
     DeploymentArchetype archetype;
 
-    /** Total estimated monthly recurring cost. */
     BigDecimal monthlyTotal;
 
-    /** Total estimated one-time setup cost. */
     BigDecimal setupTotal;
 
-    /** Currency code (ISO 4217). */
     String currency;
 
-    /** Named monthly line items contributing to {@link #monthlyTotal}. */
     Map<String, BigDecimal> lineItems;
 
-    /** Whether the model could fully price this archetype. */
     boolean priced;
 
-    /** Optional note (e.g. why an archetype is unavailable, or provenance caveats). */
     String note;
 }

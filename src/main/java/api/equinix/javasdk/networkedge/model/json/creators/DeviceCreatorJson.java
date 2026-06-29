@@ -31,10 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>DeviceCreatorJson class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Setter(AccessLevel.PRIVATE)
@@ -170,11 +168,6 @@ public class DeviceCreatorJson {
     @JsonProperty("sshInterfaceId")
     private Integer sshInterfaceId;
     
-    /**
-     * <p>Constructor for DeviceCreatorJson.</p>
-     *
-     * @param deviceBuilderSecondary a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceBuilderSecondary} object.
-     */
     public DeviceCreatorJson(DeviceOperator.DeviceBuilderSecondary deviceBuilderSecondary) {
         
         this.virtualDeviceName = deviceBuilderSecondary.getDeviceName();
@@ -197,11 +190,6 @@ public class DeviceCreatorJson {
         this.cloudInitFileId = deviceBuilderSecondary.getCloudInitFileId();
     }
 
-    /**
-     * <p>Constructor for DeviceCreatorJson.</p>
-     *
-     * @param deviceBuilder a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator.DeviceBuilder} object.
-     */
     public DeviceCreatorJson(DeviceOperator.DeviceBuilder deviceBuilder) {
         this.virtualDeviceName = deviceBuilder.getDeviceName();
         this.accountNumber = deviceBuilder.getAccountNumber();

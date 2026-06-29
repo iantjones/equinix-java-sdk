@@ -32,7 +32,6 @@ import java.util.List;
  * interface directly, so no wrapper is required.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -27,30 +27,18 @@ import api.equinix.javasdk.fabric.model.wrappers.StreamWrapper;
 import lombok.Getter;
 
 /**
- * <p>StreamOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class StreamOperator extends ResourceImpl<Stream> {
 
     @Getter
     private final Pageable<Stream> serviceClient;
 
-    /**
-     * <p>Constructor for StreamOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public StreamOperator(Pageable<Stream> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @return a {@link api.equinix.javasdk.fabric.model.json.creators.StreamOperator.StreamBuilder} object.
-     */
     public StreamBuilder create() {
         return new StreamBuilder();
     }

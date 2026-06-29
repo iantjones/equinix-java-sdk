@@ -23,67 +23,46 @@ import java.math.RoundingMode;
 @Builder
 public class SavingsEstimate {
 
-    /** Monthly egress volume modelled, in gigabytes. */
     BigDecimal monthlyEgressGb;
 
-    /** Cloud provider the data egresses from. */
     CloudProviderType provider;
 
-    /** Provider region (may be {@code null}). */
     String region;
 
-    /** Equinix metro the interconnect lands in (may be {@code null}). */
     MetroCode metro;
 
-    /** Per-GB public-internet egress rate used. */
     BigDecimal internetRatePerGb;
 
-    /** Per-GB private-interconnect egress rate used. */
     BigDecimal privateRatePerGb;
 
-    /** Monthly cost of egress over the public internet. */
     BigDecimal internetEgressMonthlyCost;
 
-    /** Monthly cost of the same egress over a private interconnect. */
     BigDecimal privateEgressMonthlyCost;
 
-    /** Monthly egress saving from the private path: internet − private. */
     BigDecimal monthlyEgressSavings;
 
-    /** Monthly recurring Equinix interconnect cost (connection + optional Cloud Router). */
     BigDecimal equinixMonthlyCost;
 
-    /** One-time Equinix setup cost (non-recurring charges). */
     BigDecimal equinixSetupCost;
 
-    /** Net monthly saving: egress saving − Equinix monthly cost. */
     BigDecimal netMonthlySavings;
 
-    /** Steady-state annual net saving: {@code netMonthlySavings × 12}. */
     BigDecimal annualNetSavings;
 
-    /** First-year net saving: {@code netMonthlySavings × 12 − setup}. */
     BigDecimal firstYearNetSavings;
 
-    /** Egress volume (GB/mo) at which egress savings equal the Equinix monthly cost; {@code null} if not computable. */
     BigDecimal breakEvenGbPerMonth;
 
-    /** Months for net savings to recoup the one-time setup; {@code null} if not computable. */
     BigDecimal paybackMonths;
 
-    /** Currency code (ISO 4217) of all amounts. */
     String currency;
 
-    /** Whether the rate card resolved both internet and private egress rates. */
     boolean egressPriced;
 
-    /** Whether the rate card resolved the Equinix interconnect cost. */
     boolean equinixPriced;
 
-    /** True when both egress and Equinix costs were priced, so net savings is fully populated. */
     boolean complete;
 
-    /** Disclaimer describing data provenance and limitations. */
     String disclaimer;
 
     private static String money(BigDecimal v, String currency) {

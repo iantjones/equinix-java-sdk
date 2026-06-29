@@ -21,7 +21,6 @@ package api.equinix.javasdk.fabric.enums;
  * destination Z-side.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum Side {
     A_Side,

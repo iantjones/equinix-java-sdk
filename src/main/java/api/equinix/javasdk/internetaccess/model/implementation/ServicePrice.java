@@ -32,7 +32,6 @@ public class ServicePrice {
     @JsonProperty("uuid")
     private String uuid;
 
-    /** Service type ({@code SINGLE_PORT} or {@code DUAL_PORT}). */
     @JsonProperty("type")
     private String type;
 
@@ -42,11 +41,9 @@ public class ServicePrice {
     @JsonProperty("minBandwidthCommit")
     private Integer minBandwidthCommit;
 
-    /** Billing type ({@code FIXED}, {@code USAGE_BASED} or {@code BURST_BASED}). */
     @JsonProperty("billing")
     private String billing;
 
-    /** Use case ({@code MAIN}, {@code BACKUP} or {@code MANAGEMENT_ACCESS}). */
     @JsonProperty("useCase")
     private String useCase;
 
@@ -91,7 +88,6 @@ public class ServicePrice {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AccessPointPrice {
 
-        /** Access point type ({@code COLO} or {@code VD}). */
         @JsonProperty("type")
         private String type;
 
@@ -137,7 +133,6 @@ public class ServicePrice {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RoutingProtocolPrice {
 
-        /** Routing protocol type ({@code DIRECT}, {@code STATIC} or {@code BGP}). */
         @JsonProperty("type")
         private String type;
 

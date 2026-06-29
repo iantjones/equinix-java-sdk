@@ -73,7 +73,6 @@ public interface ListedAction {
         String getPermissionResourceType();
     }
 
-    /** A single entry in an action's {@code permissionCodes} map. */
     interface PermissionCode {
 
         /**

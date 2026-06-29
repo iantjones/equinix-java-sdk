@@ -53,7 +53,6 @@ public class PeeringDbNetIxlan {
     @JsonProperty("notes")
     private String notes;
 
-    /** Port speed in Mbps. */
     @JsonProperty("speed")
     private int speed;
 
@@ -66,11 +65,9 @@ public class PeeringDbNetIxlan {
     @JsonProperty("ipaddr6")
     private String ipaddr6;
 
-    /** Whether this network peers via the IX route servers (MLPE). */
     @JsonProperty("is_rs_peer")
     private boolean isRsPeer;
 
-    /** Whether BFD (Bidirectional Forwarding Detection) is supported. */
     @JsonProperty("bfd_support")
     private boolean bfdSupport;
 

@@ -214,7 +214,6 @@ public class TopologyDiagram {
         return nodeId;
     }
 
-    /** Escapes characters that would break a Mermaid quoted label. */
     private String escape(String text) {
         if (text == null) {
             return "";
@@ -223,7 +222,6 @@ public class TopologyDiagram {
         return text.replace("\"", "&quot;");
     }
 
-    /** Produces an identifier-safe token for use in subgraph ids. */
     private String safe(String text) {
         if (text == null || text.isBlank()) {
             return "x";

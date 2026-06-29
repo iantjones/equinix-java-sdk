@@ -45,10 +45,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * <p>PortsImpl class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class PortsImpl implements Ports {
 
@@ -56,22 +54,11 @@ public class PortsImpl implements Ports {
 
     private final PortStatisticClient<PortStatistic> statisticServiceClient;
 
-    /**
-     * <p>Constructor for PortsImpl.</p>
-     *
-     * @param serviceClient a {@link PortClient} object.
-     * @param statisticServiceClient a {@link PortStatisticClient} object.
-     */
     public PortsImpl(PortClient<Port> serviceClient, PortStatisticClient<PortStatistic> statisticServiceClient) {
         this.serviceClient = serviceClient;
         this.statisticServiceClient = statisticServiceClient;
     }
 
-    /**
-     * <p>list.</p>
-     *
-     * @return a {@link api.equinix.javasdk.core.http.response.PaginatedList} object.
-     */
     public PaginatedList<Port> list() {
         Page<Port, PortJson> responsePage = serviceClient.list();
         PaginatedList<Port> portList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
@@ -96,30 +83,25 @@ public class PortsImpl implements Ports {
         return new PaginatedFilteredList<>(portList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public Port getByUuid(String uuid) {
         PortJson portJson = serviceClient.getByUuid(uuid);
         return new PortWrapper(portJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public List<PortVlan> getVlans(String portUuid) {
         return serviceClient.getVlans(portUuid);
     }
 
-    /** {@inheritDoc} */
     @Deprecated
     public PortStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         PortStatisticJson portStatisticJson = statisticServiceClient.getStatistics(uuid, startDateTime, endDateTime);
         return new PortStatisticWrapper(portStatisticJson, this.statisticServiceClient);
     }
 
-    /** {@inheritDoc} */
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         return statisticServiceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
     }
 
-    /** {@inheritDoc} */
     public PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable) {
         return getTopStatistics(duration, sortable, null);
     }
@@ -127,7 +109,6 @@ public class PortsImpl implements Ports {
     /**
      * {@inheritDoc}
      *
-     * <p>getTopStatistics.</p>
      */
     public PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder) {
         Page<PortStatistic, PortStatisticJson> responsePage = statisticServiceClient.getTopStatistics(duration, sortable, requestBuilder);
@@ -135,23 +116,19 @@ public class PortsImpl implements Ports {
         return new PaginatedList<>(portStatisticsList, this.statisticServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
-    /** {@inheritDoc} */
     public PortOperator.PortBuilder define() {
         return new PortOperator(this.serviceClient).create();
     }
 
-    /** {@inheritDoc} */
     public Port delete(String uuid) {
         PortJson portJson = this.serviceClient.delete(uuid);
         return new PortWrapper(portJson, this.serviceClient);
     }
 
-    /** {@inheritDoc} */
     public PortOperator.PortUpdater update(String uuid) {
         return new PortOperator(this.serviceClient).update(uuid);
     }
 
-    /** {@inheritDoc} */
     public PhysicalPortsResponseJson addToLag(String portId, List<PhysicalPort> physicalPorts) {
         return this.serviceClient.addToLag(portId, physicalPorts);
     }

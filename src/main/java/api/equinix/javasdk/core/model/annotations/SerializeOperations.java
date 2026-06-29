@@ -22,10 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>SerializeOperations class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

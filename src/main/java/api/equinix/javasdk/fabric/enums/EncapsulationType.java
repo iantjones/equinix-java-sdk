@@ -17,10 +17,8 @@
 package api.equinix.javasdk.fabric.enums;
 
 /**
- * <p>EncapsulationType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum EncapsulationType {
     QINQ,

@@ -27,7 +27,6 @@ import java.util.List;
  * (GetDeviceUpgradeResponse) returned by getDeviceUpgradeByUuid.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter

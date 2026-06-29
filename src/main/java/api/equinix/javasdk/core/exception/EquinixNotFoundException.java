@@ -22,7 +22,6 @@ package api.equinix.javasdk.core.exception;
  * does not exist or is not accessible with the current credentials.
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class EquinixNotFoundException extends EquinixServiceException {
 

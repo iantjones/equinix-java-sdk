@@ -22,10 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Setter;
 
 /**
- * <p>License class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Setter
@@ -34,7 +32,6 @@ public class License implements GenericDataObject<License> {
     @JsonProperty("virtualDeviceUuid")
     private String virtualDeviceUuid;
 
-    /** {@inheritDoc} */
     @Override
     @JsonIgnore
     public License getDataObject() {

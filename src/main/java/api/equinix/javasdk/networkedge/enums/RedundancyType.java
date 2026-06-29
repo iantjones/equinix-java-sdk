@@ -17,10 +17,8 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
- * <p>RedundancyType class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum RedundancyType {
     PRIMARY,

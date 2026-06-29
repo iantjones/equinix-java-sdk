@@ -34,41 +34,22 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * <p>DeviceLinkOperator class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
 
     @Getter
     private final Pageable<DeviceLink> serviceClient;
 
-    /**
-     * <p>Constructor for DeviceLinkOperator.</p>
-     *
-     * @param serviceClient a {@link api.equinix.javasdk.core.http.response.Pageable} object.
-     */
     public DeviceLinkOperator(Pageable<DeviceLink> serviceClient) {
         this.serviceClient = serviceClient;
     }
 
-    /**
-     * <p>create.</p>
-     *
-     * @param groupName a {@link java.lang.String} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator.DeviceLinkBuilder} object.
-     */
     public DeviceLinkBuilder create(String groupName) {
         return new DeviceLinkBuilder(groupName);
     }
 
-    /**
-     * <p>update.</p>
-     *
-     * @param json a {@link api.equinix.javasdk.networkedge.model.json.DeviceLinkJson} object.
-     * @return a {@link api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator.DeviceLinkUpdater} object.
-     */
     public DeviceLinkUpdater update(DeviceLinkJson json) {
         return new DeviceLinkUpdater(json);
     }

@@ -23,10 +23,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 /**
- * <p>ExceptionDetail class.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 @Getter
 public class ExceptionDetail {

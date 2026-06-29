@@ -46,16 +46,12 @@ import java.util.stream.Collectors;
 @Builder
 public class PresenceMatrix {
 
-    /** Ordered list of ASNs (rows). */
     List<Long> asns;
 
-    /** ASN to human-readable label. */
     Map<Long, String> asnLabels;
 
-    /** Ordered list of metros (columns). */
     List<MetroCode> metros;
 
-    /** The matrix data: ASN → Metro → Cell. */
     Map<Long, Map<MetroCode, PresenceCell>> cells;
 
     /**

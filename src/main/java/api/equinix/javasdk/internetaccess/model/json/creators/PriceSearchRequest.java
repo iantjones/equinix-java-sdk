@@ -70,7 +70,6 @@ public class PriceSearchRequest {
     }
 
     /**
-     * <p>Getter for the field <code>filter</code>.</p>
      *
      * @return the filter
      */
@@ -78,7 +77,6 @@ public class PriceSearchRequest {
         return filter;
     }
 
-    /** The required {@code filter} object of an EIA v1 price search. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Filter {
 
@@ -86,7 +84,6 @@ public class PriceSearchRequest {
         private final List<Expression> and = new ArrayList<>();
 
         /**
-         * <p>Getter for the field <code>and</code>.</p>
          *
          * @return the list of AND expressions
          */
@@ -95,7 +92,6 @@ public class PriceSearchRequest {
         }
     }
 
-    /** A single equality expression in an EIA v1 price search filter. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Expression {
 
@@ -114,7 +110,6 @@ public class PriceSearchRequest {
         }
 
         /**
-         * <p>Getter for the field <code>property</code>.</p>
          *
          * @return the property pointer
          */
@@ -123,7 +118,6 @@ public class PriceSearchRequest {
         }
 
         /**
-         * <p>Getter for the field <code>operator</code>.</p>
          *
          * @return the operator (always {@code =})
          */
@@ -132,7 +126,6 @@ public class PriceSearchRequest {
         }
 
         /**
-         * <p>Getter for the field <code>values</code>.</p>
          *
          * @return the values to match
          */
