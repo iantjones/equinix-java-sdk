@@ -1,0 +1,41 @@
+{
+  "accessPolicyId": "accesspolicy:my-policy",
+  "ern": "ern:access:us-west:proj-123:accesspolicy/my-policy",
+  "description": "A description string.",
+  "tags": {
+    "team": "platform"
+  },
+  "permissions": [
+    "permissionset:read-only",
+    "ern:access:us-west:proj-456:permissionset/shared",
+    {
+      "resources": "all",
+      "serviceActions": [
+        {
+          "serviceId": "service:fabric",
+          "actions": ["action:connection.read", "actionset:viewer"]
+        }
+      ],
+      "condition": "context.myAttribute < 5"
+    },
+    {
+      "foreignAccessPolicy": "ern:access:us-west:proj-789:accesspolicy/foreign",
+      "condition": "context.region == 'us'"
+    }
+  ],
+  "intersect": [
+    "all"
+  ],
+  "subtract": [
+    "managedset:dangerous"
+  ],
+  "rev": "rev-1",
+  "disabledPolicy": true,
+  "managed": false,
+  "createdBy": "user:alice",
+  "createdAt": "2024-01-15T12:00:00Z",
+  "updatedBy": "user:bob",
+  "updatedAt": "2024-02-15T12:00:00Z",
+  "approvedAt": "2024-02-16T12:00:00Z",
+  "approvedBy": "user:carol"
+}
