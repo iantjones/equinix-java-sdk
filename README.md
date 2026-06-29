@@ -890,19 +890,9 @@ JsonNode events = mcp.observability().searchCloudEvents(Map.of(
 
 #### MCP-Enriched Optimization
 
-The Metro Optimizer and Deployment Wizard accept an optional MCP bridge for real-time enrichment. When MCP is unavailable, they fall back to standard API data with no code changes.
+The Deployment Wizard accepts an optional MCP bridge to validate planned connections against the live MCP server before the plan is returned. When MCP is unavailable, validation is skipped with no code changes.
 
 ```java
-// Metro Optimizer with MCP enrichment
-OptimizationResult result = fabric.optimizeMetros()
-    .withMcpEnrichment(fabric.mcp())  // enrich with live MCP data
-    .addSite("NYC HQ").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
-    .requireProvider(CloudProviderType.AWS).sellerRegions("us-east-1").done()
-    .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
-    .constraints().monthlyBudget(50_000, 100_000).redundancy(RedundancyTier.MULTI_METRO).done()
-    .strategy(OptimizationStrategy.BALANCED)
-    .optimize();
-
 // Deployment Wizard with MCP validation
 DeploymentPlan plan = fabric.deploymentWizard(result)
     .withMcpValidation(fabric.mcp())  // validate connections via MCP

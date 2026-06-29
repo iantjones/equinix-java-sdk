@@ -1,6 +1,9 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
 import api.equinix.javasdk.FabricGateway;
+import api.equinix.javasdk.core.waiter.ResourceWaiter;
+import api.equinix.javasdk.fabric.enums.CloudRouterState;
+import api.equinix.javasdk.fabric.enums.ConnectionState;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.CloudRouter;
@@ -13,11 +16,16 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -311,12 +319,26 @@ public class DeploymentPlan {
                             .create();
 
                     routerUuids.put(planned.getName(), cr.getUuid());
+                    // Wait for the router to become active before the connections (and the routing
+                    // protocols built on them) that depend on it are created — provisioning is async,
+                    // and building a dependent against a still-provisioning router fails.
+                    String state = awaitState(() -> fabric.cloudRouters().getByUuid(cr.getUuid()),
+                            CloudRouter::getState, CloudRouterState.PROVISIONED,
+                            Set.of(CloudRouterState.NOT_PROVISIONED, CloudRouterState.DEPROVISIONED));
+                    if (state == null) {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("CloudRouter")
+                                .resourceName(planned.getName())
+                                .reason("did not reach PROVISIONED within the timeout")
+                                .recoverable(true)
+                                .build());
+                    }
                     resources.add(ProvisionedResource.builder()
                             .resourceType("CloudRouter")
                             .name(planned.getName())
                             .uuid(cr.getUuid())
                             .metroCode(planned.getMetroCode())
-                            .status("PROVISIONED")
+                            .status(state != null ? state : "PROVISIONING")
                             .build());
                 }
                 catch (Exception e) {
@@ -340,12 +362,22 @@ public class DeploymentPlan {
                             .create();
 
                     connectionUuids.put(planned.getName(), conn.getUuid());
+                    String state = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
+                            Connection::getState, ConnectionState.PROVISIONED, Set.of());
+                    if (state == null) {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("Connection")
+                                .resourceName(planned.getName())
+                                .reason("did not reach PROVISIONED within the timeout")
+                                .recoverable(true)
+                                .build());
+                    }
                     resources.add(ProvisionedResource.builder()
                             .resourceType("Connection")
                             .name(planned.getName())
                             .uuid(conn.getUuid())
                             .metroCode(planned.getASideMetro())
-                            .status("PROVISIONED")
+                            .status(state != null ? state : "PROVISIONING")
                             .build());
                 }
                 catch (Exception e) {
@@ -370,12 +402,22 @@ public class DeploymentPlan {
                             .create();
 
                     connectionUuids.put(planned.getName(), conn.getUuid());
+                    String state = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
+                            Connection::getState, ConnectionState.PROVISIONED, Set.of());
+                    if (state == null) {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("BackboneLink")
+                                .resourceName(planned.getName())
+                                .reason("did not reach PROVISIONED within the timeout")
+                                .recoverable(true)
+                                .build());
+                    }
                     resources.add(ProvisionedResource.builder()
                             .resourceType("BackboneLink")
                             .name(planned.getName())
                             .uuid(conn.getUuid())
                             .metroCode(link.getMetroA())
-                            .status("PROVISIONED")
+                            .status(state != null ? state : "PROVISIONING")
                             .build());
                 }
                 catch (Exception e) {
@@ -443,5 +485,74 @@ public class DeploymentPlan {
                 .errors(errors)
                 .executionTimeMs(elapsed)
                 .build();
+    }
+
+    /**
+     * Polls the given resource until it reaches {@code ready}, hits one of {@code terminalFailures},
+     * or the timeout (5 minutes, polled every 5 seconds) elapses. Returns the resource's state name
+     * once ready, or {@code null} if it failed or timed out — letting {@link #execute()} record a
+     * recoverable error and the actual interim status rather than asserting a state that never held.
+     */
+    private static <T, S extends Enum<S>> String awaitState(Supplier<T> fetch, Function<T, S> state,
+                                                             S ready, Set<S> terminalFailures) {
+        try {
+            T resource = ResourceWaiter.forResource(fetch)
+                    .until(r -> state.apply(r) == ready)
+                    .failWhen(r -> terminalFailures.contains(state.apply(r)))
+                    .timeout(Duration.ofMinutes(5))
+                    .pollInterval(Duration.ofSeconds(5))
+                    .await();
+            return state.apply(resource).name();
+        }
+        catch (RuntimeException e) {
+            // WaiterTimeoutException / WaiterFailedException (or a fetch error) — not ready.
+            return null;
+        }
+    }
+
+    /**
+     * Best-effort teardown of the resources provisioned by a prior {@link #execute()}: deletes the
+     * connections (and backbone links), then the Cloud Routers, in reverse dependency order. Routing
+     * protocols are removed with their parent connection. Use this to clean up a partially-failed
+     * deployment rather than leaving orphaned, billable resources behind.
+     *
+     * @param outcome the outcome returned by {@link #execute()}
+     * @return the deletions that failed (empty when the rollback was clean)
+     */
+    public List<ProvisioningError> rollback(DeploymentOutcome outcome) {
+        List<ProvisioningError> failures = new ArrayList<>();
+        if (outcome == null || outcome.getResources() == null) {
+            return failures;
+        }
+        List<ProvisionedResource> reversed = new ArrayList<>(outcome.getResources());
+        Collections.reverse(reversed);
+        for (ProvisionedResource resource : reversed) {
+            if (resource.getUuid() == null) {
+                continue;
+            }
+            try {
+                switch (resource.getResourceType()) {
+                    case "Connection":
+                    case "BackboneLink":
+                        fabric.connections().getByUuid(resource.getUuid()).delete();
+                        break;
+                    case "CloudRouter":
+                        fabric.cloudRouters().getByUuid(resource.getUuid()).delete();
+                        break;
+                    default:
+                        // RoutingProtocol and any others are removed with their parent connection.
+                        break;
+                }
+            }
+            catch (RuntimeException e) {
+                failures.add(ProvisioningError.builder()
+                        .resourceType(resource.getResourceType())
+                        .resourceName(resource.getName())
+                        .reason("rollback delete failed: " + e.getMessage())
+                        .recoverable(false)
+                        .build());
+            }
+        }
+        return failures;
     }
 }

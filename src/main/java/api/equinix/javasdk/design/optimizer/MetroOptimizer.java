@@ -3,7 +3,6 @@ package api.equinix.javasdk.design.optimizer;
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.design.optimizer.enums.*;
 import api.equinix.javasdk.design.optimizer.model.*;
@@ -65,7 +64,6 @@ public final class MetroOptimizer {
         private OptimizationConstraints constraints;
         private OptimizationStrategy strategy = OptimizationStrategy.BALANCED;
         private ScoringWeights scoringWeights;
-        private McpBridge mcpBridge;
         private RateCard rateCard;
         private Term term = Term.MONTH_12;
 
@@ -212,22 +210,6 @@ public final class MetroOptimizer {
 
         // ── MCP Enrichment ──
 
-        /**
-         * Enables MCP-based real-time data enrichment for the optimization pipeline.
-         * When set, the optimizer will query the Equinix MCP server for live metro data
-         * and observability metrics to supplement the standard Fabric API data.
-         *
-         * <p>MCP enrichment is entirely optional. If not set or if MCP calls fail,
-         * the optimizer falls back to its standard data sources.</p>
-         *
-         * @param mcpBridge the MCP bridge instance (typically from {@code fabric.mcp()})
-         * @return this builder for method chaining
-         */
-        public Builder withMcpEnrichment(McpBridge mcpBridge) {
-            this.mcpBridge = mcpBridge;
-            return this;
-        }
-
         // ── Pricing ──
 
         /**
@@ -279,7 +261,6 @@ public final class MetroOptimizer {
                     .constraints(constraints != null ? constraints : OptimizationConstraints.builder().build())
                     .strategy(strategy)
                     .scoringWeights(scoringWeights != null ? scoringWeights : ScoringWeights.defaults())
-                    .mcpBridge(mcpBridge)
                     .rateCard(rateCard)
                     .term(term)
                     .build();
@@ -598,9 +579,12 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Marks this workload as requiring high power density infrastructure (e.g., for
-         * GPU-intensive AI/ML training). This may affect metro scoring if facility
-         * capability data is available.
+         * Records that this workload requires high power density infrastructure (e.g., for
+         * GPU-intensive AI/ML training). This is captured on the workload profile and carried
+         * through to the result for downstream facility selection; it is <em>not</em> currently
+         * a metro-scoring input, because the Fabric API does not expose per-metro power-density
+         * capability. Use it to document the requirement and to drive cabinet/cage sizing once a
+         * metro is chosen.
          *
          * @return this builder for method chaining
          */
@@ -614,8 +598,11 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Marks this workload as requiring liquid cooling infrastructure. This may affect
-         * metro scoring if facility capability data is available.
+         * Records that this workload requires liquid cooling infrastructure. This is captured on
+         * the workload profile and carried through to the result for downstream facility selection;
+         * it is <em>not</em> currently a metro-scoring input, because the Fabric API does not expose
+         * per-metro cooling capability. Use it to document the requirement and to drive
+         * cabinet/cage selection once a metro is chosen.
          *
          * @return this builder for method chaining
          */

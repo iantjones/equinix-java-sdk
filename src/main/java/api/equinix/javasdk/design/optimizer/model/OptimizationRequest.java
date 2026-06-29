@@ -1,6 +1,5 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.enums.OptimizationStrategy;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
@@ -29,8 +28,6 @@ public class OptimizationRequest {
     OptimizationStrategy strategy;
 
     ScoringWeights scoringWeights;
-
-    McpBridge mcpBridge;
 
     RateCard rateCard;
 

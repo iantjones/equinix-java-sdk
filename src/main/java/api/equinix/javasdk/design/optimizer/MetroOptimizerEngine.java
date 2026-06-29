@@ -3,8 +3,6 @@ package api.equinix.javasdk.design.optimizer;
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.mcp.bridge.McpBridge;
-import api.equinix.javasdk.mcp.bridge.McpMetroBridge;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
@@ -82,9 +80,6 @@ final class MetroOptimizerEngine {
         }
 
         Map<MetroCode, Map<MetroCode, Double>> latencyMap = buildLatencyMap(allMetros);
-
-        // Phase 1b: MCP Enrichment (optional)
-        Map<String, McpMetroBridge.McpMetro> mcpMetroData = enrichWithMcp(request.getMcpBridge(), allMetros);
 
         // Build provider → metro availability map
         Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap =
@@ -1103,32 +1098,4 @@ final class MetroOptimizerEngine {
         }
     }
 
-    /**
-     * Enriches metro data with real-time information from the MCP server.
-     * Returns a map of metro code to MCP metro data for metros that were
-     * successfully enriched. Failures are silently ignored to ensure the
-     * optimizer continues to function without MCP.
-     */
-    private static Map<String, McpMetroBridge.McpMetro> enrichWithMcp(
-            McpBridge mcpBridge, List<Metro> allMetros) {
-
-        Map<String, McpMetroBridge.McpMetro> mcpData = new HashMap<>();
-
-        if (mcpBridge == null) {
-            return mcpData;
-        }
-
-        try {
-            List<McpMetroBridge.McpMetro> mcpMetros = mcpBridge.metros().listMetros();
-            for (McpMetroBridge.McpMetro mcpMetro : mcpMetros) {
-                if (mcpMetro.getCode() != null) {
-                    mcpData.put(mcpMetro.getCode(), mcpMetro);
-                }
-            }
-        } catch (Exception e) {
-            // MCP enrichment is optional; continue with standard data
-        }
-
-        return mcpData;
-    }
 }
