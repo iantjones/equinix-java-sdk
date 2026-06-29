@@ -19,7 +19,7 @@ package api.equinix.javasdk.iam.client.internal.implementation;
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
-import api.equinix.javasdk.iam.client.internal.IamQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.iam.client.internal.RoleAssignmentClient;
 import api.equinix.javasdk.iam.model.RoleAssignment;
 import api.equinix.javasdk.iam.model.json.RoleAssignmentJson;
@@ -43,7 +43,7 @@ public class RoleAssignmentClientImpl extends ClientBase implements RoleAssignme
 
     @Override
     public RoleAssignmentList list(String assignmentScopeId, String assignmentScopeType, String pageToken, Integer pageSize) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("assignmentScopeId", assignmentScopeId)
                 .add("assignmentScopeType", assignmentScopeType)
                 .add("pageToken", pageToken)

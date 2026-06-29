@@ -19,7 +19,7 @@ package api.equinix.javasdk.iam.client.internal.implementation;
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
 import api.equinix.javasdk.iam.client.internal.EffectivePermissionClient;
-import api.equinix.javasdk.iam.client.internal.IamQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.iam.model.EffectivePermissions;
 import api.equinix.javasdk.iam.model.json.EffectivePermissionsJson;
 
@@ -40,7 +40,7 @@ public class EffectivePermissionClientImpl extends ClientBase implements Effecti
 
     @Override
     public EffectivePermissions getEffectivePermissions(String projectId, String serviceId, String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("serviceId", serviceId)
                 .add("projectErn", projectErn)
                 .build();

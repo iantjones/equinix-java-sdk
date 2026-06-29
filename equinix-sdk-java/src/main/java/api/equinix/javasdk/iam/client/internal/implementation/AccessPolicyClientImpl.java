@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
 import api.equinix.javasdk.iam.client.internal.AccessPolicyClient;
-import api.equinix.javasdk.iam.client.internal.IamQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.iam.model.AccessPolicy;
 import api.equinix.javasdk.iam.model.AccessPolicyGrant;
 import api.equinix.javasdk.iam.model.json.AccessPolicyGrantJson;
@@ -49,7 +49,7 @@ public class AccessPolicyClientImpl extends ClientBase implements AccessPolicyCl
 
     @Override
     public AccessPolicyList list(String projectId, String pageToken, Integer pageSize) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
                 .build();
@@ -101,7 +101,7 @@ public class AccessPolicyClientImpl extends ClientBase implements AccessPolicyCl
 
     @Override
     public AccessPolicyGrantList listGrants(String projectId, String accessPolicyId, String pageToken, Integer pageSize) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
                 .build();
