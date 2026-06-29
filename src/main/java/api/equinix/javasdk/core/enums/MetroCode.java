@@ -21,6 +21,9 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Locale;
+import java.util.Optional;
+
 /**
  * Well-known Equinix metro codes.
  *
@@ -93,5 +96,43 @@ public enum MetroCode implements APIParam {
         ZH,
 
         @JsonEnumDefaultValue
-        UNKNOWN
+        UNKNOWN;
+
+    /**
+     * Resolves a wire metro code (e.g. {@code "SV"}) to its enum constant, if this enum lists it.
+     * The lookup is case-insensitive and trims surrounding whitespace. The {@link #UNKNOWN} sentinel
+     * is never returned as a match — a code that does not name a known metro yields
+     * {@link Optional#empty()}.
+     *
+     * @param code the metro code as returned by the API
+     * @return the matching {@link MetroCode}, or empty if {@code code} is null/blank or not a known metro
+     */
+    public static Optional<MetroCode> lookup(String code) {
+        if (code == null) {
+            return Optional.empty();
+        }
+        String normalized = code.trim().toUpperCase(Locale.ROOT);
+        if (normalized.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            MetroCode metroCode = MetroCode.valueOf(normalized);
+            return metroCode == UNKNOWN ? Optional.empty() : Optional.of(metroCode);
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Resolves a wire metro code to its enum constant, falling back to {@link #UNKNOWN} for a code
+     * this enum does not list (so callers always get a non-null value). Use {@link #lookup(String)}
+     * when you need to distinguish "unknown" from a real metro.
+     *
+     * @param code the metro code as returned by the API
+     * @return the matching {@link MetroCode}, or {@link #UNKNOWN}
+     */
+    public static MetroCode fromCode(String code) {
+        return lookup(code).orElse(UNKNOWN);
+    }
 }

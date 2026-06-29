@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.MetroPresence;
 import api.equinix.javasdk.fabric.model.Metro;
 
@@ -51,4 +52,21 @@ public interface Metros {
      * @return the metro matching the given code
      */
     Metro getByMetroCode(MetroCode metroCode);
+
+    /**
+     * Retrieves a single metro by its raw metro code string. Use this for a metro not listed by the
+     * {@link MetroCode} enum (e.g. one added after this SDK was built).
+     *
+     * @param metroCode the code identifying the metro location (e.g., {@code "SV"})
+     * @return the metro matching the given code
+     */
+    Metro getByMetroCode(String metroCode);
+
+    /**
+     * Retrieves a single metro by its {@link MetroId}.
+     *
+     * @param metroId the forward-compatible identifier of the metro location
+     * @return the metro matching the given id
+     */
+    Metro getByMetroId(MetroId metroId);
 }

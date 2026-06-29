@@ -92,6 +92,28 @@ try (Equinix eq = new Equinix(credentials)) {     // one token, one pool
 
 The standalone `new Fabric(credentials)` constructors remain for the single-domain case.
 
+### Metros and new locations
+
+`MetroCode` is a convenience enum of well-known metros. Because Equinix adds metros over time, the
+SDK never depends on the enum being complete:
+
+- Reads never fail on an unlisted metro — a metro the enum does not list deserializes to
+  `MetroCode.UNKNOWN`, and the model preserves the real code via `metro.metroId()`.
+- `Metro.metroId()` returns a `MetroId` (a normalized code string) that names *any* metro;
+  `metroId().asMetroCode()` bridges back to the enum when the metro is well-known.
+- `fabric.metroRegistry()` is a cached, live snapshot of every metro (and its IBX data centers)
+  from the Metros API — the authoritative set — keyed by `MetroId`:
+
+```java
+MetroRegistry registry = fabric.metroRegistry();
+registry.get("SV").ifPresent(m -> System.out.println(m.getName() + " " + m.getIbxs()));
+boolean exists = registry.contains(someNewCode);   // true even if absent from MetroCode
+
+// Provision against a metro the enum doesn't list yet:
+fabric.cloudRouters().define().name("fcr").inMetro("ZZ").withPackage("STANDARD").create();
+fabric.metros().getByMetroCode("ZZ");               // String / MetroId overloads
+```
+
 ## Domain Overview
 
 | Domain | Entry Point | Resources | Description |

@@ -35,5 +35,7 @@ public interface MetroClient<T> extends Pageable<T> {
 
     MetroJson getByMetroCode(MetroCode metroCode);
 
+    MetroJson getByMetroCode(String metroCode);
+
     MetroJson refresh(MetroCode code);
 }

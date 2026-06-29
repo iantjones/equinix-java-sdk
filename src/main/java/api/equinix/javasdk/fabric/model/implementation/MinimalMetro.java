@@ -17,6 +17,8 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -25,6 +27,33 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MinimalMetro {
 
+    /**
+     * The raw metro code exactly as returned by the API. Held as a string (rather than a
+     * {@link MetroCode} enum) so a metro the enum does not yet list is preserved verbatim instead of
+     * collapsing to {@link MetroCode#UNKNOWN}; {@link #metroId()} exposes it forward-compatibly.
+     */
     @JsonProperty("code")
-    private MetroCode code;
+    private String codeValue;
+
+    /**
+     * The metro code as a {@link MetroCode} enum, or {@link MetroCode#UNKNOWN} for a metro this enum
+     * does not list. Prefer {@link #metroId()} when you need the exact code of an unlisted metro.
+     *
+     * @return the metro code enum constant (never null; {@code UNKNOWN} if unlisted)
+     */
+    @JsonIgnore
+    public MetroCode getCode() {
+        return MetroCode.fromCode(codeValue);
+    }
+
+    /**
+     * The metro's code as a forward-compatible {@link MetroId}, preserving the exact wire value even
+     * for metros absent from the {@link MetroCode} enum.
+     *
+     * @return the metro id, or {@code null} if the API returned no code
+     */
+    @JsonIgnore
+    public MetroId metroId() {
+        return codeValue == null ? null : MetroId.of(codeValue);
+    }
 }
