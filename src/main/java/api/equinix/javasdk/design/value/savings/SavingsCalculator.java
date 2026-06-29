@@ -8,9 +8,8 @@ import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
 
 /**
- * Fluent calculator for the headline value-realization question: <em>how much does
- * routing cloud egress over an Equinix private interconnect save versus the public
- * internet?</em>
+ * Fluent calculator that estimates how much routing cloud egress over an Equinix
+ * private interconnect saves versus the public internet.
  *
  * <p>It compares the modelled monthly cost of egressing a given data volume over
  * the public internet against the same volume over a dedicated interconnect (AWS

@@ -31,9 +31,9 @@ import java.util.Set;
  * System.out.println(tco.toMarkdown());
  * }</pre>
  *
- * <p>The Equinix-interconnect archetype is priced rigorously (live Fabric pricing +
- * verified private-egress rates); the public-cloud-internet and on-prem archetypes
- * lean on indicative reference figures and the on-prem inputs are overridable.</p>
+ * <p>The Equinix-interconnect archetype uses live Fabric pricing and private-egress rates
+ * where available; the public-cloud-internet and on-prem archetypes use indicative reference
+ * figures, and the on-prem inputs are overridable.</p>
  */
 public final class TcoCalculator {
 

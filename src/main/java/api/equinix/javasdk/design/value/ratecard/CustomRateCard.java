@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A {@link RateCard} whose prices are supplied by the caller — the way to feed
- * the cost models <em>real</em> figures such as negotiated contract rates,
- * rather than published list pricing or heuristics. It is constructed fluently,
+ * A {@link RateCard} whose prices are supplied by the caller — e.g. negotiated
+ * contract rates — instead of published list pricing or built-in heuristics. It is
+ * constructed fluently,
  * mirroring how workloads, sites, and constraints are declared elsewhere in the
  * design API:
  *
