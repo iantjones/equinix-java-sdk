@@ -262,8 +262,10 @@ public class TerraformExporter {
         }
 
         hcl.append("# === Routing Protocols ===\n\n");
+        List<String> usedLabels = new ArrayList<>();
         for (PlannedRoutingProtocol rp : protocols) {
-            String label = uniqueLabel(new ArrayList<>(), "rp", rp.getName());
+            String label = uniqueLabel(usedLabels, "rp", rp.getName());
+            usedLabels.add(label);
 
             hcl.append("resource \"equinix_fabric_routing_protocol\" \"").append(label).append("\" {\n");
             hcl.append(attr(1, "name", rp.getName()));
@@ -347,7 +349,9 @@ public class TerraformExporter {
         if (value == null) {
             return "null";
         }
-        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("${", "$${").replace("%{", "%%{")
+                .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\"";
     }
 
     /**
