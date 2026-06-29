@@ -1,0 +1,35 @@
+{
+  "principalId": "user:alice",
+  "projectId": "project:abc-123",
+  "serviceId": "service:equinix/fabric",
+  "accessPolicyIds": [
+    "accesspolicy:my-policy",
+    "managedpolicy:fabric-viewer"
+  ],
+  "permissions": [
+    {
+      "actions": [
+        "action:connection.read",
+        "action:connection.create"
+      ],
+      "resources": [
+        "ern:fabric:us-west:proj-abc-123:connection/conn-1"
+      ],
+      "metroCodes": {
+        "except": [
+          "DC",
+          "SV"
+        ]
+      },
+      "ibxIds": [
+        "SV5"
+      ],
+      "condition": "context.myAttribute < 5"
+    },
+    {
+      "actions": [
+        "action:port.read"
+      ]
+    }
+  ]
+}

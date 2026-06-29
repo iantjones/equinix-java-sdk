@@ -1,0 +1,7 @@
+{
+  "list": [
+    { "accessPolicyId": "abc-123" },
+    { "accessPolicyId": "def-456" }
+  ],
+  "nextPageToken": "eyJwYWdlIjoyfQ=="
+}

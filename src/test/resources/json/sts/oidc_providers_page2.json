@@ -1,0 +1,17 @@
+{
+  "list": [
+    {
+      "idpId": "idp:okta-workforce",
+      "name": "Okta Workforce OIDC",
+      "issuerUri": "https://example.okta.com/oauth2/default",
+      "issuerLocation": "https://example.okta.com/oauth2/default",
+      "trustedClientIds": ["okta-web-client"],
+      "groupMembershipClaim": "groups",
+      "status": "ENABLED",
+      "rev": "jkl012",
+      "createdAt": "2026-05-22T11:45:00.000Z",
+      "updatedAt": "2026-06-03T07:20:00.000Z"
+    }
+  ],
+  "nextPageToken": null
+}

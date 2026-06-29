@@ -1,0 +1,7 @@
+{
+  "schema": {
+    "metroCode": "string",
+    "bandwidth": "integer",
+    "tags": "map"
+  }
+}

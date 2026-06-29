@@ -1,0 +1,28 @@
+{
+  "list": [
+    {
+      "idpId": "idp:github-actions",
+      "name": "GitHub Actions OIDC",
+      "issuerUri": "https://token.actions.githubusercontent.com",
+      "issuerLocation": "https://token.actions.githubusercontent.com",
+      "trustedClientIds": ["my-oauth-client-id"],
+      "groupMembershipClaim": "groups",
+      "status": "ENABLED",
+      "rev": "abc123",
+      "createdAt": "2026-05-15T09:30:00.000Z",
+      "updatedAt": "2026-06-01T12:00:00.000Z"
+    },
+    {
+      "idpId": "idp:gitlab-ci",
+      "name": "GitLab CI OIDC",
+      "issuerUri": "https://gitlab.com",
+      "issuerLocation": "https://gitlab.com",
+      "trustedClientIds": ["gitlab-runner-client"],
+      "status": "SUSPENDED",
+      "rev": "ghi789",
+      "createdAt": "2026-05-20T14:00:00.000Z",
+      "updatedAt": "2026-05-28T10:00:00.000Z"
+    }
+  ],
+  "nextPageToken": "eyJvZmZzZXQiOjJ9"
+}

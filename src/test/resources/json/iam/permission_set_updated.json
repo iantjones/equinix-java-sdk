@@ -1,0 +1,18 @@
+{
+  "permissionSetId": "permissionset:network-admin",
+  "ern": "ern:eqix:equinix/access:global:abc-123:permissionset:network-admin",
+  "description": "Network administrators (revised)",
+  "tags": {
+    "team": "networking",
+    "env": "prod",
+    "reviewed": "true"
+  },
+  "permissions": [
+    "permissionset:base-readers"
+  ],
+  "rev": "rev-002",
+  "createdBy": "principal:abc-123:idp:creator-user",
+  "createdAt": "2024-01-15T12:00:00Z",
+  "updatedBy": "principal:abc-123:idp:editor-user",
+  "updatedAt": "2024-03-01T11:45:00Z"
+}

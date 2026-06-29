@@ -1,0 +1,31 @@
+{
+  "list": [
+    {
+      "roleAssignmentId": "roleassignment:07218c48-343d-43e2-9831-a2080445cd22",
+      "projectId": "project:abc-123",
+      "principal": "user:alice",
+      "roleId": "role:550e8400-e29b-41d4-a716-446655440000",
+      "roleName": "Network Admin",
+      "assignmentScope": {
+        "id": "abc-123",
+        "type": "PROJECT",
+        "name": "My Project",
+        "parent": null
+      }
+    },
+    {
+      "roleAssignmentId": "roleassignment:18329d59-454e-54f3-a942-b3191556de33",
+      "projectId": "project:abc-123",
+      "principal": "user:bob",
+      "roleId": "role:660e8400-e29b-41d4-a716-446655440111",
+      "roleName": "Viewer",
+      "assignmentScope": {
+        "id": "abc-123",
+        "type": "PROJECT",
+        "name": "My Project",
+        "parent": null
+      }
+    }
+  ],
+  "nextPageToken": "eyJvZmZzZXQiOjJ9"
+}
