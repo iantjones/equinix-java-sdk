@@ -166,7 +166,7 @@ public class PaginatedList<T> implements Iterable<T> {
      * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
-        return !this.pagination.getIsLastPage();
+        return this.pagination != null && !this.pagination.getIsLastPage();
     }
 
     /**

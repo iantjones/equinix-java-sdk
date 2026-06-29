@@ -53,7 +53,8 @@ public class Constants {
     /** Constant <code>URL_ENCODER</code> */
     public static final BitSet URL_ENCODER = new BitSet(256);
 
-    public static final Integer PAGE_LIMIT = 2000;
+    // Equinix list/search endpoints cap page size (Fabric v4 max = 100); 2000 was rejected on real calls.
+    public static final Integer PAGE_LIMIT = 100;
     public static final Integer PAGE_OFFSET = 0;
     public static final Integer PAGE_TOTAL = 0;
 
