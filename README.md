@@ -50,6 +50,25 @@ Fabric fabric = new Fabric(credentials);
 // Authentication happens automatically on first API call
 ```
 
+### One session for multiple domains
+
+Each `new Fabric(creds)` / `new NetworkEdge(creds)` stands up its **own** OAuth token and
+connection pool. When you use more than one domain, open an `Equinix` session instead — it owns a
+**single** token + pool and shares it across every domain (and the design facade):
+
+```java
+import api.equinix.javasdk.Equinix;
+
+try (Equinix eq = new Equinix(credentials)) {     // one token, one pool
+    Fabric fabric    = eq.fabric();
+    NetworkEdge edge = eq.networkEdge();           // shares the same token + pool
+    Design design    = eq.design();                // value-add engines over the shared Fabric
+    Mcp mcp          = eq.mcp();
+}                                                  // closed once for the whole session
+```
+
+The standalone `new Fabric(credentials)` constructors remain for the single-domain case.
+
 ## Domain Overview
 
 | Domain | Entry Point | Resources | Description |
@@ -63,7 +82,7 @@ Fabric fabric = new Fabric(credentials);
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
 | **MCP** | `new Mcp(creds)` | — | Standalone JSON-RPC 2.0 client for the Equinix MCP (Model Context Protocol) servers — discover/invoke tools (supporting types in `api.equinix.javasdk.mcp.*`). To expose *this SDK's* Fabric as MCP tools instead, use `Fabric.mcp()`. |
-| **Design** (value-add) | `Fabric.optimizeMetros()` / `.deploymentWizard()` / `.peeringIntelligence()` | — | Metro Optimizer, Deployment Wizard, Peering Intelligence (`api.equinix.javasdk.design.*`) |
+| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Savings Calculator, TCO comparison (`api.equinix.javasdk.design.*`) — a facade over an existing Fabric client (reuses its transport) |
 
 ## Usage Examples
 

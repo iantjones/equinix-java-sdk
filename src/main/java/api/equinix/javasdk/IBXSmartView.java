@@ -118,6 +118,16 @@ public final class IBXSmartView extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    IBXSmartView(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_IBXSmartView.json");
+        this.ibxSmartViewConfig = new IBXSmartViewConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for accessing current environmental sensor data from IBX data centers.
      * Provides temperature, humidity, and other environmental readings.
      *

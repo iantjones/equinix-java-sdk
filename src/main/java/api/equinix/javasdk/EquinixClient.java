@@ -75,6 +75,12 @@ public class EquinixClient implements Service, Closeable {
     final protected api.equinix.javasdk.core.client.EquinixClient equinixClient;
 
     /**
+     * Whether this client owns the underlying core client (and must close it on {@link #close()}),
+     * or shares one owned by an {@link Equinix} session.
+     */
+    private final boolean ownsCore;
+
+    /**
      * Creates a new Equinix client using the provided credentials.
      * Authentication occurs automatically on the first API call.
      *
@@ -93,6 +99,21 @@ public class EquinixClient implements Service, Closeable {
     public EquinixClient(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
         equinixClient = new api.equinix.javasdk.core.client.EquinixClient(equinixCredentials, isSandBoxed);
         this.coreConfig = new CoreConfigImpl(equinixClient);
+        this.ownsCore = true;
+    }
+
+    /**
+     * Creates a domain client over an existing, shared core client (e.g. one owned by an
+     * {@link Equinix} session) so several domains share a single OAuth token and connection
+     * pool. The shared core is <em>not</em> closed by this client's {@link #close()} — its
+     * owner (the session) closes it. Package-private: used by {@link Equinix}.
+     *
+     * @param sharedCore the core client to share
+     */
+    EquinixClient(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        this.equinixClient = sharedCore;
+        this.coreConfig = new CoreConfigImpl(sharedCore);
+        this.ownsCore = false;
     }
 
     /**
@@ -121,6 +142,8 @@ public class EquinixClient implements Service, Closeable {
 
     @Override
     public void close() throws IOException {
-        equinixClient.close();
+        if (ownsCore) {
+            equinixClient.close();
+        }
     }
 }

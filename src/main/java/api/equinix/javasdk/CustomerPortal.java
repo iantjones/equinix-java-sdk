@@ -178,6 +178,16 @@ public final class CustomerPortal extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    CustomerPortal(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_CustomerPortal.json");
+        this.customerPortalConfig = new CustomerPortalConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for accessing invoice summaries and details. Provides billing
      * information including line items, charges, and payment history.
      *

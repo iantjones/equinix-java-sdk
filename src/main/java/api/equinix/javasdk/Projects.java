@@ -76,6 +76,16 @@ public final class Projects extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    Projects(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_Projects.json");
+        this.projectsConfig = new ProjectsConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for listing Equinix projects.
      * Projects are read-only organizational containers for grouping related infrastructure resources.
      *

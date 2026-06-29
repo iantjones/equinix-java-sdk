@@ -168,6 +168,16 @@ public final class InternetAccess extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    InternetAccess(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_InternetAccess.json");
+        this.internetAccessConfig = new InternetAccessConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for managing the Equinix Internet Access v2 service lifecycle
      * (create / get / update / delete / search).
      *
