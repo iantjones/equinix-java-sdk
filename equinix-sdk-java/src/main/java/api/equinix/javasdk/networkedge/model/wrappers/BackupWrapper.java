@@ -52,23 +52,35 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
         this.serviceClient = serviceClient;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>restore. The restore endpoint identifies the target by this backup's uuid; the backup name
+     * is sent in the body as required by the API.</p>
+     */
+    public Boolean restore(){
+        return ((BackupClientImpl)this.serviceClient).restore(this.getUuid(), this.getName());
+    }
+
     /** {@inheritDoc} */
+    @Deprecated
     public Boolean restoreToDevice(Device device){
-        return restoreToDevice(device.getUuid());
+        return restore();
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>restoreToDevice. The spec restore endpoint identifies the restore target by the backup
-     * uuid (this backup), so the supplied {@code deviceUuid} is not part of the request; the backup
-     * name is sent in the body as required by the API.</p>
+     * <p>restoreToDevice. The restore endpoint identifies the target by the backup uuid (this
+     * backup), so the supplied {@code deviceUuid} is ignored; the backup name is sent in the body
+     * as required by the API. Prefer {@link #restore()}.</p>
      *
      * @param deviceUuid a {@link java.lang.String} object.
      * @return a {@link java.lang.Boolean} object.
      */
+    @Deprecated
     public Boolean restoreToDevice(String deviceUuid){
-        return ((BackupClientImpl)this.serviceClient).restore(this.getUuid(), this.getName());
+        return restore();
     }
 
     /**

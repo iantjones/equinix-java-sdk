@@ -1,5 +1,6 @@
 {
-  "accounts": [
+  "accountCreateUrl": "https://customerportal.equinix.com",
+  "data": [
     {
       "accountName": "Acme Corp",
       "accountNumber": 123456,

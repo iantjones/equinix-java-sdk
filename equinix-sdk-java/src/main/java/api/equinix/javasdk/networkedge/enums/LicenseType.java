@@ -28,6 +28,24 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  */
 @JsonDeserialize(using = LicenseTypeDeserializer.class)
 public enum LicenseType implements APIParam {
-    SUB,
-    BYOL
+    SUB("Subscription"),
+    BYOL("BYOL");
+
+    private final String queryValue;
+
+    LicenseType(String queryValue) {
+        this.queryValue = queryValue;
+    }
+
+    /**
+     * Returns the value expected by the licenseType <em>query</em> parameter of the pricing,
+     * order-summary and vendor-terms endpoints ({@code Subscription} / {@code BYOL}). This differs
+     * from the enum name / body serialization, where the device-create {@code licenseMode}/
+     * {@code licenseType} body fields use {@code SUB} / {@code BYOL}.
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public String getQueryValue() {
+        return queryValue;
+    }
 }

@@ -41,7 +41,7 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
 
     /** {@inheritDoc} */
     public AgreementStatus getAgreementStatus(String accountNumber) {
-        return getAs("GetAgreementStatus", null, Utils.singleParamMap("account_number", accountNumber), AgreementStatus.class);
+        return getAs("GetAgreementStatus", null, Utils.singleParamMap("accountNumber", accountNumber), AgreementStatus.class);
     }
 
     /** {@inheritDoc} */
@@ -54,7 +54,10 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
 
     /** {@inheritDoc} */
     public String getVendorsTerms(String vendorPackage, LicenseType licenseType) {
-        Map<String, List<String>> qParams = Map.of("vendorPackage", Utils.singleParamList(vendorPackage), "licenseType", Utils.singleParamList(licenseType));
+        // The licenseType query parameter expects Subscription / BYOL (see LicenseType.getQueryValue),
+        // not the SUB / BYOL body form.
+        Map<String, List<String>> qParams = Map.of("vendorPackage", Utils.singleParamList(vendorPackage),
+                "licenseType", Utils.singleParamList(licenseType != null ? licenseType.getQueryValue() : null));
         return mapOp("GetVendorTerms", RequestType.SINGLE, null, qParams, null).get("terms");
     }
 

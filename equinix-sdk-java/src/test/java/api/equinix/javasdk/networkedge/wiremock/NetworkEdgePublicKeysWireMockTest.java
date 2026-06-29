@@ -44,11 +44,13 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("returns the list of public keys")
         void returnsPublicKeys() {
+            // getPublicKeys returns a GetPublicKeysResponse object: {pagination, data:[...]}.
             wireMock.stubFor(get(urlPathMatching("/ne/v1/publicKeys/?"))
-                    .willReturn(okJson("[{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
+                    .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
+                            + "\"data\":[{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
                             + "\"keyName\":\"test-public-key\","
                             + "\"keyValue\":\"ssh-rsa AAAA test@example.com\","
-                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}]")));
+                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}]}")));
 
             List<PublicKey> publicKeys = networkEdge.publicKeys().list();
             assertNotNull(publicKeys);

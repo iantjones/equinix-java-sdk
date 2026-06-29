@@ -65,19 +65,20 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
     @DisplayName("define() / save()")
     class Create {
 
-        // Valid UUID for the 201 Location header (Constants.UUID_PATTERN = 8-4-4-4-12 hex).
+        // Valid UUID returned in the 202 BgpAsyncResponse body (Constants.UUID_PATTERN = 8-4-4-4-12 hex).
         private static final String NEW_UUID = "b1c2d3e4-f5a6-7890-bcde-f12345678901";
 
         @Test
-        @DisplayName("POSTs the create body, follows the 201 Location header, and GETs the new BGP peering")
+        @DisplayName("POSTs the create body, reads the uuid from the 202 BgpAsyncResponse body, and GETs the new BGP peering")
         void createsBgpPeering() {
-            // POST /ne/v1/bgp -> 201 with Location header carrying the new uuid.
+            // POST /ne/v1/bgp -> 202 Accepted with a BgpAsyncResponse body carrying the new uuid.
             wireMock.stubFor(post(urlPathMatching("/ne/v1/bgp/?"))
                     .willReturn(aResponse()
-                            .withStatus(201)
-                            .withHeader("Location", "https://localhost/ne/v1/bgp/" + NEW_UUID)));
+                            .withStatus(202)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{\"uuid\":\"" + NEW_UUID + "\"}")));
             // GET /ne/v1/bgp/{uuid} -> returns the created object body.
-            stubSingleton(wireMock, "/ne/v1/bgp/.*", "/json/networkedge/bgppeering_response.json");
+            stubSingleton(wireMock, "/ne/v1/bgp/" + NEW_UUID, "/json/networkedge/bgppeering_response.json");
 
             BGPPeering peering = networkEdge.bgpPeerings()
                     .define()
@@ -100,7 +101,7 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("169.254.0.2")))
                     .withRequestBody(matchingJsonPath("$.localAsn", equalTo("65000")))
                     .withRequestBody(matchingJsonPath("$.remoteAsn", equalTo("65001"))));
-            // Verify the follow-up GET for the uuid parsed from the Location header.
+            // Verify the follow-up GET for the uuid parsed from the 202 response body.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + NEW_UUID)));
         }
     }

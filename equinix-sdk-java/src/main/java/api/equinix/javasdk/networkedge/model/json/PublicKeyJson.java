@@ -16,9 +16,7 @@
 
 package api.equinix.javasdk.networkedge.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.networkedge.enums.KeyType;
-import api.equinix.javasdk.networkedge.model.PublicKey;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,7 +34,19 @@ import java.util.List;
 @Getter
 public class PublicKeyJson {
 
-    @Getter static TypeReference<List<PublicKeyJson>> listTypeRef = new TypeReference<>() {};
+    @Getter static TypeReference<PublicKeyJson.NestedList> listTypeRef = new TypeReference<>() {};
+
+    /**
+     * The getPublicKeys endpoint returns a {@code GetPublicKeysResponse} object
+     * ({@code {pagination, data:[...]}}), not a flat array, so the list is read out of the
+     * {@code data} property here.
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Getter
+    public static class NestedList {
+        @JsonProperty("data")
+        private List<PublicKeyJson> data;
+    }
 
     @JsonProperty("uuid")
     private String uuid;

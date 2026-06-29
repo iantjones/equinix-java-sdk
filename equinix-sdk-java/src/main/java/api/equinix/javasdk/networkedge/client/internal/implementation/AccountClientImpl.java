@@ -55,7 +55,7 @@ public class AccountClientImpl extends ResourceClientBase<Account, AccountJson> 
     /** {@inheritDoc} */
     public List<AccountJson> list(MetroCode metroCode) {
         AccountJson.NestedList nestedList = getAs("ListAccounts", Map.of("metroCode", metroCode.toString()), null, AccountJson.NestedList.class);
-        return nestedList.getAccounts();
+        return nestedList.getData();
     }
 
     /** {@inheritDoc} */

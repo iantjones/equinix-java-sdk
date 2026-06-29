@@ -24,6 +24,7 @@ import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.BGPPeeringClient;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
+import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
 import api.equinix.javasdk.networkedge.model.json.BGPPeeringJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringCreatorJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringUpdaterJson;
@@ -72,7 +73,11 @@ public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeer
 
     /** {@inheritDoc} */
     public BGPPeeringJson create(BGPPeeringCreatorJson bgpPeeringCreatorJson) {
-        return getByUuid(createReturningLocationUuid("CreateBGP", null, null, bgpPeeringCreatorJson));
+        // createBgpConfiguration returns 202 Accepted with a BgpAsyncResponse body ({uuid:...}),
+        // not a Location header, so the new uuid is parsed from the response body (as for
+        // Device / DeviceLink create) before re-fetching the created peering.
+        UUIDResult uuidResult = postForType("CreateBGP", bgpPeeringCreatorJson, BGPPeeringJson.getCreateTypeRef());
+        return getByUuid(uuidResult.getUuid());
     }
 
     /** {@inheritDoc} */
