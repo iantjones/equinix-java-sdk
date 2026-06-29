@@ -25,6 +25,7 @@ import api.equinix.javasdk.customerportal.model.json.NotificationSearchResponseJ
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,12 +35,12 @@ public class NotificationClientImpl extends ClientBase implements NotificationCl
         super(configClient, "CustomerPortal", "Notifications");
     }
 
-    public List<? extends Notification> searchIbx(NotificationSearchRequest request) {
-        return search("SearchIbxNotifications", request);
+    public List<? extends Notification> searchIbx(NotificationSearchRequest request, Integer offset, Integer limit) {
+        return search("SearchIbxNotifications", request, offset, limit);
     }
 
-    public List<? extends Notification> searchNetwork(NotificationSearchRequest request) {
-        return search("SearchNetworkNotifications", request);
+    public List<? extends Notification> searchNetwork(NotificationSearchRequest request, Integer offset, Integer limit) {
+        return search("SearchNetworkNotifications", request, offset, limit);
     }
 
     public NotificationJson getIbxById(String id) {
@@ -51,14 +52,24 @@ public class NotificationClientImpl extends ClientBase implements NotificationCl
     }
 
     /**
-     * Posts a notification search, forwarding any {@code sorts} as a query parameter and reading the
-     * notifications from the response {@code data} array.
+     * Posts a notification search, forwarding {@code sorts} (from the request), {@code offset} and
+     * {@code limit} as query parameters and reading the notifications from the response {@code data}
+     * array.
      */
-    private List<? extends Notification> search(String serviceEndpoint, NotificationSearchRequest request) {
-        Map<String, List<String>> queryParams = (request != null && request.getSorts() != null && !request.getSorts().isEmpty())
-                ? Map.of("sorts", request.getSorts())
-                : null;
-        NotificationSearchResponseJson response = postForType(serviceEndpoint, null, queryParams, request,
+    private List<? extends Notification> search(String serviceEndpoint, NotificationSearchRequest request,
+                                               Integer offset, Integer limit) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (request != null && request.getSorts() != null && !request.getSorts().isEmpty()) {
+            queryParams.put("sorts", request.getSorts());
+        }
+        if (offset != null) {
+            queryParams.put("offset", List.of(String.valueOf(offset)));
+        }
+        if (limit != null) {
+            queryParams.put("limit", List.of(String.valueOf(limit)));
+        }
+        NotificationSearchResponseJson response = postForType(serviceEndpoint, null,
+                queryParams.isEmpty() ? null : queryParams, request,
                 new TypeReference<NotificationSearchResponseJson>() {});
         return response.getData();
     }

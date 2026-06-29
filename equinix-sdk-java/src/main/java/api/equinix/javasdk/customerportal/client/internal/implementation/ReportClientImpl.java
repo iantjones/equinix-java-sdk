@@ -53,8 +53,8 @@ public class ReportClientImpl extends ResourceClientBase<Report, ReportJson> imp
         return getOne("GetReport", Map.of("reportId", reportId));
     }
 
-    public boolean deleteReports(List<String> reportIds) {
-        return booleanOp("DeleteReports", RequestType.SINGLE, null, Map.of("reportIds", reportIds), null);
+    public List<? extends Report> deleteReports(List<String> reportIds) {
+        return listAs("DeleteReports", null, Map.of("reportIds", reportIds), ReportJson.class);
     }
 
     public byte[] downloadReports(List<String> reportIds) {

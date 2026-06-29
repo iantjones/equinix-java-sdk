@@ -55,12 +55,15 @@ public interface Reports {
     /**
      * Deletes generated reports in bulk.
      *
-     * <p>Maps to {@code DELETE /v1/reportCenter/reports} ({@code deleteReports}).</p>
+     * <p>Maps to {@code DELETE /v1/reportCenter/reports} ({@code deleteReports}). This is a
+     * best-effort bulk delete: the response carries one result per requested report id, each with a
+     * {@code reportId} and a per-report {@code status} ({@code SUCCESS} or {@code ERROR}), so callers
+     * can detect partial failures.</p>
      *
      * @param reportIds the report ids to delete
-     * @return {@code true} if the request succeeded
+     * @return the per-report delete results
      */
-    boolean deleteReports(List<String> reportIds);
+    List<? extends Report> deleteReports(List<String> reportIds);
 
     /**
      * Downloads one or more generated reports as a combined file (zip).

@@ -36,7 +36,9 @@ import api.equinix.javasdk.customerportal.model.json.PrivateBetaPermissionJson;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
+import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,8 +56,20 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
         return getAs("GetDigitalLoa", Map.of("uuid", uuid), null, DigitalLoaJson.class);
     }
 
-    public List<? extends DigitalLoa> search(DigitalLoaSearchRequest request) {
-        DigitalLoaSearchResponseJson response = postAs("SearchDigitalLoas", request, DigitalLoaSearchResponseJson.class);
+    public List<? extends DigitalLoa> search(DigitalLoaSearchRequest request, Integer offset, Integer limit, List<String> sort) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (offset != null) {
+            queryParams.put("offset", List.of(String.valueOf(offset)));
+        }
+        if (limit != null) {
+            queryParams.put("limit", List.of(String.valueOf(limit)));
+        }
+        if (sort != null && !sort.isEmpty()) {
+            queryParams.put("sort", sort);
+        }
+        DigitalLoaSearchResponseJson response = postForType("SearchDigitalLoas", null,
+                queryParams.isEmpty() ? null : queryParams, request,
+                new TypeReference<DigitalLoaSearchResponseJson>() {});
         return response.getData();
     }
 
@@ -89,8 +103,13 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
         return getAs("GetDigitalLoaChange", Map.of("uuid", uuid, "changeUuid", changeUuid), null, DigitalLoaChangeJson.class);
     }
 
-    public List<? extends LoaCustomerOrganization> findOrganizations() {
-        return listAs("FindDigitalLoaOrganizations", null, null, LoaCustomerOrganizationJson.class);
+    public List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        queryParams.put("location.ibx", List.of(ibx));
+        if (productTypes != null && !productTypes.isEmpty()) {
+            queryParams.put("product.type", productTypes);
+        }
+        return listAs("FindDigitalLoaOrganizations", null, queryParams, LoaCustomerOrganizationJson.class);
     }
 
     public PrivateBetaPermission isPrivateBetaAllowed() {

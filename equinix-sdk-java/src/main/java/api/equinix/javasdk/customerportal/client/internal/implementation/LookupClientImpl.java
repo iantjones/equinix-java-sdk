@@ -28,6 +28,7 @@ import api.equinix.javasdk.customerportal.model.json.LocationsDetailsResponseJso
 import api.equinix.javasdk.customerportal.model.json.PatchPanelJson;
 import api.equinix.javasdk.customerportal.model.json.ProviderJson;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,9 +38,28 @@ public class LookupClientImpl extends ClientBase implements LookupClient {
         super(configClient, "CustomerPortal", "Lookup");
     }
 
-    public List<? extends LookupLocation> listLocations(String permissionCode) {
-        LocationsDetailsResponseJson response = getAs("ListLocations", null,
-                Map.of("permissionCode", List.of(permissionCode)), LocationsDetailsResponseJson.class);
+    public List<? extends LookupLocation> listLocations(String permissionCode, List<String> ibxs,
+                                                        String providerAccountNumber, String aSideIbx,
+                                                        String connectionService, Boolean details) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        queryParams.put("permissionCode", List.of(permissionCode));
+        if (ibxs != null && !ibxs.isEmpty()) {
+            queryParams.put("ibxs", ibxs);
+        }
+        if (providerAccountNumber != null) {
+            queryParams.put("providerAccountNumber", List.of(providerAccountNumber));
+        }
+        if (aSideIbx != null) {
+            queryParams.put("aSideIbx", List.of(aSideIbx));
+        }
+        if (connectionService != null) {
+            queryParams.put("connectionService", List.of(connectionService));
+        }
+        if (details != null) {
+            queryParams.put("details", List.of(String.valueOf(details)));
+        }
+        LocationsDetailsResponseJson response = getAs("ListLocations", null, queryParams,
+                LocationsDetailsResponseJson.class);
         return response.getCrossConnects();
     }
 

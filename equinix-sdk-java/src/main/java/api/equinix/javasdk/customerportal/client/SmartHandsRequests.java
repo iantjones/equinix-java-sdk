@@ -143,6 +143,19 @@ public interface SmartHandsRequests {
     List<? extends SmartHandsLocation> listLocations();
 
     /**
+     * Lists the IBX locations, cages and cabinets where the current user may place smart hands
+     * orders, optionally filtered.
+     *
+     * <p>Maps to {@code GET /v1/orders/smarthands/locations} ({@code getLocation}).</p>
+     *
+     * @param detail when {@code true}, returns detailed permission with cages and cabinets, or {@code null} for the default
+     * @param ibxs   a comma-separated list of IBX codes to filter by (e.g. {@code AM1,AM2}), or {@code null}
+     * @param cages  a comma-separated list of cage ids to filter by (e.g. {@code AM1:02:002MC1}), or {@code null}
+     * @return the list of permitted locations
+     */
+    List<? extends SmartHandsLocation> listLocations(Boolean detail, String ibxs, String cages);
+
+    /**
      * Lists all supported smart hands order types.
      *
      * @return the list of supported types

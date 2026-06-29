@@ -43,6 +43,26 @@ public interface Lookups {
     List<? extends LookupLocation> listLocations(String permissionCode);
 
     /**
+     * Lists the locations the current user may order at, for the given permission code, with optional
+     * filters.
+     *
+     * <p>Maps to {@code GET /colocations/v2/locations} ({@code Get Locations by permission code}). The
+     * {@code providerAccountNumber}, {@code aSideIbx} and {@code connectionService} filters apply only
+     * when {@code permissionCode} is {@code CROSS_CONNECT}.</p>
+     *
+     * @param permissionCode        the permission code ({@code CROSS_CONNECT}, {@code WORK_VISIT} or {@code SHIPMENTS})
+     * @param ibxs                  the IBX codes to filter by, or {@code null}
+     * @param providerAccountNumber the service provider's (Z-side) account number, or {@code null}
+     * @param aSideIbx              the A-side IBX used to fetch Z-side details, or {@code null}
+     * @param connectionService     the connection service type used to fetch Z-side details, or {@code null}
+     * @param details               when {@code true}, returns cage, cabinet and account details, or {@code null} for the default
+     * @return the list of permitted locations
+     */
+    List<? extends LookupLocation> listLocations(String permissionCode, List<String> ibxs,
+                                                 String providerAccountNumber, String aSideIbx,
+                                                 String connectionService, Boolean details);
+
+    /**
      * Lists the patch panels in the given cabinet.
      *
      * <p>Maps to {@code GET /colocations/v2/patchPanels} ({@code Retrieve all patch panels}).</p>

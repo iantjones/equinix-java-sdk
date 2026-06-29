@@ -24,9 +24,9 @@ import java.util.List;
 
 public interface NotificationClient {
 
-    List<? extends Notification> searchIbx(NotificationSearchRequest request);
+    List<? extends Notification> searchIbx(NotificationSearchRequest request, Integer offset, Integer limit);
 
-    List<? extends Notification> searchNetwork(NotificationSearchRequest request);
+    List<? extends Notification> searchNetwork(NotificationSearchRequest request, Integer offset, Integer limit);
 
     NotificationJson getIbxById(String id);
 

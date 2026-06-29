@@ -26,7 +26,9 @@ import java.util.List;
 
 public interface LookupClient {
 
-    List<? extends LookupLocation> listLocations(String permissionCode);
+    List<? extends LookupLocation> listLocations(String permissionCode, List<String> ibxs,
+                                                 String providerAccountNumber, String aSideIbx,
+                                                 String connectionService, Boolean details);
 
     List<? extends PatchPanel> listPatchPanels(String cabinetId);
 

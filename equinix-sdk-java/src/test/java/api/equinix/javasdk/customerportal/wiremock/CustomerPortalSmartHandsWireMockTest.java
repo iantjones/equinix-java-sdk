@@ -128,6 +128,26 @@ class CustomerPortalSmartHandsWireMockTest extends WireMockTestBase {
         assertEquals(1, locations.size());
         assertEquals("AM1", locations.get(0).getIbx());
         assertEquals("AM1:01:001MC3", locations.get(0).getCages().get(0).getCage());
-        wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/smarthands/locations")));
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/smarthands/locations"))
+                .withQueryParam("detail", absent())
+                .withQueryParam("ibxs", absent())
+                .withQueryParam("cages", absent()));
+    }
+
+    @Test
+    @DisplayName("listLocations with filters forwards detail/ibxs/cages query params")
+    void listLocations_withFiltersForwardsQueryParams() {
+        wireMock.stubFor(get(urlPathEqualTo("/v1/orders/smarthands/locations"))
+                .willReturn(okJson("{\"locations\":[{\"ibx\":\"AM1\"}]}")));
+
+        List<? extends SmartHandsLocation> locations = customerPortal.smartHandsRequests()
+                .listLocations(true, "AM1,AM2", "AM1:02:002MC1");
+
+        assertNotNull(locations);
+        assertEquals("AM1", locations.get(0).getIbx());
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/smarthands/locations"))
+                .withQueryParam("detail", equalTo("true"))
+                .withQueryParam("ibxs", equalTo("AM1,AM2"))
+                .withQueryParam("cages", equalTo("AM1:02:002MC1")));
     }
 }

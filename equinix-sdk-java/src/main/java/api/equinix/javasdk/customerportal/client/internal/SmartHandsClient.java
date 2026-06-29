@@ -27,7 +27,7 @@ public interface SmartHandsClient {
 
     SmartHandResponse create(String serviceEndpoint, SmartHandsRequestJson requestJson);
 
-    List<? extends SmartHandsLocation> listLocations();
+    List<? extends SmartHandsLocation> listLocations(Boolean detail, String ibxs, String cages);
 
     List<? extends SmartHandType> listTypes();
 }

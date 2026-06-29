@@ -40,6 +40,18 @@ public interface Notifications {
     List<? extends Notification> searchIbx(NotificationSearchRequest request);
 
     /**
+     * Searches IBX notifications (maintenance, incidents, advisories), paging the results.
+     *
+     * <p>Maps to {@code POST /v1/notifications/ibx/search} ({@code search-ibx-notifications}).</p>
+     *
+     * @param request the search request body
+     * @param offset  the index of the first item returned (zero-based), or {@code null} for the default
+     * @param limit   the maximum number of items returned per page, or {@code null} for the default
+     * @return the matching IBX notifications
+     */
+    List<? extends Notification> searchIbx(NotificationSearchRequest request, Integer offset, Integer limit);
+
+    /**
      * Searches network notifications (network maintenance and incidents).
      *
      * <p>Maps to {@code POST /v1/notifications/network/search} ({@code search-network-notifications}).</p>
@@ -48,6 +60,18 @@ public interface Notifications {
      * @return the matching network notifications
      */
     List<? extends Notification> searchNetwork(NotificationSearchRequest request);
+
+    /**
+     * Searches network notifications (network maintenance and incidents), paging the results.
+     *
+     * <p>Maps to {@code POST /v1/notifications/network/search} ({@code search-network-notifications}).</p>
+     *
+     * @param request the search request body
+     * @param offset  the index of the first item returned (zero-based), or {@code null} for the default
+     * @param limit   the maximum number of items returned per page, or {@code null} for the default
+     * @return the matching network notifications
+     */
+    List<? extends Notification> searchNetwork(NotificationSearchRequest request, Integer offset, Integer limit);
 
     /**
      * Retrieves an IBX notification by id.
