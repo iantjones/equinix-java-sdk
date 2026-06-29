@@ -14,9 +14,9 @@ import java.util.Optional;
  * <p>A rate card resolves the price of an individual planned resource — a Fabric
  * connection or a Cloud Router — for a given bandwidth, metro, and commitment
  * {@link Term}. Lookups return an {@link Optional}: an empty result means
- * <em>this card cannot price that item</em>, which is deliberately distinct from
- * a zero price. That distinction lets callers fall back to another source rather
- * than silently treating "unknown" as "free."</p>
+ * <em>this card cannot price that item</em>, which is distinct from a zero price.
+ * That distinction lets callers fall back to another source rather than silently
+ * treating "unknown" as "free."</p>
  *
  * <p>Implementations differ by provenance (see {@link PriceSource}):</p>
  * <ul>
@@ -66,7 +66,7 @@ public interface RateCard {
      *
      * @param provider the cloud provider the data is leaving
      * @param region   the provider region (may be {@code null} for a provider-wide rate)
-     * @param path     internet vs. private interconnect — the savings lever
+     * @param path     internet vs. private interconnect
      * @param term     the commitment term
      * @return the resolved egress rate, or {@link Optional#empty()} if this card cannot price it
      */

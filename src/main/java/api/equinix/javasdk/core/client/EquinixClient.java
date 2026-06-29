@@ -47,6 +47,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
+ * Low-level transport client: owns the OAuth2 token lifecycle, the pooled HTTP client, the
+ * resolved endpoint, and the merged apiParams catalogue, and signs and dispatches every request.
+ * The public facade {@link api.equinix.javasdk.EquinixClient} and the domain clients delegate to
+ * an instance of this class.
  *
  * @author ianjones
  */

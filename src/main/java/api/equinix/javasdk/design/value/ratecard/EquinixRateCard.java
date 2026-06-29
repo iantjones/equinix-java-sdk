@@ -22,9 +22,8 @@ import java.util.Optional;
 
 /**
  * A {@link RateCard} backed by the live Equinix Fabric Pricing API
- * ({@code fabric.prices()}). This is the authoritative source of Equinix-side
- * costs for the value-realization models, and the keystone that replaces the
- * hardcoded price literals previously baked into the optimizer and wizard.
+ * ({@code fabric.prices()}); the authoritative source of Equinix-side connection
+ * and Cloud Router prices for the cost, savings, and TCO models.
  *
  * <p>The fetch is narrowed <em>server-side</em> by price {@code /type} to the
  * two product families this card prices — virtual connections
@@ -35,7 +34,7 @@ import java.util.Optional;
  * (the structured descriptor holds just the bandwidth), so the card matches
  * those remaining axes <em>client-side</em> over the (much smaller) cached set.</p>
  *
- * <p>The card is deliberately fault-tolerant: if the catalogue cannot be
+ * <p>The card is fault-tolerant: if the catalogue cannot be
  * fetched (network error, unauthenticated client, endpoint unavailable), it
  * yields {@link Optional#empty()} for every lookup so callers fall back to
  * another rate card or a heuristic rather than failing. Every quote it does

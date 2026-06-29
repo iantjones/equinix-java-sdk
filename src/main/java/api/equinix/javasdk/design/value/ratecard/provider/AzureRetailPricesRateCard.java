@@ -45,15 +45,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * cloud-router lookups return {@link Optional#empty()} (those are Equinix-side costs).
  * It maps {@link EgressPath#INTERNET} to the {@code Bandwidth} service (data transfer
  * out to the internet) and {@link EgressPath#PRIVATE} to the {@code ExpressRoute}
- * service (metered egress over a dedicated interconnect) — the two sides of the
- * value-realization savings story. Every rate it returns is tagged
+ * service (metered egress over a dedicated interconnect). Every rate it returns is tagged
  * {@link PriceSource#PROVIDER_API}.</p>
  *
  * <p>The adapter is an opt-in, pluggable source: compose it into a precedence chain
  * with {@link RateCard#layered(RateCard...)} (e.g. caller-supplied → Equinix live →
- * provider APIs → bundled reference). It is deliberately fault-tolerant — a network
- * error, throttling, or an unrecognised response shape yields no rate rather than an
- * exception, so a layered card falls back to the next source.</p>
+ * provider APIs → bundled reference). It is fault-tolerant — a network error, throttling,
+ * or an unrecognised response yields no rate rather than an exception, so a layered card
+ * falls back to the next source.</p>
  *
  * <pre>{@code
  * RateCard rates = RateCard.layered(
