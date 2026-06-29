@@ -19,15 +19,20 @@ package api.equinix.javasdk.internetaccess.model.json;
 import api.equinix.javasdk.internetaccess.enums.Region;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import api.equinix.javasdk.internetaccess.model.implementation.GeoCoordinates;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Read-only JSON model for an {@link Ibx} returned by the Equinix Internet Access (EIA) v2
- * product-availability lookup {@code GET /internetAccess/v2/ibxs}. Implements {@link Ibx}
- * directly, so no wrapper is required.
+ * Read-only JSON model for an {@link Ibx} returned by the Equinix Internet Access (EIA)
+ * product-availability lookups — the v2 list ({@code GET /internetAccess/v2/ibxs}) and the v1
+ * single-IBX get ({@code GET /internetAccess/v1/ibxs/{ibx}}). Implements {@link Ibx} directly,
+ * so no wrapper is required.
+ *
+ * <p>The v1 single-IBX response names the data-center code field {@code ibx} (the v2 list uses
+ * {@code ibxCode}); both bind to {@link #ibxCode} via {@link JsonAlias}.</p>
  */
 @Getter
 @Setter
@@ -49,7 +54,11 @@ public class IbxJson implements Ibx {
     @JsonProperty("metroCode")
     private String metroCode;
 
+    @JsonProperty("metroName")
+    private String metroName;
+
     @JsonProperty("ibxCode")
+    @JsonAlias("ibx")
     private String ibxCode;
 
     @JsonProperty("geoCoordinates")

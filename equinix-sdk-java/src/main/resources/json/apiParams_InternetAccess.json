@@ -19,11 +19,140 @@
           "ListIbxs": { "httpMethod": "GET" }
         }
       },
+      "IbxsV1": {
+        "rootUri": "ibxs",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "GetIbx": { "httpMethod": "GET", "requestUri": "{$ibx}" }
+        }
+      },
       "Prices": {
         "rootUri": "prices",
         "defaultVersion": 1,
         "serviceEndpoints": {
           "SearchPrices": { "httpMethod": "POST", "requestUri": "search" }
+        }
+      },
+      "AccountsV1": {
+        "rootUri": "accounts",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListAccounts": { "httpMethod": "GET" },
+          "GetAccount": { "httpMethod": "GET", "requestUri": "{$accountNumber}" },
+          "ListAccountAgreements": { "httpMethod": "GET", "requestUri": "{$accountNumber}/agreements" }
+        }
+      },
+      "TermsV1": {
+        "rootUri": "terms",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListTerms": { "httpMethod": "GET" }
+        }
+      },
+      "OperationalUnitsV1": {
+        "rootUri": "operationalUnits",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListOperationalUnits": { "httpMethod": "GET" }
+        }
+      },
+      "SignaturePoliciesV1": {
+        "rootUri": "signaturePolicies",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListSignaturePolicies": { "httpMethod": "GET" }
+        }
+      },
+      "RoutingConfigurationsV1": {
+        "rootUri": "routingConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListRoutingConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "DedicatedBandwidthConfigurationsV1": {
+        "rootUri": "dedicatedBandwidthConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListDedicatedBandwidthConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "VirtualBandwidthConfigurationsV1": {
+        "rootUri": "virtualBandwidthConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListVirtualBandwidthConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "VirtualConnectionDefaultConfigurationsV1": {
+        "rootUri": "virtualConnectionDefaultConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListVirtualConnectionDefaultConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "CustomerRouteConfigurationsV1": {
+        "rootUri": "customerRouteConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListCustomerRouteConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "DedicatedPortDefaultConfigurationsV1": {
+        "rootUri": "dedicatedPortDefaultConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListDedicatedPortDefaultConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "PortConfigurationsV1": {
+        "rootUri": "portConfigurations",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListPortConfigurations": { "httpMethod": "GET" }
+        }
+      },
+      "PurchaseOrdersV1": {
+        "rootUri": "accounts",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListPurchaseOrders": { "httpMethod": "GET", "requestUri": "{$accountNumber}/purchaseOrders" },
+          "GetPurchaseOrder": { "httpMethod": "GET", "requestUri": "{$accountNumber}/purchaseOrders/{$number}" }
+        }
+      },
+      "OrdersV1": {
+        "rootUri": "orders",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "GetOrder": { "httpMethod": "GET", "requestUri": "{$orderUUID}" }
+        }
+      },
+      "CagesV1": {
+        "rootUri": "cages",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListCages": { "httpMethod": "GET" }
+        }
+      },
+      "CabinetsV1": {
+        "rootUri": "cabinets",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListCabinets": { "httpMethod": "GET" }
+        }
+      },
+      "PatchPanelsV1": {
+        "rootUri": "patchPanels",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListPatchPanels": { "httpMethod": "GET" }
+        }
+      },
+      "ConnectionServicesV1": {
+        "rootUri": "connectionServices",
+        "defaultVersion": 1,
+        "serviceEndpoints": {
+          "ListConnectionServices": { "httpMethod": "GET" }
         }
       }
     }

@@ -22,6 +22,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessIbxs;
 import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
+import api.equinix.javasdk.internetaccess.client.internal.IbxV1Client;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import api.equinix.javasdk.internetaccess.model.json.IbxJson;
@@ -32,9 +33,12 @@ public class InternetAccessIbxsImpl implements InternetAccessIbxs {
 
     private final IbxClient serviceClient;
 
-    public InternetAccessIbxsImpl(IbxClient serviceClient, InternetAccess serviceManager) {
+    private final IbxV1Client ibxV1Client;
+
+    public InternetAccessIbxsImpl(IbxClient serviceClient, IbxV1Client ibxV1Client, InternetAccess serviceManager) {
         this.serviceManager = serviceManager;
         this.serviceClient = serviceClient;
+        this.ibxV1Client = ibxV1Client;
     }
 
     public PaginatedList<Ibx> availability(ConnectionType connectionType) {
@@ -44,5 +48,13 @@ public class InternetAccessIbxsImpl implements InternetAccessIbxs {
     public PaginatedList<Ibx> availability(ConnectionType connectionType, String accessPointType, String assetType) {
         Page<Ibx, IbxJson> responsePage = this.serviceClient.list(connectionType, accessPointType, assetType);
         return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+    }
+
+    public Ibx getByCode(String ibx) {
+        return getByCode(ibx, null, null);
+    }
+
+    public Ibx getByCode(String ibx, ConnectionType connectionType, String accessPointType) {
+        return this.ibxV1Client.getByCode(ibx, connectionType, accessPointType);
     }
 }
