@@ -97,11 +97,23 @@ public interface Backup {
     List<DeviceRestore> getRestores();
 
     /**
+     * Restores this backup. The restore endpoint is keyed by the backup uuid only, so the restore
+     * always targets the device this backup was taken from; there is no way to choose a different
+     * target device.
+     *
+     * @return a {@link java.lang.Boolean} object.
+     */
+    Boolean restore();
+
+    /**
      * <p>restoreToDevice.</p>
      *
      * @param device a {@link api.equinix.javasdk.networkedge.model.Device} object.
      * @return a {@link java.lang.Boolean} object.
+     * @deprecated the restore endpoint is keyed by the backup uuid only; the supplied {@code device}
+     *             is ignored. Use {@link #restore()} instead.
      */
+    @Deprecated
     Boolean restoreToDevice(Device device);
 
     /**
@@ -109,7 +121,10 @@ public interface Backup {
      *
      * @param deviceUuid a {@link java.lang.String} object.
      * @return a {@link java.lang.Boolean} object.
+     * @deprecated the restore endpoint is keyed by the backup uuid only; the supplied
+     *             {@code deviceUuid} is ignored. Use {@link #restore()} instead.
      */
+    @Deprecated
     Boolean restoreToDevice(String deviceUuid);
 
     /**

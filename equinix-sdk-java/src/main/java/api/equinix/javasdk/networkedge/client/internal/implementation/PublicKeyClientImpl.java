@@ -54,7 +54,8 @@ public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKey
     /** {@inheritDoc} */
     public List<PublicKeyJson> list(String accountUcmId) {
         Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
-        return listAs("ListPublicKeys", null, qParams, PublicKeyJson.class);
+        PublicKeyJson.NestedList nestedList = getAs("ListPublicKeys", null, qParams, PublicKeyJson.NestedList.class);
+        return nestedList.getData();
     }
 
     /** {@inheritDoc} */

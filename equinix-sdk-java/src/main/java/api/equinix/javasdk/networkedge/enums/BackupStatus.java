@@ -27,5 +27,5 @@ import api.equinix.javasdk.core.model.APIParam;
 public enum BackupStatus implements APIParam {
     IN_PROGRESS,
     COMPLETED,
-    DELETED
+    FAILED
 }

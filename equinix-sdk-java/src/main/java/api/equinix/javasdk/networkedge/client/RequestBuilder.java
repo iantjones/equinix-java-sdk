@@ -70,6 +70,33 @@ public class RequestBuilder {
     }
 
     /**
+     * <p>pricing.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.Pricing} object.
+     */
+    public static Pricing pricing() {
+        return new Pricing();
+    }
+
+    /**
+     * <p>bgp.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.BGP} object.
+     */
+    public static BGP bgp() {
+        return new BGP();
+    }
+
+    /**
+     * <p>deviceLink.</p>
+     *
+     * @return a {@link api.equinix.javasdk.networkedge.client.RequestBuilder.DeviceLink} object.
+     */
+    public static DeviceLink deviceLink() {
+        return new DeviceLink();
+    }
+
+    /**
      * <p>allowedInterfaces.</p>
      *
      * @param deviceType the device type code (path parameter).
@@ -163,7 +190,7 @@ public class RequestBuilder {
             this.queryParameters = new HashMap<>();
 
             this.queryParameters.put("deviceManagementType", ModelUtils.singleValueList(this.deviceManagementType.getJsonValue()));
-            this.queryParameters.put("mode", ModelUtils.singleValueList(this.mode));
+            this.queryParameters.put("mode", ModelUtils.singleValueList(this.mode != null ? this.mode.getQueryValue() : null));
             this.queryParameters.put("cluster", ModelUtils.singleValueList(this.cluster));
             this.queryParameters.put("sdwan", ModelUtils.singleValueList(this.sdwan));
             this.queryParameters.put("connectivity", ModelUtils.singleValueList(this.connectivity));
@@ -274,7 +301,7 @@ public class RequestBuilder {
         public DeviceLink build() {
             this.queryParameters = new HashMap<>();
 
-            this.queryParameters.put("metroCode", ModelUtils.stringListFromEnumList(this.metroCodes));
+            this.queryParameters.put("metro", ModelUtils.stringListFromEnumList(this.metroCodes));
             this.queryParameters.put("virtualDeviceUuid", ModelUtils.singleValueList(this.deviceUuid));
             this.queryParameters.put("accountUcmId", ModelUtils.singleValueList(this.accountUcmId));
             this.queryParameters.put("groupUuid", ModelUtils.singleValueList(this.groupUuid));
@@ -488,13 +515,13 @@ public class RequestBuilder {
             this.queryParameters.put("accountNumber", ModelUtils.singleValueList(this.accountNumber));
             this.queryParameters.put("metro", ModelUtils.singleValueList(this.metro));
             this.queryParameters.put("vendorPackage", ModelUtils.singleValueList(this.vendorPackage));
-            this.queryParameters.put("licenseType", ModelUtils.singleValueList(this.licenseType));
+            this.queryParameters.put("licenseType", ModelUtils.singleValueList(this.licenseType != null ? this.licenseType.getQueryValue() : null));
             this.queryParameters.put("softwarePackage", ModelUtils.singleValueList(this.softwarePackage));
             this.queryParameters.put("throughput", ModelUtils.singleValueList(this.throughput));
             this.queryParameters.put("throughputUnit", ModelUtils.singleValueList(this.throughputUnit));
             this.queryParameters.put("termLength", ModelUtils.singleValueList(this.termLength));
             this.queryParameters.put("additionalBandwidth", ModelUtils.singleValueList(this.additionalBandwidth));
-            this.queryParameters.put("deviceManagementType", ModelUtils.singleValueList(this.deviceManagementType));
+            this.queryParameters.put("deviceManagementType", ModelUtils.singleValueList(this.deviceManagementType != null ? this.deviceManagementType.getJsonValue() : null));
             this.queryParameters.put("core", ModelUtils.singleValueList(this.core));
 
             this.queryParameters.put("secondaryAccountNumber", ModelUtils.singleValueList(this.secondaryAccountNumber));
@@ -588,12 +615,12 @@ public class RequestBuilder {
             this.queryParameters.put("accountNumber", ModelUtils.singleValueList(this.accountNumber));
             this.queryParameters.put("metro", ModelUtils.singleValueList(this.metro));
             this.queryParameters.put("vendorPackage", ModelUtils.singleValueList(this.vendorPackage));
-            this.queryParameters.put("licenseType", ModelUtils.singleValueList(this.licenseType));
+            this.queryParameters.put("licenseType", ModelUtils.singleValueList(this.licenseType != null ? this.licenseType.getQueryValue() : null));
             this.queryParameters.put("softwarePackage", ModelUtils.singleValueList(this.softwarePackage));
             this.queryParameters.put("throughput", ModelUtils.singleValueList(this.throughput));
             this.queryParameters.put("throughputUnit", ModelUtils.singleValueList(this.throughputUnit));
             this.queryParameters.put("termLength", ModelUtils.singleValueList(this.termLength));
-            this.queryParameters.put("deviceManagementType", ModelUtils.singleValueList(this.deviceManagementType.toString().replace("_", "-")));
+            this.queryParameters.put("deviceManagementType", ModelUtils.singleValueList(this.deviceManagementType != null ? this.deviceManagementType.getJsonValue() : null));
             this.queryParameters.put("core", ModelUtils.singleValueList(this.core));
             this.queryParameters.put("accountUcmId", ModelUtils.singleValueList(this.accountUcmId));
 

@@ -37,11 +37,16 @@ public class AccountJson {
 
     @Getter static TypeReference<AccountJson.NestedList> listTypeRef = new TypeReference<>() {};
 
+    /**
+     * The listAccounts endpoint returns a {@code PageResponseMetroAccountResponse} object
+     * ({@code {accountCreateUrl, pagination, data:[...]}}); the account list is carried under the
+     * {@code data} property.
+     */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Getter
     public static class NestedList {
-        @JsonProperty("accounts")
-        private List<AccountJson> accounts;
+        @JsonProperty("data")
+        private List<AccountJson> data;
     }
 
     @JsonProperty("accountName")
