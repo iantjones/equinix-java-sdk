@@ -18,7 +18,6 @@ package api.equinix.javasdk.core.client;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.exception.EquinixAuthenticationException;
 import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.EquinixHttpClient;
 import api.equinix.javasdk.core.http.RetryPolicy;
@@ -79,6 +78,19 @@ public class EquinixClient implements Closeable {
      * the most recently published instance.
      */
     private final Object tokenLock = new Object();
+
+    /**
+     * Acquires and publishes a fresh OAuth token on demand. Wired by the facade client (which
+     * knows how to mint a token); used for lazy authentication on the first call and for
+     * re-authentication once the current token has expired.
+     */
+    private volatile Runnable authenticator;
+
+    /**
+     * Re-entrancy guard: the token request itself flows through {@link #setStandardHeaders}, so
+     * while a token is being acquired on this thread the lazy-auth path must not recurse.
+     */
+    private final ThreadLocal<Boolean> authenticating = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private final Boolean isSandBoxed;
 
@@ -239,42 +251,85 @@ public class EquinixClient implements Closeable {
     }
 
     /**
-     * Applies the standard headers (authorization + content type) to the request.
+     * Wires the callback used to mint and publish an OAuth token for lazy authentication and
+     * re-authentication on expiry. The facade client supplies this; the core client invokes it
+     * when a request needs a token and none valid is published.
      *
-     * <p>The authorization header is derived from the OAuth token under a
-     * single-flight guard: the token is validated and its session value captured
-     * inside a {@link #tokenLock} synchronized block using a double-checked validity
-     * pattern. This ensures that concurrent callers observe one consistent token
-     * snapshot and that an expired token is detected by a single thread at a time,
-     * rather than many threads racing the validity check and potentially stampeding
-     * the token endpoint. (Re)acquisition itself is performed by the authentication
-     * flow that publishes via {@link #setOAuthToken}; this method does not perform
-     * retry or backoff.)</p>
+     * @param authenticator the token-acquisition callback (it must publish via {@link #setOAuthToken})
+     */
+    public void setAuthenticator(Runnable authenticator) {
+        this.authenticator = authenticator;
+    }
+
+    /**
+     * Forces (re)authentication via the wired authenticator, single-flight under {@link #tokenLock}.
+     * This is the explicit {@code authenticate()} entry point. The {@link #authenticating} guard
+     * means the token request it issues (which itself flows through {@link #setStandardHeaders})
+     * does not recurse into another authentication. No-op when no authenticator is wired.
+     */
+    public void authenticate() {
+        Runnable auth = authenticator;
+        if (auth == null || Boolean.TRUE.equals(authenticating.get())) {
+            return;
+        }
+        synchronized (tokenLock) {
+            authenticating.set(Boolean.TRUE);
+            try {
+                auth.run();
+            } finally {
+                authenticating.set(Boolean.FALSE);
+            }
+        }
+    }
+
+    /**
+     * Ensures a valid token is published before a request is signed: authenticates lazily on the
+     * first call and re-authenticates when the current token has expired. Single-flight under
+     * {@link #tokenLock} (double-checked) so concurrent callers don't stampede the token endpoint.
+     * No-op when no authenticator is wired, or when invoked re-entrantly from the token request
+     * itself (guarded by {@link #authenticating}).
+     */
+    private void ensureAuthenticated() {
+        Runnable auth = authenticator;
+        if (auth == null || Boolean.TRUE.equals(authenticating.get())) {
+            return;
+        }
+        OAuthToken token = oAuthToken;
+        if (token != null && token.validSession()) {
+            return;
+        }
+        synchronized (tokenLock) {
+            token = oAuthToken;
+            if (token != null && token.validSession()) {
+                return;
+            }
+            authenticating.set(Boolean.TRUE);
+            try {
+                auth.run();
+            } finally {
+                authenticating.set(Boolean.FALSE);
+            }
+        }
+    }
+
+    /**
+     * Applies the standard headers (authorization + content type) to the request, authenticating
+     * first if necessary.
+     *
+     * <p>{@link #ensureAuthenticated()} runs first: it authenticates lazily on the first call and
+     * re-authenticates an expired token, single-flight under {@link #tokenLock}. The authorization
+     * header is then derived from the published token — omitted only for the token request itself,
+     * which carries its credentials in the body rather than a bearer header.</p>
      *
      * @param equinixRequest the request to decorate.
      */
     private <T> void setStandardHeaders(EquinixRequest<T> equinixRequest){
-        Map<String, String> standardHeaders = new HashMap<>();
+        ensureAuthenticated();
 
-        // Lock-free fast path: capture the currently published token snapshot.
+        Map<String, String> standardHeaders = new HashMap<>();
         OAuthToken currentToken = oAuthToken;
-        if(currentToken != null) {
-            String sessionToken = null;
-            synchronized (tokenLock) {
-                // Re-read under the lock so we validate the most recently published
-                // token and do not act on a snapshot another thread has since rotated.
-                currentToken = oAuthToken;
-                if(currentToken != null) {
-                    if(!currentToken.validSession()) {
-                        throw new EquinixAuthenticationException(
-                                "OAuth token has expired. Call authenticate() to obtain a new token.");
-                    }
-                    sessionToken = currentToken.getSessionToken();
-                }
-            }
-            if(sessionToken != null) {
-                standardHeaders.put("authorization", "Bearer " + sessionToken);
-            }
+        if (currentToken != null && currentToken.getSessionToken() != null) {
+            standardHeaders.put("authorization", "Bearer " + currentToken.getSessionToken());
         }
         String contentType = equinixRequest.getContentType();
         standardHeaders.put("content-type", contentType != null ? contentType : "application/json");
