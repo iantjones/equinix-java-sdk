@@ -14,25 +14,26 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.internetaccess.model.implementation;
+package api.equinix.javasdk.internetaccess.model;
 
 import api.equinix.javasdk.internetaccess.enums.ImportPolicy;
-import api.equinix.javasdk.internetaccess.model.CustomerRoute;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 
 /**
- * Customer-route allowance of an Equinix Internet Access (EIA) v1 dedicated-port default
- * configuration.
+ * A customer-route allowance on an Equinix Internet Access (EIA) v1 default configuration: an
+ * import policy plus the advertised prefix length. The dedicated-port and virtual-connection
+ * routing configurations carry the same shape; this is the common read-only view of it.
+ *
+ * @author ianjones
  */
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DedicatedPortCustomerRoute implements CustomerRoute {
+public interface CustomerRoute {
 
-    @JsonProperty("importPolicy")
-    private ImportPolicy importPolicy;
+    /**
+     * @return the import policy applied to advertised customer routes
+     */
+    ImportPolicy getImportPolicy();
 
-    @JsonProperty("prefixLength")
-    private Integer prefixLength;
+    /**
+     * @return the advertised prefix length
+     */
+    Integer getPrefixLength();
 }
