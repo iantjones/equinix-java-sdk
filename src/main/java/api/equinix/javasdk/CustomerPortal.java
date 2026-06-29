@@ -17,6 +17,8 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.customerportal.client.CrossConnects;
 import api.equinix.javasdk.customerportal.client.CustomerPortalConfig;
@@ -169,7 +171,27 @@ public final class CustomerPortal extends EquinixClient implements Service {
      * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
      */
     public CustomerPortal(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
-        super(equinixCredentials, isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
+    }
+
+    /**
+     * Creates a new Customer Portal client whose credentials are resolved through the given provider.
+     * Authentication occurs automatically on the first API call.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     */
+    public CustomerPortal(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, false);
+    }
+
+    /**
+     * Creates a new Customer Portal client over a custom credentials provider, with optional sandbox mode.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
+     */
+    public CustomerPortal(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        super(credentialsProvider, isSandBoxed);
 
         String paramFile = "json/apiParams_CustomerPortal.json";
         equinixClient.appendApiParams(paramFile);

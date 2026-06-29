@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.core.http.request;
 
-import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.enums.HttpMethod;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
@@ -44,7 +44,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class EquinixRequest<T> implements Request<T> {
 
-    private EquinixStaticCredentialsProvider equinixCredentialsProvider;
+    private EquinixCredentialsProvider equinixCredentialsProvider;
     private URI endPoint;
     private String resourcePath;
     private HttpMethod httpMethod;

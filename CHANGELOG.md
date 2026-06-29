@@ -61,6 +61,19 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   HTTP-date forms). **Idempotent methods only by default** — POST is not retried, so a transient
   failure after a create cannot duplicate the resource; opt in with `retryNonIdempotentMethods`.
   Each retry is logged at WARN. Configurable via `EquinixClient.setRetryPolicy(...)`; on by default.
+- **Token lifecycle**: authentication is now lazy (on the first API call) and the token is
+  transparently re-acquired once it expires, single-flight under a lock so concurrent calls don't
+  stampede the token endpoint. The explicit `authenticate()` still forces a fresh token.
+- **Authentication options — password grant + pluggable credentials**: `PasswordEquinixCredentials`
+  adds the OAuth2 resource-owner password grant (`grant_type=password`, with `user_name`/
+  `user_password` and an optional `password_encoding`) for accounts that still require it (Equinix
+  deprecates it in favour of client credentials). New `EquinixCredentialsProvider` interface,
+  consulted on **every** authentication, lets credentials be resolved or rotated at runtime (e.g.
+  from a secrets manager) without rebuilding the client; provider-accepting constructors were added
+  to `Equinix` and every domain client (`new Fabric(provider)`, …). **Breaking:**
+  `EquinixStaticCredentialsProvider` no longer extends Apache HttpClient's `BasicCredentialsProvider`
+  (it now implements `EquinixCredentialsProvider`); its vestigial `setCredentials(AuthScope, …)`
+  overload was removed.
 - **Forward-compatible enum deserialization**: unknown API enum values no longer crash a
   response (map to a default/`null`/`UNKNOWN`).
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error

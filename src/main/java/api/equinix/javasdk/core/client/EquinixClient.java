@@ -17,6 +17,7 @@
 package api.equinix.javasdk.core.client;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.EquinixHttpClient;
@@ -35,7 +36,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
 import org.apache.http.client.utils.URIUtils;
 
 import java.io.Closeable;
@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 /**
  * Low-level transport client: owns the OAuth2 token lifecycle, the pooled HTTP client, the
@@ -57,7 +58,7 @@ import java.util.Map.Entry;
 public class EquinixClient implements Closeable {
 
     @Getter
-    final private EquinixStaticCredentialsProvider equinixCredentialsProvider;
+    final private EquinixCredentialsProvider equinixCredentialsProvider;
 
     @Getter @Setter
     private JsonNode clientResourceFile;
@@ -99,10 +100,20 @@ public class EquinixClient implements Closeable {
     private final EquinixHttpClient equinixHttpClient;
 
     public EquinixClient(EquinixCredentials equinixCredentials, Boolean isSandBoxed) {
-        this.equinixCredentialsProvider = new EquinixStaticCredentialsProvider(equinixCredentials);
-        this.isSandBoxed = isSandBoxed;
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
+    }
 
-        this.equinixCredentialsProvider.setCredentials(AuthScope.ANY, equinixCredentials);
+    /**
+     * Creates a transport client that resolves its credentials through the given provider. The
+     * provider is consulted on each authentication (first call and re-auth on expiry), so a custom
+     * provider can rotate the underlying credentials without the client being rebuilt.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials to authenticate with
+     * @param isSandBoxed {@code true} for the sandbox environment; {@code false} for production
+     */
+    public EquinixClient(EquinixCredentialsProvider credentialsProvider, Boolean isSandBoxed) {
+        this.equinixCredentialsProvider = Objects.requireNonNull(credentialsProvider, "credentialsProvider");
+        this.isSandBoxed = isSandBoxed;
         equinixHttpClient = new EquinixHttpClient();
         init();
     }
