@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json;
 
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import api.equinix.javasdk.iam.model.PolicyMask;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,13 +47,13 @@ public class PolicyMaskJson implements PolicyMask {
     private Map<String, String> tags;
 
     @JsonProperty("managedPolicies")
-    private Object managedPolicies;
+    private PolicyExpression managedPolicies;
 
     @JsonProperty("managedPermissionSets")
-    private Object managedPermissionSets;
+    private PolicyExpression managedPermissionSets;
 
     @JsonProperty("subtract")
-    private Object subtract;
+    private PolicyExpression subtract;
 
     @JsonProperty("rev")
     private String rev;

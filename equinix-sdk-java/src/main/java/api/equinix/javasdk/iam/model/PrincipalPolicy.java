@@ -43,9 +43,10 @@ public interface PrincipalPolicy {
     Map<String, String> getTags();
 
     /**
-     * @return the permission entries, as raw deserialized JSON
+     * @return the permission entries (polymorphic {@code UserRectSet} members), each as a lossless
+     *         {@link PolicyExpression}
      */
-    List<Object> getPermissions();
+    List<PolicyExpression> getPermissions();
 
     /**
      * @return the opaque revision of the policy (used as {@code lastRev})

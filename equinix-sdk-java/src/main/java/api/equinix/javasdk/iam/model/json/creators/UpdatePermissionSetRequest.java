@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json.creators;
 
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -28,10 +29,10 @@ import java.util.Map;
  * {@code updatePermissionSet}, spec schema {@code UpdatePermissionSetBody}).
  *
  * <p>The {@code permissions}, {@code intersect} and {@code subtract} fields carry the polymorphic
- * {@code UserRectSet}/{@code InlinePermission} entries and are therefore typed loosely as
- * {@code List<Object>}; callers may pass inline-permission maps, permission-set id strings, ERNs
- * or foreign-access-policy reference maps. The {@code lastRev} field supports optimistic
- * concurrency control.</p>
+ * {@code UserRectSet}/{@code InlinePermission} entries; each entry is a {@link PolicyExpression}
+ * that losslessly represents whichever {@code oneOf} form is supplied — a bare permission-set id /
+ * ERN string or a structured inline-permission / reference object. The {@code lastRev} field
+ * supports optimistic concurrency control.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdatePermissionSetRequest {
@@ -43,13 +44,13 @@ public class UpdatePermissionSetRequest {
     private String description;
 
     @JsonProperty("permissions")
-    private List<Object> permissions;
+    private List<PolicyExpression> permissions;
 
     @JsonProperty("intersect")
-    private List<Object> intersect;
+    private List<PolicyExpression> intersect;
 
     @JsonProperty("subtract")
-    private List<Object> subtract;
+    private List<PolicyExpression> subtract;
 
     @JsonProperty("allowBadRefs")
     private String allowBadRefs;
@@ -85,7 +86,7 @@ public class UpdatePermissionSetRequest {
      * @param permissions the permission entries
      * @return this request for chaining
      */
-    public UpdatePermissionSetRequest permissions(List<Object> permissions) {
+    public UpdatePermissionSetRequest permissions(List<PolicyExpression> permissions) {
         this.permissions = permissions;
         return this;
     }
@@ -96,7 +97,7 @@ public class UpdatePermissionSetRequest {
      * @param intersect the intersect entries
      * @return this request for chaining
      */
-    public UpdatePermissionSetRequest intersect(List<Object> intersect) {
+    public UpdatePermissionSetRequest intersect(List<PolicyExpression> intersect) {
         this.intersect = intersect;
         return this;
     }
@@ -107,7 +108,7 @@ public class UpdatePermissionSetRequest {
      * @param subtract the subtract entries
      * @return this request for chaining
      */
-    public UpdatePermissionSetRequest subtract(List<Object> subtract) {
+    public UpdatePermissionSetRequest subtract(List<PolicyExpression> subtract) {
         this.subtract = subtract;
         return this;
     }
@@ -142,15 +143,15 @@ public class UpdatePermissionSetRequest {
         return description;
     }
 
-    public List<Object> getPermissions() {
+    public List<PolicyExpression> getPermissions() {
         return permissions;
     }
 
-    public List<Object> getIntersect() {
+    public List<PolicyExpression> getIntersect() {
         return intersect;
     }
 
-    public List<Object> getSubtract() {
+    public List<PolicyExpression> getSubtract() {
         return subtract;
     }
 

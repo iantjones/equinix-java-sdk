@@ -47,6 +47,18 @@ import api.equinix.javasdk.sts.client.implementation.STSTokensImpl;
  * <p>Each accessor uses lazy initialization — the internal client is created on first access and
  * reused for subsequent calls.</p>
  *
+ * <h3>Service host</h3>
+ * <p>The STS v1 OpenAPI specification declares its own service host
+ * ({@code https://sts.eqix.equinix.com}), with the discovery endpoints ({@code /jwks} and
+ * {@code /.well-known/openid-configuration}) served at the host root and token exchange under
+ * {@code /v1/token}. This SDK, however, routes every domain — STS included — through the unified
+ * Equinix API gateway ({@code https://api.equinix.com}) configured on the shared
+ * {@link EquinixClient}, which fronts the per-service hosts and exposes the same paths (the
+ * {@code bearerAuth} security scheme is likewise defined against the gateway). The relative request
+ * URIs in {@code apiParams_STS.json} are therefore resolved against that single gateway host rather
+ * than the spec's per-service {@code sts.eqix.equinix.com} server. This is the intended SDK-wide
+ * design; no per-domain host override is provided.</p>
+ *
  * <h3>Quick Start</h3>
  * <pre>{@code
  * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");

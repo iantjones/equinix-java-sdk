@@ -49,19 +49,20 @@ public interface PermissionSet {
     Map<String, String> getTags();
 
     /**
-     * @return the permission set entries, as raw deserialized JSON (polymorphic {@code UserRectSet})
+     * @return the permission set entries (polymorphic {@code UserRectSet} members), each as a
+     *         lossless {@link PolicyExpression}
      */
-    List<Object> getPermissions();
+    List<PolicyExpression> getPermissions();
 
     /**
-     * @return the {@code intersect} permission entries, as raw deserialized JSON
+     * @return the {@code intersect} permission entries, each as a lossless {@link PolicyExpression}
      */
-    List<Object> getIntersect();
+    List<PolicyExpression> getIntersect();
 
     /**
-     * @return the {@code subtract} permission entries, as raw deserialized JSON
+     * @return the {@code subtract} permission entries, each as a lossless {@link PolicyExpression}
      */
-    List<Object> getSubtract();
+    List<PolicyExpression> getSubtract();
 
     /**
      * @return the opaque revision of the permission set (used as {@code lastRev})

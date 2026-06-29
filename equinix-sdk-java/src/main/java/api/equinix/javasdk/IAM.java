@@ -63,6 +63,15 @@ import api.equinix.javasdk.iam.client.implementation.IAMRolesImpl;
  * <p>Each accessor uses lazy initialization — the internal client is created on first access and
  * reused for subsequent calls.</p>
  *
+ * <h3>Service host</h3>
+ * <p>The Access v1 OpenAPI specification declares its own service host
+ * ({@code https://access.eqix.equinix.com}). This SDK, however, routes every domain — IAM included
+ * — through the unified Equinix API gateway ({@code https://api.equinix.com}) configured on the
+ * shared {@link EquinixClient}, which fronts the per-service hosts and exposes the same paths. The
+ * relative request URIs in {@code apiParams_IAM.json} are therefore resolved against that single
+ * gateway host rather than the spec's per-service {@code access.eqix.equinix.com} server. This is
+ * the intended SDK-wide design; no per-domain host override is provided.</p>
+ *
  * <h3>Quick Start</h3>
  * <pre>{@code
  * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");

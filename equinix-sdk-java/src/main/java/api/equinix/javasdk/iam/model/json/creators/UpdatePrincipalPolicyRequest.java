@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json.creators;
 
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -28,15 +29,16 @@ import java.util.Map;
  * {@code updatePrincipalPolicy}, spec schema {@code UpdatePrincipalPolicyBody}).
  *
  * <p>The {@code permissions} field carries the polymorphic {@code UserRectSet}/
- * {@code InlinePermission} entries and is therefore typed loosely as {@code List<Object>};
- * callers may pass inline-permission maps, permission-set id strings, ERNs or foreign-access-policy
- * reference maps. The {@code lastRev} field supports optimistic concurrency control.</p>
+ * {@code InlinePermission} entries; each entry is a {@link PolicyExpression} that losslessly
+ * represents whichever {@code oneOf} form is supplied — a bare permission-set id / ERN string or a
+ * structured inline-permission / reference object. The {@code lastRev} field supports optimistic
+ * concurrency control.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdatePrincipalPolicyRequest {
 
     @JsonProperty("permissions")
-    private List<Object> permissions;
+    private List<PolicyExpression> permissions;
 
     @JsonProperty("tags")
     private Map<String, String> tags;
@@ -56,7 +58,7 @@ public class UpdatePrincipalPolicyRequest {
      * @param permissions the permission entries
      * @return this request for chaining
      */
-    public UpdatePrincipalPolicyRequest permissions(List<Object> permissions) {
+    public UpdatePrincipalPolicyRequest permissions(List<PolicyExpression> permissions) {
         this.permissions = permissions;
         return this;
     }
@@ -105,7 +107,7 @@ public class UpdatePrincipalPolicyRequest {
         return this;
     }
 
-    public List<Object> getPermissions() {
+    public List<PolicyExpression> getPermissions() {
         return permissions;
     }
 

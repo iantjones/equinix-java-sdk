@@ -31,6 +31,16 @@ import api.equinix.javasdk.iam.model.json.creators.UpdateAccessPolicyRequest;
  * <p>Provides the access policy lifecycle — list / create / get / update / delete and the
  * enable/disable lifecycle toggles — plus management of the policy's grants (which principals,
  * groups or projects the policy is granted to). All operations are scoped to a {@code projectId}.</p>
+ *
+ * <p><b>ERN addressing.</b> The single-policy operations (get / update / enable / disable / grants)
+ * additionally accept the spec's ERN-addressing form, where {@code projectId} is the literal
+ * {@code "*"} and {@code accessPolicyId} is an Equinix Resource Name (ERN) — or a managed-policy id
+ * — rather than a local {@code accesspolicy:} id. Because an ERN contains reserved characters
+ * ({@code :} and {@code /}), the API requires it to be URL-encoded when used as a path segment.
+ * This SDK does not provide a dedicated {@code byErn} overload: the shared core path-substitution
+ * layer does not percent-encode individual path segments, and adding that encoding would require a
+ * core change. Callers needing ERN addressing must therefore pass a pre-URL-encoded ERN as the
+ * {@code accessPolicyId} argument together with {@code projectId == "*"}.</p>
  */
 public interface IAMAccessPolicies {
 

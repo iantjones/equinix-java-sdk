@@ -25,7 +25,7 @@ import api.equinix.javasdk.iam.model.json.RoleList;
  */
 public interface RoleClient {
 
-    RoleList listRoles(String pageToken, Integer pageSize, String projectErn);
+    RoleList listRoles(String pageToken, Integer pageSize, String projectId, String projectErn);
 
     RoleList listRolesByProjectId(String projectId, String pageToken, Integer pageSize, String projectErn);
 }

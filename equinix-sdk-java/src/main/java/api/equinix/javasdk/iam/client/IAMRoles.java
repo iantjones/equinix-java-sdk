@@ -48,6 +48,21 @@ public interface IAMRoles {
     RoleList list(String pageToken, Integer pageSize, String projectErn);
 
     /**
+     * Lists all roles, controlling pagination and optional project scoping by id or ERN.
+     *
+     * <p>{@code projectId} and {@code projectErn} are mutually exclusive — supply at most one.</p>
+     *
+     * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
+     * @param pageSize the maximum number of results per page, or {@code null} for the server default
+     * @param projectId the project id to scope the listing to (mutually exclusive with
+     *                  {@code projectErn}), or {@code null}
+     * @param projectErn the project ERN to scope the listing to (mutually exclusive with
+     *                  {@code projectId}), or {@code null}
+     * @return the requested page of roles
+     */
+    RoleList list(String pageToken, Integer pageSize, String projectId, String projectErn);
+
+    /**
      * Lists the roles available within a specific project (first page).
      *
      * @param projectId the project identifier (e.g. {@code project:abc-123})

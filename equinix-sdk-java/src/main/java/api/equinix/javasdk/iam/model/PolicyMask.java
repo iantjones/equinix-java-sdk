@@ -22,7 +22,10 @@ import java.util.Map;
  * A policy mask that constrains the managed policies and permission sets available to a
  * principal, as returned by the IAM policy-mask operations.
  *
- * <p>This is a read-only response view (spec schema {@code PolicyMask}).</p>
+ * <p>This is a read-only response view (spec schema {@code PolicyMask}). The
+ * {@code managedPolicies}/{@code managedPermissionSets} fields are a {@code oneOf} of the literal
+ * string {@code "none"} or an array of ids, and {@code subtract} is a structured object; all three
+ * are exposed as lossless {@link PolicyExpression} values preserving whichever form was returned.</p>
  */
 public interface PolicyMask {
 
@@ -47,21 +50,22 @@ public interface PolicyMask {
     Map<String, String> getTags();
 
     /**
-     * @return the managed policies, as raw deserialized JSON
-     *         (either the string {@code "none"} or an array)
+     * @return the managed policies as a lossless {@link PolicyExpression} — either the string
+     *         {@code "none"} or an array of {@code managedpolicy:} ids
      */
-    Object getManagedPolicies();
+    PolicyExpression getManagedPolicies();
 
     /**
-     * @return the managed permission sets, as raw deserialized JSON
-     *         (either the string {@code "none"} or an array)
+     * @return the managed permission sets as a lossless {@link PolicyExpression} — either the string
+     *         {@code "none"} or an array of {@code managedset:} ids
      */
-    Object getManagedPermissionSets();
+    PolicyExpression getManagedPermissionSets();
 
     /**
-     * @return the {@code subtract} entries, as raw deserialized JSON
+     * @return the {@code subtract} object as a lossless {@link PolicyExpression} (carrying nested
+     *         {@code managedPolicies}/{@code managedPermissionSets} arrays), or {@code null}
      */
-    Object getSubtract();
+    PolicyExpression getSubtract();
 
     /**
      * @return the opaque revision of the policy mask (used as {@code lastRev})

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.iam.model.json;
 
 import api.equinix.javasdk.iam.model.AccessPolicy;
+import api.equinix.javasdk.iam.model.PolicyExpression;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -47,13 +48,13 @@ public class AccessPolicyJson implements AccessPolicy {
     private Map<String, String> tags;
 
     @JsonProperty("permissions")
-    private List<Object> permissions;
+    private List<PolicyExpression> permissions;
 
     @JsonProperty("intersect")
-    private List<Object> intersect;
+    private List<PolicyExpression> intersect;
 
     @JsonProperty("subtract")
-    private List<Object> subtract;
+    private List<PolicyExpression> subtract;
 
     @JsonProperty("rev")
     private String rev;

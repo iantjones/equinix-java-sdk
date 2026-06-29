@@ -33,11 +33,15 @@ public class IAMRolesImpl implements IAMRoles {
     }
 
     public RoleList list() {
-        return this.roleClient.listRoles(null, null, null);
+        return this.roleClient.listRoles(null, null, null, null);
     }
 
     public RoleList list(String pageToken, Integer pageSize, String projectErn) {
-        return this.roleClient.listRoles(pageToken, pageSize, projectErn);
+        return this.roleClient.listRoles(pageToken, pageSize, null, projectErn);
+    }
+
+    public RoleList list(String pageToken, Integer pageSize, String projectId, String projectErn) {
+        return this.roleClient.listRoles(pageToken, pageSize, projectId, projectErn);
     }
 
     public RoleList listByProject(String projectId) {
