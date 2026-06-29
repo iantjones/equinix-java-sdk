@@ -85,9 +85,9 @@ public interface OrderDetails {
     OrderSignature getSignature();
 
     /**
-     * @return the processing state of the order
+     * @return the processing status of the order
      */
-    OrderState getState();
+    OrderState getStatus();
 
     /**
      * @return the audit trail of the order

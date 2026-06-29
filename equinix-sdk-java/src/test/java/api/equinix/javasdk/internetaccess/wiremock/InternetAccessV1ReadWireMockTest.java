@@ -123,7 +123,7 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
 
     @Test
     void routingConfigurations_routesToV1AndDeserializesTypedEnums() {
-        wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/routingConfigurations"))
+        wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/routingProtocolConfigurations"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody(page("{ \"useCase\": \"MAIN\", \"type\": \"SINGLE_PORT\", "
                                 + "\"routingProtocol\": { \"type\": \"BGP\" } }"))));
@@ -136,7 +136,7 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
         assertEquals(Redundancy.SINGLE_PORT, configs.get(0).getType());
         assertEquals(RoutingProtocolType.BGP, configs.get(0).getRoutingProtocol().getType());
 
-        wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/routingConfigurations"))
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/routingProtocolConfigurations"))
                 .withQueryParam("useCase", equalTo("MAIN")));
     }
 
@@ -192,7 +192,7 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"href\": \"https://api.equinix.com/internetAccess/v1/orders/abc-123\", "
                                 + "\"uuid\": \"abc-123\", \"number\": \"1-9234239473\", \"type\": \"NEW\", "
-                                + "\"state\": \"AWAITING_SIGNATURE\", \"signature\": { \"signatory\": \"DELEGATE\", "
+                                + "\"status\": \"AWAITING_SIGNATURE\", \"signature\": { \"signatory\": \"DELEGATE\", "
                                 + "\"delegate\": { \"email\": \"d@e.com\" } } }")));
 
         OrderDetails order = internetAccess.orders().get("abc-123");
@@ -200,8 +200,22 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
         assertEquals("abc-123", order.getUuid());
         assertEquals("1-9234239473", order.getNumber());
         assertEquals(ServiceOrderType.NEW, order.getType());
-        assertEquals(OrderState.AWAITING_SIGNATURE, order.getState());
+        assertEquals(OrderState.AWAITING_SIGNATURE, order.getStatus());
         assertEquals("d@e.com", order.getSignature().getDelegate().getEmail());
+    }
+
+    @Test
+    void getOrder_deserializesSubmittedStatus() {
+        wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/orders/sub-1"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{ \"href\": \"https://api.equinix.com/internetAccess/v1/orders/sub-1\", "
+                                + "\"uuid\": \"sub-1\", \"number\": \"1-9234239474\", \"type\": \"NEW\", "
+                                + "\"status\": \"SUBMITTED\", \"draft\": false }")));
+
+        OrderDetails order = internetAccess.orders().get("sub-1");
+
+        assertEquals("sub-1", order.getUuid());
+        assertEquals(OrderState.SUBMITTED, order.getStatus());
     }
 
     @Test

@@ -64,7 +64,7 @@
         }
       },
       "RoutingConfigurationsV1": {
-        "rootUri": "routingConfigurations",
+        "rootUri": "routingProtocolConfigurations",
         "defaultVersion": 1,
         "serviceEndpoints": {
           "ListRoutingConfigurations": { "httpMethod": "GET" }

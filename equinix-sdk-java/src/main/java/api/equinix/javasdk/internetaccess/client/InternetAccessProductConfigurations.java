@@ -38,7 +38,7 @@ public interface InternetAccessProductConfigurations {
 
     /**
      * Returns the allowed routing-protocol configurations for the given use case
-     * ({@code GET /internetAccess/v1/routingConfigurations}).
+     * ({@code GET /internetAccess/v1/routingProtocolConfigurations}).
      *
      * @param useCase the intended use case
      * @return a paginated list of allowed routing-protocol configurations
@@ -47,7 +47,7 @@ public interface InternetAccessProductConfigurations {
 
     /**
      * Returns the allowed routing-protocol configurations for the given use case and redundancy
-     * ({@code GET /internetAccess/v1/routingConfigurations}).
+     * ({@code GET /internetAccess/v1/routingProtocolConfigurations}).
      *
      * @param useCase the intended use case
      * @param type the redundancy configuration, or {@code null} for any

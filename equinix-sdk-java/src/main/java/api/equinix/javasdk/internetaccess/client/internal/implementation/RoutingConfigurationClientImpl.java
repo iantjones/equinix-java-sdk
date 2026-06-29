@@ -32,7 +32,7 @@ import java.util.Map;
 
 /**
  * Internal client implementation for the Equinix Internet Access (EIA) v1 routing-configuration
- * lookup {@code GET /internetAccess/v1/routingConfigurations}. The
+ * lookup {@code GET /internetAccess/v1/routingProtocolConfigurations}. The
  * {@code RoutingProtocolConfiguration} response is read-only, so the deserialized
  * {@link RoutingProtocolConfigurationJson} (which implements {@link RoutingProtocolConfiguration}
  * directly) is returned without a wrapper.

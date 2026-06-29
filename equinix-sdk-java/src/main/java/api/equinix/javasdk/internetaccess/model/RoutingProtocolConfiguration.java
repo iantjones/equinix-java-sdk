@@ -22,7 +22,7 @@ import api.equinix.javasdk.internetaccess.model.implementation.RoutingConfigRout
 
 /**
  * An allowed routing-protocol configuration for an Equinix Internet Access (EIA) v1 service, as
- * returned by {@code GET /internetAccess/v1/routingConfigurations}.
+ * returned by {@code GET /internetAccess/v1/routingProtocolConfigurations}.
  *
  * <p>This is a read-only response view.</p>
  */

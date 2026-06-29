@@ -75,7 +75,7 @@ import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessTe
  *   <li>{@link #operationalUnits() Operational units} — {@code GET /internetAccess/v1/operationalUnits}.</li>
  *   <li>{@link #signaturePolicies() Signature policies} — {@code GET /internetAccess/v1/signaturePolicies}.</li>
  *   <li>{@link #productConfigurations() Attribute/default configurations} —
- *       {@code routingConfigurations}, {@code dedicatedBandwidthConfigurations},
+ *       {@code routingProtocolConfigurations}, {@code dedicatedBandwidthConfigurations},
  *       {@code virtualBandwidthConfigurations}, {@code virtualConnectionDefaultConfigurations},
  *       {@code customerRouteConfigurations}, {@code dedicatedPortDefaultConfigurations} and
  *       {@code portConfigurations} (all under {@code GET /internetAccess/v1/}).</li>

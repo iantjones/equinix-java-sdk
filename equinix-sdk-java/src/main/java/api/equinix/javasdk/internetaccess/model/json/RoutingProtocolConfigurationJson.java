@@ -27,7 +27,7 @@ import lombok.Setter;
 
 /**
  * Read-only JSON model for a {@link RoutingProtocolConfiguration} returned by the Equinix Internet
- * Access (EIA) v1 lookup {@code GET /internetAccess/v1/routingConfigurations}. Implements
+ * Access (EIA) v1 lookup {@code GET /internetAccess/v1/routingProtocolConfigurations}. Implements
  * {@link RoutingProtocolConfiguration} directly, so no wrapper is required.
  */
 @Getter
