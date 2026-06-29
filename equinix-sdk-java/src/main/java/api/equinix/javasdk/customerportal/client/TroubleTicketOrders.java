@@ -41,11 +41,37 @@ public interface TroubleTicketOrders {
     List<? extends TroubleTicketType> getTypes();
 
     /**
+     * Lists Equinix trouble ticket problem categories filtered by a single category.
+     *
+     * <p>Maps to {@code GET /v1/orders/troubleticket/types} with the {@code category} query
+     * parameter (e.g. {@code Cross Connect}, {@code Network}, {@code Power}, {@code Environment},
+     * {@code Hardware}, {@code Security}, {@code Managed Services}, {@code Smartview}).</p>
+     *
+     * @param category the trouble ticket category to filter by, or {@code null} for all
+     * @return the list of supported trouble ticket types
+     */
+    List<? extends TroubleTicketType> getTypes(String category);
+
+    /**
      * Lists the IBX locations and cages where the current user may place trouble ticket orders.
      *
      * @return the list of permitted locations
      */
     List<? extends TroubleTicketOrderLocation> getLocations();
+
+    /**
+     * Lists the IBX locations and cages where the current user may place trouble ticket orders,
+     * filtered by the supplied parameters.
+     *
+     * <p>Maps to {@code GET /v1/orders/troubleticket/locations} with the {@code detail},
+     * {@code ibxs} and {@code cages} query parameters.</p>
+     *
+     * @param detail whether to include detailed cage/account information, or {@code null}
+     * @param ibxs   the IBX codes to filter by, or {@code null}
+     * @param cages  the cage ids to filter by, or {@code null}
+     * @return the list of permitted locations
+     */
+    List<? extends TroubleTicketOrderLocation> getLocations(Boolean detail, String ibxs, String cages);
 
     /**
      * Submits a trouble ticket for an issue impacting your service.

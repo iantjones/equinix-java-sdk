@@ -20,9 +20,13 @@ import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.json.QuoteJson;
 
+import java.util.List;
+
 public interface QuoteClient<T> extends Pageable<T> {
 
     QuoteJson getByUuid(String quoteId);
+
+    QuoteJson getByUuid(String quoteId, List<String> ibxs);
 
     QuoteJson refresh(String quoteId);
 }

@@ -32,6 +32,15 @@ import java.util.Map;
  *
  * <p>{@code ibxLocation}, {@code contacts}, {@code schedule} and {@code serviceDetails} are
  * required by the API.</p>
+ *
+ * <p>For each order type a typed {@code serviceDetails} creator is available (e.g.
+ * {@link EquipmentInstallDetails}, {@link ShipmentUnpackDetails}, {@link CageEscortDetails},
+ * {@link MoveJumperCableDetails}, {@link RunJumperCableDetails}, {@link CableRequestDetails},
+ * {@link LocatePackageDetails}, {@link PicturesDocumentDetails}, {@link PatchCableInstallDetails},
+ * {@link PatchCableRemovalDetails}, {@link CageCleanupDetails}, {@link OtherSmartHandsDetails}).
+ * Pass one to {@link #builder(IbxLocation, List, ScheduleInfo, Object)}. A free-form
+ * {@code Map<String, Object>} remains available as an escape hatch via
+ * {@link #builder(IbxLocation, List, ScheduleInfo, Map)}.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -48,38 +57,34 @@ public class SmartHandsRequestJson {
 
     /**
      * The per-type {@code serviceDetails} object whose shape varies by smart hands order type.
-     * Because the API exposes around a dozen distinct order types, each with its own
-     * {@code serviceDetails} schema, this is intentionally left as a free-form
-     * {@code Map<String, Object>} rather than modelled as typed classes; a map is an acceptable
-     * escape hatch here.
+     * Typed as {@code Object} so it may be either a typed {@code serviceDetails} creator or a
+     * free-form {@code Map<String, Object>} escape hatch; both serialize to the same JSON object.
      *
      * <p>The required keys for each type are defined by the corresponding
      * {@code *Request.serviceDetails} schema in the smarthands v1 spec. The order type maps to a
-     * spec schema (and to the {@code createXxx} client method / typed POST path) as follows:</p>
+     * spec schema, typed creator and {@code createXxx} client method / typed POST path as
+     * follows:</p>
      *
      * <ul>
-     *     <li>{@code equipmentInstall} — {@code equipmentInstallRequest.serviceDetails} (required:
-     *     {@code deviceLocation}, {@code elevationDrawingAttached}, {@code installationPoint},
-     *     {@code installedEquipmentPhotoRequired}, {@code mountHardwareIncluded},
-     *     {@code patchDevices}, {@code powerItOn}, {@code scopeOfWork})</li>
-     *     <li>{@code cageCleanup} — {@code cageCleanupRequest.serviceDetails}</li>
-     *     <li>{@code cageEscort} — {@code cageEscortRequest.serviceDetails}</li>
-     *     <li>{@code shipmentUnpack} — {@code shipmentUnpackRequest.serviceDetails}</li>
-     *     <li>{@code cableRequest} — {@code cableRequestRequest.serviceDetails}</li>
-     *     <li>{@code locatePackage} — {@code locatePackageRequest.serviceDetails}</li>
-     *     <li>{@code moveJumperCable} — {@code moveJumperCableRequest.serviceDetails}</li>
-     *     <li>{@code runJumperCable} — {@code runJumperCableRequest.serviceDetails}</li>
-     *     <li>{@code patchCableInstall} — {@code patchCableInstallRequest.serviceDetails}</li>
-     *     <li>{@code patchCableRemoval} — {@code patchCableRemovalRequest.serviceDetails}</li>
-     *     <li>{@code picturesDocument} — {@code picturesDocumentRequest.serviceDetails}</li>
-     *     <li>{@code other} — {@code otherRequest.serviceDetails}</li>
+     *     <li>{@code equipmentInstall} — {@link EquipmentInstallDetails}</li>
+     *     <li>{@code cageCleanup} — {@link CageCleanupDetails}</li>
+     *     <li>{@code cageEscort} — {@link CageEscortDetails}</li>
+     *     <li>{@code shipmentUnpack} — {@link ShipmentUnpackDetails}</li>
+     *     <li>{@code cableRequest} — {@link CableRequestDetails}</li>
+     *     <li>{@code locatePackage} — {@link LocatePackageDetails}</li>
+     *     <li>{@code moveJumperCable} — {@link MoveJumperCableDetails}</li>
+     *     <li>{@code runJumperCable} — {@link RunJumperCableDetails}</li>
+     *     <li>{@code patchCableInstall} — {@link PatchCableInstallDetails}</li>
+     *     <li>{@code patchCableRemoval} — {@link PatchCableRemovalDetails}</li>
+     *     <li>{@code picturesDocument} — {@link PicturesDocumentDetails}</li>
+     *     <li>{@code other} — {@link OtherSmartHandsDetails}</li>
      * </ul>
      *
      * <p>Consult the smarthands v1 spec for the full set of properties and which are required for
      * the specific type you are ordering.</p>
      */
     @JsonProperty("serviceDetails")
-    private final Map<String, Object> serviceDetails;
+    private final Object serviceDetails;
 
     @JsonProperty("customerReferenceNumber")
     private final String customerReferenceNumber;
@@ -101,30 +106,46 @@ public class SmartHandsRequestJson {
     }
 
     /**
-     * Returns a new builder for a smart hands request body.
+     * Returns a new builder for a smart hands request body using a typed per-type
+     * {@code serviceDetails} creator (e.g. {@link EquipmentInstallDetails}).
      *
      * @param ibxLocation    the IBX/cage location (required)
      * @param contacts       the ordering, technical and notification contacts (required)
      * @param schedule       the scheduling details (required)
-     * @param serviceDetails the per-type service details (required)
+     * @param serviceDetails the typed per-type service details (required)
+     * @return a new builder
+     */
+    public static Builder builder(IbxLocation ibxLocation, List<ContactInfo> contacts, ScheduleInfo schedule,
+                                  Object serviceDetails) {
+        return new Builder(ibxLocation, contacts, schedule, serviceDetails);
+    }
+
+    /**
+     * Returns a new builder for a smart hands request body using a free-form
+     * {@code Map<String, Object>} {@code serviceDetails} escape hatch.
+     *
+     * @param ibxLocation    the IBX/cage location (required)
+     * @param contacts       the ordering, technical and notification contacts (required)
+     * @param schedule       the scheduling details (required)
+     * @param serviceDetails the per-type service details as a free-form map (required)
      * @return a new builder
      */
     public static Builder builder(IbxLocation ibxLocation, List<ContactInfo> contacts, ScheduleInfo schedule,
                                   Map<String, Object> serviceDetails) {
-        return new Builder(ibxLocation, contacts, schedule, serviceDetails);
+        return new Builder(ibxLocation, contacts, schedule, (Object) serviceDetails);
     }
 
     public static class Builder {
         private final IbxLocation ibxLocation;
         private final List<ContactInfo> contacts;
         private final ScheduleInfo schedule;
-        private final Map<String, Object> serviceDetails;
+        private final Object serviceDetails;
         private String customerReferenceNumber;
         private PurchaseOrderInfo purchaseOrder;
         private List<SmartHandsAttachment> attachments;
 
         private Builder(IbxLocation ibxLocation, List<ContactInfo> contacts, ScheduleInfo schedule,
-                        Map<String, Object> serviceDetails) {
+                        Object serviceDetails) {
             this.ibxLocation = ibxLocation;
             this.contacts = contacts;
             this.schedule = schedule;

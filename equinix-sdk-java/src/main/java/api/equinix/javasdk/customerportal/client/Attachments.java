@@ -20,6 +20,8 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
 
+import java.util.List;
+
 /**
  * Client interface for managing file attachments in the Equinix Customer Portal.
  *
@@ -36,6 +38,17 @@ public interface Attachments {
      * @return a paginated list of attachments
      */
     PaginatedList<Attachment> list();
+
+    /**
+     * Lists attachments for the current account filtered to the supplied attachment ids.
+     *
+     * <p>Maps to {@code GET /v1/attachments} ({@code getAttachments}) with the
+     * {@code attachmentIds} query parameter.</p>
+     *
+     * @param attachmentIds the attachment ids to filter by, or {@code null}/empty for all
+     * @return a paginated list of matching attachments
+     */
+    PaginatedList<Attachment> list(List<String> attachmentIds);
 
     /**
      * Retrieves a specific attachment's metadata by its identifier.

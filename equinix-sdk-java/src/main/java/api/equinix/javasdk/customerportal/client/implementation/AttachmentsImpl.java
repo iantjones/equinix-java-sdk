@@ -27,6 +27,8 @@ import api.equinix.javasdk.customerportal.model.Attachment;
 import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
 import api.equinix.javasdk.customerportal.model.wrappers.AttachmentWrapper;
 
+import java.util.List;
+
 public class AttachmentsImpl implements Attachments {
 
     private final CustomerPortal serviceManager;
@@ -39,7 +41,11 @@ public class AttachmentsImpl implements Attachments {
     }
 
     public PaginatedList<Attachment> list() {
-        Page<Attachment, AttachmentJson> responsePage = this.serviceClient.list();
+        return list(null);
+    }
+
+    public PaginatedList<Attachment> list(List<String> attachmentIds) {
+        Page<Attachment, AttachmentJson> responsePage = this.serviceClient.list(attachmentIds);
         PaginatedList<Attachment> attachmentList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, AttachmentWrapper::new);
         return new PaginatedList<>(attachmentList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }

@@ -18,6 +18,8 @@ package api.equinix.javasdk.customerportal.client;
 
 import api.equinix.javasdk.customerportal.model.Quote;
 
+import java.util.List;
+
 /**
  * Client interface for retrieving quotes in the Equinix Customer Portal.
  *
@@ -35,4 +37,16 @@ public interface Quotes {
      * @return the matching quote
      */
     Quote getByUuid(String quoteId);
+
+    /**
+     * Retrieves a specific quote by its identifier, scoped to the supplied IBXs.
+     *
+     * <p>Maps to {@code GET /v2/quotes/{quoteId}} ({@code Retrieve a quote}) with the {@code ibxs}
+     * query parameter.</p>
+     *
+     * @param quoteId the identifier of the quote
+     * @param ibxs    the IBX codes to scope the quote to, or {@code null}/empty for all
+     * @return the matching quote
+     */
+    Quote getByUuid(String quoteId, List<String> ibxs);
 }

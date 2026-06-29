@@ -33,6 +33,7 @@ import org.apache.http.entity.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,6 +50,13 @@ public class AttachmentClientImpl extends ResourceClientBase<Attachment, Attachm
 
     public Page<Attachment, AttachmentJson> list() {
         return listPage("ListAttachments");
+    }
+
+    public Page<Attachment, AttachmentJson> list(List<String> attachmentIds) {
+        if (attachmentIds == null || attachmentIds.isEmpty()) {
+            return listPage("ListAttachments");
+        }
+        return listPage("ListAttachments", Map.of("attachmentIds", attachmentIds));
     }
 
     public AttachmentJson getByUuid(String uuid) {

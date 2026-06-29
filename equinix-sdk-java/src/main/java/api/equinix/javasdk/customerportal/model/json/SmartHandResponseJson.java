@@ -17,10 +17,12 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.SmartHandResponse;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SmartHandResponseJson implements SmartHandResponse {
 
     @JsonProperty("orderNumber")

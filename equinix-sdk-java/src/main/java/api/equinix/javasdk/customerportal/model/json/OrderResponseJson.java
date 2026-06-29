@@ -17,6 +17,7 @@
 package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NoArgsConstructor;
 
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
  * id returned by the colocation v2 order APIs.
  */
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderResponseJson implements OrderResponse {
 
     @JsonProperty("orderNumber")

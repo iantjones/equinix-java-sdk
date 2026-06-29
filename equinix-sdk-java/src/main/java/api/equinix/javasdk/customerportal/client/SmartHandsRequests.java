@@ -29,8 +29,12 @@ import java.util.List;
  * <p>Backed by the Smart Hands v1 API at {@code /v1/orders/smarthands/{type}}. Each Smart Hands
  * service has its own typed create operation; all share the common request envelope
  * ({@link SmartHandsRequestJson}: IBX location, contacts, schedule, optional purchase order and
- * attachments) plus a per-type {@code serviceDetails} object. Reference data is available via
- * {@link #listLocations()} and {@link #listTypes()}.</p>
+ * attachments) plus a per-type {@code serviceDetails} object. A typed {@code serviceDetails}
+ * creator exists for every order type (e.g.
+ * {@link api.equinix.javasdk.customerportal.model.json.creators.EquipmentInstallDetails},
+ * {@link api.equinix.javasdk.customerportal.model.json.creators.RunJumperCableDetails}); a
+ * free-form {@code Map<String, Object>} remains available as an escape hatch. Reference data is
+ * available via {@link #listLocations()} and {@link #listTypes()}.</p>
  */
 public interface SmartHandsRequests {
 

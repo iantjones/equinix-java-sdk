@@ -41,6 +41,18 @@ public interface Orders {
     Order getByUuid(String orderId);
 
     /**
+     * Retrieves a specific order by its unique identifier, scoped to the supplied IBXs.
+     *
+     * <p>Maps to {@code GET /colocations/v2/orders/{orderId}} with the {@code ibxs} query
+     * parameter.</p>
+     *
+     * @param orderId the identifier of the order
+     * @param ibxs    the IBX codes to scope the order to, or {@code null}/empty for all
+     * @return the matching order
+     */
+    Order getByUuid(String orderId, List<String> ibxs);
+
+    /**
      * Retrieves the negotiation messages for an order, each proposing an alternative
      * date and time for fulfilling the order request.
      *

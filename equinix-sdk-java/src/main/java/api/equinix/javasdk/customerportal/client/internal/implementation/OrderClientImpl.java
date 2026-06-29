@@ -47,6 +47,13 @@ public class OrderClientImpl extends ResourceClientBase<Order, OrderJson> implem
         return getOne("GetOrder", Map.of("orderId", orderId));
     }
 
+    public OrderJson getByUuid(String orderId, List<String> ibxs) {
+        if (ibxs == null || ibxs.isEmpty()) {
+            return getByUuid(orderId);
+        }
+        return getAs("GetOrder", Map.of("orderId", orderId), Map.of("ibxs", ibxs), OrderJson.class);
+    }
+
     public OrderJson refresh(String orderId) {
         return this.getByUuid(orderId);
     }

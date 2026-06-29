@@ -18,6 +18,7 @@ package api.equinix.javasdk.customerportal.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.enums.WorkVisitStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -25,6 +26,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkVisitJson {
 
     @Getter static TypeReference<List<WorkVisitJson>> listTypeRef = new TypeReference<>() {};

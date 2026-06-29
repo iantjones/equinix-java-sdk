@@ -25,9 +25,9 @@ import java.util.List;
 
 public interface TroubleTicketOrderClient {
 
-    List<? extends TroubleTicketType> getTypes();
+    List<? extends TroubleTicketType> getTypes(String category);
 
-    List<? extends TroubleTicketOrderLocation> getLocations();
+    List<? extends TroubleTicketOrderLocation> getLocations(Boolean detail, String ibxs, String cages);
 
     OrderResponse placeOrder(TroubleTicketOrderRequest request);
 }
