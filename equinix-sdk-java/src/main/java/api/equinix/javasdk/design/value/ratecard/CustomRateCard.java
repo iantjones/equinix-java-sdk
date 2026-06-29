@@ -24,21 +24,31 @@ import java.util.Optional;
  *     .currency("USD")
  *     .connectionRate(ConnectionType.EVPL_VC, 1_000, new BigDecimal("250.00"))
  *     .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("1800.00"), new BigDecimal("500.00"))
+ *     // a metro- and term-specific override (e.g. a negotiated Singapore 36-month rate):
+ *     .connectionRate(ConnectionType.EVPL_VC, 10_000, MetroCode.SG, Term.MONTH_36,
+ *                     new BigDecimal("1600.00"), new BigDecimal("0.00"))
  *     .cloudRouterRate("STANDARD", new BigDecimal("285.00"))
  *     .defaultConnectionRate(new BigDecimal("400.00"))   // fallback for unlisted bandwidths
  *     .build();
  * }</pre>
  *
- * <p>Lookups resolve to the exact {@code (type, bandwidth)} entry when present,
- * otherwise to the declared default, otherwise {@link Optional#empty()} so a
- * layered card can defer to another source. Every quote it returns is tagged
- * {@link PriceSource#CUSTOM}.</p>
- *
- * <p>Metro and term are accepted by the lookup methods for interface
- * compatibility but are not yet used to differentiate custom rates; per-metro
- * and per-term granularity is a planned enhancement.</p>
+ * <h3>Granularity &amp; resolution order</h3>
+ * <p>Rates may be declared at four levels of specificity. A lookup for a given
+ * {@code (type, bandwidth, metro, term)} resolves to the <em>most specific</em>
+ * declared entry, trying in order:</p>
+ * <ol>
+ *   <li>exact metro <em>and</em> term;</li>
+ *   <li>exact metro, any term;</li>
+ *   <li>any metro, exact term;</li>
+ *   <li>any metro, any term (the metro/term-agnostic {@code connectionRate(type, bandwidth, …)} entry);</li>
+ *   <li>the declared default, otherwise {@link Optional#empty()} so a layered card can defer.</li>
+ * </ol>
+ * <p>Cloud-router rates resolve the same way over {@code (packageCode, metro, term)}.
+ * Every quote this card returns is tagged {@link PriceSource#CUSTOM}.</p>
  */
 public final class CustomRateCard implements RateCard {
+
+    private static final String WILDCARD = "*";
 
     private final Currency currency;
     private final Map<String, PriceQuote> connectionRates;
@@ -54,11 +64,11 @@ public final class CustomRateCard implements RateCard {
         this.egressRates = new HashMap<>();
 
         for (ConnEntry e : b.connectionEntries) {
-            connectionRates.put(connKey(e.type, e.bandwidthMbps),
+            connectionRates.put(connKey(e.type, e.bandwidthMbps, e.metro, e.term),
                     PriceQuote.of(e.monthly, e.setup, currency, PriceSource.CUSTOM));
         }
         for (RouterEntry e : b.routerEntries) {
-            routerRates.put(e.packageCode,
+            routerRates.put(routerKey(e.packageCode, e.metro, e.term),
                     PriceQuote.of(e.monthly, e.setup, currency, PriceSource.CUSTOM));
         }
         for (EgressEntry e : b.egressEntries) {
@@ -78,18 +88,22 @@ public final class CustomRateCard implements RateCard {
 
     @Override
     public Optional<PriceQuote> connection(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
-        PriceQuote exact = connectionRates.get(connKey(type, bandwidthMbps));
-        if (exact != null) {
-            return Optional.of(exact);
+        for (String key : connKeyCandidates(type, bandwidthMbps, metro, term)) {
+            PriceQuote match = connectionRates.get(key);
+            if (match != null) {
+                return Optional.of(match);
+            }
         }
         return Optional.ofNullable(defaultConnection);
     }
 
     @Override
     public Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term) {
-        PriceQuote exact = packageCode == null ? null : routerRates.get(packageCode);
-        if (exact != null) {
-            return Optional.of(exact);
+        for (String key : routerKeyCandidates(packageCode, metro, term)) {
+            PriceQuote match = routerRates.get(key);
+            if (match != null) {
+                return Optional.of(match);
+            }
         }
         return Optional.ofNullable(defaultRouter);
     }
@@ -107,8 +121,38 @@ public final class CustomRateCard implements RateCard {
         return PriceSource.CUSTOM;
     }
 
-    private static String connKey(ConnectionType type, int bandwidthMbps) {
-        return (type == null ? "ANY" : type.name()) + "|" + bandwidthMbps;
+    // ── Keys ──
+
+    private static String connKey(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
+        return (type == null ? "ANY" : type.name()) + "|" + bandwidthMbps
+                + "|" + (metro == null ? WILDCARD : metro.name())
+                + "|" + (term == null ? WILDCARD : term.name());
+    }
+
+    /** Candidate connection keys from most to least specific, so the closest declared rate wins. */
+    private static List<String> connKeyCandidates(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
+        List<String> keys = new ArrayList<>(4);
+        keys.add(connKey(type, bandwidthMbps, metro, term));
+        keys.add(connKey(type, bandwidthMbps, metro, null));
+        keys.add(connKey(type, bandwidthMbps, null, term));
+        keys.add(connKey(type, bandwidthMbps, null, null));
+        return keys;
+    }
+
+    private static String routerKey(String packageCode, MetroCode metro, Term term) {
+        return (packageCode == null ? "ANY" : packageCode)
+                + "|" + (metro == null ? WILDCARD : metro.name())
+                + "|" + (term == null ? WILDCARD : term.name());
+    }
+
+    /** Candidate router keys from most to least specific. */
+    private static List<String> routerKeyCandidates(String packageCode, MetroCode metro, Term term) {
+        List<String> keys = new ArrayList<>(4);
+        keys.add(routerKey(packageCode, metro, term));
+        keys.add(routerKey(packageCode, metro, null));
+        keys.add(routerKey(packageCode, null, term));
+        keys.add(routerKey(packageCode, null, null));
+        return keys;
     }
 
     private static String egressKey(CloudProviderType provider, EgressPath path) {
@@ -141,46 +185,84 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
-        /** Declares a monthly-only rate for a connection of the given type and bandwidth. */
+        /** Declares a metro/term-agnostic monthly-only rate for a connection of the given type and bandwidth. */
         public Builder connectionRate(ConnectionType type, int bandwidthMbps, BigDecimal monthly) {
-            return connectionRate(type, bandwidthMbps, monthly, BigDecimal.ZERO);
+            return connectionRate(type, bandwidthMbps, null, null, monthly, BigDecimal.ZERO);
         }
 
-        /** Declares a monthly + one-time setup rate for a connection of the given type and bandwidth. */
+        /** Declares a metro/term-agnostic monthly + one-time setup rate for a connection of the given type and bandwidth. */
         public Builder connectionRate(ConnectionType type, int bandwidthMbps, BigDecimal monthly, BigDecimal setup) {
-            connectionEntries.add(new ConnEntry(type, bandwidthMbps, monthly, setup));
+            return connectionRate(type, bandwidthMbps, null, null, monthly, setup);
+        }
+
+        /**
+         * Declares a metro- and term-specific monthly-only rate for a connection. A {@code null}
+         * metro or term means "any" for that axis, so this also expresses metro-only or term-only
+         * overrides.
+         */
+        public Builder connectionRate(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term,
+                                      BigDecimal monthly) {
+            return connectionRate(type, bandwidthMbps, metro, term, monthly, BigDecimal.ZERO);
+        }
+
+        /**
+         * Declares a metro- and term-specific monthly + one-time setup rate for a connection. A
+         * {@code null} metro or term means "any" for that axis. More specific entries win over
+         * less specific ones at lookup time (see {@link CustomRateCard}).
+         */
+        public Builder connectionRate(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term,
+                                      BigDecimal monthly, BigDecimal setup) {
+            connectionEntries.add(new ConnEntry(type, bandwidthMbps, metro, term, monthly, setup));
             return this;
         }
 
-        /** Fallback monthly rate used for any connection without an exact {@code (type, bandwidth)} entry. */
+        /** Fallback monthly rate used for any connection without a more specific entry. */
         public Builder defaultConnectionRate(BigDecimal monthly) {
             return defaultConnectionRate(monthly, BigDecimal.ZERO);
         }
 
-        /** Fallback monthly + setup rate used for any connection without an exact entry. */
+        /** Fallback monthly + setup rate used for any connection without a more specific entry. */
         public Builder defaultConnectionRate(BigDecimal monthly, BigDecimal setup) {
             this.defaultConnectionMonthly = monthly;
             this.defaultConnectionSetup = setup;
             return this;
         }
 
-        /** Declares a monthly-only rate for a Cloud Router package. */
+        /** Declares a metro/term-agnostic monthly-only rate for a Cloud Router package. */
         public Builder cloudRouterRate(String packageCode, BigDecimal monthly) {
-            return cloudRouterRate(packageCode, monthly, BigDecimal.ZERO);
+            return cloudRouterRate(packageCode, null, null, monthly, BigDecimal.ZERO);
         }
 
-        /** Declares a monthly + one-time setup rate for a Cloud Router package. */
+        /** Declares a metro/term-agnostic monthly + one-time setup rate for a Cloud Router package. */
         public Builder cloudRouterRate(String packageCode, BigDecimal monthly, BigDecimal setup) {
-            routerEntries.add(new RouterEntry(packageCode, monthly, setup));
+            return cloudRouterRate(packageCode, null, null, monthly, setup);
+        }
+
+        /**
+         * Declares a metro- and term-specific monthly-only rate for a Cloud Router package. A
+         * {@code null} metro or term means "any" for that axis.
+         */
+        public Builder cloudRouterRate(String packageCode, MetroCode metro, Term term, BigDecimal monthly) {
+            return cloudRouterRate(packageCode, metro, term, monthly, BigDecimal.ZERO);
+        }
+
+        /**
+         * Declares a metro- and term-specific monthly + one-time setup rate for a Cloud Router
+         * package. A {@code null} metro or term means "any" for that axis. More specific entries
+         * win over less specific ones at lookup time.
+         */
+        public Builder cloudRouterRate(String packageCode, MetroCode metro, Term term, BigDecimal monthly,
+                                       BigDecimal setup) {
+            routerEntries.add(new RouterEntry(packageCode, metro, term, monthly, setup));
             return this;
         }
 
-        /** Fallback monthly rate used for any Cloud Router package without an exact entry. */
+        /** Fallback monthly rate used for any Cloud Router package without a more specific entry. */
         public Builder defaultCloudRouterRate(BigDecimal monthly) {
             return defaultCloudRouterRate(monthly, BigDecimal.ZERO);
         }
 
-        /** Fallback monthly + setup rate used for any Cloud Router package without an exact entry. */
+        /** Fallback monthly + setup rate used for any Cloud Router package without a more specific entry. */
         public Builder defaultCloudRouterRate(BigDecimal monthly, BigDecimal setup) {
             this.defaultRouterMonthly = monthly;
             this.defaultRouterSetup = setup;
@@ -211,12 +293,17 @@ public final class CustomRateCard implements RateCard {
     private static final class ConnEntry {
         final ConnectionType type;
         final int bandwidthMbps;
+        final MetroCode metro;
+        final Term term;
         final BigDecimal monthly;
         final BigDecimal setup;
 
-        ConnEntry(ConnectionType type, int bandwidthMbps, BigDecimal monthly, BigDecimal setup) {
+        ConnEntry(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term,
+                  BigDecimal monthly, BigDecimal setup) {
             this.type = type;
             this.bandwidthMbps = bandwidthMbps;
+            this.metro = metro;
+            this.term = term;
             this.monthly = monthly;
             this.setup = setup;
         }
@@ -224,11 +311,15 @@ public final class CustomRateCard implements RateCard {
 
     private static final class RouterEntry {
         final String packageCode;
+        final MetroCode metro;
+        final Term term;
         final BigDecimal monthly;
         final BigDecimal setup;
 
-        RouterEntry(String packageCode, BigDecimal monthly, BigDecimal setup) {
+        RouterEntry(String packageCode, MetroCode metro, Term term, BigDecimal monthly, BigDecimal setup) {
             this.packageCode = packageCode;
+            this.metro = metro;
+            this.term = term;
             this.monthly = monthly;
             this.setup = setup;
         }
@@ -246,4 +337,3 @@ public final class CustomRateCard implements RateCard {
         }
     }
 }
-
