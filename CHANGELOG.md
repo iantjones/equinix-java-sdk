@@ -77,6 +77,26 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   properties — add the one dependency and inject `Fabric`.
 - **Samples module** (`equinix-sdk-samples`, not published): runnable examples — create a
   connection, optimize→plan→Terraform/Mermaid export, paginate, and async.
+- **Value realization — cost / savings / TCO modeling** (`design.value`, `fabric.savingsCalculator()`,
+  `fabric.tcoComparison()`, `plan.valueRealization()`): quantify the cost case for interconnection.
+  - **Layered, provenance-tagged rate cards** (`design.value.ratecard.RateCard`, combined in a
+    precedence chain via `RateCard.layered(...)`): `EquinixRateCard` reads **live `fabric.prices()`**
+    (narrowed server-side by price `/type` to the connection + gateway product families);
+    `CustomRateCard` takes caller-supplied rates fluently with **per-metro / per-term granularity**
+    and most-specific-match resolution; `ReferenceRateCard` ships dated indicative figures; and the
+    `design.value.ratecard.provider` adapters source **live cloud-egress rates** from the public
+    Azure Retail Prices, AWS Price List, and GCP Cloud Billing Catalog APIs (opt-in, fault-tolerant).
+    Every quote carries a `PriceSource` (`EQUINIX_LIVE` / `CUSTOM` / `PROVIDER_API` / `REFERENCE` /
+    `ESTIMATE` / `COMPOSITE`).
+  - **Savings calculator**: public-internet vs private-interconnect egress savings (net / annual /
+    first-year, break-even GB, payback) → `SavingsEstimate`.
+  - **TCO comparison**: Public Cloud (internet) vs On-Prem vs Equinix Interconnect, recommending the
+    cheapest with savings vs baseline; on-prem inputs overridable.
+  - **Plan value realization**: per-provider egress savings netted against a `DeploymentPlan`'s real
+    interconnect cost (no double-counting).
+  - The Metro Optimizer's cost estimate now uses live rate-card pricing (heuristic fallback tagged
+    `ESTIMATE`) and exposes per-metro + aggregate `PriceSource` provenance on `CostEstimate` /
+    `MetroCostBreakdown`.
 
 ### Changed
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
