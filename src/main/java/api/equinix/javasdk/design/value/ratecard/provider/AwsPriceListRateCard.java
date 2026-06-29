@@ -35,59 +35,75 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A {@link RateCard} that sources AWS <em>internet data-egress</em> rates from
- * the public
- * <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/using-price-list-api.html">AWS Price List Bulk API</a>
- * — specifically the {@code AWSDataTransfer} offer file
- * ({@code /offers/v1.0/aws/AWSDataTransfer/current/index.json}). The bulk API is
- * unauthenticated, so this adapter needs no credentials or request signing.
+ * A {@link RateCard} that sources AWS data-egress rates from the public
+ * <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/using-price-list-api.html">AWS Price List Bulk API</a>.
+ * Both bulk offers it reads are unauthenticated, so this adapter needs no credentials or request
+ * signing. Every rate it returns is tagged {@link PriceSource#PROVIDER_API}.
  *
- * <p>It prices only {@link EgressPath#INTERNET} egress for
- * {@link CloudProviderType#AWS} — the {@code AWS Outbound} / {@code External}
- * data-transfer products, resolved by source region. The per-GB figure is the
- * first paid on-demand tier (the headline rate; the 1&nbsp;GB free tier is
- * skipped). {@link EgressPath#PRIVATE} (AWS Direct Connect data transfer) lives in
- * a separate offer and is not modelled here, so a {@code PRIVATE} lookup returns
- * empty and a layered card falls back to another source. Every rate it returns is
- * tagged {@link PriceSource#PROVIDER_API}.</p>
+ * <ul>
+ *   <li>{@link EgressPath#INTERNET} → the {@code AWSDataTransfer} offer's {@code AWS Outbound} /
+ *       {@code External} products, resolved by source region. The per-GB figure is the first paid
+ *       on-demand tier (the headline rate; the free-tier dimension, if any, is skipped).</li>
+ *   <li>{@link EgressPath#PRIVATE} → the {@code AWSDirectConnect} offer's {@code Data Transfer}
+ *       products with an {@code *Outbound} transfer type for the region. The per-GB figure is the
+ *       <em>lowest</em> positive on-demand rate (the best-case / local Direct Connect egress rate —
+ *       the savings-relevant figure).</li>
+ * </ul>
  *
- * <p>The offer file is large; it is fetched once on first use and cached for the
- * adapter's lifetime. The adapter is fault-tolerant — any fetch or parse failure
- * yields no rate rather than an exception. A {@code null} region yields empty,
- * since AWS egress pricing is region-specific.</p>
+ * <p>The offer files are large; each is fetched once on first use and cached for the adapter's
+ * lifetime. The adapter is fault-tolerant — any fetch or parse failure yields no rate rather than
+ * an exception. A {@code null} region yields empty, since AWS egress pricing is region-specific.</p>
  */
 public final class AwsPriceListRateCard implements RateCard {
 
-    /** The public AWS data-transfer bulk offer file. */
+    /** The public AWS data-transfer bulk offer file (internet egress). */
     public static final String DEFAULT_OFFER_URL =
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDataTransfer/current/index.json";
+
+    /** The public AWS Direct Connect bulk offer file (private-path egress). */
+    public static final String DEFAULT_DIRECT_CONNECT_OFFER_URL =
+            "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDirectConnect/current/index.json";
 
     private static final Currency USD = Currency.getInstance("USD");
 
     private final String offerUrl;
+    private final String directConnectOfferUrl;
     private final ProviderPricingHttpClient http;
     private final Map<String, Optional<EgressRate>> cache = new ConcurrentHashMap<>();
     private volatile JsonNode offer;
     private volatile boolean offerFetched;
+    private volatile JsonNode dxOffer;
+    private volatile boolean dxOfferFetched;
 
-    private AwsPriceListRateCard(String offerUrl) {
+    private AwsPriceListRateCard(String offerUrl, String directConnectOfferUrl) {
         this.offerUrl = offerUrl;
+        this.directConnectOfferUrl = directConnectOfferUrl;
         this.http = new ProviderPricingHttpClient();
     }
 
-    /** Creates an adapter against the public AWS data-transfer bulk offer. */
+    /** Creates an adapter against the public AWS data-transfer + Direct Connect bulk offers. */
     public static AwsPriceListRateCard create() {
-        return new AwsPriceListRateCard(DEFAULT_OFFER_URL);
+        return new AwsPriceListRateCard(DEFAULT_OFFER_URL, DEFAULT_DIRECT_CONNECT_OFFER_URL);
     }
 
     /**
-     * Creates an adapter against a custom offer-file URL — for a mirror, a proxy,
-     * or testing.
+     * Creates an adapter with a custom data-transfer offer URL (Direct Connect uses the default) —
+     * for a mirror, a proxy, or testing.
      *
      * @param offerUrl the full URL of the {@code AWSDataTransfer} {@code index.json}
      */
     public static AwsPriceListRateCard create(String offerUrl) {
-        return new AwsPriceListRateCard(offerUrl);
+        return new AwsPriceListRateCard(offerUrl, DEFAULT_DIRECT_CONNECT_OFFER_URL);
+    }
+
+    /**
+     * Creates an adapter with custom data-transfer and Direct Connect offer URLs.
+     *
+     * @param offerUrl              the full URL of the {@code AWSDataTransfer} {@code index.json}
+     * @param directConnectOfferUrl the full URL of the {@code AWSDirectConnect} {@code index.json}
+     */
+    public static AwsPriceListRateCard create(String offerUrl, String directConnectOfferUrl) {
+        return new AwsPriceListRateCard(offerUrl, directConnectOfferUrl);
     }
 
     @Override
@@ -102,11 +118,11 @@ public final class AwsPriceListRateCard implements RateCard {
 
     @Override
     public Optional<EgressRate> egress(CloudProviderType provider, String region, EgressPath path, Term term) {
-        if (provider != CloudProviderType.AWS || path != EgressPath.INTERNET
-                || region == null || region.isEmpty()) {
+        if (provider != CloudProviderType.AWS || path == null || region == null || region.isEmpty()) {
             return Optional.empty();
         }
-        return cache.computeIfAbsent(region, this::resolveInternetEgress);
+        return cache.computeIfAbsent(path.name() + "|" + region, k ->
+                path == EgressPath.INTERNET ? resolveInternetEgress(region) : resolvePrivateEgress(region));
     }
 
     @Override
@@ -126,7 +142,7 @@ public final class AwsPriceListRateCard implements RateCard {
         }
 
         // The "AWS Outbound" → "External" (internet) data-transfer product for this region.
-        String sku = productSku(products, region);
+        String sku = internetSku(products, region);
         if (sku == null) {
             return Optional.empty();
         }
@@ -139,8 +155,43 @@ public final class AwsPriceListRateCard implements RateCard {
                 .withNote("AWS Price List: data transfer out to internet, " + region));
     }
 
+    private Optional<EgressRate> resolvePrivateEgress(String region) {
+        JsonNode root = dxOffer();
+        if (root == null) {
+            return Optional.empty();
+        }
+        JsonNode products = root.get("products");
+        JsonNode onDemand = root.path("terms").path("OnDemand");
+        if (products == null || !onDemand.isObject()) {
+            return Optional.empty();
+        }
+
+        // The lowest positive Direct Connect *Outbound data-transfer rate from this region.
+        BigDecimal best = null;
+        for (Iterator<Map.Entry<String, JsonNode>> it = products.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            JsonNode p = entry.getValue();
+            JsonNode attrs = p.path("attributes");
+            if (!"Data Transfer".equals(p.path("productFamily").asText(""))
+                    || !region.equals(attrs.path("fromRegionCode").asText(""))
+                    || !attrs.path("transferType").asText("").contains("Outbound")) {
+                continue;
+            }
+            String sku = p.path("sku").asText(entry.getKey());
+            BigDecimal rate = minPositiveRate(onDemand.path(sku));
+            if (rate != null && (best == null || rate.compareTo(best) < 0)) {
+                best = rate;
+            }
+        }
+        if (best == null) {
+            return Optional.empty();
+        }
+        return Optional.of(EgressRate.of(best, USD, PriceSource.PROVIDER_API)
+                .withNote("AWS Price List: Direct Connect data transfer out, " + region));
+    }
+
     /** Returns the SKU of the internet-egress product for the region, or null. */
-    private static String productSku(JsonNode products, String region) {
+    private static String internetSku(JsonNode products, String region) {
         for (Iterator<Map.Entry<String, JsonNode>> it = products.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> entry = it.next();
             JsonNode attrs = entry.getValue().path("attributes");
@@ -161,16 +212,9 @@ public final class AwsPriceListRateCard implements RateCard {
         BigDecimal best = null;
         long bestBegin = Long.MAX_VALUE;
         for (JsonNode term : skuTerms) {
-            JsonNode dims = term.path("priceDimensions");
-            for (JsonNode dim : dims) {
-                String usd = dim.path("pricePerUnit").path("USD").asText("0");
-                BigDecimal price;
-                try {
-                    price = new BigDecimal(usd);
-                } catch (NumberFormatException e) {
-                    continue;
-                }
-                if (price.signum() <= 0) {
+            for (JsonNode dim : term.path("priceDimensions")) {
+                BigDecimal price = usd(dim);
+                if (price == null) {
                     continue;
                 }
                 long begin = parseBegin(dim.path("beginRange").asText("0"));
@@ -181,6 +225,33 @@ public final class AwsPriceListRateCard implements RateCard {
             }
         }
         return best;
+    }
+
+    /** The minimum positive per-GB USD rate across a SKU's on-demand price dimensions, or null. */
+    private static BigDecimal minPositiveRate(JsonNode skuTerms) {
+        if (!skuTerms.isObject()) {
+            return null;
+        }
+        BigDecimal best = null;
+        for (JsonNode term : skuTerms) {
+            for (JsonNode dim : term.path("priceDimensions")) {
+                BigDecimal price = usd(dim);
+                if (price != null && (best == null || price.compareTo(best) < 0)) {
+                    best = price;
+                }
+            }
+        }
+        return best;
+    }
+
+    /** Parses a positive USD per-unit price from a price dimension, or null. */
+    private static BigDecimal usd(JsonNode dim) {
+        try {
+            BigDecimal price = new BigDecimal(dim.path("pricePerUnit").path("USD").asText("0"));
+            return price.signum() > 0 ? price : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static long parseBegin(String beginRange) {
@@ -201,5 +272,17 @@ public final class AwsPriceListRateCard implements RateCard {
             }
         }
         return offer;
+    }
+
+    private JsonNode dxOffer() {
+        if (!dxOfferFetched) {
+            synchronized (this) {
+                if (!dxOfferFetched) {
+                    dxOffer = http.getJson(directConnectOfferUrl).orElse(null);
+                    dxOfferFetched = true;
+                }
+            }
+        }
+        return dxOffer;
     }
 }

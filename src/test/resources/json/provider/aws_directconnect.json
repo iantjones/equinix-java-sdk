@@ -1,0 +1,100 @@
+{
+  "formatVersion": "v1.0",
+  "offerCode": "AWSDirectConnect",
+  "products": {
+    "DX-OUT-LOCAL": {
+      "sku": "DX-OUT-LOCAL",
+      "productFamily": "Data Transfer",
+      "attributes": {
+        "servicecode": "AWSDirectConnect",
+        "transferType": "IntraRegion Outbound",
+        "fromLocation": "US East (N. Virginia)",
+        "fromRegionCode": "us-east-1",
+        "toLocation": "Equinix DC2",
+        "toLocationType": "AWS Direct Connect Location"
+      }
+    },
+    "DX-OUT-XREGION": {
+      "sku": "DX-OUT-XREGION",
+      "productFamily": "Data Transfer",
+      "attributes": {
+        "servicecode": "AWSDirectConnect",
+        "transferType": "InterRegion Outbound",
+        "fromLocation": "US East (N. Virginia)",
+        "fromRegionCode": "us-east-1",
+        "toLocation": "Global Switch Sydney",
+        "toLocationType": "AWS Direct Connect Location"
+      }
+    },
+    "DX-IN": {
+      "sku": "DX-IN",
+      "productFamily": "Data Transfer",
+      "attributes": {
+        "servicecode": "AWSDirectConnect",
+        "transferType": "IntraRegion Inbound",
+        "fromRegionCode": "us-east-1"
+      }
+    },
+    "DX-PORT": {
+      "sku": "DX-PORT",
+      "productFamily": "Direct Connect",
+      "attributes": {
+        "servicecode": "AWSDirectConnect",
+        "capacity": "1Gbps",
+        "fromRegionCode": "us-east-1"
+      }
+    }
+  },
+  "terms": {
+    "OnDemand": {
+      "DX-OUT-LOCAL": {
+        "DX-OUT-LOCAL.JRTCKXETXF": {
+          "priceDimensions": {
+            "DX-OUT-LOCAL.JRTCKXETXF.1": {
+              "beginRange": "0",
+              "unit": "GB",
+              "pricePerUnit": { "USD": "0.0200000000" },
+              "description": "$0.0200 per GB - AWS Direct Connect data transfer Outbound US East (N. Virginia)"
+            }
+          }
+        }
+      },
+      "DX-OUT-XREGION": {
+        "DX-OUT-XREGION.JRTCKXETXF": {
+          "priceDimensions": {
+            "DX-OUT-XREGION.JRTCKXETXF.1": {
+              "beginRange": "0",
+              "unit": "GB",
+              "pricePerUnit": { "USD": "0.0600000000" },
+              "description": "$0.0600 per GB - inter-region Direct Connect Outbound"
+            }
+          }
+        }
+      },
+      "DX-IN": {
+        "DX-IN.JRTCKXETXF": {
+          "priceDimensions": {
+            "DX-IN.JRTCKXETXF.1": {
+              "beginRange": "0",
+              "unit": "GB",
+              "pricePerUnit": { "USD": "0.0000000000" },
+              "description": "inbound is free"
+            }
+          }
+        }
+      },
+      "DX-PORT": {
+        "DX-PORT.JRTCKXETXF": {
+          "priceDimensions": {
+            "DX-PORT.JRTCKXETXF.1": {
+              "beginRange": "0",
+              "unit": "Hrs",
+              "pricePerUnit": { "USD": "0.3000000000" },
+              "description": "1Gbps port-hour"
+            }
+          }
+        }
+      }
+    }
+  }
+}

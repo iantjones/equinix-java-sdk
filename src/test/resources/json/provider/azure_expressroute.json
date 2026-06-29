@@ -1,14 +1,44 @@
 {
   "BillingCurrency": "USD",
-  "Count": 1,
+  "Count": 4,
   "Items": [
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.14,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Metered Data - Data Transfer Out",
+      "productName": "ExpressRoute",
+      "serviceName": "ExpressRoute",
+      "serviceFamily": "Networking"
+    },
     {
       "currencyCode": "USD",
       "retailPrice": 0.025,
       "unitOfMeasure": "1 GB",
+      "armRegionName": "westus",
+      "meterName": "Metered Data - Data Transfer Out",
+      "productName": "ExpressRoute",
+      "serviceName": "ExpressRoute",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.0,
+      "unitOfMeasure": "1 GB",
       "armRegionName": "eastus",
-      "meterName": "Metered Egress Data Transfer Out",
-      "productName": "ExpressRoute - Metered",
+      "meterName": "Unlimited Data - Data Transfer Out",
+      "productName": "ExpressRoute",
+      "serviceName": "ExpressRoute",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.0,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Local Data Transfer Out",
+      "productName": "ExpressRoute Direct",
       "serviceName": "ExpressRoute",
       "serviceFamily": "Networking"
     }

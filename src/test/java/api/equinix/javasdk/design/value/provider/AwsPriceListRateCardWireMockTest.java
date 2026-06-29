@@ -33,15 +33,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock tests for {@link AwsPriceListRateCard}, exercising the public AWS
- * data-transfer bulk offer parse with the adapter pointed at the stub server.
+ * WireMock tests for {@link AwsPriceListRateCard}, exercising the public AWS data-transfer
+ * (internet) and Direct Connect (private) bulk-offer parses with the adapter pointed at the stub.
  */
 class AwsPriceListRateCardWireMockTest extends WireMockTestBase {
 
-    private static final String PATH = "/offers/v1.0/aws/AWSDataTransfer/current/index.json";
+    private static final String DT_PATH = "/offers/v1.0/aws/AWSDataTransfer/current/index.json";
+    private static final String DX_PATH = "/offers/v1.0/aws/AWSDirectConnect/current/index.json";
 
     private AwsPriceListRateCard card() {
-        return AwsPriceListRateCard.create(wireMockUrl() + PATH);
+        return AwsPriceListRateCard.create(wireMockUrl() + DT_PATH, wireMockUrl() + DX_PATH);
     }
 
     @BeforeEach
@@ -52,7 +53,7 @@ class AwsPriceListRateCardWireMockTest extends WireMockTestBase {
     @Test
     @DisplayName("internet egress resolves the first paid on-demand tier for the region")
     void resolvesInternetEgress() {
-        wireMock.stubFor(get(urlPathEqualTo(PATH))
+        wireMock.stubFor(get(urlPathEqualTo(DT_PATH))
                 .willReturn(okJson(loadFixture("/json/provider/aws_datatransfer.json"))));
 
         EgressRate rate = card().egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12)
@@ -65,26 +66,46 @@ class AwsPriceListRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("private egress and unknown/null region are not modelled here")
-    void notModelled() {
-        wireMock.stubFor(get(urlPathEqualTo(PATH))
+    @DisplayName("private egress resolves the lowest Direct Connect outbound rate for the region")
+    void resolvesPrivateEgress() {
+        wireMock.stubFor(get(urlPathEqualTo(DX_PATH))
+                .willReturn(okJson(loadFixture("/json/provider/aws_directconnect.json"))));
+
+        EgressRate rate = card().egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+
+        assertEquals(0, new BigDecimal("0.0200000000").compareTo(rate.getPricePerGb()),
+                "lowest positive DX outbound rate (local $0.02), not the inter-region $0.06 or the port fee");
+        assertEquals(PriceSource.PROVIDER_API, rate.getSource());
+        assertNotNull(rate.getNote());
+    }
+
+    @Test
+    @DisplayName("unknown/null region and other providers are empty")
+    void guards() {
+        wireMock.stubFor(get(urlPathEqualTo(DT_PATH))
                 .willReturn(okJson(loadFixture("/json/provider/aws_datatransfer.json"))));
+        wireMock.stubFor(get(urlPathEqualTo(DX_PATH))
+                .willReturn(okJson(loadFixture("/json/provider/aws_directconnect.json"))));
 
         AwsPriceListRateCard card = card();
-        assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12).isEmpty(),
-                "Direct Connect egress is a separate offer");
         assertTrue(card.egress(CloudProviderType.AWS, "eu-west-99", EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
                 "no product for an unknown region");
+        assertTrue(card.egress(CloudProviderType.AWS, "eu-west-99", EgressPath.PRIVATE, Term.MONTH_12).isEmpty(),
+                "no DX product for an unknown region");
         assertTrue(card.egress(CloudProviderType.AWS, null, EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
                 "AWS egress pricing is region-specific");
         assertTrue(card.egress(CloudProviderType.AZURE, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
     }
 
     @Test
-    @DisplayName("degrades to empty when the offer file is unavailable")
+    @DisplayName("degrades to empty when the offer files are unavailable")
     void degradesOnError() {
-        wireMock.stubFor(get(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(500)));
+        wireMock.stubFor(get(urlPathEqualTo(DT_PATH)).willReturn(aResponse().withStatus(500)));
+        wireMock.stubFor(get(urlPathEqualTo(DX_PATH)).willReturn(aResponse().withStatus(500)));
 
-        assertTrue(card().egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
+        AwsPriceListRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
+        assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12).isEmpty());
     }
 }
