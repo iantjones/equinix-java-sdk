@@ -1,0 +1,18 @@
+{
+  "list": [
+    {
+      "permissionSetId": "permissionset:support-agents",
+      "ern": "ern:eqix:equinix/access:global:abc-123:permissionset:support-agents",
+      "description": "Support agents",
+      "tags": {
+        "team": "support"
+      },
+      "permissions": [
+        "permissionset:base-readers"
+      ],
+      "rev": "rev-011",
+      "createdAt": "2024-02-01T10:00:00Z"
+    }
+  ],
+  "nextPageToken": null
+}

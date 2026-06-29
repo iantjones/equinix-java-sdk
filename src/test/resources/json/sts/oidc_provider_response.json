@@ -1,0 +1,27 @@
+{
+  "idpId": "idp:github-actions",
+  "name": "GitHub Actions OIDC",
+  "issuerUri": "https://token.actions.githubusercontent.com",
+  "issuerLocation": "https://token.actions.githubusercontent.com",
+  "trustedClientIds": ["my-oauth-client-id", "ci-deploy-client"],
+  "groupMembershipClaim": "groups",
+  "status": "ENABLED",
+  "jwks": {
+    "keys": [
+      {
+        "kty": "RSA",
+        "kid": "key-2024-01",
+        "use": "sig",
+        "alg": "RS256",
+        "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx",
+        "e": "AQAB"
+      }
+    ]
+  },
+  "jwksRetrievedAt": "2026-06-01T12:00:00.000Z",
+  "rev": "abc123",
+  "createdBy": "user:integration-admin",
+  "createdAt": "2026-05-15T09:30:00.000Z",
+  "updatedBy": "user:integration-admin",
+  "updatedAt": "2026-06-01T12:00:00.000Z"
+}

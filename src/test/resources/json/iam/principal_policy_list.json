@@ -1,0 +1,34 @@
+{
+  "list": [
+    {
+      "userPrincipal": "user:alice",
+      "description": "Principal policy for Alice",
+      "tags": {
+        "team": "platform"
+      },
+      "permissions": [
+        "permissionset:reader"
+      ],
+      "rev": "rev-7",
+      "createdBy": "user:admin",
+      "createdAt": "2024-01-15T12:00:00Z",
+      "updatedBy": "user:bob",
+      "updatedAt": "2024-02-15T12:00:00Z"
+    },
+    {
+      "userPrincipal": "user:bob",
+      "description": "Principal policy for Bob",
+      "tags": {},
+      "permissions": [
+        "permissionset:writer"
+      ],
+      "rev": "rev-3",
+      "disabledPolicy": true,
+      "createdBy": "user:admin",
+      "createdAt": "2024-01-10T09:00:00Z",
+      "updatedBy": "user:admin",
+      "updatedAt": "2024-01-20T09:00:00Z"
+    }
+  ],
+  "nextPageToken": "eyJvZmZzZXQiOjJ9"
+}

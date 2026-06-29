@@ -425,12 +425,35 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.40</minimum>
+                                            <minimum>0.48</minimum>
                                         </limit>
                                         <limit>
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.40</minimum>
+                                            <minimum>0.48</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <!--
+                                    Per-package floors on the client-logic packages of the newest
+                                    domains (IAM, STS), so a domain cannot ship with its request
+                                    building / response handling effectively untested again. The
+                                    model/json packages are intentionally excluded (mostly 1-line
+                                    DTOs whose coverage is incidental).
+                                -->
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>api.equinix.javasdk.iam.client.implementation</include>
+                                        <include>api.equinix.javasdk.iam.client.internal.implementation</include>
+                                        <include>api.equinix.javasdk.sts.client.implementation</include>
+                                        <include>api.equinix.javasdk.sts.client.internal.implementation</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

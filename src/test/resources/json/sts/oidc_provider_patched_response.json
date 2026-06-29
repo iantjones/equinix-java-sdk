@@ -1,0 +1,14 @@
+{
+  "idpId": "idp:github-actions",
+  "name": "GitHub Actions OIDC (renamed)",
+  "issuerUri": "https://token.actions.githubusercontent.com",
+  "issuerLocation": "https://token.actions.githubusercontent.com",
+  "trustedClientIds": ["my-oauth-client-id"],
+  "groupMembershipClaim": "groups",
+  "status": "ENABLED",
+  "rev": "def456",
+  "createdBy": "user:integration-admin",
+  "createdAt": "2026-05-15T09:30:00.000Z",
+  "updatedBy": "user:integration-admin",
+  "updatedAt": "2026-06-02T08:15:00.000Z"
+}

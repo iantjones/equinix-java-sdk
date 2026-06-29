@@ -1,0 +1,17 @@
+{
+  "list": [
+    {
+      "roleId": "role:770e8400-e29b-41d4-a716-446655440222",
+      "name": "Project Owner",
+      "description": "Full access within the project",
+      "assignmentScopeTypes": ["PROJECT"],
+      "permissions": [
+        {
+          "action": "project.resource.write",
+          "description": "Allows managing project resources"
+        }
+      ]
+    }
+  ],
+  "nextPageToken": null
+}

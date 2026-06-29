@@ -1,0 +1,33 @@
+{
+  "list": [
+    {
+      "roleId": "role:550e8400-e29b-41d4-a716-446655440000",
+      "name": "Network Admin",
+      "description": "Full administrative access to networking resources",
+      "assignmentScopeTypes": ["PROJECT", "ORGANIZATION"],
+      "permissions": [
+        {
+          "action": "iam.role.assignment.read",
+          "description": "Allows reading role assignments"
+        },
+        {
+          "action": "fabric.connection.write",
+          "description": "Allows creating and updating connections"
+        }
+      ]
+    },
+    {
+      "roleId": "role:660e8400-e29b-41d4-a716-446655440111",
+      "name": "Viewer",
+      "description": "Read-only access",
+      "assignmentScopeTypes": ["PROJECT"],
+      "permissions": [
+        {
+          "action": "fabric.connection.read",
+          "description": "Allows reading connections"
+        }
+      ]
+    }
+  ],
+  "nextPageToken": "eyJvZmZzZXQiOjJ9"
+}

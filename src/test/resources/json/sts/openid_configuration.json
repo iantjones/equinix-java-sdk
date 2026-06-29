@@ -1,0 +1,23 @@
+{
+  "issuer": "https://sts.eqix.equinix.com",
+  "jwksUri": "https://sts.eqix.equinix.com/jwks",
+  "tokenEndpoint": "https://sts.eqix.equinix.com/use/token",
+  "claimsSupported": [
+    "sub",
+    "iss",
+    "aud",
+    "exp",
+    "iat",
+    "scope"
+  ],
+  "responseTypesSupported": [
+    "token"
+  ],
+  "subjectTypesSupported": [
+    "public"
+  ],
+  "idTokenSigningAlgValuesSupported": [
+    "RS256",
+    "ES256"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "list": [
+    {
+      "actionId": "action:use/listPermissionSets",
+      "serviceAspect": "aspect:use",
+      "tags": {
+        "category": "read"
+      },
+      "rbacPermission": {
+        "permission": "fabric.permissionsets.read",
+        "permissionResourceType": "PermissionSet"
+      },
+      "permissionCodes": {
+        "READ": {
+          "requiresAll": true
+        }
+      },
+      "attributes": []
+    },
+    {
+      "actionId": "action:srv/createConnection",
+      "serviceAspect": "aspect:srv",
+      "tags": {},
+      "permissionCodes": {}
+    }
+  ],
+  "nextPageToken": "actions-next-token"
+}

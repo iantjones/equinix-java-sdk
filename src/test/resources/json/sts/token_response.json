@@ -1,0 +1,6 @@
+{
+  "accessToken": "eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJzdHMtdGVzdCJ9.signature",
+  "issuedTokenType": "urn:ietf:params:oauth:token-type:access_token",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
+}

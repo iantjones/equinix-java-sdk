@@ -1,0 +1,39 @@
+{
+  "list": [
+    {
+      "accessPolicyId": "accesspolicy:my-policy",
+      "ern": "ern:access:us-west:proj-123:accesspolicy/my-policy",
+      "description": "A description string.",
+      "tags": {
+        "team": "platform"
+      },
+      "permissions": [
+        "permissionset:read-only"
+      ],
+      "rev": "rev-1",
+      "managed": false,
+      "createdBy": "user:alice",
+      "createdAt": "2024-01-15T12:00:00Z",
+      "updatedBy": "user:bob",
+      "updatedAt": "2024-02-15T12:00:00Z"
+    },
+    {
+      "accessPolicyId": "accesspolicy:admin-policy",
+      "ern": "ern:access:us-west:proj-123:accesspolicy/admin-policy",
+      "description": "Administrative access.",
+      "tags": {
+        "team": "security"
+      },
+      "permissions": [
+        "all"
+      ],
+      "rev": "rev-2",
+      "managed": false,
+      "createdBy": "user:alice",
+      "createdAt": "2024-01-16T12:00:00Z",
+      "updatedBy": "user:alice",
+      "updatedAt": "2024-01-16T12:00:00Z"
+    }
+  ],
+  "nextPageToken": "eyJvZmZzZXQiOjJ9"
+}

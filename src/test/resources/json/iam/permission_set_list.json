@@ -1,0 +1,40 @@
+{
+  "list": [
+    {
+      "permissionSetId": "permissionset:network-admin",
+      "ern": "ern:eqix:equinix/access:global:abc-123:permissionset:network-admin",
+      "description": "Network administrators",
+      "tags": {
+        "team": "networking"
+      },
+      "permissions": [
+        "permissionset:base-readers"
+      ],
+      "rev": "rev-001",
+      "createdAt": "2024-01-15T12:00:00Z"
+    },
+    {
+      "permissionSetId": "permissionset:billing-readers",
+      "ern": "ern:eqix:equinix/access:global:abc-123:permissionset:billing-readers",
+      "description": "Read-only billing access",
+      "tags": {
+        "team": "finance"
+      },
+      "permissions": [
+        {
+          "resources": "all",
+          "serviceActions": [
+            {
+              "serviceId": "billing",
+              "actions": ["action:use/getInvoice"]
+            }
+          ]
+        }
+      ],
+      "managed": true,
+      "rev": "rev-007",
+      "createdAt": "2024-01-20T08:15:00Z"
+    }
+  ],
+  "nextPageToken": "eyJvZmZzZXQiOjJ9"
+}

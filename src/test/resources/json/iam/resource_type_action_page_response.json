@@ -1,0 +1,21 @@
+{
+  "list": [
+    {
+      "action": "action:use/getConnection",
+      "resourceType": "resourcetype:connection",
+      "resourceTypeErn": "ern:fabric::service:fabric:resourceType/connection",
+      "rev": "rev-1",
+      "createdBy": "user:alice",
+      "createdAt": "2024-01-15T12:00:00Z"
+    },
+    {
+      "action": "action:srv/updateConnection",
+      "resourceType": "resourcetype:connection",
+      "resourceTypeErn": "ern:fabric::service:fabric:resourceType/connection",
+      "rev": "rev-1",
+      "createdBy": "user:alice",
+      "createdAt": "2024-01-15T12:00:00Z"
+    }
+  ],
+  "nextPageToken": "rta-next-token"
+}
