@@ -948,12 +948,15 @@ final class MetroOptimizerEngine {
         Term term = request.getTerm() != null ? request.getTerm() : Term.MONTH_12;
         boolean anyLive = false;
         String currency = "USD";
+        PriceSource aggregateSource = null;
+        boolean mixedSources = false;
 
         for (ScoredMetro sm : selected) {
             int metroBandwidth = totalBandwidth / Math.max(1, selected.size());
 
             BigDecimal monthly;
             BigDecimal setup;
+            PriceSource metroSource;
             Map<String, BigDecimal> lineItems = new LinkedHashMap<>();
 
             Optional<PriceQuote> live = rateCard != null
@@ -965,6 +968,7 @@ final class MetroOptimizerEngine {
                 monthly = quote.getMonthlyRecurring();
                 setup = quote.getNonRecurring();
                 currency = quote.getCurrency().getCurrencyCode();
+                metroSource = quote.getSource();
                 anyLive = true;
                 lineItems.put("Fabric connection (EVPL_VC, " + metroBandwidth + " Mbps)", monthly);
             } else {
@@ -980,13 +984,20 @@ final class MetroOptimizerEngine {
                 BigDecimal bandwidthAllocation = perMbpsCost.multiply(BigDecimal.valueOf(metroBandwidth));
                 monthly = basePortCost.add(bandwidthAllocation).multiply(BigDecimal.valueOf(regionMultiplier));
                 setup = setupCost.multiply(BigDecimal.valueOf(regionMultiplier));
+                metroSource = PriceSource.ESTIMATE;
 
                 lineItems.put("Base port", basePortCost);
                 lineItems.put("Bandwidth allocation", bandwidthAllocation);
                 lineItems.put("Regional adjustment", monthly.subtract(basePortCost));
             }
 
-            perMetro.add(new MetroCostBreakdown(sm.metro.getCode(), monthly, setup, lineItems));
+            if (aggregateSource == null) {
+                aggregateSource = metroSource;
+            } else if (aggregateSource != metroSource) {
+                mixedSources = true;
+            }
+
+            perMetro.add(new MetroCostBreakdown(sm.metro.getCode(), monthly, setup, lineItems, metroSource));
             totalMonthly = totalMonthly.add(monthly);
             totalSetup = totalSetup.add(setup);
         }
@@ -1005,7 +1016,10 @@ final class MetroOptimizerEngine {
                     + "Actual costs vary by connection type, bandwidth tier, and contract terms. "
                     + "Contact your Equinix account team for precise quotes.";
 
-        return new CostEstimate(totalMonthly, totalSetup, currency, perMetro, withinBudget, disclaimer);
+        PriceSource source = mixedSources ? PriceSource.COMPOSITE
+                : (aggregateSource != null ? aggregateSource : PriceSource.ESTIMATE);
+
+        return new CostEstimate(totalMonthly, totalSetup, currency, perMetro, withinBudget, disclaimer, source);
     }
 
     // ══════════════════════════════════════════════
