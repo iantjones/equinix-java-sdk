@@ -100,6 +100,7 @@ public class EquinixClient implements Service, Closeable {
         equinixClient = new api.equinix.javasdk.core.client.EquinixClient(equinixCredentials, isSandBoxed);
         this.coreConfig = new CoreConfigImpl(equinixClient);
         this.ownsCore = true;
+        equinixClient.setAuthenticator(() -> core().authenticate());
     }
 
     /**
@@ -114,6 +115,7 @@ public class EquinixClient implements Service, Closeable {
         this.equinixClient = sharedCore;
         this.coreConfig = new CoreConfigImpl(sharedCore);
         this.ownsCore = false;
+        sharedCore.setAuthenticator(() -> core().authenticate());
     }
 
     /**
@@ -124,7 +126,7 @@ public class EquinixClient implements Service, Closeable {
      * @throws EquinixClientException if authentication fails due to invalid credentials or network errors
      */
     public void authenticate() throws EquinixClientException {
-        core().authenticate();
+        equinixClient.authenticate();
     }
 
     /**

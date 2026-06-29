@@ -1,7 +1,10 @@
 package api.equinix.javasdk.core;
 
 import api.equinix.javasdk.Fabric;
+import api.equinix.javasdk.core.model.OAuthToken;
 import org.junit.jupiter.api.*;
+
+import java.time.LocalDateTime;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,5 +71,55 @@ class CoreAuthWireMockTest extends WireMockTestBase {
     void freshToken_isValid() {
         fabric.authenticate();
         assertTrue(fabric.getEquinixClient().getOAuthToken().validSession());
+    }
+
+    @Test
+    @DisplayName("a call without an explicit authenticate() lazily authenticates and attaches the Bearer token")
+    void unauthenticatedCall_lazilyAuthenticates() throws Exception {
+        try (Fabric fresh = new Fabric(testCredentials())) {
+            redirectToWireMock(fresh);
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/metros"))
+                    .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
+
+            assertNull(fresh.getEquinixClient().getOAuthToken(), "no token before the first call");
+            try {
+                fresh.metros().list();
+            } catch (Exception ignored) {
+                // we only care that the request was signed
+            }
+
+            assertNotNull(fresh.getEquinixClient().getOAuthToken(), "lazy auth published a token");
+            wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/metros"))
+                    .withHeader("authorization", containing("Bearer")));
+        }
+    }
+
+    @Test
+    @DisplayName("an expired token is transparently re-authenticated on the next call")
+    void expiredToken_isReauthenticated() throws Exception {
+        try (Fabric fresh = new Fabric(testCredentials())) {
+            redirectToWireMock(fresh);
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/metros"))
+                    .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
+
+            OAuthToken expired = new OAuthToken();
+            expired.setSessionToken("stale-token");
+            expired.setTokenType("bearer");
+            expired.setTokenTimeout(1);
+            expired.setSessionStart(LocalDateTime.now().minusHours(1));
+            fresh.getEquinixClient().setOAuthToken(expired);
+            assertFalse(expired.validSession(), "the injected token is already expired");
+
+            try {
+                fresh.metros().list();
+            } catch (Exception ignored) {
+                // we only care that the request was re-signed with a fresh token
+            }
+
+            assertEquals("test-token-abc123", fresh.getEquinixClient().getOAuthToken().getSessionToken(),
+                    "the stale token was replaced by a fresh one");
+            wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/metros"))
+                    .withHeader("authorization", equalTo("Bearer test-token-abc123")));
+        }
     }
 }
