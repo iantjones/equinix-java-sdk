@@ -20,6 +20,7 @@ import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.enums.AccessPointRole;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.PeeringType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,6 +28,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AccessPoint {
 
     @JsonProperty("type")

@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.enums.RouteTableEntryType;
 import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.RouteTableEntryConnection;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -29,6 +30,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class RouteTableEntryJson implements RouteTableEntry {
 
     @Getter static TypeReference<List<RouteTableEntryJson>> listTypeRef = new TypeReference<>() {};

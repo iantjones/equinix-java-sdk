@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.implementation.MetricDatapoint;
 import api.equinix.javasdk.fabric.model.implementation.MetricResource;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -34,6 +35,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MetricJson implements Metric {
 
     @Getter static TypeReference<Page<Metric, MetricJson>> pagedTypeRef = new TypeReference<>() {};

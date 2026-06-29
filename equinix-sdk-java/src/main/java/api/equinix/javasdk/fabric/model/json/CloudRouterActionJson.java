@@ -23,6 +23,7 @@ import api.equinix.javasdk.fabric.model.CloudRouterAction;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.RouterActionsConnection;
 import api.equinix.javasdk.fabric.model.implementation.RouterActionsRouter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -30,6 +31,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class CloudRouterActionJson implements CloudRouterAction {
 
     @Getter static TypeReference<List<CloudRouterActionJson>> listTypeRef = new TypeReference<>() {};

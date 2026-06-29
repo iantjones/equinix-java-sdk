@@ -21,6 +21,7 @@ import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.ConnectionStatistic;
 import api.equinix.javasdk.fabric.model.implementation.ConnectionStat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -34,6 +35,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConnectionStatisticJson {
 
     @Getter static TypeReference<List<ConnectionStatisticJson>> listTypeRef = new TypeReference<>() {};

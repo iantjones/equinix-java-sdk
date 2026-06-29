@@ -30,6 +30,7 @@ import api.equinix.javasdk.fabric.model.implementation.IpBlockChange;
 import api.equinix.javasdk.fabric.model.implementation.IpBlockLocation;
 import api.equinix.javasdk.fabric.model.implementation.IpBlockOrder;
 import api.equinix.javasdk.fabric.model.implementation.IpBlockRegulations;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -37,6 +38,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IpBlockJson {
 
     @Getter static TypeReference<List<IpBlockJson>> listTypeRef = new TypeReference<>() {};

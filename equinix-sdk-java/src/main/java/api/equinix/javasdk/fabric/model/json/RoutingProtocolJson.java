@@ -21,6 +21,7 @@ import api.equinix.javasdk.fabric.enums.RoutingProtocolState;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.implementation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RoutingProtocolJson {
 
     @Getter static TypeReference<List<RoutingProtocolJson>> listTypeRef = new TypeReference<>() {};

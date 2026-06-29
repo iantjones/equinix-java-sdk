@@ -26,6 +26,7 @@ import api.equinix.javasdk.fabric.model.implementation.EiaServiceBilling;
 import api.equinix.javasdk.fabric.model.implementation.EiaServiceChange;
 import api.equinix.javasdk.fabric.model.implementation.EiaServiceLocation;
 import api.equinix.javasdk.fabric.model.implementation.EiaServiceOrder;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -33,6 +34,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EiaServiceJson {
 
     @Getter static TypeReference<List<EiaServiceJson>> listTypeRef = new TypeReference<>() {};

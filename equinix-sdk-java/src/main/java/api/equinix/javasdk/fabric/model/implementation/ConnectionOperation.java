@@ -19,12 +19,14 @@ package api.equinix.javasdk.fabric.model.implementation;
 import api.equinix.javasdk.fabric.enums.ConnectionStatus;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConnectionOperation {
 
     @JsonProperty("providerStatus")

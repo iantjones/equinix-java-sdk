@@ -23,6 +23,7 @@ import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -30,6 +31,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RouteAggregationJson {
 
     @Getter static TypeReference<List<RouteAggregationJson>> listTypeRef = new TypeReference<>() {};

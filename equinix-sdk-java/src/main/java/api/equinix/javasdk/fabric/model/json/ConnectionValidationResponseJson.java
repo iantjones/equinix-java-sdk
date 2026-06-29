@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.model.KeyValuePair;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -33,6 +34,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConnectionValidationResponseJson {
 
     @Getter static TypeReference<ConnectionValidationResponseJson> singleTypeRef = new TypeReference<>() {};

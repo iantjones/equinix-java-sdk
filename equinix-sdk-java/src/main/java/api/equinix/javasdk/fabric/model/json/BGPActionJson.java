@@ -21,6 +21,7 @@ import api.equinix.javasdk.fabric.enums.BGPActionState;
 import api.equinix.javasdk.fabric.enums.BGPActionType;
 import api.equinix.javasdk.fabric.model.BGPAction;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class BGPActionJson implements BGPAction {
 
     @Getter static TypeReference<BGPActionJson> singleTypeRef = new TypeReference<>() {};

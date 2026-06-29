@@ -18,12 +18,14 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.EncapsulationStrategy;
 import api.equinix.javasdk.fabric.enums.EncapsulationType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LinkProtocolConfig {
 
     @JsonProperty("encapsulation")

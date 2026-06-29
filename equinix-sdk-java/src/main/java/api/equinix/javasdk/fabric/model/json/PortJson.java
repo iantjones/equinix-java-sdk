@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.enums.PortState;
 import api.equinix.javasdk.fabric.model.implementation.*;
 
 import api.equinix.javasdk.fabric.model.Port;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,6 +37,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class PortJson {
 
 

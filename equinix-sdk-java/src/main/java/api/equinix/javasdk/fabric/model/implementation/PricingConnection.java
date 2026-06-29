@@ -17,10 +17,12 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingConnection {
 
     @JsonProperty("type")
@@ -33,6 +35,7 @@ public class PricingConnection {
 
     PricingAccessPoint zSide;
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     protected static class PricingAccessPoint {
         @JsonProperty("accessPoint")
         private api.equinix.javasdk.fabric.model.implementation.PricingAccessPoint accessPoint;

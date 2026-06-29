@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.ConnectionSide;
 import api.equinix.javasdk.fabric.model.implementation.Redundancy;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -31,6 +32,7 @@ import lombok.Getter;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ValidateConnectionResponseJson implements ValidateConnectionResult {
 
     @JsonProperty("uuid")

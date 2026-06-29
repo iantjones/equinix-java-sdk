@@ -17,11 +17,13 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.fabric.model.HealthStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HealthStatusJson implements HealthStatus {
 
 

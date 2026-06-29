@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.fabric.model.PrivateService;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import java.util.List;
  * which returns a non-paginated {@code { "data": [...] }} envelope.
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class PrivateServiceListResponseJson {
 
     @Getter static TypeReference<PrivateServiceListResponseJson> singleTypeRef = new TypeReference<>() {};

@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.RouteFilterType;
 import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -29,6 +30,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class RouteFilterAttachmentJson implements RouteFilterAttachment {
 
     @Getter static TypeReference<RouteFilterAttachmentJson> singleTypeRef = new TypeReference<>() {};
