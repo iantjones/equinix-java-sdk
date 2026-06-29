@@ -43,12 +43,12 @@ public class FilterPropertyList {
     }
 
     public FilterPropertyList in(String property, List<Object> values) {
-        this.filterProperties.add(new FilterProperty(FilterOperator.EQUALS, property, values));
+        this.filterProperties.add(new FilterProperty(FilterOperator.IN, property, values));
         return this;
     }
 
     public FilterPropertyList in(String property, Object value) {
-        this.filterProperties.add(new FilterProperty(FilterOperator.EQUALS, property, Arrays.asList(value)));
+        this.filterProperties.add(new FilterProperty(FilterOperator.IN, property, Arrays.asList(value)));
         return this;
     }
 }

@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -75,6 +76,24 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         assertEquals(PriceSource.EQUINIX_LIVE, quote.getSource());
         assertNotNull(quote.getNote());
         assertTrue(quote.getNote().contains("EVPL_VC_SV_DC_100"));
+    }
+
+    @Test
+    @DisplayName("narrows the catalogue fetch server-side by price /type")
+    void sendsTypeScopedFilter() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices.json");
+
+        // Any lookup forces the (once-cached) catalogue fetch.
+        EquinixRateCard.of(fabric).connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12);
+
+        // Two type-scoped POSTs are issued — one per product family this card prices — rather
+        // than an unfiltered scan of the whole catalogue.
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
+                .withRequestBody(containing("/type"))
+                .withRequestBody(containing("VIRTUAL_CONNECTION_PRODUCT")));
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
+                .withRequestBody(containing("/type"))
+                .withRequestBody(containing("FABRIC_GATEWAY_PRODUCT")));
     }
 
     @Test
