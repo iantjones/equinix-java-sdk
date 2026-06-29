@@ -72,6 +72,9 @@ public class OAuthToken {
      * @return a boolean.
      */
     public boolean validSession() {
-        return getSessionToken() != null && (getSessionStart().plusSeconds(getTokenTimeout()).isAfter(LocalDateTime.now()));
+        return getSessionToken() != null
+                && getSessionStart() != null
+                && getTokenTimeout() != null
+                && getSessionStart().plusSeconds(getTokenTimeout()).isAfter(LocalDateTime.now());
     }
 }

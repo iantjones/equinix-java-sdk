@@ -110,11 +110,16 @@ public class Mcp implements Closeable {
      * @throws McpException if initialization fails
      */
     public void initialize() {
-        McpJsonRpcRequest request = McpJsonRpcRequest.initialize(
-                "equinix-java-sdk", "1.2.0");
+        McpJsonRpcRequest request = McpJsonRpcRequest.initialize("equinix-java-sdk", sdkVersion());
 
         executeRpc(config.getFabricEndpoint(), request);
         this.initialized = true;
+    }
+
+    /** The SDK version advertised in the MCP handshake, read from the jar manifest (dev fallback "2.0.0"). */
+    private static String sdkVersion() {
+        String version = Mcp.class.getPackage().getImplementationVersion();
+        return version != null ? version : "2.0.0";
     }
 
     /**
