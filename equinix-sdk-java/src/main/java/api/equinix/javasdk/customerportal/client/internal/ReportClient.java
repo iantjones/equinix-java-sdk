@@ -33,7 +33,7 @@ public interface ReportClient<T> extends Pageable<T> {
 
     ReportJson getReportById(String reportId);
 
-    boolean deleteReports(List<String> reportIds);
+    List<? extends Report> deleteReports(List<String> reportIds);
 
     byte[] downloadReports(List<String> reportIds);
 

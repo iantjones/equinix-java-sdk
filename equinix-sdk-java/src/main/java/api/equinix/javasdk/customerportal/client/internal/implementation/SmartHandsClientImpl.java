@@ -27,7 +27,9 @@ import api.equinix.javasdk.customerportal.model.json.SmartHandsLocationsResponse
 import api.equinix.javasdk.customerportal.model.json.SmartHandsTypesResponseJson;
 import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SmartHandsClientImpl extends ClientBase implements SmartHandsClient {
 
@@ -39,8 +41,19 @@ public class SmartHandsClientImpl extends ClientBase implements SmartHandsClient
         return postAs(serviceEndpoint, requestJson, SmartHandResponseJson.class);
     }
 
-    public List<? extends SmartHandsLocation> listLocations() {
-        SmartHandsLocationsResponseJson response = getAs("ListSmartHandsLocations", SmartHandsLocationsResponseJson.class);
+    public List<? extends SmartHandsLocation> listLocations(Boolean detail, String ibxs, String cages) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (detail != null) {
+            queryParams.put("detail", List.of(String.valueOf(detail)));
+        }
+        if (ibxs != null) {
+            queryParams.put("ibxs", List.of(ibxs));
+        }
+        if (cages != null) {
+            queryParams.put("cages", List.of(cages));
+        }
+        SmartHandsLocationsResponseJson response = getAs("ListSmartHandsLocations", null,
+                queryParams.isEmpty() ? null : queryParams, SmartHandsLocationsResponseJson.class);
         return response.getLocations();
     }
 

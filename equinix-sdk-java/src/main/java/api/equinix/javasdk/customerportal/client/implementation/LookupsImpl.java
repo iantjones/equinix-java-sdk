@@ -38,7 +38,14 @@ public class LookupsImpl implements Lookups {
     }
 
     public List<? extends LookupLocation> listLocations(String permissionCode) {
-        return this.serviceClient.listLocations(permissionCode);
+        return this.serviceClient.listLocations(permissionCode, null, null, null, null, null);
+    }
+
+    public List<? extends LookupLocation> listLocations(String permissionCode, List<String> ibxs,
+                                                        String providerAccountNumber, String aSideIbx,
+                                                        String connectionService, Boolean details) {
+        return this.serviceClient.listLocations(permissionCode, ibxs, providerAccountNumber, aSideIbx,
+                connectionService, details);
     }
 
     public List<? extends PatchPanel> listPatchPanels(String cabinetId) {

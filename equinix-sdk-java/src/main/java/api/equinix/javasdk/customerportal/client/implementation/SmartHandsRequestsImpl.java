@@ -86,7 +86,11 @@ public class SmartHandsRequestsImpl implements SmartHandsRequests {
     }
 
     public List<? extends SmartHandsLocation> listLocations() {
-        return this.serviceClient.listLocations();
+        return this.serviceClient.listLocations(null, null, null);
+    }
+
+    public List<? extends SmartHandsLocation> listLocations(Boolean detail, String ibxs, String cages) {
+        return this.serviceClient.listLocations(detail, ibxs, cages);
     }
 
     public List<? extends SmartHandType> listTypes() {

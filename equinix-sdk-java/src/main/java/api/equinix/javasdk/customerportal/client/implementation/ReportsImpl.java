@@ -51,7 +51,7 @@ public class ReportsImpl implements Reports {
         return this.serviceClient.getReportById(reportId);
     }
 
-    public boolean deleteReports(List<String> reportIds) {
+    public List<? extends Report> deleteReports(List<String> reportIds) {
         return this.serviceClient.deleteReports(reportIds);
     }
 

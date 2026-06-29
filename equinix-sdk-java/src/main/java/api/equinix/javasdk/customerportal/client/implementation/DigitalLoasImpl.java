@@ -51,7 +51,11 @@ public class DigitalLoasImpl implements DigitalLoas {
     }
 
     public List<? extends DigitalLoa> search(DigitalLoaSearchRequest request) {
-        return this.serviceClient.search(request);
+        return this.serviceClient.search(request, null, null, null);
+    }
+
+    public List<? extends DigitalLoa> search(DigitalLoaSearchRequest request, Integer offset, Integer limit, List<String> sort) {
+        return this.serviceClient.search(request, offset, limit, sort);
     }
 
     public DigitalLoa patch(String uuid, List<Map<String, Object>> operations) {
@@ -78,8 +82,12 @@ public class DigitalLoasImpl implements DigitalLoas {
         return this.serviceClient.findChangeByUuid(uuid, changeUuid);
     }
 
-    public List<? extends LoaCustomerOrganization> findOrganizations() {
-        return this.serviceClient.findOrganizations();
+    public List<? extends LoaCustomerOrganization> findOrganizations(String ibx) {
+        return this.serviceClient.findOrganizations(ibx, null);
+    }
+
+    public List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes) {
+        return this.serviceClient.findOrganizations(ibx, productTypes);
     }
 
     public PrivateBetaPermission isPrivateBetaAllowed() {

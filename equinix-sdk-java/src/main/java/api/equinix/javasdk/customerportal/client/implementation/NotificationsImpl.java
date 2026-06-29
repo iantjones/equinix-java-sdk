@@ -36,11 +36,19 @@ public class NotificationsImpl implements Notifications {
     }
 
     public List<? extends Notification> searchIbx(NotificationSearchRequest request) {
-        return this.serviceClient.searchIbx(request);
+        return this.serviceClient.searchIbx(request, null, null);
+    }
+
+    public List<? extends Notification> searchIbx(NotificationSearchRequest request, Integer offset, Integer limit) {
+        return this.serviceClient.searchIbx(request, offset, limit);
     }
 
     public List<? extends Notification> searchNetwork(NotificationSearchRequest request) {
-        return this.serviceClient.searchNetwork(request);
+        return this.serviceClient.searchNetwork(request, null, null);
+    }
+
+    public List<? extends Notification> searchNetwork(NotificationSearchRequest request, Integer offset, Integer limit) {
+        return this.serviceClient.searchNetwork(request, offset, limit);
     }
 
     public Notification getIbxById(String id) {

@@ -58,12 +58,23 @@ public interface DigitalLoas {
     DigitalLoa findByUuid(String uuid);
 
     /**
-     * Searches Digital LOA documents by the supplied search criteria.
+     * Searches Digital LOA documents by the supplied search criteria (first page, default ordering).
      *
      * @param request the search criteria body
      * @return the matching Digital LOA documents
      */
     List<? extends DigitalLoa> search(DigitalLoaSearchRequest request);
+
+    /**
+     * Searches Digital LOA documents by the supplied search criteria, paging and sorting the results.
+     *
+     * @param request the search criteria body
+     * @param offset  the index of the first item returned (zero-based), or {@code null} for the default
+     * @param limit   the maximum number of items returned per page, or {@code null} for the default
+     * @param sort    the sort fields (e.g. {@code /expiryDateTime}, {@code -/expiryDateTime}), or {@code null}
+     * @return the matching Digital LOA documents
+     */
+    List<? extends DigitalLoa> search(DigitalLoaSearchRequest request, Integer offset, Integer limit, List<String> sort);
 
     /**
      * Modifies a Digital LOA document by applying the supplied patch documents.
@@ -117,13 +128,29 @@ public interface DigitalLoas {
     DigitalLoaChange findChangeByUuid(String uuid, String changeUuid);
 
     /**
-     * Lists the customer organizations the current user may use as a Digital LOA requestor.
+     * Lists the customer organizations available in the given IBX data center that the current user
+     * may use as a Digital LOA requestor.
      *
-     * <p>Private beta endpoint ({@code GET /diloa/v1/organizations}).</p>
+     * <p>Private beta endpoint ({@code GET /diloa/v1/organizations}). The {@code location.ibx} query
+     * parameter is required by the API.</p>
      *
+     * @param ibx the IBX data center identifier (e.g. {@code AM11}); required
      * @return the customer organizations
      */
-    List<? extends LoaCustomerOrganization> findOrganizations();
+    List<? extends LoaCustomerOrganization> findOrganizations(String ibx);
+
+    /**
+     * Lists the customer organizations available in the given IBX data center, filtered by product
+     * type, that the current user may use as a Digital LOA requestor.
+     *
+     * <p>Private beta endpoint ({@code GET /diloa/v1/organizations}). The {@code location.ibx} query
+     * parameter is required by the API; {@code product.type} is optional.</p>
+     *
+     * @param ibx          the IBX data center identifier (e.g. {@code AM11}); required
+     * @param productTypes the product types to filter by (e.g. {@code CROSS_CONNECT}), or {@code null}
+     * @return the customer organizations
+     */
+    List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes);
 
     /**
      * Returns whether the current user is permitted to use the Digital LOA application in its
