@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.value.ratecard;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,17 @@ final class LayeredRateCard implements RateCard {
             Optional<PriceQuote> quote = card.cloudRouter(packageCode, metro, term);
             if (quote.isPresent()) {
                 return quote;
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<EgressRate> egress(CloudProviderType provider, String region, EgressPath path, Term term) {
+        for (RateCard card : cards) {
+            Optional<EgressRate> rate = card.egress(provider, region, path, term);
+            if (rate.isPresent()) {
+                return rate;
             }
         }
         return Optional.empty();

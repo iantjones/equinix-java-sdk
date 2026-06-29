@@ -2,6 +2,8 @@ package api.equinix.javasdk.design.optimizer.model;
 
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.enums.OptimizationStrategy;
+import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.Term;
 import lombok.Builder;
 import lombok.Value;
 
@@ -36,4 +38,10 @@ public class OptimizationRequest {
 
     /** Optional MCP bridge for real-time data enrichment. Null when MCP is not configured. */
     McpBridge mcpBridge;
+
+    /** Optional rate card for cost estimation. When null, the engine defaults to live Equinix pricing. */
+    RateCard rateCard;
+
+    /** Commitment term used for rate-card lookups. When null, the engine defaults to {@link Term#MONTH_12}. */
+    Term term;
 }

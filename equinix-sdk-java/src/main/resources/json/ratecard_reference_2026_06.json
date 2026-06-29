@@ -1,0 +1,35 @@
+{
+  "asOf": "2026-06",
+  "currency": "USD",
+  "disclaimer": "Indicative published or estimated reference figures compiled for the SDK's value-realization models as of 2026-06 — NOT quotes. Cloud egress rates are headline standard-tier US/North-America list prices (tiered by volume, region- and destination-dependent, excluding free-tier allowances and negotiated discounts). On-prem and Equinix figures are market-range midpoints or indicative fallbacks; real Equinix-side costs must be sourced from the live Fabric Pricing API. Use for rough comparative estimates only; actual costs will differ.",
+  "egress": [
+    { "provider": "AWS", "path": "INTERNET", "perGb": 0.09, "note": "us-east-1, first 10 TB/mo tier", "source": "https://aws.amazon.com/ec2/pricing/on-demand/" },
+    { "provider": "AWS", "path": "PRIVATE", "perGb": 0.02, "note": "Direct Connect DTO, contiguous US", "source": "https://aws.amazon.com/directconnect/pricing/" },
+    { "provider": "AZURE", "path": "INTERNET", "perGb": 0.087, "note": "Zone 1, first 10 TB/mo tier", "source": "https://azure.microsoft.com/en-us/pricing/details/bandwidth/" },
+    { "provider": "AZURE", "path": "PRIVATE", "perGb": 0.025, "note": "ExpressRoute metered, Zone 1, flat", "source": "https://azure.microsoft.com/en-us/pricing/details/expressroute/" },
+    { "provider": "GOOGLE_CLOUD", "path": "INTERNET", "perGb": 0.12, "note": "Premium Tier, North America, 0-1 TiB tier", "source": "https://cloud.google.com/network-tiers/pricing" },
+    { "provider": "GOOGLE_CLOUD", "path": "PRIVATE", "perGb": 0.02, "note": "Cloud Interconnect, North America, flat", "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing" }
+  ],
+  "equinixConnection": [
+    { "bandwidthMbps": 100, "monthly": 75, "note": "intra-metro VC, indicative" },
+    { "bandwidthMbps": 1000, "monthly": 150, "note": "intra-metro VC, indicative" },
+    { "bandwidthMbps": 10000, "monthly": 350, "note": "intra-metro VC, indicative" }
+  ],
+  "equinixCloudRouter": [
+    { "packageCode": "STANDARD", "monthly": 1200, "note": "Fabric Cloud Router STANDARD package, indicative" }
+  ],
+  "equinixCrossConnectMonthly": 300,
+  "cspInterconnectPort": [
+    { "provider": "AWS", "bandwidthMbps": 1000, "monthly": 219, "note": "Direct Connect 1G dedicated port (~$0.30/hr)" },
+    { "provider": "AWS", "bandwidthMbps": 10000, "monthly": 1642.50, "note": "Direct Connect 10G dedicated port (~$2.25/hr)" },
+    { "provider": "AZURE", "bandwidthMbps": 1000, "monthly": 436, "note": "ExpressRoute Standard Metered 1G circuit" },
+    { "provider": "AZURE", "bandwidthMbps": 10000, "monthly": 3400, "note": "ExpressRoute Standard Metered 10G circuit" },
+    { "provider": "GOOGLE_CLOUD", "bandwidthMbps": 10000, "monthly": 1676, "note": "Dedicated Interconnect 10G circuit (~$2.328/hr)" }
+  ],
+  "onPrem": {
+    "transitPerMbpsMonth": 0.75,
+    "crossConnectMonthly": 250,
+    "hardwareMonthly": 300,
+    "powerPerKwMonth": 195
+  }
+}

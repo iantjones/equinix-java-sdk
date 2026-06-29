@@ -1,5 +1,6 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
+import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import lombok.Builder;
 import lombok.Value;
 
@@ -37,7 +38,15 @@ public class PlanPricing {
     /** Per-connection cost breakdown: connection name to monthly cost. */
     Map<String, BigDecimal> perConnectionCost;
 
-    /** Pricing disclaimer. */
+    /**
+     * Dominant provenance of these figures: {@link PriceSource#EQUINIX_LIVE} when every line
+     * item was live-priced, {@link PriceSource#ESTIMATE} when the heuristic fallback was used,
+     * or {@link PriceSource#COMPOSITE} when mixed. Read alongside {@link #disclaimer}.
+     */
+    @Builder.Default
+    PriceSource source = PriceSource.ESTIMATE;
+
+    /** Pricing disclaimer, reflecting the actual {@link #source}. */
     @Builder.Default
     String disclaimer = "Estimates based on published Fabric pricing. Actual costs may vary based on contract terms, volume discounts, and promotional offers.";
 }
