@@ -1,0 +1,28 @@
+{
+  "BillingCurrency": "USD",
+  "CustomerEntityId": "Default",
+  "Count": 2,
+  "Items": [
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.0,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Free Allowance Data Transfer Out",
+      "productName": "Bandwidth - Inter-Region",
+      "serviceName": "Bandwidth",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.087,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Standard Data Transfer Out",
+      "productName": "Bandwidth - Routing Preference: Internet",
+      "serviceName": "Bandwidth",
+      "serviceFamily": "Networking"
+    }
+  ],
+  "NextPageLink": null
+}
