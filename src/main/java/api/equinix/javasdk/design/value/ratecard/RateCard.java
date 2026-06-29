@@ -75,6 +75,23 @@ public interface RateCard {
     }
 
     /**
+     * Resolves the price of an Equinix <em>colocation</em> primitive — a cabinet, a kW of power, or
+     * a cross-connect (see {@link ColocationItem} for the per-unit semantics). This lets the cost
+     * models incorporate the physical-infrastructure side of a colocation-vs-cloud comparison with
+     * the caller's real figures, not just the interconnection. Cards that do not model colocation
+     * return {@link Optional#empty()} (the default); {@link CustomRateCard} prices whatever the
+     * caller declares.
+     *
+     * @param item  the colocation primitive to price
+     * @param metro the metro (may be {@code null} if metro-agnostic)
+     * @param term  the commitment term
+     * @return the resolved per-unit monthly quote, or {@link Optional#empty()} if not priced
+     */
+    default Optional<PriceQuote> colocation(ColocationItem item, MetroCode metro, Term term) {
+        return Optional.empty();
+    }
+
+    /**
      * The dominant provenance of prices this card produces. Aggregating cards
      * report {@link PriceSource#COMPOSITE}.
      *

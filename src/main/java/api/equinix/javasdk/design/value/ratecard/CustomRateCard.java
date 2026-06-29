@@ -54,6 +54,7 @@ public final class CustomRateCard implements RateCard {
     private final Map<String, PriceQuote> connectionRates;
     private final Map<String, PriceQuote> routerRates;
     private final Map<String, EgressRate> egressRates;
+    private final Map<String, PriceQuote> colocationRates;
     private final PriceQuote defaultConnection;
     private final PriceQuote defaultRouter;
 
@@ -62,6 +63,7 @@ public final class CustomRateCard implements RateCard {
         this.connectionRates = new HashMap<>();
         this.routerRates = new HashMap<>();
         this.egressRates = new HashMap<>();
+        this.colocationRates = new HashMap<>();
 
         for (ConnEntry e : b.connectionEntries) {
             connectionRates.put(connKey(e.type, e.bandwidthMbps, e.metro, e.term),
@@ -74,6 +76,10 @@ public final class CustomRateCard implements RateCard {
         for (EgressEntry e : b.egressEntries) {
             egressRates.put(egressKey(e.provider, e.path),
                     EgressRate.of(e.perGb, currency, PriceSource.CUSTOM));
+        }
+        for (ColoEntry e : b.colocationEntries) {
+            colocationRates.put(coloKey(e.item, e.metro, e.term),
+                    PriceQuote.of(e.monthly, e.setup, currency, PriceSource.CUSTOM));
         }
         this.defaultConnection = b.defaultConnectionMonthly == null ? null
                 : PriceQuote.of(b.defaultConnectionMonthly, b.defaultConnectionSetup, currency, PriceSource.CUSTOM);
@@ -114,6 +120,20 @@ public final class CustomRateCard implements RateCard {
             return Optional.empty();
         }
         return Optional.ofNullable(egressRates.get(egressKey(provider, path)));
+    }
+
+    @Override
+    public Optional<PriceQuote> colocation(ColocationItem item, MetroCode metro, Term term) {
+        if (item == null) {
+            return Optional.empty();
+        }
+        for (String key : coloKeyCandidates(item, metro, term)) {
+            PriceQuote match = colocationRates.get(key);
+            if (match != null) {
+                return Optional.of(match);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -159,6 +179,22 @@ public final class CustomRateCard implements RateCard {
         return provider.name() + "|" + path.name();
     }
 
+    private static String coloKey(ColocationItem item, MetroCode metro, Term term) {
+        return item.name()
+                + "|" + (metro == null ? WILDCARD : metro.name())
+                + "|" + (term == null ? WILDCARD : term.name());
+    }
+
+    /** Candidate colocation keys from most to least specific. */
+    private static List<String> coloKeyCandidates(ColocationItem item, MetroCode metro, Term term) {
+        List<String> keys = new ArrayList<>(4);
+        keys.add(coloKey(item, metro, term));
+        keys.add(coloKey(item, metro, null));
+        keys.add(coloKey(item, null, term));
+        keys.add(coloKey(item, null, null));
+        return keys;
+    }
+
     // ── Builder ──
 
     /** Fluent builder for {@link CustomRateCard}. */
@@ -168,6 +204,7 @@ public final class CustomRateCard implements RateCard {
         private final List<ConnEntry> connectionEntries = new ArrayList<>();
         private final List<RouterEntry> routerEntries = new ArrayList<>();
         private final List<EgressEntry> egressEntries = new ArrayList<>();
+        private final List<ColoEntry> colocationEntries = new ArrayList<>();
         private BigDecimal defaultConnectionMonthly;
         private BigDecimal defaultConnectionSetup = BigDecimal.ZERO;
         private BigDecimal defaultRouterMonthly;
@@ -284,6 +321,37 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
+        /**
+         * Declares a metro/term-agnostic monthly rate for an Equinix colocation primitive
+         * (per the unit named on {@link ColocationItem} — per cabinet, per kW, or per cross-connect).
+         */
+        public Builder colocationRate(ColocationItem item, BigDecimal monthly) {
+            return colocationRate(item, null, null, monthly, BigDecimal.ZERO);
+        }
+
+        /** Declares a metro/term-agnostic monthly + one-time setup rate for a colocation primitive. */
+        public Builder colocationRate(ColocationItem item, BigDecimal monthly, BigDecimal setup) {
+            return colocationRate(item, null, null, monthly, setup);
+        }
+
+        /**
+         * Declares a metro- and term-specific monthly rate for a colocation primitive. A
+         * {@code null} metro or term means "any" for that axis; more specific entries win.
+         */
+        public Builder colocationRate(ColocationItem item, MetroCode metro, Term term, BigDecimal monthly) {
+            return colocationRate(item, metro, term, monthly, BigDecimal.ZERO);
+        }
+
+        /**
+         * Declares a metro- and term-specific monthly + one-time setup rate for a colocation
+         * primitive. A {@code null} metro or term means "any" for that axis.
+         */
+        public Builder colocationRate(ColocationItem item, MetroCode metro, Term term, BigDecimal monthly,
+                                      BigDecimal setup) {
+            colocationEntries.add(new ColoEntry(item, metro, term, monthly, setup));
+            return this;
+        }
+
         /** Builds the immutable {@link CustomRateCard}. */
         public CustomRateCard build() {
             return new CustomRateCard(this);
@@ -334,6 +402,22 @@ public final class CustomRateCard implements RateCard {
             this.provider = provider;
             this.path = path;
             this.perGb = perGb;
+        }
+    }
+
+    private static final class ColoEntry {
+        final ColocationItem item;
+        final MetroCode metro;
+        final Term term;
+        final BigDecimal monthly;
+        final BigDecimal setup;
+
+        ColoEntry(ColocationItem item, MetroCode metro, Term term, BigDecimal monthly, BigDecimal setup) {
+            this.item = item;
+            this.metro = metro;
+            this.term = term;
+            this.monthly = monthly;
+            this.setup = setup;
         }
     }
 }

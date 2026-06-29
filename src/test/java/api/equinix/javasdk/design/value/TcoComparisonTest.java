@@ -17,6 +17,10 @@
 package api.equinix.javasdk.design.value;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.design.value.ratecard.ColocationItem;
+import api.equinix.javasdk.design.value.ratecard.CustomRateCard;
+import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.ReferenceRateCard;
 import api.equinix.javasdk.design.value.savings.DataUnit;
 import api.equinix.javasdk.design.value.tco.CostBreakdown;
 import api.equinix.javasdk.design.value.tco.DeploymentArchetype;
@@ -122,5 +126,43 @@ class TcoComparisonTest {
         // On-prem prices purely from reference midpoints (provider-independent), so it remains the pick.
         assertEquals(DeploymentArchetype.ON_PREM, tco.getRecommended());
         assertTrue(tco.toMarkdown().contains("_unavailable_"));
+    }
+
+    @Test
+    void additionalLineItemsFoldedIntoEveryPricedArchetype() {
+        TcoComparison tco = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .additionalLineItem("Compute", new BigDecimal("5000"))
+                .compare();
+
+        // Each priced archetype gains the $5000 line: internet 9000->14000, Equinix 4292.50->9292.50.
+        assertEquals(0, new BigDecimal("14000").compareTo(
+                tco.breakdown(DeploymentArchetype.PUBLIC_CLOUD_INTERNET).orElseThrow().getMonthlyTotal()));
+        assertEquals(0, new BigDecimal("9292.50").compareTo(
+                tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
+        assertTrue(tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow()
+                .getLineItems().containsKey("Compute"));
+        // Applied uniformly, so the recommendation is unchanged.
+        assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended());
+    }
+
+    @Test
+    void colocationCrossConnectFromRateCardOverridesReference() {
+        // A caller-supplied cross-connect ($100) layered over the reference card replaces the
+        // reference's $300 cross-connect in the Equinix archetype: 4292.50 - 300 + 100 = 4092.50.
+        CustomRateCard colo = CustomRateCard.builder()
+                .colocationRate(ColocationItem.CROSS_CONNECT, new BigDecimal("100.00"))
+                .build();
+        TcoComparison tco = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .rateCard(RateCard.layered(colo, ReferenceRateCard.standard()))
+                .compare();
+
+        assertEquals(0, new BigDecimal("4092.50").compareTo(
+                tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
     }
 }

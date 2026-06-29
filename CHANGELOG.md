@@ -89,7 +89,10 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
     precedence chain via `RateCard.layered(...)`): `EquinixRateCard` reads **live `fabric.prices()`**
     (narrowed server-side by price `/type` to the connection + gateway product families);
     `CustomRateCard` takes caller-supplied rates fluently with **per-metro / per-term granularity**
-    and most-specific-match resolution; `ReferenceRateCard` ships dated indicative figures; and the
+    and most-specific-match resolution, including **Equinix colocation primitives** (cabinet, power
+    per kW, cross-connect) so the physical-infrastructure side of a colo-vs-cloud comparison uses
+    real figures; the TCO calculator also accepts arbitrary `additionalLineItem(...)`s (compute,
+    storage, …) folded into every priced archetype. `ReferenceRateCard` ships dated indicative figures; and the
     `design.value.ratecard.provider` adapters source **live cloud-egress rates** from the public
     Azure Retail Prices, AWS Price List (data-transfer **and** Direct Connect, so both INTERNET and
     PRIVATE paths), GCP Cloud Billing Catalog, and Oracle Cloud (OCI) Price List APIs (opt-in,

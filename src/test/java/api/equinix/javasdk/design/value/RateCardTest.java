@@ -17,6 +17,7 @@
 package api.equinix.javasdk.design.value;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.design.value.ratecard.ColocationItem;
 import api.equinix.javasdk.design.value.ratecard.CustomRateCard;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
@@ -143,5 +144,34 @@ class RateCardTest {
 
         Optional<PriceQuote> q = layered.connection(ConnectionType.EVPL_VC, 1_000, null, Term.MONTH_12);
         assertTrue(q.isEmpty());
+    }
+
+    @Test
+    void customRateCard_colocationPrimitivesWithGranularityAndLayering() {
+        CustomRateCard card = CustomRateCard.builder()
+                .colocationRate(ColocationItem.CROSS_CONNECT, new BigDecimal("300.00"))         // any metro/term
+                .colocationRate(ColocationItem.CROSS_CONNECT, MetroCode.SV, null, new BigDecimal("250.00")) // SV override
+                .colocationRate(ColocationItem.CABINET, new BigDecimal("1500.00"), new BigDecimal("500.00"))
+                .colocationRate(ColocationItem.POWER_PER_KW, new BigDecimal("180.00"))
+                .build();
+
+        // metro-specific override wins; other metros fall back to the agnostic rate.
+        assertEquals(new BigDecimal("250.00"),
+                card.colocation(ColocationItem.CROSS_CONNECT, MetroCode.SV, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
+        assertEquals(new BigDecimal("300.00"),
+                card.colocation(ColocationItem.CROSS_CONNECT, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
+        PriceQuote cabinet = card.colocation(ColocationItem.CABINET, null, Term.MONTH_12).orElseThrow();
+        assertEquals(new BigDecimal("1500.00"), cabinet.getMonthlyRecurring());
+        assertEquals(new BigDecimal("500.00"), cabinet.getNonRecurring());
+        assertEquals(PriceSource.CUSTOM, cabinet.getSource());
+
+        // undeclared primitive => empty (not zero).
+        CustomRateCard noColo = CustomRateCard.builder().build();
+        assertTrue(noColo.colocation(ColocationItem.CABINET, null, Term.MONTH_12).isEmpty());
+
+        // a layered card delegates colocation to the first card that prices it.
+        RateCard layered = RateCard.layered(noColo, card);
+        assertEquals(new BigDecimal("180.00"),
+                layered.colocation(ColocationItem.POWER_PER_KW, null, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
     }
 }

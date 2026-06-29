@@ -10,6 +10,8 @@ import api.equinix.javasdk.design.value.savings.DataUnit;
 
 import java.math.BigDecimal;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -71,6 +73,10 @@ public final class TcoCalculator {
         private BigDecimal onPremHardwareMonthly;
         private BigDecimal onPremCrossConnectMonthly;
         private BigDecimal onPremPowerPerKwMonth;
+
+        // Arbitrary user-supplied monthly costs (e.g. compute, storage, software) folded into
+        // every priced archetype's breakdown so the absolute totals reflect the full deployment.
+        private final Map<String, BigDecimal> additionalLineItems = new LinkedHashMap<>();
 
         Builder(FabricGateway fabric) {
             this.fabric = fabric;
@@ -180,6 +186,24 @@ public final class TcoCalculator {
         }
 
         /**
+         * Adds an arbitrary named monthly cost — e.g. compute, storage, or software the rate cards
+         * do not price — folded into <em>every</em> priced archetype's breakdown and total. Because
+         * it is applied uniformly, it makes the absolute TCO figures realistic without changing
+         * which archetype is cheapest (the savings comparison is unaffected). Call multiple times
+         * for multiple line items.
+         *
+         * @param label   the line-item label shown in each breakdown
+         * @param monthly the monthly amount (in the comparison currency)
+         * @return this builder for method chaining
+         */
+        public Builder additionalLineItem(String label, BigDecimal monthly) {
+            if (label != null && monthly != null) {
+                additionalLineItems.put(label, monthly);
+            }
+            return this;
+        }
+
+        /**
          * Runs the comparison.
          *
          * @return the TCO comparison across the requested archetypes
@@ -208,5 +232,6 @@ public final class TcoCalculator {
         BigDecimal getOnPremHardwareMonthly() { return onPremHardwareMonthly; }
         BigDecimal getOnPremCrossConnectMonthly() { return onPremCrossConnectMonthly; }
         BigDecimal getOnPremPowerPerKwMonth() { return onPremPowerPerKwMonth; }
+        Map<String, BigDecimal> getAdditionalLineItems() { return additionalLineItems; }
     }
 }
