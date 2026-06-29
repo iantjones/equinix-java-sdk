@@ -19,11 +19,13 @@ package api.equinix.javasdk.ibxsmartview.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Reading;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SensorReadingJson {
 
 
