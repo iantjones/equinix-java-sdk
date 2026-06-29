@@ -25,6 +25,7 @@ import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Connection;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -40,6 +41,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceTokenJson {
 
     @Getter static TypeReference<List<ServiceTokenJson>> listTypeRef = new TypeReference<>() {};

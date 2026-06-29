@@ -18,11 +18,13 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.fabric.model.ServiceProfileAction;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class ServiceProfileActionJson implements ServiceProfileAction {
 
     @Getter static TypeReference<ServiceProfileActionJson> singleTypeRef = new TypeReference<>() {};

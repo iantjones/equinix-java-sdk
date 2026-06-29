@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -29,6 +30,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Connection {
 
     @JsonProperty("type")

@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.ChargeFrequency;
 import api.equinix.javasdk.networkedge.enums.ChargeType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Charge {
 
     @JsonProperty("type")

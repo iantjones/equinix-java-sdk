@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.NetworkEquinixStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -26,6 +27,7 @@ import lombok.Getter;
  * @author ianjones
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NetworkOperation {
 
     @JsonProperty("equinixStatus")

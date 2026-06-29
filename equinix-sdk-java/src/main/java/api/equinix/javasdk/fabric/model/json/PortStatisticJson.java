@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.implementation.PortStat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -31,6 +32,7 @@ import lombok.Getter;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PortStatisticJson {
 
 

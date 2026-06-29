@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.enums.RouteFilterRuleState;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -29,6 +30,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RouteFilterRuleJson {
 
     @Getter static TypeReference<List<RouteFilterRuleJson>> listTypeRef = new TypeReference<>() {};

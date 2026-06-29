@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
@@ -31,6 +32,7 @@ import java.time.LocalDateTime;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Metric {
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)

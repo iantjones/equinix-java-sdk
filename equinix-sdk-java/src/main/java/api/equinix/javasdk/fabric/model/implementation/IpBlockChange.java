@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -23,6 +24,7 @@ import lombok.Getter;
  * Reference to the most recent change applied to an IP block (carries the change resource href).
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IpBlockChange {
 
     @JsonProperty("href")

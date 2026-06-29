@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Pagination;
 import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -32,6 +33,7 @@ import java.util.List;
  * @version $Id: $Id
  */
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PhysicalPortsResponseJson {
 
     @JsonProperty("pagination")
