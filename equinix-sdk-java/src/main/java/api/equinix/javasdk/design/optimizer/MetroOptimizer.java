@@ -7,6 +7,8 @@ import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.design.optimizer.enums.*;
 import api.equinix.javasdk.design.optimizer.model.*;
+import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.Term;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,6 +66,8 @@ public final class MetroOptimizer {
         private OptimizationStrategy strategy = OptimizationStrategy.BALANCED;
         private ScoringWeights scoringWeights;
         private McpBridge mcpBridge;
+        private RateCard rateCard;
+        private Term term = Term.MONTH_12;
 
         Builder(FabricGateway fabric) {
             this.fabric = fabric;
@@ -224,6 +228,36 @@ public final class MetroOptimizer {
             return this;
         }
 
+        // ── Pricing ──
+
+        /**
+         * Sets the rate card used for cost estimation. When omitted, the optimizer
+         * defaults to live Equinix pricing ({@code EquinixRateCard.of(fabric)}),
+         * falling back to a built-in regional heuristic for any metro the live
+         * catalogue cannot price. Supply a
+         * {@link api.equinix.javasdk.design.value.ratecard.CustomRateCard} to cost
+         * against your own negotiated rates.
+         *
+         * @param rateCard the rate card to estimate costs with
+         * @return this builder for method chaining
+         */
+        public Builder rateCard(RateCard rateCard) {
+            this.rateCard = rateCard;
+            return this;
+        }
+
+        /**
+         * Sets the commitment term used when resolving rates. Defaults to
+         * {@link Term#MONTH_12}.
+         *
+         * @param term the commitment term
+         * @return this builder for method chaining
+         */
+        public Builder term(Term term) {
+            this.term = term;
+            return this;
+        }
+
         // ── Execute ──
 
         /**
@@ -246,6 +280,8 @@ public final class MetroOptimizer {
                     .strategy(strategy)
                     .scoringWeights(scoringWeights != null ? scoringWeights : ScoringWeights.defaults())
                     .mcpBridge(mcpBridge)
+                    .rateCard(rateCard)
+                    .term(term)
                     .build();
 
             return MetroOptimizerEngine.execute(request, fabric);

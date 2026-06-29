@@ -11,8 +11,14 @@ import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.fabric.model.implementation.ServiceProfileMetro;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.design.optimizer.enums.*;
 import api.equinix.javasdk.design.optimizer.model.*;
+import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
+import api.equinix.javasdk.design.value.ratecard.PriceQuote;
+import api.equinix.javasdk.design.value.ratecard.PriceSource;
+import api.equinix.javasdk.design.value.ratecard.RateCard;
+import api.equinix.javasdk.design.value.ratecard.Term;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -173,7 +179,8 @@ final class MetroOptimizerEngine {
         RiskAssessment riskAssessment = analyzeRisks(selected, topology, request, providerMetroMap, latencyMatrix);
 
         // Phase 10: Cost estimate
-        CostEstimate costEstimate = estimateCosts(selected, request);
+        RateCard rateCard = request.getRateCard() != null ? request.getRateCard() : EquinixRateCard.of(fabric);
+        CostEstimate costEstimate = estimateCosts(selected, request, rateCard);
 
         // Phase 11: Build recommendations
         List<MetroRecommendation> recommendations = new ArrayList<>();
@@ -923,8 +930,14 @@ final class MetroOptimizerEngine {
     //  Cost Estimation
     // ══════════════════════════════════════════════
 
-    /** Produces per-metro and aggregate cost estimates using a simplified regional pricing model. */
-    private static CostEstimate estimateCosts(List<ScoredMetro> selected, OptimizationRequest request) {
+    /**
+     * Produces per-metro and aggregate cost estimates. Each metro is priced via the
+     * resolved {@link RateCard} (live Equinix pricing by default) for a representative
+     * Fabric connection at the metro's allocated bandwidth, falling back to a regional
+     * heuristic (tagged {@link PriceSource#ESTIMATE}) when the rate card cannot price it.
+     */
+    private static CostEstimate estimateCosts(List<ScoredMetro> selected, OptimizationRequest request,
+                                              RateCard rateCard) {
         List<MetroCostBreakdown> perMetro = new ArrayList<>();
         BigDecimal totalMonthly = BigDecimal.ZERO;
         BigDecimal totalSetup = BigDecimal.ZERO;
@@ -932,29 +945,46 @@ final class MetroOptimizerEngine {
         int totalBandwidth = request.getWorkloads().stream()
                 .mapToInt(WorkloadSpec::getBandwidthMbps)
                 .sum();
+        Term term = request.getTerm() != null ? request.getTerm() : Term.MONTH_12;
+        boolean anyLive = false;
+        String currency = "USD";
 
         for (ScoredMetro sm : selected) {
-            // Simplified cost model: base port cost + per-Mbps connection cost
-            // Actual costs would come from the Pricing API in production
-            BigDecimal basePortCost = BigDecimal.valueOf(500);
-            BigDecimal perMbpsCost = BigDecimal.valueOf(0.50);
-            BigDecimal setupCost = BigDecimal.valueOf(1000);
+            int metroBandwidth = totalBandwidth / Math.max(1, selected.size());
 
-            // Regional multiplier
-            double regionMultiplier = 1.0;
-            if (sm.metro.getRegion() == Region.EMEA) regionMultiplier = 1.2;
-            else if (sm.metro.getRegion() == Region.APAC) regionMultiplier = 1.4;
-
-            BigDecimal monthly = basePortCost.add(
-                    perMbpsCost.multiply(BigDecimal.valueOf(totalBandwidth / Math.max(1, selected.size()))))
-                    .multiply(BigDecimal.valueOf(regionMultiplier));
-            BigDecimal setup = setupCost.multiply(BigDecimal.valueOf(regionMultiplier));
-
+            BigDecimal monthly;
+            BigDecimal setup;
             Map<String, BigDecimal> lineItems = new LinkedHashMap<>();
-            lineItems.put("Base port", basePortCost);
-            lineItems.put("Bandwidth allocation", perMbpsCost.multiply(
-                    BigDecimal.valueOf(totalBandwidth / Math.max(1, selected.size()))));
-            lineItems.put("Regional adjustment", monthly.subtract(basePortCost));
+
+            Optional<PriceQuote> live = rateCard != null
+                    ? rateCard.connection(ConnectionType.EVPL_VC, metroBandwidth, sm.metro.getCode(), term)
+                    : Optional.empty();
+
+            if (live.isPresent()) {
+                PriceQuote quote = live.get();
+                monthly = quote.getMonthlyRecurring();
+                setup = quote.getNonRecurring();
+                currency = quote.getCurrency().getCurrencyCode();
+                anyLive = true;
+                lineItems.put("Fabric connection (EVPL_VC, " + metroBandwidth + " Mbps)", monthly);
+            } else {
+                // Heuristic fallback: base port + per-Mbps connection cost with a regional multiplier.
+                BigDecimal basePortCost = BigDecimal.valueOf(500);
+                BigDecimal perMbpsCost = BigDecimal.valueOf(0.50);
+                BigDecimal setupCost = BigDecimal.valueOf(1000);
+
+                double regionMultiplier = 1.0;
+                if (sm.metro.getRegion() == Region.EMEA) regionMultiplier = 1.2;
+                else if (sm.metro.getRegion() == Region.APAC) regionMultiplier = 1.4;
+
+                BigDecimal bandwidthAllocation = perMbpsCost.multiply(BigDecimal.valueOf(metroBandwidth));
+                monthly = basePortCost.add(bandwidthAllocation).multiply(BigDecimal.valueOf(regionMultiplier));
+                setup = setupCost.multiply(BigDecimal.valueOf(regionMultiplier));
+
+                lineItems.put("Base port", basePortCost);
+                lineItems.put("Bandwidth allocation", bandwidthAllocation);
+                lineItems.put("Regional adjustment", monthly.subtract(basePortCost));
+            }
 
             perMetro.add(new MetroCostBreakdown(sm.metro.getCode(), monthly, setup, lineItems));
             totalMonthly = totalMonthly.add(monthly);
@@ -967,9 +997,15 @@ final class MetroOptimizerEngine {
             withinBudget = totalMonthly.compareTo(budget.getMaxMonthly()) <= 0;
         }
 
-        return new CostEstimate(totalMonthly, totalSetup, "USD", perMetro, withinBudget,
-                "Estimates based on simplified pricing model. Actual costs vary by connection type, "
-                        + "bandwidth tier, and contract terms. Contact your Equinix account team for precise quotes.");
+        String disclaimer = anyLive
+                ? "Per-metro costs use live Equinix Fabric pricing where available, otherwise a regional "
+                    + "estimate. Actual costs vary by connection type, bandwidth tier, and contract terms. "
+                    + "Contact your Equinix account team for precise quotes."
+                : "Estimates based on a regional pricing heuristic (live Fabric pricing was unavailable). "
+                    + "Actual costs vary by connection type, bandwidth tier, and contract terms. "
+                    + "Contact your Equinix account team for precise quotes.";
+
+        return new CostEstimate(totalMonthly, totalSetup, currency, perMetro, withinBudget, disclaimer);
     }
 
     // ══════════════════════════════════════════════
