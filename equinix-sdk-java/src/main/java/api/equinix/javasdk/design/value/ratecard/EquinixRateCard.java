@@ -9,6 +9,8 @@ import api.equinix.javasdk.fabric.enums.PriceType;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.implementation.Charge;
 import api.equinix.javasdk.fabric.model.implementation.PricingConnection;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +26,14 @@ import java.util.Optional;
  * costs for the value-realization models, and the keystone that replaces the
  * hardcoded price literals previously baked into the optimizer and wizard.
  *
- * <p>The Fabric prices search exposes no documented price-specific filter
- * fields, and a price row carries its connection <em>type</em> and metro only
- * in its {@code code}/{@code name} (the structured descriptor holds just the
- * bandwidth). This card therefore fetches the price catalogue once, caches it,
- * and matches <em>client-side</em> on the structured bandwidth plus the
- * type/metro tokens in the code — rather than trusting an unverified
- * server-side filter.</p>
+ * <p>The fetch is narrowed <em>server-side</em> by price {@code /type} to the
+ * two product families this card prices — virtual connections
+ * ({@link PriceType#VIRTUAL_CONNECTION_PRODUCT}) and Fabric gateways
+ * ({@link PriceType#FABRIC_GATEWAY_PRODUCT}) — rather than pulling the whole
+ * catalogue (ports, IP blocks, …) and discarding most of it. A price row still
+ * carries its connection <em>type</em> and metro only in its {@code code}/{@code name}
+ * (the structured descriptor holds just the bandwidth), so the card matches
+ * those remaining axes <em>client-side</em> over the (much smaller) cached set.</p>
  *
  * <p>The card is deliberately fault-tolerant: if the catalogue cannot be
  * fetched (network error, unauthenticated client, endpoint unavailable), it
@@ -38,10 +41,9 @@ import java.util.Optional;
  * another rate card or a heuristic rather than failing. Every quote it does
  * produce is tagged {@link PriceSource#EQUINIX_LIVE}.</p>
  *
- * <p>The catalogue fetch pages through all of {@code prices/search} and caches the
- * result for the card's lifetime. Targeted server-side filtering by price type/bandwidth
- * is a further optimization once those prices filter fields are confirmed against the
- * Fabric spec; until then a miss simply defers to the fallback, never a wrong number.</p>
+ * <p>Each type-scoped query is paged in full and the combined result cached for
+ * the card's lifetime; a lookup miss simply defers to the fallback, never a
+ * wrong number.</p>
  */
 public final class EquinixRateCard implements RateCard {
 
@@ -128,16 +130,28 @@ public final class EquinixRateCard implements RateCard {
     }
 
     private List<Pricing> fetchCatalog() {
+        // Fetch only the two product families this card actually prices, each narrowed
+        // server-side by /type, instead of scanning the entire price catalogue. The two
+        // type-scoped result sets are paged in full, combined, and cached for the card's
+        // lifetime. A failed fetch for one type leaves that family's rows absent (the
+        // card then defers to its fallback) rather than failing the lookup.
+        List<Pricing> combined = new ArrayList<>();
+        combined.addAll(fetchByType(PriceType.VIRTUAL_CONNECTION_PRODUCT));
+        combined.addAll(fetchByType(PriceType.FABRIC_GATEWAY_PRODUCT));
+        return combined;
+    }
+
+    private List<Pricing> fetchByType(PriceType type) {
         try {
-            PaginatedFilteredList<Pricing> page = fabric.prices().list(null);
+            FilterPropertyList filter = new FilterPropertyList(FilterType.AND).equals("/type", type.name());
+            PaginatedFilteredList<Pricing> page = fabric.prices().list(filter);
             if (page != null) {
-                // Page through the entire catalogue (not just the first page) so a match is never
-                // missed when the catalogue exceeds one page; fetched once and cached for the
-                // card's lifetime.
+                // Page through the full filtered result so a match is never missed when the
+                // type's price list exceeds one page.
                 return new ArrayList<>(page.loadAll().toList());
             }
         } catch (RuntimeException e) {
-            log.debug("Could not fetch Equinix price catalogue; live rate card will yield no prices", e);
+            log.debug("Could not fetch Equinix {} prices; those rows will be absent from the live rate card", type, e);
         }
         return new ArrayList<>();
     }
