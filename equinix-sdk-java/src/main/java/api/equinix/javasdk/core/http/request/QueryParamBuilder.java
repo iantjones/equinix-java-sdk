@@ -14,7 +14,7 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.sts.client.internal;
+package api.equinix.javasdk.core.http.request;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Small internal builder for assembling the optional query-parameter map used by STS list
- * operations (e.g. {@code includeSuspended}, {@code pageToken}, {@code pageSize}). {@code null}
- * values are skipped so only the parameters the caller actually supplied are sent.
+ * Shared builder for assembling an optional query-parameter map. {@code null} values are skipped so
+ * only the parameters the caller actually supplied are sent on the request. Used by domains whose
+ * list operations carry optional filters (e.g. IAM and STS paging/filter params).
  */
-public final class StsQueryParams {
+public final class QueryParamBuilder {
 
     private final Map<String, List<String>> params = new HashMap<>();
 
-    private StsQueryParams() {
+    private QueryParamBuilder() {
     }
 
     /**
@@ -38,8 +38,8 @@ public final class StsQueryParams {
      *
      * @return a fresh builder
      */
-    public static StsQueryParams builder() {
-        return new StsQueryParams();
+    public static QueryParamBuilder builder() {
+        return new QueryParamBuilder();
     }
 
     /**
@@ -49,7 +49,7 @@ public final class StsQueryParams {
      * @param value the parameter value (skipped when {@code null})
      * @return this builder for chaining
      */
-    public StsQueryParams add(String name, String value) {
+    public QueryParamBuilder add(String name, String value) {
         if (value != null) {
             List<String> values = new ArrayList<>();
             values.add(value);
@@ -65,7 +65,7 @@ public final class StsQueryParams {
      * @param value the parameter value (skipped when {@code null})
      * @return this builder for chaining
      */
-    public StsQueryParams add(String name, Integer value) {
+    public QueryParamBuilder add(String name, Integer value) {
         if (value != null) {
             add(name, value.toString());
         }
@@ -79,7 +79,7 @@ public final class StsQueryParams {
      * @param value the parameter value (skipped when {@code null})
      * @return this builder for chaining
      */
-    public StsQueryParams add(String name, Boolean value) {
+    public QueryParamBuilder add(String name, Boolean value) {
         if (value != null) {
             add(name, value.toString());
         }

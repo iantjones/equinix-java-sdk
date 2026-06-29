@@ -19,7 +19,7 @@ package api.equinix.javasdk.iam.client.internal.implementation;
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
-import api.equinix.javasdk.iam.client.internal.IamQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.iam.client.internal.PermissionSetClient;
 import api.equinix.javasdk.iam.model.PermissionSet;
 import api.equinix.javasdk.iam.model.json.PermissionSetJson;
@@ -45,7 +45,7 @@ public class PermissionSetClientImpl extends ClientBase implements PermissionSet
 
     @Override
     public PermissionSetList list(String projectId, String pageToken, Integer pageSize) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
                 .build();

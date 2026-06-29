@@ -278,6 +278,12 @@ public class EquinixClient implements Closeable {
         }
         String contentType = equinixRequest.getContentType();
         standardHeaders.put("content-type", contentType != null ? contentType : "application/json");
+        // Preserve any headers already set on the request (e.g. via addHeader) rather than
+        // wholesale-replacing the map; the standard auth/content-type headers take precedence.
+        Map<String, String> existingHeaders = equinixRequest.getHeaders();
+        if (existingHeaders != null) {
+            existingHeaders.forEach(standardHeaders::putIfAbsent);
+        }
         equinixRequest.setHeaders(standardHeaders);
     }
 

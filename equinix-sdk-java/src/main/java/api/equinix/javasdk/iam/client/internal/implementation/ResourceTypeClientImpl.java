@@ -18,7 +18,7 @@ package api.equinix.javasdk.iam.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
-import api.equinix.javasdk.iam.client.internal.IamQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.iam.client.internal.ResourceTypeClient;
 import api.equinix.javasdk.iam.model.ServicePolicySchema;
 import api.equinix.javasdk.iam.model.json.ActionList;
@@ -45,7 +45,7 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
     @Override
     public ResourceTypeList listResourceTypes(String projectId, String serviceId, String pageToken, Integer pageSize,
                                               String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("serviceId", serviceId)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
@@ -57,7 +57,7 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
     @Override
     public ActionList listActions(String projectId, String serviceId, String pageToken, Integer pageSize,
                                   String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("serviceId", serviceId)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
@@ -69,7 +69,7 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
     @Override
     public ServiceActionSetList listActionSets(String projectId, String serviceId, String pageToken, Integer pageSize,
                                                String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("serviceId", serviceId)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
@@ -82,7 +82,7 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
     public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
                                                           String resourceTypeServiceId, String lastAction,
                                                           Integer pageSize, String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("serviceId", serviceId)
                 .add("resourceType", resourceType)
                 .add("resourceTypeServiceId", resourceTypeServiceId)
@@ -95,7 +95,7 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
 
     @Override
     public ServicePolicySchema getServicePolicySchema(String projectId, String serviceId) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("serviceId", serviceId)
                 .build();
         return getAs("GetServicePolicySchema", Map.of("projectId", projectId), queryParams, ServicePolicySchemaJson.class);

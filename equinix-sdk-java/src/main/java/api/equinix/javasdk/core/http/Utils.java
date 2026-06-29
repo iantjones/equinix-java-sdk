@@ -66,6 +66,11 @@ public class Utils {
     private static final String uriParamFormat = "(\\{\\$(\\w+)})";
     private static final Pattern uriParamPattern = Pattern.compile(uriParamFormat);
 
+    // Per request-class property->getter map, derived once via Introspector and reused. Without this,
+    // getBeanInfo + descriptor streaming ran on every API call that has a {$param} URI (only ~3 request classes).
+    private static final java.util.concurrent.ConcurrentMap<Class<?>, Map<String, Method>> GETTER_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     /**
      * <p>buildRequest.</p>
      *
@@ -530,16 +535,24 @@ public class Utils {
         if(requestUri != null) {
             Matcher uriParamMatcher = uriParamPattern.matcher(requestUri);
 
-            try {
-                Map<String, Object> getterMethods = Arrays.stream(Introspector.getBeanInfo(equinixRequest.getClass(), Object.class).getPropertyDescriptors())
-                        .filter(pd -> Objects.nonNull(pd.getReadMethod()))
-                        .collect(Collectors.toMap(PropertyDescriptor::getName, PropertyDescriptor::getReadMethod));
+            Map<String, Method> getterMethods = GETTER_CACHE.computeIfAbsent(equinixRequest.getClass(), cls -> {
+                try {
+                    return Arrays.stream(Introspector.getBeanInfo(cls, Object.class).getPropertyDescriptors())
+                            .filter(pd -> Objects.nonNull(pd.getReadMethod()))
+                            .collect(Collectors.toMap(PropertyDescriptor::getName, PropertyDescriptor::getReadMethod));
+                }
+                catch (java.beans.IntrospectionException e) {
+                    throw new EquinixClientException(e);
+                }
+            });
 
+            try {
                 while (uriParamMatcher.find()) {
                     String propertyName = uriParamMatcher.group(2);
                     Object propertyValue = null;
-                    if (getterMethods.containsKey(propertyName)) {
-                        propertyValue = ((Method) getterMethods.get(propertyName)).invoke(equinixRequest);
+                    Method getter = getterMethods.get(propertyName);
+                    if (getter != null) {
+                        propertyValue = getter.invoke(equinixRequest);
                     }
                     else if (equinixRequest.getPathParameters().containsKey(propertyName)){
                         propertyValue = equinixRequest.getPathParameters().get(propertyName);

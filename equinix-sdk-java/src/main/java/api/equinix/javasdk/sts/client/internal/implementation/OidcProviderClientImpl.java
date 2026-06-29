@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.sts.client.implementation.STSConfigImpl;
 import api.equinix.javasdk.sts.client.internal.OidcProviderClient;
-import api.equinix.javasdk.sts.client.internal.StsQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.sts.model.OidcProvider;
 import api.equinix.javasdk.sts.model.json.OidcProviderJson;
 import api.equinix.javasdk.sts.model.json.OidcProviderPage;
@@ -44,7 +44,7 @@ public class OidcProviderClientImpl extends ClientBase implements OidcProviderCl
 
     @Override
     public OidcProviderPage page(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize) {
-        Map<String, List<String>> queryParams = StsQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("includeSuspended", includeSuspended)
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)

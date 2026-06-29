@@ -19,7 +19,7 @@ package api.equinix.javasdk.iam.client.internal.implementation;
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
 import api.equinix.javasdk.iam.client.internal.RoleClient;
-import api.equinix.javasdk.iam.client.internal.IamQueryParams;
+import api.equinix.javasdk.core.http.request.QueryParamBuilder;
 import api.equinix.javasdk.iam.model.json.RoleList;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public class RoleClientImpl extends ClientBase implements RoleClient {
 
     @Override
     public RoleList listRoles(String pageToken, Integer pageSize, String projectId, String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
                 .add("projectId", projectId)
@@ -51,7 +51,7 @@ public class RoleClientImpl extends ClientBase implements RoleClient {
 
     @Override
     public RoleList listRolesByProjectId(String projectId, String pageToken, Integer pageSize, String projectErn) {
-        Map<String, List<String>> queryParams = IamQueryParams.builder()
+        Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("pageToken", pageToken)
                 .add("pageSize", pageSize)
                 .add("projectErn", projectErn)
