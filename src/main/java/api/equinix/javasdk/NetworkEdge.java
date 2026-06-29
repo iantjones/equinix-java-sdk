@@ -114,6 +114,16 @@ public final class NetworkEdge extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    NetworkEdge(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_NetworkEdge.json");
+        this.networkEdgeConfig = new NetworkEdgeConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for Network Edge setup and provisioning operations.
      * Provides access to account settings, metro availability, license agreements,
      * pricing, and generic file uploads for virtual network devices.

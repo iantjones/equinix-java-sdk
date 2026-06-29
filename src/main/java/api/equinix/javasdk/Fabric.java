@@ -170,6 +170,16 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    Fabric(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_Fabric.json");
+        this.fabricConfig = new FabricConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for managing Equinix metro locations.
      * Metros represent geographic areas where Equinix data centers are located.
      *

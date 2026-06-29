@@ -130,6 +130,16 @@ public final class IAM extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    IAM(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_IAM.json");
+        this.iamConfig = new IAMConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for the IAM roles catalog
      * ({@code GET /v1/roles}, {@code GET /v1/projects/{projectId}/roles}).
      *

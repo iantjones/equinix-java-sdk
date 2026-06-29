@@ -110,6 +110,16 @@ public final class STS extends EquinixClient implements Service {
     }
 
     /**
+     * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
+     * shared core client (one OAuth token + connection pool across domains).
+     */
+    STS(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        super(sharedCore);
+        equinixClient.appendApiParams("json/apiParams_STS.json");
+        this.stsConfig = new STSConfigImpl(equinixClient);
+    }
+
+    /**
      * Returns the client for the STS OAuth 2.0 token exchange ({@code POST /v1/token}) and the
      * granted-access-policy listing ({@code POST /v1/accessPoliciesGranted}).
      *

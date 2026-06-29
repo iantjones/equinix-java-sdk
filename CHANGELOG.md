@@ -40,6 +40,17 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
 - IBX SmartView fictional standalone **Power** resource (real power data is `power/v1/current`).
 
 ### Added
+- **`Equinix` session — one client, many domains**: `new Equinix(creds)` owns a single OAuth token
+  and connection pool and vends every domain over it — `eq.fabric()`, `eq.networkEdge()`,
+  `eq.customerPortal()`, `eq.ibxSmartView()`, `eq.internetAccess()`, `eq.projects()`, `eq.iam()`,
+  `eq.sts()`, `eq.design()`, `eq.mcp()` — so multi-domain apps no longer authenticate and pool per
+  domain. Clients are lazily created + cached; a session-obtained domain's `close()` is a no-op
+  (the session owns and closes the shared core). The standalone `new Fabric(creds)` constructors are
+  unchanged.
+- **`Design` facade**: `Design.over(fabric)` (or `eq.design()`) groups the value-add engines —
+  `optimizeMetros()`, `deploymentWizard(...)`, `peeringIntelligence([key])`, `savingsCalculator()`,
+  `tcoComparison()` — in one discoverable root-level entry, reusing an existing Fabric client's
+  transport (it is built from a `FabricGateway`, not credentials).
 - **Fluent `update()` across all 13 mutable Fabric resources** (Network, CloudRouter, Stream,
   StreamSubscription, PrecisionTime, RouteFilter, RouteFilterRule, RouteAggregation,
   RouteAggregationRule, RoutingProtocol). Resources whose API uses RFC 6902 JSON Patch send a
