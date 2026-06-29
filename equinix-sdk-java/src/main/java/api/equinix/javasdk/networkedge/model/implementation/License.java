@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Setter;
 
@@ -26,6 +27,7 @@ import lombok.Setter;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Setter
 public class License implements GenericDataObject<License> {
 

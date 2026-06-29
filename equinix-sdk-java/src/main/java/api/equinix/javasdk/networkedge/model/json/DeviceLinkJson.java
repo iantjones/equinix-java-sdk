@@ -28,6 +28,7 @@ import api.equinix.javasdk.networkedge.model.implementation.Link;
 import api.equinix.javasdk.networkedge.model.implementation.LinkDevice;
 import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -42,6 +43,7 @@ import java.util.List;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class DeviceLinkJson extends Lifecycle {
 

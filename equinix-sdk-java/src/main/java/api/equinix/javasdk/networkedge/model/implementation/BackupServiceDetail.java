@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.networkedge.enums.ServiceType;
 import api.equinix.javasdk.networkedge.model.deserializers.BackupServiceDetailDeserializer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import lombok.Getter;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class BackupServiceDetail {
 

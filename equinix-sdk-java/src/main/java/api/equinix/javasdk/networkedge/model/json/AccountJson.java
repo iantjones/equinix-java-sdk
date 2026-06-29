@@ -31,6 +31,7 @@ import java.util.List;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class AccountJson {
 

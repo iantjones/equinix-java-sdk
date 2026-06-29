@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.networkedge.model.implementation.PricingDetail;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
@@ -27,6 +28,7 @@ import lombok.Getter;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class Pricing {
 

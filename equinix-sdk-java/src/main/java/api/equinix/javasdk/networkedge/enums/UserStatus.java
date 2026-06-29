@@ -23,7 +23,7 @@ package api.equinix.javasdk.networkedge.enums;
  * @version $Id: $Id
  */
 public enum UserStatus {
-    PENDING,
-    ACTIVE,
-    FAILED
+    ACTIVATED,
+    DEACTIVATED,
+    PENDING
 }

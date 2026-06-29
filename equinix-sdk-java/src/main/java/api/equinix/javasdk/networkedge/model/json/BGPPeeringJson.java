@@ -23,6 +23,7 @@ import api.equinix.javasdk.networkedge.enums.BGPState;
 import api.equinix.javasdk.networkedge.enums.BGPStatus;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
 import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -36,6 +37,7 @@ import java.time.LocalDateTime;
  * @author ianjones
  * @version $Id: $Id
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class BGPPeeringJson extends Lifecycle {
 

@@ -42,8 +42,11 @@ public class DeviceUpdaterJson {
     @JsonProperty("virtualDeviceName")
     private String virtualDeviceName;
 
+    // Spec models the PATCH (and create) termLength as a string (e.g. "1, 12, 24, 36"); the
+    // device-detail response also returns it as a string, so it is modelled as String here to
+    // match the documented contract and keep create/update aligned.
     @JsonProperty("termLength")
-    private Integer termLength;
+    private String termLength;
 
     @JsonProperty("clusterName")
     private String clusterName;
