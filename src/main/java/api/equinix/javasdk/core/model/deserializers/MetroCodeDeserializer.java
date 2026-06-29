@@ -60,6 +60,12 @@ public class MetroCodeDeserializer extends StdDeserializer<MetroCode> {
             metroCode = metroCode.replace("\"","").toUpperCase();
         }
 
-        return MetroCode.valueOf(metroCode);
+        try {
+            return MetroCode.valueOf(metroCode);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // A metro the API has brought online that this enum does not yet list: map to the
+            // forward-compatible UNKNOWN sentinel rather than failing the whole response.
+            return MetroCode.UNKNOWN;
+        }
     }
 }

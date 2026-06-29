@@ -39,10 +39,11 @@ import api.equinix.javasdk.design.value.tco.TcoCalculator;
  * <pre>{@code
  * Design design = Design.over(fabric);          // reuses fabric's client — no new transport
  * OptimizationResult result = design.optimizeMetros()
- *         .withWorkload(...)
+ *         .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
  *         .optimize();
  * SavingsEstimate savings = design.savingsCalculator()
- *         .provider(CloudProviderType.AWS).monthlyEgress(50, DataUnit.TB).estimate();
+ *         .egress(50, DataUnit.TERABYTE).fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+ *         .calculate();
  * }</pre>
  *
  * <p>Each method returns the same fluent builder you would get from the corresponding

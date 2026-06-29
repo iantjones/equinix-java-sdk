@@ -245,19 +245,19 @@ public class DeploymentPlan {
     public DeploymentPlan dryRun() {
         List<String> errors = new ArrayList<>();
 
-        // Validate Cloud Routers
+        // Validate Cloud Routers with client-side field checks only. Cloud Router creation has no
+        // dry-run mode, and calling create() here would provision live, billable routers — which a
+        // dry run must never do — so we validate the required fields instead.
         if (cloudRouters != null) {
             for (PlannedCloudRouter cr : cloudRouters) {
-                try {
-                    fabric.cloudRouters().define()
-                            .name(cr.getName())
-                            .inMetro(cr.getMetroCode())
-                            .withPackage(cr.getPackageCode())
-                            .create();
-                    // If dry-run is not directly supported, we validate fields
+                if (cr.getName() == null || cr.getName().isBlank()) {
+                    errors.add("Cloud Router: missing name");
                 }
-                catch (Exception e) {
-                    errors.add("Cloud Router '" + cr.getName() + "': " + e.getMessage());
+                if (cr.getMetroCode() == null) {
+                    errors.add("Cloud Router '" + cr.getName() + "': missing metro");
+                }
+                if (cr.getPackageCode() == null || cr.getPackageCode().isBlank()) {
+                    errors.add("Cloud Router '" + cr.getName() + "': missing package code");
                 }
             }
         }

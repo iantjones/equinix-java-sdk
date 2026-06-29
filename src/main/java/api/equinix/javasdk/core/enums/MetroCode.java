@@ -17,14 +17,19 @@
 package api.equinix.javasdk.core.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * <p>MetroCode class.</p>
+ * Well-known Equinix metro codes.
+ *
+ * <p>{@link #UNKNOWN} is a forward-compatibility sentinel: a metro the API returns that this enum
+ * does not yet list deserializes to {@code UNKNOWN} rather than failing the response (see
+ * {@code MetroCodeDeserializer}). The authoritative, always-current set of metros is the Metros
+ * API ({@code fabric.metros()}); this enum is a convenience for the well-known ones.</p>
  *
  * @author ianjones
- * @version $Id: $Id
  */
 public enum MetroCode implements APIParam {
         AM,
@@ -85,5 +90,9 @@ public enum MetroCode implements APIParam {
         VA,
         WA,
         WI,
-        ZH
+        ZH,
+
+        /** Sentinel for a metro code the API returned that is not (yet) a named constant here. */
+        @JsonEnumDefaultValue
+        UNKNOWN
 }
