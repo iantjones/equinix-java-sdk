@@ -54,13 +54,13 @@ public class PowerEventsImpl implements PowerEvents {
         return new PowerAlertConfigurationOperator(this.serviceClient).create();
     }
 
-    @SuppressWarnings("unchecked")
     public PaginatedList<PowerAlertConfiguration> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit) {
         Page<PowerAlertConfiguration, PowerAlertConfigurationJson> responsePage = serviceClient.searchAlertConfigurations(ibx, state, offset, limit);
-        // The internal client is a Pageable<PowerEvent>; its inherited nextPage(...) deserializes
-        // each subsequent page using the request's own response type (PowerAlertConfigurationJson),
-        // so reusing it for configuration paging is correct — only the generic parameter is laundered.
-        Pageable<PowerAlertConfiguration> pageableClient = (Pageable<PowerAlertConfiguration>) (Object) this.serviceClient;
+        // Configuration paging needs a dedicated Pageable: the internal client is a Pageable<PowerEvent>
+        // whose inherited nextPage(...) wraps with a PowerEventJson checkcast, which would
+        // ClassCastException on the deserialized PowerAlertConfigurationJson items. The dedicated
+        // pageable deserializes the nested AlertPaginatedResponse and wraps with identity.
+        Pageable<PowerAlertConfiguration> pageableClient = serviceClient.alertConfigurationPageable();
         PaginatedList<PowerAlertConfiguration> configList = Utils.mapPaginatedList(responsePage.getItems(), pageableClient, (json, client) -> json);
         return new PaginatedList<>(configList, pageableClient, responsePage.getAssociatedRequest(),
                 responsePage.getAssociatedResponse(), responsePage.getPagination());

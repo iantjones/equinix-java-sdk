@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": 1042,
+      "alertUid": "SV5.CAGE-DRAW#EXCEEDS:95",
+      "status": "ACTIVE",
+      "asset": {
+        "ibx": "SV5",
+        "assetUid": "SV5:01:A1234"
+      },
+      "category": "POWER",
+      "eventType": "CAGE_DRAW",
+      "conditionType": "EXCEEDS",
+      "triggerValue": "95",
+      "currentValue": "97.3",
+      "accountNo": "123456"
+    }
+  ],
+  "limit": 100,
+  "offset": 0,
+  "totalCount": 101
+}
