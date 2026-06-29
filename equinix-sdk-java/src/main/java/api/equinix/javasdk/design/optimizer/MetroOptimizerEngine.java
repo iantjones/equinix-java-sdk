@@ -117,11 +117,15 @@ final class MetroOptimizerEngine {
             double redundancyScore = 50.0; // baseline, refined in Phase 5
             double complianceScore = scoreCompliance(candidate, request);
 
+            // Latency and provider-coverage explanations are expensive to build
+            // (describeLatencyScore re-runs estimateLatency per user site and formats
+            // strings) and are only ever surfaced for the top maxMetros. They are left
+            // null here and backfilled for the selected set below; the numeric score and
+            // weight — the only inputs to ranking — are computed eagerly, so selection is
+            // unaffected.
             List<ScoreComponent> components = Arrays.asList(
-                    new ScoreComponent(ScoreCategory.LATENCY, latencyScore, wLatency,
-                            describeLatencyScore(candidate, request, metroMap, latencyMap, totalHeadcount)),
-                    new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, providerScore, wProvider,
-                            describeProviderScore(candidate, request, providerMetroMap)),
+                    new ScoreComponent(ScoreCategory.LATENCY, latencyScore, wLatency, null),
+                    new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, providerScore, wProvider, null),
                     new ScoreComponent(ScoreCategory.COST, costScore, wCost,
                             "Cost score based on estimated connection pricing"),
                     new ScoreComponent(ScoreCategory.REDUNDANCY, redundancyScore, wRedundancy,
@@ -146,6 +150,12 @@ final class MetroOptimizerEngine {
         List<ScoredMetro> selected = scoredMetros.stream()
                 .limit(maxMetros)
                 .collect(Collectors.toList());
+
+        // Phase 4b: Backfill the deferred latency/provider explanations for the selected
+        // metros only. These descriptions do not influence the composite score, so the
+        // surfaced output is identical to computing them eagerly for every candidate.
+        selected = backfillScoreDescriptions(selected, request, metroMap, latencyMap,
+                providerMetroMap, totalHeadcount);
 
         // Phase 5: Refine redundancy scores for selected set
         selected = refineRedundancyScores(selected, request, wRedundancy);
@@ -613,6 +623,43 @@ final class MetroOptimizerEngine {
     private static String describeRedundancy(List<ScoredMetro> selected, Set<Region> regions) {
         return selected.size() + " metros across " + regions.size() + " region(s): "
                 + regions.stream().map(Enum::name).collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Fills in the latency and provider-coverage score explanations that were deferred
+     * during the scoring phase, but only for the metros that were actually selected.
+     *
+     * <p>The explanations are descriptive only — they have no bearing on the composite
+     * score — so the per-metro composite and overall ranking are preserved exactly. This
+     * avoids running {@link #describeLatencyScore} / {@link #describeProviderScore} (each
+     * of which re-estimates latency per user site) for every candidate when only the top
+     * {@code maxMetros} are surfaced.</p>
+     */
+    private static List<ScoredMetro> backfillScoreDescriptions(
+            List<ScoredMetro> selected, OptimizationRequest request,
+            Map<MetroCode, Metro> metroMap, Map<MetroCode, Map<MetroCode, Double>> latencyMap,
+            Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap, int totalHeadcount) {
+
+        List<ScoredMetro> result = new ArrayList<>(selected.size());
+        for (ScoredMetro sm : selected) {
+            List<ScoreComponent> newComponents = new ArrayList<>(sm.score.getComponents().size());
+            for (ScoreComponent comp : sm.score.getComponents()) {
+                if (comp.getCategory() == ScoreCategory.LATENCY) {
+                    newComponents.add(new ScoreComponent(ScoreCategory.LATENCY, comp.getScore(),
+                            comp.getWeight(),
+                            describeLatencyScore(sm.metro, request, metroMap, latencyMap, totalHeadcount)));
+                } else if (comp.getCategory() == ScoreCategory.PROVIDER_COVERAGE) {
+                    newComponents.add(new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, comp.getScore(),
+                            comp.getWeight(),
+                            describeProviderScore(sm.metro, request, providerMetroMap)));
+                } else {
+                    newComponents.add(comp);
+                }
+            }
+            // Composite is unchanged: descriptions do not contribute to weightedScore().
+            result.add(new ScoredMetro(sm.metro, new MetroScore(sm.score.getComposite(), newComponents)));
+        }
+        return result;
     }
 
     // ══════════════════════════════════════════════

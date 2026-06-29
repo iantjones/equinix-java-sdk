@@ -25,6 +25,10 @@ import api.equinix.javasdk.design.peering.model.*;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +65,14 @@ class PeeringIntelligenceEngine {
     private final Map<Long, List<PeeringDbNetIxlan>> ixPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, List<PeeringDbNetFac>> facPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, NetworkPresence> networkPresences = new LinkedHashMap<>();
+
+    /**
+     * Lazily-built metro → [latitude, longitude] lookup used by {@link #computeDiversity}.
+     * Computed once per analysis from the Equinix facility map (the first facility per metro
+     * that has a non-null latitude, matching the historical per-call scan order) so that the
+     * O(metros^2) diversity calls no longer rescan the entire facility map each time.
+     */
+    private Map<MetroCode, double[]> metroCoordinates;
 
     PeeringIntelligenceEngine(FabricGateway fabric, PeeringDbClient peeringDb, PeeringRequest request) {
         this.fabric = fabric;
@@ -135,16 +147,59 @@ class PeeringIntelligenceEngine {
     // ---- Phase 2: Per-ASN data collection ----
 
     private void queryAsn(long asn) throws IOException {
-        PeeringDbNetwork net = peeringDb.getNetwork(asn);
+        // The three PeeringDB GETs for a single ASN (net, netixlan, netfac) are
+        // independent of one another, so they are fanned out onto a virtual-thread
+        // executor to overlap their blocking I/O. The ASN loop itself stays
+        // sequential (see execute()) to avoid bursting PeeringDB's anonymous
+        // ~20 req/min rate limit. Results and exception behaviour are identical to
+        // running the three calls in series: a failed sub-call still surfaces as an
+        // IOException out of this method.
+        PeeringDbNetwork net;
+        List<PeeringDbNetIxlan> ixPresence;
+        List<PeeringDbNetFac> facPresence;
+
+        try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
+            Future<PeeringDbNetwork> netFuture = exec.submit(() -> peeringDb.getNetwork(asn));
+            Future<List<PeeringDbNetIxlan>> ixFuture = exec.submit(() -> peeringDb.getEquinixIxPresence(asn));
+            Future<List<PeeringDbNetFac>> facFuture = exec.submit(() -> peeringDb.getEquinixFacPresence(asn));
+
+            net = awaitResult(netFuture);
+            ixPresence = awaitResult(ixFuture);
+            facPresence = awaitResult(facFuture);
+        }
+
         if (net != null) {
             networkMetadata.put(asn, net);
         }
-
-        List<PeeringDbNetIxlan> ixPresence = peeringDb.getEquinixIxPresence(asn);
         ixPresenceByAsn.put(asn, ixPresence);
-
-        List<PeeringDbNetFac> facPresence = peeringDb.getEquinixFacPresence(asn);
         facPresenceByAsn.put(asn, facPresence);
+    }
+
+    /**
+     * Joins a per-ASN PeeringDB sub-call, unwrapping its result while preserving the
+     * exact exception behaviour of the original sequential calls: an {@link IOException}
+     * thrown by the underlying GET is re-thrown as-is, and any other failure is wrapped
+     * in an {@link IOException} so it still surfaces from {@link #queryAsn(long)}.
+     */
+    private <T> T awaitResult(Future<T> future) throws IOException {
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException) {
+                throw (IOException) cause;
+            }
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            }
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            }
+            throw new IOException("PeeringDB query failed: " + cause.getMessage(), cause);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while querying PeeringDB", e);
+        }
     }
 
     // ---- Phase 3: Build NetworkPresence ----
@@ -600,27 +655,19 @@ class PeeringIntelligenceEngine {
     // ---- Helpers ----
 
     private DiversityScore computeDiversity(MetroCode metro1, MetroCode metro2) {
-        // Use IX city coordinates from the mapping for distance calculation
-        double lat1 = 0, lng1 = 0, lat2 = 0, lng2 = 0;
-        boolean found1 = false, found2 = false;
+        // Use IX city coordinates from the mapping for distance calculation. The
+        // metro → coordinate lookup is precomputed once per analysis (see
+        // metroCoordinatesMap()) rather than rescanning the full facility map on
+        // each of the O(metros^2) diversity calls.
+        Map<MetroCode, double[]> coords = metroCoordinatesMap();
+        double[] c1 = coords.get(metro1);
+        double[] c2 = coords.get(metro2);
+        boolean found1 = c1 != null;
+        boolean found2 = c2 != null;
 
-        for (PeeringDbFacility fac : peeringDb.getEquinixFacMap().values()) {
-            if (!found1 && ixMapping.metroForFacility(fac.getId()) == metro1
-                    && fac.getLatitude() != null) {
-                lat1 = fac.getLatitude();
-                lng1 = fac.getLongitude();
-                found1 = true;
-            }
-            if (!found2 && ixMapping.metroForFacility(fac.getId()) == metro2
-                    && fac.getLatitude() != null) {
-                lat2 = fac.getLatitude();
-                lng2 = fac.getLongitude();
-                found2 = true;
-            }
-            if (found1 && found2) break;
-        }
-
-        double distance = (found1 && found2) ? haversineKm(lat1, lng1, lat2, lng2) : 0;
+        double distance = (found1 && found2)
+                ? haversineKm(c1[0], c1[1], c2[0], c2[1])
+                : 0;
         DiversityRating rating = DiversityRating.fromDistance(distance);
 
         // Check if same region (basic check via metro naming conventions)
@@ -649,6 +696,28 @@ class PeeringIntelligenceEngine {
                 .rating(rating)
                 .explanation(explanation)
                 .build();
+    }
+
+    /**
+     * Lazily builds (once per analysis) the metro → [latitude, longitude] lookup used by
+     * {@link #computeDiversity}. For each metro the coordinate is taken from the first
+     * Equinix facility (in facility-map iteration order) that maps to that metro and has a
+     * non-null latitude — exactly the facility the previous per-call scan would have picked.
+     * Facilities that resolve to a metro but lack a latitude are skipped, so a later facility
+     * with coordinates can still populate the metro, matching the original {@code found} logic.
+     */
+    private Map<MetroCode, double[]> metroCoordinatesMap() {
+        if (metroCoordinates == null) {
+            Map<MetroCode, double[]> coords = new HashMap<>();
+            for (PeeringDbFacility fac : peeringDb.getEquinixFacMap().values()) {
+                if (fac.getLatitude() == null) continue;
+                MetroCode metro = ixMapping.metroForFacility(fac.getId());
+                if (metro == null) continue;
+                coords.putIfAbsent(metro, new double[]{fac.getLatitude(), fac.getLongitude()});
+            }
+            metroCoordinates = coords;
+        }
+        return metroCoordinates;
     }
 
     private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
