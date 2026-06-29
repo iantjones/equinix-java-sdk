@@ -1,5 +1,6 @@
 package api.equinix.javasdk.design.value.tco;
 
+import api.equinix.javasdk.design.value.ratecard.ColocationItem;
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
 import api.equinix.javasdk.design.value.ratecard.EgressRate;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
@@ -44,6 +45,18 @@ final class TcoEngine {
         }
         if (b.getArchetypes().contains(DeploymentArchetype.EQUINIX_INTERCONNECT)) {
             breakdowns.add(equinixInterconnect(b, rateCard, reference, privateEgress, gb, term, currency));
+        }
+
+        // Fold any caller-supplied line items (e.g. compute/storage) into every priced archetype,
+        // so absolute totals reflect the full deployment (applied uniformly — the comparison is
+        // unchanged).
+        Map<String, BigDecimal> additional = b.getAdditionalLineItems();
+        if (additional != null && !additional.isEmpty()) {
+            List<CostBreakdown> withExtra = new ArrayList<>(breakdowns.size());
+            for (CostBreakdown cb : breakdowns) {
+                withExtra.add(withAdditional(cb, additional));
+            }
+            breakdowns = withExtra;
         }
 
         // Recommend the cheapest priced archetype.
@@ -162,11 +175,28 @@ final class TcoEngine {
             }
         }
 
-        // The CSP interconnect port and Equinix cross-connect come from the bundled reference
-        // card (USD). Only fold them in when the comparison currency matches, so a non-USD
-        // custom rate card never silently mixes currencies into the total.
+        // Caller-supplied colocation primitives (in the comparison currency) take precedence and
+        // make the physical-infrastructure side of the comparison reflect real figures.
+        Optional<PriceQuote> coloCrossConnect = rateCard.colocation(ColocationItem.CROSS_CONNECT, b.getMetro(), term);
+        if (coloCrossConnect.isPresent()) {
+            items.put("Equinix cross-connect", coloCrossConnect.get().getMonthlyRecurring());
+            monthly = monthly.add(coloCrossConnect.get().getMonthlyRecurring());
+            setup = setup.add(coloCrossConnect.get().getNonRecurring());
+        }
+        Optional<PriceQuote> coloCabinet = rateCard.colocation(ColocationItem.CABINET, b.getMetro(), term);
+        if (coloCabinet.isPresent()) {
+            items.put("Colocation cabinet", coloCabinet.get().getMonthlyRecurring());
+            monthly = monthly.add(coloCabinet.get().getMonthlyRecurring());
+            setup = setup.add(coloCabinet.get().getNonRecurring());
+        }
+
+        // The CSP interconnect port and (unless a colocation cross-connect was supplied above) the
+        // Equinix cross-connect come from the bundled reference card (USD). Only fold them in when
+        // the comparison currency matches, so a non-USD custom rate card never silently mixes
+        // currencies into the total.
         Optional<BigDecimal> cspPort = reference.cspInterconnectPortMonthly(b.getProvider(), b.getBandwidthMbps());
-        Optional<BigDecimal> crossConnect = reference.equinixCrossConnectMonthly();
+        Optional<BigDecimal> crossConnect = coloCrossConnect.isPresent()
+                ? Optional.empty() : reference.equinixCrossConnectMonthly();
         if (currency.equals(reference.currencyCode())) {
             if (cspPort.isPresent()) {
                 items.put("Cloud provider interconnect port", cspPort.get());
@@ -187,6 +217,28 @@ final class TcoEngine {
                 .monthlyTotal(monthly).setupTotal(setup)
                 .currency(currency).lineItems(items).priced(priced)
                 .note(note)
+                .build();
+    }
+
+    /** Returns a copy of a priced breakdown with the caller's additional line items folded in. */
+    private static CostBreakdown withAdditional(CostBreakdown cb, Map<String, BigDecimal> extra) {
+        if (!cb.isPriced()) {
+            return cb;
+        }
+        Map<String, BigDecimal> items = new LinkedHashMap<>(cb.getLineItems());
+        BigDecimal monthly = cb.getMonthlyTotal();
+        for (Map.Entry<String, BigDecimal> e : extra.entrySet()) {
+            items.put(e.getKey(), e.getValue());
+            monthly = monthly.add(e.getValue());
+        }
+        return CostBreakdown.builder()
+                .archetype(cb.getArchetype())
+                .monthlyTotal(monthly)
+                .setupTotal(cb.getSetupTotal())
+                .currency(cb.getCurrency())
+                .lineItems(items)
+                .priced(true)
+                .note(cb.getNote())
                 .build();
     }
 

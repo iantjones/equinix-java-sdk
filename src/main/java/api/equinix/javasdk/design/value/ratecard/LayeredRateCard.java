@@ -65,6 +65,17 @@ final class LayeredRateCard implements RateCard {
     }
 
     @Override
+    public Optional<PriceQuote> colocation(ColocationItem item, MetroCode metro, Term term) {
+        for (RateCard card : cards) {
+            Optional<PriceQuote> quote = card.colocation(item, metro, term);
+            if (quote.isPresent()) {
+                return quote;
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public PriceSource source() {
         return PriceSource.COMPOSITE;
     }
