@@ -62,8 +62,8 @@ Fabric fabric = new Fabric(credentials);
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
+| **MCP** | `new Mcp(creds)` | — | Standalone JSON-RPC 2.0 client for the Equinix MCP (Model Context Protocol) servers — discover/invoke tools (supporting types in `api.equinix.javasdk.mcp.*`). To expose *this SDK's* Fabric as MCP tools instead, use `Fabric.mcp()`. |
 | **Design** (value-add) | `Fabric.optimizeMetros()` / `.deploymentWizard()` / `.peeringIntelligence()` | — | Metro Optimizer, Deployment Wizard, Peering Intelligence (`api.equinix.javasdk.design.*`) |
-| **Mcp** (value-add) | `Fabric.mcp()` | — | MCP JSON-RPC bridge (`api.equinix.javasdk.mcp.*`) |
 
 ## Usage Examples
 

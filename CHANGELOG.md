@@ -97,6 +97,10 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
   Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
   `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.
+- **Root-level `Mcp` client**: the standalone MCP JSON-RPC client (`mcp.McpClient`) is promoted to
+  `api.equinix.javasdk.Mcp` — `new Mcp(creds)` — so every credential-constructed client sits in
+  the root package alongside `Fabric`, `NetworkEdge`, `IAM`, etc. The Fabric-integration bridge
+  stays behind `Fabric.mcp()`; supporting types remain in `api.equinix.javasdk.mcp.*`.
 - **`FabricGateway` interface** — the value-add design engines now depend on a narrow read/build
   interface (`metros()`/`serviceProfiles()`/`cloudRouters()`/`connections()`/`routingProtocols()`/
   `prices()`) rather than the concrete `Fabric`; `Fabric implements FabricGateway`, so existing

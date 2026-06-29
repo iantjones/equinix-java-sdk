@@ -19,9 +19,12 @@ import java.time.Instant;
  * <p>Tokens are cached and automatically refreshed 5 minutes before their expiry.
  * Uses the same OAuth2 client credentials as the core Equinix SDK.</p>
  *
+ * <p>Internal helper for {@link api.equinix.javasdk.Mcp}; public only so the root-package
+ * client can construct it.</p>
+ *
  * @author ianjones
  */
-class McpTokenManager {
+public class McpTokenManager {
 
     private static final Duration REFRESH_BUFFER = Duration.ofMinutes(5);
 
@@ -33,7 +36,7 @@ class McpTokenManager {
     private String accessToken;
     private Instant expiresAt;
 
-    McpTokenManager(EquinixCredentials credentials, String tokenEndpoint,
+    public McpTokenManager(EquinixCredentials credentials, String tokenEndpoint,
                     CloseableHttpClient httpClient, ObjectMapper objectMapper) {
         this.credentials = credentials;
         this.tokenEndpoint = tokenEndpoint;
@@ -47,7 +50,7 @@ class McpTokenManager {
      * @return the OAuth2 bearer token
      * @throws McpException if token acquisition fails
      */
-    synchronized String getToken() {
+    public synchronized String getToken() {
         if (accessToken != null && expiresAt != null && Instant.now().isBefore(expiresAt.minus(REFRESH_BUFFER))) {
             return accessToken;
         }
@@ -97,7 +100,7 @@ class McpTokenManager {
     /**
      * Clears the cached token, forcing a fresh acquisition on next call.
      */
-    synchronized void invalidate() {
+    public synchronized void invalidate() {
         this.accessToken = null;
         this.expiresAt = null;
     }

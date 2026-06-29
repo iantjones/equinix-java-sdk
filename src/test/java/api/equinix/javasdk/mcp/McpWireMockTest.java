@@ -1,4 +1,5 @@
 package api.equinix.javasdk.mcp;
+import api.equinix.javasdk.Mcp;
 
 import api.equinix.javasdk.core.TestFixtures;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -20,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @Tag("wiremock")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class McpClientWireMockTest extends WireMockTestBase {
+class McpWireMockTest extends WireMockTestBase {
 
-    private static McpClient mcpClient;
+    private static Mcp mcpClient;
     private static McpBridge mcpBridge;
 
     @BeforeAll
@@ -34,7 +35,7 @@ class McpClientWireMockTest extends WireMockTestBase {
                 .readTimeoutMs(5000)
                 .build();
 
-        mcpClient = new McpClient(testCredentials(), config);
+        mcpClient = new Mcp(testCredentials(), config);
         mcpBridge = new McpBridge(mcpClient);
     }
 
@@ -139,7 +140,7 @@ class McpClientWireMockTest extends WireMockTestBase {
                 .tokenEndpoint(wireMockUrl() + "/oauth2/v1/token")
                 .build();
 
-        McpClient freshClient = new McpClient(testCredentials(), config);
+        Mcp freshClient = new Mcp(testCredentials(), config);
 
         McpException ex = assertThrows(McpException.class, () ->
                 freshClient.callTool("get_metro", Map.of("metroCode", "SV")));

@@ -1,6 +1,6 @@
 package api.equinix.javasdk.mcp.bridge;
 
-import api.equinix.javasdk.mcp.McpClient;
+import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolDefinition;
 
 import java.util.Map;
@@ -37,13 +37,13 @@ import java.util.Map;
  */
 public class McpBridge {
 
-    private final McpClient client;
+    private final Mcp client;
     private McpMetroBridge metroBridge;
     private McpConnectionBridge connectionBridge;
     private McpCloudRouterBridge cloudRouterBridge;
     private McpObservabilityBridge observabilityBridge;
 
-    public McpBridge(McpClient client) {
+    public McpBridge(Mcp client) {
         this.client = client;
     }
 
@@ -111,9 +111,9 @@ public class McpBridge {
     /**
      * Returns the underlying MCP client for direct tool invocation.
      *
-     * @return the {@link McpClient}
+     * @return the {@link Mcp}
      */
-    public McpClient getClient() {
+    public Mcp getClient() {
         return client;
     }
 }
