@@ -120,7 +120,9 @@ public final class AzureRetailPricesRateCard implements RateCard {
     private Optional<EgressRate> fetch(String region, EgressPath path) {
         String serviceName = path == EgressPath.INTERNET ? "Bandwidth" : "ExpressRoute";
         StringBuilder filter = new StringBuilder("serviceName eq '").append(serviceName).append("'");
-        if (region != null && !region.isEmpty()) {
+        // "Bandwidth" (internet) egress is region-specific; "ExpressRoute" metered egress is
+        // zone-based rather than region-keyed, so only constrain the region for the internet path.
+        if (path == EgressPath.INTERNET && region != null && !region.isEmpty()) {
             filter.append(" and armRegionName eq '").append(region).append("'");
         }
         String url = endpoint + "?currencyCode='USD'&$filter="
@@ -136,26 +138,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
             return Optional.empty();
         }
 
-        // Prefer a meter that names egress/outbound; fall back to the first priced GB meter.
-        JsonNode best = null;
-        for (JsonNode item : items) {
-            double price = item.path("retailPrice").asDouble(0d);
-            String unit = item.path("unitOfMeasure").asText("").toLowerCase();
-            if (price <= 0d || !unit.contains("gb")) {
-                continue;
-            }
-            String descriptor = (item.path("meterName").asText("") + " "
-                    + item.path("productName").asText("")).toLowerCase();
-            boolean egressMeter = descriptor.contains("out") || descriptor.contains("egress")
-                    || descriptor.contains("internet");
-            if (egressMeter) {
-                best = item;
-                break;
-            }
-            if (best == null) {
-                best = item;
-            }
-        }
+        JsonNode best = path == EgressPath.INTERNET ? selectInternet(items) : selectPrivate(items);
         if (best == null) {
             return Optional.empty();
         }
@@ -164,5 +147,69 @@ public final class AzureRetailPricesRateCard implements RateCard {
         String meter = best.path("meterName").asText(serviceName);
         return Optional.of(EgressRate.of(perGb, USD, PriceSource.PROVIDER_API)
                 .withNote("Azure Retail Prices: " + meter));
+    }
+
+    /**
+     * Internet egress: the "...Data Transfer Out" meter under the <em>Internet</em> routing
+     * preference, taking the headline (highest, first-tier) per-GB rate. Distinguishes that from
+     * the pricier Microsoft-Global-Network routing and from inter-region / inter-AZ transfers.
+     * Falls back to the highest-priced "data transfer out" GB meter if no routing-preference tag.
+     */
+    private static JsonNode selectInternet(JsonNode items) {
+        JsonNode preferred = null;
+        JsonNode fallback = null;
+        double preferredPrice = -1d;
+        double fallbackPrice = -1d;
+        for (JsonNode item : items) {
+            double price = item.path("retailPrice").asDouble(0d);
+            if (price <= 0d || !item.path("unitOfMeasure").asText("").toLowerCase().contains("gb")) {
+                continue;
+            }
+            String meter = item.path("meterName").asText("").toLowerCase();
+            if (!meter.contains("data transfer out") || meter.contains("inter-region")
+                    || meter.contains("availability zone")) {
+                continue;
+            }
+            if (price > fallbackPrice) {
+                fallback = item;
+                fallbackPrice = price;
+            }
+            if (item.path("productName").asText("").toLowerCase().contains("internet") && price > preferredPrice) {
+                preferred = item;
+                preferredPrice = price;
+            }
+        }
+        return preferred != null ? preferred : fallback;
+    }
+
+    /**
+     * Private (ExpressRoute) egress: the metered "Data Transfer Out" rate, taking the lowest
+     * positive per-GB rate (the best-case zone) — the savings-relevant figure. Skips the
+     * "Unlimited Data" flat-fee plans (which carry a $0 per-GB meter).
+     */
+    private static JsonNode selectPrivate(JsonNode items) {
+        JsonNode metered = null;
+        JsonNode fallback = null;
+        double meteredPrice = Double.MAX_VALUE;
+        double fallbackPrice = Double.MAX_VALUE;
+        for (JsonNode item : items) {
+            double price = item.path("retailPrice").asDouble(0d);
+            if (price <= 0d || !item.path("unitOfMeasure").asText("").toLowerCase().contains("gb")) {
+                continue;
+            }
+            String meter = item.path("meterName").asText("").toLowerCase();
+            if (!meter.contains("data transfer out")) {
+                continue;
+            }
+            if (price < fallbackPrice) {
+                fallback = item;
+                fallbackPrice = price;
+            }
+            if (meter.contains("metered") && price < meteredPrice) {
+                metered = item;
+                meteredPrice = price;
+            }
+        }
+        return metered != null ? metered : fallback;
     }
 }

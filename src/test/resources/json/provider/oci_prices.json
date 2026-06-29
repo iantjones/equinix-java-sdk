@@ -1,0 +1,49 @@
+{
+  "lastUpdated": "2026-06-29T00:00:00+00:00",
+  "items": [
+    {
+      "partNumber": "B88327",
+      "displayName": "Outbound Data Transfer - Originating in North America, Europe, and UK",
+      "metricName": "Gigabyte Outbound Data Transfer Per Month",
+      "serviceCategory": "Networking",
+      "currencyCodeLocalizations": [
+        {
+          "currencyCode": "USD",
+          "prices": [
+            { "model": "PAY_AS_YOU_GO", "value": 0, "rangeMin": 0 },
+            { "model": "PAY_AS_YOU_GO", "value": 0.0085, "rangeMin": 10240 }
+          ]
+        }
+      ]
+    },
+    {
+      "partNumber": "B93455",
+      "displayName": "Outbound Data Transfer - Originating in APAC, Japan, and South America",
+      "metricName": "Gigabyte Outbound Data Transfer Per Month",
+      "serviceCategory": "Networking",
+      "currencyCodeLocalizations": [
+        {
+          "currencyCode": "USD",
+          "prices": [
+            { "model": "PAY_AS_YOU_GO", "value": 0, "rangeMin": 0 },
+            { "model": "PAY_AS_YOU_GO", "value": 0.025, "rangeMin": 10240 }
+          ]
+        }
+      ]
+    },
+    {
+      "partNumber": "B96160",
+      "displayName": "MySQL Database - AWS - Outbound Data Transfer - To Internet",
+      "metricName": "Gigabyte of Data Transferred",
+      "serviceCategory": "Database",
+      "currencyCodeLocalizations": [
+        {
+          "currencyCode": "USD",
+          "prices": [
+            { "model": "PAY_AS_YOU_GO", "value": 0.0911, "rangeMin": 0 }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -59,8 +59,8 @@ class AzureRetailPricesRateCardWireMockTest extends WireMockTestBase {
         EgressRate rate = card().egress(CloudProviderType.AZURE, "eastus", EgressPath.INTERNET, Term.MONTH_12)
                 .orElseThrow();
 
-        assertEquals(0, new BigDecimal("0.087").compareTo(rate.getPricePerGb()),
-                "skips the $0 free meter, picks the priced data-transfer-out meter");
+        assertEquals(0, new BigDecimal("0.08").compareTo(rate.getPricePerGb()),
+                "headline Internet-routing data-transfer-out tier, not the pricier MGN (0.087) or inter-region (0.02)");
         assertEquals(PriceSource.PROVIDER_API, rate.getSource());
         assertNotNull(rate.getNote());
     }

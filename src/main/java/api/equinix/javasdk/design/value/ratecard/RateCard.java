@@ -25,7 +25,8 @@ import java.util.Optional;
  *   <li>{@code ReferenceRateCard} — bundled, dated reference figures (indicative).</li>
  *   <li>the {@code design.value.ratecard.provider} adapters — live cloud-egress rates from the public
  *       provider pricing APIs ({@code AzureRetailPricesRateCard}, {@code AwsPriceListRateCard},
- *       {@code GcpBillingCatalogRateCard}), tagged {@link PriceSource#PROVIDER_API}.</li>
+ *       {@code GcpBillingCatalogRateCard}, {@code OracleCloudPriceListRateCard}), tagged
+ *       {@link PriceSource#PROVIDER_API}.</li>
  * </ul>
  *
  * <p>Use {@link #layered(RateCard...)} to combine several cards into a precedence

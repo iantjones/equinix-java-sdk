@@ -1,15 +1,35 @@
 {
   "BillingCurrency": "USD",
   "CustomerEntityId": "Default",
-  "Count": 2,
+  "Count": 6,
   "Items": [
     {
       "currencyCode": "USD",
       "retailPrice": 0.0,
       "unitOfMeasure": "1 GB",
       "armRegionName": "eastus",
-      "meterName": "Free Allowance Data Transfer Out",
-      "productName": "Bandwidth - Inter-Region",
+      "meterName": "Standard Data Transfer Out",
+      "productName": "Bandwidth - Routing Preference: Internet",
+      "serviceName": "Bandwidth",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.08,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Standard Data Transfer Out",
+      "productName": "Bandwidth - Routing Preference: Internet",
+      "serviceName": "Bandwidth",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.04,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Standard Data Transfer Out",
+      "productName": "Bandwidth - Routing Preference: Internet",
       "serviceName": "Bandwidth",
       "serviceFamily": "Networking"
     },
@@ -19,7 +39,27 @@
       "unitOfMeasure": "1 GB",
       "armRegionName": "eastus",
       "meterName": "Standard Data Transfer Out",
-      "productName": "Bandwidth - Routing Preference: Internet",
+      "productName": "Rtn Preference: MGN",
+      "serviceName": "Bandwidth",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.02,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Standard Inter-Region Data Transfer",
+      "productName": "Rtn Preference: MGN",
+      "serviceName": "Bandwidth",
+      "serviceFamily": "Networking"
+    },
+    {
+      "currencyCode": "USD",
+      "retailPrice": 0.09,
+      "unitOfMeasure": "1 GB",
+      "armRegionName": "eastus",
+      "meterName": "Standard Data Transfer In - from China",
+      "productName": "Rtn Preference: MGN",
       "serviceName": "Bandwidth",
       "serviceFamily": "Networking"
     }

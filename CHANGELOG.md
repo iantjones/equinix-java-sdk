@@ -91,9 +91,10 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
     `CustomRateCard` takes caller-supplied rates fluently with **per-metro / per-term granularity**
     and most-specific-match resolution; `ReferenceRateCard` ships dated indicative figures; and the
     `design.value.ratecard.provider` adapters source **live cloud-egress rates** from the public
-    Azure Retail Prices, AWS Price List, and GCP Cloud Billing Catalog APIs (opt-in, fault-tolerant).
-    Every quote carries a `PriceSource` (`EQUINIX_LIVE` / `CUSTOM` / `PROVIDER_API` / `REFERENCE` /
-    `ESTIMATE` / `COMPOSITE`).
+    Azure Retail Prices, AWS Price List (data-transfer **and** Direct Connect, so both INTERNET and
+    PRIVATE paths), GCP Cloud Billing Catalog, and Oracle Cloud (OCI) Price List APIs (opt-in,
+    fault-tolerant; parsers verified against the live Azure/AWS responses). Every quote carries a
+    `PriceSource` (`EQUINIX_LIVE` / `CUSTOM` / `PROVIDER_API` / `REFERENCE` / `ESTIMATE` / `COMPOSITE`).
   - **Savings calculator**: public-internet vs private-interconnect egress savings (net / annual /
     first-year, break-even GB, payback) → `SavingsEstimate`.
   - **TCO comparison**: Public Cloud (internet) vs On-Prem vs Equinix Interconnect, recommending the
