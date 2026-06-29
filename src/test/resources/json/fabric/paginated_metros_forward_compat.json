@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "code": "SV",
+      "href": "https://api.equinix.com/fabric/v4/metros/SV",
+      "name": "Silicon Valley",
+      "ibxs": ["SV1", "SV2", "SV5"],
+      "type": "METRO",
+      "region": "AMER",
+      "geoCoordinates": {
+        "latitude": 37.3382,
+        "longitude": -121.8863
+      },
+      "connectedMetros": []
+    },
+    {
+      "code": "ZZ",
+      "href": "https://api.equinix.com/fabric/v4/metros/ZZ",
+      "name": "New Metro Not In Enum",
+      "ibxs": ["ZZ1", "ZZ2"],
+      "type": "METRO",
+      "region": "AMER",
+      "geoCoordinates": {
+        "latitude": 1.0,
+        "longitude": 2.0
+      },
+      "connectedMetros": []
+    }
+  ]
+}

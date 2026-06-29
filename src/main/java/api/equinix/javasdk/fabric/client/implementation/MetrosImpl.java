@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.client.Metros;
 import api.equinix.javasdk.fabric.client.internal.MetroClient;
 import api.equinix.javasdk.fabric.enums.MetroPresence;
@@ -50,7 +51,15 @@ public class MetrosImpl implements Metros {
     }
 
     public Metro getByMetroCode(MetroCode metroCode) {
+        return getByMetroCode(metroCode.toString());
+    }
+
+    public Metro getByMetroCode(String metroCode) {
         MetroJson metroJson = this.serviceClient.getByMetroCode(metroCode);
         return new MetroWrapper(metroJson, this.serviceClient);
+    }
+
+    public Metro getByMetroId(MetroId metroId) {
+        return getByMetroCode(metroId.code());
     }
 }

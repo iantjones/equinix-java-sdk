@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.MetroType;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
@@ -30,7 +31,18 @@ import java.util.List;
  */
 public interface Metro {
 
+    /**
+     * @return the metro code as a {@link MetroCode} enum, or {@link MetroCode#UNKNOWN} for a metro
+     *         this SDK's enum does not list; use {@link #metroId()} for the exact code of an
+     *         unlisted metro
+     */
     MetroCode getCode();
+
+    /**
+     * @return the metro's code as a forward-compatible {@link MetroId}, preserving the exact value
+     *         even for metros absent from {@link MetroCode}
+     */
+    MetroId metroId();
 
     MetroType getType();
 
@@ -39,6 +51,11 @@ public interface Metro {
     String getHref();
 
     Region getRegion();
+
+    /**
+     * @return the IBX data-center codes within this metro (e.g. {@code "SV1"}, {@code "SV5"})
+     */
+    List<String> getIbxs();
 
     GeoCoordinate geoCoordinates();
 

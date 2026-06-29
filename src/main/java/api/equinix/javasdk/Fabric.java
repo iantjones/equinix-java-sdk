@@ -23,6 +23,7 @@ import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 import api.equinix.javasdk.fabric.model.HealthStatus;
+import api.equinix.javasdk.fabric.model.MetroRegistry;
 import api.equinix.javasdk.mcp.McpClientConfig;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.MetroOptimizer;
@@ -84,6 +85,8 @@ import api.equinix.javasdk.design.value.tco.TcoCalculator;
 public final class Fabric extends EquinixClient implements Service, FabricGateway {
 
     private Metros metros;
+
+    private MetroRegistry metroRegistry;
 
     private ServiceTokens serviceTokens;
 
@@ -211,6 +214,32 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
             this.metros = new MetrosImpl(this.fabricConfig.getMetrosClient());
         }
         return metros;
+    }
+
+    /**
+     * Returns a cached, in-memory registry of every metro the Metros API reports (and the IBX data
+     * centers within each), keyed by {@link api.equinix.javasdk.core.model.MetroId} so it covers
+     * metros the {@link api.equinix.javasdk.core.enums.MetroCode} enum does not list. Loaded lazily
+     * on first access from {@link #metros()}; call {@link #reloadMetroRegistry()} to refresh it.
+     *
+     * @return the metro registry
+     */
+    public MetroRegistry metroRegistry() {
+        if (this.metroRegistry == null) {
+            this.metroRegistry = MetroRegistry.load(metros());
+        }
+        return metroRegistry;
+    }
+
+    /**
+     * Rebuilds the {@link #metroRegistry()} from a fresh Metros API call, picking up any metros added
+     * since it was last loaded.
+     *
+     * @return the refreshed metro registry
+     */
+    public MetroRegistry reloadMetroRegistry() {
+        this.metroRegistry = MetroRegistry.load(metros());
+        return metroRegistry;
     }
 
     /**

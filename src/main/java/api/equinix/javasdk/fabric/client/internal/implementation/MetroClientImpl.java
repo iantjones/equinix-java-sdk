@@ -57,7 +57,11 @@ public class MetroClientImpl extends ResourceClientBase<Metro, MetroJson> implem
     }
 
     public MetroJson getByMetroCode(MetroCode metroCode) {
-        return getOne("GetMetro", Map.of("metroCode", metroCode.toString()));
+        return getByMetroCode(metroCode.toString());
+    }
+
+    public MetroJson getByMetroCode(String metroCode) {
+        return getOne("GetMetro", Map.of("metroCode", metroCode));
     }
 
     public MetroJson refresh(MetroCode metroCode) {

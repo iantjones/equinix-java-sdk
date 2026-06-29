@@ -76,6 +76,20 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   overload was removed.
 - **Forward-compatible enum deserialization**: unknown API enum values no longer crash a
   response (map to a default/`null`/`UNKNOWN`).
+- **Forward-compatible metros — `MetroId` + live `MetroRegistry`**: a metro Equinix adds after this
+  SDK was built is now fully usable without an enum entry. `MetroId` (`core.model`) is a normalized
+  metro-code value object that names any metro (`MetroId.of("ZZ")`, `MetroId.of(MetroCode.SV)`,
+  `asMetroCode()`/`isKnown()`); `MetroCode` gains `lookup(String)`/`fromCode(String)`. The `Metro`
+  model now preserves the exact wire code: `metro.metroId()` returns the real code even when
+  `metro.getCode()` is `UNKNOWN` (the raw code is no longer discarded), and `Metro.getIbxs()` exposes
+  a metro's IBX data centers. `fabric.metroRegistry()` is a cached, refreshable snapshot of every
+  metro (and its IBXs) from the Metros API, keyed by `MetroId` — the authoritative, always-current
+  set — with `get`/`contains`/`all`/`ibxs`. `Metros.getByMetroCode(String)`/`getByMetroId(MetroId)`
+  overloads fetch an unlisted metro directly (the create builders' `inMetro(String)` already did).
+  **Minor breaking:** new methods `metroId()` and `getIbxs()` on the public `Metro` interface (affects
+  only code that implements `Metro` itself, not callers). The Metro Optimizer still keys its internal
+  scoring graph by `MetroCode`; rekeying it to `MetroId` so the optimizer ranks brand-new metros is a
+  tracked follow-up.
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
   instead of silently dispatching a malformed request.
 - **WireMock coverage** for 30+ previously-untested resources (request-contract `verify(...)`).
