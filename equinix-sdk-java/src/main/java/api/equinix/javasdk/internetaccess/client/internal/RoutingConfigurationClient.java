@@ -25,7 +25,7 @@ import api.equinix.javasdk.internetaccess.model.json.RoutingProtocolConfiguratio
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 routing-configuration lookup:
- * {@code GET /internetAccess/v1/routingConfigurations} — the allowed routing-protocol
+ * {@code GET /internetAccess/v1/routingProtocolConfigurations} — the allowed routing-protocol
  * configurations for a given use case and redundancy.
  */
 public interface RoutingConfigurationClient extends Pageable<RoutingProtocolConfiguration> {
