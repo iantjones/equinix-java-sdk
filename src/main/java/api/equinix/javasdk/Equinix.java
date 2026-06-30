@@ -56,6 +56,7 @@ import java.io.IOException;
 public final class Equinix implements Closeable {
 
     private final EquinixCredentialsProvider credentialsProvider;
+    private final EquinixConfig config;
     private final api.equinix.javasdk.core.client.EquinixClient core;
 
     private Fabric fabric;
@@ -84,7 +85,17 @@ public final class Equinix implements Closeable {
      * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
      */
     public Equinix(EquinixCredentials credentials, boolean isSandBoxed) {
-        this(new EquinixStaticCredentialsProvider(credentials), isSandBoxed);
+        this(new EquinixStaticCredentialsProvider(credentials), EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Opens a session with explicit {@link EquinixConfig} options (sandbox, retry, metro auto-loading).
+     *
+     * @param credentials the OAuth2 credentials shared by every client in this session
+     * @param config the construction-time options
+     */
+    public Equinix(EquinixCredentials credentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(credentials), config);
     }
 
     /**
@@ -95,7 +106,7 @@ public final class Equinix implements Closeable {
      * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
      */
     public Equinix(EquinixCredentialsProvider credentialsProvider) {
-        this(credentialsProvider, false);
+        this(credentialsProvider, EquinixConfig.defaults());
     }
 
     /**
@@ -105,8 +116,24 @@ public final class Equinix implements Closeable {
      * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
      */
     public Equinix(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        this(credentialsProvider, EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Opens a session over a custom credentials provider with explicit {@link EquinixConfig} options.
+     * When {@link EquinixConfig#isAutoLoadMetros()} is set (the default), {@link #authenticate()}
+     * eagerly loads the shared metro catalogue.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
+     * @param config the construction-time options
+     */
+    public Equinix(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
         this.credentialsProvider = credentialsProvider;
-        this.core = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, isSandBoxed);
+        this.config = config;
+        this.core = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, config.isSandbox());
+        if (config.getRetryPolicy() != null) {
+            this.core.setRetryPolicy(config.getRetryPolicy());
+        }
     }
 
     public Fabric fabric() {
@@ -186,13 +213,24 @@ public final class Equinix implements Closeable {
 
     /**
      * Explicitly performs OAuth2 authentication, warming the session's shared token. Optional —
-     * authentication otherwise happens automatically on the first API call.
+     * authentication otherwise happens automatically on the first API call. When
+     * {@link EquinixConfig#isAutoLoadMetros()} is enabled (the default), this also eagerly loads the
+     * shared metro catalogue ({@code fabric().metroRegistry()}); the load is best-effort and does
+     * not fail authentication.
      *
      * @return this session, for chaining
      * @throws EquinixClientException if authentication fails
      */
     public Equinix authenticate() throws EquinixClientException {
         fabric().authenticate();
+        if (config.isAutoLoadMetros()) {
+            try {
+                fabric().metroRegistry();
+            }
+            catch (RuntimeException ignored) {
+                // best-effort eager load; metroRegistry() remains available lazily
+            }
+        }
         return this;
     }
 

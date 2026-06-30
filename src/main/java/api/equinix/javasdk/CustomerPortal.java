@@ -200,6 +200,32 @@ public final class CustomerPortal extends EquinixClient implements Service {
     }
 
     /**
+     * Creates a new CustomerPortal client with explicit {@link EquinixConfig} options.
+     *
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public CustomerPortal(EquinixCredentials equinixCredentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), config);
+    }
+
+    /**
+     * Creates a new CustomerPortal client over a custom credentials provider with explicit
+     * {@link EquinixConfig} options.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public CustomerPortal(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        super(credentialsProvider, config);
+
+        String paramFile = "json/apiParams_CustomerPortal.json";
+        equinixClient.appendApiParams(paramFile);
+
+        this.customerPortalConfig = new CustomerPortalConfigImpl(equinixClient);
+    }
+
+    /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
      * shared core client (one OAuth token + connection pool across domains).
      */
