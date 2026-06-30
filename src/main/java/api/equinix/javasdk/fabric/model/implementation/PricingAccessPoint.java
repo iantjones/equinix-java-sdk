@@ -29,8 +29,8 @@ public class PricingAccessPoint {
     private AccessPointType type;
 
     @JsonProperty("location")
-    MinimalLocation location;
+    LocationCode location;
 
     @JsonProperty("profile")
-    MinimalProfile profile;
+    ServiceProfileRef profile;
 }

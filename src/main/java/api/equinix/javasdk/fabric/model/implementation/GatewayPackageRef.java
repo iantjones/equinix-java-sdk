@@ -16,17 +16,15 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-/**
- * Common change-reference details shared by Fabric change objects: the change resource {@code href}.
- */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class BasicChangeInfo {
+public class GatewayPackageRef {
 
-    @JsonProperty("href")
-    private String href;
+    @JsonProperty("code")
+    private GatewayPackageCode code;
 }

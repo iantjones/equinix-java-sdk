@@ -24,5 +24,5 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EiaServiceOrder extends BasicOrderInfo {
+public class EiaServiceOrder extends OrderRef {
 }

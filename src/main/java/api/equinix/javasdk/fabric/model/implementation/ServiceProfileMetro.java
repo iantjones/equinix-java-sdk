@@ -25,7 +25,7 @@ import java.util.Map;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServiceProfileMetro extends BasicMetro {
+public class ServiceProfileMetro extends MetroSummary {
 
     @JsonProperty("displayName")
     private String displayName;

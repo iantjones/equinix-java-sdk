@@ -17,14 +17,15 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.core.model.ResourceRef;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.NoArgsConstructor;
 
+/**
+ * Minimal Fabric Cloud Router reference (uuid only) for use as an access-point target.
+ */
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MinimalProfile extends ResourceRef {
+public class CloudRouterRef extends ResourceRef {
 
-    public MinimalProfile(String uuid) {
+    public CloudRouterRef(String uuid) {
         super(uuid);
     }
 }

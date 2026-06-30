@@ -19,7 +19,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 import api.equinix.javasdk.fabric.enums.NetworkScope;
 import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.Project;
-import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.implementation.LocationCode;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -43,7 +43,7 @@ public class NetworkCreatorJson {
     private Project project;
 
     @JsonProperty("location")
-    private MinimalLocation location;
+    private LocationCode location;
 
     @JsonProperty("notifications")
     private List<Notification> notifications;

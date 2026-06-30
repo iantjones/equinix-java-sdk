@@ -16,29 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.fabric.enums.NetworkState;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+import api.equinix.javasdk.core.model.ResourceRef;
 import lombok.NoArgsConstructor;
 
-/**
- * Simplified Fabric Network reference returned on an access point.
- */
-@Getter
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class SimplifiedNetwork {
+public class ServiceTokenRef extends ResourceRef {
 
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("uuid")
-    private String uuid;
-
-    @JsonProperty("name")
-    private String name;
-
-    @JsonProperty("state")
-    private NetworkState state;
+    public ServiceTokenRef(String uuid) {
+        super(uuid);
+    }
 }

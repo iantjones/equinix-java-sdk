@@ -54,7 +54,7 @@ public class AccessPoint {
     private Location location;
 
     @JsonProperty("port")
-    private BasicPort port;
+    private PortSummary port;
 
     @JsonProperty("profile")
     private Profile profile;
@@ -63,7 +63,7 @@ public class AccessPoint {
     private LinkProtocol linkProtocol;
 
     @JsonProperty("virtualDevice")
-    private BasicVirtualDevice virtualDevice;
+    private VirtualDeviceSummary virtualDevice;
 
     @JsonProperty("sellerRegion")
     private String sellerRegion;
@@ -78,10 +78,10 @@ public class AccessPoint {
     private PeeringType peeringType;
 
     @JsonProperty("router")
-    private SimplifiedRouter router;
+    private CloudRouterSummary router;
 
     @JsonProperty("network")
-    private SimplifiedNetwork network;
+    private NetworkSummary network;
 
     @JsonProperty("environment")
     private ProviderEnvironment environment;

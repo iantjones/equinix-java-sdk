@@ -25,7 +25,7 @@ import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MinimalMetro {
+public class MetroRef {
 
     /**
      * The raw metro code exactly as returned by the API. Held as a string (rather than a

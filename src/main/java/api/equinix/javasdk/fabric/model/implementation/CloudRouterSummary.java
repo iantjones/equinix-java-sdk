@@ -16,15 +16,25 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.model.ResourceRef;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Simplified Fabric Cloud Router reference returned on an access point.
+ */
+@Getter
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MinimalPort extends ResourceRef {
+public class CloudRouterSummary {
 
-    public MinimalPort(String uuid) {
-        super(uuid);
-    }
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("uuid")
+    private String uuid;
+
+    @JsonProperty("name")
+    private String name;
 }

@@ -19,10 +19,13 @@ package api.equinix.javasdk.fabric.model.implementation;
 import api.equinix.javasdk.core.model.ResourceRef;
 import lombok.NoArgsConstructor;
 
+/**
+ * Minimal Fabric Network reference (uuid only) for use as an access-point target.
+ */
 @NoArgsConstructor
-public class MinimalServiceToken extends ResourceRef {
+public class NetworkRef extends ResourceRef {
 
-    public MinimalServiceToken(String uuid) {
+    public NetworkRef(String uuid) {
         super(uuid);
     }
 }

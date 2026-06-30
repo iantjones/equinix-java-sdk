@@ -88,7 +88,7 @@ public class ServiceTokenCreatorJson {
         private AccessPointType type;
 
         @JsonProperty("port")
-        private BasicPort port;
+        private PortSummary port;
 
         @JsonProperty("linkProtocol")
         private LinkProtocol linkProtocol;
@@ -96,7 +96,7 @@ public class ServiceTokenCreatorJson {
 
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    public static class BasicPort {
+    public static class PortSummary {
 
         @JsonProperty("uuid")
         private String uuid;
@@ -126,7 +126,7 @@ public class ServiceTokenCreatorJson {
         LinkProtocol linkProtocol = new LinkProtocol(serviceTokenBuilder.getLinkProtocolType(), serviceTokenBuilder.getVLanTag(),
                 serviceTokenBuilder.getVLanCTag(), serviceTokenBuilder.getVLanSTag());
 
-        BasicPort port = new BasicPort(serviceTokenBuilder.getPortUuid());
+        PortSummary port = new PortSummary(serviceTokenBuilder.getPortUuid());
 
         AccessPointSelector accessPointSelector = new AccessPointSelector(serviceTokenBuilder.getAccessPointType(), port, linkProtocol);
 

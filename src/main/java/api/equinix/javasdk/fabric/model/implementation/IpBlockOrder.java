@@ -26,5 +26,5 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class IpBlockOrder extends BasicOrderInfo {
+public class IpBlockOrder extends OrderRef {
 }

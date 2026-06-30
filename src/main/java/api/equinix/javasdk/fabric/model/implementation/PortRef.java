@@ -16,14 +16,15 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.core.model.ResourceRef;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Getter
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicLocation extends MinimalLocation {
+public class PortRef extends ResourceRef {
 
-    @JsonProperty("href")
-    private String href;
+    public PortRef(String uuid) {
+        super(uuid);
+    }
 }

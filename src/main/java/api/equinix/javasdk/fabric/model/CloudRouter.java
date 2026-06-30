@@ -35,15 +35,15 @@ public interface CloudRouter {
 
      CloudRouterState getState();
 
-     MinimalLocation getLocation();
+     LocationCode getLocation();
 
-     BasicGatewayPackage getRouterPackage();
+     GatewayPackageRef getRouterPackage();
 
      Order getOrder();
 
      Project getProject();
 
-     BasicAccount getAccount();
+     AccountSummary getAccount();
 
      List<Notification> getNotifications();
 

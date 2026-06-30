@@ -16,16 +16,14 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.model.ResourceRef;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-/**
- * Minimal Fabric Network reference (uuid only) for use as an access-point target.
- */
-@NoArgsConstructor
-public class MinimalNetwork extends ResourceRef {
+@Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class LocationSummary extends LocationCode {
 
-    public MinimalNetwork(String uuid) {
-        super(uuid);
-    }
+    @JsonProperty("href")
+    private String href;
 }

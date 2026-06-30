@@ -34,7 +34,7 @@ public class PricingPort {
     private Integer bandwidth;
 
     @JsonProperty("location")
-    MinimalLocation location;
+    LocationCode location;
 
     @JsonProperty("physicalPortsQuantity")
     Integer physicalPortsQuantity;

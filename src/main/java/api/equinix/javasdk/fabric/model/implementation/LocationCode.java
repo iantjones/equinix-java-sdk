@@ -16,15 +16,15 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.core.enums.MetroCode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicGatewayPackage {
+public class LocationCode {
 
-    @JsonProperty("code")
-    private GatewayPackageCode code;
+    @JsonProperty("metroCode")
+    private MetroCode metroCode;
 }

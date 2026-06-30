@@ -50,10 +50,10 @@ public final class CloudRouterJson {
     private CloudRouterState state;
 
     @JsonProperty("location")
-    private MinimalLocation location;
+    private LocationCode location;
 
     @JsonProperty("package")
-    private BasicGatewayPackage routerPackage;
+    private GatewayPackageRef routerPackage;
 
     @JsonProperty("order")
     private Order order;
@@ -62,7 +62,7 @@ public final class CloudRouterJson {
     private Project project;
 
     @JsonProperty("account")
-    private BasicAccount account;
+    private AccountSummary account;
 
     @JsonProperty("notifications")
     private List<Notification> notifications;

@@ -16,16 +16,28 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.model.ResourceRef;
-import lombok.NoArgsConstructor;
+import api.equinix.javasdk.fabric.enums.VirtualDeviceType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
- * Minimal Fabric Cloud Router reference (uuid only) for use as an access-point target.
+ *
+ * @author ianjones
  */
-@NoArgsConstructor
-public class MinimalCloudRouter extends ResourceRef {
+@Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VirtualDeviceSummary {
+    
+    @JsonProperty("uuid")
+    private String uuid;
 
-    public MinimalCloudRouter(String uuid) {
-        super(uuid);
-    }
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("type")
+    private VirtualDeviceType type;
 }

@@ -24,13 +24,13 @@ import java.util.Map;
 
 /**
  * A metro in which a service profile is available (the {@code GET /serviceProfiles/{uuid}/metros}
- * response entries). Inherits {@code code}, {@code name} and {@code ibxs} from {@link BasicMetro}.
+ * response entries). Inherits {@code code}, {@code name} and {@code ibxs} from {@link MetroSummary}.
  *
  * @author ianjones
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServiceMetro extends BasicMetro {
+public class ServiceMetro extends MetroSummary {
 
     @JsonProperty("vcBandwidthMax")
     private Integer vcBandwidthMax;

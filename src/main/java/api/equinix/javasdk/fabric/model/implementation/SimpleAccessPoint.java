@@ -41,13 +41,13 @@ public class SimpleAccessPoint {
     private AccessPointType type;
 
     @JsonProperty("port")
-    private MinimalPort port;
+    private PortRef port;
 
     @JsonProperty("profile")
-    private MinimalProfile profile;
+    private ServiceProfileRef profile;
 
     @JsonProperty("virtualDevice")
-    private MinimalVirtualDevice virtualDevice;
+    private VirtualDeviceRef virtualDevice;
 
     @JsonProperty("linkProtocol")
     private LinkProtocol linkProtocol;
@@ -65,10 +65,10 @@ public class SimpleAccessPoint {
     private PeeringType peeringType;
 
     @JsonProperty("router")
-    private MinimalCloudRouter router;
+    private CloudRouterRef router;
 
     @JsonProperty("network")
-    private MinimalNetwork network;
+    private NetworkRef network;
 
     @JsonProperty("virtualNetwork")
     private VirtualNetwork virtualNetwork;
@@ -126,11 +126,11 @@ public class SimpleAccessPoint {
 
         private final AccessPointType type;
 
-        private MinimalPort port;
+        private PortRef port;
 
-        private MinimalProfile profile;
+        private ServiceProfileRef profile;
 
-        private MinimalVirtualDevice virtualDevice;
+        private VirtualDeviceRef virtualDevice;
 
         private LinkProtocol linkProtocol;
 
@@ -142,9 +142,9 @@ public class SimpleAccessPoint {
 
         private PeeringType peeringType;
 
-        private MinimalCloudRouter router;
+        private CloudRouterRef router;
 
-        private MinimalNetwork network;
+        private NetworkRef network;
 
         private VirtualNetwork virtualNetwork;
 
@@ -158,15 +158,15 @@ public class SimpleAccessPoint {
 
         protected AccessPointBuilder(AccessPoint accessPoint) {
             this.type = accessPoint.getType();
-            this.port = accessPoint.getPort() != null ? new MinimalPort(accessPoint.getPort().getUuid()) : null;
-            this.profile = accessPoint.getProfile() != null ? new MinimalProfile(accessPoint.getProfile().getUuid()) : null;
-            this.virtualDevice = accessPoint.getVirtualDevice() != null ? new MinimalVirtualDevice(accessPoint.getVirtualDevice().getUuid()) : null;
+            this.port = accessPoint.getPort() != null ? new PortRef(accessPoint.getPort().getUuid()) : null;
+            this.profile = accessPoint.getProfile() != null ? new ServiceProfileRef(accessPoint.getProfile().getUuid()) : null;
+            this.virtualDevice = accessPoint.getVirtualDevice() != null ? new VirtualDeviceRef(accessPoint.getVirtualDevice().getUuid()) : null;
             this.linkProtocol = accessPoint.getLinkProtocol() != null ? accessPoint.getLinkProtocol() : null;
             this.deviceInterface = accessPoint.getInterface() != null ? accessPoint.getInterface() : null;
         }
 
         public AccessPointBuilder port(String portUuid) {
-            this.port = new MinimalPort(portUuid);
+            this.port = new PortRef(portUuid);
             return this;
         }
 
@@ -175,7 +175,7 @@ public class SimpleAccessPoint {
         }
 
         public AccessPointBuilder serviceProfile(String serviceProfileUuid) {
-            this.profile = new MinimalProfile(serviceProfileUuid);
+            this.profile = new ServiceProfileRef(serviceProfileUuid);
             return this;
         }
 
@@ -184,7 +184,7 @@ public class SimpleAccessPoint {
         }
 
         public AccessPointBuilder virtualDevice(String virtualDeviceUuid) {
-            this.virtualDevice = new MinimalVirtualDevice(virtualDeviceUuid);
+            this.virtualDevice = new VirtualDeviceRef(virtualDeviceUuid);
             return this;
         }
 
@@ -231,7 +231,7 @@ public class SimpleAccessPoint {
          * @return this builder for chaining
          */
         public AccessPointBuilder cloudRouter(String cloudRouterUuid) {
-            this.router = new MinimalCloudRouter(cloudRouterUuid);
+            this.router = new CloudRouterRef(cloudRouterUuid);
             return this;
         }
 
@@ -247,7 +247,7 @@ public class SimpleAccessPoint {
          * @return this builder for chaining
          */
         public AccessPointBuilder network(String networkUuid) {
-            this.network = new MinimalNetwork(networkUuid);
+            this.network = new NetworkRef(networkUuid);
             return this;
         }
 
@@ -280,7 +280,7 @@ public class SimpleAccessPoint {
          * @return this builder for chaining
          */
         public AccessPointBuilder fromCloudProvider(CloudProviderConnectionAdapter<?> adapter) {
-            this.profile = new MinimalProfile(adapter.getServiceProfileUuid());
+            this.profile = new ServiceProfileRef(adapter.getServiceProfileUuid());
             this.authenticationKey = adapter.getAuthenticationKey();
             this.sellerRegion = adapter.getSellerRegion();
             if (adapter.getPreferredPeeringType() != null) {

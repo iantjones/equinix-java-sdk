@@ -25,8 +25,8 @@ import lombok.Getter;
 public class PricingGateway {
 
     @JsonProperty("package")
-    private BasicGatewayPackage gatewayPackage;
+    private GatewayPackageRef gatewayPackage;
 
     @JsonProperty("location")
-    MinimalLocation location;
+    LocationCode location;
 }
