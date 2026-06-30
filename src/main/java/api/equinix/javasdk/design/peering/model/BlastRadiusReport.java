@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.FailureScope;
 import lombok.Builder;
 import lombok.Value;
@@ -45,7 +45,7 @@ import java.util.Map;
 @Builder
 public class BlastRadiusReport {
 
-    MetroCode metro;
+    MetroId metro;
 
     FailureScope scope;
 

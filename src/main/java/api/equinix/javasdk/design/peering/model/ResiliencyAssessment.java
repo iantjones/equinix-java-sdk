@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Builder;
 import lombok.Value;
 
@@ -45,7 +45,7 @@ public class ResiliencyAssessment {
 
     String overallRating;
 
-    Map<MetroCode, List<FailoverPath>> failoverPaths;
+    Map<MetroId, List<FailoverPath>> failoverPaths;
 
     List<BlastRadiusReport> blastRadiusReports;
 
@@ -74,9 +74,9 @@ public class ResiliencyAssessment {
      * @param metro the metro to evaluate
      * @return the blast radius report, or {@code null} if not analyzed
      */
-    public BlastRadiusReport blastRadiusFor(MetroCode metro) {
+    public BlastRadiusReport blastRadiusFor(MetroId metro) {
         return blastRadiusReports.stream()
-                .filter(br -> br.getMetro() == metro)
+                .filter(br -> java.util.Objects.equals(br.getMetro(), metro))
                 .findFirst()
                 .orElse(null);
     }

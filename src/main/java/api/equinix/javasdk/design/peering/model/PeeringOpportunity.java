@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.PeeringPolicy;
 import lombok.Builder;
 import lombok.Value;
@@ -44,7 +44,7 @@ public class PeeringOpportunity {
 
     String targetLabel;
 
-    MetroCode metro;
+    MetroId metro;
 
     String ixName;
 

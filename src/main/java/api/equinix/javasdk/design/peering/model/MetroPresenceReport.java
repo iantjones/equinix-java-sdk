@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.ConnectivityType;
 import lombok.Builder;
 import lombok.Value;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Builder
 public class MetroPresenceReport {
 
-    MetroCode metro;
+    MetroId metro;
 
     String metroName;
 

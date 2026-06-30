@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.*;
 import api.equinix.javasdk.design.peering.model.*;
 import org.junit.jupiter.api.*;
@@ -48,7 +48,7 @@ class PeeringIntelligenceResultTest {
 
         PeeringRequest request = PeeringRequest.builder()
                 .targetAsns(targetAsns)
-                .customerMetros(new LinkedHashSet<>(Arrays.asList(MetroCode.DC, MetroCode.DA)))
+                .customerMetros(new LinkedHashSet<>(Arrays.asList(MetroId.of("DC"), MetroId.of("DA"))))
                 .customerAsn(65100L)
                 .includeCapacity(true)
                 .includePolicies(true)
@@ -58,17 +58,17 @@ class PeeringIntelligenceResultTest {
 
         // Build simple matrix
         List<Long> asns = Arrays.asList(AWS, MSFT);
-        List<MetroCode> metros = Arrays.asList(MetroCode.DC, MetroCode.DA);
-        Map<Long, Map<MetroCode, PresenceCell>> cells = new LinkedHashMap<>();
+        List<MetroId> metros = Arrays.asList(MetroId.of("DC"), MetroId.of("DA"));
+        Map<Long, Map<MetroId, PresenceCell>> cells = new LinkedHashMap<>();
 
-        Map<MetroCode, PresenceCell> awsRow = new LinkedHashMap<>();
-        awsRow.put(MetroCode.DC, buildCell(AWS, MetroCode.DC, true, 100000));
-        awsRow.put(MetroCode.DA, buildCell(AWS, MetroCode.DA, true, 10000));
+        Map<MetroId, PresenceCell> awsRow = new LinkedHashMap<>();
+        awsRow.put(MetroId.of("DC"), buildCell(AWS, MetroId.of("DC"), true, 100000));
+        awsRow.put(MetroId.of("DA"), buildCell(AWS, MetroId.of("DA"), true, 10000));
         cells.put(AWS, awsRow);
 
-        Map<MetroCode, PresenceCell> msftRow = new LinkedHashMap<>();
-        msftRow.put(MetroCode.DC, buildCell(MSFT, MetroCode.DC, true, 200000));
-        msftRow.put(MetroCode.DA, buildCell(MSFT, MetroCode.DA, false, 0));
+        Map<MetroId, PresenceCell> msftRow = new LinkedHashMap<>();
+        msftRow.put(MetroId.of("DC"), buildCell(MSFT, MetroId.of("DC"), true, 200000));
+        msftRow.put(MetroId.of("DA"), buildCell(MSFT, MetroId.of("DA"), false, 0));
         cells.put(MSFT, msftRow);
 
         PresenceMatrix matrix = PresenceMatrix.builder()
@@ -85,9 +85,9 @@ class PeeringIntelligenceResultTest {
                 .peeringPolicy(PeeringPolicy.SELECTIVE).networkType(NetworkType.CONTENT)
                 .trafficVolume("100-200Gbps").trafficRatio("Heavy Outbound")
                 .routeServerParticipant(true).bfdSupported(true).ipv6Capable(true)
-                .ixPeeringMetros(new LinkedHashSet<>(Arrays.asList(MetroCode.DC, MetroCode.DA)))
-                .facilityMetros(new LinkedHashSet<>(Arrays.asList(MetroCode.DC, MetroCode.DA)))
-                .allMetros(new LinkedHashSet<>(Arrays.asList(MetroCode.DC, MetroCode.DA)))
+                .ixPeeringMetros(new LinkedHashSet<>(Arrays.asList(MetroId.of("DC"), MetroId.of("DA"))))
+                .facilityMetros(new LinkedHashSet<>(Arrays.asList(MetroId.of("DC"), MetroId.of("DA"))))
+                .allMetros(new LinkedHashSet<>(Arrays.asList(MetroId.of("DC"), MetroId.of("DA"))))
                 .ixDetails(Collections.emptyList())
                 .totalIxCapacityMbps(110000)
                 .build());
@@ -97,9 +97,9 @@ class PeeringIntelligenceResultTest {
                 .peeringPolicy(PeeringPolicy.OPEN).networkType(NetworkType.CONTENT)
                 .trafficVolume("200-500Gbps").trafficRatio("Heavy Outbound")
                 .routeServerParticipant(true).bfdSupported(true).ipv6Capable(true)
-                .ixPeeringMetros(Collections.singleton(MetroCode.DC))
-                .facilityMetros(Collections.singleton(MetroCode.DC))
-                .allMetros(Collections.singleton(MetroCode.DC))
+                .ixPeeringMetros(Collections.singleton(MetroId.of("DC")))
+                .facilityMetros(Collections.singleton(MetroId.of("DC")))
+                .allMetros(Collections.singleton(MetroId.of("DC")))
                 .ixDetails(Collections.emptyList())
                 .totalIxCapacityMbps(200000)
                 .build());
@@ -116,19 +116,19 @@ class PeeringIntelligenceResultTest {
                 .build();
 
         // Metro reports
-        Map<MetroCode, MetroPresenceReport> metroReports = new LinkedHashMap<>();
-        metroReports.put(MetroCode.DC, MetroPresenceReport.builder()
-                .metro(MetroCode.DC).metroName("Ashburn").ixCount(1).facilityCount(2)
+        Map<MetroId, MetroPresenceReport> metroReports = new LinkedHashMap<>();
+        metroReports.put(MetroId.of("DC"), MetroPresenceReport.builder()
+                .metro(MetroId.of("DC")).metroName("Ashburn").ixCount(1).facilityCount(2)
                 .asnPresence(Collections.emptyList()).build());
-        metroReports.put(MetroCode.DA, MetroPresenceReport.builder()
-                .metro(MetroCode.DA).metroName("Dallas").ixCount(1).facilityCount(1)
+        metroReports.put(MetroId.of("DA"), MetroPresenceReport.builder()
+                .metro(MetroId.of("DA")).metroName("Dallas").ixCount(1).facilityCount(1)
                 .asnPresence(Collections.emptyList()).build());
 
         // Peering opportunities
         List<PeeringOpportunity> opportunities = Collections.singletonList(
                 PeeringOpportunity.builder()
                         .customerAsn(65100L).targetAsn(AWS).targetLabel("AWS")
-                        .metro(MetroCode.DC).ixName("Equinix Ashburn").ixId(1)
+                        .metro(MetroId.of("DC")).ixName("Equinix Ashburn").ixId(1)
                         .targetPolicy(PeeringPolicy.SELECTIVE)
                         .targetUsesRouteServer(true).targetSpeedMbps(100000)
                         .feasibility(0.9).complexity("Negotiation Required")
@@ -195,7 +195,7 @@ class PeeringIntelligenceResultTest {
     @Test
     @DisplayName("metroReport should return correct metro data")
     void metroReport() {
-        MetroPresenceReport dcReport = result.metroReport(MetroCode.DC);
+        MetroPresenceReport dcReport = result.metroReport(MetroId.of("DC"));
         assertNotNull(dcReport);
         assertEquals("Ashburn", dcReport.getMetroName());
         assertEquals(1, dcReport.getIxCount());
@@ -204,7 +204,7 @@ class PeeringIntelligenceResultTest {
     @Test
     @DisplayName("metroReport should return null for unknown metro")
     void metroReportUnknown() {
-        assertNull(result.metroReport(MetroCode.SG));
+        assertNull(result.metroReport(MetroId.of("SG")));
     }
 
     @Test
@@ -220,7 +220,7 @@ class PeeringIntelligenceResultTest {
         PeeringOpportunity po = result.getPeeringOpportunities().get(0);
         assertEquals(65100L, po.getCustomerAsn());
         assertEquals(AWS, po.getTargetAsn());
-        assertEquals(MetroCode.DC, po.getMetro());
+        assertEquals(MetroId.of("DC"), po.getMetro());
         assertEquals(PeeringPolicy.SELECTIVE, po.getTargetPolicy());
         assertTrue(po.isTargetUsesRouteServer());
         assertEquals(0.9, po.getFeasibility(), 0.001);
@@ -234,17 +234,17 @@ class PeeringIntelligenceResultTest {
         @DisplayName("hasIxPeeringAt should check correctly")
         void hasIxPeeringAt() {
             NetworkPresence aws = result.networkPresence(AWS);
-            assertTrue(aws.hasIxPeeringAt(MetroCode.DC));
-            assertTrue(aws.hasIxPeeringAt(MetroCode.DA));
-            assertFalse(aws.hasIxPeeringAt(MetroCode.SG));
+            assertTrue(aws.hasIxPeeringAt(MetroId.of("DC")));
+            assertTrue(aws.hasIxPeeringAt(MetroId.of("DA")));
+            assertFalse(aws.hasIxPeeringAt(MetroId.of("SG")));
         }
 
         @Test
         @DisplayName("hasFacilityAt should check correctly")
         void hasFacilityAt() {
             NetworkPresence aws = result.networkPresence(AWS);
-            assertTrue(aws.hasFacilityAt(MetroCode.DC));
-            assertFalse(aws.hasFacilityAt(MetroCode.SG));
+            assertTrue(aws.hasFacilityAt(MetroId.of("DC")));
+            assertFalse(aws.hasFacilityAt(MetroId.of("SG")));
         }
 
         @Test
@@ -257,7 +257,7 @@ class PeeringIntelligenceResultTest {
 
     // ---- Helpers ----
 
-    private static PresenceCell buildCell(long asn, MetroCode metro, boolean ixPresent, int capacity) {
+    private static PresenceCell buildCell(long asn, MetroId metro, boolean ixPresent, int capacity) {
         return PresenceCell.builder()
                 .asn(asn).metro(metro)
                 .connectivityType(ixPresent ? ConnectivityType.IX_PEERING : ConnectivityType.NONE)

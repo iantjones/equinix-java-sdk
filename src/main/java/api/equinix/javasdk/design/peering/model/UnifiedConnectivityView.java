@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.ConnectivityType;
 import lombok.Builder;
 import lombok.Value;
@@ -60,9 +60,9 @@ public class UnifiedConnectivityView {
      * @param metro the metro to look up
      * @return the metro connectivity entry, or {@code null} if not present
      */
-    public MetroConnectivity forMetro(MetroCode metro) {
+    public MetroConnectivity forMetro(MetroId metro) {
         return metroConnectivity.stream()
-                .filter(mc -> mc.getMetro() == metro)
+                .filter(mc -> java.util.Objects.equals(mc.getMetro(), metro))
                 .findFirst()
                 .orElse(null);
     }
@@ -101,7 +101,7 @@ public class UnifiedConnectivityView {
         sb.append("|-------|-----------|-------------|--------------|--------|----------|\n");
 
         for (MetroConnectivity mc : metroConnectivity) {
-            sb.append("| ").append(mc.getMetro().name());
+            sb.append("| ").append(mc.getMetro().code());
             sb.append(" | ").append(mc.isHasIxPeering() ? "Yes" : "No");
             sb.append(" | ").append(mc.isHasIxPeering() ? mc.getIxCapacityMbps() / 1000 + "G" : "-");
             sb.append(" | ").append(mc.isRouteServerAvailable() ? "Yes" : "No");
@@ -118,7 +118,7 @@ public class UnifiedConnectivityView {
     @Value
     @Builder
     public static class MetroConnectivity {
-        MetroCode metro;
+        MetroId metro;
         ConnectivityType connectivityType;
         boolean hasIxPeering;
         boolean hasFabric;

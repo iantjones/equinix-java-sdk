@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Builder;
 import lombok.Value;
 
@@ -68,7 +68,7 @@ public class PeeringIntelligenceResult {
 
     Map<Long, NetworkPresence> networkPresences;
 
-    Map<MetroCode, MetroPresenceReport> metroReports;
+    Map<MetroId, MetroPresenceReport> metroReports;
 
     ResiliencyAssessment resiliency;
 
@@ -108,7 +108,7 @@ public class PeeringIntelligenceResult {
      * @param metro the metro code
      * @return the metro report, or {@code null} if not in scope
      */
-    public MetroPresenceReport metroReport(MetroCode metro) {
+    public MetroPresenceReport metroReport(MetroId metro) {
         return metroReports != null ? metroReports.get(metro) : null;
     }
 
@@ -202,7 +202,7 @@ public class PeeringIntelligenceResult {
             sb.append("|--------|-------|----|---------|-----------|-----------|\n");
             for (PeeringOpportunity po : peeringOpportunities) {
                 sb.append("| ").append(po.getTargetLabel());
-                sb.append(" | ").append(po.getMetro().name());
+                sb.append(" | ").append(po.getMetro().code());
                 sb.append(" | ").append(po.getIxName());
                 sb.append(" | ").append(po.getTargetPolicy().getDisplayName());
                 sb.append(" | ").append(po.getComplexity());

@@ -18,6 +18,7 @@ package api.equinix.javasdk.design.peering;
 
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.client.PeeringDbClient;
 import api.equinix.javasdk.design.peering.model.PeeringIntelligenceResult;
 import api.equinix.javasdk.design.peering.model.PeeringRequest;
@@ -109,7 +110,7 @@ public class PeeringIntelligence {
         private final FabricGateway fabric;
         private final String peeringDbApiKey;
         private final Map<Long, String> targetAsns = new LinkedHashMap<>();
-        private final Set<MetroCode> customerMetros = new LinkedHashSet<>();
+        private final Set<MetroId> customerMetros = new LinkedHashSet<>();
         private long customerAsn;
         private boolean includeCapacity = true;
         private boolean includePolicies = true;
@@ -165,18 +166,48 @@ public class PeeringIntelligence {
          * @return this builder
          */
         public Builder customerMetros(MetroCode... metros) {
+            for (MetroCode metro : metros) {
+                customerMetros.add(MetroId.of(metro));
+            }
+            return this;
+        }
+
+        /**
+         * Sets the customer's metro locations by {@link MetroId} — accepts metros not in the
+         * {@link MetroCode} enum (e.g. one added to Fabric after this SDK was built).
+         *
+         * @param metros the customer's Equinix metro locations
+         * @return this builder
+         */
+        public Builder customerMetros(MetroId... metros) {
             customerMetros.addAll(Arrays.asList(metros));
             return this;
         }
 
         /**
-         * Sets the customer's metro locations from a collection.
+         * Sets the customer's metro locations by metro code string (e.g. {@code "DC"}, {@code "da"}).
+         * Accepts metros not in the {@link MetroCode} enum.
+         *
+         * @param metros the customer's Equinix metro codes
+         * @return this builder
+         */
+        public Builder customerMetros(String... metros) {
+            for (String metro : metros) {
+                customerMetros.add(MetroId.of(metro));
+            }
+            return this;
+        }
+
+        /**
+         * Sets the customer's metro locations from a collection of {@link MetroCode}.
          *
          * @param metros the customer's Equinix metro locations
          * @return this builder
          */
         public Builder customerMetros(Collection<MetroCode> metros) {
-            customerMetros.addAll(metros);
+            for (MetroCode metro : metros) {
+                customerMetros.add(MetroId.of(metro));
+            }
             return this;
         }
 
