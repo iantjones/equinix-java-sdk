@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.optimizer.enums.RiskSeverity;
 import lombok.Value;
 
@@ -14,5 +14,5 @@ public class RiskFinding {
     String category;
     String description;
     String recommendation;
-    MetroCode affectedMetro;
+    MetroId affectedMetro;
 }

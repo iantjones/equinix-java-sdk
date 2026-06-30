@@ -1,7 +1,7 @@
 package api.equinix.javasdk.design.optimizer;
 
 import api.equinix.javasdk.FabricGateway;
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
@@ -74,15 +74,15 @@ final class MetroOptimizerEngine {
         List<ServiceProfile> serviceProfiles = new ArrayList<>(fabric.serviceProfiles().search().toList());
 
         // Build lookup maps
-        Map<MetroCode, Metro> metroMap = new HashMap<>();
+        Map<MetroId, Metro> metroMap = new HashMap<>();
         for (Metro m : allMetros) {
-            metroMap.put(m.getCode(), m);
+            metroMap.put(m.metroId(), m);
         }
 
-        Map<MetroCode, Map<MetroCode, Double>> latencyMap = buildLatencyMap(allMetros);
+        Map<MetroId, Map<MetroId, Double>> latencyMap = buildLatencyMap(allMetros);
 
         // Build provider → metro availability map
-        Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap =
+        Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap =
                 buildProviderMetroMap(request.getProviders(), serviceProfiles);
 
         // Phase 2: Candidate Filtering
@@ -182,7 +182,7 @@ final class MetroOptimizerEngine {
         for (int i = 0; i < selected.size(); i++) {
             ScoredMetro sm = selected.get(i);
             Metro metro = sm.metro;
-            MetroCode code = metro.getCode();
+            MetroId code = metro.metroId();
 
             Map<String, Double> siteLatencies = new LinkedHashMap<>();
             for (UserSite site : request.getSites()) {
@@ -192,7 +192,7 @@ final class MetroOptimizerEngine {
 
             List<ProviderAvailability> provAvail = providerConnMap.forMetro(code);
             MetroCostBreakdown metroCost = costEstimate.getPerMetro().stream()
-                    .filter(c -> c.getMetroCode() == code)
+                    .filter(c -> java.util.Objects.equals(c.getMetroId(), code))
                     .findFirst().orElse(null);
 
             List<WorkloadPlacement> metroWorkloads = topology.forMetro(code);
@@ -200,7 +200,7 @@ final class MetroOptimizerEngine {
 
             recommendations.add(MetroRecommendation.builder()
                     .rank(i + 1)
-                    .metroCode(code)
+                    .metroId(code)
                     .metroName(metro.getName())
                     .region(metro.getRegion())
                     .coordinates(metro.geoCoordinates())
@@ -236,18 +236,18 @@ final class MetroOptimizerEngine {
     //  Latency Map
     // ══════════════════════════════════════════════
 
-    private static Map<MetroCode, Map<MetroCode, Double>> buildLatencyMap(List<Metro> metros) {
-        Map<MetroCode, Map<MetroCode, Double>> map = new HashMap<>();
+    private static Map<MetroId, Map<MetroId, Double>> buildLatencyMap(List<Metro> metros) {
+        Map<MetroId, Map<MetroId, Double>> map = new HashMap<>();
         for (Metro metro : metros) {
-            Map<MetroCode, Double> connections = new HashMap<>();
+            Map<MetroId, Double> connections = new HashMap<>();
             if (metro.getConnectedMetros() != null) {
                 for (ConnectedMetro cm : metro.getConnectedMetros()) {
                     if (cm.getAvgLatency() != null) {
-                        connections.put(cm.getCode(), cm.getAvgLatency());
+                        connections.put(cm.metroId(), cm.getAvgLatency());
                     }
                 }
             }
-            map.put(metro.getCode(), connections);
+            map.put(metro.metroId(), connections);
         }
         return map;
     }
@@ -256,14 +256,14 @@ final class MetroOptimizerEngine {
     //  Provider Metro Map
     // ══════════════════════════════════════════════
 
-    private static Map<String, Map<MetroCode, ProviderAvailability>> buildProviderMetroMap(
+    private static Map<String, Map<MetroId, ProviderAvailability>> buildProviderMetroMap(
             List<ProviderRequirement> requirements, List<ServiceProfile> profiles) {
 
-        Map<String, Map<MetroCode, ProviderAvailability>> result = new HashMap<>();
+        Map<String, Map<MetroId, ProviderAvailability>> result = new HashMap<>();
 
         for (ProviderRequirement req : requirements) {
             String key = req.displayLabel();
-            Map<MetroCode, ProviderAvailability> metroAvail = new HashMap<>();
+            Map<MetroId, ProviderAvailability> metroAvail = new HashMap<>();
 
             for (ServiceProfile profile : profiles) {
                 if (matchesProvider(profile, req)) {
@@ -273,7 +273,7 @@ final class MetroOptimizerEngine {
                             List<String> regions = spm.getSellerRegions() != null
                                     ? new ArrayList<>(spm.getSellerRegions().keySet())
                                     : Collections.emptyList();
-                            metroAvail.put(spm.getCode(),
+                            metroAvail.put(spm.metroId(),
                                     new ProviderAvailability(key, true, regions, profile.getUuid()));
                         }
                     }
@@ -306,11 +306,11 @@ final class MetroOptimizerEngine {
     // ══════════════════════════════════════════════
 
     private static List<Metro> filterCandidates(List<Metro> allMetros, OptimizationRequest request,
-                                                 Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap) {
+                                                 Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
         OptimizationConstraints c = request.getConstraints();
         List<Metro> filtered = new ArrayList<>();
 
-        Set<MetroCode> excluded = c.getExcludedMetros() != null
+        Set<MetroId> excluded = c.getExcludedMetros() != null
                 ? new HashSet<>(c.getExcludedMetros()) : Collections.emptySet();
         Set<Region> excludedRegions = c.getExcludedRegions() != null
                 ? new HashSet<>(c.getExcludedRegions()) : Collections.emptySet();
@@ -327,7 +327,7 @@ final class MetroOptimizerEngine {
         }
 
         for (Metro metro : allMetros) {
-            MetroCode code = metro.getCode();
+            MetroId code = metro.metroId();
             Region region = metro.getRegion();
 
             if (excluded.contains(code)) continue;
@@ -340,7 +340,7 @@ final class MetroOptimizerEngine {
             for (ProviderRequirement req : request.getProviders()) {
                 if (req.isRequired()) {
                     String key = req.displayLabel();
-                    Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(key);
+                    Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
                     if (avail == null || !avail.containsKey(code)) {
                         hasAllRequired = false;
                         break;
@@ -354,12 +354,12 @@ final class MetroOptimizerEngine {
 
         // Ensure required metros are included
         if (c.getRequiredMetros() != null) {
-            Set<MetroCode> filteredCodes = filtered.stream()
-                    .map(Metro::getCode).collect(Collectors.toSet());
-            for (MetroCode required : c.getRequiredMetros()) {
+            Set<MetroId> filteredCodes = filtered.stream()
+                    .map(Metro::metroId).collect(Collectors.toSet());
+            for (MetroId required : c.getRequiredMetros()) {
                 if (!filteredCodes.contains(required)) {
                     allMetros.stream()
-                            .filter(m -> m.getCode() == required)
+                            .filter(m -> java.util.Objects.equals(m.metroId(), required))
                             .findFirst()
                             .ifPresent(filtered::add);
                 }
@@ -374,8 +374,8 @@ final class MetroOptimizerEngine {
     // ══════════════════════════════════════════════
 
     private static double scoreLatency(Metro candidate, OptimizationRequest request,
-                                       Map<MetroCode, Metro> metroMap,
-                                       Map<MetroCode, Map<MetroCode, Double>> latencyMap,
+                                       Map<MetroId, Metro> metroMap,
+                                       Map<MetroId, Map<MetroId, Double>> latencyMap,
                                        int totalHeadcount, ScoringWeights weights) {
         if (request.getSites().isEmpty()) return 100.0;
 
@@ -385,7 +385,7 @@ final class MetroOptimizerEngine {
         for (UserSite site : request.getSites()) {
             double siteWeight = site.effectiveWeight(totalHeadcount)
                     * site.getRole().getImportanceMultiplier();
-            double latency = estimateLatency(candidate.getCode(), site, metroMap, latencyMap);
+            double latency = estimateLatency(candidate.metroId(), site, metroMap, latencyMap);
             weightedLatency += latency * siteWeight;
             totalSiteWeight += siteWeight;
         }
@@ -407,14 +407,14 @@ final class MetroOptimizerEngine {
     }
 
     private static String describeLatencyScore(Metro candidate, OptimizationRequest request,
-                                               Map<MetroCode, Metro> metroMap,
-                                               Map<MetroCode, Map<MetroCode, Double>> latencyMap,
+                                               Map<MetroId, Metro> metroMap,
+                                               Map<MetroId, Map<MetroId, Double>> latencyMap,
                                                int totalHeadcount) {
         if (request.getSites().isEmpty()) return "No sites defined";
 
         StringBuilder sb = new StringBuilder();
         for (UserSite site : request.getSites()) {
-            double lat = estimateLatency(candidate.getCode(), site, metroMap, latencyMap);
+            double lat = estimateLatency(candidate.metroId(), site, metroMap, latencyMap);
             sb.append(String.format("%s: %.1fms", site.getLabel(), lat));
             if (request.getSites().indexOf(site) < request.getSites().size() - 1) sb.append(", ");
         }
@@ -425,23 +425,23 @@ final class MetroOptimizerEngine {
      * Estimates latency from a metro to a user site. Tries direct metro-to-metro lookups first,
      * then falls back to Haversine distance-based estimation using fiber optic constants.
      */
-    static double estimateLatency(MetroCode from, UserSite site,
-                                          Map<MetroCode, Metro> metroMap,
-                                          Map<MetroCode, Map<MetroCode, Double>> latencyMap) {
-        MetroCode siteMetro = site.getNearestMetro();
+    static double estimateLatency(MetroId from, UserSite site,
+                                          Map<MetroId, Metro> metroMap,
+                                          Map<MetroId, Map<MetroId, Double>> latencyMap) {
+        MetroId siteMetro = site.getNearestMetro();
 
         // If the site has a metro code, try direct latency lookup
         if (siteMetro != null) {
-            if (siteMetro == from) return 0.5; // same metro, sub-ms
+            if (siteMetro.equals(from)) return 0.5; // same metro, sub-ms
 
-            Map<MetroCode, Double> fromConnections = latencyMap.get(from);
+            Map<MetroId, Double> fromConnections = latencyMap.get(from);
             if (fromConnections != null) {
                 Double directLatency = fromConnections.get(siteMetro);
                 if (directLatency != null) return directLatency;
             }
 
             // Reverse lookup
-            Map<MetroCode, Double> siteConnections = latencyMap.get(siteMetro);
+            Map<MetroId, Double> siteConnections = latencyMap.get(siteMetro);
             if (siteConnections != null) {
                 Double reverseLatency = siteConnections.get(from);
                 if (reverseLatency != null) return reverseLatency;
@@ -488,7 +488,7 @@ final class MetroOptimizerEngine {
     // ══════════════════════════════════════════════
 
     private static double scoreProviderCoverage(Metro candidate, OptimizationRequest request,
-                                                Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap,
+                                                Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap,
                                                 ScoringWeights weights) {
         if (request.getProviders().isEmpty()) return 100.0;
 
@@ -501,13 +501,13 @@ final class MetroOptimizerEngine {
             totalWeight += provWeight;
 
             String key = req.displayLabel();
-            Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(key);
-            if (avail != null && avail.containsKey(candidate.getCode())) {
+            Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
+            if (avail != null && avail.containsKey(candidate.metroId())) {
                 matchedWeight += provWeight;
 
                 // Bonus for matching preferred seller regions
                 if (req.getPreferredSellerRegions() != null && !req.getPreferredSellerRegions().isEmpty()) {
-                    ProviderAvailability pa = avail.get(candidate.getCode());
+                    ProviderAvailability pa = avail.get(candidate.metroId());
                     long regionMatches = req.getPreferredSellerRegions().stream()
                             .filter(r -> pa.getSellerRegions() != null && pa.getSellerRegions().contains(r))
                             .count();
@@ -521,11 +521,11 @@ final class MetroOptimizerEngine {
     }
 
     private static String describeProviderScore(Metro candidate, OptimizationRequest request,
-                                                Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap) {
+                                                Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
         long available = request.getProviders().stream()
                 .filter(req -> {
-                    Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(req.displayLabel());
-                    return avail != null && avail.containsKey(candidate.getCode());
+                    Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(req.displayLabel());
+                    return avail != null && avail.containsKey(candidate.metroId());
                 })
                 .count();
         return available + "/" + request.getProviders().size() + " providers available";
@@ -630,8 +630,8 @@ final class MetroOptimizerEngine {
      */
     private static List<ScoredMetro> backfillScoreDescriptions(
             List<ScoredMetro> selected, OptimizationRequest request,
-            Map<MetroCode, Metro> metroMap, Map<MetroCode, Map<MetroCode, Double>> latencyMap,
-            Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap, int totalHeadcount) {
+            Map<MetroId, Metro> metroMap, Map<MetroId, Map<MetroId, Double>> latencyMap,
+            Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap, int totalHeadcount) {
 
         List<ScoredMetro> result = new ArrayList<>(selected.size());
         for (ScoredMetro sm : selected) {
@@ -660,10 +660,10 @@ final class MetroOptimizerEngine {
     // ══════════════════════════════════════════════
 
     private static LatencyMatrix buildLatencyMatrix(List<ScoredMetro> selected, OptimizationRequest request,
-                                                     Map<MetroCode, Metro> metroMap,
-                                                     Map<MetroCode, Map<MetroCode, Double>> latencyMap) {
-        List<MetroCode> metroCodes = selected.stream()
-                .map(sm -> sm.metro.getCode())
+                                                     Map<MetroId, Metro> metroMap,
+                                                     Map<MetroId, Map<MetroId, Double>> latencyMap) {
+        List<MetroId> metroCodes = selected.stream()
+                .map(sm -> sm.metro.metroId())
                 .collect(Collectors.toList());
         List<String> siteLabels = request.getSites().stream()
                 .map(UserSite::getLabel)
@@ -673,9 +673,9 @@ final class MetroOptimizerEngine {
         for (ScoredMetro sm : selected) {
             List<LatencyEntry> row = new ArrayList<>();
             for (UserSite site : request.getSites()) {
-                double latency = estimateLatency(sm.metro.getCode(), site, metroMap, latencyMap);
-                boolean estimated = isEstimatedLatency(sm.metro.getCode(), site, latencyMap);
-                row.add(new LatencyEntry(sm.metro.getCode(), site.getLabel(), latency, estimated));
+                double latency = estimateLatency(sm.metro.metroId(), site, metroMap, latencyMap);
+                boolean estimated = isEstimatedLatency(sm.metro.metroId(), site, latencyMap);
+                row.add(new LatencyEntry(sm.metro.metroId(), site.getLabel(), latency, estimated));
             }
             matrix.add(row);
         }
@@ -683,14 +683,14 @@ final class MetroOptimizerEngine {
         return new LatencyMatrix(metroCodes, siteLabels, matrix);
     }
 
-    private static boolean isEstimatedLatency(MetroCode from, UserSite site,
-                                               Map<MetroCode, Map<MetroCode, Double>> latencyMap) {
-        MetroCode siteMetro = site.getNearestMetro();
+    private static boolean isEstimatedLatency(MetroId from, UserSite site,
+                                               Map<MetroId, Map<MetroId, Double>> latencyMap) {
+        MetroId siteMetro = site.getNearestMetro();
         if (siteMetro == null) return true;
-        if (siteMetro == from) return false;
-        Map<MetroCode, Double> connections = latencyMap.get(from);
+        if (siteMetro.equals(from)) return false;
+        Map<MetroId, Double> connections = latencyMap.get(from);
         if (connections != null && connections.containsKey(siteMetro)) return false;
-        Map<MetroCode, Double> reverse = latencyMap.get(siteMetro);
+        Map<MetroId, Double> reverse = latencyMap.get(siteMetro);
         return reverse == null || !reverse.containsKey(from);
     }
 
@@ -700,15 +700,15 @@ final class MetroOptimizerEngine {
 
     private static ProviderConnectivityMap buildProviderConnectivityMap(
             List<ScoredMetro> selected, OptimizationRequest request,
-            Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap) {
+            Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
 
-        Map<MetroCode, List<ProviderAvailability>> map = new LinkedHashMap<>();
+        Map<MetroId, List<ProviderAvailability>> map = new LinkedHashMap<>();
         for (ScoredMetro sm : selected) {
-            MetroCode code = sm.metro.getCode();
+            MetroId code = sm.metro.metroId();
             List<ProviderAvailability> provList = new ArrayList<>();
             for (ProviderRequirement req : request.getProviders()) {
                 String key = req.displayLabel();
-                Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(key);
+                Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
                 if (avail != null && avail.containsKey(code)) {
                     provList.add(avail.get(code));
                 } else {
@@ -725,14 +725,14 @@ final class MetroOptimizerEngine {
     // ══════════════════════════════════════════════
 
     private static DeploymentTopology assembleTopology(List<ScoredMetro> selected, OptimizationRequest request,
-                                                       Map<MetroCode, Metro> metroMap,
-                                                       Map<MetroCode, Map<MetroCode, Double>> latencyMap,
-                                                       Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap,
+                                                       Map<MetroId, Metro> metroMap,
+                                                       Map<MetroId, Map<MetroId, Double>> latencyMap,
+                                                       Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap,
                                                        int totalHeadcount) {
         List<WorkloadPlacement> placements = new ArrayList<>();
         if (selected.isEmpty()) return new DeploymentTopology(placements);
 
-        MetroCode primaryMetro = selected.get(0).metro.getCode();
+        MetroId primaryMetro = selected.get(0).metro.metroId();
         Region primaryRegion = selected.get(0).metro.getRegion();
 
         for (WorkloadSpec workload : request.getWorkloads()) {
@@ -746,7 +746,7 @@ final class MetroOptimizerEngine {
                         .filter(sm -> sm.metro.getRegion() != primaryRegion)
                         .findFirst()
                         .orElse(selected.size() > 1 ? selected.get(selected.size() - 1) : selected.get(0));
-                placements.add(new WorkloadPlacement(workload.getLabel(), drMetro.metro.getCode(),
+                placements.add(new WorkloadPlacement(workload.getLabel(), drMetro.metro.metroId(),
                         "Placed in " + drMetro.metro.getRegion() + " for geographic diversity from primary"));
                 continue;
             }
@@ -760,7 +760,7 @@ final class MetroOptimizerEngine {
                     double totalW = 0;
                     for (UserSite site : request.getSites()) {
                         double w = site.effectiveWeight(totalHeadcount) * site.getRole().getImportanceMultiplier();
-                        avg += estimateLatency(sm.metro.getCode(), site, metroMap, latencyMap) * w;
+                        avg += estimateLatency(sm.metro.metroId(), site, metroMap, latencyMap) * w;
                         totalW += w;
                     }
                     avg = totalW > 0 ? avg / totalW : avg;
@@ -769,7 +769,7 @@ final class MetroOptimizerEngine {
                         bestLatency = sm;
                     }
                 }
-                placements.add(new WorkloadPlacement(workload.getLabel(), bestLatency.metro.getCode(),
+                placements.add(new WorkloadPlacement(workload.getLabel(), bestLatency.metro.metroId(),
                         "Lowest weighted latency to user sites (" + String.format("%.1fms avg", bestAvg) + ")"));
                 continue;
             }
@@ -780,8 +780,8 @@ final class MetroOptimizerEngine {
                 for (ScoredMetro sm : selected) {
                     boolean allAvailable = workload.getDependsOnProviders().stream().allMatch(dep -> {
                         String key = dep.displayLabel();
-                        Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(key);
-                        return avail != null && avail.containsKey(sm.metro.getCode());
+                        Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
+                        return avail != null && avail.containsKey(sm.metro.metroId());
                     });
                     if (allAvailable) {
                         bestProvider = sm;
@@ -789,7 +789,7 @@ final class MetroOptimizerEngine {
                     }
                 }
                 if (bestProvider != null) {
-                    placements.add(new WorkloadPlacement(workload.getLabel(), bestProvider.metro.getCode(),
+                    placements.add(new WorkloadPlacement(workload.getLabel(), bestProvider.metro.metroId(),
                             "All required providers available"));
                     continue;
                 }
@@ -809,7 +809,7 @@ final class MetroOptimizerEngine {
 
     private static RiskAssessment analyzeRisks(List<ScoredMetro> selected, DeploymentTopology topology,
                                                OptimizationRequest request,
-                                               Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap,
+                                               Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap,
                                                LatencyMatrix latencyMatrix) {
         List<RiskFinding> findings = new ArrayList<>();
         RiskSeverity worstSeverity = RiskSeverity.INFO;
@@ -818,9 +818,9 @@ final class MetroOptimizerEngine {
         // Single point of failure
         if (selected.size() == 1) {
             findings.add(new RiskFinding(RiskSeverity.HIGH, "SINGLE_POINT_OF_FAILURE",
-                    "All workloads are assigned to a single metro (" + selected.get(0).metro.getCode() + ")",
+                    "All workloads are assigned to a single metro (" + selected.get(0).metro.metroId() + ")",
                     "Add at least one additional metro for redundancy",
-                    selected.get(0).metro.getCode()));
+                    selected.get(0).metro.metroId()));
             resiliencyScore -= 30;
             worstSeverity = RiskSeverity.HIGH;
         }
@@ -852,7 +852,7 @@ final class MetroOptimizerEngine {
         // Latency threshold violations
         Double maxLatency = request.getConstraints().getMaxLatencyMs();
         if (maxLatency != null) {
-            for (MetroCode metro : latencyMatrix.getMetros()) {
+            for (MetroId metro : latencyMatrix.getMetros()) {
                 double worst = latencyMatrix.worstCase(metro);
                 if (worst > maxLatency) {
                     findings.add(new RiskFinding(RiskSeverity.MEDIUM, "LATENCY_THRESHOLD",
@@ -870,9 +870,9 @@ final class MetroOptimizerEngine {
         for (ProviderRequirement req : request.getProviders()) {
             if (req.isRequired()) {
                 String key = req.displayLabel();
-                Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(key);
+                Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
                 long availableCount = selected.stream()
-                        .filter(sm -> avail != null && avail.containsKey(sm.metro.getCode()))
+                        .filter(sm -> avail != null && avail.containsKey(sm.metro.metroId()))
                         .count();
                 if (availableCount == 1) {
                     findings.add(new RiskFinding(RiskSeverity.MEDIUM, "PROVIDER_CONCENTRATION",
@@ -981,7 +981,7 @@ final class MetroOptimizerEngine {
                 mixedSources = true;
             }
 
-            perMetro.add(new MetroCostBreakdown(sm.metro.getCode(), monthly, setup, lineItems, metroSource));
+            perMetro.add(new MetroCostBreakdown(sm.metro.metroId(), monthly, setup, lineItems, metroSource));
             totalMonthly = totalMonthly.add(monthly);
             totalSetup = totalSetup.add(setup);
         }
@@ -1054,7 +1054,7 @@ final class MetroOptimizerEngine {
     }
 
     private static List<String> generateReasons(ScoredMetro sm, OptimizationRequest request,
-                                                Map<String, Map<MetroCode, ProviderAvailability>> providerMetroMap,
+                                                Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap,
                                                 Map<String, Double> siteLatencies) {
         List<String> reasons = new ArrayList<>();
 
@@ -1070,8 +1070,8 @@ final class MetroOptimizerEngine {
         // Provider availability
         long available = request.getProviders().stream()
                 .filter(req -> {
-                    Map<MetroCode, ProviderAvailability> avail = providerMetroMap.get(req.displayLabel());
-                    return avail != null && avail.containsKey(sm.metro.getCode());
+                    Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(req.displayLabel());
+                    return avail != null && avail.containsKey(sm.metro.metroId());
                 }).count();
         if (available == request.getProviders().size() && available > 0) {
             reasons.add("All " + available + " required/preferred providers available");

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.design.optimizer;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.design.optimizer.model.MetroRecommendation;
@@ -49,7 +50,7 @@ class DeploymentWizardModelTest {
         @DisplayName("Should build with all fields")
         void fullBuild() {
             PlannedCloudRouter cr = PlannedCloudRouter.builder()
-                    .metroCode(MetroCode.DC)
+                    .metroId(MetroId.of(MetroCode.DC))
                     .name("FCR-DC")
                     .packageCode("STANDARD")
                     .accountNumber(272010L)
@@ -57,7 +58,7 @@ class DeploymentWizardModelTest {
                     .notificationEmail("noc@example.com")
                     .build();
 
-            assertEquals(MetroCode.DC, cr.getMetroCode());
+            assertEquals(MetroId.of(MetroCode.DC), cr.getMetroId());
             assertEquals("FCR-DC", cr.getName());
             assertEquals("STANDARD", cr.getPackageCode());
             assertEquals(272010L, cr.getAccountNumber());
@@ -68,7 +69,7 @@ class DeploymentWizardModelTest {
         @DisplayName("Optional fields should be null when not set")
         void optionalFieldsNull() {
             PlannedCloudRouter cr = PlannedCloudRouter.builder()
-                    .metroCode(MetroCode.DA)
+                    .metroId(MetroId.of(MetroCode.DA))
                     .name("FCR-DA")
                     .packageCode("STANDARD")
                     .build();
@@ -91,7 +92,7 @@ class DeploymentWizardModelTest {
                     .connectionType(ConnectionType.EVPL_VC)
                     .purpose(ConnectionPurpose.PROVIDER)
                     .bandwidthMbps(1000)
-                    .aSideMetro(MetroCode.DC)
+                    .aSideMetro(MetroId.of(MetroCode.DC))
                     .aSideRouterName("FCR-DC")
                     .zSideServiceProfileUuid("sp-uuid-aws")
                     .zSideProviderLabel("AWS Direct Connect")
@@ -100,7 +101,7 @@ class DeploymentWizardModelTest {
 
             assertTrue(conn.isProviderConnection());
             assertFalse(conn.isBackboneLink());
-            assertEquals(MetroCode.DC, conn.getASideMetro());
+            assertEquals(MetroId.of(MetroCode.DC), conn.getASideMetro());
             assertEquals("us-east-1", conn.getZSideSellerRegion());
         }
 
@@ -112,9 +113,9 @@ class DeploymentWizardModelTest {
                     .connectionType(ConnectionType.EVPL_VC)
                     .purpose(ConnectionPurpose.BACKBONE)
                     .bandwidthMbps(10000)
-                    .aSideMetro(MetroCode.DC)
+                    .aSideMetro(MetroId.of(MetroCode.DC))
                     .aSideRouterName("FCR-DC")
-                    .zSideMetro(MetroCode.DA)
+                    .zSideMetro(MetroId.of(MetroCode.DA))
                     .zSideRouterName("FCR-DA")
                     .build();
 
@@ -141,7 +142,7 @@ class DeploymentWizardModelTest {
                     .purpose(ConnectionPurpose.PROVIDER)
                     .bandwidthMbps(10000)
                     .bandwidthAllocation(allocation)
-                    .aSideMetro(MetroCode.DC)
+                    .aSideMetro(MetroId.of(MetroCode.DC))
                     .aSideRouterName("FCR-DC")
                     .build();
 
@@ -164,23 +165,23 @@ class DeploymentWizardModelTest {
                     .connectionType(ConnectionType.EVPL_VC)
                     .purpose(ConnectionPurpose.BACKBONE)
                     .bandwidthMbps(10000)
-                    .aSideMetro(MetroCode.DC)
+                    .aSideMetro(MetroId.of(MetroCode.DC))
                     .aSideRouterName("FCR-DC")
-                    .zSideMetro(MetroCode.DA)
+                    .zSideMetro(MetroId.of(MetroCode.DA))
                     .zSideRouterName("FCR-DA")
                     .build();
 
             PlannedBackboneLink link = PlannedBackboneLink.builder()
-                    .metroA(MetroCode.DC)
-                    .metroZ(MetroCode.DA)
+                    .metroA(MetroId.of(MetroCode.DC))
+                    .metroZ(MetroId.of(MetroCode.DA))
                     .name("Backbone-DC-DA")
                     .bandwidthMbps(10000)
                     .topology(BackboneTopology.FULL_MESH)
                     .connection(conn)
                     .build();
 
-            assertEquals(MetroCode.DC, link.getMetroA());
-            assertEquals(MetroCode.DA, link.getMetroZ());
+            assertEquals(MetroId.of(MetroCode.DC), link.getMetroA());
+            assertEquals(MetroId.of(MetroCode.DA), link.getMetroZ());
             assertEquals(BackboneTopology.FULL_MESH, link.getTopology());
             assertNotNull(link.getConnection());
         }
@@ -230,28 +231,28 @@ class DeploymentWizardModelTest {
             OptimizationResult optResult = buildMinimalOptResult();
 
             List<PlannedCloudRouter> routers = Arrays.asList(
-                    PlannedCloudRouter.builder().metroCode(MetroCode.DC).name("FCR-DC").packageCode("STANDARD").build(),
-                    PlannedCloudRouter.builder().metroCode(MetroCode.DA).name("FCR-DA").packageCode("STANDARD").build()
+                    PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build(),
+                    PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode("STANDARD").build()
             );
 
             List<PlannedConnection> connections = Arrays.asList(
                     PlannedConnection.builder()
                             .name("FCR-DC-to-AWS").connectionType(ConnectionType.EVPL_VC)
                             .purpose(ConnectionPurpose.PROVIDER).bandwidthMbps(1000)
-                            .aSideMetro(MetroCode.DC).aSideRouterName("FCR-DC")
+                            .aSideMetro(MetroId.of(MetroCode.DC)).aSideRouterName("FCR-DC")
                             .zSideProviderLabel("AWS").build()
             );
 
             PlannedConnection bbConn = PlannedConnection.builder()
                     .name("Backbone-DC-DA").connectionType(ConnectionType.EVPL_VC)
                     .purpose(ConnectionPurpose.BACKBONE).bandwidthMbps(10000)
-                    .aSideMetro(MetroCode.DC).aSideRouterName("FCR-DC")
-                    .zSideMetro(MetroCode.DA).zSideRouterName("FCR-DA")
+                    .aSideMetro(MetroId.of(MetroCode.DC)).aSideRouterName("FCR-DC")
+                    .zSideMetro(MetroId.of(MetroCode.DA)).zSideRouterName("FCR-DA")
                     .build();
 
             List<PlannedBackboneLink> backbones = Collections.singletonList(
                     PlannedBackboneLink.builder()
-                            .metroA(MetroCode.DC).metroZ(MetroCode.DA)
+                            .metroA(MetroId.of(MetroCode.DC)).metroZ(MetroId.of(MetroCode.DA))
                             .name("Backbone-DC-DA").bandwidthMbps(10000)
                             .topology(BackboneTopology.FULL_MESH)
                             .connection(bbConn).build()
@@ -358,7 +359,7 @@ class DeploymentWizardModelTest {
             DeploymentPlan plan = DeploymentPlan.builder()
                     .sourceOptimization(buildMinimalOptResult())
                     .cloudRouters(Collections.singletonList(
-                            PlannedCloudRouter.builder().metroCode(MetroCode.DC).name("FCR-DC").packageCode("STANDARD").build()))
+                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build()))
                     .providerConnections(Collections.emptyList())
                     .backboneLinks(Collections.emptyList())
                     .routingProtocols(Collections.emptyList())
@@ -373,7 +374,7 @@ class DeploymentWizardModelTest {
                                     .resourceType("CloudRouter")
                                     .name("FCR-DC")
                                     .uuid("uuid-123")
-                                    .metroCode(MetroCode.DC)
+                                    .metroId(MetroId.of(MetroCode.DC))
                                     .status("PROVISIONED")
                                     .build()))
                     .fullySuccessful(true)
@@ -396,8 +397,8 @@ class DeploymentWizardModelTest {
             DeploymentPlan plan = DeploymentPlan.builder()
                     .sourceOptimization(buildMinimalOptResult())
                     .cloudRouters(Arrays.asList(
-                            PlannedCloudRouter.builder().metroCode(MetroCode.DC).name("FCR-DC").packageCode("STANDARD").build(),
-                            PlannedCloudRouter.builder().metroCode(MetroCode.DA).name("FCR-DA").packageCode("STANDARD").build()))
+                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build(),
+                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode("STANDARD").build()))
                     .providerConnections(Collections.emptyList())
                     .backboneLinks(Collections.emptyList())
                     .routingProtocols(Collections.emptyList())
@@ -410,7 +411,7 @@ class DeploymentWizardModelTest {
                     .resources(Collections.singletonList(
                             ProvisionedResource.builder()
                                     .resourceType("CloudRouter").name("FCR-DC")
-                                    .uuid("uuid-123").metroCode(MetroCode.DC).status("PROVISIONED").build()))
+                                    .uuid("uuid-123").metroId(MetroId.of(MetroCode.DC)).status("PROVISIONED").build()))
                     .fullySuccessful(false)
                     .errors(Collections.singletonList(
                             ProvisioningError.builder()
@@ -517,11 +518,11 @@ class DeploymentWizardModelTest {
         return OptimizationResult.builder()
                 .recommendations(Arrays.asList(
                         MetroRecommendation.builder()
-                                .rank(1).metroCode(MetroCode.DC).metroName("Ashburn")
+                                .rank(1).metroId(MetroId.of(MetroCode.DC)).metroName("Ashburn")
                                 .score(score1).reasons(Collections.singletonList("Primary metro"))
                                 .build(),
                         MetroRecommendation.builder()
-                                .rank(2).metroCode(MetroCode.DA).metroName("Dallas")
+                                .rank(2).metroId(MetroId.of(MetroCode.DA)).metroName("Dallas")
                                 .score(score2).reasons(Collections.singletonList("Secondary metro"))
                                 .build()))
                 .computedAt(Instant.now())

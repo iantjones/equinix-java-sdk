@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.optimizer.wizard;
 
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
@@ -102,8 +103,8 @@ final class DeploymentWizardEngine {
 
         return metros.stream()
                 .map(metro -> PlannedCloudRouter.builder()
-                        .metroCode(metro.getMetroCode())
-                        .name(config.getRouterNamePrefix() + "-" + metro.getMetroCode())
+                        .metroId(metro.getMetroId())
+                        .name(config.getRouterNamePrefix() + "-" + metro.getMetroId())
                         .packageCode(config.getRouterPackage())
                         .accountNumber(config.getAccountNumber())
                         .projectId(config.getProjectId())
@@ -136,7 +137,7 @@ final class DeploymentWizardEngine {
 
                 if (bandwidth.getTotalMbps() <= 0) continue;
 
-                String connName = config.getRouterNamePrefix() + "-" + metro.getMetroCode()
+                String connName = config.getRouterNamePrefix() + "-" + metro.getMetroId()
                         + "-to-" + sanitizeName(provider.getProviderLabel());
 
                 String sellerRegion = provider.getSellerRegions() != null && !provider.getSellerRegions().isEmpty()
@@ -148,8 +149,8 @@ final class DeploymentWizardEngine {
                         .purpose(ConnectionPurpose.PROVIDER)
                         .bandwidthMbps(bandwidth.getTotalMbps())
                         .bandwidthAllocation(bandwidth)
-                        .aSideMetro(metro.getMetroCode())
-                        .aSideRouterName(config.getRouterNamePrefix() + "-" + metro.getMetroCode())
+                        .aSideMetro(metro.getMetroId())
+                        .aSideRouterName(config.getRouterNamePrefix() + "-" + metro.getMetroId())
                         .zSideServiceProfileUuid(provider.getServiceProfileUuid())
                         .zSideProviderLabel(provider.getProviderLabel())
                         .zSideSellerRegion(sellerRegion)
@@ -171,7 +172,7 @@ final class DeploymentWizardEngine {
         Map<String, Integer> perWorkload = new LinkedHashMap<>();
 
         if (strategy == BandwidthStrategy.CUSTOM && config.getCustomBandwidthMap() != null) {
-            String key = metro.getMetroCode() + "-" + provider.getProviderLabel();
+            String key = metro.getMetroId() + "-" + provider.getProviderLabel();
             int customBw = config.getCustomBandwidthMap().getOrDefault(key, 1000);
             return BandwidthAllocation.builder()
                     .totalMbps(customBw)
@@ -182,7 +183,7 @@ final class DeploymentWizardEngine {
 
         // Determine workloads at this metro
         List<WorkloadPlacement> placements = result.getTopology() != null
-                ? result.getTopology().forMetro(metro.getMetroCode())
+                ? result.getTopology().forMetro(metro.getMetroId())
                 : Collections.emptyList();
 
         List<WorkloadSpec> workloadSpecs = result.getRequest() != null
@@ -225,8 +226,8 @@ final class DeploymentWizardEngine {
         }
 
         String reasoning = strategy == BandwidthStrategy.PER_WORKLOAD
-                ? "Sum of dependent workload bandwidths at " + metro.getMetroCode()
-                : "Aggregated bandwidth for all workloads at " + metro.getMetroCode();
+                ? "Sum of dependent workload bandwidths at " + metro.getMetroId()
+                : "Aggregated bandwidth for all workloads at " + metro.getMetroId();
 
         return BandwidthAllocation.builder()
                 .totalMbps(totalMbps)
@@ -249,15 +250,15 @@ final class DeploymentWizardEngine {
         String notificationEmail = config.getNotificationEmails().isEmpty()
                 ? null : config.getNotificationEmails().get(0);
 
-        List<MetroCode> metroCodes = metros.stream()
-                .map(MetroRecommendation::getMetroCode)
+        List<MetroId> metroCodes = metros.stream()
+                .map(MetroRecommendation::getMetroId)
                 .collect(Collectors.toList());
 
         List<int[]> pairs = computeTopologyPairs(topology, metroCodes.size());
 
         for (int[] pair : pairs) {
-            MetroCode metroA = metroCodes.get(pair[0]);
-            MetroCode metroZ = metroCodes.get(pair[1]);
+            MetroId metroA = metroCodes.get(pair[0]);
+            MetroId metroZ = metroCodes.get(pair[1]);
             String linkName = config.getRouterNamePrefix() + "-" + metroA + "-to-" + metroZ;
 
             PlannedConnection connection = PlannedConnection.builder()
@@ -482,14 +483,23 @@ final class DeploymentWizardEngine {
     }
 
     /**
+     * Resolves a {@link MetroId} to a {@link MetroCode} for the rate-card APIs (which are keyed by
+     * the enum). A metro not listed by the enum maps to {@link MetroCode#UNKNOWN}, so it prices via
+     * the rate card's fallback rather than a metro-specific rate.
+     */
+    private static MetroCode toMetroCode(MetroId metroId) {
+        return metroId == null ? MetroCode.UNKNOWN : metroId.asMetroCode().orElse(MetroCode.UNKNOWN);
+    }
+
+    /**
      * Prices a single connection via the rate card, falling back to the legacy
      * tiered heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
      * cannot resolve a price.
      */
     private static PriceQuote priceConnection(RateCard rateCard, ConnectionType type,
-                                              int bandwidthMbps, MetroCode metro, Term term) {
+                                              int bandwidthMbps, MetroId metro, Term term) {
         if (rateCard != null) {
-            Optional<PriceQuote> quote = rateCard.connection(type, bandwidthMbps, metro, term);
+            Optional<PriceQuote> quote = rateCard.connection(type, bandwidthMbps, toMetroCode(metro), term);
             if (quote.isPresent()) {
                 return quote.get();
             }
@@ -505,7 +515,7 @@ final class DeploymentWizardEngine {
      */
     private static PriceQuote priceRouter(RateCard rateCard, PlannedCloudRouter router, Term term) {
         if (rateCard != null) {
-            Optional<PriceQuote> quote = rateCard.cloudRouter(router.getPackageCode(), router.getMetroCode(), term);
+            Optional<PriceQuote> quote = rateCard.cloudRouter(router.getPackageCode(), toMetroCode(router.getMetroId()), term);
             if (quote.isPresent()) {
                 return quote.get();
             }

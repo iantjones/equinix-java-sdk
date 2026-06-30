@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.optimizer;
 
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.design.optimizer.enums.*;
@@ -290,7 +291,7 @@ public final class MetroOptimizer {
 
         private final Builder parent;
         private final String label;
-        private MetroCode nearestMetro;
+        private MetroId nearestMetro;
         private Double latitude;
         private Double longitude;
         private SiteRole role = SiteRole.BRANCH_OFFICE;
@@ -312,7 +313,30 @@ public final class MetroOptimizer {
          * @see #coordinates(double, double)
          */
         public SiteBuilder nearestMetro(MetroCode metro) {
-            this.nearestMetro = metro;
+            this.nearestMetro = metro == null ? null : MetroId.of(metro);
+            return this;
+        }
+
+        /**
+         * Sets the nearest metro by its raw code string — use this for a metro not listed by the
+         * {@link MetroCode} enum.
+         *
+         * @param metroCode the metro code nearest to this site (e.g. {@code "NY"})
+         * @return this builder for method chaining
+         */
+        public SiteBuilder nearestMetro(String metroCode) {
+            this.nearestMetro = metroCode == null ? null : MetroId.of(metroCode);
+            return this;
+        }
+
+        /**
+         * Sets the nearest metro by its {@link MetroId}.
+         *
+         * @param metroId the id of the metro nearest to this site
+         * @return this builder for method chaining
+         */
+        public SiteBuilder nearestMetro(MetroId metroId) {
+            this.nearestMetro = metroId;
             return this;
         }
 
@@ -679,8 +703,8 @@ public final class MetroOptimizer {
         private BudgetRange budget;
         private List<Region> requiredRegions;
         private List<Region> excludedRegions;
-        private List<MetroCode> requiredMetros;
-        private List<MetroCode> excludedMetros;
+        private List<MetroId> requiredMetros;
+        private List<MetroId> excludedMetros;
         private List<ComplianceZone> complianceZones;
         private RedundancyTier minimumRedundancy;
         private Double maxLatencyMs;
@@ -748,7 +772,19 @@ public final class MetroOptimizer {
          * @return this builder for method chaining
          */
         public ConstraintsBuilder requireMetro(MetroCode... metros) {
-            this.requiredMetros = Arrays.asList(metros);
+            this.requiredMetros = toMetroIds(metros);
+            return this;
+        }
+
+        /**
+         * Requires the specified metros (by raw code) in the final recommendation set — use this
+         * overload for metros not listed by the {@link MetroCode} enum.
+         *
+         * @param metroCodes the metro codes that must be included (e.g. {@code "SV"})
+         * @return this builder for method chaining
+         */
+        public ConstraintsBuilder requireMetro(String... metroCodes) {
+            this.requiredMetros = toMetroIds(metroCodes);
             return this;
         }
 
@@ -759,8 +795,36 @@ public final class MetroOptimizer {
          * @return this builder for method chaining
          */
         public ConstraintsBuilder excludeMetro(MetroCode... metros) {
-            this.excludedMetros = Arrays.asList(metros);
+            this.excludedMetros = toMetroIds(metros);
             return this;
+        }
+
+        /**
+         * Excludes the specified metros (by raw code) from consideration — use this overload for
+         * metros not listed by the {@link MetroCode} enum.
+         *
+         * @param metroCodes the metro codes to exclude (e.g. {@code "SV"})
+         * @return this builder for method chaining
+         */
+        public ConstraintsBuilder excludeMetro(String... metroCodes) {
+            this.excludedMetros = toMetroIds(metroCodes);
+            return this;
+        }
+
+        private static List<MetroId> toMetroIds(MetroCode... metros) {
+            List<MetroId> ids = new java.util.ArrayList<>(metros.length);
+            for (MetroCode metro : metros) {
+                ids.add(MetroId.of(metro));
+            }
+            return ids;
+        }
+
+        private static List<MetroId> toMetroIds(String... metroCodes) {
+            List<MetroId> ids = new java.util.ArrayList<>(metroCodes.length);
+            for (String code : metroCodes) {
+                ids.add(MetroId.of(code));
+            }
+            return ids;
         }
 
         /**

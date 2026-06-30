@@ -55,14 +55,14 @@ public class OptimizationResult {
         StringBuilder sb = new StringBuilder();
         MetroRecommendation primary = primaryMetro();
         sb.append("Recommended primary metro: ").append(primary.getMetroName())
-                .append(" (").append(primary.getMetroCode()).append(")")
+                .append(" (").append(primary.getMetroId()).append(")")
                 .append(" with a score of ").append(String.format("%.1f", primary.getScore().getComposite()))
                 .append("/100.\n");
 
         if (recommendations.size() > 1) {
             sb.append("Additional metros: ");
             sb.append(recommendations.subList(1, recommendations.size()).stream()
-                    .map(r -> r.getMetroName() + " (" + r.getMetroCode() + ")")
+                    .map(r -> r.getMetroName() + " (" + r.getMetroId() + ")")
                     .collect(Collectors.joining(", ")));
             sb.append(".\n");
         }
@@ -101,7 +101,7 @@ public class OptimizationResult {
         md.append("## Ranked Recommendations\n\n");
         for (MetroRecommendation rec : recommendations) {
             md.append("### #").append(rec.getRank()).append(": ")
-                    .append(rec.getMetroName()).append(" (").append(rec.getMetroCode()).append(")\n\n");
+                    .append(rec.getMetroName()).append(" (").append(rec.getMetroId()).append(")\n\n");
             md.append("- **Region**: ").append(rec.getRegion()).append("\n");
             md.append("- **Composite Score**: ").append(String.format("%.1f", rec.getScore().getComposite())).append("/100\n");
             md.append("- **Score Breakdown**:\n");
@@ -165,7 +165,7 @@ public class OptimizationResult {
             md.append("| Metro | Monthly | Setup |\n");
             md.append("|-------|--------:|------:|\n");
             for (MetroCostBreakdown mcb : costEstimate.getPerMetro()) {
-                md.append("| ").append(mcb.getMetroCode())
+                md.append("| ").append(mcb.getMetroId())
                         .append(" | $").append(mcb.getMonthlyRecurring())
                         .append(" | $").append(mcb.getNonRecurring()).append(" |\n");
             }

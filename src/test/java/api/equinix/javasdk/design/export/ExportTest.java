@@ -1,6 +1,7 @@
 package api.equinix.javasdk.design.export;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.design.optimizer.model.DeploymentTopology;
@@ -48,12 +49,12 @@ class ExportTest {
     void buildPlan() {
         List<PlannedCloudRouter> routers = Arrays.asList(
                 PlannedCloudRouter.builder()
-                        .metroCode(MetroCode.DC).name("FCR-DC").packageCode("STANDARD")
+                        .metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD")
                         .accountNumber(272010L).projectId("proj-uuid-123")
                         .notificationEmail("noc@example.com")
                         .build(),
                 PlannedCloudRouter.builder()
-                        .metroCode(MetroCode.DA).name("FCR-DA").packageCode("STANDARD")
+                        .metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode("STANDARD")
                         .build()
         );
 
@@ -68,7 +69,7 @@ class ExportTest {
                         .name("FCR-DC-to-AWS").connectionType(ConnectionType.EVPL_VC)
                         .purpose(ConnectionPurpose.PROVIDER).bandwidthMbps(1000)
                         .bandwidthAllocation(allocation)
-                        .aSideMetro(MetroCode.DC).aSideRouterName("FCR-DC")
+                        .aSideMetro(MetroId.of(MetroCode.DC)).aSideRouterName("FCR-DC")
                         .zSideServiceProfileUuid("sp-uuid-aws")
                         .zSideProviderLabel("AWS Direct Connect")
                         .zSideSellerRegion("us-east-1")
@@ -78,13 +79,13 @@ class ExportTest {
         PlannedConnection bbConn = PlannedConnection.builder()
                 .name("Backbone-DC-DA").connectionType(ConnectionType.EVPL_VC)
                 .purpose(ConnectionPurpose.BACKBONE).bandwidthMbps(10000)
-                .aSideMetro(MetroCode.DC).aSideRouterName("FCR-DC")
-                .zSideMetro(MetroCode.DA).zSideRouterName("FCR-DA")
+                .aSideMetro(MetroId.of(MetroCode.DC)).aSideRouterName("FCR-DC")
+                .zSideMetro(MetroId.of(MetroCode.DA)).zSideRouterName("FCR-DA")
                 .build();
 
         List<PlannedBackboneLink> backbones = Collections.singletonList(
                 PlannedBackboneLink.builder()
-                        .metroA(MetroCode.DC).metroZ(MetroCode.DA)
+                        .metroA(MetroId.of(MetroCode.DC)).metroZ(MetroId.of(MetroCode.DA))
                         .name("Backbone-DC-DA").bandwidthMbps(10000)
                         .topology(BackboneTopology.FULL_MESH)
                         .connection(bbConn).build()
@@ -213,7 +214,7 @@ class ExportTest {
                     .sourceOptimization(buildOptResult())
                     .cloudRouters(Collections.singletonList(
                             PlannedCloudRouter.builder()
-                                    .metroCode(MetroCode.DC).name("FCR-DC").packageCode("STANDARD").build()))
+                                    .metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build()))
                     .providerConnections(Collections.emptyList())
                     .backboneLinks(Collections.emptyList())
                     .routingProtocols(Collections.emptyList())
@@ -321,18 +322,18 @@ class ExportTest {
         MetroScore score2 = new MetroScore(82.0, Collections.emptyList());
 
         DeploymentTopology topology = new DeploymentTopology(Arrays.asList(
-                new WorkloadPlacement("ML Training", MetroCode.DC, "GPU availability"),
-                new WorkloadPlacement("DR Backup", MetroCode.DA, "geographic diversity")
+                new WorkloadPlacement("ML Training", MetroId.of(MetroCode.DC), "GPU availability"),
+                new WorkloadPlacement("DR Backup", MetroId.of(MetroCode.DA), "geographic diversity")
         ));
 
         return OptimizationResult.builder()
                 .recommendations(Arrays.asList(
                         MetroRecommendation.builder()
-                                .rank(1).metroCode(MetroCode.DC).metroName("Ashburn")
+                                .rank(1).metroId(MetroId.of(MetroCode.DC)).metroName("Ashburn")
                                 .score(score1).reasons(Collections.singletonList("Primary metro"))
                                 .build(),
                         MetroRecommendation.builder()
-                                .rank(2).metroCode(MetroCode.DA).metroName("Dallas")
+                                .rank(2).metroId(MetroId.of(MetroCode.DA)).metroName("Dallas")
                                 .score(score2).reasons(Collections.singletonList("Secondary metro"))
                                 .build()))
                 .topology(topology)

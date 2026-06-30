@@ -94,9 +94,16 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   set — with `get`/`contains`/`all`/`ibxs`. `Metros.getByMetroCode(String)`/`getByMetroId(MetroId)`
   overloads fetch an unlisted metro directly (the create builders' `inMetro(String)` already did).
   **Minor breaking:** new methods `metroId()` and `getIbxs()` on the public `Metro` interface (affects
-  only code that implements `Metro` itself, not callers). The Metro Optimizer still keys its internal
-  scoring graph by `MetroCode`; rekeying it to `MetroId` so the optimizer ranks brand-new metros is a
-  tracked follow-up.
+  only code that implements `Metro` itself, not callers).
+- **Metro Optimizer is `MetroId`-keyed end to end**: the optimizer/wizard scoring graph
+  (`metroMap`/`latencyMap`/`providerMetroMap`) and every result/input type now key by `MetroId`
+  instead of `MetroCode`, so brand-new metros (absent from the enum) are ranked distinctly rather
+  than colliding on `UNKNOWN`. `ConnectedMetro` gains a forward-compatible `metroId()`; the site and
+  constraint builders accept `String`/`MetroId` (e.g. `nearestMetro("ZZ")`, `requireMetro("ZZ")`)
+  alongside `MetroCode`; result types (`MetroRecommendation`, `MetroCostBreakdown`, `LatencyMatrix`,
+  `ProviderConnectivityMap`, `DeploymentTopology`, …) expose `MetroId`. Rate-card pricing remains
+  `MetroCode`-keyed, so an unlisted metro prices via the card's fallback. (Breaking: the optimizer
+  model types' metro accessors are now `MetroId`-typed.)
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
   instead of silently dispatching a malformed request.
 - **`CustomerRoute` interface** (`internetaccess.model`): a shared read-only view of the EIA v1

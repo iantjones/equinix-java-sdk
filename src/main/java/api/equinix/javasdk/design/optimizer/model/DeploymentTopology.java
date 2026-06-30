@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Value;
 
 import java.util.List;
@@ -14,7 +14,7 @@ public class DeploymentTopology {
 
     List<WorkloadPlacement> placements;
 
-    public List<WorkloadPlacement> forMetro(MetroCode metro) {
+    public List<WorkloadPlacement> forMetro(MetroId metro) {
         return placements.stream()
                 .filter(p -> p.getAssignedMetro() == metro)
                 .collect(Collectors.toList());
@@ -25,7 +25,7 @@ public class DeploymentTopology {
         placements.stream()
                 .collect(Collectors.groupingBy(WorkloadPlacement::getAssignedMetro))
                 .forEach((metro, wps) -> {
-                    sb.append("  ").append(metro.name()).append(":\n");
+                    sb.append("  ").append(metro.code()).append(":\n");
                     wps.forEach(wp -> sb.append("    - ").append(wp.getWorkloadLabel())
                             .append(" (").append(wp.getReasoning()).append(")\n"));
                 });

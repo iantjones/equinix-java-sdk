@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Value;
 
 /**
@@ -9,7 +9,7 @@ import lombok.Value;
 @Value
 public class LatencyEntry {
 
-    MetroCode fromMetro;
+    MetroId fromMetro;
     String toSiteLabel;
     double latencyMs;
     boolean estimated;

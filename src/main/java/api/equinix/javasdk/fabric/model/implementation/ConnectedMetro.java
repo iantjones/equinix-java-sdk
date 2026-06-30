@@ -17,6 +17,8 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -29,12 +31,35 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConnectedMetro {
 
+    /**
+     * The connected metro's raw code, held as a string so a metro not listed by {@link MetroCode}
+     * is preserved verbatim (see {@link #metroId()}) rather than collapsing to
+     * {@link MetroCode#UNKNOWN}.
+     */
     @JsonProperty("code")
-    private MetroCode code;
+    private String codeValue;
 
     @JsonProperty("href")
     private String href;
 
     @JsonProperty("avgLatency")
     private Double avgLatency;
+
+    /**
+     * @return the connected metro's code as a {@link MetroCode} enum, or {@link MetroCode#UNKNOWN}
+     *         for a metro this enum does not list; prefer {@link #metroId()} for the exact code
+     */
+    @JsonIgnore
+    public MetroCode getCode() {
+        return MetroCode.fromCode(codeValue);
+    }
+
+    /**
+     * @return the connected metro's forward-compatible {@link MetroId}, or {@code null} if no code
+     *         was returned
+     */
+    @JsonIgnore
+    public MetroId metroId() {
+        return codeValue == null ? null : MetroId.of(codeValue);
+    }
 }

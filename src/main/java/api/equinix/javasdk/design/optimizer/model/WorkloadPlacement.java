@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Value;
 
 /**
@@ -10,6 +10,6 @@ import lombok.Value;
 public class WorkloadPlacement {
 
     String workloadLabel;
-    MetroCode assignedMetro;
+    MetroId assignedMetro;
     String reasoning;
 }

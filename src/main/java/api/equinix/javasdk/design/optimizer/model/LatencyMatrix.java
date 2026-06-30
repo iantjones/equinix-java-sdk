@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Value;
 
 import java.util.List;
@@ -13,14 +13,14 @@ import java.util.Optional;
 @Value
 public class LatencyMatrix {
 
-    List<MetroCode> metros;
+    List<MetroId> metros;
     List<String> siteLabels;
     List<List<LatencyEntry>> matrix;
 
     /**
      * Retrieves the latency entry for a specific metro–site pair.
      */
-    public Optional<LatencyEntry> get(MetroCode metro, String siteLabel) {
+    public Optional<LatencyEntry> get(MetroId metro, String siteLabel) {
         int mi = metros.indexOf(metro);
         int si = siteLabels.indexOf(siteLabel);
         if (mi < 0 || si < 0) return Optional.empty();
@@ -30,7 +30,7 @@ public class LatencyMatrix {
     /**
      * Worst-case latency from a metro to any site.
      */
-    public double worstCase(MetroCode metro) {
+    public double worstCase(MetroId metro) {
         int mi = metros.indexOf(metro);
         if (mi < 0) return Double.MAX_VALUE;
         return matrix.get(mi).stream()
@@ -42,7 +42,7 @@ public class LatencyMatrix {
     /**
      * Average latency from a metro to all sites.
      */
-    public double average(MetroCode metro) {
+    public double average(MetroId metro) {
         int mi = metros.indexOf(metro);
         if (mi < 0) return Double.MAX_VALUE;
         return matrix.get(mi).stream()
@@ -59,7 +59,7 @@ public class LatencyMatrix {
         if (metros.isEmpty() || siteLabels.isEmpty()) return "(empty matrix)";
 
         int metroColWidth = metros.stream()
-                .mapToInt(m -> m.name().length())
+                .mapToInt(m -> m.code().length())
                 .max().orElse(5);
         metroColWidth = Math.max(metroColWidth, 5);
 
@@ -86,7 +86,7 @@ public class LatencyMatrix {
 
         // Rows
         for (int mi = 0; mi < metros.size(); mi++) {
-            sb.append(String.format("%-" + metroColWidth + "s", metros.get(mi).name()));
+            sb.append(String.format("%-" + metroColWidth + "s", metros.get(mi).code()));
             for (int si = 0; si < siteLabels.size(); si++) {
                 LatencyEntry entry = matrix.get(mi).get(si);
                 String val = String.format("%.1f%s", entry.getLatencyMs(),

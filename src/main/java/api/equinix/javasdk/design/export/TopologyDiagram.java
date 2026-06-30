@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.export;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.optimizer.model.MetroRecommendation;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.model.WorkloadPlacement;
@@ -48,17 +48,17 @@ public class TopologyDiagram {
         mmd.append("graph LR").append(NL);
 
         // Group Cloud Routers by metro so each metro becomes a subgraph.
-        Map<MetroCode, List<PlannedCloudRouter>> routersByMetro = new LinkedHashMap<>();
+        Map<MetroId, List<PlannedCloudRouter>> routersByMetro = new LinkedHashMap<>();
         Map<String, String> routerNodeIds = new LinkedHashMap<>();
         if (plan.getCloudRouters() != null) {
             for (PlannedCloudRouter cr : plan.getCloudRouters()) {
-                routersByMetro.computeIfAbsent(cr.getMetroCode(), k -> new ArrayList<>()).add(cr);
+                routersByMetro.computeIfAbsent(cr.getMetroId(), k -> new ArrayList<>()).add(cr);
             }
         }
 
         int idSeq = 0;
-        for (Map.Entry<MetroCode, List<PlannedCloudRouter>> entry : routersByMetro.entrySet()) {
-            MetroCode metro = entry.getKey();
+        for (Map.Entry<MetroId, List<PlannedCloudRouter>> entry : routersByMetro.entrySet()) {
+            MetroId metro = entry.getKey();
             mmd.append("  subgraph metro_").append(safe(String.valueOf(metro)))
                     .append("[\"Metro: ").append(escape(String.valueOf(metro))).append("\"]").append(NL);
             for (PlannedCloudRouter cr : entry.getValue()) {
@@ -145,19 +145,19 @@ public class TopologyDiagram {
         StringBuilder mmd = new StringBuilder();
         mmd.append("graph TD").append(NL);
 
-        Map<MetroCode, String> metroNodeIds = new LinkedHashMap<>();
+        Map<MetroId, String> metroNodeIds = new LinkedHashMap<>();
         int idSeq = 0;
 
         if (result.getRecommendations() != null) {
             for (MetroRecommendation rec : result.getRecommendations()) {
                 String nodeId = "metro" + (idSeq++);
-                metroNodeIds.put(rec.getMetroCode(), nodeId);
+                metroNodeIds.put(rec.getMetroId(), nodeId);
 
                 StringBuilder label = new StringBuilder();
                 label.append("#").append(rec.getRank()).append(" ");
-                String name = rec.getMetroName() != null ? rec.getMetroName() : String.valueOf(rec.getMetroCode());
+                String name = rec.getMetroName() != null ? rec.getMetroName() : String.valueOf(rec.getMetroId());
                 label.append(escape(name))
-                        .append(" (").append(escape(String.valueOf(rec.getMetroCode()))).append(")");
+                        .append(" (").append(escape(String.valueOf(rec.getMetroId()))).append(")");
                 if (rec.getScore() != null) {
                     label.append("<br/>score: ")
                             .append(String.format("%.1f", rec.getScore().getComposite())).append("/100");
@@ -190,7 +190,7 @@ public class TopologyDiagram {
     }
 
     private String nodeFor(Map<String, String> routerNodeIds, String routerName,
-                           MetroCode metroFallback, StringBuilder mmd) {
+                           MetroId metroFallback, StringBuilder mmd) {
         if (routerName != null && routerNodeIds.containsKey(routerName)) {
             return routerNodeIds.get(routerName);
         }
