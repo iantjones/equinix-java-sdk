@@ -745,7 +745,11 @@ System.out.println(outcome.toMarkdown());
 
 ### Fabric: Peering Intelligence
 
-Peering Intelligence combines [PeeringDB](https://www.peeringdb.com/) IX peering data with Equinix Fabric connectivity to produce unified presence matrices, resiliency assessments, and peering opportunity discovery — all scoped to Equinix IXes and facilities. Users provide their own PeeringDB API key for authenticated access.
+This one cross-references [PeeringDB](https://www.peeringdb.com/) against Equinix's own IXes and
+facilities to answer questions like "where are AWS, Azure, and Google all reachable at an Equinix
+exchange?" and "if Ashburn went down, who would I lose?" It builds presence matrices, resiliency
+assessments, and peering opportunities — all scoped to Equinix. A PeeringDB API key is optional;
+without one you get PeeringDB's anonymous rate limit, which is fine for a few ASNs.
 
 #### Presence Matrix — Which ASNs Are Where?
 
@@ -1546,7 +1550,8 @@ PaginatedFilteredList<RouteFilter> filters = fabric.routeFilters().search();
 
 ### Error Handling
 
-The SDK provides a typed exception hierarchy:
+Every API error maps to a typed exception, so you can catch just the case you care about and let the
+rest propagate:
 
 ```java
 try {
@@ -1607,13 +1612,13 @@ int total = pagination.getTotal();
 ```bash
 mvn test
 ```
-Unit tests validate JSON deserialization, pagination logic, exception mapping, and builder patterns using Mockito.
+Unit tests cover JSON deserialization, pagination, exception mapping, and the builders (Mockito for the rest).
 
 ### WireMock Tests (No Credentials Required)
 ```bash
 mvn test -Pwiremock
 ```
-WireMock tests run a local HTTP server to simulate Equinix API responses, testing full request/response cycles for Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, and the MCP Bridge without requiring live API credentials. Coverage includes CRUD operations, pagination, error handling, OAuth2 token management, JSON-RPC protocol, and typed bridge responses.
+WireMock tests stand up a local HTTP server that mimics the Equinix APIs, so they exercise the full request/response cycle — URLs, verbs, bodies, pagination, error mapping, OAuth2, JSON-RPC — across every domain without touching a live endpoint or needing credentials.
 
 ### Integration Tests (Credentials Required)
 ```bash
@@ -1640,7 +1645,7 @@ Browse Javadocs by domain:
 - [Customer Portal](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
 - [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
 - [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
-- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/package-summary.html) — Intelligent metro placement engine
+- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/package-summary.html) — Metro placement engine
 - [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
 - [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
 - [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/geo/package-summary.html) — IBX-to-IBX fibre latency calculator
