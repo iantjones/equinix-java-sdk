@@ -18,5 +18,5 @@ package api.equinix.javasdk.fabric.enums;
 
 public enum InterfaceType {
     CLOUD,
-    NETWORk;
+    NETWORK;
 }
