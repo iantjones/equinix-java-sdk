@@ -76,6 +76,7 @@ class PeeringIntelligenceEngine {
      */
     private final Map<MetroCode, double[]> metroCoordinates = new LinkedHashMap<>();
     private final Map<MetroCode, String> metroRegion = new LinkedHashMap<>();
+    private final Map<String, MetroCode> ibxToMetro = new LinkedHashMap<>();
 
     PeeringIntelligenceEngine(FabricGateway fabric, PeeringDbClient peeringDb, PeeringRequest request) {
         this.fabric = fabric;
@@ -92,15 +93,16 @@ class PeeringIntelligenceEngine {
         dataSources.add("PeeringDB");
 
         try {
-            // Phase 1: Load the Equinix catalog (PeeringDB) and live metro geo (Fabric), then build
-            // the IX/facility -> metro bridge from live coordinates — facilities first (they carry
-            // lat/lng and seed the city bridge), then IXes (city-only, resolved via that bridge).
+            // Phase 1: Load the Equinix catalog (PeeringDB) and live metro data (Fabric), then build
+            // the IX/facility -> metro bridge from the live IBX->metro map — facilities first (each
+            // PeeringDB name carries its IBX code, e.g. "LA4", and seeds the city bridge), then IXes
+            // (city-only, resolved via that bridge).
             peeringDb.loadEquinixCatalog();
             loadMetroGeo();
             if (!metroCoordinates.isEmpty()) {
                 dataSources.add("Equinix Fabric");
             }
-            ixMapping = new EquinixIXMapping(metroCoordinates);
+            ixMapping = new EquinixIXMapping(ibxToMetro);
             ixMapping.mapFacilities(peeringDb.getEquinixFacMap());
             ixMapping.mapIxes(peeringDb.getEquinixIxMap());
 
@@ -728,6 +730,13 @@ class PeeringIntelligenceEngine {
                 }
                 if (metro.getRegion() != null) {
                     metroRegion.put(code, metro.getRegion().name());
+                }
+                if (metro.getIbxs() != null) {
+                    for (String ibx : metro.getIbxs()) {
+                        if (ibx != null && !ibx.trim().isEmpty()) {
+                            ibxToMetro.put(ibx.trim().toUpperCase(java.util.Locale.ROOT), code);
+                        }
+                    }
                 }
             }
         }

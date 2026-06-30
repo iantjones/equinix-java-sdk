@@ -168,14 +168,16 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   these are pure type renames.
 - **Peering Intelligence metro bridge is now fully live (no hardcoded city table)**: the
   PeeringDB→Equinix-metro mapping previously relied on a ~60-entry hardcoded `city→MetroCode` table
-  and a hardcoded `metro→region` switch. Both are gone. PeeringDB facilities (which carry lat/lng)
-  are now bound to the **nearest live Fabric metro by coordinates** and seed a city→metro map;
-  PeeringDB IXes (city-only) resolve through that facility-derived map — so city aliases (a "San Jose"
-  exchange co-located with a Silicon Valley facility) map correctly with zero static data. Region and
-  metro coordinates come from `fabric.metros()`; the geographic-**distance** measure (haversine) is the
-  primary diversity signal, with the live Fabric region as a secondary descriptor. New metros are
-  bridged automatically as Equinix adds facilities. (`EquinixIXMapping` now takes the live metro
-  coordinates at construction; its static `resolveMetroFromCity`/`getCityToMetroMap` are removed.)
+  and a hardcoded `metro→region` switch. Both are gone. Each Equinix facility name carries its IBX
+  code (`LA4`, `SV5`, `DC11`, …) whose prefix is the metro, so facilities are resolved by reading the
+  IBX code from the PeeringDB name and looking it up in the **live IBX→metro map** built from
+  `fabric.metros().getIbxs()` (exact hit wins; metro prefix is the fallback). Each resolved facility
+  seeds a city→metro map through which PeeringDB IXes (city-only) resolve — so city aliases (a
+  "San Jose" exchange in the `SV` facilities) map correctly with zero static data. Region comes from
+  the live `metro.getRegion()`; the geographic-**distance** measure (haversine over live coordinates)
+  is the primary diversity signal, with region as a secondary descriptor. New metros/IBXs are bridged
+  automatically as Equinix adds them. (`EquinixIXMapping` now takes the live IBX→metro map at
+  construction; its static `resolveMetroFromCity`/`getCityToMetroMap` are removed.)
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
   Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
   `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.

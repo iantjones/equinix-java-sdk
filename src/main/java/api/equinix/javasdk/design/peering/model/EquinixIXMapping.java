@@ -27,37 +27,34 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Bridges PeeringDB Equinix IX and facility IDs to Equinix Fabric {@link MetroCode} values entirely
  * from live data — no hardcoded city table.
  *
- * <p>PeeringDB identifies internet exchanges and facilities by numeric IDs; Fabric uses metro codes.
- * The bridge is derived at runtime:</p>
- * <ul>
- *   <li>Each PeeringDB <strong>facility</strong> carries a latitude/longitude, so it is bound to the
- *       <em>nearest live Fabric metro</em> (within {@value #MAX_BIND_KM} km) using the metro
- *       coordinates supplied at construction. Facilities also seed a city&rarr;metro map.</li>
- *   <li>Each PeeringDB <strong>IX</strong> carries only a city (no coordinates), so it resolves
- *       through the facility-derived city&rarr;metro map — which means even city aliases (e.g. a
- *       "San Jose" exchange co-located with a Silicon Valley facility) map correctly, without any
- *       static lookup table.</li>
- * </ul>
+ * <p>Equinix names every IBX (facility) with its metro as a prefix — {@code LA3}/{@code LA4} are in
+ * Los Angeles, {@code SV5} in Silicon Valley, {@code DC11} in Ashburn. So a facility is resolved by
+ * reading the IBX code out of its PeeringDB name and looking it up in the live IBX&rarr;metro map
+ * supplied at construction (built from {@code fabric.metros().getIbxs()}); an exact IBX hit wins, and
+ * the metro prefix is a fallback. Each resolved facility also seeds a city&rarr;metro map, through
+ * which IXes — which carry only a city — resolve. This means even city aliases (a "San Jose" exchange
+ * co-located with the Silicon Valley {@code SV} facilities) map correctly, with no static table and
+ * without depending on coordinates.</p>
  *
- * <p>Construct with the live metro coordinates (from {@code fabric.metros()}), then call
- * {@link #mapFacilities} <em>before</em> {@link #mapIxes} (the IX bridge depends on the facility
- * pass).</p>
+ * <p>Call {@link #mapFacilities} <em>before</em> {@link #mapIxes} (the IX bridge depends on the
+ * facility pass).</p>
  *
  * @author ianjones
  * @see MetroCode
  */
 public class EquinixIXMapping {
 
-    /** Maximum distance from a facility to a metro for the two to be considered co-located. */
-    static final double MAX_BIND_KM = 150.0;
-    private static final double EARTH_RADIUS_KM = 6371.0;
+    /** An IBX-code-shaped token: a 2-3 letter metro prefix followed by 1-3 digits, e.g. {@code LA4}. */
+    private static final Pattern IBX_TOKEN = Pattern.compile("[A-Za-z]{2,3}\\d{1,3}");
 
-    private final Map<MetroCode, double[]> metroCoordinates;
+    private final Map<String, MetroCode> ibxToMetro;
 
     private final Map<String, MetroCode> cityToMetro = new LinkedHashMap<>();
     private final Map<Integer, MetroCode> ixIdToMetro = new LinkedHashMap<>();
@@ -66,17 +63,17 @@ public class EquinixIXMapping {
     private final Map<MetroCode, List<Integer>> metroToFacIds = new LinkedHashMap<>();
 
     /**
-     * @param metroCoordinates live Fabric metro coordinates ({@code MetroCode -> [latitude, longitude]}),
-     *                         typically built from {@code fabric.metros()}; only well-known metros need
-     *                         appear. A {@code null} map yields an empty bridge.
+     * @param ibxToMetro live IBX-code &rarr; metro map (upper-cased keys), typically built from
+     *                  {@code fabric.metros()} and each metro's {@code getIbxs()}. A {@code null} map
+     *                  yields an empty bridge.
      */
-    public EquinixIXMapping(Map<MetroCode, double[]> metroCoordinates) {
-        this.metroCoordinates = metroCoordinates != null ? metroCoordinates : Collections.emptyMap();
+    public EquinixIXMapping(Map<String, MetroCode> ibxToMetro) {
+        this.ibxToMetro = ibxToMetro != null ? ibxToMetro : Collections.emptyMap();
     }
 
     /**
-     * Binds each Equinix facility to the nearest live metro by coordinates, and seeds the
-     * city&rarr;metro map used by {@link #mapIxes}. Call this before {@link #mapIxes}.
+     * Binds each Equinix facility to its metro by reading the IBX code out of the facility name, and
+     * seeds the city&rarr;metro map used by {@link #mapIxes}. Call this before {@link #mapIxes}.
      *
      * @param equinixFacs the Equinix facility map from PeeringDB (fac ID &rarr; facility metadata)
      */
@@ -84,36 +81,26 @@ public class EquinixIXMapping {
         if (equinixFacs == null) {
             return;
         }
-        // Pass 1: facilities with coordinates -> nearest metro; these seed the city bridge.
         for (Map.Entry<Integer, PeeringDbFacility> entry : equinixFacs.entrySet()) {
             PeeringDbFacility fac = entry.getValue();
-            if (fac.getLatitude() == null || fac.getLongitude() == null) {
-                continue;
+            MetroCode metro = resolveFromName(fac.getName());
+            if (metro == null) {
+                metro = resolveFromName(fac.getAka());
             }
-            MetroCode metro = nearestMetro(fac.getLatitude(), fac.getLongitude());
             if (metro == null) {
                 continue;
             }
-            bindFacility(entry.getKey(), metro);
+            facIdToMetro.put(entry.getKey(), metro);
+            metroToFacIds.computeIfAbsent(metro, k -> new ArrayList<>()).add(entry.getKey());
             if (fac.getCity() != null) {
                 cityToMetro.putIfAbsent(normalize(fac.getCity()), metro);
-            }
-        }
-        // Pass 2: facilities lacking coordinates fall back to the city bridge from pass 1.
-        for (Map.Entry<Integer, PeeringDbFacility> entry : equinixFacs.entrySet()) {
-            if (facIdToMetro.containsKey(entry.getKey())) {
-                continue;
-            }
-            MetroCode metro = cityToMetro.get(normalize(entry.getValue().getCity()));
-            if (metro != null) {
-                bindFacility(entry.getKey(), metro);
             }
         }
     }
 
     /**
-     * Binds each Equinix IX to a metro via the facility-derived city&rarr;metro map (IXes have no
-     * coordinates of their own). Call {@link #mapFacilities} first.
+     * Binds each Equinix IX to a metro via the facility-derived city&rarr;metro map (IXes carry only a
+     * city, not an IBX code). Call {@link #mapFacilities} first.
      *
      * @param equinixIxes the Equinix IX map from PeeringDB (IX ID &rarr; IX metadata)
      */
@@ -130,30 +117,38 @@ public class EquinixIXMapping {
         }
     }
 
-    private void bindFacility(int facId, MetroCode metro) {
-        facIdToMetro.put(facId, metro);
-        metroToFacIds.computeIfAbsent(metro, k -> new ArrayList<>()).add(facId);
-    }
-
     /**
-     * @return the nearest metro to the given coordinates, or {@code null} if none is within
-     *         {@value #MAX_BIND_KM} km (or no metro coordinates are known)
+     * Reads an Equinix IBX code out of a name (e.g. {@code "Equinix LA4 - Los Angeles"}) and resolves
+     * it to a metro: an exact match against the live IBX&rarr;metro map wins; otherwise the IBX's
+     * metro-code prefix is tried.
+     *
+     * @param name a PeeringDB facility name (or {@code aka})
+     * @return the resolved metro, or {@code null} if the name carries no recognizable IBX code
      */
-    public MetroCode nearestMetro(double latitude, double longitude) {
-        MetroCode best = null;
-        double bestKm = Double.MAX_VALUE;
-        for (Map.Entry<MetroCode, double[]> entry : metroCoordinates.entrySet()) {
-            double[] coords = entry.getValue();
-            if (coords == null || coords.length < 2) {
-                continue;
+    public MetroCode resolveFromName(String name) {
+        if (name == null) {
+            return null;
+        }
+        // First pass: an exact IBX-code hit is authoritative.
+        Matcher matcher = IBX_TOKEN.matcher(name);
+        List<String> tokens = new ArrayList<>();
+        while (matcher.find()) {
+            String token = matcher.group().toUpperCase(Locale.ROOT);
+            MetroCode exact = ibxToMetro.get(token);
+            if (exact != null) {
+                return exact;
             }
-            double km = haversineKm(latitude, longitude, coords[0], coords[1]);
-            if (km < bestKm) {
-                bestKm = km;
-                best = entry.getKey();
+            tokens.add(token);
+        }
+        // Second pass: fall back to the IBX's metro-code prefix (e.g. LA4 -> LA).
+        for (String token : tokens) {
+            String prefix = token.replaceAll("\\d.*$", "");
+            MetroCode byPrefix = MetroCode.fromCode(prefix);
+            if (byPrefix != MetroCode.UNKNOWN) {
+                return byPrefix;
             }
         }
-        return bestKm <= MAX_BIND_KM ? best : null;
+        return null;
     }
 
     /**
@@ -204,14 +199,5 @@ public class EquinixIXMapping {
 
     private static String normalize(String city) {
         return city == null ? "" : city.toLowerCase(Locale.ROOT).trim();
-    }
-
-    private static double haversineKm(double lat1, double lon1, double lat2, double lon2) {
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 }
