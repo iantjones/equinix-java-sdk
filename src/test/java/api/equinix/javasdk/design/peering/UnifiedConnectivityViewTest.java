@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.ConnectivityType;
 import api.equinix.javasdk.design.peering.model.UnifiedConnectivityView;
 import api.equinix.javasdk.design.peering.model.UnifiedConnectivityView.MetroConnectivity;
@@ -40,7 +40,7 @@ class UnifiedConnectivityViewTest {
     void build() {
         List<MetroConnectivity> metros = Arrays.asList(
                 MetroConnectivity.builder()
-                        .metro(MetroCode.DC)
+                        .metro(MetroId.of("DC"))
                         .connectivityType(ConnectivityType.IX_PEERING)
                         .hasIxPeering(true).hasFabric(false)
                         .ixCapacityMbps(100000).routeServerAvailable(true)
@@ -49,7 +49,7 @@ class UnifiedConnectivityViewTest {
                         .fabricServiceProfileUuid(null)
                         .build(),
                 MetroConnectivity.builder()
-                        .metro(MetroCode.DA)
+                        .metro(MetroId.of("DA"))
                         .connectivityType(ConnectivityType.IX_PEERING)
                         .hasIxPeering(true).hasFabric(false)
                         .ixCapacityMbps(10000).routeServerAvailable(false)
@@ -58,7 +58,7 @@ class UnifiedConnectivityViewTest {
                         .fabricServiceProfileUuid(null)
                         .build(),
                 MetroConnectivity.builder()
-                        .metro(MetroCode.SG)
+                        .metro(MetroId.of("SG"))
                         .connectivityType(ConnectivityType.FABRIC_CONNECTION)
                         .hasIxPeering(false).hasFabric(true)
                         .ixCapacityMbps(0).routeServerAvailable(false)
@@ -81,7 +81,7 @@ class UnifiedConnectivityViewTest {
     @Test
     @DisplayName("forMetro should return correct connectivity")
     void forMetro() {
-        MetroConnectivity dc = view.forMetro(MetroCode.DC);
+        MetroConnectivity dc = view.forMetro(MetroId.of("DC"));
         assertNotNull(dc);
         assertTrue(dc.isHasIxPeering());
         assertFalse(dc.isHasFabric());
@@ -91,7 +91,7 @@ class UnifiedConnectivityViewTest {
     @Test
     @DisplayName("forMetro should return null for absent metro")
     void forAbsentMetro() {
-        assertNull(view.forMetro(MetroCode.HK));
+        assertNull(view.forMetro(MetroId.of("HK")));
     }
 
     @Test
@@ -106,7 +106,7 @@ class UnifiedConnectivityViewTest {
     void fabricMetros() {
         List<MetroConnectivity> fabMetros = view.fabricMetros();
         assertEquals(1, fabMetros.size()); // SG only
-        assertEquals(MetroCode.SG, fabMetros.get(0).getMetro());
+        assertEquals(MetroId.of("SG"), fabMetros.get(0).getMetro());
     }
 
     @Test

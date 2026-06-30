@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.ConnectivityType;
 import api.equinix.javasdk.design.peering.model.IxPresenceDetail;
 import api.equinix.javasdk.design.peering.model.PresenceCell;
@@ -44,14 +44,14 @@ class PresenceMatrixTest {
     @BeforeAll
     static void buildMatrix() {
         List<Long> asns = Arrays.asList(AWS, MSFT, GOOG);
-        List<MetroCode> metros = Arrays.asList(MetroCode.DC, MetroCode.CH, MetroCode.DA, MetroCode.SG);
+        List<MetroId> metros = Arrays.asList(MetroId.of("DC"), MetroId.of("CH"), MetroId.of("DA"), MetroId.of("SG"));
 
         Map<Long, String> labels = new LinkedHashMap<>();
         labels.put(AWS, "AWS");
         labels.put(MSFT, "Microsoft");
         labels.put(GOOG, "Google");
 
-        Map<Long, Map<MetroCode, PresenceCell>> cells = new LinkedHashMap<>();
+        Map<Long, Map<MetroId, PresenceCell>> cells = new LinkedHashMap<>();
 
         // AWS: present at DC (IX+RS, 100G), CH (IX, 40G), DA (IX, 10G), not SG
         cells.put(AWS, buildRow(AWS, metros, new boolean[]{true, true, true, false},
@@ -80,7 +80,7 @@ class PresenceMatrixTest {
         @Test
         @DisplayName("get() should return correct cell for known ASN and metro")
         void getKnownCell() {
-            PresenceCell cell = matrix.get(AWS, MetroCode.DC);
+            PresenceCell cell = matrix.get(AWS, MetroId.of("DC"));
             assertNotNull(cell);
             assertTrue(cell.isIxPresent());
             assertEquals(100000, cell.getTotalIxCapacityMbps());
@@ -89,7 +89,7 @@ class PresenceMatrixTest {
         @Test
         @DisplayName("get() should return cell even when ASN is not present (IX = false)")
         void getAbsentPresence() {
-            PresenceCell cell = matrix.get(AWS, MetroCode.SG);
+            PresenceCell cell = matrix.get(AWS, MetroId.of("SG"));
             assertNotNull(cell);
             assertFalse(cell.isIxPresent());
             assertEquals(ConnectivityType.NONE, cell.getConnectivityType());
@@ -98,7 +98,7 @@ class PresenceMatrixTest {
         @Test
         @DisplayName("get() should return null for unknown ASN")
         void getUnknownAsn() {
-            assertNull(matrix.get(99999L, MetroCode.DC));
+            assertNull(matrix.get(99999L, MetroId.of("DC")));
         }
     }
 
@@ -109,16 +109,16 @@ class PresenceMatrixTest {
         @Test
         @DisplayName("forAsn() should return all metros for an ASN")
         void forAsn() {
-            Map<MetroCode, PresenceCell> awsRow = matrix.forAsn(AWS);
+            Map<MetroId, PresenceCell> awsRow = matrix.forAsn(AWS);
             assertEquals(4, awsRow.size());
-            assertTrue(awsRow.get(MetroCode.DC).isIxPresent());
-            assertFalse(awsRow.get(MetroCode.SG).isIxPresent());
+            assertTrue(awsRow.get(MetroId.of("DC")).isIxPresent());
+            assertFalse(awsRow.get(MetroId.of("SG")).isIxPresent());
         }
 
         @Test
         @DisplayName("forMetro() should return all ASNs at a metro")
         void forMetro() {
-            Map<Long, PresenceCell> dcColumn = matrix.forMetro(MetroCode.DC);
+            Map<Long, PresenceCell> dcColumn = matrix.forMetro(MetroId.of("DC"));
             assertEquals(3, dcColumn.size()); // all 3 ASNs present
             assertTrue(dcColumn.get(AWS).isIxPresent());
             assertTrue(dcColumn.get(MSFT).isIxPresent());
@@ -139,18 +139,18 @@ class PresenceMatrixTest {
         @Test
         @DisplayName("metrosWithAllAsns should find metros where all ASNs have IX")
         void metrosWithAll() {
-            List<MetroCode> shared = matrix.metrosWithAllAsns(Arrays.asList(AWS, MSFT, GOOG));
+            List<MetroId> shared = matrix.metrosWithAllAsns(Arrays.asList(AWS, MSFT, GOOG));
             // DC and CH have all 3
-            assertTrue(shared.contains(MetroCode.DC));
-            assertTrue(shared.contains(MetroCode.CH));
-            assertFalse(shared.contains(MetroCode.DA)); // MSFT not in DA
-            assertFalse(shared.contains(MetroCode.SG)); // AWS not in SG
+            assertTrue(shared.contains(MetroId.of("DC")));
+            assertTrue(shared.contains(MetroId.of("CH")));
+            assertFalse(shared.contains(MetroId.of("DA"))); // MSFT not in DA
+            assertFalse(shared.contains(MetroId.of("SG"))); // AWS not in SG
         }
 
         @Test
         @DisplayName("metrosWithAnyAsn should find metros where any ASN has IX")
         void metrosWithAny() {
-            List<MetroCode> any = matrix.metrosWithAnyAsn(Arrays.asList(AWS, MSFT));
+            List<MetroId> any = matrix.metrosWithAnyAsn(Arrays.asList(AWS, MSFT));
             // DC, CH (both), DA (AWS only), SG (MSFT only) = 4
             assertEquals(4, any.size());
         }
@@ -158,11 +158,11 @@ class PresenceMatrixTest {
         @Test
         @DisplayName("asnCountByMetro should count IX-present ASNs per metro")
         void asnCount() {
-            Map<MetroCode, Integer> counts = matrix.asnCountByMetro();
-            assertEquals(3, counts.get(MetroCode.DC)); // all 3
-            assertEquals(3, counts.get(MetroCode.CH)); // all 3
-            assertEquals(2, counts.get(MetroCode.DA)); // AWS + Google
-            assertEquals(2, counts.get(MetroCode.SG)); // MSFT + Google
+            Map<MetroId, Integer> counts = matrix.asnCountByMetro();
+            assertEquals(3, counts.get(MetroId.of("DC"))); // all 3
+            assertEquals(3, counts.get(MetroId.of("CH"))); // all 3
+            assertEquals(2, counts.get(MetroId.of("DA"))); // AWS + Google
+            assertEquals(2, counts.get(MetroId.of("SG"))); // MSFT + Google
         }
     }
 
@@ -208,7 +208,7 @@ class PresenceMatrixTest {
         @DisplayName("IX-only cell should show IX symbol")
         void ixSymbol() {
             PresenceCell cell = PresenceCell.builder()
-                    .asn(AWS).metro(MetroCode.DC)
+                    .asn(AWS).metro(MetroId.of("DC"))
                     .connectivityType(ConnectivityType.IX_PEERING)
                     .ixPresent(true).fabricAvailable(false).facilityPresent(false)
                     .ixSessionCount(1).totalIxCapacityMbps(10000)
@@ -222,7 +222,7 @@ class PresenceMatrixTest {
         @DisplayName("BOTH cell should show IX+F symbol")
         void bothSymbol() {
             PresenceCell cell = PresenceCell.builder()
-                    .asn(AWS).metro(MetroCode.DC)
+                    .asn(AWS).metro(MetroId.of("DC"))
                     .connectivityType(ConnectivityType.BOTH)
                     .ixPresent(true).fabricAvailable(true).facilityPresent(false)
                     .ixSessionCount(1).totalIxCapacityMbps(10000)
@@ -236,7 +236,7 @@ class PresenceMatrixTest {
         @DisplayName("NONE cell should show -- symbol")
         void noneSymbol() {
             PresenceCell cell = PresenceCell.builder()
-                    .asn(AWS).metro(MetroCode.SG)
+                    .asn(AWS).metro(MetroId.of("SG"))
                     .connectivityType(ConnectivityType.NONE)
                     .ixPresent(false).fabricAvailable(false).facilityPresent(false)
                     .ixSessionCount(0).totalIxCapacityMbps(0)
@@ -250,7 +250,7 @@ class PresenceMatrixTest {
         @DisplayName("detailedSymbol should include capacity and route server marker")
         void detailedSymbol() {
             PresenceCell cell = PresenceCell.builder()
-                    .asn(AWS).metro(MetroCode.DC)
+                    .asn(AWS).metro(MetroId.of("DC"))
                     .connectivityType(ConnectivityType.IX_PEERING)
                     .ixPresent(true).fabricAvailable(false).facilityPresent(false)
                     .ixSessionCount(1).totalIxCapacityMbps(100000)
@@ -266,12 +266,12 @@ class PresenceMatrixTest {
 
     // ---- Helpers ----
 
-    private static Map<MetroCode, PresenceCell> buildRow(long asn, List<MetroCode> metros,
+    private static Map<MetroId, PresenceCell> buildRow(long asn, List<MetroId> metros,
                                                           boolean[] present, int[] capacities,
                                                           boolean[] routeServer) {
-        Map<MetroCode, PresenceCell> row = new LinkedHashMap<>();
+        Map<MetroId, PresenceCell> row = new LinkedHashMap<>();
         for (int i = 0; i < metros.size(); i++) {
-            MetroCode metro = metros.get(i);
+            MetroId metro = metros.get(i);
             ConnectivityType type = present[i] ? ConnectivityType.IX_PEERING : ConnectivityType.NONE;
             row.put(metro, PresenceCell.builder()
                     .asn(asn)
@@ -286,7 +286,7 @@ class PresenceMatrixTest {
                     .bfdSupported(false)
                     .ixSessions(present[i]
                             ? Collections.singletonList(IxPresenceDetail.builder()
-                                .metro(metro).ixId(i + 1).ixName("Equinix " + metro.name())
+                                .metro(metro).ixId(i + 1).ixName("Equinix " + metro.code())
                                 .speedMbps(capacities[i]).routeServerPeer(routeServer[i])
                                 .bfdSupport(false).operational(true).build())
                             : Collections.emptyList())

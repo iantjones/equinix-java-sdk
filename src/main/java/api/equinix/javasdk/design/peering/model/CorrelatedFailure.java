@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.FailureScope;
 import lombok.Builder;
 import lombok.Value;
@@ -44,7 +44,7 @@ public class CorrelatedFailure {
 
     String failureDomain;
 
-    MetroCode affectedMetro;
+    MetroId affectedMetro;
 
     List<Long> affectedAsns;
 

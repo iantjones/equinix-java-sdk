@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.client.PeeringDbFacility;
 import api.equinix.javasdk.design.peering.client.PeeringDbIx;
 import api.equinix.javasdk.design.peering.model.EquinixIXMapping;
@@ -27,12 +27,12 @@ class EquinixIXMappingTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     // Live IBX -> metro map (what fabric.metros() + getIbxs() would supply).
-    private static Map<String, MetroCode> ibxToMetro() {
-        Map<String, MetroCode> m = new LinkedHashMap<>();
-        m.put("LA3", MetroCode.LA);
-        m.put("LA4", MetroCode.LA);
-        m.put("SV5", MetroCode.SV);
-        m.put("DC11", MetroCode.DC);
+    private static Map<String, MetroId> ibxToMetro() {
+        Map<String, MetroId> m = new LinkedHashMap<>();
+        m.put("LA3", MetroId.of("LA"));
+        m.put("LA4", MetroId.of("LA"));
+        m.put("SV5", MetroId.of("SV"));
+        m.put("DC11", MetroId.of("DC"));
         return m;
     }
 
@@ -69,10 +69,10 @@ class EquinixIXMappingTest {
     @DisplayName("facilities resolve to their metro by the IBX code in the name")
     void facilitiesByIbxName() throws Exception {
         EquinixIXMapping m = built();
-        assertEquals(MetroCode.LA, m.metroForFacility(1));
-        assertEquals(MetroCode.SV, m.metroForFacility(2));
-        assertEquals(MetroCode.DC, m.metroForFacility(3));
-        assertEquals(MetroCode.SV, m.metroForFacility(4), "unlisted SV99 falls back to its SV prefix");
+        assertEquals(MetroId.of("LA"), m.metroForFacility(1));
+        assertEquals(MetroId.of("SV"), m.metroForFacility(2));
+        assertEquals(MetroId.of("DC"), m.metroForFacility(3));
+        assertEquals(MetroId.of("SV"), m.metroForFacility(4), "unlisted SV99 falls back to its SV prefix");
         assertNull(m.metroForFacility(5), "a name with no IBX code is unmapped");
     }
 
@@ -82,8 +82,8 @@ class EquinixIXMappingTest {
         EquinixIXMapping m = built();
         // "San Jose" never appears as a metro name, yet resolves to SV because the SV5 facility there
         // seeded the city bridge — no hardcoded alias needed.
-        assertEquals(MetroCode.SV, m.metroForIx(10));
-        assertEquals(MetroCode.LA, m.metroForIx(11));
+        assertEquals(MetroId.of("SV"), m.metroForIx(10));
+        assertEquals(MetroId.of("LA"), m.metroForIx(11));
         assertNull(m.metroForIx(12), "an IX whose city has no Equinix facility is unmapped");
     }
 
@@ -91,9 +91,9 @@ class EquinixIXMappingTest {
     @DisplayName("resolveFromName reads the IBX code, preferring an exact map hit over the prefix")
     void resolveFromName() {
         EquinixIXMapping m = new EquinixIXMapping(ibxToMetro());
-        assertEquals(MetroCode.LA, m.resolveFromName("Equinix LA4 - Los Angeles"));
-        assertEquals(MetroCode.DC, m.resolveFromName("Equinix DC11"));
-        assertEquals(MetroCode.SV, m.resolveFromName("Equinix SV99 - Santa Clara")); // prefix fallback
+        assertEquals(MetroId.of("LA"), m.resolveFromName("Equinix LA4 - Los Angeles"));
+        assertEquals(MetroId.of("DC"), m.resolveFromName("Equinix DC11"));
+        assertEquals(MetroId.of("SV"), m.resolveFromName("Equinix SV99 - Santa Clara")); // prefix fallback
         assertNull(m.resolveFromName("Some Carrier Hotel"));
         assertNull(m.resolveFromName(null));
     }
@@ -102,13 +102,13 @@ class EquinixIXMappingTest {
     @DisplayName("reverse lookups and presence sets reflect the resolved bridge")
     void reverseLookups() throws Exception {
         EquinixIXMapping m = built();
-        assertTrue(m.facIdsForMetro(MetroCode.SV).contains(2));
-        assertTrue(m.facIdsForMetro(MetroCode.SV).contains(4));
-        assertTrue(m.ixIdsForMetro(MetroCode.SV).contains(10));
-        assertTrue(m.metrosWithFacilities().contains(MetroCode.LA));
-        assertTrue(m.metrosWithFacilities().contains(MetroCode.SV));
-        assertTrue(m.metrosWithFacilities().contains(MetroCode.DC));
-        assertTrue(m.metrosWithIx().contains(MetroCode.LA));
-        assertTrue(m.metrosWithIx().contains(MetroCode.SV));
+        assertTrue(m.facIdsForMetro(MetroId.of("SV")).contains(2));
+        assertTrue(m.facIdsForMetro(MetroId.of("SV")).contains(4));
+        assertTrue(m.ixIdsForMetro(MetroId.of("SV")).contains(10));
+        assertTrue(m.metrosWithFacilities().contains(MetroId.of("LA")));
+        assertTrue(m.metrosWithFacilities().contains(MetroId.of("SV")));
+        assertTrue(m.metrosWithFacilities().contains(MetroId.of("DC")));
+        assertTrue(m.metrosWithIx().contains(MetroId.of("LA")));
+        assertTrue(m.metrosWithIx().contains(MetroId.of("SV")));
     }
 }

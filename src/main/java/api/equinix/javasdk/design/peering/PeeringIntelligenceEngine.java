@@ -19,7 +19,7 @@ package api.equinix.javasdk.design.peering;
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.client.*;
 import api.equinix.javasdk.design.peering.enums.*;
 import api.equinix.javasdk.design.peering.model.*;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * <p>Executes a multi-phase pipeline:</p>
  * <ol>
  *   <li>Load Equinix catalog from PeeringDB (org/2 with depth=2)</li>
- *   <li>Build IX ID → MetroCode mapping</li>
+ *   <li>Build IX ID → MetroId mapping</li>
  *   <li>Query PeeringDB for each target ASN (netixlan + netfac + net)</li>
  *   <li>Filter to Equinix IXes and facilities</li>
  *   <li>Build NetworkPresence per ASN</li>
@@ -72,11 +72,12 @@ class PeeringIntelligenceEngine {
      * Live Fabric metro geo data, loaded once per analysis from {@code fabric.metros()}: metro →
      * [latitude, longitude] (used to bind PeeringDB facilities/IXes to metros and to compute
      * geographic diversity) and metro → region (used for the same-region diversity descriptor).
-     * Well-known metros only — {@link MetroCode#UNKNOWN} is skipped.
+     * Keyed by {@link MetroId}, so metros that are live in Fabric but not yet in the
+     * {@code MetroCode} enum are still included and stay distinct.
      */
-    private final Map<MetroCode, double[]> metroCoordinates = new LinkedHashMap<>();
-    private final Map<MetroCode, String> metroRegion = new LinkedHashMap<>();
-    private final Map<String, MetroCode> ibxToMetro = new LinkedHashMap<>();
+    private final Map<MetroId, double[]> metroCoordinates = new LinkedHashMap<>();
+    private final Map<MetroId, String> metroRegion = new LinkedHashMap<>();
+    private final Map<String, MetroId> ibxToMetro = new LinkedHashMap<>();
 
     PeeringIntelligenceEngine(FabricGateway fabric, PeeringDbClient peeringDb, PeeringRequest request) {
         this.fabric = fabric;
@@ -119,7 +120,7 @@ class PeeringIntelligenceEngine {
             PresenceMatrix matrix = buildPresenceMatrix();
 
             // Phase 5: Build MetroPresenceReports
-            Map<MetroCode, MetroPresenceReport> metroReports = buildMetroReports(matrix);
+            Map<MetroId, MetroPresenceReport> metroReports = buildMetroReports(matrix);
 
             // Phase 6: Resiliency analysis (if requested)
             ResiliencyAssessment resiliency = null;
@@ -230,7 +231,7 @@ class PeeringIntelligenceEngine {
                     (net != null ? net.getName() : "AS" + asn);
 
             // Build IX details and metro sets
-            Set<MetroCode> ixMetros = new LinkedHashSet<>();
+            Set<MetroId> ixMetros = new LinkedHashSet<>();
             List<IxPresenceDetail> ixDetails = new ArrayList<>();
             boolean anyRouteServer = false;
             boolean anyBfd = false;
@@ -238,7 +239,7 @@ class PeeringIntelligenceEngine {
             long totalCapacity = 0;
 
             for (PeeringDbNetIxlan nix : ixEntries) {
-                MetroCode metro = ixMapping.metroForIx(nix.getIxId());
+                MetroId metro = ixMapping.metroForIx(nix.getIxId());
                 if (metro == null) continue;
 
                 ixMetros.add(metro);
@@ -266,14 +267,14 @@ class PeeringIntelligenceEngine {
             }
 
             // Facility metros
-            Set<MetroCode> facMetros = new LinkedHashSet<>();
+            Set<MetroId> facMetros = new LinkedHashSet<>();
             for (PeeringDbNetFac nf : facEntries) {
-                MetroCode metro = ixMapping.metroForFacility(nf.getFacId());
+                MetroId metro = ixMapping.metroForFacility(nf.getFacId());
                 if (metro != null) facMetros.add(metro);
             }
 
             // All metros
-            Set<MetroCode> allMetros = new LinkedHashSet<>();
+            Set<MetroId> allMetros = new LinkedHashSet<>();
             allMetros.addAll(ixMetros);
             allMetros.addAll(facMetros);
 
@@ -303,7 +304,7 @@ class PeeringIntelligenceEngine {
 
     private PresenceMatrix buildPresenceMatrix() {
         // Determine columns: all metros that have any presence
-        Set<MetroCode> allMetros = new TreeSet<>(Comparator.comparing(Enum::name));
+        Set<MetroId> allMetros = new TreeSet<>(Comparator.comparing(MetroId::code));
         for (NetworkPresence np : networkPresences.values()) {
             allMetros.addAll(np.getAllMetros());
         }
@@ -312,22 +313,22 @@ class PeeringIntelligenceEngine {
         allMetros.addAll(request.getCustomerMetros());
 
         List<Long> asns = new ArrayList<>(request.getTargetAsns().keySet());
-        List<MetroCode> metros = new ArrayList<>(allMetros);
+        List<MetroId> metros = new ArrayList<>(allMetros);
 
-        Map<Long, Map<MetroCode, PresenceCell>> cells = new LinkedHashMap<>();
+        Map<Long, Map<MetroId, PresenceCell>> cells = new LinkedHashMap<>();
 
         for (Long asn : asns) {
-            Map<MetroCode, PresenceCell> row = new LinkedHashMap<>();
+            Map<MetroId, PresenceCell> row = new LinkedHashMap<>();
             NetworkPresence np = networkPresences.get(asn);
 
-            for (MetroCode metro : metros) {
+            for (MetroId metro : metros) {
                 boolean ixPresent = np != null && np.hasIxPeeringAt(metro);
                 boolean facPresent = np != null && np.hasFacilityAt(metro);
 
                 // Collect IX details for this metro
                 List<IxPresenceDetail> metroIxSessions = np != null
                         ? np.getIxDetails().stream()
-                            .filter(d -> d.getMetro() == metro)
+                            .filter(d -> metro.equals(d.getMetro()))
                             .collect(Collectors.toList())
                         : Collections.emptyList();
 
@@ -376,10 +377,10 @@ class PeeringIntelligenceEngine {
 
     // ---- Phase 5: Build MetroPresenceReports ----
 
-    private Map<MetroCode, MetroPresenceReport> buildMetroReports(PresenceMatrix matrix) {
-        Map<MetroCode, MetroPresenceReport> reports = new LinkedHashMap<>();
+    private Map<MetroId, MetroPresenceReport> buildMetroReports(PresenceMatrix matrix) {
+        Map<MetroId, MetroPresenceReport> reports = new LinkedHashMap<>();
 
-        for (MetroCode metro : matrix.getMetros()) {
+        for (MetroId metro : matrix.getMetros()) {
             List<PresenceCell> cells = new ArrayList<>();
             for (Long asn : matrix.getAsns()) {
                 PresenceCell cell = matrix.get(asn, metro);
@@ -394,7 +395,7 @@ class PeeringIntelligenceEngine {
                 sampleIx = peeringDb.getEquinixIx(ixIds.get(0));
             }
 
-            String metroName = sampleIx != null ? sampleIx.getCity() : metro.name();
+            String metroName = sampleIx != null ? sampleIx.getCity() : metro.code();
 
             reports.put(metro, MetroPresenceReport.builder()
                     .metro(metro)
@@ -413,13 +414,13 @@ class PeeringIntelligenceEngine {
     private ResiliencyAssessment buildResiliencyAssessment(PresenceMatrix matrix) {
         int totalAsns = request.getTargetAsns().size();
         List<BlastRadiusReport> blastReports = new ArrayList<>();
-        Map<MetroCode, List<FailoverPath>> failoverPaths = new LinkedHashMap<>();
+        Map<MetroId, List<FailoverPath>> failoverPaths = new LinkedHashMap<>();
         List<CorrelatedFailure> correlatedFailures = new ArrayList<>();
         List<DiversityScore> diversityScores = new ArrayList<>();
         List<String> findings = new ArrayList<>();
 
         // Blast radius per customer metro
-        for (MetroCode customerMetro : request.getCustomerMetros()) {
+        for (MetroId customerMetro : request.getCustomerMetros()) {
             List<Long> lostIxAsns = new ArrayList<>();
             List<String> lostIxLabels = new ArrayList<>();
             long lostCapacity = 0;
@@ -466,8 +467,8 @@ class PeeringIntelligenceEngine {
                 NetworkPresence np = networkPresences.get(asn);
                 if (np == null) continue;
 
-                for (MetroCode altMetro : np.getIxPeeringMetros()) {
-                    if (altMetro == customerMetro) continue;
+                for (MetroId altMetro : np.getIxPeeringMetros()) {
+                    if (altMetro.equals(customerMetro)) continue;
 
                     PresenceCell altCell = matrix.get(asn, altMetro);
                     if (altCell == null || !altCell.isIxPresent()) continue;
@@ -496,15 +497,15 @@ class PeeringIntelligenceEngine {
             NetworkPresence np = networkPresences.get(asn);
             if (np == null) continue;
 
-            List<MetroCode> customerMetrosWithAsn = request.getCustomerMetros().stream()
+            List<MetroId> customerMetrosWithAsn = request.getCustomerMetros().stream()
                     .filter(np::hasIxPeeringAt)
                     .collect(Collectors.toList());
 
             if (customerMetrosWithAsn.size() == 1) {
-                MetroCode singleMetro = customerMetrosWithAsn.get(0);
+                MetroId singleMetro = customerMetrosWithAsn.get(0);
                 correlatedFailures.add(CorrelatedFailure.builder()
                         .scope(FailureScope.METRO)
-                        .failureDomain(singleMetro.name() + " metro")
+                        .failureDomain(singleMetro.code() + " metro")
                         .affectedMetro(singleMetro)
                         .affectedAsns(Collections.singletonList(asn))
                         .affectedLabels(Collections.singletonList(np.getLabel()))
@@ -518,7 +519,7 @@ class PeeringIntelligenceEngine {
         }
 
         // Diversity scores between customer metro pairs
-        List<MetroCode> customerMetroList = new ArrayList<>(request.getCustomerMetros());
+        List<MetroId> customerMetroList = new ArrayList<>(request.getCustomerMetros());
         for (int i = 0; i < customerMetroList.size(); i++) {
             for (int j = i + 1; j < customerMetroList.size(); j++) {
                 diversityScores.add(computeDiversity(customerMetroList.get(i), customerMetroList.get(j)));
@@ -631,7 +632,7 @@ class PeeringIntelligenceEngine {
             long totalCapacity = 0;
             boolean anyFabric = false;
 
-            for (MetroCode metro : matrix.getMetros()) {
+            for (MetroId metro : matrix.getMetros()) {
                 PresenceCell cell = matrix.get(asn, metro);
                 if (cell == null || cell.getConnectivityType() == ConnectivityType.NONE) continue;
 
@@ -666,12 +667,12 @@ class PeeringIntelligenceEngine {
 
     // ---- Helpers ----
 
-    private DiversityScore computeDiversity(MetroCode metro1, MetroCode metro2) {
+    private DiversityScore computeDiversity(MetroId metro1, MetroId metro2) {
         // Use IX city coordinates from the mapping for distance calculation. The
         // metro → coordinate lookup is precomputed once per analysis (see
         // metroCoordinatesMap()) rather than rescanning the full facility map on
         // each of the O(metros^2) diversity calls.
-        Map<MetroCode, double[]> coords = metroCoordinatesMap();
+        Map<MetroId, double[]> coords = metroCoordinatesMap();
         double[] c1 = coords.get(metro1);
         double[] c2 = coords.get(metro2);
         boolean found1 = c1 != null;
@@ -714,14 +715,15 @@ class PeeringIntelligenceEngine {
      * Loads metro coordinates and regions from the live Fabric Metros API into {@link #metroCoordinates}
      * and {@link #metroRegion}. These drive the IX/facility-to-metro bridge and the geographic
      * diversity scoring. Best-effort: if Fabric is unavailable the maps stay empty and the bridge
-     * degrades to whatever can be resolved, rather than failing the analysis. Well-known metros only
-     * ({@link MetroCode#UNKNOWN} is skipped).
+     * degrades to whatever can be resolved, rather than failing the analysis. Keyed by
+     * {@link MetroId}, so a metro that is live in Fabric but not yet in the {@code MetroCode} enum
+     * still participates.
      */
     private void loadMetroGeo() {
         try {
             for (Metro metro : fabric.metros().list().loadAll()) {
-                MetroCode code = metro.getCode();
-                if (code == MetroCode.UNKNOWN) {
+                MetroId code = metro.metroId();
+                if (code == null) {
                     continue;
                 }
                 GeoCoordinate geo = metro.geoCoordinates();
@@ -746,9 +748,9 @@ class PeeringIntelligenceEngine {
     }
 
     /**
-     * @return the live metro → [latitude, longitude] lookup used by {@link #computeDiversity}
+     * @return the live metro → [latitude, longitude] lookup used by {@code computeDiversity}
      */
-    private Map<MetroCode, double[]> metroCoordinatesMap() {
+    private Map<MetroId, double[]> metroCoordinatesMap() {
         return metroCoordinates;
     }
 
@@ -762,11 +764,11 @@ class PeeringIntelligenceEngine {
         return EARTH_RADIUS_KM * c;
     }
 
-    private boolean isSameRegion(MetroCode m1, MetroCode m2) {
+    private boolean isSameRegion(MetroId m1, MetroId m2) {
         return getRegionForMetro(m1).equals(getRegionForMetro(m2));
     }
 
-    private String getRegionForMetro(MetroCode metro) {
+    private String getRegionForMetro(MetroId metro) {
         // Live Fabric region (AMER/EMEA/APAC), loaded in loadMetroGeo(); the geographic-distance
         // measure in computeDiversity() — not this coarse bucket — is the primary diversity signal.
         return metroRegion.getOrDefault(metro, "UNKNOWN");
@@ -799,7 +801,7 @@ class PeeringIntelligenceEngine {
         return Math.max(0.0, Math.min(1.0, score));
     }
 
-    private String buildFailoverRecommendation(NetworkPresence np, MetroCode altMetro,
+    private String buildFailoverRecommendation(NetworkPresence np, MetroId altMetro,
                                                 PresenceCell altCell, DiversityScore diversity) {
         StringBuilder sb = new StringBuilder();
         sb.append("Establish IX peering with ").append(np.getLabel()).append(" at ").append(altMetro);

@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.ConnectivityType;
 import api.equinix.javasdk.design.peering.enums.NetworkType;
 import api.equinix.javasdk.design.peering.enums.PeeringPolicy;
@@ -61,11 +61,11 @@ public class NetworkPresence {
 
     boolean ipv6Capable;
 
-    Set<MetroCode> ixPeeringMetros;
+    Set<MetroId> ixPeeringMetros;
 
-    Set<MetroCode> facilityMetros;
+    Set<MetroId> facilityMetros;
 
-    Set<MetroCode> allMetros;
+    Set<MetroId> allMetros;
 
     List<IxPresenceDetail> ixDetails;
 
@@ -95,7 +95,7 @@ public class NetworkPresence {
      * @param metro the metro to check
      * @return {@code true} if IX peering is available at this metro
      */
-    public boolean hasIxPeeringAt(MetroCode metro) {
+    public boolean hasIxPeeringAt(MetroId metro) {
         return ixPeeringMetros != null && ixPeeringMetros.contains(metro);
     }
 
@@ -105,7 +105,7 @@ public class NetworkPresence {
      * @param metro the metro to check
      * @return {@code true} if facility presence exists at this metro
      */
-    public boolean hasFacilityAt(MetroCode metro) {
+    public boolean hasFacilityAt(MetroId metro) {
         return facilityMetros != null && facilityMetros.contains(metro);
     }
 
@@ -115,7 +115,7 @@ public class NetworkPresence {
      * @param metro the metro to check
      * @return {@code true} if any presence exists at this metro
      */
-    public boolean hasPresentAt(MetroCode metro) {
+    public boolean hasPresentAt(MetroId metro) {
         return allMetros != null && allMetros.contains(metro);
     }
 }

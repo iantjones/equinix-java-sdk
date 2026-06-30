@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Builder;
 import lombok.Value;
 
@@ -50,9 +50,9 @@ public class PresenceMatrix {
 
     Map<Long, String> asnLabels;
 
-    List<MetroCode> metros;
+    List<MetroId> metros;
 
-    Map<Long, Map<MetroCode, PresenceCell>> cells;
+    Map<Long, Map<MetroId, PresenceCell>> cells;
 
     /**
      * Gets the cell for a specific ASN at a specific metro.
@@ -61,8 +61,8 @@ public class PresenceMatrix {
      * @param metro the Equinix metro code
      * @return the presence cell, or {@code null} if the combination is not in the matrix
      */
-    public PresenceCell get(long asn, MetroCode metro) {
-        Map<MetroCode, PresenceCell> row = cells.get(asn);
+    public PresenceCell get(long asn, MetroId metro) {
+        Map<MetroId, PresenceCell> row = cells.get(asn);
         return row != null ? row.get(metro) : null;
     }
 
@@ -72,7 +72,7 @@ public class PresenceMatrix {
      * @param asn the autonomous system number
      * @return map of metro → cell for this ASN, or empty map
      */
-    public Map<MetroCode, PresenceCell> forAsn(long asn) {
+    public Map<MetroId, PresenceCell> forAsn(long asn) {
         return cells.getOrDefault(asn, Collections.emptyMap());
     }
 
@@ -82,7 +82,7 @@ public class PresenceMatrix {
      * @param metro the Equinix metro code
      * @return map of ASN → cell for this metro
      */
-    public Map<Long, PresenceCell> forMetro(MetroCode metro) {
+    public Map<Long, PresenceCell> forMetro(MetroId metro) {
         Map<Long, PresenceCell> column = new LinkedHashMap<>();
         for (Long asn : asns) {
             PresenceCell cell = get(asn, metro);
@@ -99,7 +99,7 @@ public class PresenceMatrix {
      * @param targetAsns the ASNs that must all be present
      * @return list of metros where all target ASNs peer at Equinix IXes
      */
-    public List<MetroCode> metrosWithAllAsns(Collection<Long> targetAsns) {
+    public List<MetroId> metrosWithAllAsns(Collection<Long> targetAsns) {
         return metros.stream()
                 .filter(metro -> targetAsns.stream()
                         .allMatch(asn -> {
@@ -115,7 +115,7 @@ public class PresenceMatrix {
      * @param targetAsns the ASNs to check
      * @return list of metros where at least one target ASN peers at an Equinix IX
      */
-    public List<MetroCode> metrosWithAnyAsn(Collection<Long> targetAsns) {
+    public List<MetroId> metrosWithAnyAsn(Collection<Long> targetAsns) {
         return metros.stream()
                 .filter(metro -> targetAsns.stream()
                         .anyMatch(asn -> {
@@ -130,9 +130,9 @@ public class PresenceMatrix {
      *
      * @return map of metro → count of ASNs with IX presence
      */
-    public Map<MetroCode, Integer> asnCountByMetro() {
-        Map<MetroCode, Integer> counts = new LinkedHashMap<>();
-        for (MetroCode metro : metros) {
+    public Map<MetroId, Integer> asnCountByMetro() {
+        Map<MetroId, Integer> counts = new LinkedHashMap<>();
+        for (MetroId metro : metros) {
             int count = 0;
             for (Long asn : asns) {
                 PresenceCell cell = get(asn, metro);
@@ -169,7 +169,7 @@ public class PresenceMatrix {
     public String toMarkdown() {
         StringBuilder sb = new StringBuilder();
         sb.append("| ASN | Network |");
-        for (MetroCode m : metros) sb.append(" ").append(m.name()).append(" |");
+        for (MetroId m : metros) sb.append(" ").append(m.code()).append(" |");
         sb.append("\n|-----|---------|");
         for (int i = 0; i < metros.size(); i++) sb.append("------|");
         sb.append("\n");
@@ -177,7 +177,7 @@ public class PresenceMatrix {
         for (Long asn : asns) {
             String label = asnLabels.getOrDefault(asn, String.valueOf(asn));
             sb.append("| ").append(asn).append(" | ").append(label).append(" |");
-            for (MetroCode metro : metros) {
+            for (MetroId metro : metros) {
                 PresenceCell cell = get(asn, metro);
                 String sym = cell != null ? cell.symbol() : " -- ";
                 sb.append(" ").append(sym).append(" |");
@@ -195,8 +195,8 @@ public class PresenceMatrix {
 
         // Header
         sb.append(String.format("%-" + labelWidth + "s", "Network"));
-        for (MetroCode m : metros) {
-            sb.append(String.format("%" + cellWidth + "s", m.name()));
+        for (MetroId m : metros) {
+            sb.append(String.format("%" + cellWidth + "s", m.code()));
         }
         sb.append("\n");
         sb.append(repeat("-", labelWidth + metros.size() * cellWidth));
@@ -208,7 +208,7 @@ public class PresenceMatrix {
             if (label.length() > labelWidth - 1) label = label.substring(0, labelWidth - 1);
             sb.append(String.format("%-" + labelWidth + "s", label));
 
-            for (MetroCode metro : metros) {
+            for (MetroId metro : metros) {
                 PresenceCell cell = get(asn, metro);
                 String sym = cell != null
                         ? (detailed ? cell.detailedSymbol() : cell.symbol())

@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -43,7 +43,7 @@ public class PeeringRequest {
     Map<Long, String> targetAsns;
 
     @Singular("customerMetro")
-    Set<MetroCode> customerMetros;
+    Set<MetroId> customerMetros;
 
     long customerAsn;
 

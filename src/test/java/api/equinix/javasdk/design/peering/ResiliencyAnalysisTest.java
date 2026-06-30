@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.design.peering;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.peering.enums.*;
 import api.equinix.javasdk.design.peering.model.*;
 import org.junit.jupiter.api.*;
@@ -48,7 +48,7 @@ class ResiliencyAnalysisTest {
         @DisplayName("CRITICAL severity when impact > 80%")
         void criticalSeverity() {
             BlastRadiusReport report = BlastRadiusReport.builder()
-                    .metro(MetroCode.DC)
+                    .metro(MetroId.of("DC"))
                     .scope(FailureScope.METRO)
                     .lostIxPeeringAsns(Arrays.asList(AWS, MSFT, GOOG))
                     .lostFabricAsns(Collections.emptyList())
@@ -63,7 +63,7 @@ class ResiliencyAnalysisTest {
             assertEquals("CRITICAL", report.computeSeverity());
             assertEquals(0.9, report.getImpactRatio());
             assertEquals(3, report.totalAffectedAsns());
-            assertEquals(MetroCode.DC, report.getMetro());
+            assertEquals(MetroId.of("DC"), report.getMetro());
             assertEquals(700000, report.getLostIxCapacityMbps());
         }
 
@@ -99,7 +99,7 @@ class ResiliencyAnalysisTest {
         @DisplayName("Total affected ASNs combines IX and Fabric losses")
         void totalAffected() {
             BlastRadiusReport report = BlastRadiusReport.builder()
-                    .metro(MetroCode.DC)
+                    .metro(MetroId.of("DC"))
                     .scope(FailureScope.METRO)
                     .lostIxPeeringAsns(Arrays.asList(AWS, MSFT))
                     .lostFabricAsns(Collections.singletonList(GOOG))
@@ -125,7 +125,7 @@ class ResiliencyAnalysisTest {
             CorrelatedFailure cf = CorrelatedFailure.builder()
                     .scope(FailureScope.METRO)
                     .failureDomain("DC metro")
-                    .affectedMetro(MetroCode.DC)
+                    .affectedMetro(MetroId.of("DC"))
                     .affectedAsns(Collections.singletonList(AWS))
                     .affectedLabels(Collections.singletonList("AWS"))
                     .affectedPaths(Collections.singletonList("IX Peering to AWS"))
@@ -136,7 +136,7 @@ class ResiliencyAnalysisTest {
 
             assertEquals(FailureScope.METRO, cf.getScope());
             assertEquals("DC metro", cf.getFailureDomain());
-            assertEquals(MetroCode.DC, cf.getAffectedMetro());
+            assertEquals(MetroId.of("DC"), cf.getAffectedMetro());
             assertEquals(1, cf.getAffectedAsns().size());
             assertEquals(AWS, cf.getAffectedAsns().get(0).longValue());
         }
@@ -147,7 +147,7 @@ class ResiliencyAnalysisTest {
             CorrelatedFailure cf = CorrelatedFailure.builder()
                     .scope(FailureScope.IX)
                     .failureDomain("Equinix Ashburn IX")
-                    .affectedMetro(MetroCode.DC)
+                    .affectedMetro(MetroId.of("DC"))
                     .affectedAsns(Arrays.asList(AWS, MSFT, GOOG))
                     .affectedLabels(Arrays.asList("AWS", "Microsoft", "Google"))
                     .affectedPaths(Arrays.asList(
@@ -171,8 +171,8 @@ class ResiliencyAnalysisTest {
         @DisplayName("Intercontinental distance should be EXCELLENT")
         void intercontinental() {
             DiversityScore score = DiversityScore.builder()
-                    .primaryMetro(MetroCode.DC)
-                    .backupMetro(MetroCode.SG)
+                    .primaryMetro(MetroId.of("DC"))
+                    .backupMetro(MetroId.of("SG"))
                     .distanceKm(15000)
                     .sameRegion(false)
                     .rating(DiversityRating.EXCELLENT)
@@ -181,16 +181,16 @@ class ResiliencyAnalysisTest {
 
             assertEquals(DiversityRating.EXCELLENT, score.getRating());
             assertFalse(score.isSameRegion());
-            assertEquals(MetroCode.DC, score.getPrimaryMetro());
-            assertEquals(MetroCode.SG, score.getBackupMetro());
+            assertEquals(MetroId.of("DC"), score.getPrimaryMetro());
+            assertEquals(MetroId.of("SG"), score.getBackupMetro());
         }
 
         @Test
         @DisplayName("Same region US distance should be GOOD or MODERATE")
         void sameRegionUs() {
             DiversityScore score = DiversityScore.builder()
-                    .primaryMetro(MetroCode.DC)
-                    .backupMetro(MetroCode.DA)
+                    .primaryMetro(MetroId.of("DC"))
+                    .backupMetro(MetroId.of("DA"))
                     .distanceKm(1900)
                     .sameRegion(true)
                     .rating(DiversityRating.GOOD)
@@ -205,8 +205,8 @@ class ResiliencyAnalysisTest {
         @DisplayName("Very close metros should be CRITICAL")
         void veryClose() {
             DiversityScore score = DiversityScore.builder()
-                    .primaryMetro(MetroCode.DC)
-                    .backupMetro(MetroCode.NY)
+                    .primaryMetro(MetroId.of("DC"))
+                    .backupMetro(MetroId.of("NY"))
                     .distanceKm(50)
                     .sameRegion(true)
                     .rating(DiversityRating.CRITICAL)
@@ -225,8 +225,8 @@ class ResiliencyAnalysisTest {
         @DisplayName("Failover path should capture complete path details")
         void completeFailoverPath() {
             DiversityScore diversity = DiversityScore.builder()
-                    .primaryMetro(MetroCode.DC)
-                    .backupMetro(MetroCode.DA)
+                    .primaryMetro(MetroId.of("DC"))
+                    .backupMetro(MetroId.of("DA"))
                     .distanceKm(1900)
                     .sameRegion(true)
                     .rating(DiversityRating.GOOD)
@@ -236,23 +236,23 @@ class ResiliencyAnalysisTest {
             FailoverPath path = FailoverPath.builder()
                     .targetAsn(AWS)
                     .targetLabel("AWS")
-                    .primaryMetro(MetroCode.DC)
-                    .failoverMetro(MetroCode.DA)
+                    .primaryMetro(MetroId.of("DC"))
+                    .failoverMetro(MetroId.of("DA"))
                     .connectivityType(ConnectivityType.IX_PEERING)
                     .ixCapacityMbps(10000)
                     .routeServerAvailable(false)
                     .diversity(diversity)
                     .ixSessions(Collections.singletonList(
                             IxPresenceDetail.builder()
-                                    .metro(MetroCode.DA).ixId(3).ixName("Equinix Dallas")
+                                    .metro(MetroId.of("DA")).ixId(3).ixName("Equinix Dallas")
                                     .speedMbps(10000).routeServerPeer(false).bfdSupport(false)
                                     .operational(true).build()))
                     .recommendation("Establish IX peering with AWS at DA")
                     .build();
 
             assertEquals(AWS, path.getTargetAsn());
-            assertEquals(MetroCode.DC, path.getPrimaryMetro());
-            assertEquals(MetroCode.DA, path.getFailoverMetro());
+            assertEquals(MetroId.of("DC"), path.getPrimaryMetro());
+            assertEquals(MetroId.of("DA"), path.getFailoverMetro());
             assertEquals(10000, path.getIxCapacityMbps());
             assertEquals(DiversityRating.GOOD, path.getDiversity().getRating());
             assertEquals(1, path.getIxSessions().size());
@@ -264,13 +264,13 @@ class ResiliencyAnalysisTest {
             FailoverPath path = FailoverPath.builder()
                     .targetAsn(GOOG)
                     .targetLabel("Google")
-                    .primaryMetro(MetroCode.DC)
-                    .failoverMetro(MetroCode.CH)
+                    .primaryMetro(MetroId.of("DC"))
+                    .failoverMetro(MetroId.of("CH"))
                     .connectivityType(ConnectivityType.IX_PEERING)
                     .ixCapacityMbps(200000)
                     .routeServerAvailable(true)
                     .diversity(DiversityScore.builder()
-                            .primaryMetro(MetroCode.DC).backupMetro(MetroCode.CH)
+                            .primaryMetro(MetroId.of("DC")).backupMetro(MetroId.of("CH"))
                             .distanceKm(950).sameRegion(true)
                             .rating(DiversityRating.MODERATE)
                             .explanation("Moderate diversity").build())
@@ -296,7 +296,7 @@ class ResiliencyAnalysisTest {
 
             // Blast radius for DC
             BlastRadiusReport dcBlast = BlastRadiusReport.builder()
-                    .metro(MetroCode.DC)
+                    .metro(MetroId.of("DC"))
                     .scope(FailureScope.METRO)
                     .lostIxPeeringAsns(Arrays.asList(AWS, MSFT, GOOG))
                     .lostFabricAsns(Collections.emptyList())
@@ -313,7 +313,7 @@ class ResiliencyAnalysisTest {
 
             // Blast radius for DA
             BlastRadiusReport daBlast = BlastRadiusReport.builder()
-                    .metro(MetroCode.DA)
+                    .metro(MetroId.of("DA"))
                     .scope(FailureScope.METRO)
                     .lostIxPeeringAsns(Arrays.asList(AWS, GOOG))
                     .lostFabricAsns(Collections.emptyList())
@@ -329,7 +329,7 @@ class ResiliencyAnalysisTest {
             CorrelatedFailure msfCorrelation = CorrelatedFailure.builder()
                     .scope(FailureScope.METRO)
                     .failureDomain("DC metro")
-                    .affectedMetro(MetroCode.DC)
+                    .affectedMetro(MetroId.of("DC"))
                     .affectedAsns(Collections.singletonList(MSFT))
                     .affectedLabels(Collections.singletonList("Microsoft"))
                     .affectedPaths(Collections.singletonList("IX Peering to Microsoft"))
@@ -340,8 +340,8 @@ class ResiliencyAnalysisTest {
 
             // Diversity: DC to DA
             DiversityScore dcToDa = DiversityScore.builder()
-                    .primaryMetro(MetroCode.DC)
-                    .backupMetro(MetroCode.DA)
+                    .primaryMetro(MetroId.of("DC"))
+                    .backupMetro(MetroId.of("DA"))
                     .distanceKm(1900)
                     .sameRegion(true)
                     .rating(DiversityRating.GOOD)
@@ -349,11 +349,11 @@ class ResiliencyAnalysisTest {
                     .build();
 
             // Failover paths
-            Map<MetroCode, List<FailoverPath>> failovers = new LinkedHashMap<>();
-            failovers.put(MetroCode.DC, Arrays.asList(
+            Map<MetroId, List<FailoverPath>> failovers = new LinkedHashMap<>();
+            failovers.put(MetroId.of("DC"), Arrays.asList(
                     FailoverPath.builder()
                             .targetAsn(AWS).targetLabel("AWS")
-                            .primaryMetro(MetroCode.DC).failoverMetro(MetroCode.DA)
+                            .primaryMetro(MetroId.of("DC")).failoverMetro(MetroId.of("DA"))
                             .connectivityType(ConnectivityType.IX_PEERING)
                             .ixCapacityMbps(10000).routeServerAvailable(false)
                             .diversity(dcToDa)
@@ -362,7 +362,7 @@ class ResiliencyAnalysisTest {
                             .build(),
                     FailoverPath.builder()
                             .targetAsn(GOOG).targetLabel("Google")
-                            .primaryMetro(MetroCode.DC).failoverMetro(MetroCode.DA)
+                            .primaryMetro(MetroId.of("DC")).failoverMetro(MetroId.of("DA"))
                             .connectivityType(ConnectivityType.IX_PEERING)
                             .ixCapacityMbps(100000).routeServerAvailable(true)
                             .diversity(dcToDa)
@@ -402,12 +402,12 @@ class ResiliencyAnalysisTest {
         @DisplayName("Blast radius reports should cover all customer metros")
         void blastRadiusCoversAllMetros() {
             assertEquals(2, assessment.getBlastRadiusReports().size());
-            List<MetroCode> reportedMetros = new ArrayList<>();
+            List<MetroId> reportedMetros = new ArrayList<>();
             for (BlastRadiusReport br : assessment.getBlastRadiusReports()) {
                 reportedMetros.add(br.getMetro());
             }
-            assertTrue(reportedMetros.contains(MetroCode.DC));
-            assertTrue(reportedMetros.contains(MetroCode.DA));
+            assertTrue(reportedMetros.contains(MetroId.of("DC")));
+            assertTrue(reportedMetros.contains(MetroId.of("DA")));
         }
 
         @Test
@@ -415,7 +415,7 @@ class ResiliencyAnalysisTest {
         void failoverPathsForAsn() {
             List<FailoverPath> awsFailovers = assessment.failoverPathsForAsn(AWS);
             assertEquals(1, awsFailovers.size());
-            assertEquals(MetroCode.DA, awsFailovers.get(0).getFailoverMetro());
+            assertEquals(MetroId.of("DA"), awsFailovers.get(0).getFailoverMetro());
         }
 
         @Test
@@ -429,7 +429,7 @@ class ResiliencyAnalysisTest {
         @Test
         @DisplayName("blastRadiusFor should return correct metro report")
         void blastRadiusFor() {
-            BlastRadiusReport dcReport = assessment.blastRadiusFor(MetroCode.DC);
+            BlastRadiusReport dcReport = assessment.blastRadiusFor(MetroId.of("DC"));
             assertNotNull(dcReport);
             assertEquals(1.0, dcReport.getImpactRatio());
             assertEquals(3, dcReport.getLostIxPeeringAsns().size());
@@ -438,7 +438,7 @@ class ResiliencyAnalysisTest {
         @Test
         @DisplayName("blastRadiusFor unknown metro should return null")
         void blastRadiusForUnknown() {
-            assertNull(assessment.blastRadiusFor(MetroCode.SG));
+            assertNull(assessment.blastRadiusFor(MetroId.of("SG")));
         }
 
         @Test
@@ -469,8 +469,8 @@ class ResiliencyAnalysisTest {
         void diversityScores() {
             assertEquals(1, assessment.getDiversityScores().size());
             DiversityScore dcDa = assessment.getDiversityScores().get(0);
-            assertEquals(MetroCode.DC, dcDa.getPrimaryMetro());
-            assertEquals(MetroCode.DA, dcDa.getBackupMetro());
+            assertEquals(MetroId.of("DC"), dcDa.getPrimaryMetro());
+            assertEquals(MetroId.of("DA"), dcDa.getBackupMetro());
             assertEquals(DiversityRating.GOOD, dcDa.getRating());
         }
     }
@@ -483,7 +483,7 @@ class ResiliencyAnalysisTest {
         @DisplayName("Single metro customer should have maximum blast radius")
         void singleMetroCustomer() {
             BlastRadiusReport report = BlastRadiusReport.builder()
-                    .metro(MetroCode.DC)
+                    .metro(MetroId.of("DC"))
                     .scope(FailureScope.METRO)
                     .lostIxPeeringAsns(Arrays.asList(AWS, MSFT))
                     .lostFabricAsns(Collections.emptyList())
@@ -532,7 +532,7 @@ class ResiliencyAnalysisTest {
             CorrelatedFailure highCf = CorrelatedFailure.builder()
                     .scope(FailureScope.METRO)
                     .failureDomain("DC metro")
-                    .affectedMetro(MetroCode.DC)
+                    .affectedMetro(MetroId.of("DC"))
                     .affectedAsns(Collections.singletonList(AWS))
                     .affectedLabels(Collections.singletonList("AWS"))
                     .affectedPaths(Collections.singletonList("IX Peering to AWS"))
@@ -567,7 +567,7 @@ class ResiliencyAnalysisTest {
         }
 
         return BlastRadiusReport.builder()
-                .metro(MetroCode.DC)
+                .metro(MetroId.of("DC"))
                 .scope(FailureScope.METRO)
                 .lostIxPeeringAsns(asns)
                 .lostFabricAsns(Collections.emptyList())
