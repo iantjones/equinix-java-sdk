@@ -43,6 +43,14 @@ public class DiversityScore {
 
     double distanceKm;
 
+    /**
+     * Estimated round-trip fibre latency between the two metros, in milliseconds — the
+     * {@linkplain api.equinix.javasdk.design.geo.SpeedOfLightLatency speed-of-light floor} for the
+     * {@link #distanceKm} great-circle distance. A physical lower bound; real latency is higher
+     * (switching, queuing, non-direct fibre).
+     */
+    double estimatedRttMs;
+
     boolean sameRegion;
 
     DiversityRating rating;
