@@ -89,6 +89,9 @@ class EquinixConfigWireMockTest extends WireMockTestBase {
             eq.authenticate();
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metros")));
+            // The catalogue is reachable session-level (cross-domain), sharing the one Fabric cache.
+            assertNotNull(eq.metroRegistry());
+            assertSame(eq.metroRegistry(), eq.fabric().metroRegistry());
         }
     }
 }

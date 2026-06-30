@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.exception.EquinixClientException;
+import api.equinix.javasdk.fabric.model.MetroRegistry;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -198,6 +199,30 @@ public final class Equinix implements Closeable {
      */
     public Design design() {
         return Design.over(fabric());
+    }
+
+    /**
+     * The live metro catalogue — every metro with its IBXs, coordinates, region, and inter-metro
+     * latencies — keyed by {@link api.equinix.javasdk.core.model.MetroId}. Sourced from the Fabric
+     * Metros API (the only catalogue with that depth) but surfaced here as a session-level,
+     * cross-domain concern; it shares this session's single Fabric cache. Loaded eagerly on
+     * {@link #authenticate()} when {@link EquinixConfig#isAutoLoadMetros()} is set (the default),
+     * otherwise lazily on first access.
+     *
+     * @return the shared metro registry
+     */
+    public MetroRegistry metroRegistry() {
+        return fabric().metroRegistry();
+    }
+
+    /**
+     * Rebuilds the {@link #metroRegistry()} from a fresh Metros API call, picking up any metros added
+     * since it was last loaded.
+     *
+     * @return the refreshed metro registry
+     */
+    public MetroRegistry reloadMetroRegistry() {
+        return fabric().reloadMetroRegistry();
     }
 
     /**
