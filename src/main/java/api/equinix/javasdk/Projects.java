@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.projects.client.ProjectList;
 import api.equinix.javasdk.projects.client.ProjectsConfig;
 import api.equinix.javasdk.projects.client.implementation.ProjectListImpl;
@@ -46,7 +45,7 @@ import api.equinix.javasdk.projects.client.implementation.ProjectsConfigImpl;
  * @author ianjones
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  */
-public final class Projects extends EquinixClient implements Service {
+public final class Projects extends EquinixClient {
 
     private ProjectList projects;
 

@@ -24,7 +24,6 @@ import api.equinix.javasdk.core.client.CoreImpl;
 import api.equinix.javasdk.core.client.interfaces.Core;
 import api.equinix.javasdk.core.client.interfaces.CoreConfig;
 import api.equinix.javasdk.core.exception.EquinixClientException;
-import api.equinix.javasdk.core.model.Service;
 import lombok.Getter;
 
 import java.io.Closeable;
@@ -66,7 +65,7 @@ import java.io.IOException;
  * @see Projects
  * @see Messaging
  */
-public class EquinixClient implements Service, Closeable {
+public class EquinixClient implements Closeable {
 
     private Core core;
 

@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.iam.client.IAMAccessPolicies;
 import api.equinix.javasdk.iam.client.IAMConfig;
 import api.equinix.javasdk.iam.client.IAMEffectivePermissions;
@@ -86,7 +85,7 @@ import api.equinix.javasdk.iam.client.implementation.IAMRolesImpl;
  * @author ianjones
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  */
-public final class IAM extends EquinixClient implements Service {
+public final class IAM extends EquinixClient {
 
     private IAMRoles roles;
 

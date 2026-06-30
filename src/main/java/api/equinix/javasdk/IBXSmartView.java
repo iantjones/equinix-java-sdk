@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.ibxsmartview.client.Environmentals;
 import api.equinix.javasdk.ibxsmartview.client.Hierarchy;
 import api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfig;
@@ -81,7 +80,7 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.SystemAlertsImpl;
  * @see api.equinix.javasdk.ibxsmartview.client.Environmentals
  * @see api.equinix.javasdk.ibxsmartview.client.StreamingSubscriptions
  */
-public final class IBXSmartView extends EquinixClient implements Service {
+public final class IBXSmartView extends EquinixClient {
 
     private Environmentals environmentals;
     private PowerEvents powerEvents;
