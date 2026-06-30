@@ -63,7 +63,8 @@ public final class MetroRegistry {
      */
     public static MetroRegistry load(Metros metros) {
         Map<String, Metro> map = new LinkedHashMap<>();
-        for (Metro metro : metros.list()) {
+        // loadAll() pages through the full catalogue — list() alone returns only the first page.
+        for (Metro metro : metros.list().loadAll()) {
             MetroId id = metro.metroId();
             if (id != null) {
                 map.put(id.code(), metro);
