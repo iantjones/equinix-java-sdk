@@ -22,7 +22,7 @@
 - **Real-time streaming** support via IBX SmartView subscriptions (AWS IoT, Azure Event Hub, Webhook, REST)
 - **Metro Optimizer** — intelligent placement engine that recommends optimal Equinix metros based on workforce locations, provider requirements, workload types, and business constraints with latency-aware scoring, risk assessment, and cost estimation
 - **Deployment Wizard** — transforms optimization results into executable deployment plans with Cloud Routers, provider connections, inter-metro backbone links, routing protocols, bandwidth sizing, and pricing
-- **Peering Intelligence** — interconnection analysis engine combining PeeringDB IX peering data with Equinix Fabric connectivity to produce ASN presence matrices, resiliency assessments, blast radius analysis, geographic diversity scoring, and mutual peering opportunity discovery across 47 Equinix Internet Exchanges globally
+- **Peering Intelligence** — interconnection analysis engine combining PeeringDB IX peering data with Equinix Fabric connectivity to produce ASN presence matrices, resiliency assessments, blast radius analysis, geographic diversity scoring, IBX-to-IBX latency estimation, and mutual peering opportunity discovery across all Equinix Internet Exchanges (loaded live from PeeringDB)
 - **MCP Bridge** — Java client for the Equinix MCP (Model Context Protocol) servers, providing programmatic access to the Fabric MCP server's tools (discovered at runtime via `listTools()`) over JSON-RPC 2.0 with typed response models, OAuth2 token management, and optional enrichment/validation hooks for the Metro Optimizer, Deployment Wizard, and Peering Intelligence modules
 
 ## Quick Start
@@ -132,10 +132,10 @@ Fabric fabric = new Fabric(credentials, EquinixConfig.builder()
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
 | **Fabric** | `new Fabric(creds)` | 28 | Connections (+ advertised/received routes), Ports (+ search/VLANs), Service Tokens, Cloud Routers (+ route search/commands/validate), Networks, Streams (+ Subscriptions/Alert Rules/Assets), Precision Time (+ packages), Route Filters/Aggregations (+Rules), Routing Protocols (+ BGP actions), Service Profiles, Prices, Metrics, Cloud Events, Marketplace Subscriptions, IP Blocks, Agents (+Templates), Company Profiles (+Tags), Port Packages, Health — all mutable resources support fluent `update()` |
-| **Network Edge** | `new NetworkEdge(creds)` | 10 | Virtual Devices (+ soft-reboot/RMA/ACL/file upload), ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups |
+| **Network Edge** | `new NetworkEdge(creds)` | 8 | Virtual Devices (+ soft-reboot/RMA/ACL/file upload), ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups, Setup |
 | **Customer Portal** | `new CustomerPortal(creds)` | 23 | Orders, Order History, Cross-Connects, Trouble Tickets (+ Ticket Orders), Work Visits, Smart Hands, Shipments, Secure Cabinets, Invoices, Billing Accounts, Quotes, Assets, Attachments, Reports, Notifications, Unified Notifications, Support Cases, Support Plans, Digital LOAs, Resellers, Lookups |
 | **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Events (`dcim/v3`), System Alerts, Streaming Subscriptions, Asset Management, Hierarchy |
-| **Internet Access** | `new InternetAccess(creds)` | 3 | EIA v2 Services (full lifecycle), IBX availability, EIA v1 Prices |
+| **Internet Access** | `new InternetAccess(creds)` | 14 | EIA v2 Services (full lifecycle), IBX availability, EIA v1 Prices, Accounts, Terms & Conditions, Operational Units, Signature Policies, Product Configurations, Purchase Orders, Orders, Cages, Cabinets, Patch Panels, Connection Services |
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
@@ -521,7 +521,7 @@ System.out.println(result.toSummary());
 
 // ── Primary recommendation ──
 MetroRecommendation primary = result.primaryMetro();
-System.out.println(primary.getMetroCode());           // DC
+System.out.println(primary.getMetroId());             // DC (MetroId.toString() is the code)
 System.out.println(primary.getScore().getComposite()); // 87.3
 System.out.println(primary.getReasons());
 // [Excellent average latency of 12.4ms to user sites,
@@ -582,7 +582,7 @@ System.out.println("Monthly: $" + cost.getMonthlyTotal() + " " + cost.getCurrenc
 System.out.println("Setup:   $" + cost.getSetupTotal());
 System.out.println("Budget:  " + (cost.isWithinBudget() ? "WITHIN" : "OVER"));
 for (MetroCostBreakdown metro : cost.getPerMetro()) {
-    System.out.println("  " + metro.getMetroCode() + ": $" + metro.getMonthlyRecurring() + "/mo");
+    System.out.println("  " + metro.getMetroId() + ": $" + metro.getMonthlyRecurring() + "/mo");
 }
 
 // ── Full markdown report (for architecture review docs) ──
@@ -619,8 +619,8 @@ OptimizationResult latencyFirst = fabric.optimizeMetros()
     .requireProvider(CloudProviderType.AWS).done()
     .strategy(OptimizationStrategy.LATENCY_FIRST).optimize();
 
-System.out.println("Balanced:      " + balanced.primaryMetro().getMetroCode());
-System.out.println("Latency-first: " + latencyFirst.primaryMetro().getMetroCode());
+System.out.println("Balanced:      " + balanced.primaryMetro().getMetroId());
+System.out.println("Latency-first: " + latencyFirst.primaryMetro().getMetroId());
 ```
 
 #### Built-in Workload Types
@@ -688,7 +688,7 @@ System.out.println(plan.toSummary());
 
 // Inspect individual components
 plan.getCloudRouters().forEach(cr ->
-    System.out.println(cr.getName() + " in " + cr.getMetroCode()));
+    System.out.println(cr.getName() + " in " + cr.getMetroId()));
 
 plan.getProviderConnections().forEach(conn ->
     System.out.println(conn.getName() + ": " + conn.getBandwidthMbps() + " Mbps → "
@@ -748,7 +748,7 @@ PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-ap
     .analyze();
 
 // ASCII matrix: rows = ASNs, columns = Equinix metros
-System.out.println(result.presenceMatrix().toTableString());
+System.out.println(result.getPresenceMatrix().toTableString());
 // Network           AM    AT    CH    DA    DC    FR    HK    LA  ...
 // -----------------------------------------------------------------------
 // AWS                IX    IX    IX    IX    IX    IX    IX    IX  ...
@@ -757,7 +757,7 @@ System.out.println(result.presenceMatrix().toTableString());
 // Cloudflare         IX   --     IX    IX    IX    IX    IX    IX  ...
 
 // Detailed matrix with port capacity and route server indicators
-System.out.println(result.presenceMatrix().toDetailedTableString());
+System.out.println(result.getPresenceMatrix().toDetailedTableString());
 // Network         AM          CH          DA          DC          FR     ...
 // --------------------------------------------------------------------------
 // AWS        IX:100G*    IX:10G*     IX:10G*    IX:100G*    IX:100G*    ...
@@ -769,12 +769,13 @@ System.out.println(result.presenceMatrix().toDetailedTableString());
 
 ```java
 // Which ASNs are available at Ashburn?
-MetroPresenceReport dcReport = result.metroReport(MetroCode.DC);
+// Peering lookups are keyed by MetroId (import api.equinix.javasdk.core.model.MetroId)
+MetroPresenceReport dcReport = result.metroReport(MetroId.of(MetroCode.DC));
 System.out.println("ASNs with IX peering at DC: " + dcReport.withIxPeering().size());
 System.out.println("Total IX capacity: " + dcReport.totalIxCapacityMbps() / 1000 + " Gbps");
 
 // Find metros where ALL target ASNs are present
-List<MetroCode> fullCoverage = result.presenceMatrix()
+List<MetroId> fullCoverage = result.getPresenceMatrix()
     .metrosWithAllAsns(List.of(16509L, 8075L, 15169L));
 System.out.println("Metros with all 3 providers: " + fullCoverage);
 ```
@@ -805,14 +806,14 @@ PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-ap
     .analyze();
 
 // What happens if Ashburn goes dark?
-BlastRadiusReport dcBlast = result.resiliency().blastRadiusFor(MetroCode.DC);
+BlastRadiusReport dcBlast = result.getResiliency().blastRadiusFor(MetroId.of(MetroCode.DC));
 System.out.println("Impact: " + (int)(dcBlast.getImpactRatio() * 100) + "% of connectivity");
 System.out.println("Lost IX peering: " + dcBlast.getLostIxPeeringLabels());
 System.out.println("Lost IX capacity: " + dcBlast.getLostIxCapacityMbps() / 1000 + " Gbps");
 System.out.println("Severity: " + dcBlast.getSeverity());
 
 // Where can I failover AWS peering?
-List<FailoverPath> awsFailovers = result.resiliency().failoverPathsForAsn(16509);
+List<FailoverPath> awsFailovers = result.getResiliency().failoverPathsForAsn(16509);
 for (FailoverPath fp : awsFailovers) {
     System.out.println(fp.getFailoverMetro() + ": " + fp.getIxCapacityMbps() / 1000 + "G"
         + " (diversity: " + fp.getDiversity().getRating() + ")"
@@ -820,15 +821,46 @@ for (FailoverPath fp : awsFailovers) {
 }
 
 // Correlated failure detection
-for (CorrelatedFailure cf : result.resiliency().criticalCorrelations()) {
+for (CorrelatedFailure cf : result.getResiliency().criticalCorrelations()) {
     System.out.println("[" + cf.getSeverity() + "] " + cf.getFailureDomain()
         + ": " + cf.getRecommendation());
 }
 
 // Overall resiliency score
-System.out.println("Resiliency: " + result.resiliency().getOverallRating()
-    + " (" + (int)(result.resiliency().getOverallScore() * 100) + "%)");
+System.out.println("Resiliency: " + result.getResiliency().getOverallRating()
+    + " (" + (int)(result.getResiliency().getOverallScore() * 100) + "%)");
 ```
+
+#### IBX-to-IBX Latency — Speed-of-Light Floor
+
+The diversity RTT above comes from `design.geo.SpeedOfLightLatency`, a reusable calculator that
+estimates fibre latency between two specific Equinix IBX data centers from their coordinates
+(great-circle distance × speed of light in fibre, ~4.9 µs/km one-way). It is **IBX-to-IBX**, not
+metro-centroid to metro-centroid, so two IBXes in the same metro have a real, non-zero latency.
+
+```java
+import api.equinix.javasdk.design.geo.SpeedOfLightLatency;
+import api.equinix.javasdk.internetaccess.model.Ibx;
+
+Ibx la4 = internetAccess.ibxs().getByCode("LA4");
+Ibx sv5 = internetAccess.ibxs().getByCode("SV5");
+
+// Round-trip (RTT) speed-of-light floor between two IBX data centers — RTT is the default
+SpeedOfLightLatency rtt = SpeedOfLightLatency.roundTrip();
+double rttMs = rtt.millisBetween(la4, sv5);
+double km    = SpeedOfLightLatency.distanceKm(la4, sv5);
+
+// One-way, with a realistic non-direct-fibre route factor (must be >= 1.0)
+SpeedOfLightLatency realistic = SpeedOfLightLatency.builder()
+    .mode(SpeedOfLightLatency.Mode.ONE_WAY)
+    .routeFactor(1.4)
+    .build();
+double oneWayMs = realistic.millisBetween(la4, sv5);
+```
+
+`millisBetween(Ibx, Ibx)` / `distanceKm(Ibx, Ibx)` throw `IllegalArgumentException` (naming the
+offending IBX code) if an IBX has no coordinates — `geoCoordinates` is optional on the EIA response.
+The result is a physical lower bound; it excludes switching, queuing, and serialization delay.
 
 #### Mutual Peering Opportunity Discovery
 
@@ -865,8 +897,8 @@ System.out.println(result.toMarkdown());
 ┌─────────────┐     ┌──────────────────┐     ┌────────────────────────┐
 │  PeeringDB   │────▶│  PeeringIntelligence │────▶│ PeeringIntelligenceResult │
 │  /api/org/2  │     │     Engine        │     │                        │
-│  /api/netixlan│     │  (8-phase pipeline) │     │  .presenceMatrix()     │
-│  /api/netfac │     │                  │     │  .resiliency()         │
+│  /api/netixlan│     │  (8-phase pipeline) │     │  .getPresenceMatrix()  │
+│  /api/netfac │     │                  │     │  .getResiliency()      │
 │  /api/net    │     │                  │     │  .unifiedView(asn)     │
 └─────────────┘     │                  │     │  .peeringOpportunities()│
                     │                  │     │  .toMarkdown()         │
@@ -875,6 +907,42 @@ System.out.println(result.toMarkdown());
 │ Service Profiles│   └──────────────────┘
 └─────────────┘
 ```
+
+### Design: Savings Calculator & TCO Comparison
+
+Beyond placement, the `Design` module estimates the cost of moving cloud egress onto Equinix Fabric.
+The **Savings Calculator** prices a single egress profile; the **TCO comparison** contrasts
+public-internet egress against Fabric over a term. Both reuse the live cloud-provider pricing
+adapters (AWS / Azure / GCP / Oracle) and the layered rate card.
+
+```java
+import api.equinix.javasdk.design.value.savings.SavingsEstimate;
+import api.equinix.javasdk.design.value.savings.DataUnit;
+import api.equinix.javasdk.design.value.ratecard.Term;
+import api.equinix.javasdk.design.value.tco.TcoComparison;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
+import api.equinix.javasdk.core.enums.MetroCode;
+
+// What does 50 TB/mo of AWS egress cost over Fabric vs. the public internet?
+SavingsEstimate savings = fabric.savingsCalculator()
+    .egress(50, DataUnit.TERABYTE)
+    .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+    .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+    .term(Term.MONTH_12)          // optional; defaults to Term.MONTH_12
+    .calculate();
+System.out.println(savings.toMarkdown());
+
+// Full term TCO comparison
+TcoComparison tco = fabric.tcoComparison()
+    .egress(100, DataUnit.TERABYTE)
+    .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+    .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+    .compare();
+System.out.println(tco.toMarkdown());
+```
+
+Both are equivalently reachable via the design facade: `Design.over(fabric).savingsCalculator()` /
+`.tcoComparison()` (or `eq.design()…`).
 
 ### Fabric: MCP Bridge — Real-Time Validation & Enrichment
 
@@ -1308,23 +1376,20 @@ PaginatedList<DeviceType> deviceTypes = networkEdge.devices().listDeviceTypes();
 Device device = networkEdge.devices()
     .define("my-router")
     .withAccountNumber(accountNumber)
-    .inMetro(MetroCode.SV)
-    .withDeviceType("CSR1000V")
-    .withLicenseType(LicenseType.SUB)
+    .withMetroCode(MetroCode.SV)
+    .withDeviceTypeCode("CSR1000V")
+    .withLicenseMode(LicenseType.SUB)
     .withThroughput(500)
     .withThroughputUnit(BandwidthUnit.MBPS)
     .withCore(4)
-    .withManagementType(DeviceManagementType.EQUINIX_CONFIGURED)
-    .withPackageCode(PackageCode.IPBASE)
+    .withDeviceManagementType(DeviceManagementType.EQUINIX_CONFIGURED)
+    .withPackageCode("IPBASE")
     .create();
 ```
 
-### Network Edge: SSH Users and Security
+### Network Edge: ACL Templates, VPNs, and Peerings
 
 ```java
-// Manage SSH users
-PaginatedList<SSHUser> sshUsers = networkEdge.sshUsers().list();
-
 // Manage ACL templates
 PaginatedList<ACLTemplate> templates = networkEdge.aclTemplates().list();
 
@@ -1334,6 +1399,9 @@ PaginatedList<BGPPeering> peerings = networkEdge.bgpPeerings().list();
 // VPN connections
 PaginatedList<VPN> vpns = networkEdge.vpns().list();
 ```
+
+> SSH users are configured on the device at creation time via the device builder, not as a
+> standalone resource.
 
 ### IBX SmartView: Environmental Monitoring
 
@@ -1361,11 +1429,15 @@ PaginatedList<SystemAlert> alerts = smartView.systemAlerts()
 // Create a streaming subscription for real-time data
 StreamingSubscription subscription = smartView.streamingSubscriptions()
     .define()
-    .withName("My-Alerts-Stream")
-    .withChannelType(ChannelType.WEBHOOK)
-    .withWebhookUrl("https://my-app.example.com/webhook")
-    .addMessage(StreamingMessageType.ALERT, accountNumbers, ibxCodes)
-    .addMessage(StreamingMessageType.ENVIRONMENTAL, accountNumbers, ibxCodes)
+    .withChannel(Channel.builder()
+        .channelType(ChannelType.WEBHOOK)
+        .webhookChannelConfiguration(WebhookChannelConfiguration.builder()
+            .url("https://my-app.example.com/webhook").build())
+        .build())
+    .withMessageType(MessageType.builder()
+        .environmental(List.of(EnvironmentalMessageType.builder()
+            .accountNumber(accountNumber).ibx(ibxCodes).build()))
+        .build())
     .create();
 
 // List existing subscriptions
@@ -1373,7 +1445,7 @@ List<StreamingSubscription> subs = smartView.streamingSubscriptions().list();
 
 // Get subscription data
 SubscriptionData data = smartView.streamingSubscriptions()
-    .getSubscriptionData(subscription.getUuid());
+    .getSubscriptionData(subscription.getId());
 
 // Clean up
 subscription.delete();
@@ -1383,7 +1455,7 @@ subscription.delete();
 
 ```java
 // Location hierarchy for an IBX
-LocationHierarchy hierarchy = smartView.hierarchy()
+List<HierarchyNode> hierarchy = smartView.hierarchy()
     .getLocationHierarchy(accountNo, "DC2");
 
 // Legacy environment data
@@ -1458,7 +1530,7 @@ try {
     Connection conn = fabric.connections().getByUuid("non-existent-uuid");
 } catch (EquinixNotFoundException e) {
     // 404 - Resource not found
-    System.err.println("Connection not found: " + e.getErrorMessage());
+    System.err.println("Connection not found: " + e.getMessage());
 } catch (EquinixAuthenticationException e) {
     // 401 - Invalid credentials
     System.err.println("Authentication failed");
@@ -1467,7 +1539,7 @@ try {
     System.err.println("Rate limited, retry after: " + e.getMessage());
 } catch (EquinixServiceException e) {
     // Any other API error
-    System.err.println("API error " + e.getHttpCode() + ": " + e.getErrorMessage());
+    System.err.println("API error " + e.getStatusCode() + ": " + e.getMessage());
 }
 ```
 
@@ -1482,10 +1554,20 @@ try {
 
 ### Pagination
 
-All list operations return `PaginatedList<T>` which extends `ArrayList<T>` with pagination metadata:
+All list operations return `PaginatedList<T>`, an `Iterable<T>` view of the loaded results with
+pagination metadata and automatic page loading (it is **not** a `java.util.List`). Iterate it
+directly, call `stream()`, snapshot it with `toList()`, page with `hasNextPage()`/`next()`, or eagerly
+load every page with `loadAll()`:
 
 ```java
 PaginatedList<Port> ports = fabric.ports().list();
+
+// Iterate the current page, or stream it
+for (Port port : ports) { /* ... */ }
+ports.stream().map(Port::getUuid).forEach(System.out::println);
+
+// Eagerly load every page, then snapshot
+List<Port> all = fabric.ports().list().loadAll().toList();
 
 // Access pagination info
 Pagination pagination = ports.getPagination();
@@ -1531,14 +1613,15 @@ Full Javadoc documentation is published at **[iantjones.github.io/equinix-java-s
 
 Browse Javadocs by domain:
 - [Fabric](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/package-summary.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
-- [Network Edge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/networkedge/package-summary.html) — Virtual Devices, SSH Users, ACL Templates, VPNs
+- [Network Edge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/networkedge/package-summary.html) — Virtual Devices, ACL Templates, VPNs, BGP Peerings
 - [Customer Portal](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
 - [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
 - [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
-- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/package-summary.html) — Intelligent metro placement engine
-- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
-- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
-- [MCP Bridge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/mcp/package-summary.html) — JSON-RPC 2.0 client for Equinix MCP servers
+- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/package-summary.html) — Intelligent metro placement engine
+- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
+- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
+- [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/geo/package-summary.html) — IBX-to-IBX fibre latency calculator
+- [MCP Bridge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/mcp/bridge/package-summary.html) — JSON-RPC 2.0 client for Equinix MCP servers
 
 ## Building
 
@@ -1585,7 +1668,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation.
 - **Maven 3.6+** for building
 
 ### Dependencies
-- Jackson 2.17.2 (JSON serialization)
+- Jackson 2.21.1 (JSON serialization)
 - Apache HttpClient 4.5.14 (HTTP communication)
 - Lombok 1.18.42 (compile-time code generation)
 
