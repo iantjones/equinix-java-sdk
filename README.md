@@ -5,25 +5,29 @@
 [![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.eqixiac.equinix/equinix-sdk-java.svg)](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)
 
-> A comprehensive Java SDK for the Equinix Platform APIs, providing typed access to Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS services — plus value-add `Design` (metro optimizer, deployment wizard, peering intelligence) and `Mcp` modules.
+> A Java client for the Equinix platform APIs — Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS — plus a `Design` module (metro optimizer, deployment wizard, peering intelligence, cost calculators) and an `Mcp` client.
 
 **[View Full API Documentation (Javadoc)](https://iantjones.github.io/equinix-java-sdk/)** · **[Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)**
 
-## Features
+## What's in the box
 
-- **8 API domains** spanning the full Equinix API catalog — 80+ resource types and 500+ API methods
-- **Fluent builder pattern** for creating and updating resources
-- **Cloud provider SDK interoperability** via adapter pattern (AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect, Oracle FastConnect)
-- **Automatic pagination** with `PaginatedList<T>` and `PaginatedFilteredList<T>`
-- **Built-in OAuth2** authentication with automatic token management
-- **Dry Run validation** for Fabric connections and service tokens
-- **Jackson-based** JSON serialization with full type safety
-- **Comprehensive exception hierarchy** mapping HTTP status codes to typed exceptions
-- **Real-time streaming** support via IBX SmartView subscriptions (AWS IoT, Azure Event Hub, Webhook, REST)
-- **Metro Optimizer** — intelligent placement engine that recommends optimal Equinix metros based on workforce locations, provider requirements, workload types, and business constraints with latency-aware scoring, risk assessment, and cost estimation
-- **Deployment Wizard** — transforms optimization results into executable deployment plans with Cloud Routers, provider connections, inter-metro backbone links, routing protocols, bandwidth sizing, and pricing
-- **Peering Intelligence** — interconnection analysis engine combining PeeringDB IX peering data with Equinix Fabric connectivity to produce ASN presence matrices, resiliency assessments, blast radius analysis, geographic diversity scoring, IBX-to-IBX latency estimation, and mutual peering opportunity discovery across all Equinix Internet Exchanges (loaded live from PeeringDB)
-- **MCP Bridge** — Java client for the Equinix MCP (Model Context Protocol) servers, providing programmatic access to the Fabric MCP server's tools (discovered at runtime via `listTools()`) over JSON-RPC 2.0 with typed response models, OAuth2 token management, and optional enrichment/validation hooks for the Metro Optimizer, Deployment Wizard, and Peering Intelligence modules
+The SDK covers all eight Equinix API domains — Fabric, Network Edge, Customer Portal, IBX SmartView,
+Internet Access, Projects, IAM, and STS — with fluent builders for both create and update. A few
+things it handles so you don't have to:
+
+- **OAuth2**, token refresh on expiry included. Open an `Equinix` session and every domain shares a
+  single token and connection pool.
+- **Pagination** — `loadAll()`/`stream()` when you want the whole set, lazy paging when you don't.
+- **Errors** mapped from HTTP status onto a typed exception hierarchy you can actually `catch`.
+- **Cloud provider adapters** — AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect,
+  Oracle FastConnect — that drop straight into the Fabric connection builder.
+- **Dry-run validation** for Fabric connections and service tokens before you commit to anything.
+- **Real-time streaming** from IBX SmartView (AWS IoT, Azure Event Hub, webhook, REST).
+
+On top of the raw API, the **`Design`** module is for planning rather than provisioning: a
+metro-placement optimizer, a deployment wizard that turns a plan into provisioned Fabric resources,
+peering intelligence built on PeeringDB, IBX-to-IBX latency estimates, and Fabric-vs-internet cost
+calculators. The **`Mcp`** module is a JSON-RPC client for the Equinix Model Context Protocol servers.
 
 ## Quick Start
 
@@ -250,7 +254,7 @@ PaginatedList<StreamSubscription> subs = fabric.streamSubscriptions().list(strea
 
 ### Fabric: Cloud Provider SDK Interoperability
 
-The SDK includes a **Cloud Provider Adapter** framework that bridges cloud provider SDK objects (AWS, Azure, Google Cloud, Oracle) with Equinix Fabric connection creation. This lets you pass cloud provider objects directly into the Fabric connection builder.
+Cloud provider adapters let you hand a provider's own SDK object — an AWS `Connection`, an Azure ExpressRoute service key, a GCP pairing key, an Oracle virtual-circuit OCID — straight to the Fabric connection builder, instead of copying the fields across yourself.
 
 #### Built-in Adapters
 
@@ -399,11 +403,15 @@ Connection azureValidated = fabric.connections()
 // Both validated successfully - now create for real (remove .dryRun())
 ```
 
-### Fabric: Metro Optimizer — Intelligent Placement Engine
+### Fabric: Metro Optimizer
 
-The Metro Optimizer is an analytical engine built into the SDK that recommends optimal Equinix metro placements for your infrastructure. Given your workforce locations, cloud provider requirements, workload characteristics, and business constraints, it computes a ranked set of metro recommendations with latency matrices, deployment topologies, risk assessments, and cost estimates.
+Give the optimizer your sites, the providers you need to reach, your workloads, and your constraints,
+and it ranks Equinix metros — and tells you why each one landed where it did. You get back a latency
+matrix, a suggested workload-to-metro layout, a risk assessment, and a cost estimate.
 
-The optimizer uses live Fabric API data — inter-metro latency from `Metro.connectedMetros`, provider availability from `ServiceProfile.metros()`, and pricing from the Prices API — combined with a multi-dimensional scoring algorithm across five weighted categories: latency, provider coverage, cost, redundancy, and compliance.
+Scoring weighs five things: latency, provider coverage, cost, redundancy, and compliance. The numbers
+come from live Fabric data — inter-metro latency from `Metro.connectedMetros`, provider availability
+from `ServiceProfile.metros()`, and pricing from the Prices API — not from a static table.
 
 #### Defining the Optimization
 
@@ -641,7 +649,10 @@ Each workload type carries a default infrastructure profile that drives placemen
 
 ### Fabric: Deployment Wizard — From Optimization to Execution
 
-The Deployment Wizard takes a completed `OptimizationResult` and generates an executable deployment plan — Cloud Routers in each recommended metro, connections to cloud providers, inter-metro Fabric backbone links, and routing protocol configurations. Bandwidth sizing is a core component that drives accurate pricing across the entire plan.
+Hand the wizard a finished `OptimizationResult` and it works out the concrete plan: a Cloud Router in
+each metro, the connections to your cloud providers, inter-metro backbone links, and the routing
+protocols to wire them together. Bandwidth sizing is what makes the pricing real, so it's front and
+centre. Review the plan, dry-run it against Fabric, then execute.
 
 #### Generate a Deployment Plan
 
@@ -732,7 +743,7 @@ System.out.println(outcome.toMarkdown());
 | `AGGREGATED` | All connections at a metro sized to total metro bandwidth. Simpler provisioning. |
 | `CUSTOM` | User supplies explicit bandwidth values via `customBandwidthMap()`. |
 
-### Fabric: Peering Intelligence — Interconnection Analysis Engine
+### Fabric: Peering Intelligence
 
 Peering Intelligence combines [PeeringDB](https://www.peeringdb.com/) IX peering data with Equinix Fabric connectivity to produce unified presence matrices, resiliency assessments, and peering opportunity discovery — all scoped to Equinix IXes and facilities. Users provide their own PeeringDB API key for authenticated access.
 
@@ -885,7 +896,7 @@ for (PeeringOpportunity opp : result.getPeeringOpportunities()) {
 #### Full Markdown Report
 
 ```java
-// Generate a comprehensive report with all sections
+// Generate the full report (every section)
 System.out.println(result.toMarkdown());
 // Outputs: Presence Matrix, Network Profiles, Resiliency Assessment,
 //          Correlated Failures, Peering Opportunities, Unified Connectivity Views
@@ -893,19 +904,15 @@ System.out.println(result.toMarkdown());
 
 #### Data Flow
 
-```
-┌─────────────┐     ┌──────────────────┐     ┌────────────────────────┐
-│  PeeringDB   │────▶│  PeeringIntelligence │────▶│ PeeringIntelligenceResult │
-│  /api/org/2  │     │     Engine        │     │                        │
-│  /api/netixlan│     │  (8-phase pipeline) │     │  .getPresenceMatrix()  │
-│  /api/netfac │     │                  │     │  .getResiliency()      │
-│  /api/net    │     │                  │     │  .unifiedView(asn)     │
-└─────────────┘     │                  │     │  .peeringOpportunities()│
-                    │                  │     │  .toMarkdown()         │
-┌─────────────┐     │                  │     └────────────────────────┘
-│ Equinix Fabric│────▶│                  │
-│ Service Profiles│   └──────────────────┘
-└─────────────┘
+```mermaid
+flowchart LR
+    pdb["PeeringDB<br/>org · netixlan · netfac · net"]
+    fab["Equinix Fabric<br/>service profiles"]
+    engine["PeeringIntelligence engine<br/>8-phase pipeline"]
+    result["PeeringIntelligenceResult<br/>getPresenceMatrix() · getResiliency()<br/>unifiedView(asn) · getPeeringOpportunities()<br/>toMarkdown()"]
+    pdb --> engine
+    fab --> engine
+    engine --> result
 ```
 
 ### Design: Savings Calculator & TCO Comparison
@@ -944,9 +951,9 @@ System.out.println(tco.toMarkdown());
 Both are equivalently reachable via the design facade: `Design.over(fabric).savingsCalculator()` /
 `.tcoComparison()` (or `eq.design()…`).
 
-### Fabric: MCP Bridge — Real-Time Validation & Enrichment
+### Fabric: MCP Bridge
 
-The MCP (Model Context Protocol) Bridge connects the SDK to the [Equinix MCP servers](https://docs.equinix.com/equinix-api/mcp-servers/overview/) over JSON-RPC 2.0. It offers typed convenience methods across four domains — metros, connections, cloud routers, and observability — plus dynamic discovery of the server's full tool catalog via `availableTools()` and a generic `callTool(name, args)` escape hatch. This enables real-time infrastructure validation, live metro data enrichment, and observability metrics with typed Java response models.
+The MCP bridge talks to the [Equinix MCP servers](https://docs.equinix.com/equinix-api/mcp-servers/overview/) over JSON-RPC 2.0. There are typed helpers for the everyday things — metros, connections, cloud routers, observability — plus `availableTools()` to list the server's full catalog and `callTool(name, args)` for anything not yet wrapped. Responses come back as typed Java objects.
 
 > **Note:** The Equinix MCP server is currently in Private Beta. Contact `fabric-intelligence-support@equinix.com` or your Equinix account representative for access.
 
@@ -1055,48 +1062,64 @@ McpBridge mcp = fabric.mcp(config);
 
 #### Architecture
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌──────────────────────┐
-│  Your Code       │────▶│    McpBridge      │────▶│ Equinix MCP Server   │
-│                  │     │                  │     │ mcp.equinix.com      │
-│  fabric.mcp()    │     │  .metros()       │     │                      │
-│  .optimizeMetros │     │  .connections()  │     │  Fabric MCP tools    │
-│  .deploymentWiz  │     │  .cloudRouters() │     │  JSON-RPC 2.0        │
-│  .peeringIntel   │     │  .observability()│     │  OAuth2 Bearer auth  │
-└─────────────────┘     └────────┬─────────┘     └──────────────────────┘
-                                 │
-                        ┌────────▼─────────┐
-                        │    McpClient      │
-                        │  JSON-RPC 2.0     │
-                        │  Token management │
-                        │  Retry + errors   │
-                        └──────────────────┘
+```mermaid
+flowchart LR
+    code["Your code<br/>fabric.mcp() · optimizeMetros()<br/>deploymentWizard() · peeringIntelligence()"]
+    bridge["McpBridge<br/>metros() · connections()<br/>cloudRouters() · observability()"]
+    client["McpClient<br/>JSON-RPC 2.0 · token mgmt · retry"]
+    server["Equinix MCP server<br/>mcp.equinix.com · OAuth2 bearer"]
+    code --> bridge --> client --> server
 ```
 
 ### Enterprise Multi-Metro Deployment
 
-The following example demonstrates a complete global network deployment using the SDK across three domains — **Fabric**, **Network Edge**, and **Internet Access**. The architecture provisions Fabric Cloud Routers (FCRs) in six metros spanning three regions, connects each to two cloud providers at 5 Gbps, deploys Cisco C8000V routers and Cisco Secure Firewall (FTDv) instances via Network Edge, interconnects all metros over a 10 Gbps Global IP-WAN backbone, configures BGP routing on every connection, and provisions 500 Mbps Dedicated Internet Access at each location. This showcases the SDK's fluent builders, cloud provider adapter framework, cross-domain resource orchestration, and routing protocol configuration in a single cohesive workflow.
+A larger end-to-end example spanning Fabric, Network Edge, and Internet Access. It stands up a Cloud
+Router in six metros across three regions, wires each to two cloud providers at 5 Gbps, drops a Cisco
+C8000V router and an FTDv firewall into every metro, links the lot over a 10 Gbps IP-WAN backbone, and
+runs BGP on every connection. It's long, but it's one flow — builders, cloud adapters, and routing
+config all pulling together.
 
+```mermaid
+flowchart TB
+    ipwan(["Global IP-WAN backbone · 10 Gbps"])
+    AWS(["AWS"])
+    AZ(["Azure"])
+    GCP(["GCP"])
+    OCI(["Oracle"])
+    subgraph AMER
+        SV["SV<br/>FCR · C8000V · FTDv · DIA"]
+        DC["DC<br/>FCR · C8000V · FTDv · DIA"]
+    end
+    subgraph EMEA
+        LD["LD<br/>FCR · C8000V · FTDv · DIA"]
+        AM["AM<br/>FCR · C8000V · FTDv · DIA"]
+    end
+    subgraph APAC
+        SG["SG<br/>FCR · C8000V · FTDv · DIA"]
+        SY["SY<br/>FCR · C8000V · FTDv · DIA"]
+    end
+    SV --- ipwan
+    DC --- ipwan
+    LD --- ipwan
+    AM --- ipwan
+    SG --- ipwan
+    SY --- ipwan
+    SV -->|5G| AWS
+    SV -->|5G| GCP
+    DC -->|5G| AWS
+    DC -->|5G| AZ
+    LD -->|5G| AZ
+    LD -->|5G| GCP
+    AM -->|5G| AWS
+    AM -->|5G| AZ
+    SG -->|5G| AWS
+    SG -->|5G| GCP
+    SY -->|5G| AZ
+    SY -->|5G| OCI
 ```
-                              Global IP-WAN Backbone (10 Gbps)
-    ┌─────────────────────────────────────────────────────────────────────────┐
-    │                                                                         │
-    │   AMER                        EMEA                        APAC          │
-    │   ┌─────────┐  ┌─────────┐   ┌─────────┐  ┌─────────┐   ┌─────────┐  ┌─────────┐
-    │   │  SV     │  │  DC     │   │  LD     │  │  AM     │   │  SG     │  │  SY     │
-    │   │  FCR    │──│  FCR    │   │  FCR    │──│  FCR    │   │  FCR    │──│  FCR    │
-    │   │         │  │         │   │         │  │         │   │         │  │         │
-    │   │ C8000V  │  │ C8000V  │   │ C8000V  │  │ C8000V  │   │ C8000V  │  │ C8000V  │
-    │   │ FTDv    │  │ FTDv    │   │ FTDv    │  │ FTDv    │   │ FTDv    │  │ FTDv    │
-    │   │ DIA     │  │ DIA     │   │ DIA     │  │ DIA     │   │ DIA     │  │ DIA     │
-    │   └──┬──┬───┘  └──┬──┬───┘   └──┬──┬───┘  └──┬──┬───┘   └──┬──┬───┘  └──┬──┬───┘
-    │      │  │         │  │          │  │         │  │          │  │         │  │
-    │     AWS GCP     AWS Azure    Azure GCP     AWS Azure    AWS  GCP    Azure Oracle
-    │     5G  5G      5G  5G       5G   5G      5G  5G       5G   5G     5G    5G
-    └─────────────────────────────────────────────────────────────────────────┘
 
-    Cross-Region Links: SV ↔ SY, SV ↔ SG, DC ↔ LD, DC ↔ AM (via Global IP-WAN)
-```
+Every FCR joins the IP-WAN backbone, so routes propagate between metros over BGP — the cross-region
+paths (SV↔SY, SV↔SG, DC↔LD, DC↔AM) come for free, with no direct FCR-to-FCR connections.
 
 ```java
 import api.equinix.javasdk.*;
@@ -1496,7 +1519,7 @@ SmartHandResponse order = portal.smartHandsRequests().createEquipmentInstall(sma
 
 ### Observability: Chaining Resources
 
-The SDK enables powerful resource chaining patterns:
+Resources chain the way you'd expect — list, filter, then read statistics off what you found:
 
 ```java
 Fabric fabric = new Fabric(credentials);
@@ -1649,13 +1672,15 @@ The SDK is also published to [Maven Central](https://central.sonatype.com/artifa
 
 The SDK follows a layered architecture:
 
-```
-Entry Point (Fabric.java)
-  -> Public Client Interface (Connections.java)
-    -> Public Client Impl (ConnectionsImpl.java)
-      -> Internal Client Interface (ConnectionClient.java)
-        -> Internal Client Impl (ConnectionClientImpl.java)
-          -> HTTP Layer (ClientBase -> EquinixHttpClient)
+```mermaid
+flowchart TB
+    e["Entry point — Fabric"]
+    pc["Public client — Connections"]
+    pi["Public impl — ConnectionsImpl"]
+    ic["Internal client — ConnectionClient"]
+    ii["Internal impl — ConnectionClientImpl"]
+    http["HTTP — ClientBase → EquinixHttpClient"]
+    e --> pc --> pi --> ic --> ii --> http
 ```
 
 Resources use either a **full pattern** (with Wrapper + Operator for mutable CRUD) or a **read-only pattern** (JSON model implements the interface directly).
