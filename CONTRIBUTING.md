@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the Equinix Java SDK! This docume
 ## Development Setup
 
 ### Prerequisites
-- Java 14 or later
+- Java 21 or later
 - Maven 3.6+
 - An Equinix developer account (for integration tests)
 
@@ -21,6 +21,16 @@ mvn clean compile
 **Unit tests** (no credentials required):
 ```bash
 mvn test
+```
+
+**WireMock tests** (no credentials required — full request/response cycles against a local stub server):
+```bash
+mvn test -Pwiremock
+```
+
+**Coverage gate** (JaCoCo line/branch thresholds, fails the build if unmet):
+```bash
+mvn -Pcoverage verify
 ```
 
 **Integration tests** (requires Equinix API credentials):
@@ -77,7 +87,13 @@ Model Interface          - Public API contract (getters)
 ```
 
 ### Key Files
-- Entry points: `Fabric.java`, `CustomerPortal.java`, etc. in `api.equinix.javasdk`
+- Entry points: `Fabric.java`, `NetworkEdge.java`, `CustomerPortal.java`, `IBXSmartView.java`,
+  `InternetAccess.java`, `Projects.java`, `IAM.java`, `STS.java`, plus the `Equinix.java` session,
+  in `api.equinix.javasdk`
+- Value-add modules: `api.equinix.javasdk.design.*` (Metro Optimizer, Deployment Wizard, Peering
+  Intelligence, Savings/TCO, `design.geo` speed-of-light latency) and `api.equinix.javasdk.mcp.*`
+  (MCP JSON-RPC bridge) — the engines depend on the narrow `FabricGateway` interface, which makes
+  them straightforward to unit-test against a stub gateway
 - Config wiring: `*Config.java` + `*ConfigImpl.java` per domain
 - API endpoints: `src/main/resources/json/apiParams_*.json`
 - Base classes: `ClientBase.java`, `PageableBase.java`
