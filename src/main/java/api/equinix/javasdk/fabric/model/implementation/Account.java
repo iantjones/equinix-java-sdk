@@ -26,7 +26,7 @@ import lombok.Getter;
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Account extends BasicAccount {
+public class Account extends AccountSummary {
 
     @JsonProperty("globalOrgId")
     private String globalOrgId;

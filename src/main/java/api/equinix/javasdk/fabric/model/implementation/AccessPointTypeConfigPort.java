@@ -35,7 +35,7 @@ public class AccessPointTypeConfigPort {
     private PortType type;
 
     @JsonProperty("location")
-    private BasicLocation location;
+    private LocationSummary location;
 
     public AccessPointTypeConfigPort(String uuid, PortType type) {
         this.uuid = uuid;

@@ -28,5 +28,5 @@ public class ServiceToken {
     private String uuid;
 
     @JsonProperty("account")
-    private BasicAccount account;
+    private AccountSummary account;
 }

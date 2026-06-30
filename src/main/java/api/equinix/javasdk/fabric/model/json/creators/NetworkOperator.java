@@ -25,7 +25,7 @@ import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.Project;
-import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.implementation.LocationCode;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.json.NetworkJson;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
@@ -69,7 +69,7 @@ public class NetworkOperator extends ResourceImpl<Network> {
         private String name;
         private NetworkScope scope;
         private Project project;
-        private MinimalLocation location;
+        private LocationCode location;
         private List<Notification> notifications;
 
         protected NetworkBuilder(NetworkType type) {
@@ -91,7 +91,7 @@ public class NetworkOperator extends ResourceImpl<Network> {
             return this;
         }
 
-        public NetworkOperator.NetworkBuilder withLocation(MinimalLocation location) {
+        public NetworkOperator.NetworkBuilder withLocation(LocationCode location) {
             this.location = location;
             return this;
         }

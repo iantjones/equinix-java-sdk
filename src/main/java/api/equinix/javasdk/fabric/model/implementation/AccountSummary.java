@@ -19,17 +19,21 @@ package api.equinix.javasdk.fabric.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+/**
+ *
+ * @author ianjones
+ */
 @Getter
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicPort extends MinimalPort {
+public class AccountSummary {
 
-    @JsonProperty("href")
-    private String href;
+    @JsonProperty("orgId")
+    private Integer orgId;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("accountNumber")
+    private Integer accountNumber;
 
-    @JsonProperty("redundancy")
-    private Redundancy redundancy;
 }

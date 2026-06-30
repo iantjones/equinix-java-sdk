@@ -27,7 +27,7 @@ import lombok.Getter;
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Location extends MinimalLocation {
+public class Location extends LocationCode {
 
     @JsonProperty("ibx")
     private String ibx;

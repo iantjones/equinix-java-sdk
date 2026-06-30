@@ -19,22 +19,24 @@ package api.equinix.javasdk.fabric.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
- * Simplified Fabric Cloud Router reference returned on an access point.
+ * Common order details shared by Fabric order references: the order resource {@code href}, the
+ * customer purchase-order number, and the resolved order number / order line.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SimplifiedRouter {
+public abstract class OrderRef {
 
     @JsonProperty("href")
     private String href;
 
-    @JsonProperty("uuid")
-    private String uuid;
+    @JsonProperty("purchaseOrderNumber")
+    private String purchaseOrderNumber;
 
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("orderNumber")
+    private String orderNumber;
+
+    @JsonProperty("orderLine")
+    private String orderLine;
 }

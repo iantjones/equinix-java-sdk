@@ -32,5 +32,5 @@ public class PricingIPBlock {
     Integer prefixLength;
 
     @JsonProperty("location")
-    MinimalLocation location;
+    LocationCode location;
 }

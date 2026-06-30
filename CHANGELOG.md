@@ -149,6 +149,16 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
     `MetroCostBreakdown`.
 
 ### Changed
+- **Consistent response-model naming — `*Ref` / `*Summary` / full (breaking)**: the unevenly-applied
+  `Minimal*` / `Basic*` / `Simplified*` prefixes are replaced by one convention — a bare embedded
+  reference (uuid/href, or code-keyed identity) is `*Ref`; a reference plus a few list/display fields
+  is `*Summary`; the complete resource carries no prefix; nested value objects keep descriptive
+  names. 18 renames, e.g. `MinimalPort`→`PortRef`, `MinimalMetro`→`MetroRef`, `BasicMetro`→
+  `MetroSummary`, `BasicPort`→`PortSummary`, `SimplifiedNetwork`→`NetworkSummary`, `SimplifiedRouter`→
+  `CloudRouterSummary`, and the two mislabeled abstract bases `BasicOrderInfo`→`OrderRef` /
+  `BasicChangeInfo`→`ChangeRef`. (`MinimalLocation`→`LocationCode`, a metro-code value object;
+  `BasicEquinixCredentials` is unrelated to the scheme and unchanged.) Wire contracts are untouched —
+  these are pure type renames.
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
   Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
   `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.

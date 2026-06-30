@@ -70,8 +70,8 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         private Redundancy redundancy;
         private SimpleAccessPoint aSideAccessPoint;
         private SimpleAccessPoint zSideAccessPoint;
-        private MinimalServiceToken aSideServiceToken;
-        private MinimalServiceToken zSideServiceToken;
+        private ServiceTokenRef aSideServiceToken;
+        private ServiceTokenRef zSideServiceToken;
         private List<Notification> notifications = Collections.singletonList(new Notification(NotificationType.ALL, new ArrayList<>()));
         private GeoScopeType geoScope;
         private Project project;
@@ -110,12 +110,12 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         }
 
         public ConnectionBuilder aSideServiceToken(ServiceToken serviceToken) {
-            this.aSideServiceToken = new MinimalServiceToken(serviceToken.getUuid());
+            this.aSideServiceToken = new ServiceTokenRef(serviceToken.getUuid());
             return this;
         }
 
         public ConnectionBuilder aSideServiceToken(String serviceTokenUuid) {
-            this.aSideServiceToken = new MinimalServiceToken(serviceTokenUuid);
+            this.aSideServiceToken = new ServiceTokenRef(serviceTokenUuid);
             return this;
         }
 
@@ -191,12 +191,12 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         }
 
         public ConnectionBuilder zSideServiceToken(String serviceTokenUuid) {
-            this.zSideServiceToken = new MinimalServiceToken(serviceTokenUuid);
+            this.zSideServiceToken = new ServiceTokenRef(serviceTokenUuid);
             return this;
         }
 
         public ConnectionBuilder zSideServiceToken(ServiceToken serviceToken) {
-            this.zSideServiceToken = new MinimalServiceToken(serviceToken.getUuid());
+            this.zSideServiceToken = new ServiceTokenRef(serviceToken.getUuid());
             return this;
         }
 

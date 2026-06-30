@@ -16,28 +16,15 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.fabric.enums.VirtualDeviceType;
+import api.equinix.javasdk.core.model.ResourceRef;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/**
- *
- * @author ianjones
- */
-@Getter
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicVirtualDevice {
-    
-    @JsonProperty("uuid")
-    private String uuid;
+public class ServiceProfileRef extends ResourceRef {
 
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("name")
-    private String name;
-
-    @JsonProperty("type")
-    private VirtualDeviceType type;
+    public ServiceProfileRef(String uuid) {
+        super(uuid);
+    }
 }

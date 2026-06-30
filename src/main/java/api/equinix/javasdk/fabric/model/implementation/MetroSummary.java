@@ -19,21 +19,19 @@ package api.equinix.javasdk.fabric.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-/**
- *
- * @author ianjones
- */
+import java.util.List;
+
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicAccount {
+public class MetroSummary extends MetroRef {
 
-    @JsonProperty("orgId")
-    private Integer orgId;
+    @JsonProperty("href")
+    private String href;
 
-    @JsonProperty("accountNumber")
-    private Integer accountNumber;
+    @JsonProperty("name")
+    private String name;
 
+    @JsonProperty("ibxs")
+    private List<String> ibxs;
 }

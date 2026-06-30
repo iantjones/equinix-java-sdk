@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.ServiceTokenState;
 import api.equinix.javasdk.fabric.enums.ServiceTokenType;
-import api.equinix.javasdk.fabric.model.implementation.BasicAccount;
+import api.equinix.javasdk.fabric.model.implementation.AccountSummary;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Connection;
@@ -48,7 +48,7 @@ public interface ServiceToken {
 
     List<Notification> getNotifications();
 
-    BasicAccount getAccount();
+    AccountSummary getAccount();
 
     ChangeLog getChangeLog();
 

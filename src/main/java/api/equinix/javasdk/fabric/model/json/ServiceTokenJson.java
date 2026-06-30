@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.fabric.enums.ServiceTokenState;
 import api.equinix.javasdk.fabric.enums.ServiceTokenType;
-import api.equinix.javasdk.fabric.model.implementation.BasicAccount;
+import api.equinix.javasdk.fabric.model.implementation.AccountSummary;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Connection;
@@ -70,7 +70,7 @@ public class ServiceTokenJson {
     private List<Notification> notifications;
 
     @JsonProperty("account")
-    private BasicAccount account;
+    private AccountSummary account;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

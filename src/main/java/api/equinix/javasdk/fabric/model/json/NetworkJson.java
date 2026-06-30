@@ -26,7 +26,7 @@ import api.equinix.javasdk.fabric.model.implementation.Account;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Link;
-import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.implementation.LocationCode;
 import api.equinix.javasdk.fabric.model.implementation.NetworkOperation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -60,7 +60,7 @@ public class NetworkJson {
     private NetworkScope scope;
 
     @JsonProperty("location")
-    private MinimalLocation location;
+    private LocationCode location;
 
     @JsonProperty("project")
     private Project project;

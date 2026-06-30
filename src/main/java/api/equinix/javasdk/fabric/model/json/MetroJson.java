@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.enums.MetroType;
-import api.equinix.javasdk.fabric.model.implementation.BasicMetro;
+import api.equinix.javasdk.fabric.model.implementation.MetroSummary;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
@@ -37,7 +37,7 @@ import java.util.List;
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MetroJson extends BasicMetro {
+public class MetroJson extends MetroSummary {
 
 
     @JsonProperty("type")

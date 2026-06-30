@@ -16,22 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+import api.equinix.javasdk.core.model.ResourceRef;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
+@NoArgsConstructor
+public class VirtualDeviceRef extends ResourceRef {
 
-@Getter
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class BasicMetro extends MinimalMetro {
-
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("name")
-    private String name;
-
-    @JsonProperty("ibxs")
-    private List<String> ibxs;
+    public VirtualDeviceRef(String uuid) {
+        super(uuid);
+    }
 }

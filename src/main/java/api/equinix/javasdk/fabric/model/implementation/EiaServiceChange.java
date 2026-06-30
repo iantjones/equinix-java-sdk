@@ -24,5 +24,5 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EiaServiceChange extends BasicChangeInfo {
+public class EiaServiceChange extends ChangeRef {
 }

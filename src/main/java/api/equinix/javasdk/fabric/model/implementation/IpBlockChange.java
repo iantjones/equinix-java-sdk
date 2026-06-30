@@ -22,5 +22,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * Reference to the most recent change applied to an IP block (carries the change resource href).
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class IpBlockChange extends BasicChangeInfo {
+public class IpBlockChange extends ChangeRef {
 }

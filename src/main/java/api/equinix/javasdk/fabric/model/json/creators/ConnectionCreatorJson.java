@@ -73,7 +73,7 @@ public class ConnectionCreatorJson {
                 private SimpleAccessPoint accessPoint;
 
                 @JsonProperty("serviceToken")
-                private MinimalServiceToken serviceToken;
+                private ServiceTokenRef serviceToken;
         }
 
         public ConnectionCreatorJson(ConnectionOperator.ConnectionBuilder connectionBuilder) {

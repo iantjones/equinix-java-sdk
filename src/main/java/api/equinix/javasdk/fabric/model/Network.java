@@ -23,7 +23,7 @@ import api.equinix.javasdk.fabric.model.implementation.Account;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Link;
-import api.equinix.javasdk.fabric.model.implementation.MinimalLocation;
+import api.equinix.javasdk.fabric.model.implementation.LocationCode;
 import api.equinix.javasdk.fabric.model.implementation.NetworkOperation;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
 
@@ -43,7 +43,7 @@ public interface Network {
 
     NetworkScope getScope();
 
-    MinimalLocation getLocation();
+    LocationCode getLocation();
 
     Project getProject();
 

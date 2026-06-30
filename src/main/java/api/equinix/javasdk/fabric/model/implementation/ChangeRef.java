@@ -16,13 +16,17 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.model.ResourceRef;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-@NoArgsConstructor
-public class MinimalVirtualDevice extends ResourceRef {
+/**
+ * Common change-reference details shared by Fabric change objects: the change resource {@code href}.
+ */
+@Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public abstract class ChangeRef {
 
-    public MinimalVirtualDevice(String uuid) {
-        super(uuid);
-    }
+    @JsonProperty("href")
+    private String href;
 }

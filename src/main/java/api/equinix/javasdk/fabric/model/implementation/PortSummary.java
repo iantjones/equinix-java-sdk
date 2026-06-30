@@ -20,23 +20,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-/**
- * Common order details shared by Fabric order references: the order resource {@code href}, the
- * customer purchase-order number, and the resolved order number / order line.
- */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class BasicOrderInfo {
+public class PortSummary extends PortRef {
 
     @JsonProperty("href")
     private String href;
 
-    @JsonProperty("purchaseOrderNumber")
-    private String purchaseOrderNumber;
+    @JsonProperty("name")
+    private String name;
 
-    @JsonProperty("orderNumber")
-    private String orderNumber;
-
-    @JsonProperty("orderLine")
-    private String orderLine;
+    @JsonProperty("redundancy")
+    private Redundancy redundancy;
 }
