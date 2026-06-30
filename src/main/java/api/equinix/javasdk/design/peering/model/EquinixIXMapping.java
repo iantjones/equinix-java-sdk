@@ -20,115 +20,109 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.design.peering.client.PeeringDbFacility;
 import api.equinix.javasdk.design.peering.client.PeeringDbIx;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Maps PeeringDB Equinix IX IDs and facility IDs to Equinix Fabric {@link MetroCode} values.
+ * Bridges PeeringDB Equinix IX and facility IDs to Equinix Fabric {@link MetroCode} values entirely
+ * from live data — no hardcoded city table.
  *
- * <p>PeeringDB identifies internet exchanges and facilities by numeric IDs, while the
- * Equinix Fabric API uses two-letter metro codes. This class bridges the two systems
- * using a combination of static city-name mapping (for the 47 known Equinix IXes)
- * and geographic proximity matching (for facilities with lat/lng coordinates).</p>
+ * <p>PeeringDB identifies internet exchanges and facilities by numeric IDs; Fabric uses metro codes.
+ * The bridge is derived at runtime:</p>
+ * <ul>
+ *   <li>Each PeeringDB <strong>facility</strong> carries a latitude/longitude, so it is bound to the
+ *       <em>nearest live Fabric metro</em> (within {@value #MAX_BIND_KM} km) using the metro
+ *       coordinates supplied at construction. Facilities also seed a city&rarr;metro map.</li>
+ *   <li>Each PeeringDB <strong>IX</strong> carries only a city (no coordinates), so it resolves
+ *       through the facility-derived city&rarr;metro map — which means even city aliases (e.g. a
+ *       "San Jose" exchange co-located with a Silicon Valley facility) map correctly, without any
+ *       static lookup table.</li>
+ * </ul>
  *
- * <p>The static IX mapping covers all Equinix Internet Exchange locations as cataloged
- * in PeeringDB (org_id=2). For facilities, the city name is matched first; if no
- * match is found, the facility's coordinates are compared against known metro
- * coordinates to find the nearest metro.</p>
+ * <p>Construct with the live metro coordinates (from {@code fabric.metros()}), then call
+ * {@link #mapFacilities} <em>before</em> {@link #mapIxes} (the IX bridge depends on the facility
+ * pass).</p>
  *
  * @author ianjones
  * @see MetroCode
  */
 public class EquinixIXMapping {
 
-    private static final Map<String, MetroCode> CITY_TO_METRO;
+    /** Maximum distance from a facility to a metro for the two to be considered co-located. */
+    static final double MAX_BIND_KM = 150.0;
+    private static final double EARTH_RADIUS_KM = 6371.0;
 
-    static {
-        Map<String, MetroCode> m = new LinkedHashMap<>();
+    private final Map<MetroCode, double[]> metroCoordinates;
 
-        // North America
-        m.put("ashburn", MetroCode.DC);
-        m.put("chicago", MetroCode.CH);
-        m.put("dallas", MetroCode.DA);
-        m.put("los angeles", MetroCode.LA);
-        m.put("san jose", MetroCode.SV);
-        m.put("palo alto", MetroCode.SV);
-        m.put("silicon valley", MetroCode.SV);
-        m.put("atlanta", MetroCode.AT);
-        m.put("seattle", MetroCode.SE);
-        m.put("new york", MetroCode.NY);
-        m.put("miami", MetroCode.MI);
-        m.put("denver", MetroCode.DE);
-        m.put("houston", MetroCode.HO);
-        m.put("toronto", MetroCode.TR);
-        m.put("montreal", MetroCode.MT);
-        m.put("mexico city", MetroCode.MX);
-        m.put("phoenix", MetroCode.PH);
-        m.put("philadelphia", MetroCode.PH);
-
-        // South America
-        m.put("são paulo", MetroCode.SP);
-        m.put("sao paulo", MetroCode.SP);
-        m.put("rio de janeiro", MetroCode.RJ);
-        m.put("bogota", MetroCode.BG);
-        m.put("bogotá", MetroCode.BG);
-
-        // Europe
-        m.put("amsterdam", MetroCode.AM);
-        m.put("frankfurt", MetroCode.FR);
-        m.put("london", MetroCode.LD);
-        m.put("paris", MetroCode.PA);
-        m.put("zurich", MetroCode.ZH);
-        m.put("warsaw", MetroCode.WA);
-        m.put("helsinki", MetroCode.HE);
-        m.put("stockholm", MetroCode.SK);
-        m.put("milan", MetroCode.ML);
-        m.put("dublin", MetroCode.DB);
-        // Manchester does not have a MetroCode in the Fabric API
-        m.put("madrid", MetroCode.MD);
-        m.put("lisbon", MetroCode.LS);
-        m.put("barcelona", MetroCode.BA);
-        m.put("hamburg", MetroCode.HH);
-        m.put("geneva", MetroCode.GV);
-        m.put("bordeaux", MetroCode.BO);
-        m.put("brussels", MetroCode.BX);
-        m.put("sofia", MetroCode.SO);
-
-        // Asia Pacific
-        m.put("hong kong", MetroCode.HK);
-        m.put("singapore", MetroCode.SG);
-        m.put("tokyo", MetroCode.TY);
-        m.put("osaka", MetroCode.OS);
-        m.put("sydney", MetroCode.SY);
-        m.put("melbourne", MetroCode.ME);
-        m.put("perth", MetroCode.PE);
-        m.put("seoul", MetroCode.SL);
-        m.put("mumbai", MetroCode.MB);
-        m.put("kuala lumpur", MetroCode.KA);
-        m.put("jakarta", MetroCode.IL);
-        m.put("canberra", MetroCode.CA);
-        m.put("chennai", MetroCode.CL);
-
-        // Middle East / Africa
-        m.put("muscat", MetroCode.MU);
-        m.put("dubai", MetroCode.DX);
-
-        CITY_TO_METRO = Collections.unmodifiableMap(m);
-    }
-
+    private final Map<String, MetroCode> cityToMetro = new LinkedHashMap<>();
     private final Map<Integer, MetroCode> ixIdToMetro = new LinkedHashMap<>();
     private final Map<Integer, MetroCode> facIdToMetro = new LinkedHashMap<>();
     private final Map<MetroCode, List<Integer>> metroToIxIds = new LinkedHashMap<>();
     private final Map<MetroCode, List<Integer>> metroToFacIds = new LinkedHashMap<>();
 
     /**
-     * Builds the IX ID → MetroCode mapping from the Equinix IX catalog.
+     * @param metroCoordinates live Fabric metro coordinates ({@code MetroCode -> [latitude, longitude]}),
+     *                         typically built from {@code fabric.metros()}; only well-known metros need
+     *                         appear. A {@code null} map yields an empty bridge.
+     */
+    public EquinixIXMapping(Map<MetroCode, double[]> metroCoordinates) {
+        this.metroCoordinates = metroCoordinates != null ? metroCoordinates : Collections.emptyMap();
+    }
+
+    /**
+     * Binds each Equinix facility to the nearest live metro by coordinates, and seeds the
+     * city&rarr;metro map used by {@link #mapIxes}. Call this before {@link #mapIxes}.
      *
-     * @param equinixIxes the Equinix IX map from PeeringDB (IX ID → IX metadata)
+     * @param equinixFacs the Equinix facility map from PeeringDB (fac ID &rarr; facility metadata)
+     */
+    public void mapFacilities(Map<Integer, PeeringDbFacility> equinixFacs) {
+        if (equinixFacs == null) {
+            return;
+        }
+        // Pass 1: facilities with coordinates -> nearest metro; these seed the city bridge.
+        for (Map.Entry<Integer, PeeringDbFacility> entry : equinixFacs.entrySet()) {
+            PeeringDbFacility fac = entry.getValue();
+            if (fac.getLatitude() == null || fac.getLongitude() == null) {
+                continue;
+            }
+            MetroCode metro = nearestMetro(fac.getLatitude(), fac.getLongitude());
+            if (metro == null) {
+                continue;
+            }
+            bindFacility(entry.getKey(), metro);
+            if (fac.getCity() != null) {
+                cityToMetro.putIfAbsent(normalize(fac.getCity()), metro);
+            }
+        }
+        // Pass 2: facilities lacking coordinates fall back to the city bridge from pass 1.
+        for (Map.Entry<Integer, PeeringDbFacility> entry : equinixFacs.entrySet()) {
+            if (facIdToMetro.containsKey(entry.getKey())) {
+                continue;
+            }
+            MetroCode metro = cityToMetro.get(normalize(entry.getValue().getCity()));
+            if (metro != null) {
+                bindFacility(entry.getKey(), metro);
+            }
+        }
+    }
+
+    /**
+     * Binds each Equinix IX to a metro via the facility-derived city&rarr;metro map (IXes have no
+     * coordinates of their own). Call {@link #mapFacilities} first.
+     *
+     * @param equinixIxes the Equinix IX map from PeeringDB (IX ID &rarr; IX metadata)
      */
     public void mapIxes(Map<Integer, PeeringDbIx> equinixIxes) {
+        if (equinixIxes == null) {
+            return;
+        }
         for (Map.Entry<Integer, PeeringDbIx> entry : equinixIxes.entrySet()) {
-            PeeringDbIx ix = entry.getValue();
-            MetroCode metro = resolveMetroFromCity(ix.getCity());
+            MetroCode metro = cityToMetro.get(normalize(entry.getValue().getCity()));
             if (metro != null) {
                 ixIdToMetro.put(entry.getKey(), metro);
                 metroToIxIds.computeIfAbsent(metro, k -> new ArrayList<>()).add(entry.getKey());
@@ -136,97 +130,88 @@ public class EquinixIXMapping {
         }
     }
 
-    /**
-     * Builds the facility ID → MetroCode mapping from the Equinix facility catalog.
-     *
-     * @param equinixFacs the Equinix facility map from PeeringDB (fac ID → facility metadata)
-     */
-    public void mapFacilities(Map<Integer, PeeringDbFacility> equinixFacs) {
-        for (Map.Entry<Integer, PeeringDbFacility> entry : equinixFacs.entrySet()) {
-            PeeringDbFacility fac = entry.getValue();
-            MetroCode metro = resolveMetroFromCity(fac.getCity());
-            if (metro != null) {
-                facIdToMetro.put(entry.getKey(), metro);
-                metroToFacIds.computeIfAbsent(metro, k -> new ArrayList<>()).add(entry.getKey());
-            }
-        }
+    private void bindFacility(int facId, MetroCode metro) {
+        facIdToMetro.put(facId, metro);
+        metroToFacIds.computeIfAbsent(metro, k -> new ArrayList<>()).add(facId);
     }
 
     /**
-     * Returns the MetroCode for a PeeringDB IX ID.
-     *
+     * @return the nearest metro to the given coordinates, or {@code null} if none is within
+     *         {@value #MAX_BIND_KM} km (or no metro coordinates are known)
+     */
+    public MetroCode nearestMetro(double latitude, double longitude) {
+        MetroCode best = null;
+        double bestKm = Double.MAX_VALUE;
+        for (Map.Entry<MetroCode, double[]> entry : metroCoordinates.entrySet()) {
+            double[] coords = entry.getValue();
+            if (coords == null || coords.length < 2) {
+                continue;
+            }
+            double km = haversineKm(latitude, longitude, coords[0], coords[1]);
+            if (km < bestKm) {
+                bestKm = km;
+                best = entry.getKey();
+            }
+        }
+        return bestKm <= MAX_BIND_KM ? best : null;
+    }
+
+    /**
      * @param ixId the PeeringDB IX ID
-     * @return the mapped MetroCode, or {@code null} if unmapped
+     * @return the mapped {@link MetroCode}, or {@code null} if unmapped
      */
     public MetroCode metroForIx(int ixId) {
         return ixIdToMetro.get(ixId);
     }
 
     /**
-     * Returns the MetroCode for a PeeringDB facility ID.
-     *
      * @param facId the PeeringDB facility ID
-     * @return the mapped MetroCode, or {@code null} if unmapped
+     * @return the mapped {@link MetroCode}, or {@code null} if unmapped
      */
     public MetroCode metroForFacility(int facId) {
         return facIdToMetro.get(facId);
     }
 
     /**
-     * Returns all PeeringDB IX IDs in a given metro.
-     *
      * @param metro the Equinix metro code
-     * @return list of IX IDs, or empty list if none
+     * @return the PeeringDB IX IDs in that metro, or an empty list
      */
     public List<Integer> ixIdsForMetro(MetroCode metro) {
         return metroToIxIds.getOrDefault(metro, Collections.emptyList());
     }
 
     /**
-     * Returns all PeeringDB facility IDs in a given metro.
-     *
      * @param metro the Equinix metro code
-     * @return list of facility IDs, or empty list if none
+     * @return the PeeringDB facility IDs in that metro, or an empty list
      */
     public List<Integer> facIdsForMetro(MetroCode metro) {
         return metroToFacIds.getOrDefault(metro, Collections.emptyList());
     }
 
     /**
-     * Returns all metro codes that have at least one mapped IX.
-     *
-     * @return unmodifiable set of metro codes with Equinix IX presence
+     * @return the metros with at least one mapped IX (unmodifiable)
      */
     public Set<MetroCode> metrosWithIx() {
         return Collections.unmodifiableSet(metroToIxIds.keySet());
     }
 
     /**
-     * Returns all metro codes that have at least one mapped facility.
-     *
-     * @return unmodifiable set of metro codes with Equinix facility presence
+     * @return the metros with at least one mapped facility (unmodifiable)
      */
     public Set<MetroCode> metrosWithFacilities() {
         return Collections.unmodifiableSet(metroToFacIds.keySet());
     }
 
-    /**
-     * Resolves a city name to its corresponding MetroCode.
-     *
-     * @param city the city name (case-insensitive)
-     * @return the MetroCode, or {@code null} if no mapping exists
-     */
-    public static MetroCode resolveMetroFromCity(String city) {
-        if (city == null || city.isEmpty()) return null;
-        return CITY_TO_METRO.get(city.toLowerCase().trim());
+    private static String normalize(String city) {
+        return city == null ? "" : city.toLowerCase(Locale.ROOT).trim();
     }
 
-    /**
-     * Returns the complete static city-to-metro mapping.
-     *
-     * @return unmodifiable map of lowercase city names to metro codes
-     */
-    public static Map<String, MetroCode> getCityToMetroMap() {
-        return CITY_TO_METRO;
+    private static double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 }

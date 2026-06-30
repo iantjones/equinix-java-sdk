@@ -1,249 +1,111 @@
-/*
- * Copyright 2021 Ian Jones. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
- * file except in compliance with the License.
- *
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
- * OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- */
-
 package api.equinix.javasdk.design.peering;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.design.peering.client.PeeringDbFacility;
 import api.equinix.javasdk.design.peering.client.PeeringDbIx;
 import api.equinix.javasdk.design.peering.model.EquinixIXMapping;
-import org.junit.jupiter.api.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for {@link EquinixIXMapping} — the PeeringDB ID to MetroCode translation layer.
+ * Tests {@link EquinixIXMapping} — the fully live, coordinate-driven PeeringDB&rarr;metro bridge
+ * (no hardcoded city table). Facilities resolve to the nearest live metro by lat/lng and seed a
+ * city&rarr;metro map; IXes (city-only) resolve through that map, so city aliases work without any
+ * static lookup.
  */
-@DisplayName("Equinix IX Mapping")
+@DisplayName("Equinix IX Mapping (live, coordinate-driven)")
 class EquinixIXMappingTest {
 
-    @Nested
-    @DisplayName("Static city-to-metro resolution")
-    class CityResolutionTests {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-        @Test
-        @DisplayName("Ashburn should map to DC")
-        void ashburn_mapsToDC() {
-            assertEquals(MetroCode.DC, EquinixIXMapping.resolveMetroFromCity("Ashburn"));
-        }
-
-        @Test
-        @DisplayName("City name matching should be case-insensitive")
-        void caseInsensitive() {
-            assertEquals(MetroCode.DC, EquinixIXMapping.resolveMetroFromCity("ASHBURN"));
-            assertEquals(MetroCode.DC, EquinixIXMapping.resolveMetroFromCity("ashburn"));
-            assertEquals(MetroCode.DC, EquinixIXMapping.resolveMetroFromCity("Ashburn"));
-        }
-
-        @Test
-        @DisplayName("Leading/trailing whitespace should be trimmed")
-        void trimWhitespace() {
-            assertEquals(MetroCode.DC, EquinixIXMapping.resolveMetroFromCity("  ashburn  "));
-        }
-
-        @Test
-        @DisplayName("Null and empty city should return null")
-        void nullAndEmpty_returnNull() {
-            assertNull(EquinixIXMapping.resolveMetroFromCity(null));
-            assertNull(EquinixIXMapping.resolveMetroFromCity(""));
-        }
-
-        @Test
-        @DisplayName("Unknown city should return null")
-        void unknownCity_returnsNull() {
-            assertNull(EquinixIXMapping.resolveMetroFromCity("Timbuktu"));
-        }
-
-        @Test
-        @DisplayName("Major North American cities should map correctly")
-        void northAmerica_mappings() {
-            assertEquals(MetroCode.CH, EquinixIXMapping.resolveMetroFromCity("Chicago"));
-            assertEquals(MetroCode.DA, EquinixIXMapping.resolveMetroFromCity("Dallas"));
-            assertEquals(MetroCode.LA, EquinixIXMapping.resolveMetroFromCity("Los Angeles"));
-            assertEquals(MetroCode.SV, EquinixIXMapping.resolveMetroFromCity("San Jose"));
-            assertEquals(MetroCode.NY, EquinixIXMapping.resolveMetroFromCity("New York"));
-            assertEquals(MetroCode.SE, EquinixIXMapping.resolveMetroFromCity("Seattle"));
-            assertEquals(MetroCode.AT, EquinixIXMapping.resolveMetroFromCity("Atlanta"));
-            assertEquals(MetroCode.MI, EquinixIXMapping.resolveMetroFromCity("Miami"));
-        }
-
-        @Test
-        @DisplayName("European cities should map correctly")
-        void europe_mappings() {
-            assertEquals(MetroCode.AM, EquinixIXMapping.resolveMetroFromCity("Amsterdam"));
-            assertEquals(MetroCode.FR, EquinixIXMapping.resolveMetroFromCity("Frankfurt"));
-            assertEquals(MetroCode.LD, EquinixIXMapping.resolveMetroFromCity("London"));
-            assertEquals(MetroCode.PA, EquinixIXMapping.resolveMetroFromCity("Paris"));
-            assertEquals(MetroCode.ZH, EquinixIXMapping.resolveMetroFromCity("Zurich"));
-        }
-
-        @Test
-        @DisplayName("APAC cities should map correctly")
-        void apac_mappings() {
-            assertEquals(MetroCode.HK, EquinixIXMapping.resolveMetroFromCity("Hong Kong"));
-            assertEquals(MetroCode.SG, EquinixIXMapping.resolveMetroFromCity("Singapore"));
-            assertEquals(MetroCode.TY, EquinixIXMapping.resolveMetroFromCity("Tokyo"));
-            assertEquals(MetroCode.SY, EquinixIXMapping.resolveMetroFromCity("Sydney"));
-        }
-
-        @Test
-        @DisplayName("Silicon Valley alias cities should all map to SV")
-        void siliconValleyAliases() {
-            assertEquals(MetroCode.SV, EquinixIXMapping.resolveMetroFromCity("San Jose"));
-            assertEquals(MetroCode.SV, EquinixIXMapping.resolveMetroFromCity("Palo Alto"));
-            assertEquals(MetroCode.SV, EquinixIXMapping.resolveMetroFromCity("Silicon Valley"));
-        }
-
-        @Test
-        @DisplayName("Sao Paulo with both accent forms should map to SP")
-        void saoPauloVariants() {
-            assertEquals(MetroCode.SP, EquinixIXMapping.resolveMetroFromCity("Sao Paulo"));
-            assertEquals(MetroCode.SP, EquinixIXMapping.resolveMetroFromCity("São Paulo"));
-        }
-
-        @Test
-        @DisplayName("Static map should contain all expected entries")
-        void staticMap_isComplete() {
-            Map<String, MetroCode> map = EquinixIXMapping.getCityToMetroMap();
-            assertNotNull(map);
-            assertTrue(map.size() >= 45, "Expected at least 45 city mappings, got " + map.size());
-        }
+    // Live Fabric metro coordinates (what fabric.metros() would supply).
+    private static Map<MetroCode, double[]> metroCoords() {
+        Map<MetroCode, double[]> coords = new LinkedHashMap<>();
+        coords.put(MetroCode.DC, new double[]{39.0438, -77.4874});  // Ashburn
+        coords.put(MetroCode.SV, new double[]{37.3382, -121.8863}); // Silicon Valley
+        coords.put(MetroCode.LD, new double[]{51.5074, -0.1278});   // London
+        return coords;
     }
 
-    @Nested
-    @DisplayName("Dynamic IX ID mapping")
-    class IxMappingTests {
-
-        private EquinixIXMapping mapping;
-
-        @BeforeEach
-        void setUp() {
-            mapping = new EquinixIXMapping();
-            Map<Integer, PeeringDbIx> ixes = new LinkedHashMap<>();
-            ixes.put(1, createIx(1, "Equinix Ashburn", "Ashburn"));
-            ixes.put(2, createIx(2, "Equinix Chicago", "Chicago"));
-            ixes.put(3, createIx(3, "Equinix Dallas", "Dallas"));
-            ixes.put(99, createIx(99, "Unknown Exchange", "Atlantis")); // unmappable
-            mapping.mapIxes(ixes);
+    private static PeeringDbFacility fac(int id, String city, Double lat, Double lng) throws Exception {
+        StringBuilder json = new StringBuilder("{\"id\":").append(id).append(",\"city\":\"").append(city).append("\"");
+        if (lat != null) {
+            json.append(",\"latitude\":").append(lat);
         }
-
-        @Test
-        @DisplayName("Known IX IDs should resolve to correct metro")
-        void knownIxIds_resolve() {
-            assertEquals(MetroCode.DC, mapping.metroForIx(1));
-            assertEquals(MetroCode.CH, mapping.metroForIx(2));
-            assertEquals(MetroCode.DA, mapping.metroForIx(3));
+        if (lng != null) {
+            json.append(",\"longitude\":").append(lng);
         }
-
-        @Test
-        @DisplayName("Unknown IX IDs should return null")
-        void unknownIxId_returnsNull() {
-            assertNull(mapping.metroForIx(99));
-            assertNull(mapping.metroForIx(999));
-        }
-
-        @Test
-        @DisplayName("Metro should list its IX IDs")
-        void ixIdsForMetro() {
-            List<Integer> dcIxes = mapping.ixIdsForMetro(MetroCode.DC);
-            assertEquals(1, dcIxes.size());
-            assertTrue(dcIxes.contains(1));
-        }
-
-        @Test
-        @DisplayName("Metro with no IXes should return empty list")
-        void emptyMetro_returnsEmptyList() {
-            assertTrue(mapping.ixIdsForMetro(MetroCode.SG).isEmpty());
-        }
-
-        @Test
-        @DisplayName("Metros with IX presence should be correct")
-        void metrosWithIx() {
-            Set<MetroCode> metros = mapping.metrosWithIx();
-            assertEquals(3, metros.size());
-            assertTrue(metros.contains(MetroCode.DC));
-            assertTrue(metros.contains(MetroCode.CH));
-            assertTrue(metros.contains(MetroCode.DA));
-        }
+        return MAPPER.readValue(json.append("}").toString(), PeeringDbFacility.class);
     }
 
-    @Nested
-    @DisplayName("Dynamic facility ID mapping")
-    class FacilityMappingTests {
-
-        private EquinixIXMapping mapping;
-
-        @BeforeEach
-        void setUp() {
-            mapping = new EquinixIXMapping();
-            Map<Integer, PeeringDbFacility> facs = new LinkedHashMap<>();
-            facs.put(100, createFacility(100, "DC1", "Ashburn", 39.0438, -77.4874));
-            facs.put(101, createFacility(101, "DC2", "Ashburn", 39.0438, -77.4874));
-            facs.put(200, createFacility(200, "SG1", "Singapore", 1.3521, 103.8198));
-            mapping.mapFacilities(facs);
-        }
-
-        @Test
-        @DisplayName("Known facility IDs should resolve to correct metro")
-        void knownFacIds_resolve() {
-            assertEquals(MetroCode.DC, mapping.metroForFacility(100));
-            assertEquals(MetroCode.DC, mapping.metroForFacility(101));
-            assertEquals(MetroCode.SG, mapping.metroForFacility(200));
-        }
-
-        @Test
-        @DisplayName("Multiple facilities in same metro should all map")
-        void multipleFacilitiesInSameMetro() {
-            List<Integer> dcFacs = mapping.facIdsForMetro(MetroCode.DC);
-            assertEquals(2, dcFacs.size());
-            assertTrue(dcFacs.contains(100));
-            assertTrue(dcFacs.contains(101));
-        }
-
-        @Test
-        @DisplayName("Metros with facility presence should be correct")
-        void metrosWithFacilities() {
-            Set<MetroCode> metros = mapping.metrosWithFacilities();
-            assertEquals(2, metros.size());
-            assertTrue(metros.contains(MetroCode.DC));
-            assertTrue(metros.contains(MetroCode.SG));
-        }
+    private static PeeringDbIx ix(int id, String city) throws Exception {
+        return MAPPER.readValue("{\"id\":" + id + ",\"city\":\"" + city + "\"}", PeeringDbIx.class);
     }
 
-    // ---- Helpers ----
+    private static EquinixIXMapping built() throws Exception {
+        Map<Integer, PeeringDbFacility> facs = new LinkedHashMap<>();
+        facs.put(1, fac(1, "Ashburn", 39.04, -77.49));     // -> DC by coordinates
+        facs.put(2, fac(2, "San Jose", 37.33, -121.89));   // -> SV by coordinates (alias of metro "Silicon Valley")
+        facs.put(3, fac(3, "London", 51.50, -0.13));       // -> LD by coordinates
+        facs.put(4, fac(4, "Nowhere", 0.0, 0.0));          // no metro within range -> unmapped
 
-    private static PeeringDbIx createIx(int id, String name, String city) {
-        PeeringDbIx ix = new PeeringDbIx();
-        ix.setId(id);
-        ix.setName(name);
-        ix.setCity(city);
-        ix.setCountry("US");
-        return ix;
+        Map<Integer, PeeringDbIx> ixes = new LinkedHashMap<>();
+        ixes.put(10, ix(10, "San Jose"));   // resolves via the facility-derived city bridge -> SV
+        ixes.put(11, ix(11, "Ashburn"));    // -> DC
+        ixes.put(12, ix(12, "Atlantis"));   // no facility city match -> unmapped
+
+        EquinixIXMapping mapping = new EquinixIXMapping(metroCoords());
+        mapping.mapFacilities(facs);   // facilities first (seed the city bridge)
+        mapping.mapIxes(ixes);
+        return mapping;
     }
 
-    private static PeeringDbFacility createFacility(int id, String name, String city,
-                                                     double lat, double lng) {
-        PeeringDbFacility fac = new PeeringDbFacility();
-        fac.setId(id);
-        fac.setName(name);
-        fac.setCity(city);
-        fac.setLatitude(lat);
-        fac.setLongitude(lng);
-        return fac;
+    @Test
+    @DisplayName("facilities bind to the nearest live metro by coordinates")
+    void facilitiesByCoordinates() throws Exception {
+        EquinixIXMapping m = built();
+        assertEquals(MetroCode.DC, m.metroForFacility(1));
+        assertEquals(MetroCode.SV, m.metroForFacility(2));
+        assertEquals(MetroCode.LD, m.metroForFacility(3));
+        assertNull(m.metroForFacility(4), "a facility with no metro in range is unmapped");
+    }
+
+    @Test
+    @DisplayName("IXes resolve via the facility-derived city bridge — aliases included")
+    void ixesViaCityBridge() throws Exception {
+        EquinixIXMapping m = built();
+        // "San Jose" never appears as a metro name, yet resolves to SV because a San Jose facility
+        // resolved there by coordinates — no hardcoded alias needed.
+        assertEquals(MetroCode.SV, m.metroForIx(10));
+        assertEquals(MetroCode.DC, m.metroForIx(11));
+        assertNull(m.metroForIx(12), "an IX whose city has no Equinix facility is unmapped");
+    }
+
+    @Test
+    @DisplayName("nearestMetro respects the co-location distance threshold")
+    void nearestMetroThreshold() throws Exception {
+        EquinixIXMapping m = new EquinixIXMapping(metroCoords());
+        assertEquals(MetroCode.SV, m.nearestMetro(37.33, -121.89));
+        assertNull(m.nearestMetro(0.0, 0.0), "the Gulf of Guinea is not near any metro");
+    }
+
+    @Test
+    @DisplayName("reverse lookups and presence sets reflect the resolved bridge")
+    void reverseLookups() throws Exception {
+        EquinixIXMapping m = built();
+        assertTrue(m.facIdsForMetro(MetroCode.SV).contains(2));
+        assertTrue(m.ixIdsForMetro(MetroCode.SV).contains(10));
+        assertTrue(m.metrosWithFacilities().contains(MetroCode.DC));
+        assertTrue(m.metrosWithFacilities().contains(MetroCode.SV));
+        assertTrue(m.metrosWithIx().contains(MetroCode.DC));
+        assertTrue(m.metrosWithIx().contains(MetroCode.SV));
     }
 }

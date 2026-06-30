@@ -166,6 +166,16 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   `BasicChangeInfo`→`ChangeRef`. (`MinimalLocation`→`LocationCode`, a metro-code value object;
   `BasicEquinixCredentials` is unrelated to the scheme and unchanged.) Wire contracts are untouched —
   these are pure type renames.
+- **Peering Intelligence metro bridge is now fully live (no hardcoded city table)**: the
+  PeeringDB→Equinix-metro mapping previously relied on a ~60-entry hardcoded `city→MetroCode` table
+  and a hardcoded `metro→region` switch. Both are gone. PeeringDB facilities (which carry lat/lng)
+  are now bound to the **nearest live Fabric metro by coordinates** and seed a city→metro map;
+  PeeringDB IXes (city-only) resolve through that facility-derived map — so city aliases (a "San Jose"
+  exchange co-located with a Silicon Valley facility) map correctly with zero static data. Region and
+  metro coordinates come from `fabric.metros()`; the geographic-**distance** measure (haversine) is the
+  primary diversity signal, with the live Fabric region as a secondary descriptor. New metros are
+  bridged automatically as Equinix adds facilities. (`EquinixIXMapping` now takes the live metro
+  coordinates at construction; its static `resolveMetroFromCity`/`getCityToMetroMap` are removed.)
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
   Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
   `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.
