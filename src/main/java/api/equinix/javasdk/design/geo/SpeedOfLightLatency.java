@@ -16,8 +16,9 @@
 
 package api.equinix.javasdk.design.geo;
 
-import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
+import api.equinix.javasdk.internetaccess.model.Ibx;
+import api.equinix.javasdk.internetaccess.model.implementation.GeoCoordinates;
 
 /**
  * Estimates network latency from geographic distance using the speed of light in optical fiber.
@@ -35,9 +36,22 @@ import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
  * <p>The {@linkplain Mode#ROUND_TRIP round-trip (RTT)} mode is the default, since RTT is what most
  * latency budgets are quoted in.</p>
  *
+ * <p>Latency is computed <strong>IBX-to-IBX</strong> — between two specific Equinix data centers
+ * using each IBX's own {@linkplain Ibx#getGeoCoordinates() coordinates} — not between metro
+ * centroids, so two IBXes in the same metro have a real (small, non-zero) distance.</p>
+ *
+ * <p>The EIA availability response only guarantees {@code href}; {@code geoCoordinates} is optional,
+ * so {@link #millisBetween(Ibx, Ibx)} / {@link #distanceKm(Ibx, Ibx)} throw
+ * {@link IllegalArgumentException} (naming the offending IBX code) when an IBX has no coordinates —
+ * fail loud rather than return a bogus zero. Callers iterating {@code availability(...)} results
+ * should handle that per IBX.</p>
+ *
  * <pre>{@code
+ * Ibx la4 = internetAccess.ibxs().getByCode("LA4");
+ * Ibx sv5 = internetAccess.ibxs().getByCode("SV5");
+ *
  * SpeedOfLightLatency rtt = SpeedOfLightLatency.roundTrip();   // default
- * double ms = rtt.millisBetween(metroA, metroB);
+ * double ms = rtt.millisBetween(la4, sv5);                     // round-trip floor, LA4 <-> SV5
  *
  * SpeedOfLightLatency realistic = SpeedOfLightLatency.builder()
  *         .mode(Mode.ONE_WAY).routeFactor(1.4).build();
@@ -126,18 +140,17 @@ public final class SpeedOfLightLatency {
     }
 
     /**
-     * Fibre latency between two metros, using their {@link Metro#geoCoordinates() coordinates}.
+     * Fibre latency between two Equinix IBX data centers, using each IBX's own
+     * {@linkplain Ibx#getGeoCoordinates() coordinates}. This is the IBX-to-IBX figure: two IBXes in
+     * the same metro have a real (small) latency rather than zero.
      *
-     * @param a one metro
-     * @param b the other metro
+     * @param a one IBX
+     * @param b the other IBX
      * @return the estimated latency in milliseconds
-     * @throws IllegalArgumentException if either metro has no coordinates
+     * @throws IllegalArgumentException if either IBX is null or has no coordinates
      */
-    public double millisBetween(Metro a, Metro b) {
-        if (a == null || b == null) {
-            throw new IllegalArgumentException("both metros must be non-null");
-        }
-        return millisBetween(a.geoCoordinates(), b.geoCoordinates());
+    public double millisBetween(Ibx a, Ibx b) {
+        return millisForKm(distanceKm(a, b));
     }
 
     /**
@@ -154,6 +167,33 @@ public final class SpeedOfLightLatency {
             throw new IllegalArgumentException("both coordinates must have latitude and longitude");
         }
         return distanceKm(a.getLatitude(), a.getLongitude(), b.getLatitude(), b.getLongitude());
+    }
+
+    /**
+     * Great-circle (haversine) distance between two Equinix IBX data centers.
+     *
+     * @param a one IBX
+     * @param b the other IBX
+     * @return the distance in kilometres
+     * @throws IllegalArgumentException if either IBX is null or is missing its coordinates
+     */
+    public static double distanceKm(Ibx a, Ibx b) {
+        if (a == null || b == null) {
+            throw new IllegalArgumentException("both IBXs must be non-null");
+        }
+        GeoCoordinates ca = a.getGeoCoordinates();
+        GeoCoordinates cb = b.getGeoCoordinates();
+        if (ca == null || cb == null || ca.getLatitude() == null || ca.getLongitude() == null
+                || cb.getLatitude() == null || cb.getLongitude() == null) {
+            throw new IllegalArgumentException("both IBXs must have geo coordinates (missing for "
+                    + ibxLabel(a) + " or " + ibxLabel(b) + ")");
+        }
+        return distanceKm(ca.getLatitude(), ca.getLongitude(), cb.getLatitude(), cb.getLongitude());
+    }
+
+    private static String ibxLabel(Ibx ibx) {
+        String code = ibx.getIbxCode();
+        return code != null ? code : "<unknown IBX>";
     }
 
     /**

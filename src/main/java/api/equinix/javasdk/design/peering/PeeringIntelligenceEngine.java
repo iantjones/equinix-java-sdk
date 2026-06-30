@@ -80,6 +80,14 @@ class PeeringIntelligenceEngine {
     private final Map<MetroId, String> metroRegion = new LinkedHashMap<>();
     private final Map<String, MetroId> ibxToMetro = new LinkedHashMap<>();
 
+    /**
+     * Per-metro representative coordinate derived from the actual Equinix IBX data centers in that
+     * metro — the centroid of the PeeringDB Equinix facility coordinates resolved to the metro. This
+     * grounds the geographic-diversity distance in real data-center positions (IBX-to-IBX) rather than
+     * the single Fabric metro centroid, and is preferred over {@link #metroCoordinates} when present.
+     */
+    private final Map<MetroId, double[]> metroFacilityCoordinates = new LinkedHashMap<>();
+
     PeeringIntelligenceEngine(FabricGateway fabric, PeeringDbClient peeringDb, PeeringRequest request) {
         this.fabric = fabric;
         this.peeringDb = peeringDb;
@@ -107,6 +115,7 @@ class PeeringIntelligenceEngine {
             ixMapping = new EquinixIXMapping(ibxToMetro);
             ixMapping.mapFacilities(peeringDb.getEquinixFacMap());
             ixMapping.mapIxes(peeringDb.getEquinixIxMap());
+            loadFacilityCoordinates();
 
             // Phase 2: Query each target ASN
             for (Map.Entry<Long, String> entry : request.getTargetAsns().entrySet()) {
@@ -669,13 +678,11 @@ class PeeringIntelligenceEngine {
     // ---- Helpers ----
 
     private DiversityScore computeDiversity(MetroId metro1, MetroId metro2) {
-        // Use IX city coordinates from the mapping for distance calculation. The
-        // metro → coordinate lookup is precomputed once per analysis (see
-        // metroCoordinatesMap()) rather than rescanning the full facility map on
-        // each of the O(metros^2) diversity calls.
-        Map<MetroId, double[]> coords = metroCoordinatesMap();
-        double[] c1 = coords.get(metro1);
-        double[] c2 = coords.get(metro2);
+        // Distance is IBX-grounded: each metro is represented by the centroid of its actual Equinix
+        // IBX data centers (resolveCoordinates), falling back to the Fabric metro centroid only when
+        // no facility coordinates are available. Both lookups are precomputed once per analysis.
+        double[] c1 = resolveCoordinates(metro1);
+        double[] c2 = resolveCoordinates(metro2);
         boolean found1 = c1 != null;
         boolean found2 = c2 != null;
 
@@ -754,10 +761,49 @@ class PeeringIntelligenceEngine {
     }
 
     /**
-     * @return the live metro → [latitude, longitude] lookup used by {@code computeDiversity}
+     * Builds {@link #metroFacilityCoordinates} — a per-metro representative coordinate from the actual
+     * Equinix IBX data centers, computed as the centroid of the PeeringDB Equinix facility coordinates
+     * resolved to each metro (via the IBX-name bridge). Requires {@link EquinixIXMapping#mapFacilities}
+     * to have run. Best-effort: facilities without coordinates or without a resolvable metro are
+     * skipped, and the diversity distance falls back to the Fabric metro centroid for any metro with
+     * no facility coordinates.
      */
-    private Map<MetroId, double[]> metroCoordinatesMap() {
-        return metroCoordinates;
+    private void loadFacilityCoordinates() {
+        Map<Integer, PeeringDbFacility> facs = peeringDb.getEquinixFacMap();
+        if (facs == null || ixMapping == null) {
+            return;
+        }
+        Map<MetroId, double[]> sums = new LinkedHashMap<>();   // metro -> [sumLat, sumLon, count]
+        for (Map.Entry<Integer, PeeringDbFacility> entry : facs.entrySet()) {
+            PeeringDbFacility fac = entry.getValue();
+            if (fac == null || fac.getLatitude() == null || fac.getLongitude() == null) {
+                continue;
+            }
+            MetroId metro = ixMapping.metroForFacility(entry.getKey());
+            if (metro == null) {
+                continue;
+            }
+            double[] acc = sums.computeIfAbsent(metro, k -> new double[3]);
+            acc[0] += fac.getLatitude();
+            acc[1] += fac.getLongitude();
+            acc[2] += 1;
+        }
+        for (Map.Entry<MetroId, double[]> entry : sums.entrySet()) {
+            double[] acc = entry.getValue();
+            if (acc[2] > 0) {
+                metroFacilityCoordinates.put(entry.getKey(),
+                        new double[]{acc[0] / acc[2], acc[1] / acc[2]});
+            }
+        }
+    }
+
+    /**
+     * Resolves a metro's coordinate for distance: the IBX-grounded facility centroid when available,
+     * otherwise the Fabric metro centroid, or {@code null} if neither is known.
+     */
+    private double[] resolveCoordinates(MetroId metro) {
+        double[] facility = metroFacilityCoordinates.get(metro);
+        return facility != null ? facility : metroCoordinates.get(metro);
     }
 
     private double haversineKm(double lat1, double lon1, double lat2, double lon2) {

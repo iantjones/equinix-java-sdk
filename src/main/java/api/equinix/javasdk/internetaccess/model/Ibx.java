@@ -64,7 +64,8 @@ public interface Ibx {
     String getIbxCode();
 
     /**
-     * @return the geographic coordinates of the IBX
+     * @return the geographic coordinates of the IBX, or {@code null} — the EIA response only
+     *         guarantees {@link #getHref() href}, so coordinates may be absent on some IBXes
      */
     GeoCoordinates getGeoCoordinates();
 }
