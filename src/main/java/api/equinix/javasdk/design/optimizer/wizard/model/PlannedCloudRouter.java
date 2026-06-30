@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import lombok.Builder;
 import lombok.Value;
 
@@ -12,7 +12,7 @@ import lombok.Value;
 @Builder
 public class PlannedCloudRouter {
 
-    MetroCode metroCode;
+    MetroId metroId;
 
     String name;
 

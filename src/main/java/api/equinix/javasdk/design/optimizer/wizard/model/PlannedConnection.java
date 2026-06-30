@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import lombok.Builder;
@@ -25,7 +25,7 @@ public class PlannedConnection {
 
     BandwidthAllocation bandwidthAllocation;
 
-    MetroCode aSideMetro;
+    MetroId aSideMetro;
 
     String aSideRouterName;
 
@@ -35,7 +35,7 @@ public class PlannedConnection {
 
     String zSideSellerRegion;
 
-    MetroCode zSideMetro;
+    MetroId zSideMetro;
 
     String zSideRouterName;
 

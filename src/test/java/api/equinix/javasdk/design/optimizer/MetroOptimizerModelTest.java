@@ -17,6 +17,7 @@
 package api.equinix.javasdk.design.optimizer;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.optimizer.enums.ScoreCategory;
 import api.equinix.javasdk.design.optimizer.model.*;
 import org.junit.jupiter.api.*;
@@ -82,14 +83,14 @@ class MetroOptimizerModelTest {
             MetroScore score = new MetroScore(90.0, Collections.emptyList());
             MetroRecommendation rec = MetroRecommendation.builder()
                     .rank(1)
-                    .metroCode(MetroCode.DC)
+                    .metroId(MetroId.of(MetroCode.DC))
                     .metroName("Ashburn")
                     .score(score)
                     .reasons(Arrays.asList("Lowest latency", "All providers available"))
                     .build();
 
             assertEquals(1, rec.getRank());
-            assertEquals(MetroCode.DC, rec.getMetroCode());
+            assertEquals(MetroId.of(MetroCode.DC), rec.getMetroId());
             assertEquals("Ashburn", rec.getMetroName());
             assertEquals(90.0, rec.getScore().getComposite());
             assertEquals(2, rec.getReasons().size());
@@ -111,15 +112,15 @@ class MetroOptimizerModelTest {
             result = OptimizationResult.builder()
                     .recommendations(Arrays.asList(
                             MetroRecommendation.builder()
-                                    .rank(1).metroCode(MetroCode.DC).metroName("Ashburn")
+                                    .rank(1).metroId(MetroId.of(MetroCode.DC)).metroName("Ashburn")
                                     .score(score1).reasons(Collections.singletonList("Best overall"))
                                     .build(),
                             MetroRecommendation.builder()
-                                    .rank(2).metroCode(MetroCode.DA).metroName("Dallas")
+                                    .rank(2).metroId(MetroId.of(MetroCode.DA)).metroName("Dallas")
                                     .score(score2).reasons(Collections.singletonList("Good secondary"))
                                     .build(),
                             MetroRecommendation.builder()
-                                    .rank(3).metroCode(MetroCode.SV).metroName("Silicon Valley")
+                                    .rank(3).metroId(MetroId.of(MetroCode.SV)).metroName("Silicon Valley")
                                     .score(score3).reasons(Collections.singletonList("West coast coverage"))
                                     .build()))
                     .computedAt(Instant.parse("2026-03-15T12:00:00Z"))
@@ -132,7 +133,7 @@ class MetroOptimizerModelTest {
         void primaryMetro() {
             MetroRecommendation primary = result.primaryMetro();
             assertNotNull(primary);
-            assertEquals(MetroCode.DC, primary.getMetroCode());
+            assertEquals(MetroId.of(MetroCode.DC), primary.getMetroId());
             assertEquals(1, primary.getRank());
         }
 
@@ -141,8 +142,8 @@ class MetroOptimizerModelTest {
         void topN() {
             List<MetroRecommendation> top2 = result.top(2);
             assertEquals(2, top2.size());
-            assertEquals(MetroCode.DC, top2.get(0).getMetroCode());
-            assertEquals(MetroCode.DA, top2.get(1).getMetroCode());
+            assertEquals(MetroId.of(MetroCode.DC), top2.get(0).getMetroId());
+            assertEquals(MetroId.of(MetroCode.DA), top2.get(1).getMetroId());
         }
 
         @Test

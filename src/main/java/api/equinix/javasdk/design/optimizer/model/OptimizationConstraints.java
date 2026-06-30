@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.design.optimizer.enums.ComplianceZone;
 import api.equinix.javasdk.design.optimizer.enums.RedundancyTier;
@@ -19,8 +19,8 @@ public class OptimizationConstraints {
     BudgetRange budget;
     List<Region> requiredRegions;
     List<Region> excludedRegions;
-    List<MetroCode> requiredMetros;
-    List<MetroCode> excludedMetros;
+    List<MetroId> requiredMetros;
+    List<MetroId> excludedMetros;
     List<ComplianceZone> complianceZones;
     RedundancyTier minimumRedundancy;
     Double maxLatencyMs;

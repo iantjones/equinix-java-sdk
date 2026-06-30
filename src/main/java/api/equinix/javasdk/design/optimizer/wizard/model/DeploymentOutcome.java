@@ -58,7 +58,7 @@ public class DeploymentOutcome {
                 md.append("| ").append(res.getResourceType())
                         .append(" | ").append(res.getName())
                         .append(" | ").append(res.getUuid())
-                        .append(" | ").append(res.getMetroCode() != null ? res.getMetroCode() : "-")
+                        .append(" | ").append(res.getMetroId() != null ? res.getMetroId() : "-")
                         .append(" | ").append(res.getStatus())
                         .append(" |\n");
             }

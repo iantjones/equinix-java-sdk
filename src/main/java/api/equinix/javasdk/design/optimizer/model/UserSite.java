@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.optimizer.enums.SiteRole;
 import lombok.Builder;
 import lombok.Value;
@@ -21,7 +21,7 @@ public class UserSite {
      * location; if set, it takes precedence over {@link #latitude}/{@link #longitude}
      * for latency lookups.
      */
-    MetroCode nearestMetro;
+    MetroId nearestMetro;
 
     /**
      * Latitude in decimal degrees. Used as a fallback for distance-based latency

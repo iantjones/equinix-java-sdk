@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import lombok.Builder;
 import lombok.Value;
@@ -13,9 +13,9 @@ import lombok.Value;
 @Builder
 public class PlannedBackboneLink {
 
-    MetroCode metroA;
+    MetroId metroA;
 
-    MetroCode metroZ;
+    MetroId metroZ;
 
     String name;
 

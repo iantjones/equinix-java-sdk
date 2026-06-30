@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import lombok.Builder;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class MetroRecommendation {
 
     int rank;
-    MetroCode metroCode;
+    MetroId metroId;
     String metroName;
     Region region;
     GeoCoordinate coordinates;

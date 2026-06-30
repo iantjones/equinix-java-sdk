@@ -1,6 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
-import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import lombok.Value;
 
@@ -13,7 +13,7 @@ import java.util.Map;
 @Value
 public class MetroCostBreakdown {
 
-    MetroCode metroCode;
+    MetroId metroId;
     BigDecimal monthlyRecurring;
     BigDecimal nonRecurring;
     Map<String, BigDecimal> lineItems;

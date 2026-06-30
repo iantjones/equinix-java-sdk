@@ -119,7 +119,7 @@ public class DeploymentPlan {
             md.append("|------|-------|---------|\n");
             for (PlannedCloudRouter cr : cloudRouters) {
                 md.append("| ").append(cr.getName())
-                        .append(" | ").append(cr.getMetroCode())
+                        .append(" | ").append(cr.getMetroId())
                         .append(" | ").append(cr.getPackageCode())
                         .append(" |\n");
             }
@@ -252,7 +252,7 @@ public class DeploymentPlan {
                 if (cr.getName() == null || cr.getName().isBlank()) {
                     errors.add("Cloud Router: missing name");
                 }
-                if (cr.getMetroCode() == null) {
+                if (cr.getMetroId() == null) {
                     errors.add("Cloud Router '" + cr.getName() + "': missing metro");
                 }
                 if (cr.getPackageCode() == null || cr.getPackageCode().isBlank()) {
@@ -312,7 +312,7 @@ public class DeploymentPlan {
                 try {
                     CloudRouter cr = fabric.cloudRouters().define()
                             .name(planned.getName())
-                            .inMetro(planned.getMetroCode())
+                            .inMetro(planned.getMetroId().code())
                             .withPackage(planned.getPackageCode())
                             .accountNumber(planned.getAccountNumber())
                             .projectId(planned.getProjectId())
@@ -337,7 +337,7 @@ public class DeploymentPlan {
                             .resourceType("CloudRouter")
                             .name(planned.getName())
                             .uuid(cr.getUuid())
-                            .metroCode(planned.getMetroCode())
+                            .metroId(planned.getMetroId())
                             .status(state != null ? state : "PROVISIONING")
                             .build());
                 }
@@ -376,7 +376,7 @@ public class DeploymentPlan {
                             .resourceType("Connection")
                             .name(planned.getName())
                             .uuid(conn.getUuid())
-                            .metroCode(planned.getASideMetro())
+                            .metroId(planned.getASideMetro())
                             .status(state != null ? state : "PROVISIONING")
                             .build());
                 }
@@ -416,7 +416,7 @@ public class DeploymentPlan {
                             .resourceType("BackboneLink")
                             .name(planned.getName())
                             .uuid(conn.getUuid())
-                            .metroCode(link.getMetroA())
+                            .metroId(link.getMetroA())
                             .status(state != null ? state : "PROVISIONING")
                             .build());
                 }

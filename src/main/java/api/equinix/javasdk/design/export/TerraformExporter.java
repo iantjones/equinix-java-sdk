@@ -109,7 +109,7 @@ public class TerraformExporter {
             hcl.append(INDENT).append("}\n");
 
             hcl.append(INDENT).append("location {\n");
-            hcl.append(attr(2, "metro_code", String.valueOf(cr.getMetroCode())));
+            hcl.append(attr(2, "metro_code", String.valueOf(cr.getMetroId())));
             hcl.append(INDENT).append("}\n");
 
             if (cr.getAccountNumber() != null) {
