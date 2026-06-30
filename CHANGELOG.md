@@ -122,6 +122,10 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   `Orders` (the real `colocations/v2` order sub-actions).
 - **Customer Portal SmartHands** typed order builders: 12 typed creates
   (`createEquipmentInstall`, `createShipmentUnpack`, …) plus `listTypes()`/`listLocations()`.
+- **Speed-of-light latency calculator** (`design.geo.SpeedOfLightLatency`): estimates fibre latency
+  from geographic distance (great-circle haversine × speed of light in fibre, ~4.9 µs/km one-way).
+  Configurable refractive index and route-inflation factor; **round-trip (RTT) by default**, one-way
+  optional. `millisForKm(km)`, `millisBetween(GeoCoordinate, GeoCoordinate)`, `millisBetween(Metro, Metro)`.
 - **Typed async waiter** (`ResourceWaiter`): poll a resource until a target state
   (`PROVISIONING`→`PROVISIONED`), with timeout/failure conditions.
 - **IaC / Terraform export** (`design.export.TerraformExporter`): turn a `DeploymentPlan`
