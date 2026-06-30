@@ -19,6 +19,7 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
+import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
@@ -169,13 +170,24 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
     }
 
     /**
+     * Creates a new Fabric client with explicit {@link EquinixConfig} options (sandbox, retry,
+     * metro auto-loading).
+     *
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public Fabric(EquinixCredentials equinixCredentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), config);
+    }
+
+    /**
      * Creates a new Fabric client whose credentials are resolved through the given provider.
      * Authentication occurs automatically on the first API call.
      *
      * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
      */
     public Fabric(EquinixCredentialsProvider credentialsProvider) {
-        this(credentialsProvider, false);
+        this(credentialsProvider, EquinixConfig.defaults());
     }
 
     /**
@@ -185,7 +197,18 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public Fabric(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
-        super(credentialsProvider, isSandBoxed);
+        this(credentialsProvider, EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Creates a new Fabric client over a custom credentials provider with explicit
+     * {@link EquinixConfig} options.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public Fabric(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        super(credentialsProvider, config);
 
         String paramFile = "json/apiParams_Fabric.json";
         equinixClient.appendApiParams(paramFile);
@@ -201,6 +224,28 @@ public final class Fabric extends EquinixClient implements Service, FabricGatewa
         super(sharedCore);
         equinixClient.appendApiParams("json/apiParams_Fabric.json");
         this.fabricConfig = new FabricConfigImpl(equinixClient);
+    }
+
+    /**
+     * Performs OAuth2 authentication and, when metro auto-loading is enabled (the default — see
+     * {@link EquinixConfig#isAutoLoadMetros()}), eagerly loads the {@link #metroRegistry()} so the
+     * full metro catalogue (metros, their IBXs, coordinates, region, and inter-metro latencies) is
+     * resolved up front rather than lazily on first access. The catalogue load is best-effort: a
+     * failure there does not fail authentication, and the registry stays lazily loadable on demand.
+     *
+     * @throws EquinixClientException if authentication itself fails
+     */
+    @Override
+    public void authenticate() throws EquinixClientException {
+        super.authenticate();
+        if (autoLoadMetros) {
+            try {
+                metroRegistry();
+            }
+            catch (RuntimeException ignored) {
+                // best-effort eager load; metroRegistry() remains available lazily
+            }
+        }
     }
 
     /**

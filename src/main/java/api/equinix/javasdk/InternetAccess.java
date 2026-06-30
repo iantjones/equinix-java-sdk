@@ -190,6 +190,32 @@ public final class InternetAccess extends EquinixClient implements Service {
     }
 
     /**
+     * Creates a new InternetAccess client with explicit {@link EquinixConfig} options.
+     *
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public InternetAccess(EquinixCredentials equinixCredentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), config);
+    }
+
+    /**
+     * Creates a new InternetAccess client over a custom credentials provider with explicit
+     * {@link EquinixConfig} options.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public InternetAccess(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        super(credentialsProvider, config);
+
+        String paramFile = "json/apiParams_InternetAccess.json";
+        equinixClient.appendApiParams(paramFile);
+
+        this.internetAccessConfig = new InternetAccessConfigImpl(equinixClient);
+    }
+
+    /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
      * shared core client (one OAuth token + connection pool across domains).
      */

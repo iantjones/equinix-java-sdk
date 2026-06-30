@@ -114,6 +114,19 @@ fabric.cloudRouters().define().name("fcr").inMetro("ZZ").withPackage("STANDARD")
 fabric.metros().getByMetroCode("ZZ");               // String / MetroId overloads
 ```
 
+By default the catalog is loaded eagerly on the first explicit `authenticate()` (so it's ready up
+front) and otherwise lazily on first `metroRegistry()` access. Control this — and the other
+construction-time options — with `EquinixConfig`:
+
+```java
+Fabric fabric = new Fabric(credentials, EquinixConfig.builder()
+    .sandbox(false)
+    .autoLoadMetros(false)              // keep the catalog lazy instead of loading it at auth
+    .retryPolicy(RetryPolicy.none())   // override the default retry behavior
+    .build());
+// Equinix and every domain client accept EquinixConfig the same way.
+```
+
 ## Domain Overview
 
 | Domain | Entry Point | Resources | Description |

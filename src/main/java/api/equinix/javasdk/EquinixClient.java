@@ -18,6 +18,7 @@ package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.client.CoreConfigImpl;
 import api.equinix.javasdk.core.client.CoreImpl;
 import api.equinix.javasdk.core.client.interfaces.Core;
@@ -81,13 +82,21 @@ public class EquinixClient implements Service, Closeable {
     private final boolean ownsCore;
 
     /**
+     * Whether an explicit {@link #authenticate()} should eagerly load the metro catalog. Set from
+     * {@link EquinixConfig#isAutoLoadMetros()}; {@code false} for a shared-core domain client, whose
+     * owning {@link Equinix} session drives metro auto-loading instead. Only acted on by domains with
+     * a metro catalog (Fabric).
+     */
+    protected final boolean autoLoadMetros;
+
+    /**
      * Creates a new Equinix client using the provided credentials.
      * Authentication occurs automatically on the first API call.
      *
      * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
      */
     public EquinixClient(EquinixCredentials equinixCredentials) {
-        this(equinixCredentials, false);
+        this(equinixCredentials, EquinixConfig.defaults());
     }
 
     /**
@@ -97,10 +106,17 @@ public class EquinixClient implements Service, Closeable {
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public EquinixClient(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
-        equinixClient = new api.equinix.javasdk.core.client.EquinixClient(equinixCredentials, isSandBoxed);
-        this.coreConfig = new CoreConfigImpl(equinixClient);
-        this.ownsCore = true;
-        equinixClient.setAuthenticator(() -> core().authenticate());
+        this(equinixCredentials, EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Creates a new Equinix client with explicit {@link EquinixConfig} options.
+     *
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public EquinixClient(EquinixCredentials equinixCredentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), config);
     }
 
     /**
@@ -111,7 +127,7 @@ public class EquinixClient implements Service, Closeable {
      * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
      */
     public EquinixClient(EquinixCredentialsProvider credentialsProvider) {
-        this(credentialsProvider, false);
+        this(credentialsProvider, EquinixConfig.defaults());
     }
 
     /**
@@ -121,10 +137,25 @@ public class EquinixClient implements Service, Closeable {
      * @param isSandBoxed {@code true} to use the sandbox environment for testing; {@code false} for production
      */
     public EquinixClient(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
-        equinixClient = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, isSandBoxed);
+        this(credentialsProvider, EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Canonical constructor: creates a new Equinix client over a credentials provider with explicit
+     * {@link EquinixConfig} options. All other public constructors funnel through this one.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public EquinixClient(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        this.equinixClient = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, config.isSandbox());
         this.coreConfig = new CoreConfigImpl(equinixClient);
         this.ownsCore = true;
+        this.autoLoadMetros = config.isAutoLoadMetros();
         equinixClient.setAuthenticator(() -> core().authenticate());
+        if (config.getRetryPolicy() != null) {
+            equinixClient.setRetryPolicy(config.getRetryPolicy());
+        }
     }
 
     /**
@@ -139,6 +170,7 @@ public class EquinixClient implements Service, Closeable {
         this.equinixClient = sharedCore;
         this.coreConfig = new CoreConfigImpl(sharedCore);
         this.ownsCore = false;
+        this.autoLoadMetros = false;
         sharedCore.setAuthenticator(() -> core().authenticate());
     }
 

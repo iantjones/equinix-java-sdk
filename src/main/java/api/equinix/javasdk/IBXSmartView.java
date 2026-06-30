@@ -140,6 +140,32 @@ public final class IBXSmartView extends EquinixClient implements Service {
     }
 
     /**
+     * Creates a new IBXSmartView client with explicit {@link EquinixConfig} options.
+     *
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public IBXSmartView(EquinixCredentials equinixCredentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), config);
+    }
+
+    /**
+     * Creates a new IBXSmartView client over a custom credentials provider with explicit
+     * {@link EquinixConfig} options.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public IBXSmartView(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        super(credentialsProvider, config);
+
+        String paramFile = "json/apiParams_IBXSmartView.json";
+        equinixClient.appendApiParams(paramFile);
+
+        this.ibxSmartViewConfig = new IBXSmartViewConfigImpl(equinixClient);
+    }
+
+    /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
      * shared core client (one OAuth token + connection pool across domains).
      */

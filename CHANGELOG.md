@@ -76,6 +76,13 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   overload was removed.
 - **Forward-compatible enum deserialization**: unknown API enum values no longer crash a
   response (map to a default/`null`/`UNKNOWN`).
+- **`EquinixConfig` — unified construction options + metro auto-load**: a builder passed at
+  construction (`new Fabric(creds, EquinixConfig.builder()...build())`, likewise `Equinix` and every
+  domain) that consolidates the previously-scattered options — `sandbox`, `retryPolicy` — and adds
+  `autoLoadMetros` (default `true`): an explicit `authenticate()` (or `Equinix.authenticate()`) now
+  eagerly loads the metro catalogue (`metroRegistry()`) up front, best-effort, so it is ready before
+  first use; set `autoLoadMetros(false)` to keep it lazy. The plain `(creds)` / `(creds, sandbox)`
+  constructors remain and are equivalent to a config differing only in `sandbox`.
 - **Forward-compatible metros — `MetroId` + live `MetroRegistry`**: a metro Equinix adds after this
   SDK was built is now fully usable without an enum entry. `MetroId` (`core.model`) is a normalized
   metro-code value object that names any metro (`MetroId.of("ZZ")`, `MetroId.of(MetroCode.SV)`,

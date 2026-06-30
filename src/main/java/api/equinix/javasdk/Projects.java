@@ -98,6 +98,32 @@ public final class Projects extends EquinixClient implements Service {
     }
 
     /**
+     * Creates a new Projects client with explicit {@link EquinixConfig} options.
+     *
+     * @param equinixCredentials the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public Projects(EquinixCredentials equinixCredentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(equinixCredentials), config);
+    }
+
+    /**
+     * Creates a new Projects client over a custom credentials provider with explicit
+     * {@link EquinixConfig} options.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials for authenticating with Equinix APIs
+     * @param config the construction-time options
+     */
+    public Projects(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        super(credentialsProvider, config);
+
+        String paramFile = "json/apiParams_Projects.json";
+        equinixClient.appendApiParams(paramFile);
+
+        this.projectsConfig = new ProjectsConfigImpl(equinixClient);
+    }
+
+    /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
      * shared core client (one OAuth token + connection pool across domains).
      */
