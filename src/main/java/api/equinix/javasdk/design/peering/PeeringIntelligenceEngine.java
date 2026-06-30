@@ -17,6 +17,8 @@
 package api.equinix.javasdk.design.peering;
 
 import api.equinix.javasdk.FabricGateway;
+import api.equinix.javasdk.fabric.model.Metro;
+import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.design.peering.client.*;
 import api.equinix.javasdk.design.peering.enums.*;
@@ -60,19 +62,20 @@ class PeeringIntelligenceEngine {
     private final PeeringDbClient peeringDb;
     private final PeeringRequest request;
 
-    private final EquinixIXMapping ixMapping = new EquinixIXMapping();
+    private EquinixIXMapping ixMapping;
     private final Map<Long, PeeringDbNetwork> networkMetadata = new LinkedHashMap<>();
     private final Map<Long, List<PeeringDbNetIxlan>> ixPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, List<PeeringDbNetFac>> facPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, NetworkPresence> networkPresences = new LinkedHashMap<>();
 
     /**
-     * Lazily-built metro → [latitude, longitude] lookup used by {@link #computeDiversity}.
-     * Computed once per analysis from the Equinix facility map (the first facility per metro
-     * that has a non-null latitude, matching the historical per-call scan order) so that the
-     * O(metros^2) diversity calls no longer rescan the entire facility map each time.
+     * Live Fabric metro geo data, loaded once per analysis from {@code fabric.metros()}: metro →
+     * [latitude, longitude] (used to bind PeeringDB facilities/IXes to metros and to compute
+     * geographic diversity) and metro → region (used for the same-region diversity descriptor).
+     * Well-known metros only — {@link MetroCode#UNKNOWN} is skipped.
      */
-    private Map<MetroCode, double[]> metroCoordinates;
+    private final Map<MetroCode, double[]> metroCoordinates = new LinkedHashMap<>();
+    private final Map<MetroCode, String> metroRegion = new LinkedHashMap<>();
 
     PeeringIntelligenceEngine(FabricGateway fabric, PeeringDbClient peeringDb, PeeringRequest request) {
         this.fabric = fabric;
@@ -89,10 +92,17 @@ class PeeringIntelligenceEngine {
         dataSources.add("PeeringDB");
 
         try {
-            // Phase 1: Load Equinix catalog
+            // Phase 1: Load the Equinix catalog (PeeringDB) and live metro geo (Fabric), then build
+            // the IX/facility -> metro bridge from live coordinates — facilities first (they carry
+            // lat/lng and seed the city bridge), then IXes (city-only, resolved via that bridge).
             peeringDb.loadEquinixCatalog();
-            ixMapping.mapIxes(peeringDb.getEquinixIxMap());
+            loadMetroGeo();
+            if (!metroCoordinates.isEmpty()) {
+                dataSources.add("Equinix Fabric");
+            }
+            ixMapping = new EquinixIXMapping(metroCoordinates);
             ixMapping.mapFacilities(peeringDb.getEquinixFacMap());
+            ixMapping.mapIxes(peeringDb.getEquinixIxMap());
 
             // Phase 2: Query each target ASN
             for (Map.Entry<Long, String> entry : request.getTargetAsns().entrySet()) {
@@ -699,24 +709,37 @@ class PeeringIntelligenceEngine {
     }
 
     /**
-     * Lazily builds (once per analysis) the metro → [latitude, longitude] lookup used by
-     * {@link #computeDiversity}. For each metro the coordinate is taken from the first
-     * Equinix facility (in facility-map iteration order) that maps to that metro and has a
-     * non-null latitude — exactly the facility the previous per-call scan would have picked.
-     * Facilities that resolve to a metro but lack a latitude are skipped, so a later facility
-     * with coordinates can still populate the metro, matching the original {@code found} logic.
+     * Loads metro coordinates and regions from the live Fabric Metros API into {@link #metroCoordinates}
+     * and {@link #metroRegion}. These drive the IX/facility-to-metro bridge and the geographic
+     * diversity scoring. Best-effort: if Fabric is unavailable the maps stay empty and the bridge
+     * degrades to whatever can be resolved, rather than failing the analysis. Well-known metros only
+     * ({@link MetroCode#UNKNOWN} is skipped).
+     */
+    private void loadMetroGeo() {
+        try {
+            for (Metro metro : fabric.metros().list().loadAll()) {
+                MetroCode code = metro.getCode();
+                if (code == MetroCode.UNKNOWN) {
+                    continue;
+                }
+                GeoCoordinate geo = metro.geoCoordinates();
+                if (geo != null && geo.getLatitude() != null && geo.getLongitude() != null) {
+                    metroCoordinates.put(code, new double[]{geo.getLatitude(), geo.getLongitude()});
+                }
+                if (metro.getRegion() != null) {
+                    metroRegion.put(code, metro.getRegion().name());
+                }
+            }
+        }
+        catch (RuntimeException e) {
+            // Fabric metros unavailable; proceed with whatever is already loaded.
+        }
+    }
+
+    /**
+     * @return the live metro → [latitude, longitude] lookup used by {@link #computeDiversity}
      */
     private Map<MetroCode, double[]> metroCoordinatesMap() {
-        if (metroCoordinates == null) {
-            Map<MetroCode, double[]> coords = new HashMap<>();
-            for (PeeringDbFacility fac : peeringDb.getEquinixFacMap().values()) {
-                if (fac.getLatitude() == null) continue;
-                MetroCode metro = ixMapping.metroForFacility(fac.getId());
-                if (metro == null) continue;
-                coords.putIfAbsent(metro, new double[]{fac.getLatitude(), fac.getLongitude()});
-            }
-            metroCoordinates = coords;
-        }
         return metroCoordinates;
     }
 
@@ -735,25 +758,9 @@ class PeeringIntelligenceEngine {
     }
 
     private String getRegionForMetro(MetroCode metro) {
-        // Simplified region assignment based on common knowledge
-        switch (metro) {
-            case DC: case NY: case CH: case DA: case LA: case SV: case AT: case SE:
-            case MI: case DE: case HO: case PH: case TR: case MT: case MX:
-                return "AMER";
-            case SP: case RJ: case BG:
-                return "LATAM";
-            case AM: case FR: case LD: case PA: case ZH: case WA: case HE: case SK:
-            case ML: case DB: case MD: case LS: case BA: case HH: case GV:
-            case BO: case BX: case SO:
-                return "EMEA";
-            case HK: case SG: case TY: case OS: case SY: case ME: case PE: case SL:
-            case MB: case KA: case IL: case CA: case CL:
-                return "APAC";
-            case MU: case DX:
-                return "MEA";
-            default:
-                return "UNKNOWN";
-        }
+        // Live Fabric region (AMER/EMEA/APAC), loaded in loadMetroGeo(); the geographic-distance
+        // measure in computeDiversity() — not this coarse bucket — is the primary diversity signal.
+        return metroRegion.getOrDefault(metro, "UNKNOWN");
     }
 
     private double computeOverallResiliency(List<BlastRadiusReport> blastReports,
