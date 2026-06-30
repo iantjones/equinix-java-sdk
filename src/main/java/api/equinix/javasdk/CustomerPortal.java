@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.customerportal.client.CrossConnects;
 import api.equinix.javasdk.customerportal.client.CustomerPortalConfig;
 import api.equinix.javasdk.customerportal.client.Invoices;
@@ -101,7 +100,7 @@ import api.equinix.javasdk.customerportal.client.implementation.BillingAccountsS
  * @see api.equinix.javasdk.customerportal.client.TroubleTickets
  * @see api.equinix.javasdk.customerportal.client.Invoices
  */
-public final class CustomerPortal extends EquinixClient implements Service {
+public final class CustomerPortal extends EquinixClient {
 
     private Invoices invoices;
 

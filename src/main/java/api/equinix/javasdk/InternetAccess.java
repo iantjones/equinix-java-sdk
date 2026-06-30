@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.internetaccess.client.InternetAccessAccounts;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCabinets;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCages;
@@ -112,7 +111,7 @@ import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessTe
  * @author ianjones
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  */
-public final class InternetAccess extends EquinixClient implements Service {
+public final class InternetAccess extends EquinixClient {
 
     private InternetAccessServices services;
 

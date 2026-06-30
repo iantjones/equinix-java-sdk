@@ -20,7 +20,6 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.exception.EquinixClientException;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 import api.equinix.javasdk.fabric.model.HealthStatus;
@@ -83,7 +82,7 @@ import api.equinix.javasdk.design.value.tco.TcoCalculator;
  * @see api.equinix.javasdk.fabric.client.Connections
  * @see api.equinix.javasdk.fabric.client.Ports
  */
-public final class Fabric extends EquinixClient implements Service, FabricGateway {
+public final class Fabric extends EquinixClient implements FabricGateway {
 
     private Metros metros;
 

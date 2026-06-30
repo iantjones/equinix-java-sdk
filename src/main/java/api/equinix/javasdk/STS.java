@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.sts.client.STSConfig;
 import api.equinix.javasdk.sts.client.STSDiscovery;
 import api.equinix.javasdk.sts.client.STSOidcProviders;
@@ -76,7 +75,7 @@ import api.equinix.javasdk.sts.client.implementation.STSTokensImpl;
  * @author ianjones
  * @see api.equinix.javasdk.core.auth.BasicEquinixCredentials
  */
-public final class STS extends EquinixClient implements Service {
+public final class STS extends EquinixClient {
 
     private STSTokens tokens;
 

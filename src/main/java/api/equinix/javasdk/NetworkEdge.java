@@ -19,7 +19,6 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.core.model.Service;
 import api.equinix.javasdk.networkedge.client.ACLTemplates;
 import api.equinix.javasdk.networkedge.client.BGPPeerings;
 import api.equinix.javasdk.networkedge.client.Backups;
@@ -76,7 +75,7 @@ import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
  * @see api.equinix.javasdk.networkedge.client.Devices
  * @see api.equinix.javasdk.networkedge.client.ACLTemplates
  */
-public final class NetworkEdge extends EquinixClient implements Service {
+public final class NetworkEdge extends EquinixClient {
 
     private Setup setup;
     private Devices devices;
