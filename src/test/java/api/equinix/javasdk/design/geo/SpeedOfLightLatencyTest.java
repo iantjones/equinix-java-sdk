@@ -2,6 +2,8 @@ package api.equinix.javasdk.design.geo;
 
 import api.equinix.javasdk.design.geo.SpeedOfLightLatency.Mode;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
+import api.equinix.javasdk.internetaccess.model.Ibx;
+import api.equinix.javasdk.internetaccess.model.json.IbxJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,11 +66,62 @@ class SpeedOfLightLatencyTest {
     }
 
     @Test
+    @DisplayName("IBX-to-IBX latency uses each IBX's own coordinates")
+    void betweenIbxes() throws Exception {
+        IbxJson la4 = MAPPER.readValue(
+                "{\"ibxCode\":\"LA4\",\"geoCoordinates\":{\"latitude\":33.9292,\"longitude\":-118.3807}}",
+                IbxJson.class);
+        IbxJson sv5 = MAPPER.readValue(
+                "{\"ibxCode\":\"SV5\",\"geoCoordinates\":{\"latitude\":37.4029,\"longitude\":-121.9846}}",
+                IbxJson.class);
+
+        double km = SpeedOfLightLatency.distanceKm(la4, sv5);
+        assertTrue(km > 450 && km < 650, "LA4<->SV5 ~505 km, was " + km);
+
+        double rtt = SpeedOfLightLatency.roundTrip().millisBetween(la4, sv5);
+        assertEquals(SpeedOfLightLatency.roundTrip().millisForKm(km), rtt, 1e-9);
+    }
+
+    @Test
+    @DisplayName("two IBXes in the same metro have a real, non-zero distance")
+    void sameMetroIsNonZero() throws Exception {
+        IbxJson la3 = MAPPER.readValue(
+                "{\"ibxCode\":\"LA3\",\"geoCoordinates\":{\"latitude\":34.0490,\"longitude\":-118.2640}}",
+                IbxJson.class);
+        IbxJson la4 = MAPPER.readValue(
+                "{\"ibxCode\":\"LA4\",\"geoCoordinates\":{\"latitude\":33.9292,\"longitude\":-118.3807}}",
+                IbxJson.class);
+
+        double km = SpeedOfLightLatency.distanceKm(la3, la4);
+        assertTrue(km > 0 && km < 50, "intra-metro LA3<->LA4 should be small but non-zero, was " + km);
+        assertTrue(SpeedOfLightLatency.roundTrip().millisBetween(la3, la4) > 0);
+    }
+
+    @Test
     @DisplayName("invalid configuration and missing coordinates are rejected")
-    void validation() {
+    void validation() throws Exception {
         assertThrows(IllegalArgumentException.class, () -> SpeedOfLightLatency.builder().refractiveIndex(0));
         assertThrows(IllegalArgumentException.class, () -> SpeedOfLightLatency.builder().routeFactor(0.5));
         assertThrows(IllegalArgumentException.class,
                 () -> SpeedOfLightLatency.roundTrip().millisBetween((GeoCoordinate) null, null));
+
+        // An IBX with no coordinates is rejected with a clear message naming the IBX code.
+        IbxJson withCoords = MAPPER.readValue(
+                "{\"ibxCode\":\"LA4\",\"geoCoordinates\":{\"latitude\":33.9292,\"longitude\":-118.3807}}",
+                IbxJson.class);
+        IbxJson noCoords = MAPPER.readValue("{\"ibxCode\":\"ZZ9\"}", IbxJson.class);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> SpeedOfLightLatency.distanceKm(withCoords, noCoords));
+        assertTrue(ex.getMessage().contains("ZZ9"), "message should name the IBX missing coordinates");
+
+        // A geoCoordinates object present but with a null latitude/longitude is rejected too.
+        IbxJson partialCoords = MAPPER.readValue(
+                "{\"ibxCode\":\"YY1\",\"geoCoordinates\":{\"longitude\":-118.0}}", IbxJson.class);
+        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+                () -> SpeedOfLightLatency.distanceKm(withCoords, partialCoords));
+        assertTrue(ex2.getMessage().contains("YY1"), "message should name the IBX with partial coordinates");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> SpeedOfLightLatency.roundTrip().millisBetween((Ibx) null, withCoords));
     }
 }

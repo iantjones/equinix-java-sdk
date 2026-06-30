@@ -115,8 +115,13 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
 - **Speed-of-light latency calculator** (`design.geo.SpeedOfLightLatency`): estimates fibre latency
   from geographic distance — great-circle haversine × speed of light in fibre (`c / n`, ~4.9 µs/km
   one-way). Configurable refractive index and route-inflation factor; **round-trip (RTT) by default**,
-  one-way optional. Surfaced in peering: `DiversityScore.estimatedRttMs` reports the round-trip floor
-  for each metro pair, and the diversity explanation now quotes the "~X ms RTT floor".
+  one-way optional. Computed **IBX-to-IBX**: `millisBetween(Ibx, Ibx)` / `distanceKm(Ibx, Ibx)` use
+  each Equinix data center's own `geoCoordinates` (from `internetAccess.ibxs()`), so two IBXes in the
+  same metro have a real, non-zero latency rather than collapsing to a metro centroid. Surfaced in
+  peering: the diversity distance and `DiversityScore.estimatedRttMs` are now grounded in the centroid
+  of each metro's actual Equinix IBX data centers (PeeringDB facility coordinates), falling back to the
+  Fabric metro centroid only when no facility coordinates are available; the diversity explanation
+  quotes the "~X ms RTT floor".
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
   instead of silently dispatching a malformed request.
 - **`CustomerRoute` interface** (`internetaccess.model`): a shared read-only view of the EIA v1
