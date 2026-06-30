@@ -104,6 +104,19 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   `ProviderConnectivityMap`, `DeploymentTopology`, …) expose `MetroId`. Rate-card pricing remains
   `MetroCode`-keyed, so an unlisted metro prices via the card's fallback. (Breaking: the optimizer
   model types' metro accessors are now `MetroId`-typed.)
+- **Peering Intelligence is `MetroId`-keyed end to end**: the IX/facility→metro bridge
+  (`EquinixIXMapping`), the analysis engine, the presence matrix, the resiliency assessment, and
+  every result/request model now key by `MetroId` built from the live `Metro.metroId()` — so a
+  metro that is live in Fabric but not yet in the enum binds its IBXs and stays distinct instead of
+  collapsing to `UNKNOWN`. The IBX-name bridge's metro-prefix fallback is gated on the live metro
+  set (a new metro's prefix resolves; a stray token does not). The `PeeringIntelligence` builder
+  keeps `customerMetros(MetroCode...)` and adds `MetroId.../String...` overloads. (Breaking: peering
+  result/model metro accessors are now `MetroId`-typed.)
+- **Speed-of-light latency calculator** (`design.geo.SpeedOfLightLatency`): estimates fibre latency
+  from geographic distance — great-circle haversine × speed of light in fibre (`c / n`, ~4.9 µs/km
+  one-way). Configurable refractive index and route-inflation factor; **round-trip (RTT) by default**,
+  one-way optional. Surfaced in peering: `DiversityScore.estimatedRttMs` reports the round-trip floor
+  for each metro pair, and the diversity explanation now quotes the "~X ms RTT floor".
 - **Fail-fast endpoint validation**: an unknown apiParams endpoint now throws a clear error
   instead of silently dispatching a malformed request.
 - **`CustomerRoute` interface** (`internetaccess.model`): a shared read-only view of the EIA v1
@@ -122,10 +135,6 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   `Orders` (the real `colocations/v2` order sub-actions).
 - **Customer Portal SmartHands** typed order builders: 12 typed creates
   (`createEquipmentInstall`, `createShipmentUnpack`, …) plus `listTypes()`/`listLocations()`.
-- **Speed-of-light latency calculator** (`design.geo.SpeedOfLightLatency`): estimates fibre latency
-  from geographic distance (great-circle haversine × speed of light in fibre, ~4.9 µs/km one-way).
-  Configurable refractive index and route-inflation factor; **round-trip (RTT) by default**, one-way
-  optional. `millisForKm(km)`, `millisBetween(GeoCoordinate, GeoCoordinate)`, `millisBetween(Metro, Metro)`.
 - **Typed async waiter** (`ResourceWaiter`): poll a resource until a target state
   (`PROVISIONING`→`PROVISIONED`), with timeout/failure conditions.
 - **IaC / Terraform export** (`design.export.TerraformExporter`): turn a `DeploymentPlan`
