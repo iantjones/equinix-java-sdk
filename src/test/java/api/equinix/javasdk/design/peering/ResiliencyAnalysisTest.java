@@ -215,6 +215,25 @@ class ResiliencyAnalysisTest {
 
             assertEquals(DiversityRating.CRITICAL, score.getRating());
         }
+
+        @Test
+        @DisplayName("carries the speed-of-light RTT floor for its distance")
+        void estimatedRttFloor() {
+            double distance = 1900;
+            DiversityScore score = DiversityScore.builder()
+                    .primaryMetro(MetroId.of("DC"))
+                    .backupMetro(MetroId.of("DA"))
+                    .distanceKm(distance)
+                    .estimatedRttMs(api.equinix.javasdk.design.geo.SpeedOfLightLatency
+                            .roundTrip().millisForKm(distance))
+                    .rating(DiversityRating.GOOD)
+                    .build();
+
+            // ~18.6 ms round-trip floor at 1900 km (2 x 1900 / (c/n)); strictly positive and
+            // greater than the one-way figure.
+            assertTrue(score.getEstimatedRttMs() > 18 && score.getEstimatedRttMs() < 19,
+                    "expected ~18.6 ms RTT floor, was " + score.getEstimatedRttMs());
+        }
     }
 
     @Nested

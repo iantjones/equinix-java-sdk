@@ -20,6 +20,7 @@ import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.core.model.MetroId;
+import api.equinix.javasdk.design.geo.SpeedOfLightLatency;
 import api.equinix.javasdk.design.peering.client.*;
 import api.equinix.javasdk.design.peering.enums.*;
 import api.equinix.javasdk.design.peering.model.*;
@@ -683,28 +684,33 @@ class PeeringIntelligenceEngine {
                 : 0;
         DiversityRating rating = DiversityRating.fromDistance(distance);
 
+        // Speed-of-light floor for the round-trip between the two metros (physical lower bound).
+        double rttMs = SpeedOfLightLatency.roundTrip().millisForKm(distance);
+        String rttHint = distance > 0 ? String.format(" (~%.1f ms RTT floor)", rttMs) : "";
+
         // Check if same region (basic check via metro naming conventions)
         boolean sameRegion = isSameRegion(metro1, metro2);
 
         String explanation;
         if (rating == DiversityRating.EXCELLENT) {
             explanation = metro1 + " and " + metro2 + " are " + (int) distance +
-                    " km apart — excellent geographic diversity across regions.";
+                    " km apart" + rttHint + " — excellent geographic diversity across regions.";
         } else if (rating == DiversityRating.GOOD) {
             explanation = metro1 + " and " + metro2 + " are " + (int) distance +
-                    " km apart — good diversity within the same continent.";
+                    " km apart" + rttHint + " — good diversity within the same continent.";
         } else if (rating == DiversityRating.MODERATE) {
             explanation = metro1 + " and " + metro2 + " are " + (int) distance +
-                    " km apart — moderate diversity; some shared infrastructure risk.";
+                    " km apart" + rttHint + " — moderate diversity; some shared infrastructure risk.";
         } else {
             explanation = metro1 + " and " + metro2 + " are only " + (int) distance +
-                    " km apart — limited geographic diversity; consider a more distant failover.";
+                    " km apart" + rttHint + " — limited geographic diversity; consider a more distant failover.";
         }
 
         return DiversityScore.builder()
                 .primaryMetro(metro1)
                 .backupMetro(metro2)
                 .distanceKm(distance)
+                .estimatedRttMs(rttMs)
                 .sameRegion(sameRegion)
                 .rating(rating)
                 .explanation(explanation)
