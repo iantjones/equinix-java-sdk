@@ -1,0 +1,23 @@
+{
+  "data": [
+    {
+      "id": 1234,
+      "asn": 16509,
+      "name": "Amazon.com, Inc.",
+      "aka": "AWS",
+      "name_long": "Amazon Web Services",
+      "website": "https://amazon.com",
+      "info_type": "Content",
+      "info_prefixes4": 5000,
+      "info_prefixes6": 1500,
+      "info_traffic": "100-200Gbps",
+      "info_ratio": "Heavy Outbound",
+      "info_scope": "Global",
+      "info_ipv6": true,
+      "policy_general": "Selective",
+      "ix_count": 200,
+      "fac_count": 300,
+      "status": "ok"
+    }
+  ]
+}

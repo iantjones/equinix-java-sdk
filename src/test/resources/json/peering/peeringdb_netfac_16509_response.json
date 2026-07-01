@@ -1,0 +1,34 @@
+{
+  "data": [
+    {
+      "id": 60001,
+      "net_id": 1234,
+      "fac_id": 200,
+      "name": "Equinix DC11 - Ashburn",
+      "local_asn": 16509,
+      "city": "Ashburn",
+      "country": "US",
+      "status": "ok"
+    },
+    {
+      "id": 60002,
+      "net_id": 1234,
+      "fac_id": 201,
+      "name": "Equinix SV5 - San Jose",
+      "local_asn": 16509,
+      "city": "San Jose",
+      "country": "US",
+      "status": "ok"
+    },
+    {
+      "id": 60003,
+      "net_id": 1234,
+      "fac_id": 888,
+      "name": "Non-Equinix Facility",
+      "local_asn": 16509,
+      "city": "Somewhere",
+      "country": "US",
+      "status": "ok"
+    }
+  ]
+}

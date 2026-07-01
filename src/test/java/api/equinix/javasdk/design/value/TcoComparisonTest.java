@@ -165,4 +165,27 @@ class TcoComparisonTest {
         assertEquals(0, new BigDecimal("4092.50").compareTo(
                 tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
     }
+
+    @Test
+    void recommendedBreakdownReturnsTheRecommendedArchetypesLine() {
+        TcoComparison tco = run();
+
+        CostBreakdown recommended = tco.recommendedBreakdown().orElseThrow();
+        assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, recommended.getArchetype());
+        assertSame(tco.breakdown(tco.getRecommended()).orElseThrow(), recommended,
+                "recommendedBreakdown() must resolve to the same breakdown as breakdown(recommended)");
+        assertEquals(0, new BigDecimal("4292.50").compareTo(recommended.getMonthlyTotal()));
+    }
+
+    @Test
+    void recommendedBreakdownIsEmptyWhenNoArchetypeRecommended() {
+        // A model with a null recommendation (e.g. nothing priceable) has no recommended breakdown.
+        TcoComparison tco = TcoComparison.builder()
+                .breakdowns(java.util.List.of())
+                .recommended(null)
+                .currency("USD")
+                .build();
+
+        assertTrue(tco.recommendedBreakdown().isEmpty());
+    }
 }

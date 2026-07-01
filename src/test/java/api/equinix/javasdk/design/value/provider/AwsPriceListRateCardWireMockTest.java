@@ -22,6 +22,7 @@ import api.equinix.javasdk.design.value.ratecard.EgressRate;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.design.value.ratecard.provider.AwsPriceListRateCard;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -96,6 +97,16 @@ class AwsPriceListRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.egress(CloudProviderType.AWS, null, EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
                 "AWS egress pricing is region-specific");
         assertTrue(card.egress(CloudProviderType.AZURE, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
+    }
+
+    @Test
+    @DisplayName("connection and cloud-router lookups are not priced by the AWS egress adapter")
+    void doesNotPriceInterconnect() {
+        AwsPriceListRateCard card = card();
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 1000, null, Term.MONTH_12).isEmpty(),
+                "AWS egress adapter prices egress only, never Equinix connections");
+        assertTrue(card.cloudRouter("STANDARD", null, Term.MONTH_12).isEmpty(),
+                "AWS egress adapter prices egress only, never Fabric Cloud Routers");
     }
 
     @Test

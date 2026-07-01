@@ -64,12 +64,19 @@ import java.util.stream.Collectors;
  */
 public class PeeringDbClient {
 
-    private static final String BASE_URL = "https://www.peeringdb.com/api";
+    static final String DEFAULT_BASE_URL = "https://www.peeringdb.com/api";
     static final int EQUINIX_ORG_ID = 2;
 
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final String apiKey;
+
+    /**
+     * The PeeringDB API base URL. Defaults to {@link #DEFAULT_BASE_URL}; a test-only,
+     * package-private constructor can point it at a local stub server so the HTTP/parsing
+     * paths can be exercised without hitting the public PeeringDB API.
+     */
+    private final String baseUrl;
 
     private PeeringDbOrg equinixOrg;
     private Map<Integer, PeeringDbIx> equinixIxMap;
@@ -83,18 +90,44 @@ public class PeeringDbClient {
      * @param apiKey the PeeringDB API key, or {@code null} for unauthenticated access
      */
     public PeeringDbClient(String apiKey) {
-        this.apiKey = apiKey;
-        this.httpClient = HttpClients.createDefault();
-        this.objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        this(apiKey, DEFAULT_BASE_URL);
     }
 
     /**
      * Creates a PeeringDB client with unauthenticated access (~20 requests/minute).
      */
     public PeeringDbClient() {
-        this(null);
+        this(null, DEFAULT_BASE_URL);
+    }
+
+    /**
+     * Creates a PeeringDB client pointed at an alternate API base URL.
+     *
+     * <p><b>Test seam.</b> This exists so the HTTP/parsing paths can be exercised against a
+     * local stub server; production code should use the no-arg or API-key constructors, which
+     * target the real PeeringDB endpoint.</p>
+     *
+     * @param apiKey  the PeeringDB API key, or {@code null} for unauthenticated access
+     * @param baseUrl the API base URL (e.g. {@code http://localhost:PORT/api})
+     * @return a client that issues requests against {@code baseUrl}
+     */
+    public static PeeringDbClient withBaseUrl(String apiKey, String baseUrl) {
+        return new PeeringDbClient(apiKey, baseUrl);
+    }
+
+    /**
+     * Base-URL-overriding constructor backing {@link #withBaseUrl(String, String)}.
+     *
+     * @param apiKey  the PeeringDB API key, or {@code null} for unauthenticated access
+     * @param baseUrl the API base URL (e.g. {@code http://localhost:PORT/api})
+     */
+    PeeringDbClient(String apiKey, String baseUrl) {
+        this.apiKey = apiKey;
+        this.baseUrl = baseUrl;
+        this.httpClient = HttpClients.createDefault();
+        this.objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
     }
 
     /**
@@ -108,7 +141,7 @@ public class PeeringDbClient {
      * @throws IOException if the API call fails
      */
     public void loadEquinixCatalog() throws IOException {
-        String url = BASE_URL + "/org/" + EQUINIX_ORG_ID + "?depth=2";
+        String url = baseUrl + "/org/" + EQUINIX_ORG_ID + "?depth=2";
         JsonNode root = executeGet(url);
         JsonNode data = root.get("data");
 
@@ -144,7 +177,7 @@ public class PeeringDbClient {
      * @throws IOException if the API call fails
      */
     public PeeringDbNetwork getNetwork(long asn) throws IOException {
-        String url = BASE_URL + "/net?asn=" + asn;
+        String url = baseUrl + "/net?asn=" + asn;
         JsonNode root = executeGet(url);
         JsonNode data = root.get("data");
 
@@ -162,7 +195,7 @@ public class PeeringDbClient {
      * @throws IOException if the API call fails
      */
     public List<PeeringDbNetIxlan> getNetIxlans(long asn) throws IOException {
-        String url = BASE_URL + "/netixlan?asn=" + asn;
+        String url = baseUrl + "/netixlan?asn=" + asn;
         return getList(url, new TypeReference<List<PeeringDbNetIxlan>>() {});
     }
 
@@ -174,7 +207,7 @@ public class PeeringDbClient {
      * @throws IOException if the API call fails
      */
     public List<PeeringDbNetFac> getNetFacs(long asn) throws IOException {
-        String url = BASE_URL + "/netfac?asn=" + asn;
+        String url = baseUrl + "/netfac?asn=" + asn;
         return getList(url, new TypeReference<List<PeeringDbNetFac>>() {});
     }
 

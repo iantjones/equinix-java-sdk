@@ -22,6 +22,7 @@ import api.equinix.javasdk.design.value.ratecard.EgressRate;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.design.value.ratecard.provider.GcpBillingCatalogRateCard;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -98,5 +99,15 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
                 .isEmpty(), "an API error must yield no rate");
         assertEquals(PriceSource.PROVIDER_API, card.source());
+    }
+
+    @Test
+    @DisplayName("connection and cloud-router lookups are not priced by the GCP egress adapter")
+    void doesNotPriceInterconnect() {
+        GcpBillingCatalogRateCard card = card();
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 1000, null, Term.MONTH_12).isEmpty(),
+                "GCP egress adapter prices egress only, never Equinix connections");
+        assertTrue(card.cloudRouter("STANDARD", null, Term.MONTH_12).isEmpty(),
+                "GCP egress adapter prices egress only, never Fabric Cloud Routers");
     }
 }

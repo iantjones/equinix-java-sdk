@@ -1,0 +1,102 @@
+{
+  "data": [
+    {
+      "id": 2,
+      "name": "Equinix, Inc. (formerly Switch and Data)",
+      "aka": "Equinix",
+      "website": "https://www.equinix.com",
+      "city": "Redwood City",
+      "state": "California",
+      "country": "US",
+      "status": "ok",
+      "ix_set": [
+        {
+          "id": 100,
+          "org_id": 2,
+          "name": "Equinix Ashburn",
+          "name_long": "Equinix Internet Exchange Ashburn",
+          "city": "Ashburn",
+          "country": "US",
+          "region_continent": "North America",
+          "proto_ipv6": true,
+          "net_count": 300,
+          "status": "ok"
+        },
+        {
+          "id": 101,
+          "org_id": 2,
+          "name": "Equinix San Jose",
+          "name_long": "Equinix Internet Exchange San Jose",
+          "city": "San Jose",
+          "country": "US",
+          "region_continent": "North America",
+          "proto_ipv6": true,
+          "net_count": 250,
+          "status": "ok"
+        },
+        {
+          "id": 102,
+          "org_id": 2,
+          "name": "Equinix Dallas",
+          "name_long": "Equinix Internet Exchange Dallas",
+          "city": "Dallas",
+          "country": "US",
+          "region_continent": "North America",
+          "proto_ipv6": true,
+          "net_count": 120,
+          "status": "ok"
+        }
+      ],
+      "fac_set": [
+        {
+          "id": 200,
+          "org_id": 2,
+          "org_name": "Equinix, Inc.",
+          "name": "Equinix DC11 - Ashburn",
+          "aka": "DC11",
+          "city": "Ashburn",
+          "state": "Virginia",
+          "country": "US",
+          "latitude": 39.0181,
+          "longitude": -77.5389,
+          "net_count": 400,
+          "ix_count": 2,
+          "region_continent": "North America",
+          "status": "ok"
+        },
+        {
+          "id": 201,
+          "org_id": 2,
+          "org_name": "Equinix, Inc.",
+          "name": "Equinix SV5 - San Jose",
+          "aka": "SV5",
+          "city": "San Jose",
+          "state": "California",
+          "country": "US",
+          "latitude": 37.2431,
+          "longitude": -121.7836,
+          "net_count": 350,
+          "ix_count": 1,
+          "region_continent": "North America",
+          "status": "ok"
+        },
+        {
+          "id": 202,
+          "org_id": 2,
+          "org_name": "Equinix, Inc.",
+          "name": "Equinix DA1 - Dallas",
+          "aka": "DA1",
+          "city": "Dallas",
+          "state": "Texas",
+          "country": "US",
+          "latitude": 32.7908,
+          "longitude": -96.8003,
+          "net_count": 150,
+          "ix_count": 1,
+          "region_continent": "North America",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}
