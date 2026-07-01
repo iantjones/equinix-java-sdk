@@ -19,15 +19,8 @@ package api.equinix.javasdk.core.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.stream.Stream;
+import java.io.InputStream;
 
 /**
  *
@@ -38,35 +31,20 @@ public class ResourceFileUtils {
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     /**
+     * Loads a classpath resource as JSON. The resource is read through an {@link InputStream}
+     * so it resolves correctly whether it is a loose file on disk (e.g. running from an IDE)
+     * or packed inside a jar (where the URL is a {@code jar:file:...!/...} entry that cannot be
+     * turned into a {@link java.nio.file.Path}).
      *
      * @throws java.io.IOException if any.
-     * @throws java.net.URISyntaxException if any.
-     * @throws java.lang.NullPointerException if any.
      */
-    public static JsonNode loadResourceFileJson(String fileName) throws IOException, URISyntaxException, NullPointerException {
+    public static JsonNode loadResourceFileJson(String fileName) throws IOException {
 
-        File jsonFile = null;
-        URL resourceFileUrl = ResourceFileUtils.class.getClassLoader().getResource(fileName);
-
-        if(resourceFileUrl != null) {
-            jsonFile = Path.of(resourceFileUrl.toURI()).toFile();
+        try (InputStream resourceStream = ResourceFileUtils.class.getClassLoader().getResourceAsStream(fileName)) {
+            if(resourceStream == null) {
+                return null;
+            }
+            return jsonMapper.readTree(resourceStream);
         }
-
-        if(jsonFile != null) {
-            return jsonMapper.readTree(loadFileContents(jsonFile));
-        }
-        else {
-            return null;
-        }
-    }
-
-    private static String loadFileContents(File resourceFile) throws IOException {
-        StringBuilder contentBuilder = new StringBuilder();
-
-        try (Stream<String> stream = Files.lines(Paths.get(resourceFile.getPath()), StandardCharsets.UTF_8)) {
-            stream.forEach(s -> contentBuilder.append(s).append("\n"));
-        }
-
-        return contentBuilder.toString();
     }
 }
