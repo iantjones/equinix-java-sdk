@@ -126,6 +126,99 @@ class NetworkEdgeACLTemplatesWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("getByUuid then update().save() PUTs the changed body and re-GETs the template")
+        void updatesAclTemplate() {
+            // GET seeds the updater from the current template body (incl. existing inboundRules),
+            // and the PUT's follow-up GET returns the refreshed body.
+            stubSingleton(wireMock, "/ne/v1/aclTemplates/.*", "/json/networkedge/acltemplate_response.json");
+            // PUT /ne/v1/aclTemplates/{uuid} -> UpdateACLTemplate (200, body ignored by the client).
+            wireMock.stubFor(put(urlPathMatching("/ne/v1/aclTemplates/.*"))
+                    .willReturn(aResponse().withStatus(200)));
+
+            ACLTemplate template = networkEdge.aclTemplates().getByUuid("acl-1111-2222-3333-444455556666");
+
+            ACLTemplate updated = template.update()
+                    .withName("renamed-acl-template")
+                    .withDescription("Updated description")
+                    .addRule(Protocol.UDP, "any", "53", "192.168.0.0/24", 2)
+                    .save();
+
+            assertNotNull(updated);
+
+            // The updater is seeded from the fixture (rule 0 preserved) and rule 1 is appended.
+            // accountUcmId is @JsonIgnore on ACLTemplateUpdaterJson, so it never enters the body.
+            wireMock.verify(putRequestedFor(urlPathMatching("/ne/v1/aclTemplates/acl-1111-2222-3333-444455556666"))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("renamed-acl-template")))
+                    .withRequestBody(matchingJsonPath("$.description", equalTo("Updated description")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[0].protocol", equalTo("TCP")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[0].dstPort", equalTo("22")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[1].protocol", equalTo("UDP")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[1].srcPort", equalTo("any")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[1].dstPort", equalTo("53")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[1].subnet", equalTo("192.168.0.0/24")))
+                    .withRequestBody(matchingJsonPath("$.inboundRules[1].seqNo", equalTo("2"))));
+        }
+
+        @Test
+        @DisplayName("update().forCustomer(...).save() carries accountUcmId as a query param, not in the body")
+        void updatesAclTemplateWithAccount() {
+            stubSingleton(wireMock, "/ne/v1/aclTemplates/.*", "/json/networkedge/acltemplate_response.json");
+            wireMock.stubFor(put(urlPathMatching("/ne/v1/aclTemplates/.*"))
+                    .willReturn(aResponse().withStatus(200)));
+
+            ACLTemplate template = networkEdge.aclTemplates().getByUuid("acl-1111-2222-3333-444455556666");
+
+            template.update()
+                    .forCustomer("account-ucm-123")
+                    .withDescription("Account-scoped update")
+                    .save();
+
+            wireMock.verify(putRequestedFor(urlPathMatching("/ne/v1/aclTemplates/acl-1111-2222-3333-444455556666"))
+                    .withQueryParam("accountUcmId", equalTo("account-ucm-123"))
+                    .withRequestBody(matchingJsonPath("$.description", equalTo("Account-scoped update"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("delete()")
+    class Delete {
+
+        @Test
+        @DisplayName("delete() DELETEs the template with no accountUcmId query param")
+        void deletesAclTemplate() {
+            stubSingleton(wireMock, "/ne/v1/aclTemplates/.*", "/json/networkedge/acltemplate_response.json");
+            wireMock.stubFor(delete(urlPathMatching("/ne/v1/aclTemplates/.*"))
+                    .willReturn(aResponse().withStatus(204)));
+
+            ACLTemplate template = networkEdge.aclTemplates().getByUuid("acl-1111-2222-3333-444455556666");
+
+            assertTrue(template.delete());
+
+            wireMock.verify(deleteRequestedFor(urlPathMatching("/ne/v1/aclTemplates/acl-1111-2222-3333-444455556666"))
+                    .withoutQueryParam("accountUcmId"));
+        }
+
+        @Test
+        @DisplayName("delete(accountUcmId) DELETEs the template carrying accountUcmId as a query param")
+        void deletesAclTemplateWithAccount() {
+            stubSingleton(wireMock, "/ne/v1/aclTemplates/.*", "/json/networkedge/acltemplate_response.json");
+            wireMock.stubFor(delete(urlPathMatching("/ne/v1/aclTemplates/.*"))
+                    .willReturn(aResponse().withStatus(204)));
+
+            ACLTemplate template = networkEdge.aclTemplates().getByUuid("acl-1111-2222-3333-444455556666");
+
+            assertTrue(template.delete("account-ucm-123"));
+
+            wireMock.verify(deleteRequestedFor(urlPathMatching("/ne/v1/aclTemplates/acl-1111-2222-3333-444455556666"))
+                    .withQueryParam("accountUcmId", equalTo("account-ucm-123")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

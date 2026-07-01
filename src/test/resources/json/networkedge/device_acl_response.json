@@ -1,0 +1,12 @@
+{
+  "aclTemplate": {
+    "uuid": "be7ef79e-31e7-4769-be5b-e192496f48aa",
+    "name": "wan-acl",
+    "status": "PROVISIONED"
+  },
+  "mgmtAclTemplate": {
+    "uuid": "ce7ef79e-31e7-4769-be5b-e192496f48ab",
+    "name": "mgmt-acl",
+    "status": "PROVISIONED"
+  }
+}

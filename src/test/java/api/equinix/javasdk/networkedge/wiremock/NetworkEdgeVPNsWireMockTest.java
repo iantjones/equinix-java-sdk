@@ -137,6 +137,64 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        private static final String VPN_UUID = "vpn-1111-2222-3333-444455556666";
+
+        @Test
+        @DisplayName("update PUTs the mutated config to /ne/v1/vpn/{uuid} and re-fetches it")
+        void updatesVpn() {
+            // The instance update() flow is: getByUuid() (GET) -> update() builder (seeds a
+            // VPNUpdaterJson from the current VPNJson via convertValue) -> save() which PUTs the
+            // full body then GETs the refreshed object.
+            stubSingleton(wireMock, "/ne/v1/vpn/.*", "/json/networkedge/vpn_response.json");
+            wireMock.stubFor(put(urlPathMatching("/ne/v1/vpn/.*"))
+                    .willReturn(aResponse().withStatus(200)));
+
+            VPN vpn = networkEdge.vpns().getByUuid(VPN_UUID);
+            VPN updated = vpn.update()
+                    .withConfigName("renamed-vpn-config")
+                    .withPeerIp("198.51.100.20")
+                    .withRemoteAsn(65010L)
+                    .save();
+
+            assertNotNull(updated);
+            // The PUT carries the mutated fields plus the fields carried over from the current
+            // config (e.g. virtualDeviceUuid), since the updater is seeded from the existing json.
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + VPN_UUID))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.configName", equalTo("renamed-vpn-config")))
+                    .withRequestBody(matchingJsonPath("$.peerIp", equalTo("198.51.100.20")))
+                    .withRequestBody(matchingJsonPath("$.remoteAsn", equalTo("65010")))
+                    .withRequestBody(matchingJsonPath("$.virtualDeviceUuid",
+                            equalTo("dev-1234-5678-90ab-cdef12345678"))));
+            // save() re-fetches the object after the PUT.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + VPN_UUID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("delete()")
+    class Delete {
+
+        private static final String VPN_UUID = "vpn-1111-2222-3333-444455556666";
+
+        @Test
+        @DisplayName("delete DELETEs /ne/v1/vpn/{uuid} and returns true")
+        void deletesVpn() {
+            // delete() is an instance op, so resolve the VPN via getByUuid() first.
+            stubSingleton(wireMock, "/ne/v1/vpn/.*", "/json/networkedge/vpn_response.json");
+            stubDeleteNoContent(wireMock, "/ne/v1/vpn/.*");
+
+            VPN vpn = networkEdge.vpns().getByUuid(VPN_UUID);
+            assertTrue(vpn.delete());
+
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + VPN_UUID)));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 
