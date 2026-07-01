@@ -249,7 +249,7 @@ public final class MetroOptimizer {
          * then delegates to the {@link MetroOptimizerEngine} for scoring and ranking.
          *
          * <p>This method makes live API calls to retrieve metro and service profile data from
-         * Equinix Fabric. The {@link Fabric} client must be authenticated before calling this method.</p>
+         * Equinix Fabric. The {@link api.equinix.javasdk.Fabric Fabric} client must be authenticated before calling this method.</p>
          *
          * @return the complete optimization result with ranked recommendations, topology, and reports
          * @see OptimizationResult
@@ -363,7 +363,7 @@ public final class MetroOptimizer {
          *
          * @param role the business role of this site
          * @return this builder for method chaining
-         * @see SiteRole#getImportanceMultiplier()
+         * @see SiteRole
          */
         public SiteBuilder role(SiteRole role) {
             this.role = role;
@@ -538,7 +538,7 @@ public final class MetroOptimizer {
          *
          * @param type the workload archetype
          * @return this builder for method chaining
-         * @see WorkloadType#getDefaultProfile()
+         * @see WorkloadType
          */
         public WorkloadBuilder type(WorkloadType type) {
             this.type = type;
@@ -566,7 +566,7 @@ public final class MetroOptimizer {
          *
          * @param sensitivity the latency sensitivity tier
          * @return this builder for method chaining
-         * @see LatencySensitivity#getThresholdMs()
+         * @see LatencySensitivity
          */
         public WorkloadBuilder latencySensitivity(LatencySensitivity sensitivity) {
             this.latencySensitivity = sensitivity;
@@ -833,7 +833,7 @@ public final class MetroOptimizer {
          *
          * @param zones the compliance zones to enforce (e.g., {@code ComplianceZone.EU_GDPR})
          * @return this builder for method chaining
-         * @see ComplianceZone#getAllowedRegions()
+         * @see ComplianceZone
          */
         public ConstraintsBuilder compliance(ComplianceZone... zones) {
             this.complianceZones = Arrays.asList(zones);
@@ -846,7 +846,7 @@ public final class MetroOptimizer {
          *
          * @param tier the minimum redundancy requirement
          * @return this builder for method chaining
-         * @see RedundancyTier#getMinimumMetros()
+         * @see RedundancyTier
          */
         public ConstraintsBuilder redundancy(RedundancyTier tier) {
             this.minimumRedundancy = tier;

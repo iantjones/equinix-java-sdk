@@ -17,14 +17,12 @@
 /**
  * Core model interfaces and base types for the Equinix Java SDK. Defines the
  * foundational contracts that all domain models extend, including
- * {@link api.equinix.javasdk.core.model.Resource} for API-managed entities,
- * {@link api.equinix.javasdk.core.model.Service} for domain service descriptors,
+ * {@link api.equinix.javasdk.core.model.Resource} for API-managed entities
  * and {@link api.equinix.javasdk.core.model.APIParam} for API parameter definitions.
  * Also contains shared model classes such as {@link api.equinix.javasdk.core.model.IPAddress},
  * {@link api.equinix.javasdk.core.model.Lifecycle}, and
  * {@link api.equinix.javasdk.core.model.OAuthToken}.
  *
  * @see api.equinix.javasdk.core.model.Resource
- * @see api.equinix.javasdk.core.model.Service
  */
 package api.equinix.javasdk.core.model;

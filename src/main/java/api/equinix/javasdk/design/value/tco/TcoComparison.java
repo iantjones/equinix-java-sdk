@@ -16,7 +16,7 @@ import java.util.Optional;
  *
  * <p>All figures are design-time estimates; cloud-egress and on-prem inputs are
  * indicative reference figures while Equinix interconnect costs use live pricing
- * where available. See {@link #getDisclaimer()}.</p>
+ * where available. See {@code getDisclaimer()}.</p>
  */
 @Value
 @Builder

@@ -27,7 +27,7 @@ import java.util.List;
  * A paginated list of OIDC providers (spec schema {@code OIDCProviderPage}), as returned by
  * {@code GET /v1/projects/{projectId}/oidcProviders} (operationId {@code pageOidcProviders}).
  *
- * <p>Callers fetch the next page by passing {@link #getNextPageToken()} back as the
+ * <p>Callers fetch the next page by passing {@code getNextPageToken()} back as the
  * {@code pageToken} argument.</p>
  */
 @Getter

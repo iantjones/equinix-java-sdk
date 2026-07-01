@@ -27,7 +27,7 @@ import java.util.List;
  * Token-paginated JSON model for the IAM {@code PolicyMaskList} response schema. Wraps a
  * page of {@link PolicyMaskJson} items along with an opaque continuation token.
  * <p>
- * To fetch the next page, callers pass the value returned by {@link #getNextPageToken()}
+ * To fetch the next page, callers pass the value returned by {@code getNextPageToken()}
  * back as the {@code pageToken} argument on the subsequent request.
  */
 @Getter

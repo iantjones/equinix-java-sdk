@@ -25,7 +25,7 @@ import lombok.Getter;
  * {@code charges} array. Extends {@link PriceCharge} with the per-charge product attribution
  * ({@code product}) carried by the spec's {@code ProductPriceCharge}.
  *
- * <p>The summarized charges ({@link PriceSummary#getCharges()}) remain plain {@link PriceCharge}
+ * <p>The summarized charges ({@code PriceSummary.getCharges()}) remain plain {@link PriceCharge}
  * entries, which carry no product attribution.</p>
  */
 @Getter

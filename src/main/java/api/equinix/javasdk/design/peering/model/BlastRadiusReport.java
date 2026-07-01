@@ -68,7 +68,7 @@ public class BlastRadiusReport {
     /**
      * Returns a severity classification based on the impact ratio.
      *
-     * @return "CRITICAL" (>80%), "HIGH" (>50%), "MEDIUM" (>25%), "LOW" (<=25%)
+     * @return "CRITICAL" ({@code >80%}), "HIGH" ({@code >50%}), "MEDIUM" ({@code >25%}), "LOW" ({@code <=25%})
      */
     public String computeSeverity() {
         if (impactRatio > 0.8) return "CRITICAL";

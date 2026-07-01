@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * <p>Read-only JSON model for the {@code ConnectionResponse} body returned by the connection
  * validation API ({@code POST /fabric/v4/connections/validate}). Wraps the validated
- * connection specifications ({@link #getData()}) plus any additional informational
+ * connection specifications ({@code getData()}) plus any additional informational
  * key/value pairs.</p>
  *
  * @author ianjones

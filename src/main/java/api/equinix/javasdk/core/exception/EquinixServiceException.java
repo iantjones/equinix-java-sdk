@@ -77,7 +77,7 @@ public class EquinixServiceException extends BaseException {
     }
 
     /**
-     * Full constructor used by {@link ResponseErrorMapper} when mapping an HTTP error response
+     * Full constructor used by {@link api.equinix.javasdk.core.http.ResponseErrorMapper ResponseErrorMapper} when mapping an HTTP error response
      * into a typed exception. All API-error metadata is supplied at construction time so the
      * exception is immutable.
      *

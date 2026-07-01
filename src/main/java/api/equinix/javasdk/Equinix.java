@@ -122,7 +122,7 @@ public final class Equinix implements Closeable {
 
     /**
      * Opens a session over a custom credentials provider with explicit {@link EquinixConfig} options.
-     * When {@link EquinixConfig#isAutoLoadMetros()} is set (the default), {@link #authenticate()}
+     * When {@code EquinixConfig.isAutoLoadMetros()} is set (the default), {@link #authenticate()}
      * eagerly loads the shared metro catalogue.
      *
      * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
@@ -206,7 +206,7 @@ public final class Equinix implements Closeable {
      * latencies — keyed by {@link api.equinix.javasdk.core.model.MetroId}. Sourced from the Fabric
      * Metros API (the only catalogue with that depth) but surfaced here as a session-level,
      * cross-domain concern; it shares this session's single Fabric cache. Loaded eagerly on
-     * {@link #authenticate()} when {@link EquinixConfig#isAutoLoadMetros()} is set (the default),
+     * {@link #authenticate()} when {@code EquinixConfig.isAutoLoadMetros()} is set (the default),
      * otherwise lazily on first access.
      *
      * @return the shared metro registry
@@ -239,7 +239,7 @@ public final class Equinix implements Closeable {
     /**
      * Explicitly performs OAuth2 authentication, warming the session's shared token. Optional —
      * authentication otherwise happens automatically on the first API call. When
-     * {@link EquinixConfig#isAutoLoadMetros()} is enabled (the default), this also eagerly loads the
+     * {@code EquinixConfig.isAutoLoadMetros()} is enabled (the default), this also eagerly loads the
      * shared metro catalogue ({@code fabric().metroRegistry()}); the load is best-effort and does
      * not fail authentication.
      *

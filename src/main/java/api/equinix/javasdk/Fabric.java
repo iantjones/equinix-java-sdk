@@ -227,7 +227,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
 
     /**
      * Performs OAuth2 authentication and, when metro auto-loading is enabled (the default — see
-     * {@link EquinixConfig#isAutoLoadMetros()}), eagerly loads the {@link #metroRegistry()} so the
+     * {@code EquinixConfig.isAutoLoadMetros()} on {@link EquinixConfig}), eagerly loads the {@link #metroRegistry()} so the
      * full metro catalogue (metros, their IBXs, coordinates, region, and inter-metro latencies) is
      * resolved up front rather than lazily on first access. The catalogue load is best-effort: a
      * failure there does not fail authentication, and the registry stays lazily loadable on demand.
