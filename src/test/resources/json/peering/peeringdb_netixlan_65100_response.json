@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "id": 70001,
+      "net_id": 9999,
+      "ix_id": 100,
+      "name": "Equinix Ashburn",
+      "ixlan_id": 100,
+      "speed": 10000,
+      "asn": 65100,
+      "ipaddr4": "206.126.236.99",
+      "ipaddr6": null,
+      "is_rs_peer": true,
+      "bfd_support": false,
+      "operational": true,
+      "status": "ok"
+    }
+  ]
+}

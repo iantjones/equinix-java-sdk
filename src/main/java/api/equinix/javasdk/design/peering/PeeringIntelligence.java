@@ -117,9 +117,29 @@ public class PeeringIntelligence {
         private boolean includeFabricConnections;
         private boolean includeResiliency;
 
+        /**
+         * Test-only override for the PeeringDB base URL. When {@code null} (the default and only
+         * value reachable through the public API) the client uses the real PeeringDB endpoint;
+         * tests set it to point the analysis at a local stub server.
+         */
+        private String peeringDbBaseUrl;
+
         Builder(FabricGateway fabric, String peeringDbApiKey) {
             this.fabric = fabric;
             this.peeringDbApiKey = peeringDbApiKey;
+        }
+
+        /**
+         * Test-only seam: points the PeeringDB client at an alternate base URL so
+         * {@link #analyze()} can be exercised end-to-end against a stub server. Package-private
+         * so it is never part of the public builder surface.
+         *
+         * @param baseUrl the PeeringDB API base URL (e.g. {@code http://localhost:PORT/api})
+         * @return this builder
+         */
+        Builder peeringDbBaseUrl(String baseUrl) {
+            this.peeringDbBaseUrl = baseUrl;
+            return this;
         }
 
         /**
@@ -317,9 +337,9 @@ public class PeeringIntelligence {
                     .includeResiliency(includeResiliency)
                     .build();
 
-            PeeringDbClient peeringDbClient = peeringDbApiKey != null
-                    ? new PeeringDbClient(peeringDbApiKey)
-                    : new PeeringDbClient();
+            PeeringDbClient peeringDbClient = peeringDbBaseUrl != null
+                    ? PeeringDbClient.withBaseUrl(peeringDbApiKey, peeringDbBaseUrl)
+                    : (peeringDbApiKey != null ? new PeeringDbClient(peeringDbApiKey) : new PeeringDbClient());
 
             PeeringIntelligenceEngine engine = new PeeringIntelligenceEngine(
                     fabric, peeringDbClient, request);

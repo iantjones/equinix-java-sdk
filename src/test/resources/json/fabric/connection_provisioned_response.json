@@ -1,0 +1,17 @@
+{
+  "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+  "name": "Provisioned-EVPL-Connection",
+  "type": "EVPL_VC",
+  "bandwidth": 1000,
+  "state": "PROVISIONED",
+  "direction": "OUTGOING",
+  "operation": {
+    "providerStatus": "AVAILABLE",
+    "equinixStatus": "PROVISIONED"
+  },
+  "account": {
+    "accountNumber": 123456,
+    "accountName": "Test Account",
+    "orgId": 100100
+  }
+}

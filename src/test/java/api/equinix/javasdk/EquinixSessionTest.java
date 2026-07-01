@@ -17,8 +17,16 @@
 package api.equinix.javasdk;
 
 import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
+import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.model.MetroId;
+import api.equinix.javasdk.design.optimizer.model.MetroRecommendation;
+import api.equinix.javasdk.design.optimizer.model.MetroScore;
+import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -91,5 +99,29 @@ class EquinixSessionTest {
             // building a design facade must not have triggered authentication / a token fetch
             assertNull(fabric.getEquinixClient().getOAuthToken());
         }
+    }
+
+    @Test
+    @DisplayName("deploymentWizard(result) returns a builder bound to the facade's Fabric")
+    void deploymentWizardBuilderSmoke() throws Exception {
+        try (Fabric fabric = new Fabric(creds())) {
+            Design design = Design.over(fabric);
+            assertNotNull(design.deploymentWizard(minimalOptimizationResult()));
+            // like the other facade accessors, building the wizard must not trigger a token fetch
+            assertNull(fabric.getEquinixClient().getOAuthToken());
+        }
+    }
+
+    private static OptimizationResult minimalOptimizationResult() {
+        return OptimizationResult.builder()
+                .recommendations(Collections.singletonList(
+                        MetroRecommendation.builder()
+                                .rank(1).metroId(MetroId.of(MetroCode.DC)).metroName("Ashburn")
+                                .score(new MetroScore(95.0, Collections.emptyList()))
+                                .reasons(Collections.singletonList("Primary metro"))
+                                .build()))
+                .computedAt(Instant.now())
+                .computeTimeMs(1)
+                .build();
     }
 }

@@ -3,6 +3,7 @@ package api.equinix.javasdk.design.optimizer.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Builder;
 import lombok.Value;
 
@@ -195,6 +196,11 @@ public class OptimizationResult {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.findAndRegisterModules();
+            // Register the JavaTime module explicitly so the Instant computedAt field always
+            // serializes, independent of module auto-discovery on the runtime classpath, and as a
+            // readable ISO-8601 string rather than a numeric timestamp.
+            mapper.registerModule(new JavaTimeModule());
+            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             return mapper.writeValueAsString(this);
         }
