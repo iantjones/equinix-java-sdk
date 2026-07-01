@@ -10,6 +10,7 @@ import api.equinix.javasdk.customerportal.enums.Frequency;
 import api.equinix.javasdk.customerportal.enums.Region;
 import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.customerportal.enums.TransactionType;
+import api.equinix.javasdk.customerportal.client.RequestBuilder;
 import api.equinix.javasdk.customerportal.model.InvoiceDetail;
 import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import org.junit.jupiter.api.*;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.*;
 import java.time.LocalDate;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -73,6 +75,32 @@ class CustomerPortalInvoicesWireMockTest extends WireMockTestBase {
             assertEquals(1, summary.getPriorAdjustmentInfo().size());
             assertEquals("CM-2024-000451", summary.getPriorAdjustmentInfo().get(0).getTransactionId());
         }
+
+        @Test
+        @DisplayName("filtered summaries issue GET /v2/invoices with the builder query params")
+        void filteredSummaries() {
+            stubPaginatedGet(wireMock, "/v2/invoices",
+                    "/json/customerportal/paginated_invoice_summaries.json");
+
+            RequestBuilder.Invoice filter = RequestBuilder.Invoice.builder()
+                    .withStart(LocalDate.of(2024, 1, 1))
+                    .withEnd(LocalDate.of(2024, 12, 31))
+                    .withAccountNumber("128745")
+                    .withAccountNumber("128746")
+                    .withTransactionId("INV-2024-00198734")
+                    .build();
+
+            PaginatedList<InvoiceSummary> summaries = customerPortal.invoices().summaries(filter);
+            assertNotNull(summaries);
+            assertEquals(1, summaries.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/invoices"))
+                    .withQueryParam("startDate", equalTo("2024-01-01"))
+                    .withQueryParam("endDate", equalTo("2024-12-31"))
+                    .withQueryParam("accountNumbers", equalTo("128745"))
+                    .withQueryParam("accountNumbers", equalTo("128746"))
+                    .withQueryParam("transactionIds", equalTo("INV-2024-00198734")));
+        }
     }
 
     @Nested
@@ -102,6 +130,32 @@ class CustomerPortalInvoicesWireMockTest extends WireMockTestBase {
             assertNotNull(detail.getTermsOfUse());
             assertEquals(1, detail.getTermsOfUse().size());
             assertEquals(36, detail.getTermsOfUse().get(0).getValue());
+        }
+
+        @Test
+        @DisplayName("filtered details issue GET /v2/invoices/details with the builder query params")
+        void filteredDetails() {
+            stubPaginatedGet(wireMock, "/v2/invoices/details",
+                    "/json/customerportal/paginated_invoice_details.json");
+
+            RequestBuilder.Invoice filter = RequestBuilder.Invoice.builder()
+                    .withStart(LocalDate.of(2024, 10, 1))
+                    .withEnd(LocalDate.of(2024, 10, 31))
+                    .withAccountNumber("128745")
+                    .withTransactionId("INV-2024-00198734")
+                    .withTransactionId("INV-2024-00198735")
+                    .build();
+
+            PaginatedList<InvoiceDetail> details = customerPortal.invoices().details(filter);
+            assertNotNull(details);
+            assertEquals(1, details.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/invoices/details"))
+                    .withQueryParam("startDate", equalTo("2024-10-01"))
+                    .withQueryParam("endDate", equalTo("2024-10-31"))
+                    .withQueryParam("accountNumbers", equalTo("128745"))
+                    .withQueryParam("transactionIds", equalTo("INV-2024-00198734"))
+                    .withQueryParam("transactionIds", equalTo("INV-2024-00198735")));
         }
     }
 }

@@ -1,0 +1,29 @@
+{
+  "locations": [
+    {
+      "ibx": "AM1",
+      "cages": [
+        {
+          "cage": "AM1:01:001MC3",
+          "cageTypes": ["Colocation"],
+          "accounts": [
+            {
+              "number": "12345",
+              "name": "Test Account"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ibx": "LD5",
+      "cages": [
+        {
+          "cage": "LD5:02:002XY9",
+          "cageTypes": ["Colocation"],
+          "accounts": []
+        }
+      ]
+    }
+  ]
+}

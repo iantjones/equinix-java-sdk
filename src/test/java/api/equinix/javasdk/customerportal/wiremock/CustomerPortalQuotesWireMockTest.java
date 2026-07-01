@@ -6,7 +6,10 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.model.Quote;
 import org.junit.jupiter.api.*;
 
+import java.util.List;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -50,6 +53,18 @@ class CustomerPortalQuotesWireMockTest extends WireMockTestBase {
         }
 
         @Test
+        @DisplayName("GETs /v2/quotes/{quoteId} without any ibxs query param")
+        void issuesGetToExactPath() {
+            stubSingleton(wireMock, "/v2/quotes/.*",
+                    "/json/customerportal/quote_response.json");
+
+            customerPortal.quotes().getByUuid("1-1234567891011");
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/quotes/1-1234567891011"))
+                    .withQueryParam("ibxs", absent()));
+        }
+
+        @Test
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v2/quotes/.*",
@@ -57,6 +72,52 @@ class CustomerPortalQuotesWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.quotes().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByUuid(quoteId, ibxs)")
+    class GetByUuidWithIbxs {
+
+        @Test
+        @DisplayName("forwards the ibxs list as repeated query params")
+        void forwardsIbxs() {
+            stubSingleton(wireMock, "/v2/quotes/.*",
+                    "/json/customerportal/quote_response.json");
+
+            Quote quote = customerPortal.quotes()
+                    .getByUuid("1-1234567891011", List.of("AM1", "SV5"));
+
+            assertNotNull(quote);
+            assertEquals("1-1234567891011", quote.getQuoteId());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/quotes/1-1234567891011"))
+                    .withQueryParam("ibxs", havingExactly("AM1", "SV5")));
+        }
+
+        @Test
+        @DisplayName("null ibxs falls back to the un-scoped GET (no ibxs query param)")
+        void nullIbxsFallsBack() {
+            stubSingleton(wireMock, "/v2/quotes/.*",
+                    "/json/customerportal/quote_response.json");
+
+            Quote quote = customerPortal.quotes().getByUuid("1-1234567891011", null);
+
+            assertNotNull(quote);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/quotes/1-1234567891011"))
+                    .withQueryParam("ibxs", absent()));
+        }
+
+        @Test
+        @DisplayName("empty ibxs falls back to the un-scoped GET (no ibxs query param)")
+        void emptyIbxsFallsBack() {
+            stubSingleton(wireMock, "/v2/quotes/.*",
+                    "/json/customerportal/quote_response.json");
+
+            Quote quote = customerPortal.quotes().getByUuid("1-1234567891011", List.of());
+
+            assertNotNull(quote);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/quotes/1-1234567891011"))
+                    .withQueryParam("ibxs", absent()));
         }
     }
 

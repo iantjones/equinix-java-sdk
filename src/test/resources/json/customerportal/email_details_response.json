@@ -1,0 +1,9 @@
+{
+  "orderId": "1-204976070710",
+  "createdDateTime": "2024-11-10T09:00:00Z",
+  "subject": "Issue with device",
+  "email_content": "Hello, we are seeing packet loss on the cross connect.",
+  "FromAddress": "abc@equinix.com",
+  "ToAddress": "xyz@example.com",
+  "CCAddress": "ops@example.com"
+}

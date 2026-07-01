@@ -1,0 +1,31 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "accountId": "acct-0001",
+      "accountNumber": "123456",
+      "accountName": "Acme Cloud Services Inc.",
+      "currency": "USD",
+      "billingCountry": "US",
+      "accountStatus": "ACTIVE",
+      "isGlobal": true,
+      "isReseller": false
+    },
+    {
+      "accountId": "acct-0002",
+      "accountNumber": "789012",
+      "accountName": "Globex Networks LLC",
+      "currency": "EUR",
+      "billingCountry": "DE",
+      "accountStatus": "ACTIVE",
+      "isGlobal": false,
+      "isReseller": true
+    }
+  ]
+}

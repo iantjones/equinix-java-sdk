@@ -1,0 +1,19 @@
+{
+  "pagination": { "offset": 0, "limit": 50, "total": 1 },
+  "data": [
+    {
+      "type": "STANDARD_PURCHASE_ORDER",
+      "number": "PO-100013200-001",
+      "account": { "accountNumber": "100013200", "accountName": "Acme" },
+      "categories": ["NETWORK"],
+      "locations": [ { "ibx": "SG1" } ],
+      "amount": 5000.00,
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "description": "Annual EIA blanket",
+      "draft": false,
+      "status": "ACTIVE",
+      "currency": "USD"
+    }
+  ]
+}

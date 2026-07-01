@@ -1,0 +1,30 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "accountNumber": "123456",
+      "accountName": "Acme Cloud Services Inc.",
+      "parentAccountNumber": "100000",
+      "billingFrequency": "MONTHLY",
+      "currencyCode": "USD",
+      "invoiceLanguage": "en",
+      "invoiceFormat": "PDF",
+      "accountIbxs": ["SV5", "DC11"]
+    },
+    {
+      "accountNumber": "789012",
+      "accountName": "Globex Networks LLC",
+      "billingFrequency": "QUARTERLY",
+      "currencyCode": "EUR",
+      "invoiceLanguage": "de",
+      "invoiceFormat": "EXCEL",
+      "accountIbxs": ["FR5"]
+    }
+  ]
+}

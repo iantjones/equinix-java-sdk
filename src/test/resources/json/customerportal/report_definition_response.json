@@ -1,0 +1,23 @@
+{
+  "name": "power_usage",
+  "scheduleType": "WEEKLY",
+  "period": "30_DAYS",
+  "control": "CUSTOMER",
+  "categories": [
+    "POWER"
+  ],
+  "parameters": [
+    {
+      "name": "metro",
+      "value": "SV",
+      "type": "STRING",
+      "required": true
+    },
+    {
+      "name": "user_key",
+      "value": "143534,908373",
+      "type": "ARRAY",
+      "required": true
+    }
+  ]
+}

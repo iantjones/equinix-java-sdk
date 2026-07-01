@@ -1,0 +1,49 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "assetNumber": "AST-100045",
+      "serialNumber": "SN-998877",
+      "orderNumber": "1-204050607",
+      "productName": "CROSS_CONNECT",
+      "ibx": "SV5",
+      "cage": "SV5:01:000ABC",
+      "productDescription": "Single-mode fiber cross connect",
+      "accountNumber": "128745",
+      "accountName": "Acme Corp",
+      "installationDate": "2025-09-15T10:30:00Z",
+      "customerReferenceNumber": "CRN-5521",
+      "status": "ACTIVE",
+      "productDetails": [
+        {
+          "key": "Media Type",
+          "value": "Single Mode Fiber",
+          "tag": "A-SIDE"
+        }
+      ],
+      "additionalDetails": {
+        "cabinetNumber": "C-14",
+        "customerOrCarrierCircuitID": "CIRCUIT-7788"
+      }
+    },
+    {
+      "assetNumber": "AST-100046",
+      "serialNumber": "SN-112233",
+      "orderNumber": "1-204050608",
+      "productName": "CABINET",
+      "ibx": "DC11",
+      "cage": "DC11:02:000XYZ",
+      "productDescription": "Standard cabinet",
+      "accountNumber": "128745",
+      "accountName": "Acme Corp",
+      "installationDate": "2025-08-01T09:00:00Z",
+      "status": "INACTIVE"
+    }
+  ]
+}

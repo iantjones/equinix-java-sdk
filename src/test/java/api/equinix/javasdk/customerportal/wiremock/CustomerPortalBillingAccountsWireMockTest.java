@@ -3,10 +3,13 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.customerportal.model.BillingAccount;
 import org.junit.jupiter.api.*;
 
 import java.nio.charset.StandardCharsets;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,6 +48,110 @@ class CustomerPortalBillingAccountsWireMockTest extends WireMockTestBase {
 
     private static String downloadPath() {
         return "/v1/finance/accounts/" + ACCOUNT_NUMBER + "/" + INVOICE_ID;
+    }
+
+    /** rootUri {@code finance/accounts}, defaultVersion 1 → {@code /v1/finance/accounts}. */
+    private static final String LIST_PATH = "/v1/finance/accounts";
+    private static final String ACCOUNT_PATH = "/v1/finance/accounts/" + ACCOUNT_NUMBER;
+    private static final String LIST_FIXTURE = "/json/customerportal/paginated_billing_accounts.json";
+    private static final String ACCOUNT_FIXTURE = "/json/customerportal/billing_account_response.json";
+
+    @Nested
+    @DisplayName("summaries()")
+    class Summaries {
+
+        @Test
+        @DisplayName("GETs /v1/finance/accounts and returns the paginated summaries")
+        void listsSummaries() {
+            stubPaginatedGet(wireMock, LIST_PATH, LIST_FIXTURE);
+
+            PaginatedList<BillingAccount> accounts = customerPortal.billingAccounts().summaries();
+
+            assertNotNull(accounts);
+            assertEquals(2, accounts.size());
+            assertEquals("123456", accounts.get(0).getAccountNumber());
+            assertEquals("Acme Cloud Services Inc.", accounts.get(0).getAccountName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH)));
+        }
+
+        @Test
+        @DisplayName("with a sort specifier passes it as the sorts query param")
+        void listsSummariesSorted() {
+            stubPaginatedGet(wireMock, LIST_PATH, LIST_FIXTURE);
+
+            PaginatedList<BillingAccount> accounts = customerPortal.billingAccounts().summaries("-ACCOUNT_NUMBER");
+
+            assertNotNull(accounts);
+            assertEquals(2, accounts.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("sorts", equalTo("-ACCOUNT_NUMBER")));
+        }
+
+        @Test
+        @DisplayName("with a null sort specifier omits the sorts query param")
+        void listsSummariesNullSort() {
+            stubPaginatedGet(wireMock, LIST_PATH, LIST_FIXTURE);
+
+            PaginatedList<BillingAccount> accounts = customerPortal.billingAccounts().summaries(null);
+
+            assertNotNull(accounts);
+            assertEquals(2, accounts.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withoutQueryParam("sorts"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByAccountNumber()")
+    class GetByAccountNumber {
+
+        @Test
+        @DisplayName("GETs /v1/finance/accounts/{accountNumber} and returns the account")
+        void getsByNumber() {
+            stubSingleton(wireMock, ACCOUNT_PATH, ACCOUNT_FIXTURE);
+
+            BillingAccount account = customerPortal.billingAccounts().getByAccountNumber(ACCOUNT_NUMBER);
+
+            assertNotNull(account);
+            assertEquals("123456", account.getAccountNumber());
+            assertEquals("Acme Cloud Services Inc.", account.getAccountName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(ACCOUNT_PATH))
+                    .withoutQueryParam("months"));
+        }
+
+        @Test
+        @DisplayName("with months passes them as the months query param")
+        void getsByNumberWithMonths() {
+            stubSingleton(wireMock, ACCOUNT_PATH, ACCOUNT_FIXTURE);
+
+            BillingAccount account = customerPortal.billingAccounts()
+                    .getByAccountNumber(ACCOUNT_NUMBER, "2017-12-03,2018-01-03");
+
+            assertNotNull(account);
+            assertEquals("123456", account.getAccountNumber());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(ACCOUNT_PATH))
+                    .withQueryParam("months", equalTo("2017-12-03,2018-01-03")));
+        }
+
+        @Test
+        @DisplayName("with null months omits the months query param")
+        void getsByNumberNullMonths() {
+            stubSingleton(wireMock, ACCOUNT_PATH, ACCOUNT_FIXTURE);
+
+            BillingAccount account = customerPortal.billingAccounts()
+                    .getByAccountNumber(ACCOUNT_NUMBER, null);
+
+            assertNotNull(account);
+            assertEquals("123456", account.getAccountNumber());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(ACCOUNT_PATH))
+                    .withoutQueryParam("months"));
+        }
     }
 
     @Nested

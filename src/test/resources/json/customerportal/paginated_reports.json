@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "reportId": "8f204c59-f70f-437b-92d5-dbbde2932de5",
+      "scheduledId": "886fc5de-6304-46c7-902c-d946c656c169",
+      "reportName": "Power Usage",
+      "fileName": "power-usage.xls",
+      "fileType": "XLS",
+      "fileSize": 95806395,
+      "createdFor": "john.doe",
+      "requestedDate": "2024-08-28T13:34:33.735Z",
+      "generatedDate": "2024-09-19T23:25:35.305Z",
+      "status": "SUCCESS",
+      "numberOfDownloads": 1
+    },
+    {
+      "reportId": "71df1306-94f9-4cbd-b6b0-735098bf7f87",
+      "scheduledId": "806f281c-6295-465e-bd41-04559d4d4960",
+      "reportName": "Cross Connect Inventory",
+      "fileName": "cross-connect-inventory.csv",
+      "fileType": "CSV",
+      "fileSize": 20481,
+      "createdFor": "jane.roe",
+      "requestedDate": "2024-08-29T09:10:00.000Z",
+      "generatedDate": "2024-08-29T09:12:00.000Z",
+      "status": "SUCCESS",
+      "numberOfDownloads": 0
+    }
+  ]
+}

@@ -282,6 +282,27 @@ class IAMEffectivePermissionsWireMockTest extends WireMockTestBase {
             wireMock.verify(getRequestedFor(urlPathEqualTo(ACTION_SETS_PATH))
                     .withQueryParam("serviceId", equalTo(SERVICE_ID)));
         }
+
+        @Test
+        @DisplayName("paged overload passes serviceId/pageToken/pageSize/projectErn query params")
+        void listsActionSetsWithPaging() {
+            stubPaginatedGet(wireMock, ACTION_SETS_PATH, "/json/iam/action_set_list_response.json");
+
+            ServiceActionSetList page = iam.resourceTypes().listActionSets(
+                    PROJECT_ID, SERVICE_ID, "action-sets-next-token", 25,
+                    "ern:access:us-west:proj-abc-123:project");
+
+            assertNotNull(page);
+            assertEquals(1, page.getList().size());
+            assertEquals("actionset:viewer", page.getList().get(0).getActionSetId());
+            assertEquals("action-sets-next-token", page.getNextPageToken());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(ACTION_SETS_PATH))
+                    .withQueryParam("serviceId", equalTo(SERVICE_ID))
+                    .withQueryParam("pageToken", equalTo("action-sets-next-token"))
+                    .withQueryParam("pageSize", equalTo("25"))
+                    .withQueryParam("projectErn", equalTo("ern:access:us-west:proj-abc-123:project")));
+        }
     }
 
     @Nested

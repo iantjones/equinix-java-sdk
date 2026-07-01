@@ -4,6 +4,7 @@ import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
+import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
 import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
 import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
@@ -275,6 +276,83 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo("/diloa/v1/privateBetaAccess"))
                     .withRequestBody(matchingJsonPath("$.email", equalTo("user@acme.com")))
                     .withRequestBody(matchingJsonPath("$.companyName", equalTo("Acme Corp"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("findByUuid")
+    class FindByUuid {
+
+        @Test
+        @DisplayName("findByUuid(uuid) GETs /diloa/v1/digitalLoas/{uuid} and maps the document")
+        void findByUuid_getsDocument() {
+            stubSingleton(wireMock, "/diloa/v1/digitalLoas/loa-abc-123",
+                    "/json/customerportal/digital_loa_response.json");
+
+            DigitalLoa loa = customerPortal.digitalLoas().findByUuid("loa-abc-123");
+
+            assertNotNull(loa);
+            assertEquals("loa-abc-123", loa.getUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123")));
+        }
+    }
+
+    @Nested
+    @DisplayName("findChangesByLoaUuid")
+    class FindChangesByLoaUuid {
+
+        @Test
+        @DisplayName("findChangesByLoaUuid(uuid) GETs /diloa/v1/digitalLoas/{uuid}/changes and maps the array")
+        void findChangesByLoaUuid_getsChanges() {
+            stubPaginatedGet(wireMock, "/diloa/v1/digitalLoas/loa-abc-123/changes",
+                    "/json/customerportal/paginated_digital_loa_changes.json");
+
+            List<? extends DigitalLoaChange> changes =
+                    customerPortal.digitalLoas().findChangesByLoaUuid("loa-abc-123");
+
+            assertNotNull(changes);
+            assertEquals(2, changes.size());
+            assertEquals("change-1", changes.get(0).getUuid());
+            assertEquals("change-2", changes.get(1).getUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123/changes")));
+        }
+    }
+
+    @Nested
+    @DisplayName("findChangeByUuid")
+    class FindChangeByUuid {
+
+        @Test
+        @DisplayName("findChangeByUuid(uuid, changeUuid) GETs /diloa/v1/digitalLoas/{uuid}/changes/{changeUuid}")
+        void findChangeByUuid_getsChange() {
+            wireMock.stubFor(get(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123/changes/change-1"))
+                    .willReturn(okJson("{\"uuid\":\"change-1\",\"type\":\"LOA_CREATION\",\"status\":\"COMPLETED\"}")));
+
+            DigitalLoaChange change =
+                    customerPortal.digitalLoas().findChangeByUuid("loa-abc-123", "change-1");
+
+            assertNotNull(change);
+            assertEquals("change-1", change.getUuid());
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123/changes/change-1")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getBetaTermsAgreement")
+    class GetBetaTermsAgreement {
+
+        @Test
+        @DisplayName("getBetaTermsAgreement() GETs /diloa/v1/betaTermsAgreement and maps the flag")
+        void getBetaTermsAgreement_getsAgreement() {
+            wireMock.stubFor(get(urlPathEqualTo("/diloa/v1/betaTermsAgreement"))
+                    .willReturn(okJson("{\"agreementAccepted\":true}")));
+
+            BetaTermsAgreement agreement = customerPortal.digitalLoas().getBetaTermsAgreement();
+
+            assertNotNull(agreement);
+            assertTrue(agreement.getAgreementAccepted());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/betaTermsAgreement")));
         }
     }
 }

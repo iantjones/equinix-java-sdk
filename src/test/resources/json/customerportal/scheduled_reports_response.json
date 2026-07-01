@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "scheduledId": "806f281c-6295-465e-bd41-04559d4d4960",
+      "reportName": "my_report",
+      "scheduleType": "WEEKLY",
+      "period": "30_DAYS",
+      "createdBy": "john.doe",
+      "createdDate": "2017-05-14T00:40:59.790Z",
+      "status": "ACTIVE",
+      "parameters": [
+        {
+          "name": "user_key",
+          "value": "143534,908373",
+          "type": "ARRAY",
+          "required": true
+        }
+      ]
+    },
+    {
+      "scheduledId": "12ab34cd-5678-90ef-ba98-fedcba987654",
+      "reportName": "power_report",
+      "scheduleType": "MONTHLY",
+      "period": "90_DAYS",
+      "createdBy": "jane.roe",
+      "createdDate": "2018-01-02T10:00:00.000Z",
+      "status": "INACTIVE",
+      "parameters": []
+    }
+  ]
+}

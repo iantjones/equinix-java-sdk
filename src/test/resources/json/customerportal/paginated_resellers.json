@@ -1,0 +1,23 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "accountNumber": "256891",
+      "accountName": "TechBridge Solutions LLC",
+      "accountType": "RESELLER",
+      "ibxs": ["SV5", "SV6", "DC6", "NY5", "CH1"]
+    },
+    {
+      "accountNumber": "300142",
+      "accountName": "Meridian Interconnect Partners",
+      "accountType": "RESELLER",
+      "ibxs": ["FR5", "LD5"]
+    }
+  ]
+}

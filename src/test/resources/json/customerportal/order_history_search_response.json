@@ -1,0 +1,50 @@
+{
+  "content": [
+    {
+      "orderNumber": "1-234567890",
+      "type": ["CROSS_CONNECT", "SMART_HANDS"],
+      "orderStatus": "IN_PROGRESS",
+      "createdAt": "2026-05-01T10:15:30.000Z",
+      "submittedDate": "2026-05-01",
+      "account": {
+        "number": "1234567",
+        "name": "Acme Corp"
+      },
+      "orderingContact": {
+        "name": "Ada Lovelace",
+        "email": "ada@acme.example",
+        "phone": "+44 20 7946 0000"
+      },
+      "notificationContact": {
+        "name": "Grace Hopper",
+        "email": "grace@acme.example"
+      },
+      "ibx": ["LD5", "LD6"],
+      "customerReferenceNumbers": ["PO-99"],
+      "links": [
+        {"rel": "self", "href": "/v1/retrieve-orders/1-234567890"},
+        {"rel": "orderFullDetails", "href": "/colocations/v2/orders/1-234567890"}
+      ]
+    },
+    {
+      "orderNumber": "1-234567891",
+      "type": ["CAGE"],
+      "orderStatus": "CLOSED",
+      "createdAt": "2026-04-15T09:00:00.000Z",
+      "submittedDate": "2026-04-15",
+      "ibx": ["SV1"],
+      "customerReferenceNumbers": [],
+      "links": []
+    }
+  ],
+  "links": [
+    {"rel": "self", "href": "/v1/retrieve-orders?page=0"},
+    {"rel": "next", "href": "/v1/retrieve-orders?page=1"}
+  ],
+  "page": {
+    "size": 20,
+    "totalElements": 42,
+    "totalPages": 3,
+    "number": 0
+  }
+}

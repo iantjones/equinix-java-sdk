@@ -2,8 +2,10 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.ScheduledReport;
+import api.equinix.javasdk.customerportal.model.json.ReportDefinitionJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
 import org.junit.jupiter.api.*;
 
@@ -215,6 +217,142 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertEquals("8f204c59-f70f-437b-92d5-dbbde2932de5", generated.getReportId());
             assertEquals("SUCCESS", generated.getStatus());
             wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId + "/report")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getReports()")
+    class GetReports {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports and returns the paginated reports")
+        void listsReports() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/paginated_reports.json"))));
+
+            PaginatedList<Report> reports = customerPortal.reports().getReports();
+
+            assertNotNull(reports);
+            assertEquals(2, reports.size());
+            assertEquals("8f204c59-f70f-437b-92d5-dbbde2932de5", reports.get(0).getReportId());
+            assertEquals("Power Usage", reports.get(0).getReportName());
+            assertEquals("SUCCESS", reports.get(0).getStatus());
+            assertEquals("71df1306-94f9-4cbd-b6b0-735098bf7f87", reports.get(1).getReportId());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getReportById()")
+    class GetReportById {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/{reportId} and returns the report")
+        void getsReportById() {
+            String reportId = "8f204c59-f70f-437b-92d5-dbbde2932de5";
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/" + reportId))
+                    .willReturn(okJson(loadFixture("/json/customerportal/report_response.json"))));
+
+            Report report = customerPortal.reports().getReportById(reportId);
+
+            assertNotNull(report);
+            assertEquals(reportId, report.getReportId());
+            assertEquals("Power Usage", report.getReportName());
+            assertEquals("SUCCESS", report.getStatus());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/" + reportId)));
+        }
+    }
+
+    @Nested
+    @DisplayName("getScheduledReports()")
+    class GetScheduledReports {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/scheduler and returns the scheduled reports from the data array")
+        void listsScheduledReports() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/scheduler"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/scheduled_reports_response.json"))));
+
+            List<? extends ScheduledReport> scheduled = customerPortal.reports().getScheduledReports();
+
+            assertNotNull(scheduled);
+            assertEquals(2, scheduled.size());
+            assertEquals("806f281c-6295-465e-bd41-04559d4d4960", scheduled.get(0).getScheduledId());
+            assertEquals("my_report", scheduled.get(0).getReportName());
+            assertEquals("WEEKLY", scheduled.get(0).getScheduleType());
+            assertEquals("power_report", scheduled.get(1).getReportName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getScheduledReport()")
+    class GetScheduledReport {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/scheduler/{scheduledId} and returns the scheduled report")
+        void getsScheduledReportById() {
+            String scheduledId = "806f281c-6295-465e-bd41-04559d4d4960";
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId))
+                    .willReturn(okJson(loadFixture("/json/customerportal/scheduled_report_response.json"))));
+
+            ScheduledReport scheduled = customerPortal.reports().getScheduledReport(scheduledId);
+
+            assertNotNull(scheduled);
+            assertEquals(scheduledId, scheduled.getScheduledId());
+            assertEquals("my_report", scheduled.getReportName());
+            assertEquals("WEEKLY", scheduled.getScheduleType());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId)));
+        }
+    }
+
+    @Nested
+    @DisplayName("getReportDefinitions()")
+    class GetReportDefinitions {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/definitions and returns the definitions array")
+        void listsReportDefinitions() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/definitions"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/report_definitions_response.json"))));
+
+            List<ReportDefinitionJson> definitions = customerPortal.reports().getReportDefinitions();
+
+            assertNotNull(definitions);
+            assertEquals(2, definitions.size());
+            assertEquals("power_usage", definitions.get(0).getName());
+            assertEquals("WEEKLY", definitions.get(0).getScheduleType());
+            assertEquals("cross_connect_inventory", definitions.get(1).getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/definitions")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getReportDefinition()")
+    class GetReportDefinition {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/definitions/{reportName} and returns the definition")
+        void getsReportDefinitionByName() {
+            String reportName = "power_usage";
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/definitions/" + reportName))
+                    .willReturn(okJson(loadFixture("/json/customerportal/report_definition_response.json"))));
+
+            ReportDefinitionJson definition = customerPortal.reports().getReportDefinition(reportName);
+
+            assertNotNull(definition);
+            assertEquals("power_usage", definition.getName());
+            assertEquals("WEEKLY", definition.getScheduleType());
+            assertEquals("30_DAYS", definition.getPeriod());
+            assertNotNull(definition.getParameters());
+            assertEquals(2, definition.getParameters().size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/definitions/" + reportName)));
         }
     }
 }

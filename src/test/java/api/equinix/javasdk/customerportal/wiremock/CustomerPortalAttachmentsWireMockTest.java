@@ -3,11 +3,13 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
 import org.junit.jupiter.api.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static api.equinix.javasdk.core.ResponseStubs.*;
@@ -64,6 +66,95 @@ class CustomerPortalAttachmentsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.attachments().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListAll {
+
+        @Test
+        @DisplayName("GETs /v1/attachments and returns the paginated attachments")
+        void listsAttachments() {
+            stubPaginatedGet(wireMock, "/v1/attachments",
+                    "/json/customerportal/paginated_attachments.json");
+
+            PaginatedList<Attachment> attachments = customerPortal.attachments().list();
+
+            assertNotNull(attachments);
+            assertEquals(2, attachments.size());
+            assertEquals("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b", attachments.get(0).getAttachmentId());
+            assertEquals("rack-diagram.pdf", attachments.get(0).getAttachmentName());
+            assertEquals("a9b8c7d6-e5f4-4321-8a7b-6c5d4e3f2a1b", attachments.get(1).getAttachmentId());
+
+            // GET /v1/attachments with no attachmentIds filter.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/attachments"))
+                    .withoutQueryParam("attachmentIds"));
+        }
+
+        @Test
+        @DisplayName("500 throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v1/attachments",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.attachments().list());
+        }
+    }
+
+    @Nested
+    @DisplayName("list(List<String> attachmentIds)")
+    class ListFiltered {
+
+        @Test
+        @DisplayName("GETs /v1/attachments with repeated attachmentIds query params")
+        void listsFilteredByIds() {
+            stubPaginatedGet(wireMock, "/v1/attachments",
+                    "/json/customerportal/paginated_attachments.json");
+
+            List<String> ids = List.of(
+                    "f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b",
+                    "a9b8c7d6-e5f4-4321-8a7b-6c5d4e3f2a1b");
+            PaginatedList<Attachment> attachments = customerPortal.attachments().list(ids);
+
+            assertNotNull(attachments);
+            assertEquals(2, attachments.size());
+
+            // Each id is sent as its own repeated attachmentIds query param.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/attachments"))
+                    .withQueryParam("attachmentIds", equalTo("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b"))
+                    .withQueryParam("attachmentIds", equalTo("a9b8c7d6-e5f4-4321-8a7b-6c5d4e3f2a1b")));
+        }
+
+        @Test
+        @DisplayName("null ids omits the filter and GETs the unfiltered list")
+        void nullIdsOmitsFilter() {
+            stubPaginatedGet(wireMock, "/v1/attachments",
+                    "/json/customerportal/paginated_attachments.json");
+
+            PaginatedList<Attachment> attachments = customerPortal.attachments().list(null);
+
+            assertNotNull(attachments);
+            assertEquals(2, attachments.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/attachments"))
+                    .withoutQueryParam("attachmentIds"));
+        }
+
+        @Test
+        @DisplayName("empty ids omits the filter and GETs the unfiltered list")
+        void emptyIdsOmitsFilter() {
+            stubPaginatedGet(wireMock, "/v1/attachments",
+                    "/json/customerportal/paginated_attachments.json");
+
+            PaginatedList<Attachment> attachments = customerPortal.attachments().list(List.of());
+
+            assertNotNull(attachments);
+            assertEquals(2, attachments.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/attachments"))
+                    .withoutQueryParam("attachmentIds"));
         }
     }
 

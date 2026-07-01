@@ -1,0 +1,22 @@
+[
+  {
+    "uuid": "change-1",
+    "type": "LOA_CREATION",
+    "status": "COMPLETED",
+    "createdDateTime": "2026-01-01T10:00:00Z",
+    "updatedDateTime": "2026-01-01T10:05:00Z",
+    "data": "{}",
+    "description": "Digital LOA created",
+    "href": "https://api.equinix.com/diloa/v1/digitalLoas/loa-abc-123/changes/change-1"
+  },
+  {
+    "uuid": "change-2",
+    "type": "LOA_AUTHORIZATION",
+    "status": "REQUESTED",
+    "createdDateTime": "2026-01-02T11:00:00Z",
+    "updatedDateTime": "2026-01-02T11:00:00Z",
+    "data": "{}",
+    "description": "Authorization requested",
+    "href": "https://api.equinix.com/diloa/v1/digitalLoas/loa-abc-123/changes/change-2"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/internetAccess/v2/services/e1f2a3b4-c5d6-4e7f-8091-021324354657",
+      "uuid": "e1f2a3b4-c5d6-4e7f-8091-021324354657",
+      "name": "WebServers",
+      "type": "SINGLE",
+      "bandwidth": 1000,
+      "state": "ACTIVE",
+      "useCase": "MAIN",
+      "billing": "FIXED"
+    },
+    {
+      "href": "https://api.equinix.com/internetAccess/v2/services/a9b8c7d6-e5f4-4321-8765-102938475601",
+      "uuid": "a9b8c7d6-e5f4-4321-8765-102938475601",
+      "name": "AppServers",
+      "type": "REDUNDANT",
+      "bandwidth": 2000,
+      "state": "ACTIVE",
+      "useCase": "MAIN",
+      "billing": "USAGE_BASED"
+    }
+  ]
+}

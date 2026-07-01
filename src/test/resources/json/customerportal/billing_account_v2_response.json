@@ -1,0 +1,15 @@
+{
+  "accountId": "acct-0001",
+  "accountNumber": "123456",
+  "accountName": "Acme Cloud Services Inc.",
+  "currency": "USD",
+  "billingCountry": "US",
+  "accountStatus": "ACTIVE",
+  "isGlobal": true,
+  "isPoRequired": false,
+  "isSignatureRequired": false,
+  "isReseller": false,
+  "isSubCustomer": false,
+  "createdDatetime": "2024-01-15T10:30:00Z",
+  "lastModifiedDatetime": "2024-11-01T08:15:00Z"
+}
