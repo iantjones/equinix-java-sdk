@@ -100,6 +100,179 @@ class CustomerPortalSmartHandsWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("createShipmentUnpack posts to the shipmentUnpack path")
+    void createShipmentUnpack_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/shipmentUnpack"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-shipmentUnpack\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createShipmentUnpack(sampleRequest(Map.of("scopeOfWork", "Unpack inbound shipment")));
+
+        assertEquals("1-shipmentUnpack", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/shipmentUnpack"))
+                .withRequestBody(matchingJsonPath("$.ibxLocation.ibx", equalTo("AM1")))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Unpack inbound shipment")))
+                .withRequestBody(matchingJsonPath("$.customerReferenceNumber", equalTo("RSS41244"))));
+    }
+
+    @Test
+    @DisplayName("createMoveJumperCable posts to the moveJumperCable path")
+    void createMoveJumperCable_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/moveJumperCable"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-moveJumperCable\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createMoveJumperCable(sampleRequest(Map.of("scopeOfWork", "Move jumper cable")));
+
+        assertEquals("1-moveJumperCable", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/moveJumperCable"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Move jumper cable")))
+                .withRequestBody(matchingJsonPath("$.schedule.scheduleType", equalTo("STANDARD"))));
+    }
+
+    @Test
+    @DisplayName("createLocatePackage posts to the locatePackage path")
+    void createLocatePackage_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/locatePackage"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-locatePackage\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createLocatePackage(sampleRequest(Map.of("scopeOfWork", "Locate my package")));
+
+        assertEquals("1-locatePackage", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/locatePackage"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Locate my package"))));
+    }
+
+    @Test
+    @DisplayName("createPicturesDocument posts to the picturesDocument path")
+    void createPicturesDocument_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/picturesDocument"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-picturesDocument\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createPicturesDocument(sampleRequest(Map.of("scopeOfWork", "Take pictures")));
+
+        assertEquals("1-picturesDocument", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/picturesDocument"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Take pictures"))));
+    }
+
+    @Test
+    @DisplayName("createPatchCableInstall posts to the patchCableInstall path")
+    void createPatchCableInstall_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/patchCableInstall"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-patchCableInstall\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createPatchCableInstall(sampleRequest(Map.of("scopeOfWork", "Install patch cable")));
+
+        assertEquals("1-patchCableInstall", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/patchCableInstall"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Install patch cable"))));
+    }
+
+    @Test
+    @DisplayName("createPatchCableRemoval posts to the patchCableRemoval path")
+    void createPatchCableRemoval_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/patchCableRemoval"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-patchCableRemoval\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createPatchCableRemoval(sampleRequest(Map.of("scopeOfWork", "Remove patch cable")));
+
+        assertEquals("1-patchCableRemoval", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/patchCableRemoval"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Remove patch cable"))));
+    }
+
+    @Test
+    @DisplayName("createCageCleanup posts to the cageCleanup path")
+    void createCageCleanup_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/cageCleanup"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-cageCleanup\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createCageCleanup(sampleRequest(Map.of("scopeOfWork", "Clean up cage")));
+
+        assertEquals("1-cageCleanup", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/cageCleanup"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Clean up cage"))));
+    }
+
+    @Test
+    @DisplayName("createCableRequest posts to the cableRequest path")
+    void createCableRequest_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/cableRequest"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-cableRequest\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createCableRequest(sampleRequest(Map.of("scopeOfWork", "Request a cable")));
+
+        assertEquals("1-cableRequest", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/cableRequest"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Request a cable"))));
+    }
+
+    @Test
+    @DisplayName("createRunJumperCable posts to the runJumperCable path")
+    void createRunJumperCable_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/runJumperCable"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-runJumperCable\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createRunJumperCable(sampleRequest(Map.of("scopeOfWork", "Run jumper cable")));
+
+        assertEquals("1-runJumperCable", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/runJumperCable"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Run jumper cable"))));
+    }
+
+    @Test
+    @DisplayName("createOther posts to the other path")
+    void createOther_postsToTypedPath() {
+        wireMock.stubFor(post(urlPathEqualTo("/v1/orders/smarthands/other"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"orderNumber\":\"1-other\"}")));
+
+        SmartHandResponse response = customerPortal.smartHandsRequests()
+                .createOther(sampleRequest(Map.of("scopeOfWork", "Something else entirely")));
+
+        assertEquals("1-other", response.getOrderNumber());
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/orders/smarthands/other"))
+                .withRequestBody(matchingJsonPath("$.serviceDetails.scopeOfWork", equalTo("Something else entirely"))));
+    }
+
+    @Test
     @DisplayName("listTypes returns the supported types")
     void listTypes_returnsSupportedTypes() {
         wireMock.stubFor(get(urlPathEqualTo("/v1/orders/smarthands/types"))
