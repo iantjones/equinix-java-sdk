@@ -428,7 +428,16 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         }
 
         public List<Connection> createBatch() {
-            return ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).batch(this.connections);
+            // batch() returns the raw ConnectionJson list; wrap each so callers get real Connection
+            // instances (ConnectionJson does not implement Connection — returning it directly caused a
+            // ClassCastException on use).
+            List<ConnectionJson> created =
+                    ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).batch(this.connections);
+            List<Connection> result = new ArrayList<>();
+            for (ConnectionJson json : created) {
+                result.add(new ConnectionWrapper(json, ConnectionOperator.this.getServiceClient()));
+            }
+            return result;
         }
     }
 
