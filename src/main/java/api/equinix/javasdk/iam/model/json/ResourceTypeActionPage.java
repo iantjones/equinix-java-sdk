@@ -29,7 +29,7 @@ import java.util.List;
  * {@code ResourceTypeAction}) under {@code list}; this model flattens that to a page of
  * {@link ResourceTypeActionJson} items along with an opaque continuation token.
  * <p>
- * To fetch the next page, callers pass the value returned by {@link #getNextPageToken()}
+ * To fetch the next page, callers pass the value returned by {@code getNextPageToken()}
  * back as the {@code pageToken} argument on the subsequent request.
  */
 @Getter

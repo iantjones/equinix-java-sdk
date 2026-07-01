@@ -25,8 +25,8 @@ import java.util.Map;
 
 /**
  * Response body returned when a support case / trouble ticket is created via the support v2 API
- * ({@code TicketResponse}). Carries the generated case or order number ({@link #getId()}) and the
- * ticket {@link #getType()} ({@code CASE} or {@code TROUBLE}).
+ * ({@code TicketResponse}). Carries the generated case or order number ({@code getId()}) and the
+ * ticket {@code getType()} ({@code CASE} or {@code TROUBLE}).
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

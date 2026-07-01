@@ -28,7 +28,7 @@ import java.util.List;
  * {@code ListAccessPoliciesGrantedOutput}), as returned by {@code POST /v1/accessPoliciesGranted}
  * (operationId {@code listAccessPoliciesGranted}).
  *
- * <p>Callers fetch the next page by passing {@link #getNextPageToken()} back as the input's
+ * <p>Callers fetch the next page by passing {@code getNextPageToken()} back as the input's
  * {@code pageToken}.</p>
  */
 @Getter

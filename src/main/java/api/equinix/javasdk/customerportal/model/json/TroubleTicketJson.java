@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * A trouble ticket as returned by the Tickets v2 API ({@code Tickets}). A record of an issue in
- * the ticket management system, identified by {@link #getId()}.
+ * the ticket management system, identified by {@code getId()}.
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

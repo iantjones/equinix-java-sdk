@@ -63,7 +63,7 @@ import java.io.IOException;
  * @see IBXSmartView
  * @see InternetAccess
  * @see Projects
- * @see Messaging
+ * @see IAM
  */
 public class EquinixClient implements Closeable {
 
@@ -82,7 +82,7 @@ public class EquinixClient implements Closeable {
 
     /**
      * Whether an explicit {@link #authenticate()} should eagerly load the metro catalog. Set from
-     * {@link EquinixConfig#isAutoLoadMetros()}; {@code false} for a shared-core domain client, whose
+     * {@code EquinixConfig.isAutoLoadMetros()}; {@code false} for a shared-core domain client, whose
      * owning {@link Equinix} session drives metro auto-loading instead. Only acted on by domains with
      * a metro catalog (Fabric).
      */
