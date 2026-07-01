@@ -139,7 +139,7 @@ public final class Equinix implements Closeable {
 
     public Fabric fabric() {
         if (fabric == null) {
-            fabric = new Fabric(core);
+            fabric = new Fabric(core, config.getPeeringDbApiKey());
         }
         return fabric;
     }

@@ -68,6 +68,19 @@ public class EquinixConfig {
     private final RetryPolicy retryPolicy;
 
     /**
+     * A PeeringDB API key used by the Peering Intelligence entry points
+     * ({@code fabric.peeringIntelligence()} / {@code design.peeringIntelligence()}) when no key is
+     * passed explicitly. This is a separate credential from the Equinix OAuth client — it is created
+     * on <a href="https://docs.peeringdb.com/howto/api_keys/">peeringdb.com</a> — and unlocks higher
+     * rate limits than anonymous PeeringDB access (~20 requests/minute) plus auth-gated fields.
+     *
+     * <p>Resolution order at analysis time: an explicit {@code peeringIntelligence(key)} argument,
+     * then this option, then the {@code PEERINGDB_API_KEY} environment variable, then anonymous
+     * access. Defaults to {@code null} (not configured).</p>
+     */
+    private final String peeringDbApiKey;
+
+    /**
      * @return a config with all defaults (production, auto-load metros on, default retry policy)
      */
     public static EquinixConfig defaults() {

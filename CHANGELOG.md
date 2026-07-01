@@ -5,6 +5,35 @@ All notable changes to the Equinix Java SDK will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **PeeringDB API key as a first-class option.** The Peering Intelligence entry points now resolve
+  the PeeringDB credential in a documented order: an explicit `peeringIntelligence("key")` argument,
+  then the new `EquinixConfig.peeringDbApiKey` option (works on a standalone `Fabric` and on an
+  `Equinix` session, flowing through `eq.design()`), then the `PEERINGDB_API_KEY` environment
+  variable, then anonymous access. Previously the key could only be passed as a method argument.
+
+## [2.0.1] - 2026-07-01
+
+Patch release superseding 2.0.0, which was unusable as a jar dependency.
+
+### Fixed
+- **Client init crashed when the SDK was consumed from the published jar** — classpath resources
+  (`apiParams_*.json`) were resolved via `Path.of(url.toURI())`, which throws
+  `FileSystemNotFoundException` for `jar:file:...!/` entries. Resources are now read through
+  `getResourceAsStream`, which works from both a jar and loose files.
+- `OptimizationResult.toJson()` returned an `{"error": ...}` blob for every engine result: it relied
+  on Jackson module auto-discovery to serialize its `Instant` field, but `jackson-datatype-jsr310`
+  was not on the classpath. The module is now a declared dependency and registered explicitly.
+- Pinned `commons-codec` to 1.17.1, overriding the 1.11 pulled in transitively by httpclient
+  (WS-2019-0379).
+
+### Testing
+- Exhaustive endpoint coverage across every domain (~520 new WireMock tests asserting URL, verb,
+  query params, and request bodies), including the Design module's wizard engine
+  (plan/execute/dryRun/rollback), the PeeringDB client HTTP paths, and the optimizer renderers.
+
 ## [2.0.0] - 2026-06-26
 
 A major hardening and correctness release. **Breaking:** fictional/misattributed resources
