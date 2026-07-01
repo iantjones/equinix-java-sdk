@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 11,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"uuid\":\"cmd-abc-123\",\"type\":\"ping\",\"status\":\"COMPLETED\",\"output\":\"64 bytes from 8.8.8.8: icmp_seq=1 ttl=118 time=1.23 ms\"}"
+      }
+    ],
+    "isError": false
+  }
+}
