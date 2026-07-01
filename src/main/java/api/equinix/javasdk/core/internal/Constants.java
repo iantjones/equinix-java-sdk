@@ -59,7 +59,15 @@ public class Constants {
                     "lastUpdatedBy","lastUpdatedByFullName","lastUpdatedByEmail","updatedByEmail","lastUpdatedDate",
                     "deletedBy","deletedByEmail","deletedDate");
 
-    public static final ObjectMapper JSON_CONVERTOR = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    // Used only for object-to-object mapping (e.g. seeding a resource's *UpdaterJson from its current
+    // *Json via convertValue). REQUIRE_HANDLERS_FOR_JAVA8_TIMES is disabled because a source *Json can
+    // expose read-only java.time lifecycle getters (createdDate/lastUpdatedDate/deletedDate) that this
+    // bare mapper has no serializer for; they are not part of any updater, so they are dropped on the
+    // target — without this, seeding an update() from a fetched resource with a populated timestamp
+    // would throw. Actual wire serialization/deserialization uses {@link #objectMapper}, not this.
+    public static final ObjectMapper JSON_CONVERTOR = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES, false);
 
     private static final SimpleModule module = new SimpleModule()
             .addDeserializer(BandwidthUnit.class, new BandwidthDeserializer())

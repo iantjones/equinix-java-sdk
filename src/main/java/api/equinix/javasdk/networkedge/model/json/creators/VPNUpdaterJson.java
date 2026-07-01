@@ -62,6 +62,12 @@ public class VPNUpdaterJson {
     @JsonProperty("useNetworkServiceConnection")
     private Boolean useNetworkServiceConnection;
 
+    // Required so update() can seed this updater from an existing VPNJson via
+    // Constants.JSON_CONVERTOR.convertValue(...); the declared builder constructor below otherwise
+    // suppresses the implicit no-arg constructor (unlike the other *UpdaterJson types).
+    VPNUpdaterJson() {
+    }
+
     VPNUpdaterJson(VPNOperator.VPNBuilder vpnBuilder) {
             this.siteName = vpnBuilder.getSiteName();
             this.virtualDeviceUuid = vpnBuilder.getVirtualDeviceUuid();
