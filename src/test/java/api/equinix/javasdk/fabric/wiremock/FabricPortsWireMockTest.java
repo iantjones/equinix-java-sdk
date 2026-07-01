@@ -5,6 +5,7 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.SortOrder;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
@@ -14,7 +15,12 @@ import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
+import api.equinix.javasdk.fabric.model.PortVlan;
 import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.PhysicalPortsResponseJson;
 import org.junit.jupiter.api.*;
 
@@ -71,6 +77,126 @@ class FabricPortsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.ports().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListPorts {
+
+        @Test
+        @DisplayName("GETs /fabric/v4/ports and returns a paginated list")
+        void listsPorts() {
+            stubPaginatedGet(wireMock, "/fabric/v4/ports", "/json/fabric/paginated_ports.json");
+
+            PaginatedList<Port> ports = fabric.ports().list();
+
+            assertNotNull(ports);
+            assertEquals(2, ports.size());
+            assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", ports.get(0).getUuid());
+            assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", ports.get(1).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports")));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/ports/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /ports/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ports.json");
+
+            PaginatedFilteredList<Port> ports = fabric.ports().search();
+
+            assertNotNull(ports);
+            assertEquals(2, ports.size());
+
+            // Default no-arg search sends an (empty) filter, no sort.
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ports.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "XF_PORT")
+                    .equals("/location/metroCode", "SV");
+
+            PaginatedFilteredList<Port> ports = fabric.ports().search(filter);
+
+            assertNotNull(ports);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("XF_PORT")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/location/metroCode")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("SV"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ports.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<Port> ports = fabric.ports().search(sort);
+
+            assertNotNull(ports);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ports.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/state", "ACTIVE");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<Port> ports = fabric.ports().search(filter, sort);
+
+            assertNotNull(ports);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ACTIVE")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getVlans()")
+    class GetVlans {
+
+        private static final String PORT_ID = "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee";
+
+        @Test
+        @DisplayName("GETs /fabric/v4/ports/{portUuid}/linkProtocols and returns the VLAN list")
+        void getsVlans() {
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports/" + PORT_ID + "/linkProtocols"))
+                    .willReturn(okJson(loadFixture("/json/fabric/paginated_port_vlans.json"))));
+
+            List<PortVlan> vlans = fabric.ports().getVlans(PORT_ID);
+
+            assertNotNull(vlans);
+            assertEquals(2, vlans.size());
+            assertEquals("vlan-1111-2222-3333", vlans.get(0).getUuid());
+            assertEquals(Integer.valueOf(1001), vlans.get(0).getVlanTag());
+            assertEquals(Integer.valueOf(2001), vlans.get(1).getVlanSTag());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/" + PORT_ID + "/linkProtocols")));
         }
     }
 

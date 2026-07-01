@@ -4,6 +4,7 @@ import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
@@ -46,6 +47,47 @@ class FabricRouteAggregationRulesWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListRules {
+
+        static final String LIST_PATH =
+                "/fabric/v4/routeAggregations/" + PARENT + "/routeAggregationRules";
+        static final String LIST_PATH_PATTERN =
+                "/fabric/v4/routeAggregations/[^/]+/routeAggregationRules";
+
+        @Test
+        @DisplayName("GETs {parent}/routeAggregationRules and deserializes the rules")
+        void listsRules() {
+            stubPaginatedGet(wireMock, LIST_PATH_PATTERN,
+                    "/json/fabric/paginated_route_aggregation_rules.json");
+
+            PaginatedList<RouteAggregationRule> rules =
+                    fabric.routeAggregationRules().list(PARENT);
+
+            assertNotNull(rules);
+            assertEquals(2, rules.size());
+            assertEquals("c2d3e4f5-a6b7-8901-cdef-012345678901", rules.get(0).getUuid());
+            assertEquals("Aggregate-10-0-0-0-8", rules.get(0).getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH)));
+        }
+
+        @Test
+        @DisplayName("uses the parent id in the request path (no child segment)")
+        void listTargetsParentScopedCollection() {
+            stubPaginatedGet(wireMock, LIST_PATH_PATTERN,
+                    "/json/fabric/paginated_route_aggregation_rules.json");
+
+            fabric.routeAggregationRules().list(PARENT);
+
+            // GET on the collection, not on an individual rule, and not a POST /search.
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH)));
+            wireMock.verify(0, getRequestedFor(urlPathMatching(LIST_PATH + "/[^/]+")));
+            wireMock.verify(0, postRequestedFor(urlPathMatching(LIST_PATH_PATTERN + "/search")));
+        }
     }
 
     @Nested

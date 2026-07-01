@@ -1,0 +1,47 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+      "name": "testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154",
+      "type": "XF_PORT",
+      "state": "ACTIVE",
+      "bandwidth": 10000,
+      "usedBandwidth": 2500,
+      "availableBandwidth": 7500,
+      "lagEnabled": false,
+      "location": {
+        "metroCode": "SV",
+        "region": "AMER",
+        "ibx": "SV5"
+      },
+      "account": {
+        "accountNumber": 123456,
+        "accountName": "Test Account"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "testBuyer-DC5-NL-Dot1q-BO-SEC-10G-JN-155",
+      "type": "XF_PORT",
+      "state": "ACTIVE",
+      "bandwidth": 10000,
+      "usedBandwidth": 1000,
+      "availableBandwidth": 9000,
+      "lagEnabled": false,
+      "location": {
+        "metroCode": "DC",
+        "region": "AMER",
+        "ibx": "DC5"
+      },
+      "account": {
+        "accountNumber": 123456,
+        "accountName": "Test Account"
+      }
+    }
+  ]
+}

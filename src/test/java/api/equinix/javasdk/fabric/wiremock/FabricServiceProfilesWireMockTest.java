@@ -3,11 +3,17 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.ServiceProfileAction;
 import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -64,6 +70,107 @@ class FabricServiceProfilesWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.serviceProfiles().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListProfiles {
+
+        @Test
+        @DisplayName("GETs /serviceProfiles and returns a paginated list")
+        void returnsPaginatedList() {
+            stubPaginatedGet(wireMock, "/fabric/v4/serviceProfiles",
+                    "/json/fabric/paginated_service_profiles.json");
+
+            PaginatedList<ServiceProfile> profiles = fabric.serviceProfiles().list();
+
+            assertNotNull(profiles);
+            assertEquals(2, profiles.size());
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", profiles.get(0).getUuid());
+            assertEquals("AWS Direct Connect - Production", profiles.get(0).getName());
+            assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", profiles.get(1).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/serviceProfiles")));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/serviceProfiles/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /serviceProfiles/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_profiles.json");
+
+            PaginatedFilteredList<ServiceProfile> profiles = fabric.serviceProfiles().search();
+
+            assertNotNull(profiles);
+            assertEquals(2, profiles.size());
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", profiles.get(0).getUuid());
+
+            // Default no-arg search sends an (empty) filter, no sort, with pagination.
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_profiles.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "AWS Direct Connect - Production")
+                    .equals("/visibility", "PUBLIC");
+
+            PaginatedFilteredList<ServiceProfile> profiles = fabric.serviceProfiles().search(filter);
+
+            assertNotNull(profiles);
+            assertEquals(2, profiles.size());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("AWS Direct Connect - Production")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/visibility")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("PUBLIC"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_profiles.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/updatedDateTime");
+
+            PaginatedFilteredList<ServiceProfile> profiles = fabric.serviceProfiles().search(sort);
+
+            assertNotNull(profiles);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/updatedDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_profiles.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/state", "ACTIVE");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<ServiceProfile> profiles = fabric.serviceProfiles().search(filter, sort);
+
+            assertNotNull(profiles);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ACTIVE")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
         }
     }
 

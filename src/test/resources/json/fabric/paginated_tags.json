@@ -1,0 +1,25 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/tags/18a127ad-9d0c-46e2-a66d-8ed85d1858b0",
+      "uuid": "18a127ad-9d0c-46e2-a66d-8ed85d1858b0",
+      "type": "RESOURCE_TAG",
+      "name": "environment",
+      "displayName": "Environment",
+      "weight": 10000
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/tags/2b9f43c1-7a6d-4e11-9c3a-1f2e3d4c5b6a",
+      "uuid": "2b9f43c1-7a6d-4e11-9c3a-1f2e3d4c5b6a",
+      "type": "RESOURCE_TAG",
+      "name": "costCenter",
+      "displayName": "Cost Center",
+      "weight": 20000
+    }
+  ]
+}

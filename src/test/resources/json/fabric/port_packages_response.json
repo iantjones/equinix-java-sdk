@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/portPackages/STANDARD",
+      "type": "PORT_PACKAGE",
+      "code": "STANDARD",
+      "vcBandwidthMax": 10000,
+      "vcRemoteSupported": true,
+      "supportedServiceTypes": ["EVPL_VC", "EPL_VC"]
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/portPackages/UNTAGGED",
+      "type": "PORT_PACKAGE",
+      "code": "UNTAGGED",
+      "vcBandwidthMax": 50000,
+      "vcRemoteSupported": false,
+      "supportedServiceTypes": ["EPL_VC"]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.BGPActionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.BGPAction;
@@ -307,6 +308,52 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo(
                     "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols/" + PROTOCOL_UUID + "/actions"))
                     .withRequestBody(equalToJson("{\"type\":\"RESET_BGPIPV4\"}", true, true)));
+        }
+    }
+
+    @Nested
+    @DisplayName("list(connectionId)")
+    class ListByConnection {
+
+        @Test
+        @DisplayName("GETs the connection's routingProtocols collection and maps the paginated body")
+        void listsRoutingProtocols() {
+            stubPaginatedGet(wireMock, "/fabric/v4/connections/.*/routingProtocols",
+                    "/json/fabric/paginated_routing_protocols.json");
+
+            PaginatedList<RoutingProtocol> protocols = fabric.routingProtocols().list(CONNECTION_ID);
+
+            assertNotNull(protocols);
+            assertEquals(2, protocols.size());
+            assertEquals("f1e2d3c4-b5a6-7890-abcd-1234567890ef", protocols.get(0).getUuid());
+            assertEquals(RoutingProtocolType.BGP, protocols.get(0).getType());
+            assertEquals(RoutingProtocolType.DIRECT, protocols.get(1).getType());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getBgpActions(connectionId, routingProtocolId)")
+    class GetBgpActions {
+
+        @Test
+        @DisplayName("GETs the routing protocol's actions collection and returns the list")
+        void listsBgpActions() {
+            stubPaginatedGet(wireMock, "/fabric/v4/connections/.*/routingProtocols/.*/actions",
+                    "/json/fabric/paginated_bgp_actions.json");
+
+            List<BGPAction> actions = fabric.routingProtocols().getBgpActions(CONNECTION_ID, PROTOCOL_UUID);
+
+            assertNotNull(actions);
+            assertEquals(2, actions.size());
+            assertEquals("b9a8c7d6-e5f4-3210-abcd-fedcba112233", actions.get(0).getUuid());
+            assertEquals(BGPActionType.RESET_BGPIPV4, actions.get(0).getType());
+            assertEquals(BGPActionType.RESET_BGPIPV6, actions.get(1).getType());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols/" + PROTOCOL_UUID + "/actions")));
         }
     }
 

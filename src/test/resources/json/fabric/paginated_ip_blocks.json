@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "31fbdb3f-8def-410d-868b-ef920878affb",
+      "href": "https://api.equinix.com/fabric/v4/ipBlocks/31fbdb3f-8def-410d-868b-ef920878affb",
+      "type": "IPV4_IP_BLOCK",
+      "state": "ACTIVE",
+      "ownership": "EQUINIX",
+      "prefixLength": 28,
+      "prefix": "192.0.2.0/28",
+      "location": {
+        "metroCode": "SY"
+      }
+    },
+    {
+      "uuid": "9b8c7d6e-5f4a-3b2c-1d0e-fedcba987654",
+      "href": "https://api.equinix.com/fabric/v4/ipBlocks/9b8c7d6e-5f4a-3b2c-1d0e-fedcba987654",
+      "type": "IPV6_IP_BLOCK",
+      "state": "ACTIVE",
+      "ownership": "CUSTOMER",
+      "prefixLength": 64,
+      "prefix": "2001:db8::/64",
+      "location": {
+        "metroCode": "DC"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "uuid": "557400f8-d360-11e9-bb65-2a2ae2dbcce4",
+  "type": "equinix.fabric.connection.updated",
+  "source": "/fabric/v4/connections/095be615-a8ad-4c33-8e9c-c7612fbf6c9f",
+  "subject": "Connection updated",
+  "time": "2024-11-06T07:00:00.000Z",
+  "data": {
+    "status": "PROVISIONED"
+  }
+}

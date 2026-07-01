@@ -2,9 +2,11 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.Tag;
 import org.junit.jupiter.api.*;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubPaginatedGet;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -60,6 +62,35 @@ class FabricTagsWireMockTest extends WireMockTestBase {
                     .withRequestBody(equalToJson(
                             "{\"type\":\"RESOURCE_TAG\",\"name\":\"environment\",\"displayName\":\"Environment\"}",
                             true, true)));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class List {
+
+        @Test
+        @DisplayName("GETs /fabric/v4/tags and returns the paginated tags")
+        void listGetsAndReturnsTags() {
+            stubPaginatedGet(wireMock, "/fabric/v4/tags", "/json/fabric/paginated_tags.json");
+
+            PaginatedList<Tag> tags = fabric.tags().list();
+
+            assertNotNull(tags);
+            assertEquals(2, tags.size());
+
+            Tag first = tags.get(0);
+            assertEquals("18a127ad-9d0c-46e2-a66d-8ed85d1858b0", first.getUuid());
+            assertEquals("RESOURCE_TAG", first.getType());
+            assertEquals("environment", first.getName());
+            assertEquals("Environment", first.getDisplayName());
+            assertEquals(10000, first.getWeight());
+
+            Tag second = tags.get(1);
+            assertEquals("2b9f43c1-7a6d-4e11-9c3a-1f2e3d4c5b6a", second.getUuid());
+            assertEquals("costCenter", second.getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/tags")));
         }
     }
 }

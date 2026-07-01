@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
@@ -10,6 +11,10 @@ import api.equinix.javasdk.fabric.enums.ServiceTokenAction;
 import api.equinix.javasdk.fabric.enums.ServiceTokenType;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.ServiceToken;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
@@ -62,6 +67,104 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.serviceTokens().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class List {
+
+        @Test
+        @DisplayName("GETs /fabric/v4/serviceTokens and returns a paginated list")
+        void listsServiceTokens() {
+            stubPaginatedGet(wireMock, "/fabric/v4/serviceTokens",
+                    "/json/fabric/paginated_service_tokens.json");
+
+            PaginatedList<ServiceToken> tokens = fabric.serviceTokens().list();
+
+            assertNotNull(tokens);
+            assertEquals(2, tokens.size());
+            assertEquals("ab7f685-41b0-1b07-6de0-3a7c54b08b8f", tokens.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/serviceTokens")));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/serviceTokens/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /serviceTokens/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_tokens.json");
+
+            PaginatedFilteredList<ServiceToken> tokens = fabric.serviceTokens().search();
+
+            assertNotNull(tokens);
+            assertEquals(2, tokens.size());
+            assertEquals("ab7f685-41b0-1b07-6de0-3a7c54b08b8f", tokens.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_tokens.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "Token-Primary")
+                    .equals("/state", "ACTIVE");
+
+            PaginatedFilteredList<ServiceToken> tokens = fabric.serviceTokens().search(filter);
+
+            assertNotNull(tokens);
+            assertEquals(2, tokens.size());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("Token-Primary")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("ACTIVE"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_tokens.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<ServiceToken> tokens = fabric.serviceTokens().search(sort);
+
+            assertNotNull(tokens);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_service_tokens.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/state", "ACTIVE");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<ServiceToken> tokens = fabric.serviceTokens().search(filter, sort);
+
+            assertNotNull(tokens);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ACTIVE")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
         }
     }
 

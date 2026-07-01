@@ -3,14 +3,26 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.CloudRouterCommandType;
+import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
 import api.equinix.javasdk.fabric.model.CloudRouter;
+import api.equinix.javasdk.fabric.model.CloudRouterAction;
 import api.equinix.javasdk.fabric.model.CloudRouterCommand;
+import api.equinix.javasdk.fabric.model.CloudRouterPackage;
+import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
+import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
+import api.equinix.javasdk.fabric.model.RouteTableEntry;
 import api.equinix.javasdk.fabric.model.RoutingProtocolValidation;
 import api.equinix.javasdk.fabric.model.implementation.CloudRouterCommandRequest;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -218,6 +230,370 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                             + "{\"property\":\"/directIpv4/equinixICLAdvertisedIP\",\"operator\":\"=\",\"values\":[\"10.1.1.1\"]},"
                             + "{\"property\":\"/connection/uuid\",\"operator\":\"=\",\"values\":[\"3a58dd05-f46d-4b1d-a154-2e85c396ea85\"]}"
                             + "]}}", true, true)));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/routers/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /routers/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_cloud_routers.json");
+
+            PaginatedFilteredList<CloudRouter> routers = fabric.cloudRouters().search();
+
+            assertNotNull(routers);
+            assertEquals(2, routers.size());
+            assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", routers.get(0).getUuid());
+
+            // Default no-arg search sends an (empty) filter, no sort.
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_cloud_routers.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "My-Cloud-Router-Primary")
+                    .equals("/location/metroCode", "SV");
+
+            PaginatedFilteredList<CloudRouter> routers = fabric.cloudRouters().search(filter);
+
+            assertNotNull(routers);
+            assertEquals(2, routers.size());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("My-Cloud-Router-Primary")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/location/metroCode")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("SV"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_cloud_routers.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<CloudRouter> routers = fabric.cloudRouters().search(sort);
+
+            assertNotNull(routers);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_cloud_routers.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/state", "PROVISIONED");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<CloudRouter> routers = fabric.cloudRouters().search(filter, sort);
+
+            assertNotNull(routers);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("PROVISIONED")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchRoutes()")
+    class SearchRoutes {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String ROUTES_URL = "/fabric/v4/routers/" + ROUTER_ID + "/routes/search";
+
+        @Test
+        @DisplayName("searchRoutes(routerId) POSTs to /{routerId}/routes/search")
+        void searchRoutesNoFilter() {
+            stubPaginatedPost(wireMock, ROUTES_URL, "/json/fabric/paginated_route_table_entries.json");
+
+            PaginatedFilteredList<RouteTableEntry> routes = fabric.cloudRouters().searchRoutes(ROUTER_ID);
+
+            assertNotNull(routes);
+            assertEquals(1, routes.size());
+            assertEquals("10.0.0.0/24", routes.get(0).getPrefix());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(ROUTES_URL))
+                    .withHeader("Content-Type", containing("application/json")));
+        }
+
+        @Test
+        @DisplayName("searchRoutes(routerId, filter, sort) carries the filter and sort in the POST body")
+        void searchRoutesWithFilterAndSort() {
+            stubPaginatedPost(wireMock, ROUTES_URL, "/json/fabric/paginated_route_table_entries.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/prefix", "10.0.0.0/24");
+            SortPropertyList sort = Sort.sort().desc("/localPreference");
+
+            PaginatedFilteredList<RouteTableEntry> routes =
+                    fabric.cloudRouters().searchRoutes(ROUTER_ID, filter, sort);
+
+            assertNotNull(routes);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(ROUTES_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/prefix")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("10.0.0.0/24")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/localPreference")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchActions()")
+    class SearchActions {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/routers/" + ROUTER_ID + "/actions/search";
+
+        @Test
+        @DisplayName("searchActions(routerId, filter, sort) POSTs the filter/sort to /{routerId}/actions/search")
+        void searchActions() {
+            stubPaginatedPost(wireMock, URL, "/json/fabric/paginated_cloud_router_actions.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "ROUTE_TABLE_ENTRY_UPDATE");
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<CloudRouterAction> actions =
+                    fabric.cloudRouters().searchActions(ROUTER_ID, filter, sort);
+
+            assertNotNull(actions);
+            assertEquals(1, actions.size());
+            assertEquals("1e9414f1-763e-4c0a-86c6-0bc8336048d9", actions.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ROUTE_TABLE_ENTRY_UPDATE")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchCommands()")
+    class SearchCommands {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/routers/" + ROUTER_ID + "/commands/search";
+
+        @Test
+        @DisplayName("searchCommands(routerId, filter, sort) POSTs the filter/sort to /{routerId}/commands/search")
+        void searchCommands() {
+            stubPaginatedPost(wireMock, URL, "/json/fabric/paginated_cloud_router_commands.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "PING_COMMAND");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<CloudRouterCommand> commands =
+                    fabric.cloudRouters().searchCommands(ROUTER_ID, filter, sort);
+
+            assertNotNull(commands);
+            assertEquals(1, commands.size());
+            assertEquals("9d1e5f0a-2b3c-4d5e-8f90-a1b2c3d4e5f6", commands.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("PING_COMMAND")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchRouteFilterAttachments()")
+    class SearchRouteFilterAttachments {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/routers/" + ROUTER_ID + "/routeFilters/search";
+
+        @Test
+        @DisplayName("searchRouteFilterAttachments(routerId, filter, sort) POSTs to /{routerId}/routeFilters/search")
+        void searchRouteFilterAttachments() {
+            stubPaginatedPost(wireMock, URL, "/json/fabric/paginated_route_filter_attachments.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/direction", "INBOUND");
+            SortPropertyList sort = Sort.sort().asc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<RouteFilterAttachment> attachments =
+                    fabric.cloudRouters().searchRouteFilterAttachments(ROUTER_ID, filter, sort);
+
+            assertNotNull(attachments);
+            assertEquals(1, attachments.size());
+            assertEquals("8e1e2f3a-4b5c-6d7e-8f90-a1b2c3d4e5f6", attachments.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/direction")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("INBOUND")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchRouteAggregationAttachments()")
+    class SearchRouteAggregationAttachments {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/routers/" + ROUTER_ID + "/routeAggregations/search";
+
+        @Test
+        @DisplayName("searchRouteAggregationAttachments(routerId, filter, sort) POSTs to /{routerId}/routeAggregations/search")
+        void searchRouteAggregationAttachments() {
+            stubPaginatedPost(wireMock, URL, "/json/fabric/paginated_route_aggregation_attachments.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/attachmentStatus", "ATTACHED");
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<RouteAggregationAttachment> attachments =
+                    fabric.cloudRouters().searchRouteAggregationAttachments(ROUTER_ID, filter, sort);
+
+            assertNotNull(attachments);
+            assertEquals(1, attachments.size());
+            assertEquals("7d0e1f2a-3b4c-5d6e-7f80-91a2b3c4d5e6", attachments.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/attachmentStatus")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ATTACHED")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("routerPackages() / routerPackageByCode()")
+    class Packages {
+
+        @Test
+        @DisplayName("routerPackages() GETs /routers/routerPackages and returns the list")
+        void listPackages() {
+            stubPaginatedGet(wireMock, "/fabric/v4/routerPackages",
+                    "/json/fabric/paginated_cloud_router_packages.json");
+
+            PaginatedList<CloudRouterPackage> packages = fabric.cloudRouters().routerPackages();
+
+            assertNotNull(packages);
+            assertEquals(2, packages.size());
+            assertEquals(CloudRouterPackageCode.BASIC, packages.get(0).getCode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/routerPackages")));
+        }
+
+        @Test
+        @DisplayName("routerPackageByCode(code) GETs /routers/routerPackages/{code}")
+        void getPackageByCode() {
+            stubSingleton(wireMock, "/fabric/v4/routerPackages/.*",
+                    "/json/fabric/cloud_router_package_response.json");
+
+            CloudRouterPackage pkg = fabric.cloudRouters().routerPackageByCode(CloudRouterPackageCode.PREMIUM);
+
+            assertNotNull(pkg);
+            assertEquals(CloudRouterPackageCode.PREMIUM, pkg.getCode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/routerPackages/PREMIUM")));
+        }
+    }
+
+    @Nested
+    @DisplayName("commands() [list]")
+    class ListCommands {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
+        @Test
+        @DisplayName("commands(routerId) GETs /{routerId}/commands and returns the list")
+        void listCommands() {
+            stubPaginatedGet(wireMock, "/fabric/v4/routers/" + ROUTER_ID + "/commands",
+                    "/json/fabric/paginated_cloud_router_commands.json");
+
+            PaginatedList<CloudRouterCommand> commands = fabric.cloudRouters().commands(ROUTER_ID);
+
+            assertNotNull(commands);
+            assertEquals(1, commands.size());
+            assertEquals("9d1e5f0a-2b3c-4d5e-8f90-a1b2c3d4e5f6", commands.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_ID + "/commands")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getActions() [list]")
+    class ListActions {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
+        @Test
+        @DisplayName("getActions(routerId) GETs /{routerId}/actions and returns the list")
+        void listActions() {
+            stubPaginatedGet(wireMock, "/fabric/v4/routers/" + ROUTER_ID + "/actions",
+                    "/json/fabric/paginated_cloud_router_actions.json");
+
+            List<CloudRouterAction> actions = fabric.cloudRouters().getActions(ROUTER_ID);
+
+            assertNotNull(actions);
+            assertEquals(1, actions.size());
+            assertEquals("1e9414f1-763e-4c0a-86c6-0bc8336048d9", actions.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_ID + "/actions")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getCommand() / getAction() [get-by-id]")
+    class GetById {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String COMMAND_ID = "9d1e5f0a-2b3c-4d5e-8f90-a1b2c3d4e5f6";
+        private static final String ACTION_ID = "1e9414f1-763e-4c0a-86c6-0bc8336048d9";
+
+        @Test
+        @DisplayName("getCommand(routerId, commandId) GETs /{routerId}/commands/{commandId}")
+        void getCommand() {
+            stubSingleton(wireMock, "/fabric/v4/routers/.*/commands/.*",
+                    "/json/fabric/cloud_router_command_response.json");
+
+            CloudRouterCommand command = fabric.cloudRouters().getCommand(ROUTER_ID, COMMAND_ID);
+
+            assertNotNull(command);
+            assertEquals(COMMAND_ID, command.getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routers/" + ROUTER_ID + "/commands/" + COMMAND_ID)));
+        }
+
+        @Test
+        @DisplayName("getAction(routerId, uuid) GETs /{routerId}/actions/{uuid}")
+        void getAction() {
+            stubSingleton(wireMock, "/fabric/v4/routers/.*/actions/.*",
+                    "/json/fabric/cloud_router_action_response.json");
+
+            CloudRouterAction action = fabric.cloudRouters().getAction(ROUTER_ID, ACTION_ID);
+
+            assertNotNull(action);
+            // The singleton fixture carries its own uuid; the request path is what we assert on.
+            assertEquals("557400f8-d360-11e9-bb65-2a2ae2dbcce4", action.getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routers/" + ROUTER_ID + "/actions/" + ACTION_ID)));
         }
     }
 

@@ -1,0 +1,26 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "type": "IPv4_BGP_ROUTE",
+      "protocolType": "BGP",
+      "state": "ACTIVE",
+      "prefix": "10.0.0.0/24",
+      "nextHop": "10.0.0.1",
+      "MED": 100,
+      "localPreference": 200,
+      "asPath": ["65000", "65001"],
+      "connection": {
+        "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85"
+      },
+      "changeLog": {
+        "createdBy": "user1234",
+        "createdDateTime": "2024-06-15T09:30:00.000Z"
+      }
+    }
+  ]
+}

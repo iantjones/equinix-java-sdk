@@ -3,10 +3,13 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.TimeServiceConnection;
+import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -148,6 +151,93 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
                     .withHeader("Content-Type", containing("application/json"))
                     .withRequestBody(matchingJsonPath("$.connections[0].uuid",
                             equalTo("095be615-a8ad-4c33-8e9c-c7612fbf6c9f"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListServices {
+
+        @Test
+        @DisplayName("GETs /timeServices and returns the paginated services")
+        void listsTimeServices() {
+            stubPaginatedGet(wireMock, "/fabric/v4/timeServices",
+                    "/json/fabric/paginated_time_services.json");
+
+            PaginatedList<PrecisionTime> services = fabric.precisionTimes().list();
+
+            assertNotNull(services);
+            assertEquals(2, services.size());
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", services.get(0).getUuid());
+            assertEquals("Staging-PTP-Service", services.get(1).getName());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices")));
+        }
+    }
+
+    @Nested
+    @DisplayName("packages()")
+    class Packages {
+
+        @Test
+        @DisplayName("GETs /timeServicePackages (overrideRootUri replaces the parent) not /timeServices/timeServicePackages")
+        void listsPackages() {
+            stubPaginatedGet(wireMock, "/fabric/v4/timeServicePackages",
+                    "/json/fabric/paginated_time_service_packages.json");
+
+            List<TimeServicePackage> packages = fabric.precisionTimes().packages();
+
+            assertNotNull(packages);
+            assertEquals(2, packages.size());
+            assertEquals(PrecisionTimePackageCode.NTP_STANDARD, packages.get(0).getCode());
+            assertEquals(PrecisionTimePackageCode.NTP_ENTERPRISE, packages.get(1).getCode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServicePackages")));
+            // overrideRootUri: must NOT be nested under the timeServices root
+            wireMock.verify(0, getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/timeServicePackages")));
+        }
+    }
+
+    @Nested
+    @DisplayName("packageByCode()")
+    class PackageByCode {
+
+        @Test
+        @DisplayName("GETs /timeServicePackages/{code} (overrideRootUri) and returns the matching package")
+        void getsPackageByCode() {
+            stubSingleton(wireMock, "/fabric/v4/timeServicePackages/.*",
+                    "/json/fabric/time_service_package_response.json");
+
+            TimeServicePackage pkg = fabric.precisionTimes()
+                    .packageByCode(PrecisionTimePackageCode.NTP_STANDARD);
+
+            assertNotNull(pkg);
+            assertEquals(PrecisionTimePackageCode.NTP_STANDARD, pkg.getCode());
+            assertEquals(Integer.valueOf(5), pkg.getBandwidth());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServicePackages/NTP_STANDARD")));
+            wireMock.verify(0, getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/timeServicePackages/NTP_STANDARD")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getConnections()")
+    class GetConnections {
+
+        @Test
+        @DisplayName("GETs /timeServices/{serviceId}/connections and returns the connection links")
+        void getsConnections() {
+            stubPaginatedGet(wireMock, "/fabric/v4/timeServices/.*/connections",
+                    "/json/fabric/paginated_time_service_connections.json");
+
+            List<TimeServiceConnection> connections = fabric.precisionTimes()
+                    .getConnections("f6a7b8c9-d0e1-2345-fabc-567890123def");
+
+            assertNotNull(connections);
+            assertEquals(2, connections.size());
+            assertEquals("095be615-a8ad-4c33-8e9c-c7612fbf6c9f", connections.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def/connections")));
         }
     }
 

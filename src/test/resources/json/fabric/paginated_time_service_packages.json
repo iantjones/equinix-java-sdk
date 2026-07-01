@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/timeServicePackages/NTP_STANDARD",
+      "type": "TIME_SERVICE_PACKAGE",
+      "code": "NTP_STANDARD",
+      "bandwidth": 5,
+      "clientsPerSecondMax": 1000,
+      "redundancySupported": false,
+      "multiSubnetSupported": false,
+      "accuracySlaUnit": "MICROSECONDS",
+      "accuracySla": 50,
+      "accuracySlaMin": 10,
+      "accuracySlaMax": 100
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/timeServicePackages/NTP_ENTERPRISE",
+      "type": "TIME_SERVICE_PACKAGE",
+      "code": "NTP_ENTERPRISE",
+      "bandwidth": 10,
+      "clientsPerSecondMax": 5000,
+      "redundancySupported": true,
+      "multiSubnetSupported": true,
+      "accuracySlaUnit": "MICROSECONDS",
+      "accuracySla": 20,
+      "accuracySlaMin": 5,
+      "accuracySlaMax": 50
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.StreamSubscription;
 import org.junit.jupiter.api.*;
 
@@ -37,6 +38,28 @@ class FabricStreamSubscriptionsWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+    }
+
+    @Nested
+    @DisplayName("list(streamId)")
+    class ListByStream {
+
+        @Test
+        @DisplayName("GETs the stream's subscriptions collection endpoint")
+        void listsSubscriptions() {
+            stubPaginatedGet(wireMock, "/fabric/v4/streams/.*/subscriptions",
+                    "/json/fabric/paginated_stream_subscriptions.json");
+
+            PaginatedList<StreamSubscription> subscriptions = fabric.streamSubscriptions().list(STREAM_ID);
+
+            assertNotNull(subscriptions);
+            assertEquals(1, subscriptions.size());
+            assertEquals(SUBSCRIPTION_ID, subscriptions.get(0).getUuid());
+            assertEquals("Production-Splunk-Subscription", subscriptions.get(0).getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/streams/" + STREAM_ID + "/subscriptions")));
+        }
     }
 
     @Nested

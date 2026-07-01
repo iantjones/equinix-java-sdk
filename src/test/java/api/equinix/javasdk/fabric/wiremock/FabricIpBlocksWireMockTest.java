@@ -3,10 +3,16 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.http.request.PatchOperation;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.IpBlockProductType;
 import api.equinix.javasdk.fabric.model.IpBlock;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -103,6 +109,103 @@ class FabricIpBlocksWireMockTest extends WireMockTestBase {
         private void stubSingletonGet() {
             wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ipBlocks/31fbdb3f-8def-410d-868b-ef920878affb"))
                     .willReturn(okJson(loadFixture("/json/fabric/ip_block_response.json"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByUuid()")
+    class GetByUuid {
+
+        @Test
+        @DisplayName("GETs /fabric/v4/ipBlocks/{uuid} and returns the IP block")
+        void returnsIpBlock() {
+            stubSingleton(wireMock, "/fabric/v4/ipBlocks/.*",
+                    "/json/fabric/ip_block_response.json");
+
+            IpBlock ipBlock = fabric.ipBlocks().getByUuid("31fbdb3f-8def-410d-868b-ef920878affb");
+
+            assertNotNull(ipBlock);
+            assertEquals("31fbdb3f-8def-410d-868b-ef920878affb", ipBlock.getUuid());
+            assertEquals(IpBlockProductType.IPV4_IP_BLOCK, ipBlock.getType());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/ipBlocks/31fbdb3f-8def-410d-868b-ef920878affb")));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/ipBlocks/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /ipBlocks/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ip_blocks.json");
+
+            PaginatedFilteredList<IpBlock> ipBlocks = fabric.ipBlocks().search();
+
+            assertNotNull(ipBlocks);
+            assertEquals(2, ipBlocks.size());
+            assertEquals("31fbdb3f-8def-410d-868b-ef920878affb", ipBlocks.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ip_blocks.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "IPV4_IP_BLOCK")
+                    .equals("/state", "ACTIVE");
+
+            PaginatedFilteredList<IpBlock> ipBlocks = fabric.ipBlocks().search(filter);
+
+            assertNotNull(ipBlocks);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("IPV4_IP_BLOCK")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("ACTIVE"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ip_blocks.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<IpBlock> ipBlocks = fabric.ipBlocks().search(sort);
+
+            assertNotNull(ipBlocks);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_ip_blocks.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "IPV4_IP_BLOCK");
+            SortPropertyList sort = Sort.sort().asc("/prefixLength");
+
+            PaginatedFilteredList<IpBlock> ipBlocks = fabric.ipBlocks().search(filter, sort);
+
+            assertNotNull(ipBlocks);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("IPV4_IP_BLOCK")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/prefixLength")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
         }
     }
 }

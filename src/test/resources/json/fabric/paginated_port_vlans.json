@@ -1,0 +1,24 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee/linkProtocols/vlan-1",
+      "uuid": "vlan-1111-2222-3333",
+      "state": "ACTIVE",
+      "type": "DOT1Q",
+      "vlanTag": 1001
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee/linkProtocols/vlan-2",
+      "uuid": "vlan-4444-5555-6666",
+      "state": "ACTIVE",
+      "type": "QINQ",
+      "vlanSTag": 2001,
+      "vlanCTag": 2002
+    }
+  ]
+}

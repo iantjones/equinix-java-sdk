@@ -6,9 +6,15 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.model.implementation.LinkProtocol;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
 import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
+import api.equinix.javasdk.fabric.model.RouteTableEntry;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -250,6 +256,250 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
 
             assertTrue(result);
             wireMock.verify(deleteRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeFilters/695a8471-6595-4ac6-a2f4-b3d96ed3a59d")));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        @Test
+        @DisplayName("search() POSTs an empty filter to /connections/search")
+        void searchNoArgs() {
+            stubPaginatedPost(wireMock, "/fabric/v4/connections/search",
+                    "/json/fabric/paginated_connections.json");
+
+            PaginatedFilteredList<Connection> results = fabric.connections().search();
+
+            assertNotNull(results);
+            assertEquals(2, results.size());
+            assertEquals("3a58dd05-f46d-4b1d-a154-2e85c396ea85", results.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections/search")));
+        }
+
+        @Test
+        @DisplayName("search(filter) POSTs the AND/equals filter in the body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, "/fabric/v4/connections/search",
+                    "/json/fabric/paginated_connections.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "My-EVPL-Connection");
+
+            PaginatedFilteredList<Connection> results = fabric.connections().search(filter);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("=")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("My-EVPL-Connection"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) POSTs the sort array in the body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, "/fabric/v4/connections/search",
+                    "/json/fabric/paginated_connections.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<Connection> results = fabric.connections().search(sort);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections/search"))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) POSTs both filter and sort in the body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, "/fabric/v4/connections/search",
+                    "/json/fabric/paginated_connections.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/operation/equinixStatus", "PROVISIONED");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<Connection> results = fabric.connections().search(filter, sort);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/operation/equinixStatus")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("PROVISIONED")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchAdvertisedRoutes()")
+    class SearchAdvertisedRoutes {
+
+        @Test
+        @DisplayName("POSTs to /connections/{id}/advertisedRoutes/search")
+        void searchNoArgs() {
+            stubPaginatedPost(wireMock,
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/advertisedRoutes/search",
+                    "/json/fabric/paginated_route_table_entries.json");
+
+            PaginatedFilteredList<RouteTableEntry> routes =
+                    fabric.connections().searchAdvertisedRoutes("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+
+            assertNotNull(routes);
+            assertEquals(1, routes.size());
+            assertEquals("10.0.0.0/24", routes.get(0).getPrefix());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/advertisedRoutes/search")));
+        }
+
+        @Test
+        @DisplayName("POSTs the filter and sort in the body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock,
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/advertisedRoutes/search",
+                    "/json/fabric/paginated_route_table_entries.json");
+
+            FilterPropertyList filter = Filter.filter().and().equals("/protocolType", "BGP");
+            SortPropertyList sort = Sort.sort().asc("/prefix");
+
+            PaginatedFilteredList<RouteTableEntry> routes = fabric.connections()
+                    .searchAdvertisedRoutes("3a58dd05-f46d-4b1d-a154-2e85c396ea85", filter, sort);
+
+            assertNotNull(routes);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/advertisedRoutes/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/protocolType")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("BGP")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/prefix")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchReceivedRoutes()")
+    class SearchReceivedRoutes {
+
+        @Test
+        @DisplayName("POSTs to /connections/{id}/receivedRoutes/search")
+        void searchNoArgs() {
+            stubPaginatedPost(wireMock,
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/receivedRoutes/search",
+                    "/json/fabric/paginated_route_table_entries.json");
+
+            PaginatedFilteredList<RouteTableEntry> routes =
+                    fabric.connections().searchReceivedRoutes("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+
+            assertNotNull(routes);
+            assertEquals(1, routes.size());
+            assertEquals("10.0.0.0/24", routes.get(0).getPrefix());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/receivedRoutes/search")));
+        }
+
+        @Test
+        @DisplayName("POSTs the filter and sort in the body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock,
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/receivedRoutes/search",
+                    "/json/fabric/paginated_route_table_entries.json");
+
+            FilterPropertyList filter = Filter.filter().and().equals("/state", "ACTIVE");
+            SortPropertyList sort = Sort.sort().desc("/prefix");
+
+            PaginatedFilteredList<RouteTableEntry> routes = fabric.connections()
+                    .searchReceivedRoutes("3a58dd05-f46d-4b1d-a154-2e85c396ea85", filter, sort);
+
+            assertNotNull(routes);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85/receivedRoutes/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ACTIVE")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/prefix")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getRouteAggregations() / getRouteAggregation()")
+    class RouteAggregationReads {
+
+        @Test
+        @DisplayName("getRouteAggregations GETs /connections/{id}/routeAggregations (list)")
+        void listAggregations() {
+            stubPaginatedGet(wireMock,
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeAggregations",
+                    "/json/fabric/paginated_route_aggregation_attachments.json");
+
+            List<RouteAggregationAttachment> aggregations = fabric.connections()
+                    .getRouteAggregations("81331c52-04c0-4656-a4a7-18c52669348f");
+
+            assertNotNull(aggregations);
+            assertEquals(1, aggregations.size());
+            assertEquals("7d0e1f2a-3b4c-5d6e-7f80-91a2b3c4d5e6", aggregations.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeAggregations")));
+        }
+
+        @Test
+        @DisplayName("getRouteAggregation GETs /connections/{id}/routeAggregations/{raId} (single)")
+        void getAggregation() {
+            stubSingleton(wireMock,
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeAggregations/695a8471-6595-4ac6-a2f4-b3d96ed3a59d",
+                    "/json/fabric/connection_route_aggregation_attachment_response.json");
+
+            RouteAggregationAttachment attachment = fabric.connections().getRouteAggregation(
+                    "81331c52-04c0-4656-a4a7-18c52669348f", "695a8471-6595-4ac6-a2f4-b3d96ed3a59d");
+
+            assertNotNull(attachment);
+            assertEquals("695a8471-6595-4ac6-a2f4-b3d96ed3a59d", attachment.getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeAggregations/695a8471-6595-4ac6-a2f4-b3d96ed3a59d")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getRouteFilters() / getRouteFilter()")
+    class RouteFilterReads {
+
+        @Test
+        @DisplayName("getRouteFilters GETs /connections/{id}/routeFilters (list)")
+        void listFilters() {
+            stubPaginatedGet(wireMock,
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeFilters",
+                    "/json/fabric/paginated_route_filter_attachments.json");
+
+            List<RouteFilterAttachment> filters = fabric.connections()
+                    .getRouteFilters("81331c52-04c0-4656-a4a7-18c52669348f");
+
+            assertNotNull(filters);
+            assertEquals(1, filters.size());
+            assertEquals("8e1e2f3a-4b5c-6d7e-8f90-a1b2c3d4e5f6", filters.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeFilters")));
+        }
+
+        @Test
+        @DisplayName("getRouteFilter GETs /connections/{id}/routeFilters/{rfId} (single)")
+        void getFilter() {
+            stubSingleton(wireMock,
+                    "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeFilters/695a8471-6595-4ac6-a2f4-b3d96ed3a59d",
+                    "/json/fabric/connection_route_filter_attachment_response.json");
+
+            RouteFilterAttachment attachment = fabric.connections().getRouteFilter(
+                    "81331c52-04c0-4656-a4a7-18c52669348f", "695a8471-6595-4ac6-a2f4-b3d96ed3a59d");
+
+            assertNotNull(attachment);
+            assertEquals("695a8471-6595-4ac6-a2f4-b3d96ed3a59d", attachment.getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/connections/81331c52-04c0-4656-a4a7-18c52669348f/routeFilters/695a8471-6595-4ac6-a2f4-b3d96ed3a59d")));
         }
     }

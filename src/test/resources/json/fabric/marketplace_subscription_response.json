@@ -1,0 +1,9 @@
+{
+  "uuid": "195be615-a8ad-4c33-8e9c-c7612fbf6c9f",
+  "href": "https://api.equinix.com/fabric/v4/marketplaceSubscriptions/195be615-a8ad-4c33-8e9c-c7612fbf6c9f",
+  "type": "MARKETPLACE_SUBSCRIPTION",
+  "state": "ACTIVE",
+  "marketplace": "AWS",
+  "offerId": "offer-12345",
+  "isAutoRenew": true
+}

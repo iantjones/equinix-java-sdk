@@ -1,0 +1,47 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "f6a7b8c9-d0e1-2345-fabc-567890123def",
+      "state": "ACTIVE",
+      "name": "AWS Direct Connect - Production",
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def",
+      "description": "AWS Direct Connect service profile for production workloads",
+      "type": "L2_PROFILE",
+      "visibility": "PUBLIC",
+      "account": {
+        "orgId": 91831,
+        "accountNumber": 270129
+      },
+      "changeLog": {
+        "createdBy": "user9012",
+        "createdDateTime": "2024-01-20T10:00:00.000Z",
+        "updatedBy": "user3456",
+        "updatedDateTime": "2024-11-10T08:30:00.000Z"
+      }
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "state": "ACTIVE",
+      "name": "Azure ExpressRoute - Shared",
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "description": "Azure ExpressRoute shared service profile",
+      "type": "L2_PROFILE",
+      "visibility": "PUBLIC",
+      "account": {
+        "orgId": 91831,
+        "accountNumber": 270129
+      },
+      "changeLog": {
+        "createdBy": "user9012",
+        "createdDateTime": "2024-02-11T09:15:00.000Z",
+        "updatedBy": "user3456",
+        "updatedDateTime": "2024-10-05T16:20:00.000Z"
+      }
+    }
+  ]
+}

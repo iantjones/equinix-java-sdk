@@ -6,8 +6,13 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.fabric.enums.EiaBillingType;
 import api.equinix.javasdk.fabric.enums.EiaRoutingProtocolType;
 import api.equinix.javasdk.fabric.enums.EiaServiceType;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.EiaService;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.creators.EiaRoutingProtocolRequest;
 import org.junit.jupiter.api.*;
 
@@ -138,6 +143,113 @@ class FabricEiaServicesWireMockTest extends WireMockTestBase {
                             .withRoutingProtocol(new EiaRoutingProtocolRequest(EiaRoutingProtocolType.DIRECT))
                             .withProject(new Project("proj-unauth"))
                             .create());
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        @Test
+        @DisplayName("search() POSTs an empty search body to /internetAccessServices/search")
+        void searchNoArgs() {
+            stubPaginatedPost(wireMock, "/fabric/v4/internetAccessServices/search",
+                    "/json/fabric/paginated_eia_services.json");
+
+            PaginatedFilteredList<EiaService> results = fabric.eiaServices().search();
+
+            assertNotNull(results);
+            assertEquals(2, results.size());
+            assertEquals("f1e2d3c4-b5a6-7890-abcd-ef0123456789", results.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/internetAccessServices/search")));
+        }
+
+        @Test
+        @DisplayName("search(filter) POSTs the AND/equals filter in the body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, "/fabric/v4/internetAccessServices/search",
+                    "/json/fabric/paginated_eia_services.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "My-EIA-Service");
+
+            PaginatedFilteredList<EiaService> results = fabric.eiaServices().search(filter);
+
+            assertNotNull(results);
+            assertEquals(2, results.size());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/internetAccessServices/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("=")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("My-EIA-Service"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) POSTs the sort array in the body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, "/fabric/v4/internetAccessServices/search",
+                    "/json/fabric/paginated_eia_services.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<EiaService> results = fabric.eiaServices().search(sort);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/internetAccessServices/search"))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) POSTs both filter and sort in the body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, "/fabric/v4/internetAccessServices/search",
+                    "/json/fabric/paginated_eia_services.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/state", "PROVISIONED");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<EiaService> results = fabric.eiaServices().search(filter, sort);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/internetAccessServices/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("PROVISIONED")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByUuid()")
+    class GetByUuid {
+
+        @Test
+        @DisplayName("GETs /internetAccessServices/{uuid} and returns the service")
+        void returnsService() {
+            stubSingleton(wireMock, "/fabric/v4/internetAccessServices/.*",
+                    "/json/fabric/eia_service_response.json");
+
+            EiaService service = fabric.eiaServices().getByUuid("f1e2d3c4-b5a6-7890-abcd-ef0123456789");
+
+            assertNotNull(service);
+            assertEquals("f1e2d3c4-b5a6-7890-abcd-ef0123456789", service.getUuid());
+            assertEquals("My-EIA-Service", service.getName());
+            assertEquals(EiaServiceType.SINGLE_IA, service.getType());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/internetAccessServices/f1e2d3c4-b5a6-7890-abcd-ef0123456789")));
+        }
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/fabric/v4/internetAccessServices/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"EIA service not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.eiaServices().getByUuid("invalid-uuid"));
         }
     }
 }
