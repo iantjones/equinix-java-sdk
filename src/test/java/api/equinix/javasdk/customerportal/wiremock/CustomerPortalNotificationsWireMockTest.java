@@ -66,4 +66,113 @@ class CustomerPortalNotificationsWireMockTest extends WireMockTestBase {
                 .withQueryParam("offset", absent())
                 .withQueryParam("limit", absent()));
     }
+
+    @Nested
+    @DisplayName("searchIbx(request)")
+    class SearchIbx {
+
+        @Test
+        @DisplayName("POSTs the typed filter body to /v1/notifications/ibx/search")
+        void searchIbx_postsFilterBody() {
+            wireMock.stubFor(post(urlPathEqualTo("/v1/notifications/ibx/search"))
+                    .willReturn(okJson("{\"data\":[{\"id\":\"5-1\",\"type\":\"IBX_MAINTENANCE\"}]}")));
+
+            NotificationSearchRequest request = NotificationSearchRequest.builder()
+                    .filter(NotificationSearchRequest.Filter.builder()
+                            .ibxs(List.of("SV5", "SV1"))
+                            .types(List.of("IBX_MAINTENANCE"))
+                            .statuses(List.of("NEW"))
+                            .dateRange(new NotificationSearchRequest.DateRange(
+                                    "2024-11-01T00:00:00.000Z", "2024-11-30T00:00:00.000Z"))
+                            .build())
+                    .build();
+
+            List<? extends Notification> items = customerPortal.notifications().searchIbx(request);
+
+            assertNotNull(items);
+            assertEquals(1, items.size());
+            assertEquals("5-1", items.get(0).getId());
+
+            // sorts is @JsonIgnore-d out of the body; no query params on the no-paging overload.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/notifications/ibx/search"))
+                    .withQueryParam("offset", absent())
+                    .withQueryParam("limit", absent())
+                    .withQueryParam("sorts", absent())
+                    .withRequestBody(matchingJsonPath("$.filter.ibxs[0]", equalTo("SV5")))
+                    .withRequestBody(matchingJsonPath("$.filter.ibxs[1]", equalTo("SV1")))
+                    .withRequestBody(matchingJsonPath("$.filter.types[0]", equalTo("IBX_MAINTENANCE")))
+                    .withRequestBody(matchingJsonPath("$.filter.statuses[0]", equalTo("NEW")))
+                    .withRequestBody(matchingJsonPath("$.filter.dateRange.fromDate", equalTo("2024-11-01T00:00:00.000Z")))
+                    .withRequestBody(matchingJsonPath("$.filter.dateRange.toDate", equalTo("2024-11-30T00:00:00.000Z"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("searchNetwork(request, offset, limit)")
+    class SearchNetwork {
+
+        @Test
+        @DisplayName("POSTs productTypes filter body and forwards paging + sorts query params")
+        void searchNetwork_postsBodyAndPaging() {
+            wireMock.stubFor(post(urlPathEqualTo("/v1/notifications/network/search"))
+                    .willReturn(okJson("{\"data\":[{\"id\":\"n-9\",\"type\":\"NETWORK_INCIDENT\"}]}")));
+
+            NotificationSearchRequest request = NotificationSearchRequest.builder()
+                    .sorts(List.of("-startDate"))
+                    .filter(NotificationSearchRequest.Filter.builder()
+                            .productTypes(List.of("FABRIC"))
+                            .statuses(List.of("NEW"))
+                            .build())
+                    .build();
+
+            List<? extends Notification> items = customerPortal.notifications().searchNetwork(request, 5, 10);
+
+            assertNotNull(items);
+            assertEquals(1, items.size());
+            assertEquals("n-9", items.get(0).getId());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/notifications/network/search"))
+                    .withQueryParam("offset", equalTo("5"))
+                    .withQueryParam("limit", equalTo("10"))
+                    .withQueryParam("sorts", equalTo("-startDate"))
+                    .withRequestBody(matchingJsonPath("$.filter.productTypes[0]", equalTo("FABRIC")))
+                    .withRequestBody(matchingJsonPath("$.filter.statuses[0]", equalTo("NEW"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("get-by-id")
+    class GetById {
+
+        @Test
+        @DisplayName("getIbxById GETs /v1/notifications/ibx/{id} and maps the body")
+        void getIbxById_getsAndMaps() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/notifications/ibx/5-122719992195"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/notification_response.json"))));
+
+            Notification notification = customerPortal.notifications().getIbxById("5-122719992195");
+
+            assertNotNull(notification);
+            assertEquals("5-122719992195", notification.getId());
+            assertEquals("IBX_MAINTENANCE", notification.getType());
+            assertEquals(List.of("SV5", "SV1"), notification.getIbxs());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/notifications/ibx/5-122719992195")));
+        }
+
+        @Test
+        @DisplayName("getNetworkById GETs /v1/notifications/network/{id}")
+        void getNetworkById_gets() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/notifications/network/n-42"))
+                    .willReturn(okJson("{\"id\":\"n-42\",\"type\":\"NETWORK_INCIDENT\",\"status\":\"NEW\"}")));
+
+            Notification notification = customerPortal.notifications().getNetworkById("n-42");
+
+            assertNotNull(notification);
+            assertEquals("n-42", notification.getId());
+            assertEquals("NETWORK_INCIDENT", notification.getType());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/notifications/network/n-42")));
+        }
+    }
 }

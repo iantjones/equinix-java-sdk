@@ -1,0 +1,42 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "id": "SP-100023",
+      "accountNumber": "128745",
+      "planName": "Smart Hands Premium",
+      "productCode": "SMARTHANDS_PREMIUM",
+      "ibxs": ["SV5", "DC11"],
+      "ibxSpecific": true,
+      "planFrequency": "MONTHLY_ROLLOVER",
+      "purchasedMinutes": 600,
+      "assignedMinutes": 550,
+      "consumedMinutes": 120,
+      "remainingMinutes": 430,
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "SP-100099",
+      "accountNumber": "998877",
+      "planName": "Smart Hands Standard",
+      "productCode": "SMARTHANDS_STANDARD",
+      "ibxs": ["FR5"],
+      "ibxSpecific": false,
+      "planFrequency": "ANNUAL",
+      "purchasedMinutes": 300,
+      "consumedMinutes": 60,
+      "remainingMinutes": 240,
+      "startDate": "2026-02-01",
+      "endDate": "2027-01-31",
+      "status": "ACTIVE"
+    }
+  ]
+}

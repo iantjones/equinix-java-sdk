@@ -2,7 +2,10 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.customerportal.model.ConnectionService;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
+import api.equinix.javasdk.customerportal.model.PatchPanel;
+import api.equinix.javasdk.customerportal.model.Provider;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -69,5 +72,89 @@ class CustomerPortalLookupsWireMockTest extends WireMockTestBase {
                 .withQueryParam("aSideIbx", equalTo("LD5"))
                 .withQueryParam("connectionService", equalTo("DOT1Q"))
                 .withQueryParam("details", equalTo("true")));
+    }
+
+    @Nested
+    @DisplayName("listPatchPanels")
+    class ListPatchPanels {
+
+        @Test
+        @DisplayName("GET /colocations/v2/patchPanels with cabinetId query param")
+        void listPatchPanels_forwardsCabinetId() {
+            wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/patchPanels"))
+                    .willReturn(okJson("[{\"patchPanelId\":\"PP-1\",\"availablePortCount\":8}]")));
+
+            List<? extends PatchPanel> panels =
+                    customerPortal.lookups().listPatchPanels("cabinet-123");
+
+            assertNotNull(panels);
+            assertEquals(1, panels.size());
+            assertEquals("PP-1", panels.get(0).getPatchPanelId());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/patchPanels"))
+                    .withQueryParam("cabinetId", equalTo("cabinet-123")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getPatchPanelById")
+    class GetPatchPanelById {
+
+        @Test
+        @DisplayName("GET /colocations/v2/patchPanels/{patchPanelId}")
+        void getPatchPanelById_hitsDetailPath() {
+            wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/patchPanels/PP-99"))
+                    .willReturn(okJson("{\"patchPanelId\":\"PP-99\",\"ibx\":\"LD5\",\"cabinetId\":\"cabinet-123\"}")));
+
+            PatchPanel panel = customerPortal.lookups().getPatchPanelById("PP-99");
+
+            assertNotNull(panel);
+            assertEquals("PP-99", panel.getPatchPanelId());
+            assertEquals("LD5", panel.getIbx());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/patchPanels/PP-99")));
+        }
+    }
+
+    @Nested
+    @DisplayName("listProviders")
+    class ListProviders {
+
+        @Test
+        @DisplayName("GET /colocations/v2/providers with cageId and accountNumber query params")
+        void listProviders_forwardsCageIdAndAccountNumber() {
+            wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/providers"))
+                    .willReturn(okJson("[{\"providerAccountName\":\"Acme\","
+                            + "\"providerAccountNumber\":\"10000001\"}]")));
+
+            List<? extends Provider> providers =
+                    customerPortal.lookups().listProviders("cage-1", "10000001");
+
+            assertNotNull(providers);
+            assertEquals(1, providers.size());
+            assertEquals("10000001", providers.get(0).getProviderAccountNumber());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/providers"))
+                    .withQueryParam("cageId", equalTo("cage-1"))
+                    .withQueryParam("accountNumber", equalTo("10000001")));
+        }
+    }
+
+    @Nested
+    @DisplayName("listConnectionServices")
+    class ListConnectionServices {
+
+        @Test
+        @DisplayName("GET /colocations/v2/connectionServices with ibx query param")
+        void listConnectionServices_forwardsIbx() {
+            wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/connectionServices"))
+                    .willReturn(okJson("[{\"name\":\"DOT1Q\"}]")));
+
+            List<? extends ConnectionService> services =
+                    customerPortal.lookups().listConnectionServices("LD5");
+
+            assertNotNull(services);
+            assertEquals(1, services.size());
+            assertEquals("DOT1Q", services.get(0).getName());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/connectionServices"))
+                    .withQueryParam("ibx", equalTo("LD5")));
+        }
     }
 }

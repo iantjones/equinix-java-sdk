@@ -1,0 +1,29 @@
+[
+  {
+    "name": "power_usage",
+    "scheduleType": "WEEKLY",
+    "period": "30_DAYS",
+    "control": "CUSTOMER",
+    "categories": [
+      "POWER"
+    ],
+    "parameters": [
+      {
+        "name": "metro",
+        "value": "SV",
+        "type": "STRING",
+        "required": true
+      }
+    ]
+  },
+  {
+    "name": "cross_connect_inventory",
+    "scheduleType": "MONTHLY",
+    "period": "90_DAYS",
+    "control": "CUSTOMER",
+    "categories": [
+      "INVENTORY"
+    ],
+    "parameters": []
+  }
+]

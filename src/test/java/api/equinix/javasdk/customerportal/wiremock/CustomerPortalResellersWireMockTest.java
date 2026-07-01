@@ -3,7 +3,9 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.enums.Service;
+import api.equinix.javasdk.customerportal.model.Reseller;
 import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.implementation.Address;
 import org.junit.jupiter.api.*;
@@ -38,6 +40,79 @@ class CustomerPortalResellersWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListResellers {
+
+        /** rootUri {@code resellers}, defaultVersion 2, no requestUri → {@code /v2/resellers}. */
+        private static final String LIST_PATH = "/v2/resellers";
+
+        @Test
+        @DisplayName("GETs /v2/resellers and returns the paginated reseller accounts")
+        void listsResellers() {
+            stubPaginatedGet(wireMock, LIST_PATH,
+                    "/json/customerportal/paginated_resellers.json");
+
+            PaginatedList<Reseller> resellers = customerPortal.resellers().list();
+
+            assertNotNull(resellers);
+            assertEquals(2, resellers.size());
+            assertEquals("256891", resellers.get(0).getAccountNumber());
+            assertEquals("TechBridge Solutions LLC", resellers.get(0).getAccountName());
+            assertEquals("300142", resellers.get(1).getAccountNumber());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH)));
+        }
+
+        @Test
+        @DisplayName("500 throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v2/resellers",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.resellers().list());
+        }
+    }
+
+    @Nested
+    @DisplayName("listCustomers()")
+    class ListResellerCustomers {
+
+        private static final String ACCOUNT_NUMBER = "256891";
+        /** requestUri {@code {$accountNumber}/customers} → {@code /v2/resellers/256891/customers}. */
+        private static final String LIST_PATH = "/v2/resellers/" + ACCOUNT_NUMBER + "/customers";
+
+        @Test
+        @DisplayName("GETs /v2/resellers/{accountNumber}/customers and returns the paginated customers")
+        void listsCustomers() {
+            stubPaginatedGet(wireMock, LIST_PATH,
+                    "/json/customerportal/paginated_reseller_customers.json");
+
+            PaginatedList<ResellerCustomer> customers = customerPortal.resellers()
+                    .listCustomers(ACCOUNT_NUMBER);
+
+            assertNotNull(customers);
+            assertEquals(2, customers.size());
+            assertEquals("778231", customers.get(0).getCustomerAccountNumber());
+            assertEquals("Northwind Trading Co.", customers.get(0).getCustomerAccountName());
+            assertEquals("256891", customers.get(0).getAccountNumber());
+            assertEquals("778232", customers.get(1).getCustomerAccountNumber());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH)));
+        }
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v2/resellers/invalid/customers",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Reseller account not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.resellers().listCustomers("invalid"));
+        }
     }
 
     @Nested

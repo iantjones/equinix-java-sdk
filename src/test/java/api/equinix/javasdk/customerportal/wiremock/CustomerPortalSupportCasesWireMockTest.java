@@ -8,6 +8,8 @@ import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCancelR
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseNoteRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.OrderContact;
+import api.equinix.javasdk.customerportal.model.EmailDetails;
+import api.equinix.javasdk.customerportal.model.SupportCase;
 import org.junit.jupiter.api.*;
 
 import java.nio.charset.StandardCharsets;
@@ -179,6 +181,62 @@ class CustomerPortalSupportCasesWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.supportCases().downloadAttachment("2-987654321", "missing"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByCaseOrOrderNumber()")
+    class GetByCaseOrOrderNumber {
+
+        @Test
+        @DisplayName("GETs /support/v2/tickets/{id} and deserializes the case")
+        void getReturnsCase() {
+            wireMock.stubFor(get(urlPathEqualTo("/support/v2/tickets/11150929"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/support_case_response.json"))));
+
+            SupportCase supportCase = customerPortal.supportCases().getByCaseOrOrderNumber("11150929");
+
+            assertNotNull(supportCase);
+            assertEquals("11150929", supportCase.getId());
+            assertEquals("1-204976070710", supportCase.getOrderId());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/support/v2/tickets/11150929")));
+        }
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            wireMock.stubFor(get(urlPathMatching("/support/v2/tickets/.*"))
+                    .willReturn(aResponse()
+                            .withStatus(404)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Case not found\"}]")));
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.supportCases().getByCaseOrOrderNumber("missing"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getEmailDetails()")
+    class GetEmailDetails {
+
+        @Test
+        @DisplayName("GETs the v1 /support/v1/tickets/emailDetails/{emailId}/caseNumber/{caseNumber} path and deserializes")
+        void getEmailDetailsReturnsDetails() {
+            wireMock.stubFor(get(urlPathEqualTo(
+                    "/support/v1/tickets/emailDetails/02s7z00000D30lZAAR/caseNumber/11150929"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/email_details_response.json"))));
+
+            EmailDetails details = customerPortal.supportCases()
+                    .getEmailDetails("02s7z00000D30lZAAR", "11150929");
+
+            assertNotNull(details);
+            assertEquals("Issue with device", details.getSubject());
+            assertEquals("abc@equinix.com", details.getFromAddress());
+            assertEquals("xyz@example.com", details.getToAddress());
+            assertEquals("ops@example.com", details.getCcAddress());
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/support/v1/tickets/emailDetails/02s7z00000D30lZAAR/caseNumber/11150929")));
         }
     }
 }

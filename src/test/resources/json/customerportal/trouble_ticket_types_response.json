@@ -1,0 +1,18 @@
+{
+  "troubleTicketTypes": [
+    {
+      "category": "Cross Connect",
+      "code": "cc01",
+      "description": "Cross connect down",
+      "severity": "P2",
+      "additionalDetails": {}
+    },
+    {
+      "category": "Network",
+      "code": "net01",
+      "description": "Intermittent packet loss",
+      "severity": "P3",
+      "additionalDetails": {}
+    }
+  ]
+}

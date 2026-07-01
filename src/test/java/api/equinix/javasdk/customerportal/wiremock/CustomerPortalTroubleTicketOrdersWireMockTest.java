@@ -5,6 +5,8 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.customerportal.enums.PhonePreferenceToCall;
 import api.equinix.javasdk.customerportal.enums.SmartHandsContactType;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.TroubleTicketOrderLocation;
+import api.equinix.javasdk.customerportal.model.TroubleTicketType;
 import api.equinix.javasdk.customerportal.model.json.creators.IbxLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketContact;
 import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketOrderRequest;
@@ -86,6 +88,90 @@ class CustomerPortalTroubleTicketOrdersWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.contacts[0].contactType", equalTo("ORDERING")))
                     .withRequestBody(matchingJsonPath("$.contacts[2].name", equalTo("John Doe")))
                     .withRequestBody(matchingJsonPath("$.customerReferenceNumber", equalTo("RSS41244"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getTypes()")
+    class GetTypes {
+
+        @Test
+        @DisplayName("GETs the reference types endpoint with no query params")
+        void listsAllTypes() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/troubleticket/types"))
+                    .willReturn(okJson(loadFixture(
+                            "/json/customerportal/trouble_ticket_types_response.json"))));
+
+            List<? extends TroubleTicketType> types = customerPortal.troubleTicketOrders().getTypes();
+
+            assertNotNull(types);
+            assertEquals(2, types.size());
+            assertEquals("net01", types.get(1).getCode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/troubleticket/types"))
+                    .withQueryParam("category", absent()));
+        }
+
+        @Test
+        @DisplayName("GETs the reference types endpoint filtered by category")
+        void listsTypesByCategory() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/troubleticket/types"))
+                    .willReturn(okJson(loadFixture(
+                            "/json/customerportal/trouble_ticket_types_response.json"))));
+
+            List<? extends TroubleTicketType> types =
+                    customerPortal.troubleTicketOrders().getTypes("Network");
+
+            assertNotNull(types);
+            assertEquals(2, types.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/troubleticket/types"))
+                    .withQueryParam("category", equalTo("Network")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getLocations()")
+    class GetLocations {
+
+        @Test
+        @DisplayName("GETs the reference locations endpoint with no query params")
+        void listsAllLocations() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/troubleticket/locations"))
+                    .willReturn(okJson(loadFixture(
+                            "/json/customerportal/trouble_ticket_locations_response.json"))));
+
+            List<? extends TroubleTicketOrderLocation> locations =
+                    customerPortal.troubleTicketOrders().getLocations();
+
+            assertNotNull(locations);
+            assertEquals(2, locations.size());
+            assertEquals("AM1", locations.get(0).getIbx());
+            assertEquals("AM1:01:001MC3", locations.get(0).getCages().get(0).getCage());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/troubleticket/locations"))
+                    .withQueryParam("detail", absent())
+                    .withQueryParam("ibxs", absent())
+                    .withQueryParam("cages", absent()));
+        }
+
+        @Test
+        @DisplayName("GETs the reference locations endpoint filtered by detail, ibxs and cages")
+        void listsLocationsFiltered() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/troubleticket/locations"))
+                    .willReturn(okJson(loadFixture(
+                            "/json/customerportal/trouble_ticket_locations_response.json"))));
+
+            List<? extends TroubleTicketOrderLocation> locations =
+                    customerPortal.troubleTicketOrders().getLocations(true, "AM1", "AM1:01:001MC3");
+
+            assertNotNull(locations);
+            assertEquals(2, locations.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/troubleticket/locations"))
+                    .withQueryParam("detail", equalTo("true"))
+                    .withQueryParam("ibxs", equalTo("AM1"))
+                    .withQueryParam("cages", equalTo("AM1:01:001MC3")));
         }
     }
 }

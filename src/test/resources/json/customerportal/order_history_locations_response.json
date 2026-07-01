@@ -1,0 +1,28 @@
+[
+  {
+    "ibx": {
+      "code": "LD5",
+      "metro": "London",
+      "region": "EMEA",
+      "country": "United Kingdom",
+      "city": "London",
+      "state": "England",
+      "address": "8-9 Buckingham Avenue",
+      "postalCode": "SL1 4AX"
+    },
+    "cages": ["LD5:01:000123", "LD5:01:000124"]
+  },
+  {
+    "ibx": {
+      "code": "SV1",
+      "metro": "Silicon Valley",
+      "region": "AMER",
+      "country": "United States",
+      "city": "San Jose",
+      "state": "CA",
+      "address": "11 Great Oaks Blvd",
+      "postalCode": "95119"
+    },
+    "cages": ["SV1:02:000900"]
+  }
+]

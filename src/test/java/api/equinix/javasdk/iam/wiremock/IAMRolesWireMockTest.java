@@ -104,6 +104,23 @@ class IAMRolesWireMockTest extends WireMockTestBase {
         }
 
         @Test
+        @DisplayName("4-arg overload sends projectId as a query param (not a path segment) alongside projectErn")
+        void listsRolesWithProjectIdQueryParam() {
+            stubPaginatedGet(wireMock, "/v1/roles", "/json/iam/roles_list.json");
+
+            RoleList roles = iam.roles().list("tok-4", 20, "project:abc-123", "ern:project:abc-123");
+
+            assertNotNull(roles);
+            assertEquals(2, roles.getList().size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/roles"))
+                    .withQueryParam("pageToken", equalTo("tok-4"))
+                    .withQueryParam("pageSize", equalTo("20"))
+                    .withQueryParam("projectId", equalTo("project:abc-123"))
+                    .withQueryParam("projectErn", equalTo("ern:project:abc-123")));
+        }
+
+        @Test
         @DisplayName("returns an empty list when the catalog has no roles")
         void listsRolesEmpty() {
             stubPaginatedGet(wireMock, "/v1/roles", "/json/iam/roles_empty.json");

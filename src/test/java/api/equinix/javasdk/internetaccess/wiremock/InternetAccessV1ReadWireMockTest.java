@@ -17,6 +17,7 @@ import api.equinix.javasdk.internetaccess.enums.ServiceOrderType;
 import api.equinix.javasdk.internetaccess.enums.UseCase;
 import api.equinix.javasdk.internetaccess.model.AccountAgreement;
 import api.equinix.javasdk.internetaccess.model.AccountDetails;
+import api.equinix.javasdk.internetaccess.model.Cabinet;
 import api.equinix.javasdk.internetaccess.model.Cage;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import api.equinix.javasdk.internetaccess.model.OrderDetails;
@@ -26,8 +27,10 @@ import api.equinix.javasdk.internetaccess.model.RoutingProtocolConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -259,5 +262,135 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
                 .withQueryParam("account.accountNumber", equalTo("100013200"))
                 .withQueryParam("cage.spaceId", equalTo("S1"))
                 .withQueryParam("cabinet.spaceId", equalTo("S2")));
+    }
+
+    /**
+     * The EIA v1 cabinets product-availability lookup
+     * ({@code GET /internetAccess/v1/cabinets}, the {@code CabinetsV1} group in
+     * {@code apiParams_InternetAccess.json}). Confirms v1 URI/version routing, the optional
+     * {@code cage.spaceId}/{@code location.ibx}/{@code account.accountNumber} filter placement, and
+     * the read-only {@link Cabinet} deserialization.
+     */
+    @Nested
+    class Cabinets {
+
+        @Test
+        void list_noArgs_routesToV1WithNoQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                            .withBody(page("{ \"spaceId\": \"CAB-1\", \"number\": \"0101\", \"patchPanelsCount\": 4, "
+                                    + "\"cage\": { \"spaceId\": \"S1\" }, \"location\": { \"ibx\": \"WA1\" }, "
+                                    + "\"account\": { \"accountNumber\": \"100013200\" } }"))));
+
+            PaginatedList<Cabinet> cabinets = internetAccess.cabinets().list();
+
+            assertEquals(1, cabinets.size());
+            assertEquals("CAB-1", cabinets.get(0).getSpaceId());
+            assertEquals("0101", cabinets.get(0).getNumber());
+            assertEquals(Integer.valueOf(4), cabinets.get(0).getPatchPanelsCount());
+            assertEquals("S1", cabinets.get(0).getCage().getSpaceId());
+            assertEquals("WA1", cabinets.get(0).getLocation().getIbx());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .withQueryParam("cage.spaceId", absent())
+                    .withQueryParam("location.ibx", absent())
+                    .withQueryParam("account.accountNumber", absent()));
+        }
+
+        @Test
+        void list_withFilters_sendsAllThreeQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                            .withBody(page("{ \"spaceId\": \"CAB-2\", \"number\": \"0202\", \"patchPanelsCount\": 2, "
+                                    + "\"cage\": { \"spaceId\": \"S1\" }, \"location\": { \"ibx\": \"WA1\" }, "
+                                    + "\"account\": { \"accountNumber\": \"100013200\" } }"))));
+
+            PaginatedList<Cabinet> cabinets = internetAccess.cabinets().list("S1", "WA1", "100013200");
+
+            assertEquals(1, cabinets.size());
+            assertEquals("CAB-2", cabinets.get(0).getSpaceId());
+            assertEquals("100013200", cabinets.get(0).getAccount().getAccountNumber());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .withQueryParam("cage.spaceId", equalTo("S1"))
+                    .withQueryParam("location.ibx", equalTo("WA1"))
+                    .withQueryParam("account.accountNumber", equalTo("100013200")));
+        }
+    }
+
+    /**
+     * The EIA product-availability IBX inventory. Verifies the version routing across the two
+     * Ibxs groups in {@code apiParams_InternetAccess.json}: the v2 list
+     * ({@code GET /internetAccess/v2/ibxs}, the {@code Ibxs} group, {@code defaultVersion: 2})
+     * driven by {@code availability(...)}, and the v1 single-IBX get
+     * ({@code GET /internetAccess/v1/ibxs/{ibx}}, the {@code IbxsV1} group,
+     * {@code defaultVersion: 1}) driven by {@code getByCode(...)} — plus the query-parameter
+     * placement for each overload.
+     */
+    @Nested
+    class IbxAvailability {
+
+        @Test
+        void availability_connectionTypeOnly_v2ListSendsOnlyConnectionType() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                            .withBody(page("{ \"href\": \"https://api.equinix.com/internetAccess/ibxs/WA1\", "
+                                    + "\"ibxCode\": \"WA1\", \"metroCode\": \"WA\", \"countryCode\": \"PL\", "
+                                    + "\"countryName\": \"Poland\", \"region\": \"EMEA\" }"))));
+
+            PaginatedList<Ibx> ibxs = internetAccess.ibxs().availability(ConnectionType.IA_C);
+
+            assertEquals(1, ibxs.size());
+            assertEquals("WA1", ibxs.get(0).getIbxCode());
+            assertEquals("WA", ibxs.get(0).getMetroCode());
+
+            // v2 route (defaultVersion 2, no requestUri) — only the required connection type,
+            // the two optional narrowing params must be absent.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .withQueryParam("service.connection.type", equalTo("IA_C"))
+                    .withQueryParam("connection.aside.accessPoint.type", absent())
+                    .withQueryParam("asset.type", absent()));
+        }
+
+        @Test
+        void availability_allFilters_v2ListSendsAllThreeQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                            .withBody(page("{ \"href\": \"https://api.equinix.com/internetAccess/ibxs/SG1\", "
+                                    + "\"ibxCode\": \"SG1\", \"metroCode\": \"SG\", \"countryCode\": \"SG\", "
+                                    + "\"region\": \"APAC\" }"))));
+
+            PaginatedList<Ibx> ibxs =
+                    internetAccess.ibxs().availability(ConnectionType.IA_VC, "COLO", "CABINET");
+
+            assertEquals(1, ibxs.size());
+            assertEquals("SG1", ibxs.get(0).getIbxCode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .withQueryParam("service.connection.type", equalTo("IA_VC"))
+                    .withQueryParam("connection.aside.accessPoint.type", equalTo("COLO"))
+                    .withQueryParam("asset.type", equalTo("CABINET")));
+        }
+
+        @Test
+        void getByCode_singleArg_v1GetSendsNoQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/ibxs/WA1"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                            .withBody("{ \"href\": \"https://api.equinix.com/internetAccess/ibxs/WA1\", "
+                                    + "\"ibx\": \"WA1\", \"metroCode\": \"WA\", \"metroName\": \"Warsaw\", "
+                                    + "\"countryCode\": \"PL\", \"region\": \"EMEA\" }")));
+
+            Ibx ibx = internetAccess.ibxs().getByCode("WA1");
+
+            assertEquals("WA1", ibx.getIbxCode());
+            assertEquals("Warsaw", ibx.getMetroName());
+            assertEquals("WA", ibx.getMetroCode());
+
+            // v1 route (IbxsV1 group, defaultVersion 1, requestUri {$ibx}); the single-arg
+            // overload passes null for both optional filters, so no query string is sent.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/ibxs/WA1"))
+                    .withQueryParam("service.connection.type", absent())
+                    .withQueryParam("connection.aside.accessPoint.type", absent()));
+        }
     }
 }

@@ -1,0 +1,27 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/internetAccess/v1/prices/IA_C_100",
+      "type": "INTERNET_ACCESS_PRODUCT",
+      "code": "IA_C_100",
+      "name": "Internet Access Connection 100 Mbps",
+      "description": "Equinix Internet Access connection at 100 Mbps",
+      "currency": "USD",
+      "category": "CUSTOMER"
+    },
+    {
+      "href": "https://api.equinix.com/internetAccess/v1/prices/IP_BLOCK_29",
+      "type": "IP_BLOCK_PRODUCT",
+      "code": "IP_BLOCK_29",
+      "name": "IP Block /29",
+      "description": "Public IP block, /29 prefix",
+      "currency": "USD",
+      "category": "COUNTRY"
+    }
+  ]
+}

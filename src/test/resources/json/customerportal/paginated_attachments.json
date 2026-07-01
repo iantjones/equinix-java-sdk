@@ -1,0 +1,29 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "attachmentId": "f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b",
+      "attachmentName": "rack-diagram.pdf",
+      "attachmentType": "application/pdf",
+      "attachmentSize": 482310,
+      "createdDate": "2024-11-12T09:45:00.000Z",
+      "createdBy": "jane.doe@example.com",
+      "lastUpdatedDate": "2024-11-13T10:15:00.000Z"
+    },
+    {
+      "attachmentId": "a9b8c7d6-e5f4-4321-8a7b-6c5d4e3f2a1b",
+      "attachmentName": "purchase-order.pdf",
+      "attachmentType": "application/pdf",
+      "attachmentSize": 128044,
+      "createdDate": "2024-11-14T14:00:00.000Z",
+      "createdBy": "john.smith@example.com",
+      "lastUpdatedDate": "2024-11-14T14:05:00.000Z"
+    }
+  ]
+}

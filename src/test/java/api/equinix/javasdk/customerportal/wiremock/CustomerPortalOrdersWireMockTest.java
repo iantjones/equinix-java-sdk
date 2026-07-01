@@ -74,6 +74,65 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("getByUuid(orderId, ibxs)")
+    class GetByUuidScopedToIbxs {
+
+        @Test
+        @DisplayName("appends each IBX as a repeated ibxs query param on the GET")
+        void scopesToIbxs() {
+            stubSingleton(wireMock, "/colocations/v2/orders/.*",
+                    "/json/customerportal/order_response.json");
+
+            Order order = customerPortal.orders().getByUuid(ORDER_ID, List.of("SV5", "DC2"));
+
+            assertNotNull(order);
+            assertEquals(ORDER_ID, order.getOrderId());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID))
+                    .withQueryParam("ibxs", equalTo("SV5"))
+                    .withQueryParam("ibxs", equalTo("DC2")));
+        }
+
+        @Test
+        @DisplayName("a single IBX is sent as one ibxs query param")
+        void scopesToSingleIbx() {
+            stubSingleton(wireMock, "/colocations/v2/orders/.*",
+                    "/json/customerportal/order_response.json");
+
+            Order order = customerPortal.orders().getByUuid(ORDER_ID, List.of("SV5"));
+
+            assertNotNull(order);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID))
+                    .withQueryParam("ibxs", equalTo("SV5")));
+        }
+
+        @Test
+        @DisplayName("null ibxs falls through to the unscoped GET with no query params")
+        void nullIbxsIsUnscoped() {
+            stubSingleton(wireMock, "/colocations/v2/orders/.*",
+                    "/json/customerportal/order_response.json");
+
+            Order order = customerPortal.orders().getByUuid(ORDER_ID, null);
+
+            assertNotNull(order);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID))
+                    .withQueryParam("ibxs", absent()));
+        }
+
+        @Test
+        @DisplayName("empty ibxs list falls through to the unscoped GET with no query params")
+        void emptyIbxsIsUnscoped() {
+            stubSingleton(wireMock, "/colocations/v2/orders/.*",
+                    "/json/customerportal/order_response.json");
+
+            Order order = customerPortal.orders().getByUuid(ORDER_ID, List.of());
+
+            assertNotNull(order);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID))
+                    .withQueryParam("ibxs", absent()));
+        }
+    }
+
+    @Nested
     @DisplayName("getNegotiations()")
     class GetNegotiations {
 

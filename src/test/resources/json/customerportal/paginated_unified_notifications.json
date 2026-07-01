@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "id": "un-0001",
+      "notificationNumber": "5-987654321",
+      "category": "MAINTENANCE",
+      "type": "IBX_MAINTENANCE",
+      "productTypes": ["CABINET", "CROSS_CONNECT"],
+      "summary": "Scheduled electrical maintenance at SV5",
+      "status": "SCHEDULED",
+      "createdDateTime": "2024-11-05T09:30:00.000Z",
+      "ibxs": ["SV5", "SV1"],
+      "contacts": [
+        {
+          "firstName": "Ada",
+          "lastName": "Lovelace",
+          "email": "ada@example.com"
+        }
+      ],
+      "additionalInfo": [
+        {
+          "key": "windowStart",
+          "value": "2024-11-20T02:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "un-0002",
+      "notificationNumber": "5-123456789",
+      "category": "INCIDENT",
+      "type": "IBX_INCIDENT",
+      "productTypes": ["CAGE"],
+      "summary": "Cooling incident under investigation at DC11",
+      "status": "IN_PROGRESS",
+      "createdDateTime": "2024-11-06T14:15:00.000Z",
+      "ibxs": ["DC11"],
+      "contacts": [],
+      "additionalInfo": []
+    }
+  ]
+}
