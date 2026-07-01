@@ -1,0 +1,28 @@
+{
+  "payLoad": {
+    "accountNumber": "123456",
+    "ibx": "SV5",
+    "levelType": "cage",
+    "levelValue": "SV5:01:001000",
+    "interval": "hourly",
+    "data": [
+      {
+        "datetime": "2026-06-30T10:00:00Z",
+        "value": "3.10"
+      },
+      {
+        "datetime": "2026-06-30T11:00:00Z",
+        "value": "3.42"
+      },
+      {
+        "datetime": "2026-06-30T12:00:00Z",
+        "value": "3.55"
+      }
+    ]
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "OK"
+  }
+}

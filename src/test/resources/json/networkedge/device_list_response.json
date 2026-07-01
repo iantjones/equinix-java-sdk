@@ -1,0 +1,25 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "ed7891f4-7a67-11e9-9bea-1681be663d3e",
+      "name": "My-CSR1000V-Device",
+      "deviceTypeCode": "CSR1000V",
+      "status": "PROVISIONED",
+      "metroCode": "SV",
+      "accountNumber": 123456
+    },
+    {
+      "uuid": "fe8902g5-8b78-22f0-0cfa-2792cf774e4f",
+      "name": "My-PA-VM-Device",
+      "deviceTypeCode": "PA-VM",
+      "status": "PROVISIONED",
+      "metroCode": "DC",
+      "accountNumber": 654321
+    }
+  ]
+}

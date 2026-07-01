@@ -1,0 +1,27 @@
+{
+  "termLength": 12,
+  "primary": {
+    "currency": "USD",
+    "billingCommencementDate": "2026-07-01T00:00:00.000Z",
+    "charges": [
+      {
+        "description": "DEVICE_LICENSE",
+        "monthlyRecurringCharges": 1500.00
+      },
+      {
+        "description": "DEVICE_MANAGEMENT",
+        "monthlyRecurringCharges": 250.00
+      }
+    ]
+  },
+  "secondary": {
+    "currency": "USD",
+    "billingCommencementDate": "2026-07-01T00:00:00.000Z",
+    "charges": [
+      {
+        "description": "DEVICE_LICENSE",
+        "monthlyRecurringCharges": 1500.00
+      }
+    ]
+  }
+}

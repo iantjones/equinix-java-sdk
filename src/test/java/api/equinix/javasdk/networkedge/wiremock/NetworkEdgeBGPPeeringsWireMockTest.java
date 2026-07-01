@@ -3,6 +3,9 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.networkedge.client.RequestBuilder;
+import api.equinix.javasdk.networkedge.enums.BGPStatus;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
 import org.junit.jupiter.api.*;
 
@@ -165,6 +168,83 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
 
             assertTrue(result);
             wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListAll {
+
+        @Test
+        @DisplayName("GETs /ne/v1/bgp with no query params and maps the paginated body")
+        void listsAllBgpPeerings() {
+            // ListBGP -> GET /ne/v1/bgp (rootUri "bgp", no requestUri).
+            stubPaginatedGet(wireMock, "/ne/v1/bgp/?",
+                    "/json/networkedge/bgppeering_list_response.json");
+
+            PaginatedList<BGPPeering> peerings = networkEdge.bgpPeerings().list();
+
+            assertNotNull(peerings);
+            assertEquals(2, peerings.size());
+            assertEquals("bgp-1111-2222-3333-444455556666", peerings.get(0).getUuid());
+            assertEquals("test-connection", peerings.get(0).getConnectionName());
+            assertEquals("bgp-7777-8888-9999-aaaabbbbcccc", peerings.get(1).getUuid());
+            assertEquals("second-connection", peerings.get(1).getConnectionName());
+
+            // Verb + path, and that the unfiltered call carries none of the filter params.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp"))
+                    .withQueryParam("virtualDeviceUuid", absent())
+                    .withQueryParam("connectionUuid", absent())
+                    .withQueryParam("status", absent())
+                    .withQueryParam("accountUcmId", absent()));
+        }
+    }
+
+    @Nested
+    @DisplayName("list(RequestBuilder.BGP)")
+    class ListFiltered {
+
+        @Test
+        @DisplayName("GETs /ne/v1/bgp applying the builder's query params")
+        void listsWithFilters() {
+            stubPaginatedGet(wireMock, "/ne/v1/bgp/?",
+                    "/json/networkedge/bgppeering_list_response.json");
+
+            PaginatedList<BGPPeering> peerings = networkEdge.bgpPeerings().list(
+                    RequestBuilder.bgp()
+                            .forDevice("dev-1234-5678-90ab-cdef12345678")
+                            .forConnection("conn-aaaa-bbbb-cccc-ddddeeeeffff")
+                            .havingStatus(BGPStatus.PROVISIONED)
+                            .forAccount("ucm-account-42"));
+
+            assertNotNull(peerings);
+            assertEquals(2, peerings.size());
+
+            // Each with* on the builder maps to a query param on the GET.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp"))
+                    .withQueryParam("virtualDeviceUuid", equalTo("dev-1234-5678-90ab-cdef12345678"))
+                    .withQueryParam("connectionUuid", equalTo("conn-aaaa-bbbb-cccc-ddddeeeeffff"))
+                    .withQueryParam("status", equalTo("PROVISIONED"))
+                    .withQueryParam("accountUcmId", equalTo("ucm-account-42")));
+        }
+
+        @Test
+        @DisplayName("omits query params not set on the builder")
+        void listsWithPartialFilters() {
+            stubPaginatedGet(wireMock, "/ne/v1/bgp/?",
+                    "/json/networkedge/bgppeering_list_response.json");
+
+            PaginatedList<BGPPeering> peerings = networkEdge.bgpPeerings().list(
+                    RequestBuilder.bgp().forConnection("conn-aaaa-bbbb-cccc-ddddeeeeffff"));
+
+            assertNotNull(peerings);
+            assertEquals(2, peerings.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp"))
+                    .withQueryParam("connectionUuid", equalTo("conn-aaaa-bbbb-cccc-ddddeeeeffff"))
+                    .withQueryParam("virtualDeviceUuid", absent())
+                    .withQueryParam("status", absent())
+                    .withQueryParam("accountUcmId", absent()));
         }
     }
 

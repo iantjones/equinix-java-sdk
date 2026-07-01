@@ -1,0 +1,33 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "bkp-1111-2222-3333-444455556666",
+      "name": "test-backup",
+      "type": "CONFIG",
+      "status": "COMPLETED",
+      "requestType": "MANUAL",
+      "downloadUrl": "https://example.com/backups/test-backup",
+      "version": "1.0",
+      "deleteAllowed": true,
+      "restores": []
+    },
+    {
+      "uuid": "bkp-7777-8888-9999-aaaabbbbcccc",
+      "name": "second-backup",
+      "type": "CONFIG",
+      "status": "IN_PROGRESS",
+      "requestType": "AUTOMATED",
+      "downloadUrl": "https://example.com/backups/second-backup",
+      "version": "1.1",
+      "deleteAllowed": false,
+      "restores": []
+    }
+  ]
+}

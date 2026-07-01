@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "name": "eth0",
+    "type": "WAN",
+    "status": "ASSIGNED",
+    "operationalStatus": "UP",
+    "macAddress": "00:1a:2b:3c:4d:5e",
+    "ipAddress": "10.0.0.1",
+    "assignedType": "WAN",
+    "vxLan": 100
+  },
+  {
+    "id": "2",
+    "name": "eth1",
+    "status": "AVAILABLE",
+    "operationalStatus": "DOWN",
+    "assignedType": "MGMT"
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "payLoad": {
+    "ibx": "SV5",
+    "accountNo": "123456",
+    "levelType": "cage",
+    "levelValue": "SV5:01:001000",
+    "isAlarm": "false",
+    "kva": 3.42,
+    "amps": 9.5,
+    "soldKva": 5.0,
+    "cabinetRating": 8.0,
+    "contractualKva": 5.0,
+    "percentageKva": 68.4,
+    "peakKvaLastSevenDays": 4.1,
+    "peakKvaLastSevenDaysPercentage": 82.0,
+    "peakKvaLastSevenDaysContractualKva": 5.0,
+    "peakKvaLastSevenDaysTime": 1656633600000,
+    "soldAmps": 20,
+    "primaryKva": 1.71,
+    "redundantKva": 1.71,
+    "kw": "3.08",
+    "powerFactor": "0.9",
+    "readingTime": "2026-06-30T12:00:00Z",
+    "lastUpdatedTime": "2026-06-30T12:05:00Z",
+    "customerName": "Acme Corp"
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "OK"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "bgp-1111-2222-3333-444455556666",
+      "connectionUuid": "conn-aaaa-bbbb-cccc-ddddeeeeffff",
+      "connectionName": "test-connection",
+      "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+      "localIpAddress": "169.254.0.1/30",
+      "remoteIpAddress": "169.254.0.2",
+      "localAsn": 65000,
+      "remoteAsn": 65001,
+      "authenticationKey": "secret-key",
+      "provisioningStatus": "PROVISIONED",
+      "state": "ESTABLISHED"
+    },
+    {
+      "uuid": "bgp-7777-8888-9999-aaaabbbbcccc",
+      "connectionUuid": "conn-1111-2222-3333-444455556666",
+      "connectionName": "second-connection",
+      "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+      "localIpAddress": "169.254.0.5/30",
+      "remoteIpAddress": "169.254.0.6",
+      "localAsn": 65000,
+      "remoteAsn": 65002,
+      "authenticationKey": "secret-key-2",
+      "provisioningStatus": "PROVISIONING",
+      "state": "IDLE"
+    }
+  ]
+}

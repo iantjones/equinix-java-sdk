@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 23,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"data\":[{\"uuid\":\"stream-uuid-1\",\"name\":\"prod-telemetry\",\"type\":\"TELEMETRY_STREAM\",\"state\":\"ACTIVE\"},{\"uuid\":\"stream-uuid-2\",\"name\":\"prod-events\",\"type\":\"TELEMETRY_STREAM\",\"state\":\"PROVISIONING\"}]}"
+      }
+    ],
+    "isError": false
+  }
+}

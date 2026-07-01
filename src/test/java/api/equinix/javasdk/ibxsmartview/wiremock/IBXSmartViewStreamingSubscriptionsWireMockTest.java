@@ -5,6 +5,8 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.ibxsmartview.enums.ChannelType;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
+import api.equinix.javasdk.ibxsmartview.model.SubscriptionCertificate;
+import api.equinix.javasdk.ibxsmartview.model.SubscriptionData;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
 import api.equinix.javasdk.ibxsmartview.model.implementation.MessageType;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerMessageType;
@@ -119,6 +121,119 @@ class IBXSmartViewStreamingSubscriptionsWireMockTest extends WireMockTestBase {
             assertTrue(subscription.delete());
             wireMock.verify(deleteRequestedFor(
                     urlPathEqualTo("/smartview/v2/streaming/subscriptions/sub-12345-abcde")));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListSubscriptions {
+
+        @Test
+        @DisplayName("GETs /streaming/subscriptions and maps the bare JSON array")
+        void listsSubscriptions() {
+            stubPaginatedGet(wireMock, "/smartview/v2/streaming/subscriptions",
+                    "/json/ibxsmartview/streaming_subscriptions_list.json");
+
+            List<StreamingSubscription> subscriptions = ibxSmartView.streamingSubscriptions().list();
+
+            assertNotNull(subscriptions);
+            assertEquals(2, subscriptions.size());
+            assertEquals("sub-12345-abcde", subscriptions.get(0).getId());
+            assertEquals("sub-67890-fghij", subscriptions.get(1).getId());
+            assertNotNull(subscriptions.get(0).getChannel());
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/smartview/v2/streaming/subscriptions")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getSubscriptionData()")
+    class GetSubscriptionData {
+
+        @Test
+        @DisplayName("plain overload GETs /streaming/subscriptionData/{id} with no query params")
+        void getsDataNoFilters() {
+            stubSingleton(wireMock, "/smartview/v2/streaming/subscriptionData/sub-12345-abcde",
+                    "/json/ibxsmartview/subscription_data_response.json");
+
+            SubscriptionData data =
+                    ibxSmartView.streamingSubscriptions().getSubscriptionData("sub-12345-abcde");
+
+            assertNotNull(data);
+            assertNotNull(data.getPowerMessageData());
+            assertEquals(1, data.getPowerMessageData().size());
+            assertEquals("POWER", data.getPowerMessageData().get(0).getType());
+            assertNotNull(data.getPagination());
+            assertEquals(2, data.getPagination().getTotal());
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/smartview/v2/streaming/subscriptionData/sub-12345-abcde"))
+                    .withUrl("/smartview/v2/streaming/subscriptionData/sub-12345-abcde"));
+        }
+
+        @Test
+        @DisplayName("filtered overload GETs the same path carrying ibxs/messageTypes/streamIds/offset/limit query params")
+        void getsDataWithFilters() {
+            stubSingleton(wireMock, "/smartview/v2/streaming/subscriptionData/sub-12345-abcde",
+                    "/json/ibxsmartview/subscription_data_response.json");
+
+            SubscriptionData data = ibxSmartView.streamingSubscriptions().getSubscriptionData(
+                    "sub-12345-abcde",
+                    List.of("SV5", "DC6"),
+                    List.of("POWER", "ENVIRONMENTAL"),
+                    List.of("stream-1"),
+                    10, 25);
+
+            assertNotNull(data);
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/smartview/v2/streaming/subscriptionData/sub-12345-abcde"))
+                    .withQueryParam("ibxs", equalTo("SV5"))
+                    .withQueryParam("ibxs", equalTo("DC6"))
+                    .withQueryParam("messageTypes", equalTo("POWER"))
+                    .withQueryParam("messageTypes", equalTo("ENVIRONMENTAL"))
+                    .withQueryParam("streamIds", equalTo("stream-1"))
+                    .withQueryParam("offset", equalTo("10"))
+                    .withQueryParam("limit", equalTo("25")));
+        }
+
+        @Test
+        @DisplayName("null filters/pagination emit no query params")
+        void getsDataNullFiltersOmitted() {
+            stubSingleton(wireMock, "/smartview/v2/streaming/subscriptionData/sub-12345-abcde",
+                    "/json/ibxsmartview/subscription_data_response.json");
+
+            ibxSmartView.streamingSubscriptions().getSubscriptionData(
+                    "sub-12345-abcde", null, null, null, null, null);
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/smartview/v2/streaming/subscriptionData/sub-12345-abcde"))
+                    .withUrl("/smartview/v2/streaming/subscriptionData/sub-12345-abcde"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getCertificate()")
+    class GetCertificate {
+
+        @Test
+        @DisplayName("GETs /streaming/subscriptions/certificate with the channelType query param")
+        void getsCertificate() {
+            stubSingleton(wireMock, "/smartview/v2/streaming/subscriptions/certificate",
+                    "/json/ibxsmartview/subscription_certificate_response.json");
+
+            SubscriptionCertificate certificate = ibxSmartView.streamingSubscriptions()
+                    .getCertificate(ChannelType.AWS_IOT_CORE.name());
+
+            assertNotNull(certificate);
+            assertEquals("AWS_IOT_CORE", certificate.getChannelType());
+            assertNotNull(certificate.getCertificateBase64());
+            assertEquals("2025-12-31T23:59:59Z", certificate.getExpiryDate());
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/smartview/v2/streaming/subscriptions/certificate"))
+                    .withQueryParam("channelType", equalTo("AWS_IOT_CORE")));
         }
     }
 

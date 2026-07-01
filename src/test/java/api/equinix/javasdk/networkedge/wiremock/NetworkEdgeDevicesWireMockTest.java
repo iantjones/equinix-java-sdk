@@ -4,15 +4,27 @@ import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.ACLInterfaceType;
+import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
+import api.equinix.javasdk.networkedge.enums.DeviceStatus;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
+import api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceReboot;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgrade;
+import api.equinix.javasdk.networkedge.model.implementation.DownloadableImage;
 import api.equinix.javasdk.networkedge.model.implementation.ImageDownload;
+import api.equinix.javasdk.networkedge.model.implementation.InterfaceStats;
+import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceACLRequest;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceWrapper;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -64,6 +76,200 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> networkEdge.devices().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list() / list(RequestBuilder.Device)")
+    class ListDevices {
+
+        @Test
+        @DisplayName("list() GETs /ne/v1/devices with no filter query params")
+        void listsAllDevices() {
+            stubPaginatedGet(wireMock, "/ne/v1/devices/?",
+                    "/json/networkedge/device_list_response.json");
+
+            PaginatedList<Device> devices = networkEdge.devices().list();
+
+            assertNotNull(devices);
+            assertEquals(2, devices.size());
+            assertEquals("ed7891f4-7a67-11e9-9bea-1681be663d3e", devices.get(0).getUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices")));
+        }
+
+        @Test
+        @DisplayName("list(RequestBuilder.Device) applies metroCode/status/accountUcmId/showOnlySubCustomerDevices query params")
+        void listsFilteredDevices() {
+            stubPaginatedGet(wireMock, "/ne/v1/devices/?",
+                    "/json/networkedge/device_list_response.json");
+
+            RequestBuilder.Device filter = RequestBuilder.device()
+                    .inMetro(MetroCode.SV)
+                    .inMetro(MetroCode.DC)
+                    .havingStatus(DeviceStatus.PROVISIONED)
+                    .forAccount("ucm-account-42")
+                    .showOnlySubCustomerDevices(true);
+            filter.build();
+
+            PaginatedList<Device> devices = networkEdge.devices().list(filter);
+
+            assertNotNull(devices);
+            assertEquals(2, devices.size());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices"))
+                    .withQueryParam("metroCode", equalTo("SV"))
+                    .withQueryParam("metroCode", equalTo("DC"))
+                    .withQueryParam("status", equalTo("PROVISIONED"))
+                    .withQueryParam("accountUcmId", equalTo("ucm-account-42"))
+                    .withQueryParam("showOnlySubCustomerDevices", equalTo("true")));
+        }
+    }
+
+    @Nested
+    @DisplayName("listInterfaces() / listAllowedInterfaces()")
+    class Interfaces {
+
+        private static final String UUID = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
+
+        @Test
+        @DisplayName("listInterfaces() GETs {uuid}/interfaces and returns the interface list")
+        void listsInterfaces() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/network_interface_list_response.json"))));
+
+            List<NetworkInterface> interfaces = networkEdge.devices().listInterfaces(UUID);
+
+            assertNotNull(interfaces);
+            assertEquals(2, interfaces.size());
+            assertEquals("eth0", interfaces.get(0).getName());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces")));
+        }
+
+        @Test
+        @DisplayName("listAllowedInterfaces() GETs /ne/v1/deviceTypes/{deviceType}/interfaces (overrideRootUri) with the config query params")
+        void listsAllowedInterfaces() {
+            // overrideRootUri:true -> the path is /ne/v1/deviceTypes/{deviceType}/interfaces, NOT under /devices.
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/deviceTypes/CSR1000V/interfaces"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/allowed_interfaces_response.json"))));
+
+            RequestBuilder.AllowedInterfaces requestBuilder =
+                    RequestBuilder.allowedInterfaces("CSR1000V", DeviceManagementType.SELF_CONFIGURED)
+                            .withMode(LicenseType.SUB)
+                            .withCluster(false)
+                            .withCore(2);
+
+            AllowedInterfaceResponse response = networkEdge.devices().listAllowedInterfaces(requestBuilder);
+
+            assertNotNull(response);
+            assertNotNull(response.getInterfaceProfiles());
+            assertEquals(2, response.getInterfaceProfiles().size());
+            assertEquals(3, response.getInterfaceProfiles().get(0).getCount());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/deviceTypes/CSR1000V/interfaces"))
+                    .withQueryParam("deviceManagementType", equalTo("SELF-CONFIGURED"))
+                    .withQueryParam("mode", equalTo("Subscription"))
+                    .withQueryParam("cluster", equalTo("false"))
+                    .withQueryParam("core", equalTo("2")));
+        }
+    }
+
+    @Nested
+    @DisplayName("listReloadHistory() / listUpgradeHistory()")
+    class History {
+
+        private static final String UUID = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
+
+        @Test
+        @DisplayName("listReloadHistory() GETs {uuid}/softReboot and returns the reboot history (data[])")
+        void listsReloadHistory() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/softReboot"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/reload_history_response.json"))));
+
+            List<DeviceReboot> history = networkEdge.devices().listReloadHistory(UUID);
+
+            assertNotNull(history);
+            assertEquals(2, history.size());
+            assertEquals(UUID, history.get(0).getDeviceUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/softReboot")));
+        }
+
+        @Test
+        @DisplayName("listUpgradeHistory() GETs {uuid}/resourceUpgrade and returns the upgrade history (data[])")
+        void listsUpgradeHistory() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/resourceUpgrade"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/upgrade_history_response.json"))));
+
+            List<DeviceUpgrade> history = networkEdge.devices().listUpgradeHistory(UUID);
+
+            assertNotNull(history);
+            assertEquals(2, history.size());
+            assertEquals(UUID, history.get(0).getVirtualDeviceUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/resourceUpgrade")));
+        }
+    }
+
+    @Nested
+    @DisplayName("listDownloadableImages() / getInterfaceStatistics() / getDeviceAcl()")
+    class MiscReads {
+
+        private static final String UUID = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
+
+        @Test
+        @DisplayName("listDownloadableImages() GETs {deviceType}/repositories and returns the image list")
+        void listsDownloadableImages() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/CSR1000V/repositories"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/downloadable_image_list_response.json"))));
+
+            List<DownloadableImage> images = networkEdge.devices().listDownloadableImages("CSR1000V");
+
+            assertNotNull(images);
+            assertEquals(2, images.size());
+            assertEquals("16.09.05", images.get(0).getVersion());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/CSR1000V/repositories")));
+        }
+
+        @Test
+        @DisplayName("getInterfaceStatistics() GETs {uuid}/interfaces/{interfaceId}/stats with startDateTime/endDateTime query params")
+        void getsInterfaceStatistics() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/interface_stats_response.json"))));
+
+            InterfaceStats stats = networkEdge.devices()
+                    .getInterfaceStatistics(UUID, "1", "2021-05-01T00:00:00Z", "2021-05-02T00:00:00Z");
+
+            assertNotNull(stats);
+            assertNotNull(stats.getStats());
+            assertEquals("bps", stats.getStats().getUnit());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats"))
+                    .withQueryParam("startDateTime", equalTo("2021-05-01T00:00:00Z"))
+                    .withQueryParam("endDateTime", equalTo("2021-05-02T00:00:00Z")));
+        }
+
+        @Test
+        @DisplayName("getInterfaceStatistics() with null date bounds sends no date query params")
+        void getsInterfaceStatisticsNoDates() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/interface_stats_response.json"))));
+
+            InterfaceStats stats = networkEdge.devices()
+                    .getInterfaceStatistics(UUID, "1", null, null);
+
+            assertNotNull(stats);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats"))
+                    .withoutQueryParam("startDateTime")
+                    .withoutQueryParam("endDateTime"));
+        }
+
+        @Test
+        @DisplayName("getDeviceAcl() GETs {uuid}/acl and returns the device ACL state")
+        void getsDeviceAcl() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/acl"))
+                    .willReturn(okJson(loadFixture("/json/networkedge/device_acl_response.json"))));
+
+            DeviceACL acl = networkEdge.devices().getDeviceAcl(UUID);
+
+            assertNotNull(acl);
+            assertNotNull(acl.getAclTemplate());
+            assertEquals("be7ef79e-31e7-4769-be5b-e192496f48aa", acl.getAclTemplate().getUuid());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/acl")));
         }
     }
 

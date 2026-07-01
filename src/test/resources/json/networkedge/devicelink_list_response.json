@@ -1,0 +1,59 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "d1e2f3a4-b5c6-7890-abcd-1234567890ab",
+      "source": "API",
+      "groupName": "test-device-link",
+      "subnet": "10.0.0.0/24",
+      "status": "PROVISIONED",
+      "redundancyType": "PRIMARY",
+      "metroLinks": [
+        {
+          "accountName": "Acme Corp",
+          "metroCode": "SV",
+          "metroName": "Silicon Valley",
+          "throughput": "50",
+          "throughputUnit": "MB"
+        }
+      ],
+      "linkDevices": [
+        {
+          "deviceUuid": "aaaa1111-bbbb-2222-cccc-3333dddd4444",
+          "asn": 65000,
+          "interfaceId": 6
+        }
+      ]
+    },
+    {
+      "uuid": "e2f3a4b5-c6d7-8901-bcde-2345678901bc",
+      "source": "API",
+      "groupName": "second-device-link",
+      "subnet": "10.1.0.0/24",
+      "status": "PROVISIONED",
+      "redundancyType": "PRIMARY",
+      "metroLinks": [
+        {
+          "accountName": "Globex LLC",
+          "metroCode": "DC",
+          "metroName": "Washington DC",
+          "throughput": "100",
+          "throughputUnit": "MB"
+        }
+      ],
+      "linkDevices": [
+        {
+          "deviceUuid": "bbbb2222-cccc-3333-dddd-4444eeee5555",
+          "asn": 65001,
+          "interfaceId": 7
+        }
+      ]
+    }
+  ]
+}

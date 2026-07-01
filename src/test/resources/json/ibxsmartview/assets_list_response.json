@@ -1,0 +1,26 @@
+{
+  "payLoad": {
+    "classification": "Electrical",
+    "categories": [
+      {
+        "categoryName": "Power Distribution",
+        "templates": [
+          {
+            "templateId": "TMPL-PDU",
+            "assets": [
+              {
+                "assetId": "ASSET-SV5-001",
+                "assetLabel": "PDU A1"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "Request processed successfully"
+  }
+}

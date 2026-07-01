@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 20,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"code\":\"SV\",\"name\":\"Silicon Valley\",\"region\":\"AMER\",\"country\":\"US\",\"connectedMetros\":[\"LA\",\"DC\",\"DA\"]}"
+      }
+    ],
+    "isError": false
+  }
+}

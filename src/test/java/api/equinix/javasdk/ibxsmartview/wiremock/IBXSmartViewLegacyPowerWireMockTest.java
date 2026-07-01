@@ -3,7 +3,9 @@ package api.equinix.javasdk.ibxsmartview.wiremock;
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
+import api.equinix.javasdk.ibxsmartview.model.PowerData;
 import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
+import api.equinix.javasdk.ibxsmartview.model.TrendingPowerData;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerCurrentPostRequest;
 import org.junit.jupiter.api.*;
 
@@ -89,6 +91,76 @@ class IBXSmartViewLegacyPowerWireMockTest extends WireMockTestBase {
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/power/v1/current"))
                     .withRequestBody(matchingJsonPath("$.levelType", equalTo("ibx"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getCurrent()")
+    class GetCurrent {
+
+        @Test
+        @DisplayName("GETs /power/v1/current with the level query params and unwraps payLoad")
+        void getsCurrentPowerWithQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/power/v1/current"))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/power_current_get_response.json"))));
+
+            PowerData result = ibxSmartView.legacyPower()
+                    .getCurrent("123456", "SV5", "cage", "SV5:01:001000");
+
+            assertNotNull(result);
+            assertNotNull(result.getPayLoad());
+            assertEquals("SV5", result.getPayLoad().getIbx());
+            assertEquals("123456", result.getPayLoad().getAccountNo());
+            assertEquals("cage", result.getPayLoad().getLevelType());
+            assertEquals("SV5:01:001000", result.getPayLoad().getLevelValue());
+            assertEquals(3.42, result.getPayLoad().getKva());
+            assertEquals("false", result.getPayLoad().getIsAlarm());
+            assertNotNull(result.getStatus());
+            assertEquals(200, result.getStatus().getStatuscode());
+
+            // Verify exact path, verb and every query parameter.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/power/v1/current"))
+                    .withQueryParam("accountNo", equalTo("123456"))
+                    .withQueryParam("ibx", equalTo("SV5"))
+                    .withQueryParam("levelType", equalTo("cage"))
+                    .withQueryParam("levelValue", equalTo("SV5:01:001000")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getTrending()")
+    class GetTrending {
+
+        @Test
+        @DisplayName("GETs /power/v1/trending with all query params and unwraps the trend series")
+        void getsTrendingPowerWithQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/power/v1/trending"))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/power_trending_response.json"))));
+
+            TrendingPowerData result = ibxSmartView.legacyPower()
+                    .getTrending("123456", "SV5", "cage", "SV5:01:001000",
+                            "hourly", "2026-06-30T00:00:00Z", "2026-06-30T23:59:59Z");
+
+            assertNotNull(result);
+            assertNotNull(result.getPayLoad());
+            assertEquals("123456", result.getPayLoad().getAccountNumber());
+            assertEquals("SV5", result.getPayLoad().getIbx());
+            assertEquals("cage", result.getPayLoad().getLevelType());
+            assertEquals("hourly", result.getPayLoad().getInterval());
+            assertNotNull(result.getPayLoad().getData());
+            assertEquals(3, result.getPayLoad().getData().size());
+            assertEquals("3.42", result.getPayLoad().getData().get(1).getValue());
+            assertEquals("2026-06-30T11:00:00Z", result.getPayLoad().getData().get(1).getDatetime());
+
+            // Verify exact path, verb and every query parameter.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/power/v1/trending"))
+                    .withQueryParam("accountNo", equalTo("123456"))
+                    .withQueryParam("ibx", equalTo("SV5"))
+                    .withQueryParam("levelType", equalTo("cage"))
+                    .withQueryParam("levelValue", equalTo("SV5:01:001000"))
+                    .withQueryParam("interval", equalTo("hourly"))
+                    .withQueryParam("fromDate", equalTo("2026-06-30T00:00:00Z"))
+                    .withQueryParam("toDate", equalTo("2026-06-30T23:59:59Z")));
         }
     }
 }

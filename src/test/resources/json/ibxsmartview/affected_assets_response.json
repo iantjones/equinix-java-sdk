@@ -1,0 +1,17 @@
+{
+  "payLoad": {
+    "cages": [
+      {
+        "name": "SV5:01:0001",
+        "type": "CAGE",
+        "cabinets": []
+      }
+    ],
+    "circuits": []
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "Request processed successfully"
+  }
+}

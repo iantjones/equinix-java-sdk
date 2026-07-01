@@ -86,4 +86,80 @@ class IBXSmartViewSensorReadingsWireMockTest extends WireMockTestBase {
         assertThrows(EquinixServerException.class,
                 () -> ibxSmartView.environmentals().list(IBX));
     }
+
+    /**
+     * Request-shape coverage for the filtered list overload
+     * {@code list(ibx, type, zone, offset, limit)}: verifies the exact path, verb,
+     * embedded IBX path segment, and query parameters (or their absence).
+     */
+    @Nested
+    @DisplayName("list(ibx, type, zone, offset, limit) request shape")
+    class FilteredListRequestShape {
+
+        static final String EXPECTED_PATH = "/smartview/v2/environmental/ibxs/SV5/sensors/readings";
+
+        @Test
+        @DisplayName("all filters present are sent as query params on a GET to the exact path")
+        void allFiltersSent() {
+            stubPaginatedGet(wireMock, "/smartview/v2/environmental/ibxs/.*/sensors/readings",
+                    "/json/ibxsmartview/paginated_sensor_readings.json");
+
+            PaginatedList<SensorReading> readings =
+                    ibxSmartView.environmentals().list(IBX, "HUMIDITY", "ZONE-A", 40, 10);
+
+            assertNotNull(readings);
+            assertEquals(2, readings.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(EXPECTED_PATH))
+                    .withQueryParam("type", equalTo("HUMIDITY"))
+                    .withQueryParam("zone", equalTo("ZONE-A"))
+                    .withQueryParam("offset", equalTo("40"))
+                    .withQueryParam("limit", equalTo("10")));
+        }
+
+        @Test
+        @DisplayName("null filters are omitted from the query string")
+        void nullFiltersOmitted() {
+            stubPaginatedGet(wireMock, "/smartview/v2/environmental/ibxs/.*/sensors/readings",
+                    "/json/ibxsmartview/paginated_sensor_readings.json");
+
+            ibxSmartView.environmentals().list(IBX, null, null, null, null);
+
+            // null type/zone are omitted, but offset/limit fall back to the SDK's pagination defaults.
+            wireMock.verify(getRequestedFor(urlPathEqualTo(EXPECTED_PATH))
+                    .withoutQueryParam("type")
+                    .withoutQueryParam("zone")
+                    .withQueryParam("offset", equalTo("0"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        @DisplayName("partial filters send only the supplied params")
+        void partialFiltersSent() {
+            stubPaginatedGet(wireMock, "/smartview/v2/environmental/ibxs/.*/sensors/readings",
+                    "/json/ibxsmartview/paginated_sensor_readings.json");
+
+            ibxSmartView.environmentals().list(IBX, "TEMPERATURE", null, null, 5);
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(EXPECTED_PATH))
+                    .withQueryParam("type", equalTo("TEMPERATURE"))
+                    .withQueryParam("limit", equalTo("5"))
+                    .withoutQueryParam("zone")
+                    .withQueryParam("offset", equalTo("0")));
+        }
+
+        @Test
+        @DisplayName("the IBX code is embedded in the path, not sent as a query param")
+        void ibxInPath() {
+            stubPaginatedGet(wireMock, "/smartview/v2/environmental/ibxs/.*/sensors/readings",
+                    "/json/ibxsmartview/paginated_sensor_readings.json");
+
+            ibxSmartView.environmentals().list("DC11", "HUMIDITY", null, null, null);
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/smartview/v2/environmental/ibxs/DC11/sensors/readings"))
+                    .withQueryParam("type", equalTo("HUMIDITY"))
+                    .withoutQueryParam("ibx"));
+        }
+    }
 }

@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 21,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"data\":[{\"type\":\"VIRTUAL_CONNECTION_PRODUCT\",\"account\":{\"accountNumber\":12345},\"charges\":[{\"type\":\"MONTHLY_RECURRING\",\"price\":250.0,\"currency\":\"USD\"}],\"bandwidth\":1000}],\"pagination\":{\"total\":1}}"
+      }
+    ],
+    "isError": false
+  }
+}

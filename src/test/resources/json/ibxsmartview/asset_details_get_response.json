@@ -1,0 +1,23 @@
+{
+  "payLoad": {
+    "assetId": "ASSET-SV5-001",
+    "assetType": "PDU",
+    "userPrefTimeZone": "America/Los_Angeles",
+    "manufacturerName": "Schneider Electric",
+    "equipmentModelNumber": "PDU-1234",
+    "equipmentSerialNumber": "SN-000111",
+    "lastMaintenanceDate": "2026-05-01T00:00:00Z",
+    "tags": [
+      {
+        "tagId": "TAG-SV5-001",
+        "tagDisplayName": "Input Power",
+        "uom": "kW"
+      }
+    ]
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "Request processed successfully"
+  }
+}
