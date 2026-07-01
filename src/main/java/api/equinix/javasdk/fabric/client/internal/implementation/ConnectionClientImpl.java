@@ -117,7 +117,7 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
         return patchOne("UpdateConnection", uuid, operations);
     }
 
-    public List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList) {
+    public List<ConnectionJson> batch(List<ConnectionCreatorJson> connectionCreatorJsonList) {
         return postForType("PostBulkConnections", connectionCreatorJsonList, ConnectionJson.getListTypeRef());
     }
 

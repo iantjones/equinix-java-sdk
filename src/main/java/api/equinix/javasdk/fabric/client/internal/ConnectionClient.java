@@ -64,7 +64,7 @@ public interface ConnectionClient<T> extends PageablePost<T> {
 
     ConnectionJson update(String uuid, List<PatchOperation> operations);
 
-    List<Connection> batch(List<ConnectionCreatorJson> connectionCreatorJsonList);
+    List<ConnectionJson> batch(List<ConnectionCreatorJson> connectionCreatorJsonList);
 
     ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
 
