@@ -1,0 +1,7 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+  "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+  "type": "CONNECTION",
+  "metricsEnabled": true,
+  "attachmentStatus": "ATTACHED"
+}

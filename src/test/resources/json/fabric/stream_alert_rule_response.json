@@ -1,0 +1,19 @@
+{
+  "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd/alertRules/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "type": "METRIC_ALERT",
+  "name": "High-Egress-Bandwidth-Alert",
+  "description": "Fires when egress bandwidth utilisation exceeds the configured threshold",
+  "state": "PROVISIONED",
+  "enabled": true,
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-05-20T13:00:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-11-01T09:15:00.000Z"
+  }
+}

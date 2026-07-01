@@ -3,7 +3,10 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.ServiceProfileType;
+import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.ServiceProfileAction;
 import api.equinix.javasdk.fabric.model.implementation.ServiceMetro;
 import org.junit.jupiter.api.*;
 
@@ -84,6 +87,114 @@ class FabricServiceProfilesWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(urlPathMatching(
                     "/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def/metros")));
+        }
+    }
+
+    @Nested
+    @DisplayName("define() / create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs a new service profile with the configured body")
+        void createsServiceProfile() {
+            stubCreate(wireMock, "/fabric/v4/serviceProfiles",
+                    "/json/fabric/service_profile_response.json");
+
+            ServiceProfile created = fabric.serviceProfiles()
+                    .define(ServiceProfileType.L2_PROFILE)
+                    .name("AWS Direct Connect - Production")
+                    .description("AWS Direct Connect service profile for production workloads with low-latency connectivity")
+                    .visibility(ServiceProfileVisibility.PUBLIC)
+                    .allowedEmail("partner-onboard@example.com")
+                    .tag("cloud")
+                    .create();
+
+            assertNotNull(created);
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", created.getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/serviceProfiles"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("L2_PROFILE")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("AWS Direct Connect - Production")))
+                    .withRequestBody(matchingJsonPath("$.visibility", equalTo("PUBLIC")))
+                    .withRequestBody(matchingJsonPath("$.allowedEmails[0]", equalTo("partner-onboard@example.com")))
+                    .withRequestBody(matchingJsonPath("$.tags[0]", equalTo("cloud"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("PATCHes a JSON Patch array as application/json-patch+json")
+        void savePatchesNameAndDescription() {
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/serviceProfiles/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
+
+            ServiceProfile updated = fabric.serviceProfiles()
+                    .update("f6a7b8c9-d0e1-2345-fabc-567890123def")
+                    .name("Renamed-Profile")
+                    .description("Updated description")
+                    .save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Profile\"},"
+                            + "{\"op\":\"replace\",\"path\":\"/description\",\"value\":\"Updated description\"}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            assertThrows(IllegalStateException.class,
+                    () -> fabric.serviceProfiles().update("f6a7b8c9-d0e1-2345-fabc-567890123def").save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/serviceProfiles/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("createAction()")
+    class CreateAction {
+
+        @Test
+        @DisplayName("POSTs {uuid}/actions with the action type and description")
+        void postsAction() {
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/serviceProfiles/.*/actions"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_action_response.json"))));
+
+            ServiceProfileAction action = fabric.serviceProfiles().createAction(
+                    "f6a7b8c9-d0e1-2345-fabc-567890123def",
+                    "PROFILE_UPDATE_ACCEPTANCE",
+                    "Approved by network team");
+
+            assertNotNull(action);
+            assertEquals("PROFILE_UPDATE_ACCEPTANCE", action.getType());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def/actions"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("PROFILE_UPDATE_ACCEPTANCE")))
+                    .withRequestBody(matchingJsonPath("$.description", equalTo("Approved by network team"))));
+        }
+
+        @Test
+        @DisplayName("omits null description from the request body")
+        void omitsNullDescription() {
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/serviceProfiles/.*/actions"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_action_response.json"))));
+
+            fabric.serviceProfiles().createAction(
+                    "f6a7b8c9-d0e1-2345-fabc-567890123def",
+                    "PROFILE_UPDATE_REJECTION",
+                    null);
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def/actions"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("PROFILE_UPDATE_REJECTION")))
+                    .withRequestBody(notContaining("description")));
         }
     }
 

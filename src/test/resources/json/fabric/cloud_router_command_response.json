@@ -1,0 +1,25 @@
+{
+  "uuid": "9d1e5f0a-2b3c-4d5e-8f90-a1b2c3d4e5f6",
+  "href": "https://api.equinix.com/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890/commands/9d1e5f0a-2b3c-4d5e-8f90-a1b2c3d4e5f6",
+  "type": "PING_COMMAND",
+  "name": "ping-to-peer",
+  "description": "Ping the remote BGP peer",
+  "state": "COMPLETED",
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "request": {
+    "destination": "192.168.1.1",
+    "sourceConnection": {
+      "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85"
+    },
+    "count": 5
+  },
+  "response": {
+    "output": "5 packets transmitted, 5 received, 0% packet loss"
+  },
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdDateTime": "2024-06-15T09:30:00.000Z"
+  }
+}

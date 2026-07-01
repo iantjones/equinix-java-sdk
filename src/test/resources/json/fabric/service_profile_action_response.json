@@ -1,0 +1,12 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/serviceProfiles/f6a7b8c9-d0e1-2345-fabc-567890123def/actions/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "type": "PROFILE_UPDATE_ACCEPTANCE",
+  "comments": "Approved by network team",
+  "changeLog": {
+    "createdBy": "user3456",
+    "createdByFullName": "Bob Williams",
+    "createdByEmail": "bob.williams@example.com",
+    "createdDateTime": "2024-11-10T08:30:00.000Z"
+  }
+}

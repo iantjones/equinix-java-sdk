@@ -6,6 +6,7 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.ServiceTokenAction;
 import api.equinix.javasdk.fabric.enums.ServiceTokenType;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.ServiceToken;
@@ -101,6 +102,62 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
                             "$.connection.aSide.accessPointSelectors[0].linkProtocol.type", equalTo("DOT1Q")))
                     .withRequestBody(matchingJsonPath(
                             "$.connection.aSide.accessPointSelectors[0].linkProtocol.vlanTag", equalTo("1001"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        @Test
+        @DisplayName("PATCHes a JSON Patch array of the changed fields")
+        void savePatchesFields() {
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/serviceTokens/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json"))));
+
+            ServiceToken updated = fabric.serviceTokens()
+                    .update("ab7f685-41b0-1b07-6de0-3a7c54b08b8f")
+                    .name("Renamed-Token")
+                    .description("Updated description")
+                    .expiry(45)
+                    .save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(
+                    urlPathEqualTo("/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Token\"},"
+                            + "{\"op\":\"replace\",\"path\":\"/description\",\"value\":\"Updated description\"},"
+                            + "{\"op\":\"replace\",\"path\":\"/expiry\",\"value\":45}]", true, true)));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            assertThrows(IllegalStateException.class,
+                    () -> fabric.serviceTokens().update("ab7f685-41b0-1b07-6de0-3a7c54b08b8f").save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/serviceTokens/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("createAction()")
+    class CreateAction {
+
+        @Test
+        @DisplayName("POSTs the action type to /{uuid}/actions and returns the token")
+        void postsAction() {
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/serviceTokens/.*/actions"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json"))));
+
+            ServiceToken result = fabric.serviceTokens().createAction(
+                    "ab7f685-41b0-1b07-6de0-3a7c54b08b8f",
+                    ServiceTokenAction.RESEND_EMAIL_NOTIFICATION);
+
+            assertNotNull(result);
+            wireMock.verify(postRequestedFor(
+                    urlPathEqualTo("/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f/actions"))
+                    .withRequestBody(equalToJson("{\"type\":\"RESEND_EMAIL_NOTIFICATION\"}", true, true)));
         }
     }
 

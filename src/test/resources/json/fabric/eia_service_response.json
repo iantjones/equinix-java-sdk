@@ -1,0 +1,25 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/internetAccessServices/f1e2d3c4-b5a6-7890-abcd-ef0123456789",
+  "uuid": "f1e2d3c4-b5a6-7890-abcd-ef0123456789",
+  "type": "SINGLE_IA",
+  "name": "My-EIA-Service",
+  "bandwidth": 1000,
+  "bandwidthCommit": 500,
+  "state": "PROVISIONED",
+  "useCase": "MAIN",
+  "billing": {
+    "type": "FIXED"
+  },
+  "account": {
+    "accountNumber": "123456"
+  },
+  "project": {
+    "projectId": "proj-abc-123"
+  },
+  "order": {
+    "purchaseOrderNumber": "PO-98765"
+  },
+  "changeLog": {
+    "createdDateTime": "2026-06-01T12:00:00.000Z"
+  }
+}

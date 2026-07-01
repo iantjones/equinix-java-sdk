@@ -1,0 +1,65 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "p1234567-89ab-cdef-0123-456789abcdef",
+      "type": "XF_PORT",
+      "name": "top-port-one",
+      "bandwidth": 10000,
+      "stats": {
+        "startDateTime": "2026-06-01T00:00:00.000Z",
+        "endDateTime": "2026-06-08T00:00:00.000Z",
+        "capacity": 10000,
+        "bandwidthUtilization": {
+          "unit": "MB",
+          "metricInterval": "PT1H",
+          "inbound": {
+            "max": 9100.0,
+            "mean": 4200.5,
+            "lastPolled": 3900.0,
+            "metrics": []
+          },
+          "outbound": {
+            "max": 8600.25,
+            "mean": 3850.75,
+            "lastPolled": 3700.0,
+            "metrics": []
+          }
+        }
+      }
+    },
+    {
+      "uuid": "q2345678-9abc-def0-1234-56789abcdef0",
+      "type": "XF_PORT",
+      "name": "top-port-two",
+      "bandwidth": 10000,
+      "stats": {
+        "startDateTime": "2026-06-01T00:00:00.000Z",
+        "endDateTime": "2026-06-08T00:00:00.000Z",
+        "capacity": 10000,
+        "bandwidthUtilization": {
+          "unit": "MB",
+          "metricInterval": "PT1H",
+          "inbound": {
+            "max": 7200.0,
+            "mean": 3100.5,
+            "lastPolled": 2800.0,
+            "metrics": []
+          },
+          "outbound": {
+            "max": 6600.25,
+            "mean": 2850.75,
+            "lastPolled": 2600.0,
+            "metrics": []
+          }
+        }
+      }
+    }
+  ]
+}

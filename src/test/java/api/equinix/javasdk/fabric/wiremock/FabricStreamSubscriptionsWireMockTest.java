@@ -3,6 +3,8 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
+import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.StreamSubscription;
 import org.junit.jupiter.api.*;
 
@@ -61,6 +63,61 @@ class FabricStreamSubscriptionsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.streamSubscriptions().getByUuid(STREAM_ID, "invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("define(streamId).create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the sink + credential body to the stream's subscriptions endpoint")
+        void createPostsBody() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/streams/" + STREAM_ID + "/subscriptions"))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_subscription_response.json"))));
+
+            StreamSubscription created = fabric.streamSubscriptions().define(STREAM_ID)
+                    .withType(StreamSubscriptionType.STREAM_SUBSCRIPTION)
+                    .withName("Production-Splunk-Subscription")
+                    .withDescription("Delivers production telemetry events to the Splunk HEC sink")
+                    .withEnabled(true)
+                    .withSinkType(StreamSubscriptionSinkType.SPLUNK_HEC)
+                    .withSinkUri("https://splunk.example.com:8088/services/collector")
+                    .withCredentialType("ACCESS_TOKEN")
+                    .withAccessToken("test-access-token")
+                    .withIntegrationKey("test-integration-key")
+                    .create();
+
+            assertNotNull(created);
+            assertEquals(SUBSCRIPTION_ID, created.getUuid());
+            assertEquals("Production-Splunk-Subscription", created.getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/streams/" + STREAM_ID + "/subscriptions"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("STREAM_SUBSCRIPTION")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Production-Splunk-Subscription")))
+                    .withRequestBody(matchingJsonPath("$.enabled", equalTo("true")))
+                    .withRequestBody(matchingJsonPath("$.sink.type", equalTo("SPLUNK_HEC")))
+                    .withRequestBody(matchingJsonPath("$.sink.uri",
+                            equalTo("https://splunk.example.com:8088/services/collector")))
+                    .withRequestBody(matchingJsonPath("$.sink.credential.type", equalTo("ACCESS_TOKEN")))
+                    .withRequestBody(matchingJsonPath("$.sink.credential.accessToken", equalTo("test-access-token")))
+                    .withRequestBody(matchingJsonPath("$.sink.credential.integrationKey",
+                            equalTo("test-integration-key"))));
+        }
+
+        @Test
+        @DisplayName("create() on a builder targeting an existing subscription throws")
+        void createOnUpdateBuilderThrows() {
+            stubSingleton(wireMock, "/fabric/v4/streams/.*/subscriptions/.*",
+                    "/json/fabric/stream_subscription_response.json");
+
+            StreamSubscription subscription = fabric.streamSubscriptions().getByUuid(STREAM_ID, SUBSCRIPTION_ID);
+            assertThrows(IllegalStateException.class,
+                    () -> subscription.update(STREAM_ID).withName("X").create());
+            wireMock.verify(0, postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/streams/" + STREAM_ID + "/subscriptions")));
         }
     }
 
