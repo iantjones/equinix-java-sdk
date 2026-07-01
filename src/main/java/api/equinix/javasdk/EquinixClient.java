@@ -89,6 +89,14 @@ public class EquinixClient implements Closeable {
     protected final boolean autoLoadMetros;
 
     /**
+     * The PeeringDB API key configured via {@code EquinixConfig.getPeeringDbApiKey()}, or
+     * {@code null} when none was configured. Consumed by the Peering Intelligence entry points
+     * ({@link Fabric#peeringIntelligence()}, {@link Design#peeringIntelligence()}); unused by
+     * other domains.
+     */
+    protected final String peeringDbApiKey;
+
+    /**
      * Creates a new Equinix client using the provided credentials.
      * Authentication occurs automatically on the first API call.
      *
@@ -151,6 +159,7 @@ public class EquinixClient implements Closeable {
         this.coreConfig = new CoreConfigImpl(equinixClient);
         this.ownsCore = true;
         this.autoLoadMetros = config.isAutoLoadMetros();
+        this.peeringDbApiKey = config.getPeeringDbApiKey();
         equinixClient.setAuthenticator(() -> core().authenticate());
         if (config.getRetryPolicy() != null) {
             equinixClient.setRetryPolicy(config.getRetryPolicy());
@@ -166,10 +175,23 @@ public class EquinixClient implements Closeable {
      * @param sharedCore the core client to share
      */
     EquinixClient(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
+        this(sharedCore, null);
+    }
+
+    /**
+     * Creates a domain client over a shared core client, carrying selected options from the owning
+     * {@link Equinix} session's config (session-driven options like metro auto-loading stay with
+     * the session). Package-private: used by {@link Equinix} for domains that consume them (Fabric).
+     *
+     * @param sharedCore the core client to share
+     * @param peeringDbApiKey the session-configured PeeringDB API key, or {@code null}
+     */
+    EquinixClient(api.equinix.javasdk.core.client.EquinixClient sharedCore, String peeringDbApiKey) {
         this.equinixClient = sharedCore;
         this.coreConfig = new CoreConfigImpl(sharedCore);
         this.ownsCore = false;
         this.autoLoadMetros = false;
+        this.peeringDbApiKey = peeringDbApiKey;
         sharedCore.setAuthenticator(() -> core().authenticate());
     }
 

@@ -749,7 +749,11 @@ This one cross-references [PeeringDB](https://www.peeringdb.com/) against Equini
 facilities to answer questions like "where are AWS, Azure, and Google all reachable at an Equinix
 exchange?" and "if Ashburn went down, who would I lose?" It builds presence matrices, resiliency
 assessments, and peering opportunities — all scoped to Equinix. A PeeringDB API key is optional;
-without one you get PeeringDB's anonymous rate limit, which is fine for a few ASNs.
+without one you get PeeringDB's anonymous rate limit (~20 requests/minute), which is fine for a few
+ASNs. The key (created on [peeringdb.com](https://docs.peeringdb.com/howto/api_keys/) — it's separate
+from your Equinix credentials) can be passed inline as below, set once via
+`EquinixConfig.builder().peeringDbApiKey("...")` on the client or session, or exported as the
+`PEERINGDB_API_KEY` environment variable — resolved in that order.
 
 #### Presence Matrix — Which ASNs Are Where?
 

@@ -90,11 +90,18 @@ public final class Design {
     }
 
     /**
-     * Begins a peering-intelligence request using anonymous PeeringDB access.
+     * Begins a peering-intelligence request, resolving the PeeringDB credential the same way
+     * {@link Fabric#peeringIntelligence()} does: the {@code EquinixConfig.peeringDbApiKey} option
+     * configured on the underlying client (if this facade wraps a {@link Fabric}), else the
+     * {@code PEERINGDB_API_KEY} environment variable, else anonymous access.
      *
      * @return a {@link PeeringIntelligence.Builder} bound to this facade's Fabric client
+     * @see EquinixConfig#getPeeringDbApiKey()
      */
     public PeeringIntelligence.Builder peeringIntelligence() {
+        if (fabric instanceof Fabric fabricClient) {
+            return fabricClient.peeringIntelligence();
+        }
         return PeeringIntelligence.builder(fabric);
     }
 

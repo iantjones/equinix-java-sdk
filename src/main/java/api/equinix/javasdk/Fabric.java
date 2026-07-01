@@ -217,10 +217,11 @@ public final class Fabric extends EquinixClient implements FabricGateway {
 
     /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
-     * shared core client (one OAuth token + connection pool across domains).
+     * shared core client (one OAuth token + connection pool across domains), carrying the
+     * session-configured PeeringDB API key (or {@code null}).
      */
-    Fabric(api.equinix.javasdk.core.client.EquinixClient sharedCore) {
-        super(sharedCore);
+    Fabric(api.equinix.javasdk.core.client.EquinixClient sharedCore, String peeringDbApiKey) {
+        super(sharedCore, peeringDbApiKey);
         equinixClient.appendApiParams("json/apiParams_Fabric.json");
         this.fabricConfig = new FabricConfigImpl(equinixClient);
     }
@@ -725,14 +726,17 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     }
 
     /**
-     * Begins a Peering Intelligence analysis session with anonymous PeeringDB access.
-     * Anonymous access is rate-limited to approximately 20 requests per minute.
+     * Begins a Peering Intelligence analysis session, resolving the PeeringDB credential from the
+     * client's configuration: the {@code EquinixConfig.peeringDbApiKey} option if one was set, else
+     * the {@code PEERINGDB_API_KEY} environment variable, else anonymous access. Anonymous access is
+     * rate-limited by PeeringDB to approximately 20 requests per minute.
      *
      * @return a {@link PeeringIntelligence.Builder} for configuring the analysis
      * @see #peeringIntelligence(String)
+     * @see EquinixConfig#getPeeringDbApiKey()
      */
     public PeeringIntelligence.Builder peeringIntelligence() {
-        return PeeringIntelligence.builder(this);
+        return PeeringIntelligence.builder(this, peeringDbApiKey);
     }
 
     /**

@@ -42,6 +42,17 @@ import java.util.*;
  *       and target ASN are both at an Equinix IX but not yet peering</li>
  * </ul>
  *
+ * <h3>PeeringDB credentials</h3>
+ * <p>PeeringDB authentication is an API key (created on
+ * <a href="https://docs.peeringdb.com/howto/api_keys/">peeringdb.com</a>) — a separate credential
+ * from the Equinix OAuth client. The key is resolved in this order:</p>
+ * <ol>
+ *   <li>an explicit key — {@code fabric.peeringIntelligence("key")} or {@code builder(fabric, "key")}</li>
+ *   <li>the {@code EquinixConfig.peeringDbApiKey} option configured on the client/session</li>
+ *   <li>the {@value #PEERINGDB_API_KEY_ENV} environment variable</li>
+ *   <li>anonymous access (rate-limited by PeeringDB to ~20 requests/minute)</li>
+ * </ol>
+ *
  * <h3>Usage</h3>
  * <pre>{@code
  * // Basic presence matrix
@@ -75,13 +86,21 @@ import java.util.*;
  */
 public class PeeringIntelligence {
 
+    /**
+     * The environment variable consulted for a PeeringDB API key when none is supplied explicitly
+     * or via {@code EquinixConfig.peeringDbApiKey}.
+     */
+    public static final String PEERINGDB_API_KEY_ENV = "PEERINGDB_API_KEY";
+
     private PeeringIntelligence() {}
 
     /**
      * Creates a new builder for configuring a peering intelligence analysis.
      *
      * @param fabric the Fabric client instance (used for Fabric service profile cross-referencing)
-     * @param peeringDbApiKey the PeeringDB API key for authenticated access, or {@code null} for anonymous
+     * @param peeringDbApiKey the PeeringDB API key for authenticated access, or {@code null} to fall
+     *                        back to the {@value #PEERINGDB_API_KEY_ENV} environment variable (anonymous
+     *                        access when that is unset too)
      * @return a new {@link Builder}
      */
     public static Builder builder(FabricGateway fabric, String peeringDbApiKey) {
@@ -89,7 +108,9 @@ public class PeeringIntelligence {
     }
 
     /**
-     * Creates a new builder with anonymous PeeringDB access (~20 requests/minute).
+     * Creates a new builder without an explicit PeeringDB API key: the
+     * {@value #PEERINGDB_API_KEY_ENV} environment variable is used when set, anonymous access
+     * (~20 requests/minute) otherwise.
      *
      * @param fabric the Fabric client instance
      * @return a new {@link Builder}
@@ -124,9 +145,29 @@ public class PeeringIntelligence {
          */
         private String peeringDbBaseUrl;
 
+        /**
+         * Environment lookup used for the {@value #PEERINGDB_API_KEY_ENV} fallback. Defaults to
+         * {@link System#getenv(String)}; package-private and replaceable only by tests (the JVM
+         * offers no portable way to set an environment variable in a test).
+         */
+        private java.util.function.Function<String, String> envLookup = System::getenv;
+
         Builder(FabricGateway fabric, String peeringDbApiKey) {
             this.fabric = fabric;
             this.peeringDbApiKey = peeringDbApiKey;
+        }
+
+        /**
+         * Test-only seam: replaces the environment lookup used for the
+         * {@value #PEERINGDB_API_KEY_ENV} fallback. Package-private so it is never part of the
+         * public builder surface.
+         *
+         * @param envLookup the replacement lookup (name → value, {@code null} when unset)
+         * @return this builder
+         */
+        Builder envLookup(java.util.function.Function<String, String> envLookup) {
+            this.envLookup = envLookup;
+            return this;
         }
 
         /**
@@ -337,9 +378,13 @@ public class PeeringIntelligence {
                     .includeResiliency(includeResiliency)
                     .build();
 
+            String resolvedApiKey = peeringDbApiKey != null && !peeringDbApiKey.isBlank()
+                    ? peeringDbApiKey
+                    : envLookup.apply(PEERINGDB_API_KEY_ENV);
+
             PeeringDbClient peeringDbClient = peeringDbBaseUrl != null
-                    ? PeeringDbClient.withBaseUrl(peeringDbApiKey, peeringDbBaseUrl)
-                    : (peeringDbApiKey != null ? new PeeringDbClient(peeringDbApiKey) : new PeeringDbClient());
+                    ? PeeringDbClient.withBaseUrl(resolvedApiKey, peeringDbBaseUrl)
+                    : (resolvedApiKey != null ? new PeeringDbClient(resolvedApiKey) : new PeeringDbClient());
 
             PeeringIntelligenceEngine engine = new PeeringIntelligenceEngine(
                     fabric, peeringDbClient, request);
