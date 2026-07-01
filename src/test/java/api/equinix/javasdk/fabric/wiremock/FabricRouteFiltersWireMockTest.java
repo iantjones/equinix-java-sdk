@@ -3,11 +3,16 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.RouteFilterAction;
 import api.equinix.javasdk.fabric.enums.RouteFilterType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteFilter;
 import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -63,6 +68,81 @@ class FabricRouteFiltersWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> fabric.routeFilters().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        @Test
+        @DisplayName("search() POSTs to /routeFilters/search and returns a filtered list")
+        void searchReturnsResults() {
+            // Fabric exposes route filters via POST /search, not a GET list.
+            stubPaginatedPost(wireMock, "/fabric/v4/routeFilters/search",
+                    "/json/fabric/paginated_route_filters.json");
+
+            PaginatedFilteredList<RouteFilter> filters = fabric.routeFilters().search();
+
+            assertNotNull(filters);
+            assertEquals(2, filters.size());
+            assertEquals("e5f6a7b8-c9d0-1234-efab-456789012cde", filters.get(0).getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routeFilters/search")));
+        }
+
+        @Test
+        @DisplayName("search(filter) POSTs the AND/equals filter in the body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, "/fabric/v4/routeFilters/search",
+                    "/json/fabric/paginated_route_filters.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "BGP_IPv4_PREFIX_FILTER");
+
+            PaginatedFilteredList<RouteFilter> results = fabric.routeFilters().search(filter);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routeFilters/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("=")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("BGP_IPv4_PREFIX_FILTER"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) POSTs the sort array in the body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, "/fabric/v4/routeFilters/search",
+                    "/json/fabric/paginated_route_filters.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<RouteFilter> results = fabric.routeFilters().search(sort);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routeFilters/search"))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) POSTs both filter and sort in the body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, "/fabric/v4/routeFilters/search",
+                    "/json/fabric/paginated_route_filters.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/state", "PROVISIONED");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<RouteFilter> results = fabric.routeFilters().search(filter, sort);
+
+            assertNotNull(results);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routeFilters/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("PROVISIONED")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
         }
     }
 

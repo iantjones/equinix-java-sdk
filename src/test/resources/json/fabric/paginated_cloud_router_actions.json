@@ -1,0 +1,20 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890/actions/1e9414f1-763e-4c0a-86c6-0bc8336048d9",
+      "uuid": "1e9414f1-763e-4c0a-86c6-0bc8336048d9",
+      "type": "ROUTE_TABLE_ENTRY_UPDATE",
+      "description": "Refresh route table entries",
+      "state": "SUCCEEDED",
+      "changeLog": {
+        "createdBy": "user1234",
+        "createdDateTime": "2024-06-15T09:30:00.000Z"
+      }
+    }
+  ]
+}

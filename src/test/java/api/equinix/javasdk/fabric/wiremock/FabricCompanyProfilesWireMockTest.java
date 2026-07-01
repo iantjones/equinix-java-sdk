@@ -2,8 +2,19 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.PrivateService;
+import api.equinix.javasdk.fabric.model.Tag;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -185,6 +196,182 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
             assertTrue(result);
             wireMock.verify(deleteRequestedFor(urlPathEqualTo(
                     "/fabric/v4/companyProfiles/" + CP_ID + "/privateServices/" + PS_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/companyProfiles/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /companyProfiles/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_company_profiles.json");
+
+            PaginatedFilteredList<CompanyProfile> profiles = fabric.companyProfiles().search();
+
+            assertNotNull(profiles);
+            assertEquals(2, profiles.size());
+            assertEquals(CP_ID, profiles.get(0).getUuid());
+
+            // Default no-arg search sends an (empty) filter and pagination, no sort.
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_company_profiles.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "Acme Networks")
+                    .equals("/state", "ACTIVE");
+
+            PaginatedFilteredList<CompanyProfile> profiles = fabric.companyProfiles().search(filter);
+
+            assertNotNull(profiles);
+            assertEquals(2, profiles.size());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("Acme Networks")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("ACTIVE"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_company_profiles.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<CompanyProfile> profiles = fabric.companyProfiles().search(sort);
+
+            assertNotNull(profiles);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_company_profiles.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "COMPANY_PROFILE");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<CompanyProfile> profiles = fabric.companyProfiles().search(filter, sort);
+
+            assertNotNull(profiles);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("COMPANY_PROFILE")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByUuid()")
+    class GetByUuid {
+
+        @Test
+        @DisplayName("GETs /companyProfiles/{uuid} and returns the profile")
+        void returnsProfile() {
+            stubSingleton(wireMock, "/fabric/v4/companyProfiles/.*",
+                    "/json/fabric/company_profile_response.json");
+
+            CompanyProfile profile = fabric.companyProfiles().getByUuid(CP_ID);
+
+            assertNotNull(profile);
+            assertEquals(CP_ID, profile.getUuid());
+            assertEquals("Acme Networks", profile.getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/companyProfiles/" + CP_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("getLogo()")
+    class GetLogo {
+
+        @Test
+        @DisplayName("GETs /logos/{uuid} (overrideRootUri, not under companyProfiles) and returns the raw bytes")
+        void returnsLogoBytes() {
+            byte[] payload = "PNGDATA".getBytes(StandardCharsets.UTF_8);
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/logos/" + LOGO_ID))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "image/png")
+                            .withBody(payload)));
+
+            byte[] logo = fabric.companyProfiles().getLogo(LOGO_ID);
+
+            assertNotNull(logo);
+            assertArrayEquals(payload, logo);
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/logos/" + LOGO_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("getServiceProfiles() / getTags() / getPrivateServices() [list]")
+    class Lists {
+
+        @Test
+        @DisplayName("getServiceProfiles(cpId) GETs /companyProfiles/{cpId}/serviceProfiles")
+        void listServiceProfiles() {
+            stubPaginatedGet(wireMock, "/fabric/v4/companyProfiles/.*/serviceProfiles",
+                    "/json/fabric/company_profile_service_profiles_response.json");
+
+            List<CompanyServiceProfile> serviceProfiles = fabric.companyProfiles().getServiceProfiles(CP_ID);
+
+            assertNotNull(serviceProfiles);
+            assertEquals(2, serviceProfiles.size());
+            assertEquals("423af68b-42f0-4f2e-9c5c-2fbd44b4b387", serviceProfiles.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/companyProfiles/" + CP_ID + "/serviceProfiles")));
+        }
+
+        @Test
+        @DisplayName("getTags(cpId) GETs /companyProfiles/{cpId}/tags")
+        void listTags() {
+            stubPaginatedGet(wireMock, "/fabric/v4/companyProfiles/.*/tags",
+                    "/json/fabric/company_profile_tags_response.json");
+
+            List<Tag> tags = fabric.companyProfiles().getTags(CP_ID);
+
+            assertNotNull(tags);
+            assertEquals(1, tags.size());
+            assertEquals(TAG_ID, tags.get(0).getUuid());
+            assertEquals("environment", tags.get(0).getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/companyProfiles/" + CP_ID + "/tags")));
+        }
+
+        @Test
+        @DisplayName("getPrivateServices(cpId) GETs /companyProfiles/{cpId}/privateServices")
+        void listPrivateServices() {
+            stubPaginatedGet(wireMock, "/fabric/v4/companyProfiles/.*/privateServices",
+                    "/json/fabric/company_profile_private_services_response.json");
+
+            List<PrivateService> privateServices = fabric.companyProfiles().getPrivateServices(CP_ID);
+
+            assertNotNull(privateServices);
+            assertEquals(1, privateServices.size());
+            assertEquals("460af68b-42f0-4f2e-9c5c-2fbd44b4b387", privateServices.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/companyProfiles/" + CP_ID + "/privateServices")));
         }
     }
 }

@@ -1,0 +1,19 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/095be615-a8ad-4c33-8e9c-c7612fbf6c9f",
+      "type": "EVPL_VC",
+      "uuid": "095be615-a8ad-4c33-8e9c-c7612fbf6c9f"
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/1c2d3e4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f",
+      "type": "EVPL_VC",
+      "uuid": "1c2d3e4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f"
+    }
+  ]
+}

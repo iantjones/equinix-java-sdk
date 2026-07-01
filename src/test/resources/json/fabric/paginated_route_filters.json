@@ -1,0 +1,39 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "uuid": "e5f6a7b8-c9d0-1234-efab-456789012cde",
+      "href": "https://api.equinix.com/fabric/v4/routeFilters/e5f6a7b8-c9d0-1234-efab-456789012cde",
+      "name": "Production-IPv4-Prefix-Filter",
+      "type": "BGP_IPv4_PREFIX_FILTER",
+      "state": "PROVISIONED",
+      "description": "IPv4 prefix filter for production BGP peering sessions",
+      "project": {
+        "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+      },
+      "rulesCount": 24,
+      "notMatchedRuleAction": "DENY",
+      "connectionsCount": 3
+    },
+    {
+      "uuid": "f6a7b8c9-d0e1-2345-fabc-56789012cdef",
+      "href": "https://api.equinix.com/fabric/v4/routeFilters/f6a7b8c9-d0e1-2345-fabc-56789012cdef",
+      "name": "Staging-IPv6-Prefix-Filter",
+      "type": "BGP_IPv6_PREFIX_FILTER",
+      "state": "PROVISIONED",
+      "description": "IPv6 prefix filter for staging BGP peering sessions",
+      "project": {
+        "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+      },
+      "rulesCount": 8,
+      "notMatchedRuleAction": "ALLOW",
+      "connectionsCount": 1
+    }
+  ]
+}

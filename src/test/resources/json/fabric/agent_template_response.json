@@ -1,0 +1,13 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/agentTemplates/tmpl-1234",
+  "type": "AGENT_TEMPLATE",
+  "uuid": "tmpl-1234",
+  "name": "Network-Operations-Template",
+  "description": "Baseline automated network operations template",
+  "state": "ACTIVE",
+  "enabled": true,
+  "changeLog": {
+    "createdBy": "test-user",
+    "createdDateTime": "2026-07-01T12:00:00.000Z"
+  }
+}

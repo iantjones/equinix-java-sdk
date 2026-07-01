@@ -1,0 +1,19 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/routeAggregations/7d0e1f2a-3b4c-5d6e-7f80-91a2b3c4d5e6",
+      "type": "BGP_IPv4_PREFIX_AGGREGATION",
+      "uuid": "7d0e1f2a-3b4c-5d6e-7f80-91a2b3c4d5e6",
+      "attachmentStatus": "ATTACHED",
+      "changeLog": {
+        "createdBy": "user1234",
+        "createdDateTime": "2024-06-15T09:30:00.000Z"
+      }
+    }
+  ]
+}

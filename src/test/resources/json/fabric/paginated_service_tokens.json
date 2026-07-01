@@ -1,0 +1,71 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "ab7f685-41b0-1b07-6de0-3a7c54b08b8f",
+      "type": "VC_TOKEN",
+      "href": "https://api.equinix.com/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f",
+      "name": "Token-Primary",
+      "state": "ACTIVE",
+      "expiry": 30,
+      "expirationDateTime": "2024-03-15T10:30:00Z",
+      "connection": {
+        "type": "EVPL_VC",
+        "allowRemoteConnection": true,
+        "allowCustomBandwidth": true,
+        "bandwidthLimit": 500
+      },
+      "notifications": [
+        {
+          "type": "ALL",
+          "emails": ["admin@example.com"]
+        }
+      ],
+      "account": {
+        "accountNumber": 123456,
+        "orgId": 100100
+      },
+      "changeLog": {
+        "createdBy": "tokenCreator",
+        "createdDateTime": "2024-02-15T10:30:00Z",
+        "updatedBy": "tokenCreator",
+        "updatedDateTime": "2024-02-15T10:30:00Z"
+      }
+    },
+    {
+      "uuid": "cd8f796-52c1-2c18-7ef1-4b8d65c19c90",
+      "type": "VC_TOKEN",
+      "href": "https://api.equinix.com/fabric/v4/serviceTokens/cd8f796-52c1-2c18-7ef1-4b8d65c19c90",
+      "name": "Token-Secondary",
+      "state": "INACTIVE",
+      "expiry": 45,
+      "expirationDateTime": "2024-04-20T12:00:00Z",
+      "connection": {
+        "type": "EVPL_VC",
+        "allowRemoteConnection": false,
+        "allowCustomBandwidth": false,
+        "bandwidthLimit": 1000
+      },
+      "notifications": [
+        {
+          "type": "ALL",
+          "emails": ["ops@example.com"]
+        }
+      ],
+      "account": {
+        "accountNumber": 123456,
+        "orgId": 100100
+      },
+      "changeLog": {
+        "createdBy": "tokenCreator",
+        "createdDateTime": "2024-03-01T09:00:00Z",
+        "updatedBy": "tokenCreator",
+        "updatedDateTime": "2024-03-01T09:00:00Z"
+      }
+    }
+  ]
+}

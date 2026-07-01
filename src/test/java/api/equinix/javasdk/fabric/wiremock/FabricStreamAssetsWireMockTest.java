@@ -42,6 +42,37 @@ class FabricStreamAssetsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("get()")
+    class Get {
+
+        @Test
+        @DisplayName("GETs the asset path by id and maps the response")
+        void getReadsAssetById() {
+            stubSingleton(wireMock, ASSET_PATH, "/json/fabric/stream_asset_response.json");
+
+            StreamAsset asset = fabric.streamAssets().get(STREAM_ID, ASSET, ASSET_ID);
+
+            assertNotNull(asset);
+            assertEquals(ASSET_ID, asset.getUuid());
+            assertEquals("CONNECTION", asset.getType());
+            assertEquals(Boolean.TRUE, asset.getMetricsEnabled());
+            assertEquals("ATTACHED", asset.getAttachmentStatus());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(ASSET_PATH)));
+        }
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void getNotFound() {
+            stubErrorInline(wireMock, ASSET_PATH,
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Asset not attached\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.streamAssets().get(STREAM_ID, ASSET, ASSET_ID));
+        }
+    }
+
+    @Nested
     @DisplayName("attach()")
     class Attach {
 

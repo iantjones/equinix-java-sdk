@@ -3,11 +3,18 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.NetworkEquinixStatus;
 import api.equinix.javasdk.fabric.enums.NetworkScope;
 import api.equinix.javasdk.fabric.enums.NetworkType;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -231,6 +238,105 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixServerException.class,
                     () -> fabric.networks().getByUuid("test-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class Search {
+
+        private static final String SEARCH_URL = "/fabric/v4/networks/search";
+
+        @Test
+        @DisplayName("no-arg search POSTs the default body to /networks/search and returns a filtered list")
+        void searchNoArg() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_networks.json");
+
+            PaginatedFilteredList<Network> networks = fabric.networks().search();
+
+            assertNotNull(networks);
+            assertEquals(2, networks.size());
+            assertEquals("c3d4e5f6-a7b8-9012-cdef-234567890abc", networks.get(0).getUuid());
+
+            // Default no-arg search sends an (empty) filter, no sort.
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.pagination")));
+        }
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_networks.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "Production-EVPLAN-Network")
+                    .equals("/scope", "REGIONAL");
+
+            PaginatedFilteredList<Network> networks = fabric.networks().search(filter);
+
+            assertNotNull(networks);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("Production-EVPLAN-Network")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/scope")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("REGIONAL"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_networks.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<Network> networks = fabric.networks().search(sort);
+
+            assertNotNull(networks);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_networks.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "EVPLAN");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<Network> networks = fabric.networks().search(filter, sort);
+
+            assertNotNull(networks);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("EVPLAN")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("getConnections()")
+    class GetConnections {
+
+        @Test
+        @DisplayName("GETs {networkId}/connections and returns the paginated connection list")
+        void returnsConnections() {
+            stubPaginatedGet(wireMock, "/fabric/v4/networks/.*/connections",
+                    "/json/fabric/paginated_connections.json");
+
+            PaginatedList<Connection> connections = fabric.networks()
+                    .getConnections("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+
+            assertNotNull(connections);
+            assertEquals(2, connections.size());
+            assertEquals("3a58dd05-f46d-4b1d-a154-2e85c396ea85", connections.get(0).getUuid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/networks/c3d4e5f6-a7b8-9012-cdef-234567890abc/connections")));
         }
     }
 }

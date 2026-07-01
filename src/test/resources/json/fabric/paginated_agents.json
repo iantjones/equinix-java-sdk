@@ -1,0 +1,27 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/agents/d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10",
+      "type": "ANO_AGENT",
+      "uuid": "d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10",
+      "name": "My-Fabric-Agent",
+      "description": "Automated network operations agent",
+      "state": "PROVISIONED",
+      "enabled": true
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/agents/a2b3c4d5-e6f7-8091-a2b3-c4d5e6f70819",
+      "type": "ANO_AGENT",
+      "uuid": "a2b3c4d5-e6f7-8091-a2b3-c4d5e6f70819",
+      "name": "Second-Fabric-Agent",
+      "description": "Secondary agent",
+      "state": "PROVISIONED",
+      "enabled": false
+    }
+  ]
+}

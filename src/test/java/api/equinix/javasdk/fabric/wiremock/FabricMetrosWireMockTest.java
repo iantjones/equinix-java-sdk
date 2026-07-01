@@ -6,6 +6,7 @@ import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.MetroId;
+import api.equinix.javasdk.fabric.enums.MetroPresence;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.MetroRegistry;
 import org.junit.jupiter.api.*;
@@ -61,6 +62,25 @@ class FabricMetrosWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("list(MetroPresence)")
+    class ListMetrosByPresence {
+
+        @Test
+        @DisplayName("sends the presence query param and returns metros")
+        void sendsPresenceQueryParam() {
+            stubPaginatedGet(wireMock, "/fabric/v4/metros", "/json/fabric/paginated_metros_list.json");
+
+            PaginatedList<Metro> metros = fabric.metros().list(MetroPresence.MY_PORTS);
+
+            assertNotNull(metros);
+            assertEquals(2, metros.size());
+            assertEquals(MetroCode.SV, metros.get(0).getCode());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metros"))
+                    .withQueryParam("presence", equalTo("MY_PORTS")));
+        }
+    }
+
+    @Nested
     @DisplayName("getByMetroCode()")
     class GetByMetroCode {
 
@@ -74,6 +94,24 @@ class FabricMetrosWireMockTest extends WireMockTestBase {
             assertNotNull(metro);
             assertEquals(MetroCode.SV, metro.getCode());
             assertEquals("Silicon Valley", metro.getName());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metros/SV")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getByMetroId(MetroId)")
+    class GetByMetroId {
+
+        @Test
+        @DisplayName("targets GET /metros/{code} using the MetroId's code")
+        void returnsMetroById() {
+            stubSingleton(wireMock, "/fabric/v4/metros/.*", "/json/fabric/metro_single_response.json");
+
+            Metro metro = fabric.metros().getByMetroId(MetroId.of("SV"));
+
+            assertNotNull(metro);
+            assertEquals(MetroCode.SV, metro.getCode());
+            assertEquals(MetroId.of("SV"), metro.metroId());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metros/SV")));
         }
     }

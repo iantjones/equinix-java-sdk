@@ -1,0 +1,27 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd/alertRules/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "type": "METRIC_ALERT",
+      "name": "High-Egress-Bandwidth-Alert",
+      "description": "Fires when egress bandwidth utilisation exceeds the configured threshold",
+      "state": "PROVISIONED",
+      "enabled": true
+    },
+    {
+      "uuid": "b2c3d4e5-f6a7-8901-bcde-f01234567890",
+      "href": "https://api.equinix.com/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd/alertRules/b2c3d4e5-f6a7-8901-bcde-f01234567890",
+      "type": "HEALTH_ALERT",
+      "name": "Stream-Health-Alert",
+      "description": "Fires when the stream health degrades",
+      "state": "PROVISIONED",
+      "enabled": false
+    }
+  ]
+}

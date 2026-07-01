@@ -1,0 +1,21 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/agents/d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10/activities/act-1",
+      "type": "CONFIG_APPLY",
+      "uuid": "act-1",
+      "status": "COMPLETED"
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/agents/d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10/activities/act-2",
+      "type": "CONFIG_APPLY",
+      "uuid": "act-2",
+      "status": "IN_PROGRESS"
+    }
+  ]
+}

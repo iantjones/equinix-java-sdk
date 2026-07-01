@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/companyProfiles/9c0f8e2a-2b1d-4c3e-9a4f-1d2c3b4a5e6f",
+      "uuid": "9c0f8e2a-2b1d-4c3e-9a4f-1d2c3b4a5e6f",
+      "type": "COMPANY_PROFILE",
+      "name": "Acme Networks",
+      "summary": "Global interconnection provider",
+      "description": "Acme Networks offers low-latency interconnection across major metros.",
+      "state": "ACTIVE",
+      "webUrl": "https://acme.example.com",
+      "contactUrl": "https://acme.example.com/contact"
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/companyProfiles/1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "uuid": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "type": "COMPANY_PROFILE",
+      "name": "Globex Interconnect",
+      "summary": "Regional peering fabric",
+      "state": "ACTIVE"
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  }
+}

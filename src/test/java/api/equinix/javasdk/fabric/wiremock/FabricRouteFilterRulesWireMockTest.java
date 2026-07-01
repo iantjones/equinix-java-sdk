@@ -4,6 +4,7 @@ import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.RouteFilterAction;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
@@ -43,6 +44,28 @@ class FabricRouteFilterRulesWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListRules {
+
+        @Test
+        @DisplayName("GETs /routeFilters/{id}/routeFilterRules and deserializes the rules")
+        void listsRules() {
+            stubPaginatedGet(wireMock, "/fabric/v4/routeFilters/.*/routeFilterRules",
+                    "/json/fabric/paginated_route_filter_rules.json");
+
+            PaginatedList<RouteFilterRule> rules = fabric.routeFilterRules().list(ROUTE_FILTER_ID);
+
+            assertNotNull(rules);
+            assertEquals(2, rules.size());
+            assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", rules.get(0).getUuid());
+            assertEquals("Allow-10-0-0-0-8", rules.get(0).getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routeFilters/" + ROUTE_FILTER_ID + "/routeFilterRules")));
+        }
     }
 
     @Nested

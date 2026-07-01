@@ -1,0 +1,13 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/timeServicePackages/NTP_STANDARD",
+  "type": "TIME_SERVICE_PACKAGE",
+  "code": "NTP_STANDARD",
+  "bandwidth": 5,
+  "clientsPerSecondMax": 1000,
+  "redundancySupported": false,
+  "multiSubnetSupported": false,
+  "accuracySlaUnit": "MICROSECONDS",
+  "accuracySla": 50,
+  "accuracySlaMin": 10,
+  "accuracySlaMax": 100
+}

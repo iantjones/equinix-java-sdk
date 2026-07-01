@@ -1,0 +1,23 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/c0ffee00-1111-2222-3333-444455556666/routingProtocols/f1e2d3c4-b5a6-7890-abcd-1234567890ef/actions/b9a8c7d6-e5f4-3210-abcd-fedcba112233",
+      "uuid": "b9a8c7d6-e5f4-3210-abcd-fedcba112233",
+      "type": "RESET_BGPIPV4",
+      "description": "Reset of BGP IPv4 session",
+      "state": "SUCCEEDED"
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/c0ffee00-1111-2222-3333-444455556666/routingProtocols/f1e2d3c4-b5a6-7890-abcd-1234567890ef/actions/c8b7a6d5-e4f3-2109-bcde-aabbccddeeff",
+      "uuid": "c8b7a6d5-e4f3-2109-bcde-aabbccddeeff",
+      "type": "RESET_BGPIPV6",
+      "description": "Reset of BGP IPv6 session",
+      "state": "SUCCEEDED"
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  }
+}

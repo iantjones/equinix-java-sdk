@@ -7,6 +7,8 @@ import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -242,5 +244,76 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
 
         wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/asset-uuid/metrics"))
                 .withQueryParam("name", equalTo("equinix.fabric.port.bandwidth_rx.usage")));
+    }
+
+    /**
+     * Coverage for the sort-carrying search variants of the Metrics resource. The Metrics
+     * resource is defined with {@code rootUri: "metrics"} and {@code SearchMetrics}
+     * {@code requestUri: "search"} (no {@code overrideRootUri}), so every variant targets
+     * {@code POST /fabric/v4/metrics/search}. These assert the serialized {@code sort} array
+     * carried in the POST body, complementing the existing {@code search()} / {@code search(filter)}
+     * cases above.
+     */
+    @Nested
+    @DisplayName("metrics().search(filter, sort) — sort-carrying variants")
+    class SearchWithSort {
+
+        private static final String SEARCH_URL = "/fabric/v4/metrics/search";
+
+        private static final String SEARCH_BODY = "{"
+                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
+                + "\"data\":[{"
+                + "  \"type\":\"equinix.fabric.connection\","
+                + "  \"name\":\"equinix.fabric.connection.bandwidth_tx.usage\","
+                + "  \"unit\":\"bps\","
+                + "  \"interval\":\"PT1H\","
+                + "  \"resource\":{\"uuid\":\"conn-uuid\",\"type\":\"CONNECTION\",\"name\":\"my-conn\"},"
+                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":12345.6}]"
+                + "}]}";
+
+        @Test
+        @DisplayName("search(filter, sort) POSTs both the filter and sort arrays in the body")
+        void searchWithFilterAndSort_postsBothFilterAndSort() {
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_URL)).willReturn(okJson(SEARCH_BODY)));
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "equinix.fabric.connection.bandwidth_tx.usage")
+                    .equals("/subject", "/connections/conn-uuid");
+            SortPropertyList sort = Sort.sort().desc("/name");
+
+            PaginatedFilteredList<Metric> metrics = fabric.metrics().search(filter, sort);
+
+            assertNotNull(metrics);
+            assertEquals(1, metrics.size());
+            assertEquals("equinix.fabric.connection.bandwidth_tx.usage", metrics.get(0).getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]",
+                            equalTo("equinix.fabric.connection.bandwidth_tx.usage")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/subject")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) POSTs the sort array in the body without any filter")
+        void searchWithSortOnly_postsSortArray() {
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_URL)).willReturn(okJson(SEARCH_BODY)));
+
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            // No search(sort)-only overload on Metrics; the sort-only shape is expressed as
+            // an empty filter plus the sort, which still serializes the sort array in the body.
+            PaginatedFilteredList<Metric> metrics =
+                    fabric.metrics().search(Filter.filter().empty(), sort);
+
+            assertNotNull(metrics);
+            assertEquals(1, metrics.size());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
     }
 }

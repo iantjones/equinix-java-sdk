@@ -1,0 +1,42 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/internetAccessServices/f1e2d3c4-b5a6-7890-abcd-ef0123456789",
+      "uuid": "f1e2d3c4-b5a6-7890-abcd-ef0123456789",
+      "type": "SINGLE_IA",
+      "name": "My-EIA-Service",
+      "bandwidth": 1000,
+      "bandwidthCommit": 500,
+      "state": "PROVISIONED",
+      "useCase": "MAIN",
+      "project": {
+        "projectId": "proj-abc-123"
+      },
+      "changeLog": {
+        "createdDateTime": "2026-06-01T12:00:00.000Z"
+      }
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/internetAccessServices/a9b8c7d6-e5f4-3210-9876-543210fedcba",
+      "uuid": "a9b8c7d6-e5f4-3210-9876-543210fedcba",
+      "type": "DUAL_IA",
+      "name": "Backup-EIA-Service",
+      "bandwidth": 200,
+      "state": "PROVISIONED",
+      "useCase": "MAIN",
+      "project": {
+        "projectId": "proj-def-456"
+      },
+      "changeLog": {
+        "createdDateTime": "2026-06-02T08:30:00.000Z"
+      }
+    }
+  ]
+}

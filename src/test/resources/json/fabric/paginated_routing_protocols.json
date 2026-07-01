@@ -1,0 +1,33 @@
+{
+  "data": [
+    {
+      "uuid": "f1e2d3c4-b5a6-7890-abcd-1234567890ef",
+      "href": "https://api.equinix.com/fabric/v4/connections/c0ffee00-1111-2222-3333-444455556666/routingProtocols/f1e2d3c4-b5a6-7890-abcd-1234567890ef",
+      "name": "Production-BGP-RoutingProtocol",
+      "type": "BGP",
+      "state": "PROVISIONED",
+      "bgpIpv4": {
+        "customerPeerIp": "192.168.100.1",
+        "equinixPeerIp": "192.168.100.2",
+        "enabled": true
+      },
+      "customerAsn": 65001,
+      "equinixAsn": 65002
+    },
+    {
+      "uuid": "a1b2c3d4-e5f6-7890-abcd-0987654321fe",
+      "href": "https://api.equinix.com/fabric/v4/connections/c0ffee00-1111-2222-3333-444455556666/routingProtocols/a1b2c3d4-e5f6-7890-abcd-0987654321fe",
+      "name": "Production-Direct-RoutingProtocol",
+      "type": "DIRECT",
+      "state": "PROVISIONED",
+      "directIpv4": {
+        "equinixIfaceIp": "192.168.200.2"
+      }
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  }
+}

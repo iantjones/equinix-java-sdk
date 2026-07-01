@@ -8,6 +8,10 @@ import api.equinix.javasdk.fabric.enums.RouteAggregationType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RouteAggregation;
 import api.equinix.javasdk.fabric.model.implementation.Change;
+import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
+import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -74,6 +78,64 @@ class FabricRouteAggregationsWireMockTest extends WireMockTestBase {
             assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", aggregations.get(0).getUuid());
 
             wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/routeAggregations/search")));
+        }
+
+        private static final String SEARCH_URL = "/fabric/v4/routeAggregations/search";
+
+        @Test
+        @DisplayName("search(filter) carries the filter predicate in the POST body")
+        void searchWithFilter() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_route_aggregations.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/name", "Production-Aggregation")
+                    .equals("/state", "PROVISIONED");
+
+            PaginatedFilteredList<RouteAggregation> aggregations = fabric.routeAggregations().search(filter);
+
+            assertNotNull(aggregations);
+            assertEquals(1, aggregations.size());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("Production-Aggregation")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/state")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].values[0]", equalTo("PROVISIONED"))));
+        }
+
+        @Test
+        @DisplayName("search(sort) carries the sort directive in the POST body")
+        void searchWithSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_route_aggregations.json");
+
+            SortPropertyList sort = Sort.sort().desc("/changeLog/createdDateTime");
+
+            PaginatedFilteredList<RouteAggregation> aggregations = fabric.routeAggregations().search(sort);
+
+            assertNotNull(aggregations);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+        }
+
+        @Test
+        @DisplayName("search(filter, sort) carries both filter and sort in the POST body")
+        void searchWithFilterAndSort() {
+            stubPaginatedPost(wireMock, SEARCH_URL, "/json/fabric/paginated_route_aggregations.json");
+
+            FilterPropertyList filter = Filter.filter().and()
+                    .equals("/type", "BGP_IPv4_PREFIX_AGGREGATION");
+            SortPropertyList sort = Sort.sort().asc("/name");
+
+            PaginatedFilteredList<RouteAggregation> aggregations = fabric.routeAggregations().search(filter, sort);
+
+            assertNotNull(aggregations);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("BGP_IPv4_PREFIX_AGGREGATION")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
         }
     }
 
