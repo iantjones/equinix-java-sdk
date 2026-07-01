@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "uuid": "up-1111-2222-3333-444455556666",
+      "virtualDeviceUuid": "ed7891f4-7a67-11e9-9bea-1681be663d3e",
+      "status": "SUCCESS",
+      "requestedBy": "ops@example.com",
+      "requestedDateTime": "2021-05-01T10:15:30.000Z",
+      "completiondDateTime": "2021-05-01T10:45:30.000Z"
+    },
+    {
+      "uuid": "up-7777-8888-9999-aaaabbbbcccc",
+      "virtualDeviceUuid": "ed7891f4-7a67-11e9-9bea-1681be663d3e",
+      "status": "IN_PROGRESS",
+      "requestedBy": "noc@example.com",
+      "requestedDateTime": "2021-06-01T08:00:00.000Z"
+    }
+  ]
+}

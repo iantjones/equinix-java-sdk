@@ -1,0 +1,14 @@
+{
+  "notificationType": "PLANNED",
+  "startDateTime": "2026-07-10T02:00:00.000Z",
+  "endDateTime": "2026-07-10T06:00:00.000Z",
+  "additionalMessage": "Scheduled maintenance window for Network Edge control plane.",
+  "impactedServices": [
+    {
+      "serviceName": "Device Provisioning",
+      "impact": "Degraded",
+      "serviceStartDateTime": "2026-07-10T02:00:00.000Z",
+      "serviceEndDateTime": "2026-07-10T06:00:00.000Z"
+    }
+  ]
+}

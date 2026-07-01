@@ -1,0 +1,26 @@
+{
+  "payLoad": {
+    "ibx": "SV5",
+    "accountNo": "123456",
+    "interval": "hourly",
+    "datapoint": "temperature",
+    "uom": "°C",
+    "series": [
+      {
+        "value": "21.5",
+        "modifiers": [],
+        "datetime": "2024-01-15T13:00:00Z"
+      },
+      {
+        "value": "21.8",
+        "modifiers": ["INTERPOLATED"],
+        "datetime": "2024-01-15T14:00:00Z"
+      }
+    ]
+  },
+  "status": {
+    "type": "INFO",
+    "statuscode": 1000,
+    "msg": "OK"
+  }
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "sub-12345-abcde",
+    "status": "ACTIVE",
+    "messageType": {
+      "power": [
+        {
+          "accountNumber": "123456",
+          "ibx": ["SV5"]
+        }
+      ]
+    },
+    "channel": {
+      "channelType": "WEBHOOK",
+      "webhookChannelConfiguration": {
+        "url": "https://webhook.example.com/events",
+        "numberOfRetries": 3,
+        "numberOfConcurrentCalls": 20,
+        "batchSize": 10
+      }
+    },
+    "orgId": "org-987"
+  },
+  {
+    "id": "sub-67890-fghij",
+    "status": "ACTIVE",
+    "messageType": {
+      "environmental": [
+        {
+          "accountNumber": "123456",
+          "ibx": ["DC6"],
+          "level": ["IBX"]
+        }
+      ]
+    },
+    "channel": {
+      "channelType": "AWS_IOT_CORE"
+    },
+    "orgId": "org-987"
+  }
+]

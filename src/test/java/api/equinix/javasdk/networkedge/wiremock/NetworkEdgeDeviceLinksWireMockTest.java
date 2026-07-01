@@ -4,6 +4,8 @@ import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.RedundancyType;
 import api.equinix.javasdk.networkedge.model.DeviceLink;
 import org.junit.jupiter.api.*;
@@ -34,6 +36,67 @@ class NetworkEdgeDeviceLinksWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListAll {
+
+        @Test
+        @DisplayName("GETs /ne/v1/links with no filter query params")
+        void listsAllDeviceLinks() {
+            stubPaginatedGet(wireMock, "/ne/v1/links/?",
+                    "/json/networkedge/devicelink_list_response.json");
+
+            PaginatedList<DeviceLink> deviceLinks = networkEdge.deviceLinks().list();
+
+            assertNotNull(deviceLinks);
+            assertEquals(2, deviceLinks.size());
+            assertEquals("d1e2f3a4-b5c6-7890-abcd-1234567890ab", deviceLinks.get(0).getUuid());
+            assertEquals("test-device-link", deviceLinks.get(0).getGroupName());
+            assertEquals("second-device-link", deviceLinks.get(1).getGroupName());
+
+            // GET verb + exact path; the unfiltered overload sends no filter params.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/links"))
+                    .withQueryParam("metro", absent())
+                    .withQueryParam("virtualDeviceUuid", absent())
+                    .withQueryParam("accountUcmId", absent())
+                    .withQueryParam("groupUuid", absent())
+                    .withQueryParam("groupName", absent()));
+        }
+    }
+
+    @Nested
+    @DisplayName("list(RequestBuilder.DeviceLink)")
+    class ListFiltered {
+
+        @Test
+        @DisplayName("GETs /ne/v1/links carrying the builder's filter query params")
+        void listsFilteredDeviceLinks() {
+            stubPaginatedGet(wireMock, "/ne/v1/links/?",
+                    "/json/networkedge/devicelink_list_response.json");
+
+            RequestBuilder.DeviceLink filter = RequestBuilder.deviceLink()
+                    .inMetro(MetroCode.SV)
+                    .forDeviceUuid("aaaa1111-bbbb-2222-cccc-3333dddd4444")
+                    .forAccount("account-ucm-123")
+                    .forGroupUuid("d1e2f3a4-b5c6-7890-abcd-1234567890ab")
+                    .forGroupName("test-device-link")
+                    .build();
+
+            PaginatedList<DeviceLink> deviceLinks = networkEdge.deviceLinks().list(filter);
+
+            assertNotNull(deviceLinks);
+            assertEquals(2, deviceLinks.size());
+
+            // GET verb + exact path; each builder field maps to its wire query-param name.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/links"))
+                    .withQueryParam("metro", equalTo("SV"))
+                    .withQueryParam("virtualDeviceUuid", equalTo("aaaa1111-bbbb-2222-cccc-3333dddd4444"))
+                    .withQueryParam("accountUcmId", equalTo("account-ucm-123"))
+                    .withQueryParam("groupUuid", equalTo("d1e2f3a4-b5c6-7890-abcd-1234567890ab"))
+                    .withQueryParam("groupName", equalTo("test-device-link")));
+        }
     }
 
     @Nested

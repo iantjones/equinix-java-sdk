@@ -1,0 +1,29 @@
+[
+  {
+    "levelType": "ibx",
+    "levelValue": "SV5",
+    "label": "Silicon Valley 5",
+    "children": [
+      {
+        "levelType": "cage",
+        "levelValue": "SV5:01:0001",
+        "label": "Cage 0001",
+        "children": [
+          {
+            "levelType": "cabinet",
+            "levelValue": "SV5:01:0001:CAB01",
+            "label": "Cabinet 01",
+            "children": [
+              {
+                "levelType": "circuit",
+                "levelValue": "CIRCUIT-A1",
+                "label": "Primary Feed A",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

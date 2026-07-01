@@ -3,6 +3,7 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.networkedge.enums.Protocol;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import org.junit.jupiter.api.*;
@@ -214,6 +215,45 @@ class NetworkEdgeACLTemplatesWireMockTest extends WireMockTestBase {
             assertTrue(template.delete("account-ucm-123"));
 
             wireMock.verify(deleteRequestedFor(urlPathMatching("/ne/v1/aclTemplates/acl-1111-2222-3333-444455556666"))
+                    .withQueryParam("accountUcmId", equalTo("account-ucm-123")));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class List {
+
+        @Test
+        @DisplayName("list() GETs /ne/v1/aclTemplates with no accountUcmId query param")
+        void listsAclTemplates() {
+            stubPaginatedGet(wireMock, "/ne/v1/aclTemplates/?",
+                    "/json/networkedge/acltemplate_list_response.json");
+
+            PaginatedList<ACLTemplate> templates = networkEdge.aclTemplates().list();
+
+            assertNotNull(templates);
+            assertEquals(2, templates.size());
+            assertEquals("acl-1111-2222-3333-444455556666", templates.get(0).getUuid());
+            assertEquals("test-acl-template", templates.get(0).getName());
+            assertEquals("acl-aaaa-bbbb-cccc-ddddeeeeffff", templates.get(1).getUuid());
+            assertEquals("second-acl-template", templates.get(1).getName());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/aclTemplates"))
+                    .withoutQueryParam("accountUcmId"));
+        }
+
+        @Test
+        @DisplayName("list(accountUcmId) GETs /ne/v1/aclTemplates carrying accountUcmId as a query param")
+        void listsAclTemplatesForAccount() {
+            stubPaginatedGet(wireMock, "/ne/v1/aclTemplates/?",
+                    "/json/networkedge/acltemplate_list_response.json");
+
+            PaginatedList<ACLTemplate> templates = networkEdge.aclTemplates().list("account-ucm-123");
+
+            assertNotNull(templates);
+            assertEquals(2, templates.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/aclTemplates"))
                     .withQueryParam("accountUcmId", equalTo("account-ucm-123")));
         }
     }

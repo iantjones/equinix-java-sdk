@@ -1,0 +1,38 @@
+{
+  "payLoad": {
+    "totalCount": 2,
+    "data": [
+      {
+        "ibx": "SV5",
+        "accountNo": "123456",
+        "zone": "SV5:1:01:ColoArea:1",
+        "cage": "SV5:01:001100",
+        "cabinet": "SV5:01:001100:0105",
+        "sensor": "ENV-SV5-002",
+        "temperature": "21.8",
+        "humidity": "42.3",
+        "timestamp": "2024-01-15T14:30:00Z",
+        "temperatureUom": "°C",
+        "humidityUom": "%"
+      },
+      {
+        "ibx": "SV5",
+        "accountNo": "123456",
+        "zone": "SV5:1:01:ColoArea:1",
+        "cage": "SV5:01:001100",
+        "cabinet": "SV5:01:001100:0106",
+        "sensor": "ENV-SV5-003",
+        "temperature": "22.4",
+        "humidity": "41.1",
+        "timestamp": "2024-01-15T14:30:00Z",
+        "temperatureUom": "°C",
+        "humidityUom": "%"
+      }
+    ]
+  },
+  "status": {
+    "type": "INFO",
+    "statuscode": 1000,
+    "msg": "OK"
+  }
+}

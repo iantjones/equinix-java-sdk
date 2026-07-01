@@ -1,0 +1,29 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "vpn-1111-2222-3333-444455556666",
+      "siteName": "test-site",
+      "status": "PROVISIONED",
+      "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+      "configName": "test-vpn-config",
+      "peerIp": "203.0.113.10",
+      "remoteAsn": 65001,
+      "localAsn": 65000
+    },
+    {
+      "uuid": "vpn-aaaa-bbbb-cccc-ddddeeeeffff",
+      "siteName": "second-site",
+      "status": "PROVISIONING",
+      "virtualDeviceUuid": "dev-9999-8888-7777-666655554444",
+      "configName": "second-vpn-config",
+      "peerIp": "198.51.100.20",
+      "remoteAsn": 65010,
+      "localAsn": 65000
+    }
+  ]
+}

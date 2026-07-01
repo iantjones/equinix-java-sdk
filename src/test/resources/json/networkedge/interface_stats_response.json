@@ -1,0 +1,24 @@
+{
+  "stats": {
+    "startDateTime": "2021-05-01T00:00:00.000Z",
+    "endDateTime": "2021-05-02T00:00:00.000Z",
+    "unit": "bps",
+    "inbound": {
+      "max": 1000000.0,
+      "mean": 500000.0,
+      "lastPolled": 750000.0,
+      "metrics": [
+        {
+          "intervalDateTime": "2021-05-01T01:00:00.000Z",
+          "mean": 400000.0
+        }
+      ]
+    },
+    "outbound": {
+      "max": 800000.0,
+      "mean": 300000.0,
+      "lastPolled": 600000.0,
+      "metrics": []
+    }
+  }
+}

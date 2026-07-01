@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 21,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"data\":[{\"assetId\":\"conn-uuid-1\",\"metricType\":\"bandwidth\",\"min\":10.5,\"max\":95.2,\"avg\":52.4},{\"assetId\":\"conn-uuid-2\",\"metricType\":\"bandwidth\",\"min\":5.0,\"max\":80.0,\"avg\":40.0}]}"
+      }
+    ],
+    "isError": false
+  }
+}

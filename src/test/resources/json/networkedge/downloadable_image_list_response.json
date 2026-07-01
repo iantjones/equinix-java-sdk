@@ -1,0 +1,14 @@
+[
+  {
+    "uuid": "img-1111-2222-3333-444455556666",
+    "deviceType": "CSR1000V",
+    "imageName": "csr1000v-universalk9.16.09.05.image",
+    "version": "16.09.05"
+  },
+  {
+    "uuid": "img-7777-8888-9999-aaaabbbbcccc",
+    "deviceType": "CSR1000V",
+    "imageName": "csr1000v-universalk9.17.03.04a.image",
+    "version": "17.03.04a"
+  }
+]

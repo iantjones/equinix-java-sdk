@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "id": 5001,
+      "alertUid": "SV5.TEMP#EXCEEDS:27",
+      "traceUid": "trace-5001",
+      "assetTagUid": "SV5:01:TAG-001",
+      "assetTagDisplayName": "Cage SV5:01 Temperature",
+      "status": "ACTIVE",
+      "value": {
+        "alertTagValue": "28.4",
+        "alertTagValueDisplayName": "28.4 C",
+        "currentTagValue": "28.4"
+      },
+      "asset": {
+        "ibx": "SV5",
+        "assetUid": "SV5:01:A1234",
+        "assetType": "TEMPERATURE_SENSOR",
+        "assetClassification": "Mechanical"
+      },
+      "configuration": {
+        "thresholdValue": "27",
+        "unitOfMeasurement": "C",
+        "thresholdType": "EXCEEDS",
+        "conditionName": "High Temperature"
+      }
+    },
+    {
+      "id": 5002,
+      "alertUid": "SV5.HUMIDITY#EXCEEDS:60",
+      "traceUid": "trace-5002",
+      "assetTagUid": "SV5:01:TAG-002",
+      "assetTagDisplayName": "Cage SV5:01 Humidity",
+      "status": "INACTIVE",
+      "value": {
+        "alertTagValue": "62.1",
+        "alertTagValueDisplayName": "62.1 %",
+        "currentTagValue": "62.1"
+      },
+      "asset": {
+        "ibx": "SV5",
+        "assetUid": "SV5:01:A1235",
+        "assetType": "HUMIDITY_SENSOR",
+        "assetClassification": "Mechanical"
+      },
+      "configuration": {
+        "thresholdValue": "60",
+        "unitOfMeasurement": "%",
+        "thresholdType": "EXCEEDS",
+        "conditionName": "High Humidity"
+      }
+    }
+  ],
+  "limit": 100,
+  "offset": 0,
+  "totalCount": 2
+}

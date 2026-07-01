@@ -1,0 +1,25 @@
+{
+  "powerMessageData": [
+    {
+      "type": "POWER",
+      "data": {
+        "ibx": "SV5",
+        "accountNumber": "123456"
+      }
+    }
+  ],
+  "environmentMessageData": [
+    {
+      "type": "ENVIRONMENTAL",
+      "data": {
+        "ibx": "SV5",
+        "accountNumber": "123456"
+      }
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 50,
+    "total": 2
+  }
+}

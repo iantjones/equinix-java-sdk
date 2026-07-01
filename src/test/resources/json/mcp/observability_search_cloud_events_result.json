@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 22,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"data\":[{\"id\":\"evt-1\",\"type\":\"connection.state.changed\",\"source\":\"fabric\"}],\"total\":1}"
+      }
+    ],
+    "isError": false
+  }
+}

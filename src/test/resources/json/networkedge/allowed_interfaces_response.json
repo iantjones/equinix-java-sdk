@@ -1,0 +1,27 @@
+{
+  "interfaceProfiles": [
+    {
+      "count": 3,
+      "default": true,
+      "interfaces": [
+        {
+          "name": "eth0",
+          "description": "Management interface",
+          "interfaceId": "1",
+          "status": "AVAILABLE"
+        },
+        {
+          "name": "eth1",
+          "description": "WAN interface",
+          "interfaceId": "2",
+          "status": "AVAILABLE"
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "default": false,
+      "interfaces": []
+    }
+  ]
+}

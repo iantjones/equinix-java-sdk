@@ -1,0 +1,24 @@
+{
+  "payLoad": {
+    "totalCount": 2,
+    "assetsList": [
+      {
+        "assetId": "ASSET-SV5-001",
+        "type": "PDU",
+        "assetLabel": "PDU A1",
+        "assetClassification": "Electrical"
+      },
+      {
+        "assetId": "ASSET-SV5-002",
+        "type": "UPS",
+        "assetLabel": "UPS B2",
+        "assetClassification": "Electrical"
+      }
+    ]
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "Request processed successfully"
+  }
+}

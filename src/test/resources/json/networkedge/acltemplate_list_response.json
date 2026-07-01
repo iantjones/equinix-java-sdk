@@ -1,0 +1,37 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "uuid": "acl-1111-2222-3333-444455556666",
+      "name": "test-acl-template",
+      "description": "Test ACL template for WireMock",
+      "inboundRules": [
+        {
+          "subnet": "10.0.0.0/24",
+          "protocol": "TCP",
+          "srcPort": "any",
+          "dstPort": "22",
+          "description": "Allow SSH"
+        }
+      ]
+    },
+    {
+      "uuid": "acl-aaaa-bbbb-cccc-ddddeeeeffff",
+      "name": "second-acl-template",
+      "description": "Second ACL template",
+      "inboundRules": [
+        {
+          "subnet": "192.168.0.0/24",
+          "protocol": "UDP",
+          "srcPort": "any",
+          "dstPort": "53",
+          "description": "Allow DNS"
+        }
+      ]
+    }
+  ]
+}

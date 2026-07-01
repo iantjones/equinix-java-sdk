@@ -1,0 +1,16 @@
+{
+  "payLoad": [
+    {
+      "value": "12.5",
+      "tagId": "TAG-SV5-001",
+      "tagDisplayName": "Input Power",
+      "uom": "kW",
+      "readingTime": "2026-06-30T23:59:00Z"
+    }
+  ],
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "Request processed successfully"
+  }
+}

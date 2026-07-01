@@ -19,7 +19,11 @@ package api.equinix.javasdk.ibxsmartview.wiremock;
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.ibxsmartview.model.AssetDetail;
 import api.equinix.javasdk.ibxsmartview.model.AssetDetailsResponse;
+import api.equinix.javasdk.ibxsmartview.model.Assets;
+import api.equinix.javasdk.ibxsmartview.model.AssetsList;
+import api.equinix.javasdk.ibxsmartview.model.HierarchyNodeForAssetAPI;
 import api.equinix.javasdk.ibxsmartview.model.TagPointData;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.AssetDetailsRequest;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.CurrentTagPointRequest;
@@ -45,6 +49,12 @@ class IBXSmartViewAssetsWireMockTest extends WireMockTestBase {
 
     static final String ASSET_DETAILS_PATH = "/smartview/v1/asset/details";
     static final String CURRENT_TAGPOINTS_PATH = "/smartview/v1/asset/tagpoint/current";
+    static final String LIST_PATH = "/smartview/v1/asset/list";
+    static final String SEARCH_PATH = "/smartview/v1/asset/search";
+    static final String AFFECTED_ASSETS_PATH = "/smartview/v1/asset/tagpoint/affected-assets";
+
+    static final String ASSET_ID = "ASSET-SV5-001";
+    static final String TAG_ID = "TAG-SV5-001";
 
     @BeforeAll
     static void setUp() {
@@ -159,6 +169,167 @@ class IBXSmartViewAssetsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> smartView.smartViewAssets().getMultipleCurrentTagPoints(request));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListAssets {
+
+        @Test
+        @DisplayName("GETs asset/list with account/ibx/classification and the multi-valued cages query params")
+        void getsListWithQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/assets_list_response.json"))));
+
+            AssetsList response = smartView.smartViewAssets().list(
+                    ACCOUNT_NO, IBX, CLASSIFICATION, List.of("SV5:01:0001", "SV5:01:0002"));
+
+            assertNotNull(response);
+            assertNotNull(response.getPayLoad());
+            assertEquals("Electrical", response.getPayLoad().getClassification());
+            assertEquals(1, response.getPayLoad().getCategories().size());
+            assertEquals("Power Distribution",
+                    response.getPayLoad().getCategories().get(0).getCategoryName());
+            assertEquals("TMPL-PDU",
+                    response.getPayLoad().getCategories().get(0).getTemplates().get(0).getTemplateId());
+            assertEquals(200, response.getStatus().getStatuscode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
+                    .withQueryParam("ibx", equalTo(IBX))
+                    .withQueryParam("classification", equalTo(CLASSIFICATION))
+                    .withQueryParam("cages", equalTo("SV5:01:0001"))
+                    .withQueryParam("cages", equalTo("SV5:01:0002")));
+        }
+
+        @Test
+        @DisplayName("omits the cages query param when the cages list is null")
+        void omitsCagesWhenNull() {
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/assets_list_response.json"))));
+
+            smartView.smartViewAssets().list(ACCOUNT_NO, IBX, CLASSIFICATION, null);
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
+                    .withQueryParam("ibx", equalTo(IBX))
+                    .withQueryParam("classification", equalTo(CLASSIFICATION))
+                    .withoutQueryParam("cages"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getAssetDetails()")
+    class GetAssetDetails {
+
+        @Test
+        @DisplayName("GETs asset/details with accountNo/ibx/classification/assetId query params")
+        void getsSingleAssetDetails() {
+            wireMock.stubFor(get(urlPathEqualTo(ASSET_DETAILS_PATH))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/asset_details_get_response.json"))));
+
+            AssetDetail response = smartView.smartViewAssets().getAssetDetails(
+                    ACCOUNT_NO, IBX, CLASSIFICATION, ASSET_ID);
+
+            assertNotNull(response);
+            assertNotNull(response.getPayLoad());
+            assertEquals(ASSET_ID, response.getPayLoad().getAssetId());
+            assertEquals("PDU", response.getPayLoad().getAssetType());
+            assertEquals("Schneider Electric", response.getPayLoad().getManufacturerName());
+            assertEquals("TAG-SV5-001", response.getPayLoad().getTags().get(0).getTagId());
+            assertEquals(200, response.getStatus().getStatuscode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(ASSET_DETAILS_PATH))
+                    .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
+                    .withQueryParam("ibx", equalTo(IBX))
+                    .withQueryParam("classification", equalTo(CLASSIFICATION))
+                    .withQueryParam("assetId", equalTo(ASSET_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("search()")
+    class SearchAssets {
+
+        @Test
+        @DisplayName("GETs asset/search with accountNo/ibx/searchString query params")
+        void getsSearchResults() {
+            wireMock.stubFor(get(urlPathEqualTo(SEARCH_PATH))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/assets_search_response.json"))));
+
+            Assets response = smartView.smartViewAssets().search(ACCOUNT_NO, IBX, "PDU");
+
+            assertNotNull(response);
+            assertNotNull(response.getPayLoad());
+            assertEquals(2, response.getPayLoad().getTotalCount());
+            assertEquals(2, response.getPayLoad().getAssetsList().size());
+            assertEquals(ASSET_ID, response.getPayLoad().getAssetsList().get(0).getAssetId());
+            assertEquals("PDU", response.getPayLoad().getAssetsList().get(0).getType());
+            assertEquals("Electrical",
+                    response.getPayLoad().getAssetsList().get(0).getAssetClassification());
+            assertEquals(200, response.getStatus().getStatuscode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
+                    .withQueryParam("ibx", equalTo(IBX))
+                    .withQueryParam("searchString", equalTo("PDU")));
+        }
+    }
+
+    @Nested
+    @DisplayName("getAffectedAssets()")
+    class GetAffectedAssets {
+
+        @Test
+        @DisplayName("GETs asset/tagpoint/affected-assets with accountNo/ibx/assetId/classification query params")
+        void getsAffectedAssets() {
+            wireMock.stubFor(get(urlPathEqualTo(AFFECTED_ASSETS_PATH))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/affected_assets_response.json"))));
+
+            HierarchyNodeForAssetAPI response = smartView.smartViewAssets().getAffectedAssets(
+                    ACCOUNT_NO, IBX, ASSET_ID, CLASSIFICATION);
+
+            assertNotNull(response);
+            assertNotNull(response.getPayLoad());
+            assertEquals(1, response.getPayLoad().getCages().size());
+            assertEquals("SV5:01:0001", response.getPayLoad().getCages().get(0).getName());
+            assertEquals("CAGE", response.getPayLoad().getCages().get(0).getType());
+            assertEquals(200, response.getStatus().getStatuscode());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo(AFFECTED_ASSETS_PATH))
+                    .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
+                    .withQueryParam("ibx", equalTo(IBX))
+                    .withQueryParam("assetId", equalTo(ASSET_ID))
+                    .withQueryParam("classification", equalTo(CLASSIFICATION)));
+        }
+    }
+
+    @Nested
+    @DisplayName("getCurrentTagPoint()")
+    class GetCurrentTagPoint {
+
+        @Test
+        @DisplayName("GETs asset/tagpoint/current with accountNo/ibx and the lowercase tagid query param")
+        void getsCurrentTagPoint() {
+            wireMock.stubFor(get(urlPathEqualTo(CURRENT_TAGPOINTS_PATH))
+                    .willReturn(okJson(loadFixture("/json/ibxsmartview/current_tag_point_response.json"))));
+
+            TagPointData response = smartView.smartViewAssets().getCurrentTagPoint(ACCOUNT_NO, IBX, TAG_ID);
+
+            assertNotNull(response);
+            assertNotNull(response.getPayLoad());
+            assertEquals(1, response.getPayLoad().size());
+            assertEquals(TAG_ID, response.getPayLoad().get(0).getTagId());
+            assertEquals("12.5", response.getPayLoad().get(0).getValue());
+            assertEquals("kW", response.getPayLoad().get(0).getUom());
+            assertEquals("SUCCESS", response.getStatus().getType());
+
+            // getAssetDetails uses "assetId" but this op sends the tag id under the lowercase "tagid" key.
+            wireMock.verify(getRequestedFor(urlPathEqualTo(CURRENT_TAGPOINTS_PATH))
+                    .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
+                    .withQueryParam("ibx", equalTo(IBX))
+                    .withQueryParam("tagid", equalTo(TAG_ID)));
         }
     }
 }

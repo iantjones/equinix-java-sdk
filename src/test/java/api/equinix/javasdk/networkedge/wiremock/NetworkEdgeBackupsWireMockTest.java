@@ -3,6 +3,9 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.networkedge.client.RequestBuilder;
+import api.equinix.javasdk.networkedge.enums.BackupStatus;
 import api.equinix.javasdk.networkedge.model.Backup;
 import org.junit.jupiter.api.*;
 
@@ -58,6 +61,75 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> networkEdge.backups().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list(deviceUuid)")
+    class ListAll {
+
+        @Test
+        @DisplayName("GETs /ne/v1/deviceBackups carrying only virtualDeviceUuid, and maps the paginated body")
+        void listsAllBackups() {
+            // ListBackups -> GET /ne/v1/deviceBackups (rootUri "deviceBackups", no requestUri override).
+            stubPaginatedGet(wireMock, "/ne/v1/deviceBackups/?",
+                    "/json/networkedge/backup_list_response.json");
+
+            PaginatedList<Backup> backups =
+                    networkEdge.backups().list("dev-9999-8888-7777-666655554444");
+
+            assertNotNull(backups);
+            assertEquals(2, backups.size());
+            assertEquals("bkp-1111-2222-3333-444455556666", backups.get(0).getUuid());
+            assertEquals("test-backup", backups.get(0).getName());
+            assertEquals("bkp-7777-8888-9999-aaaabbbbcccc", backups.get(1).getUuid());
+            assertEquals("second-backup", backups.get(1).getName());
+
+            // deviceUuid is always sent as virtualDeviceUuid; the unfiltered call carries no status filter.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/deviceBackups"))
+                    .withQueryParam("virtualDeviceUuid", equalTo("dev-9999-8888-7777-666655554444"))
+                    .withQueryParam("status", absent()));
+        }
+    }
+
+    @Nested
+    @DisplayName("list(deviceUuid, RequestBuilder.Backup)")
+    class ListFiltered {
+
+        @Test
+        @DisplayName("GETs /ne/v1/deviceBackups applying the builder's status filter alongside virtualDeviceUuid")
+        void listsWithStatusFilter() {
+            stubPaginatedGet(wireMock, "/ne/v1/deviceBackups/?",
+                    "/json/networkedge/backup_list_response.json");
+
+            PaginatedList<Backup> backups = networkEdge.backups().list(
+                    "dev-9999-8888-7777-666655554444",
+                    RequestBuilder.backup().withStatus(BackupStatus.COMPLETED));
+
+            assertNotNull(backups);
+            assertEquals(2, backups.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/deviceBackups"))
+                    .withQueryParam("virtualDeviceUuid", equalTo("dev-9999-8888-7777-666655554444"))
+                    .withQueryParam("status", equalTo("COMPLETED")));
+        }
+
+        @Test
+        @DisplayName("omits status when the builder sets no filter")
+        void listsWithoutStatusFilter() {
+            stubPaginatedGet(wireMock, "/ne/v1/deviceBackups/?",
+                    "/json/networkedge/backup_list_response.json");
+
+            PaginatedList<Backup> backups = networkEdge.backups().list(
+                    "dev-9999-8888-7777-666655554444",
+                    RequestBuilder.backup());
+
+            assertNotNull(backups);
+            assertEquals(2, backups.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/deviceBackups"))
+                    .withQueryParam("virtualDeviceUuid", equalTo("dev-9999-8888-7777-666655554444"))
+                    .withQueryParam("status", absent()));
         }
     }
 

@@ -59,6 +59,27 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
         }
 
         @Test
+        @DisplayName("list(accountUcmId) sends accountUcmId as a query param")
+        void filtersByAccountUcmId() {
+            wireMock.stubFor(get(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
+                            + "\"data\":[{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
+                            + "\"keyName\":\"acct-scoped-key\","
+                            + "\"keyValue\":\"ssh-rsa AAAA acct@example.com\","
+                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}]}")));
+
+            List<PublicKey> publicKeys = networkEdge.publicKeys().list("ucm-67890");
+
+            assertNotNull(publicKeys);
+            assertEquals(1, publicKeys.size());
+            assertEquals("acct-scoped-key", publicKeys.get(0).getKeyName());
+
+            // GET /ne/v1/publicKeys?accountUcmId=ucm-67890
+            wireMock.verify(getRequestedFor(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .withQueryParam("accountUcmId", equalTo("ucm-67890")));
+        }
+
+        @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
             stubErrorInline(wireMock, "/ne/v1/publicKeys",

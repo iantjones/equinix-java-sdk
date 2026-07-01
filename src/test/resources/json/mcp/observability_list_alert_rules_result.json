@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 24,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"data\":[{\"uuid\":\"rule-uuid-1\",\"name\":\"high-bandwidth\",\"enabled\":true}],\"total\":1}"
+      }
+    ],
+    "isError": false
+  }
+}

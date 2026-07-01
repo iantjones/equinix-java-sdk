@@ -3,7 +3,10 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.UserStatus;
+import api.equinix.javasdk.networkedge.enums.VPNStatus;
 import api.equinix.javasdk.networkedge.model.VPN;
 import org.junit.jupiter.api.*;
 
@@ -95,6 +98,77 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> networkEdge.vpns().getByUuid("invalid-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("list()")
+    class ListAll {
+
+        @Test
+        @DisplayName("unfiltered list GETs /ne/v1/vpn and maps the paginated body")
+        void listsAllVpns() {
+            // ListVPNs -> GET /ne/v1/vpn (rootUri "vpn", no requestUri suffix).
+            stubPaginatedGet(wireMock, "/ne/v1/vpn",
+                    "/json/networkedge/vpn_list_response.json");
+
+            PaginatedList<VPN> vpns = networkEdge.vpns().list();
+
+            assertNotNull(vpns);
+            assertEquals(2, vpns.size());
+            assertEquals("vpn-1111-2222-3333-444455556666", vpns.get(0).getUuid());
+            assertEquals("test-vpn-config", vpns.get(0).getConfigName());
+            assertEquals("vpn-aaaa-bbbb-cccc-ddddeeeeffff", vpns.get(1).getUuid());
+            assertEquals("second-vpn-config", vpns.get(1).getConfigName());
+
+            // Unfiltered list() sends no VPN-specific query parameters.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn"))
+                    .withQueryParam("statusList", absent())
+                    .withQueryParam("virtualDeviceUuid", absent()));
+        }
+    }
+
+    @Nested
+    @DisplayName("list(RequestBuilder.VPN)")
+    class ListFiltered {
+
+        @Test
+        @DisplayName("filtered list applies statusList + virtualDeviceUuid query params")
+        void listsFilteredVpns() {
+            stubPaginatedGet(wireMock, "/ne/v1/vpn",
+                    "/json/networkedge/vpn_list_response.json");
+
+            PaginatedList<VPN> vpns = networkEdge.vpns().list(
+                    RequestBuilder.vpn()
+                            .withStatus(VPNStatus.PROVISIONED)
+                            .forDeviceUuid("dev-1234-5678-90ab-cdef12345678")
+                            .build());
+
+            assertNotNull(vpns);
+            assertEquals(2, vpns.size());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn"))
+                    .withQueryParam("statusList", equalTo("PROVISIONED"))
+                    .withQueryParam("virtualDeviceUuid", equalTo("dev-1234-5678-90ab-cdef12345678")));
+        }
+
+        @Test
+        @DisplayName("multiple statuses are sent as repeated statusList query params")
+        void listsMultipleStatuses() {
+            stubPaginatedGet(wireMock, "/ne/v1/vpn",
+                    "/json/networkedge/vpn_list_response.json");
+
+            PaginatedList<VPN> vpns = networkEdge.vpns().list(
+                    RequestBuilder.vpn()
+                            .withStatus(VPNStatus.PROVISIONED)
+                            .withStatus(VPNStatus.PROVISIONING)
+                            .build());
+
+            assertNotNull(vpns);
+            // Each enum is emitted as its own statusList value (ApacheUtils repeats the pair),
+            // so the wire form is ?statusList=PROVISIONED&statusList=PROVISIONING.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn"))
+                    .withQueryParam("statusList", havingExactly("PROVISIONED", "PROVISIONING")));
         }
     }
 
