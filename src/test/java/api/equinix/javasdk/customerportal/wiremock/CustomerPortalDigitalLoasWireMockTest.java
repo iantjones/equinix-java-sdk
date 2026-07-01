@@ -2,14 +2,19 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
+import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
+import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.Map;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -100,5 +105,176 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
                 .withQueryParam("offset", absent())
                 .withQueryParam("limit", absent())
                 .withQueryParam("sort", absent()));
+    }
+
+    @Nested
+    @DisplayName("create")
+    class Create {
+
+        @Test
+        @DisplayName("create(request) POSTs to /diloa/v1/digitalLoas with the serialized body")
+        void create_postsBody() {
+            stubCreate(wireMock, "/diloa/v1/digitalLoas", "/json/customerportal/digital_loa_response.json");
+
+            DigitalLoaCreateRequest request = DigitalLoaCreateRequest
+                    .builder(
+                            List.of(Map.of("type", "CROSS_CONNECT", "ibx", "AM11")),
+                            Map.of("name", "Acme Corp", "accountNumber", "1234567"),
+                            Map.of("name", "Globex LLC", "accountNumber", "7654321"))
+                    .notes("Cross connect authorization for AM11")
+                    .expiryDateTime("2026-12-31T23:59:59Z")
+                    .build();
+
+            DigitalLoa created = customerPortal.digitalLoas().create(request);
+
+            assertNotNull(created);
+            assertEquals("loa-abc-123", created.getUuid());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas"))
+                    .withRequestBody(matchingJsonPath("$.products[0].type", equalTo("CROSS_CONNECT")))
+                    .withRequestBody(matchingJsonPath("$.requestor.name", equalTo("Acme Corp")))
+                    .withRequestBody(matchingJsonPath("$.provider.name", equalTo("Globex LLC")))
+                    .withRequestBody(matchingJsonPath("$.notes", equalTo("Cross connect authorization for AM11")))
+                    .withRequestBody(matchingJsonPath("$.expiryDateTime", equalTo("2026-12-31T23:59:59Z"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("patch")
+    class Patch {
+
+        @Test
+        @DisplayName("patch(uuid, operations) PATCHes /diloa/v1/digitalLoas/{uuid} with the JSON-patch array")
+        void patch_sendsPatchArray() {
+            wireMock.stubFor(patch(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/digital_loa_response.json"))));
+
+            List<Map<String, Object>> operations = List.of(
+                    Map.of("op", "replace", "path", "/notes", "value", "Updated notes"));
+
+            DigitalLoa patched = customerPortal.digitalLoas().patch("loa-abc-123", operations);
+
+            assertNotNull(patched);
+            assertEquals("loa-abc-123", patched.getUuid());
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123"))
+                    .withRequestBody(matchingJsonPath("$[0].op", equalTo("replace")))
+                    .withRequestBody(matchingJsonPath("$[0].path", equalTo("/notes")))
+                    .withRequestBody(matchingJsonPath("$[0].value", equalTo("Updated notes"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("updateBetaTermsAgreement")
+    class UpdateBetaTermsAgreement {
+
+        @Test
+        @DisplayName("updateBetaTermsAgreement(true) PUTs /diloa/v1/betaTermsAgreement with the flag body")
+        void updateBetaTermsAgreement_putsFlag() {
+            wireMock.stubFor(put(urlPathEqualTo("/diloa/v1/betaTermsAgreement"))
+                    .willReturn(okJson("{\"agreementAccepted\":true}")));
+
+            BetaTermsAgreement agreement = customerPortal.digitalLoas().updateBetaTermsAgreement(true);
+
+            assertNotNull(agreement);
+            assertTrue(agreement.getAgreementAccepted());
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/diloa/v1/betaTermsAgreement"))
+                    .withRequestBody(matchingJsonPath("$.agreementAccepted", equalTo("true"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("cancel")
+    class Cancel {
+
+        @Test
+        @DisplayName("cancel(uuid) DELETEs /diloa/v1/digitalLoas/{uuid} and returns true on 204")
+        void cancel_deletes() {
+            stubDeleteNoContent(wireMock, "/diloa/v1/digitalLoas/loa-abc-123");
+
+            Boolean result = customerPortal.digitalLoas().cancel("loa-abc-123");
+
+            assertTrue(result);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123")));
+        }
+    }
+
+    @Nested
+    @DisplayName("performAction")
+    class PerformAction {
+
+        @Test
+        @DisplayName("performAction(uuid, action) POSTs /diloa/v1/digitalLoas/{uuid}/actions with the action body")
+        void performAction_postsAction() {
+            wireMock.stubFor(post(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123/actions"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/digital_loa_response.json"))));
+
+            DigitalLoa actioned = customerPortal.digitalLoas()
+                    .performAction("loa-abc-123", Map.of("type", "SUBMIT"));
+
+            assertNotNull(actioned);
+            assertEquals("loa-abc-123", actioned.getUuid());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123/actions"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("SUBMIT"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("createRequest")
+    class CreateRequest {
+
+        @Test
+        @DisplayName("createRequest(request) POSTs /diloa/v1/digitalLoas/loaRequests and returns true on 2xx")
+        void createRequest_postsBody() {
+            wireMock.stubFor(post(urlPathEqualTo("/diloa/v1/digitalLoas/loaRequests"))
+                    .willReturn(aResponse().withStatus(201)));
+
+            Boolean result = customerPortal.digitalLoas()
+                    .createRequest(Map.of("ibx", "AM11", "product", Map.of("type", "CROSS_CONNECT")));
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loaRequests"))
+                    .withRequestBody(matchingJsonPath("$.ibx", equalTo("AM11")))
+                    .withRequestBody(matchingJsonPath("$.product.type", equalTo("CROSS_CONNECT"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("isPrivateBetaAllowed")
+    class IsPrivateBetaAllowed {
+
+        @Test
+        @DisplayName("isPrivateBetaAllowed() GETs /diloa/v1/privateBetaAccess and maps the permission flag")
+        void isPrivateBetaAllowed_getsPermission() {
+            wireMock.stubFor(get(urlPathEqualTo("/diloa/v1/privateBetaAccess"))
+                    .willReturn(okJson("{\"privateBetaTests\":true}")));
+
+            PrivateBetaPermission permission = customerPortal.digitalLoas().isPrivateBetaAllowed();
+
+            assertNotNull(permission);
+            assertTrue(permission.getPrivateBetaTests());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/privateBetaAccess")));
+        }
+    }
+
+    @Nested
+    @DisplayName("createPrivateBetaAccessRequest")
+    class CreatePrivateBetaAccessRequest {
+
+        @Test
+        @DisplayName("createPrivateBetaAccessRequest(request) POSTs /diloa/v1/privateBetaAccess with the body")
+        void createPrivateBetaAccessRequest_postsBody() {
+            wireMock.stubFor(post(urlPathEqualTo("/diloa/v1/privateBetaAccess"))
+                    .willReturn(aResponse().withStatus(201)));
+
+            PrivateBetaAccessRequest request = PrivateBetaAccessRequest
+                    .builder("user@acme.com", "Acme Corp")
+                    .build();
+
+            Boolean result = customerPortal.digitalLoas().createPrivateBetaAccessRequest(request);
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/diloa/v1/privateBetaAccess"))
+                    .withRequestBody(matchingJsonPath("$.email", equalTo("user@acme.com")))
+                    .withRequestBody(matchingJsonPath("$.companyName", equalTo("Acme Corp"))));
+        }
     }
 }

@@ -1,0 +1,22 @@
+{
+  "uuid": "loa-abc-123",
+  "token": "tok-9f8e7d",
+  "state": "ACTIVE",
+  "notes": "Cross connect authorization for AM11",
+  "expiryDateTime": "2026-12-31T23:59:59Z",
+  "products": [
+    {
+      "type": "CROSS_CONNECT",
+      "ibx": "AM11"
+    }
+  ],
+  "requestor": {
+    "name": "Acme Corp",
+    "accountNumber": "1234567"
+  },
+  "provider": {
+    "name": "Globex LLC",
+    "accountNumber": "7654321"
+  },
+  "href": "https://api.equinix.com/diloa/v1/digitalLoas/loa-abc-123"
+}

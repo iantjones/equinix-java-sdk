@@ -5,10 +5,14 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.enums.TicketCode;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
+import api.equinix.javasdk.customerportal.model.json.creators.ContactUpdate;
 import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.TicketUpdateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreateRequest;
 import org.junit.jupiter.api.*;
+
+import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -91,6 +95,42 @@ class CustomerPortalTroubleTicketsWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixNotFoundException.class,
                     () -> customerPortal.troubleTickets().getByUuid("invalid-id"));
+        }
+    }
+
+    @Nested
+    @DisplayName("update()")
+    class Update {
+
+        @Test
+        @DisplayName("PATCHes the ticket's notification contacts")
+        void updatesContacts() {
+            wireMock.stubFor(patch(urlPathEqualTo("/v2/tickets/1-34891"))
+                    .willReturn(aResponse().withStatus(202).withHeader("Location", "/tickets/1-34891")));
+
+            Boolean accepted = customerPortal.troubleTickets().update("1-34891",
+                    new TicketUpdateRequest(List.of(
+                            new ContactUpdate(List.of("jsmith", "adoe"), "WORK_HOURS", "America/Los_Angeles"))));
+
+            assertTrue(accepted);
+
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/v2/tickets/1-34891"))
+                    .withRequestBody(matchingJsonPath("$.contacts[0].registeredUsers[0]", equalTo("jsmith")))
+                    .withRequestBody(matchingJsonPath("$.contacts[0].registeredUsers[1]", equalTo("adoe")))
+                    .withRequestBody(matchingJsonPath("$.contacts[0].type", equalTo("NOTIFICATION")))
+                    .withRequestBody(matchingJsonPath("$.contacts[0].availability", equalTo("WORK_HOURS")))
+                    .withRequestBody(matchingJsonPath("$.contacts[0].timezone", equalTo("America/Los_Angeles"))));
+        }
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v2/tickets/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Trouble ticket not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.troubleTickets().update("invalid-id",
+                            new TicketUpdateRequest(List.of(new ContactUpdate(List.of("jsmith"))))));
         }
     }
 

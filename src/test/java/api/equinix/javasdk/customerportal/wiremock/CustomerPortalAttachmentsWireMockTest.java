@@ -97,6 +97,40 @@ class CustomerPortalAttachmentsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("download()")
+    class Download {
+
+        @Test
+        @DisplayName("GETs /v1/attachments/{id}/file and returns the raw bytes")
+        void downloadsBytes() {
+            byte[] pdfBytes = "%PDF-1.4 rack-diagram-contents".getBytes(StandardCharsets.UTF_8);
+            wireMock.stubFor(get(urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b/file"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/pdf")
+                            .withBody(pdfBytes)));
+
+            byte[] downloaded = customerPortal.attachments().download("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b");
+
+            assertNotNull(downloaded);
+            assertArrayEquals(pdfBytes, downloaded);
+
+            wireMock.verify(getRequestedFor(
+                    urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b/file")));
+        }
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v1/attachments/.*/file",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Attachment not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.attachments().download("missing-uuid"));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

@@ -3,9 +3,13 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.customerportal.model.Report;
+import api.equinix.javasdk.customerportal.model.ScheduledReport;
+import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
 import org.junit.jupiter.api.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,5 +59,162 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
         wireMock.verify(deleteRequestedFor(urlPathEqualTo("/v1/reportCenter/reports"))
                 .withQueryParam("reportIds", equalTo("r1"))
                 .withQueryParam("reportIds", equalTo("r2")));
+    }
+
+    @Nested
+    @DisplayName("scheduleReport()")
+    class ScheduleReport {
+
+        @Test
+        @DisplayName("POSTs the request body to /v1/reportCenter/reports/scheduler and returns the created schedule")
+        void schedulesReport() {
+            wireMock.stubFor(post(urlPathEqualTo("/v1/reportCenter/reports/scheduler"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/customerportal/scheduled_report_response.json"))));
+
+            ScheduleReportRequest request = ScheduleReportRequest.builder(
+                            "my_report",
+                            List.of(Map.of("name", "user_key", "value", "143534,908373", "type", "ARRAY", "required", true)),
+                            "WEEKLY",
+                            "30_DAYS")
+                    .control("CUSTOMER")
+                    .categories(List.of("POWER"))
+                    .build();
+
+            ScheduledReport created = customerPortal.reports().scheduleReport(request);
+
+            assertNotNull(created);
+            assertEquals("806f281c-6295-465e-bd41-04559d4d4960", created.getScheduledId());
+            assertEquals("my_report", created.getReportName());
+            assertEquals("WEEKLY", created.getScheduleType());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler"))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("my_report")))
+                    .withRequestBody(matchingJsonPath("$.scheduleType", equalTo("WEEKLY")))
+                    .withRequestBody(matchingJsonPath("$.period", equalTo("30_DAYS")))
+                    .withRequestBody(matchingJsonPath("$.control", equalTo("CUSTOMER")))
+                    .withRequestBody(matchingJsonPath("$.categories[0]", equalTo("POWER")))
+                    .withRequestBody(matchingJsonPath("$.parameters[0].name", equalTo("user_key")))
+                    .withRequestBody(matchingJsonPath("$.parameters[0].value", equalTo("143534,908373"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("updateScheduledReport()")
+    class UpdateScheduledReport {
+
+        @Test
+        @DisplayName("PUTs the request body to /v1/reportCenter/reports/scheduler/{scheduledId} and returns the updated schedule")
+        void updatesScheduledReport() {
+            String scheduledId = "806f281c-6295-465e-bd41-04559d4d4960";
+            wireMock.stubFor(put(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId))
+                    .willReturn(okJson(loadFixture("/json/customerportal/scheduled_report_response.json"))));
+
+            ScheduleReportRequest request = ScheduleReportRequest.builder(
+                            "my_report",
+                            List.of(Map.of("name", "user_key", "value", "143534", "type", "ARRAY", "required", true)),
+                            "MONTHLY",
+                            "90_DAYS")
+                    .build();
+
+            ScheduledReport updated = customerPortal.reports().updateScheduledReport(scheduledId, request);
+
+            assertNotNull(updated);
+            assertEquals(scheduledId, updated.getScheduledId());
+
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("my_report")))
+                    .withRequestBody(matchingJsonPath("$.scheduleType", equalTo("MONTHLY")))
+                    .withRequestBody(matchingJsonPath("$.period", equalTo("90_DAYS")))
+                    .withRequestBody(matchingJsonPath("$.parameters[0].name", equalTo("user_key"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteScheduledReports()")
+    class DeleteScheduledReports {
+
+        @Test
+        @DisplayName("DELETEs /v1/reportCenter/reports/scheduler with the scheduledIds query param and returns true on 204")
+        void deletesScheduledReports() {
+            wireMock.stubFor(delete(urlPathEqualTo("/v1/reportCenter/reports/scheduler"))
+                    .willReturn(noContent()));
+
+            boolean result = customerPortal.reports().deleteScheduledReports(List.of("s1", "s2"));
+
+            assertTrue(result);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler"))
+                    .withQueryParam("scheduledIds", equalTo("s1"))
+                    .withQueryParam("scheduledIds", equalTo("s2")));
+        }
+    }
+
+    @Nested
+    @DisplayName("downloadReports()")
+    class DownloadReports {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/files with the reportIds query param and returns the raw bytes")
+        void downloadsReportsBundle() {
+            byte[] zipBytes = "PK combined-reports-archive".getBytes(StandardCharsets.UTF_8);
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/files"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/zip")
+                            .withBody(zipBytes)));
+
+            byte[] downloaded = customerPortal.reports().downloadReports(List.of("r1", "r2"));
+
+            assertNotNull(downloaded);
+            assertArrayEquals(zipBytes, downloaded);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/files"))
+                    .withQueryParam("reportIds", equalTo("r1"))
+                    .withQueryParam("reportIds", equalTo("r2")));
+        }
+    }
+
+    @Nested
+    @DisplayName("downloadReport()")
+    class DownloadReport {
+
+        @Test
+        @DisplayName("GETs /v1/reportCenter/reports/{reportId}/file and returns the raw bytes")
+        void downloadsSingleReport() {
+            String reportId = "8f204c59-f70f-437b-92d5-dbbde2932de5";
+            byte[] fileBytes = "power-usage-spreadsheet-contents".getBytes(StandardCharsets.UTF_8);
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports/" + reportId + "/file"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/vnd.ms-excel")
+                            .withBody(fileBytes)));
+
+            byte[] downloaded = customerPortal.reports().downloadReport(reportId);
+
+            assertNotNull(downloaded);
+            assertArrayEquals(fileBytes, downloaded);
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/" + reportId + "/file")));
+        }
+    }
+
+    @Nested
+    @DisplayName("generateReport()")
+    class GenerateReport {
+
+        @Test
+        @DisplayName("POSTs /v1/reportCenter/reports/scheduler/{scheduledId}/report and returns the generated report")
+        void generatesReport() {
+            String scheduledId = "886fc5de-6304-46c7-902c-d946c656c169";
+            wireMock.stubFor(post(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId + "/report"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/report_response.json"))));
+
+            Report generated = customerPortal.reports().generateReport(scheduledId);
+
+            assertNotNull(generated);
+            assertEquals("8f204c59-f70f-437b-92d5-dbbde2932de5", generated.getReportId());
+            assertEquals("SUCCESS", generated.getStatus());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId + "/report")));
+        }
     }
 }

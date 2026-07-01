@@ -6,6 +6,7 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.enums.NegotiationAction;
 import api.equinix.javasdk.customerportal.model.Order;
 import api.equinix.javasdk.customerportal.model.OrderNegotiation;
+import api.equinix.javasdk.customerportal.model.json.creators.AttachmentReference;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -144,6 +145,41 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
                     .withRequestBody(matchingJsonPath("$.text", equalTo("problem description"))));
         }
+
+        @Test
+        @DisplayName("posts text, referenceId and attachment references")
+        void postsTextReferenceIdAndAttachments() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            Boolean result = customerPortal.orders().addNote(
+                    ORDER_ID,
+                    "problem description",
+                    "4-12312312132",
+                    List.of(new AttachmentReference("att-1", "diagram.pdf")));
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
+                    .withRequestBody(equalToJson("{"
+                            + "\"text\":\"problem description\","
+                            + "\"referenceId\":\"4-12312312132\","
+                            + "\"attachments\":[{\"id\":\"att-1\",\"name\":\"diagram.pdf\"}]"
+                            + "}")));
+        }
+
+        @Test
+        @DisplayName("omits null referenceId and attachments from the serialized body")
+        void omitsNullOptionalFields() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            customerPortal.orders().addNote(ORDER_ID, "just text", null, null);
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/notes"))
+                    .withRequestBody(matchingJsonPath("$.text", equalTo("just text")))
+                    .withRequestBody(notMatching("(?s).*referenceId.*"))
+                    .withRequestBody(notMatching("(?s).*attachments.*")));
+        }
     }
 
     @Nested
@@ -161,6 +197,41 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
             assertTrue(result);
             wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
                     .withRequestBody(matchingJsonPath("$.reason", equalTo("No longer required"))));
+        }
+
+        @Test
+        @DisplayName("posts reason, attachments and lineIds")
+        void postsReasonAttachmentsAndLineIds() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            Boolean result = customerPortal.orders().cancel(
+                    ORDER_ID,
+                    "No longer required",
+                    List.of(new AttachmentReference("att-9", "authorisation.pdf")),
+                    List.of("1-line-a", "1-line-b"));
+
+            assertTrue(result);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
+                    .withRequestBody(equalToJson("{"
+                            + "\"reason\":\"No longer required\","
+                            + "\"attachments\":[{\"id\":\"att-9\",\"name\":\"authorisation.pdf\"}],"
+                            + "\"lineIds\":[\"1-line-a\",\"1-line-b\"]"
+                            + "}")));
+        }
+
+        @Test
+        @DisplayName("omits null attachments and lineIds from the serialized body")
+        void omitsNullOptionalFields() {
+            wireMock.stubFor(post(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
+                    .willReturn(aResponse().withStatus(204)));
+
+            customerPortal.orders().cancel(ORDER_ID, "just the reason", null, null);
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID + "/cancel"))
+                    .withRequestBody(matchingJsonPath("$.reason", equalTo("just the reason")))
+                    .withRequestBody(notMatching(".*attachments.*"))
+                    .withRequestBody(notMatching(".*lineIds.*")));
         }
     }
 
