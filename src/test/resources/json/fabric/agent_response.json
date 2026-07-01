@@ -1,0 +1,16 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/agents/d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10",
+  "type": "ANO_AGENT",
+  "uuid": "d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10",
+  "name": "My-Fabric-Agent",
+  "description": "Automated network operations agent",
+  "state": "PROVISIONED",
+  "enabled": true,
+  "project": {
+    "projectId": "291639000636111"
+  },
+  "changeLog": {
+    "createdBy": "test-user",
+    "createdDateTime": "2026-07-01T12:00:00.000Z"
+  }
+}

@@ -6,6 +6,7 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.fabric.enums.BGPActionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.BGPAction;
+import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import org.junit.jupiter.api.*;
@@ -217,6 +218,95 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
 
             assertNotNull(change);
             assertEquals("a9b8c7d6-e5f4-3210-abcd-fedcba987654", change.getUuid());
+        }
+    }
+
+    @Nested
+    @DisplayName("define().create(...)")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the routing protocol body to the connection and returns the created model (create(connectionId))")
+        void createsRoutingProtocolByConnectionId() {
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/connections/.*/routingProtocols"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/routing_protocol_response.json"))));
+
+            RoutingProtocol created = fabric.routingProtocols().define()
+                    .ofType(RoutingProtocolType.BGP)
+                    .withName("New-BGP-RoutingProtocol")
+                    .withBGPIpv4("192.168.100.1", "192.168.100.2", true)
+                    .withBgpAuthKey("secret-key")
+                    .withCustomerAsn(65001L)
+                    .withEquinixAsn(65002L)
+                    .create(CONNECTION_ID);
+
+            assertNotNull(created);
+            assertEquals(PROTOCOL_UUID, created.getUuid());
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols"))
+                    .withRequestBody(equalToJson(
+                            "{\"type\":\"BGP\",\"name\":\"New-BGP-RoutingProtocol\","
+                                    + "\"bgpIpv4\":{\"customerPeerIp\":\"192.168.100.1\","
+                                    + "\"equinixPeerIp\":\"192.168.100.2\",\"enabled\":true},"
+                                    + "\"bgpAuthKey\":\"secret-key\","
+                                    + "\"customerAsn\":65001,\"equinixAsn\":65002}",
+                            true, true)));
+        }
+
+        @Test
+        @DisplayName("create(Connection) delegates to the connection's uuid")
+        void createsRoutingProtocolByConnection() {
+            // Fetch a Connection so we can drive the create(Connection) overload with a real model.
+            stubSingleton(wireMock, "/fabric/v4/connections/" + CONNECTION_ID,
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/connections/.*/routingProtocols"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/routing_protocol_response.json"))));
+
+            Connection connection = fabric.connections().getByUuid(CONNECTION_ID);
+
+            RoutingProtocol created = fabric.routingProtocols().define()
+                    .ofType(RoutingProtocolType.DIRECT)
+                    .withName("New-Direct-RoutingProtocol")
+                    .withDirectIpv4("192.168.200.2")
+                    .create(connection);
+
+            assertNotNull(created);
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/" + connection.getUuid() + "/routingProtocols"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("DIRECT")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("New-Direct-RoutingProtocol")))
+                    .withRequestBody(matchingJsonPath("$.directIpv4.equinixIfaceIp", equalTo("192.168.200.2"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("createBgpAction(connectionId, routingProtocolId, type)")
+    class CreateBgpAction {
+
+        @Test
+        @DisplayName("POSTs a {\"type\":...} body to the actions sub-resource and returns the created action")
+        void createsBgpAction() {
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/connections/.*/routingProtocols/.*/actions"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/bgp_action_response.json"))));
+
+            BGPAction action = fabric.routingProtocols()
+                    .createBgpAction(CONNECTION_ID, PROTOCOL_UUID, BGPActionType.RESET_BGPIPV4);
+
+            assertNotNull(action);
+            assertEquals("b9a8c7d6-e5f4-3210-abcd-fedcba112233", action.getUuid());
+            assertEquals(BGPActionType.RESET_BGPIPV4, action.getType());
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols/" + PROTOCOL_UUID + "/actions"))
+                    .withRequestBody(equalToJson("{\"type\":\"RESET_BGPIPV4\"}", true, true)));
         }
     }
 

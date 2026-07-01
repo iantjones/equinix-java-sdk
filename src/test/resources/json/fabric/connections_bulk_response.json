@@ -1,0 +1,16 @@
+[
+  {
+    "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+    "name": "Batch-Connection-1",
+    "type": "EVPL_VC",
+    "bandwidth": 100,
+    "state": "PROVISIONING"
+  },
+  {
+    "uuid": "7c92aa16-1f4e-4d2b-9b8a-1122334455ff",
+    "name": "Batch-Connection-2",
+    "type": "EVPL_VC",
+    "bandwidth": 200,
+    "state": "PROVISIONING"
+  }
+]

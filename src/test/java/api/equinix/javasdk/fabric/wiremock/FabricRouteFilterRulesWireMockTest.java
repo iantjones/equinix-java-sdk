@@ -62,6 +62,41 @@ class FabricRouteFilterRulesWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("define().create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the rule body to /routeFilterRules and returns the created rule")
+        void createsRule() {
+            wireMock.stubFor(post(urlPathMatching("/fabric/v4/routeFilters/.*/routeFilterRules"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/route_filter_rule_response.json"))));
+
+            RouteFilterRule created = fabric.routeFilterRules().define(ROUTE_FILTER_ID)
+                    .prefix("10.0.0.0/8")
+                    .name("Allow-10-0-0-0-8")
+                    .description("Permit the 10/8 private range")
+                    .action(RouteFilterAction.PERMIT)
+                    .prefixMatch("exact")
+                    .create();
+
+            assertNotNull(created);
+            assertEquals(RULE_UUID, created.getUuid());
+            assertEquals("Allow-10-0-0-0-8", created.getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routeFilters/" + ROUTE_FILTER_ID + "/routeFilterRules"))
+                    .withRequestBody(matchingJsonPath("$.prefix", equalTo("10.0.0.0/8")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Allow-10-0-0-0-8")))
+                    .withRequestBody(matchingJsonPath("$.description", equalTo("Permit the 10/8 private range")))
+                    .withRequestBody(matchingJsonPath("$.action", equalTo("PERMIT")))
+                    .withRequestBody(matchingJsonPath("$.prefixMatch", equalTo("exact"))));
+        }
+    }
+
+    @Nested
     @DisplayName("update() / save()")
     class Update {
 

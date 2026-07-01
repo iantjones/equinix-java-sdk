@@ -99,6 +99,39 @@ class FabricRouteAggregationRulesWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("define().create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the rule body to /routeAggregationRules and returns the created rule")
+        void createsRule() {
+            wireMock.stubFor(post(urlPathMatching(
+                    "/fabric/v4/routeAggregations/.*/routeAggregationRules"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/route_aggregation_rule_response.json"))));
+
+            RouteAggregationRule created = fabric.routeAggregationRules().define(PARENT)
+                    .withName("Aggregate-10-0-0-0-8")
+                    .withPrefix("10.0.0.0/8")
+                    .withDescription("Aggregate the 10/8 private range")
+                    .create();
+
+            assertNotNull(created);
+            assertEquals(RULE, created.getUuid());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routeAggregations/" + PARENT + "/routeAggregationRules"))
+                    .withRequestBody(equalToJson(
+                            "{\"name\":\"Aggregate-10-0-0-0-8\","
+                            + "\"prefix\":\"10.0.0.0/8\","
+                            + "\"description\":\"Aggregate the 10/8 private range\"}",
+                            true, true)));
+        }
+    }
+
+    @Nested
     @DisplayName("replace()")
     class Replace {
 

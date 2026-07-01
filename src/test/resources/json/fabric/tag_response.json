@@ -1,0 +1,8 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/tags/18a127ad-9d0c-46e2-a66d-8ed85d1858b0",
+  "uuid": "18a127ad-9d0c-46e2-a66d-8ed85d1858b0",
+  "type": "RESOURCE_TAG",
+  "name": "environment",
+  "displayName": "Environment",
+  "weight": 10000
+}

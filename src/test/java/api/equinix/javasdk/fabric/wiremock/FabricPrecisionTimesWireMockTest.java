@@ -3,7 +3,10 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
+import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
+import api.equinix.javasdk.fabric.model.Project;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -50,6 +53,43 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
             assertNotNull(ts);
             assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", ts.getUuid());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def")));
+        }
+    }
+
+    @Nested
+    @DisplayName("define().create()")
+    class Create {
+
+        @Test
+        @DisplayName("POSTs the creator body to /timeServices and returns the created service")
+        void createsTimeService() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/timeServices"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/precision_time_response.json"))));
+
+            PrecisionTime created = fabric.precisionTimes().define()
+                    .withType(PrecisionTimeType.NTP)
+                    .withName("Production-NTP-Service")
+                    .withDescription("Primary NTP time service for production")
+                    .withPackageCode(PrecisionTimePackageCode.NTP_STANDARD)
+                    .withProject(new Project("d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"))
+                    .create();
+
+            assertNotNull(created);
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", created.getUuid());
+            assertEquals("Production-NTP-Service", created.getName());
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/timeServices"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(equalToJson(
+                            "{\"type\":\"NTP\","
+                            + "\"name\":\"Production-NTP-Service\","
+                            + "\"description\":\"Primary NTP time service for production\","
+                            + "\"packageCode\":\"NTP_STANDARD\","
+                            + "\"project\":{\"projectId\":\"d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345\"}}",
+                            true, true)));
         }
     }
 
