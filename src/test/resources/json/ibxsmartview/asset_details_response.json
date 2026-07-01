@@ -1,0 +1,39 @@
+{
+  "payLoad": {
+    "totalCount": 2,
+    "assetDetails": [
+      {
+        "assetId": "ASSET-SV5-001",
+        "assetType": "PDU",
+        "userPrefTimeZone": "America/Los_Angeles",
+        "manufacturerName": "Schneider Electric",
+        "equipmentModelNumber": "PDU-1234",
+        "equipmentSerialNumber": "SN-000111",
+        "lastMaintenanceDate": "2026-05-01T00:00:00Z",
+        "alarmLastTriggeredTime": "2026-06-15T12:00:00Z",
+        "alarmLastProcessedTime": "2026-06-15T12:05:00Z",
+        "tags": [
+          {
+            "tagId": "TAG-SV5-001",
+            "tagDisplayName": "Input Power",
+            "uom": "kW"
+          }
+        ]
+      },
+      {
+        "assetId": "ASSET-SV5-002",
+        "assetType": "UPS",
+        "userPrefTimeZone": "America/Los_Angeles",
+        "manufacturerName": "Vertiv",
+        "equipmentModelNumber": "UPS-9876",
+        "equipmentSerialNumber": "SN-000222",
+        "tags": []
+      }
+    ]
+  },
+  "status": {
+    "type": "SUCCESS",
+    "statuscode": 200,
+    "msg": "Request processed successfully"
+  }
+}
