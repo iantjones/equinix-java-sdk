@@ -107,6 +107,68 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        private static final String UUID = "bgp-1111-2222-3333-444455556666";
+
+        @Test
+        @DisplayName("PUTs the merged update body then re-GETs the peering")
+        void updatesBgpPeering() {
+            // getByUuid() -> loads the existing peering the updater is derived from.
+            stubSingleton(wireMock, "/ne/v1/bgp/" + UUID,
+                    "/json/networkedge/bgppeering_response.json");
+            // PUT /ne/v1/bgp/{uuid} -> 204 No Content (voidOp), then the impl re-GETs the peering.
+            wireMock.stubFor(put(urlPathEqualTo("/ne/v1/bgp/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            BGPPeering peering = networkEdge.bgpPeerings().getByUuid(UUID);
+            BGPPeering updated = peering.update()
+                    .withRemoteAsn(65010L)
+                    .withAuthenticationKey("new-secret")
+                    .save();
+
+            assertNotNull(updated);
+            assertEquals(UUID, updated.getUuid());
+
+            // The updater is seeded from the existing json, so the PUT body carries the merged
+            // fields with the caller's overrides applied.
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID))
+                    .withRequestBody(matchingJsonPath("$.remoteAsn", equalTo("65010")))
+                    .withRequestBody(matchingJsonPath("$.authenticationKey", equalTo("new-secret")))
+                    .withRequestBody(matchingJsonPath("$.localIpAddress", equalTo("169.254.0.1/30")))
+                    .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("169.254.0.2")))
+                    .withRequestBody(matchingJsonPath("$.localAsn", equalTo("65000"))));
+            // A follow-up GET re-fetches the updated peering.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("delete()")
+    class Delete {
+
+        private static final String UUID = "bgp-1111-2222-3333-444455556666";
+
+        @Test
+        @DisplayName("DELETEs the peering and returns true")
+        void deletesBgpPeering() {
+            // getByUuid() -> load the instance to delete.
+            stubSingleton(wireMock, "/ne/v1/bgp/" + UUID,
+                    "/json/networkedge/bgppeering_response.json");
+            // DELETE /ne/v1/bgp/{uuid} -> 204 No Content.
+            wireMock.stubFor(delete(urlPathEqualTo("/ne/v1/bgp/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            BGPPeering peering = networkEdge.bgpPeerings().getByUuid(UUID);
+            Boolean result = peering.delete();
+
+            assertTrue(result);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID)));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 
