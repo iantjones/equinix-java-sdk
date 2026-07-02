@@ -1,6 +1,8 @@
 package api.equinix.javasdk.design.geo;
 
+import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.geo.SpeedOfLightLatency.Mode;
+import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import api.equinix.javasdk.internetaccess.model.json.IbxJson;
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests {@link SpeedOfLightLatency} — the fibre speed-of-light latency-from-distance calculator.
@@ -95,6 +99,64 @@ class SpeedOfLightLatencyTest {
         double km = SpeedOfLightLatency.distanceKm(la3, la4);
         assertTrue(km > 0 && km < 50, "intra-metro LA3<->LA4 should be small but non-zero, was " + km);
         assertTrue(SpeedOfLightLatency.roundTrip().millisBetween(la3, la4) > 0);
+    }
+
+    @Test
+    @DisplayName("metro-to-metro latency uses the Fabric metro centroids")
+    void betweenMetros() throws Exception {
+        Metro dc = metro("DC", 39.0438, -77.4874);
+        Metro sv = metro("SV", 37.3382, -121.8863);
+
+        double km = SpeedOfLightLatency.distanceKm(dc, sv);
+        assertTrue(km > 3700 && km < 4000, "DC<->SV great-circle ~3.86k km, was " + km);
+
+        double rtt = SpeedOfLightLatency.roundTrip().millisBetween(dc, sv);
+        assertEquals(SpeedOfLightLatency.roundTrip().millisForKm(km), rtt, 1e-9);
+
+        // Metro-level math: the same metro against itself is 0 (use IBX overloads for finer grain).
+        assertEquals(0.0, SpeedOfLightLatency.roundTrip().millisBetween(dc, metro("DC", 39.0438, -77.4874)), 1e-9);
+    }
+
+    @Test
+    @DisplayName("mixed IBX-to-metro latency works in both directions and is symmetric")
+    void betweenIbxAndMetro() throws Exception {
+        IbxJson la4 = MAPPER.readValue(
+                "{\"ibxCode\":\"LA4\",\"geoCoordinates\":{\"latitude\":33.9292,\"longitude\":-118.3807}}",
+                IbxJson.class);
+        Metro dc = metro("DC", 39.0438, -77.4874);
+
+        double kmAtoB = SpeedOfLightLatency.distanceKm(la4, dc);
+        double kmBtoA = SpeedOfLightLatency.distanceKm(dc, la4);
+        assertEquals(kmAtoB, kmBtoA, 1e-9, "distance must be symmetric");
+        assertTrue(kmAtoB > 3500 && kmAtoB < 3900, "LA4<->DC ~3.7k km, was " + kmAtoB);
+
+        SpeedOfLightLatency rtt = SpeedOfLightLatency.roundTrip();
+        assertEquals(rtt.millisBetween(la4, dc), rtt.millisBetween(dc, la4), 1e-9);
+        assertEquals(rtt.millisForKm(kmAtoB), rtt.millisBetween(la4, dc), 1e-9);
+    }
+
+    @Test
+    @DisplayName("a metro without coordinates is rejected with a message naming the metro")
+    void metroMissingCoordinates() throws Exception {
+        Metro dc = metro("DC", 39.0438, -77.4874);
+        Metro bare = mock(Metro.class);
+        when(bare.metroId()).thenReturn(MetroId.of("ZZ"));
+        when(bare.geoCoordinates()).thenReturn(null);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> SpeedOfLightLatency.distanceKm(dc, bare));
+        assertTrue(ex.getMessage().contains("ZZ"), "message should name the metro: " + ex.getMessage());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> SpeedOfLightLatency.roundTrip().millisBetween((Metro) null, dc));
+    }
+
+    private static Metro metro(String code, double lat, double lon) throws Exception {
+        Metro m = mock(Metro.class);
+        when(m.metroId()).thenReturn(MetroId.of(code));
+        when(m.geoCoordinates()).thenReturn(MAPPER.readValue(
+                "{\"latitude\":" + lat + ",\"longitude\":" + lon + "}", GeoCoordinate.class));
+        return m;
     }
 
     @Test

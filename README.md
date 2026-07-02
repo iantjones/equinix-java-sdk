@@ -850,36 +850,50 @@ System.out.println("Resiliency: " + result.getResiliency().getOverallRating()
     + " (" + (int)(result.getResiliency().getOverallScore() * 100) + "%)");
 ```
 
-#### IBX-to-IBX Latency — Speed-of-Light Floor
+#### Speed-of-Light Latency — IBX-to-IBX, Metro-to-Metro, or Mixed
 
 The diversity RTT above comes from `design.geo.SpeedOfLightLatency`, a reusable calculator that
-estimates fibre latency between two specific Equinix IBX data centers from their coordinates
-(great-circle distance × speed of light in fibre, ~4.9 µs/km one-way). It is **IBX-to-IBX**, not
-metro-centroid to metro-centroid, so two IBXes in the same metro have a real, non-zero latency.
+estimates fibre latency from coordinates (great-circle distance × speed of light in fibre,
+~4.9 µs/km one-way). It accepts any mix of the SDK's location types:
+
+| Endpoints | Overload | Coordinate source | Precision |
+|---|---|---|---|
+| IBX ↔ IBX | `millisBetween(Ibx, Ibx)` | `internetAccess.ibxs()` (EIA) | per data center — same-metro pairs get a real, non-zero figure |
+| Metro ↔ Metro | `millisBetween(Metro, Metro)` | `fabric.metros()` | metro centroid — city-to-city planning |
+| IBX ↔ Metro | `millisBetween(Ibx, Metro)` (either order) | both | mixed — "my cage in LA4 to the Dallas metro" |
+| raw | `millisForKm(km)`, `distanceKm(lat, lon, lat, lon)` | none | fully offline |
 
 ```java
 import api.equinix.javasdk.design.geo.SpeedOfLightLatency;
-import api.equinix.javasdk.internetaccess.model.Ibx;
 
-Ibx la4 = internetAccess.ibxs().getByCode("LA4");
-Ibx sv5 = internetAccess.ibxs().getByCode("SV5");
+// Inputs: IBXes come from EIA (the only per-IBX coordinate source in the Equinix catalog);
+// metros come from Fabric.
+Ibx la4  = internetAccess.ibxs().getByCode("LA4");
+Ibx sv5  = internetAccess.ibxs().getByCode("SV5");
+Metro dc = fabric.metros().getByMetroCode(MetroCode.DC);
+Metro sv = fabric.metros().getByMetroCode(MetroCode.SV);
 
-// Round-trip (RTT) speed-of-light floor between two IBX data centers — RTT is the default
+// Round-trip (RTT) speed-of-light floor — RTT is the default
 SpeedOfLightLatency rtt = SpeedOfLightLatency.roundTrip();
-double rttMs = rtt.millisBetween(la4, sv5);
-double km    = SpeedOfLightLatency.distanceKm(la4, sv5);
+double ibxToIbx     = rtt.millisBetween(la4, sv5);   // precise
+double metroToMetro = rtt.millisBetween(dc, sv);     // centroids
+double ibxToMetro   = rtt.millisBetween(la4, dc);    // mixed
+double km           = SpeedOfLightLatency.distanceKm(la4, sv5);
 
 // One-way, with a realistic non-direct-fibre route factor (must be >= 1.0)
 SpeedOfLightLatency realistic = SpeedOfLightLatency.builder()
     .mode(SpeedOfLightLatency.Mode.ONE_WAY)
-    .routeFactor(1.4)
+    .routeFactor(1.4)          // 1.0 = theoretical floor; ~1.3–1.5 = real terrestrial routes
+    .refractiveIndex(1.467)    // single-mode fibre (the default)
     .build();
 double oneWayMs = realistic.millisBetween(la4, sv5);
 ```
 
-`millisBetween(Ibx, Ibx)` / `distanceKm(Ibx, Ibx)` throw `IllegalArgumentException` (naming the
-offending IBX code) if an IBX has no coordinates — `geoCoordinates` is optional on the EIA response.
-The result is a physical lower bound; it excludes switching, queuing, and serialization delay.
+Every typed overload throws `IllegalArgumentException` naming the offending IBX/metro if it has no
+coordinates (`geoCoordinates` is optional in both source APIs) — better loud than a bogus zero. The
+result is a physical lower bound; it excludes switching, queuing, and serialization delay. For
+metro pairs, compare the floor against Equinix's *measured* backbone RTT:
+`metro.getConnectedMetros()` carries `avgLatency` in ms — physics vs. what the network delivers.
 
 #### Mutual Peering Opportunity Discovery
 
