@@ -50,7 +50,9 @@ public class NetworkInterface {
     @JsonProperty("status")
     private NetworkInterfaceStatus status;
 
-    @JsonProperty("operationalStatus")
+    // Spec property is "operationStatus" (InterfaceBasicInfoResponse); the getter keeps the
+    // historical operationalStatus name.
+    @JsonProperty("operationStatus")
     private OperationalStatus operationalStatus;
 
     @JsonProperty("macAddress")
@@ -61,7 +63,4 @@ public class NetworkInterface {
 
     @JsonProperty("assignedType")
     private String assignedType;
-
-    @JsonProperty("vxLan")
-    private Integer vxLan;
 }

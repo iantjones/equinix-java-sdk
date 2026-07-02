@@ -19,5 +19,6 @@ package api.equinix.javasdk.fabric.enums;
 public enum PeeringType {
     PUBLIC,
     PRIVATE,
-    MICROSOFT;
+    MICROSOFT,
+    MANUAL;
 }

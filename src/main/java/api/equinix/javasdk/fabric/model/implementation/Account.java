@@ -17,32 +17,13 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 
 /**
+ * A full account (the Fabric v4 {@code SimplifiedAccount} schema). All attributes are
+ * inherited from {@link AccountSummary}.
  *
  * @author ianjones
  */
-@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Account extends AccountSummary {
-
-    @JsonProperty("globalOrgId")
-    private String globalOrgId;
-
-    @JsonProperty("accountName")
-    private String accountName;
-
-    @JsonProperty("ucmId")
-    private String ucmId;
-
-    @JsonProperty("globalCustId")
-    private String globalCustId;
-
-    @JsonProperty("organizationName")
-    private String organizationName;
-
-    @JsonProperty("globalOrganizationName")
-    private String globalOrganizationName;
 }

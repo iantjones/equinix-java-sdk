@@ -16,28 +16,15 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
-import api.equinix.javasdk.core.enums.Region;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 
 /**
+ * A full location (the Fabric v4 {@code SimplifiedLocation} schema). All attributes
+ * ({@code metroCode}, {@code metroHref}, {@code metroName}, {@code region}, {@code ibx})
+ * are inherited from {@link LocationCode}.
  *
  * @author ianjones
  */
-@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Location extends LocationCode {
-
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("metroName")
-    private String metroName;
-
-    @JsonProperty("href")
-    private String href;
-
-    @JsonProperty("region")
-    private Region region;
 }

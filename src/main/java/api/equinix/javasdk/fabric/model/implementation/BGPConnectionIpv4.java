@@ -41,4 +41,13 @@ public class BGPConnectionIpv4 {
 
     @JsonProperty("outboundMED")
     private Integer outboundMED;
+
+    /**
+     * Maximum learnt prefixes limit.
+     */
+    @JsonProperty("routesMax")
+    private Long routesMax;
+
+    @JsonProperty("operation")
+    private BGPConnectionOperation operation;
 }

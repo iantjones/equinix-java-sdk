@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.ConnectionClientImpl;
 import api.equinix.javasdk.fabric.enums.ConnectionOperationType;
 import api.equinix.javasdk.fabric.model.Connection;
+import api.equinix.javasdk.fabric.model.ConnectionAction;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 import lombok.Getter;
@@ -42,20 +43,20 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
         this.serviceClient = serviceClient;
     }
 
-    public void performOperation(ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
-        this.jsonObject = ((ConnectionClientImpl)this.serviceClient).performOperation(this.getUuid(), connectionOperationType, description, bodyObject);
+    public ConnectionAction performOperation(ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
+        return ((ConnectionClientImpl)this.serviceClient).performOperation(this.getUuid(), connectionOperationType, description, bodyObject);
     }
 
-    public void performOperation(ConnectionOperationType connectionOperation, String description) {
-        performOperation(connectionOperation, description, null);
+    public ConnectionAction performOperation(ConnectionOperationType connectionOperation, String description) {
+        return performOperation(connectionOperation, description, null);
     }
 
     public ConnectionOperator.ConnectionUpdater update() {
         return new ConnectionOperator((ConnectionClientImpl) this.serviceClient).update(this.getUuid());
     }
 
-    public void performOperation(ConnectionOperationType connectionOperation) {
-        performOperation(connectionOperation, null, null);
+    public ConnectionAction performOperation(ConnectionOperationType connectionOperation) {
+        return performOperation(connectionOperation, null, null);
     }
 
     public Boolean delete() {
@@ -68,9 +69,9 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
     }
 
     private interface ConnectionMutability {
-        void performOperation(ConnectionOperationType connectionOperationType, String description, Object bodyObject);
-        void performOperation(ConnectionOperationType connectionOperation, String description);
-        void performOperation(ConnectionOperationType connectionOperation);
+        ConnectionAction performOperation(ConnectionOperationType connectionOperationType, String description, Object bodyObject);
+        ConnectionAction performOperation(ConnectionOperationType connectionOperation, String description);
+        ConnectionAction performOperation(ConnectionOperationType connectionOperation);
         Boolean delete();
         void refresh();
     }

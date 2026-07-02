@@ -43,15 +43,33 @@ public class OrderPurchaseOrder {
     @JsonProperty("amount")
     private final Double amount;
 
+    @JsonProperty("attachmentId")
+    private final String attachmentId;
+
     public OrderPurchaseOrder(String type, String number) {
-        this(type, number, null, null, null);
+        this(type, number, null, null, null, null);
     }
 
     public OrderPurchaseOrder(String type, String number, String startDate, String endDate, Double amount) {
+        this(type, number, startDate, endDate, amount, null);
+    }
+
+    /**
+     * Builds a purchase-order reference including a previously uploaded PO document.
+     *
+     * @param type         the purchase order type ({@code EXEMPTED}, {@code NEW} or {@code EXISTING})
+     * @param number       the purchase order number
+     * @param startDate    the purchase order start date
+     * @param endDate      the purchase order end date
+     * @param amount       the purchase order amount
+     * @param attachmentId the id of a previously uploaded purchase-order attachment
+     */
+    public OrderPurchaseOrder(String type, String number, String startDate, String endDate, Double amount, String attachmentId) {
         this.type = type;
         this.number = number;
         this.startDate = startDate;
         this.endDate = endDate;
         this.amount = amount;
+        this.attachmentId = attachmentId;
     }
 }

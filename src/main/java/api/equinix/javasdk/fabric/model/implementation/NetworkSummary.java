@@ -16,14 +16,19 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.NetworkScope;
 import api.equinix.javasdk.fabric.enums.NetworkState;
+import api.equinix.javasdk.fabric.enums.NetworkType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
- * Simplified Fabric Network reference returned on an access point.
+ * Simplified Fabric Network reference returned on an access point (spec schema
+ * {@code SimplifiedNetwork}).
  */
 @Getter
 @NoArgsConstructor
@@ -39,6 +44,30 @@ public class NetworkSummary {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("type")
+    private NetworkType type;
+
+    @JsonProperty("scope")
+    private NetworkScope scope;
+
     @JsonProperty("state")
     private NetworkState state;
+
+    @JsonProperty("location")
+    private Location location;
+
+    @JsonProperty("account")
+    private AccountSummary account;
+
+    @JsonProperty("change")
+    private Change change;
+
+    @JsonProperty("operation")
+    private NetworkOperation operation;
+
+    @JsonProperty("changeLog")
+    private ChangeLog changeLog;
+
+    @JsonProperty("links")
+    private List<Link> links;
 }

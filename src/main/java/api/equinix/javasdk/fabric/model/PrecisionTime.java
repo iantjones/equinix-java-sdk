@@ -19,8 +19,17 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeState;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
+import api.equinix.javasdk.fabric.model.implementation.Account;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.Md5;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeOrder;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimePrice;
+import api.equinix.javasdk.fabric.model.implementation.PtpAdvanceConfiguration;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceOperation;
 import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
+
+import java.util.List;
 
 public interface PrecisionTime {
 
@@ -34,15 +43,40 @@ public interface PrecisionTime {
 
     PrecisionTimeState getState();
 
-    String getDescription();
+    /**
+     * The service package ({@code NTP_STANDARD}, {@code NTP_ENTERPRISE}, {@code PTP_STANDARD}
+     * or {@code PTP_ENTERPRISE}) with its link.
+     *
+     * @return the service package
+     */
+    TimeServicePackage getServicePackage();
 
+    /**
+     * Convenience accessor for the code of {@code getServicePackage()}.
+     *
+     * @return the package code, or {@code null} when no package is present
+     */
     PrecisionTimePackageCode getPackageCode();
+
+    TimeServiceOperation getOperation();
+
+    List<TimeServiceConnection> getConnections();
+
+    PrecisionTimeIpv4 getIpv4();
+
+    List<Md5> getNtpAdvancedConfiguration();
+
+    PtpAdvanceConfiguration getPtpAdvancedConfiguration();
 
     Project getProject();
 
-    ChangeLog getChangeLog();
+    Account getAccount();
 
-    Integer getConnectionsCount();
+    PrecisionTimeOrder getOrder();
+
+    PrecisionTimePrice getPricing();
+
+    ChangeLog getChangeLog();
 
     /**
      * Begins a fluent JSON Patch update of this precision time service, e.g.

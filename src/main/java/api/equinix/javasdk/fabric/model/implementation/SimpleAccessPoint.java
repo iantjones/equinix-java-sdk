@@ -40,14 +40,20 @@ public class SimpleAccessPoint {
     @JsonProperty("type")
     private AccessPointType type;
 
+    /**
+     * Deprecated in the spec but still accepted on service-token selectors.
+     */
+    @JsonProperty("hideAssetInfo")
+    private Boolean hideAssetInfo;
+
     @JsonProperty("port")
-    private PortRef port;
+    private SimplifiedMetadataEntity port;
 
     @JsonProperty("profile")
     private ServiceProfileRef profile;
 
     @JsonProperty("virtualDevice")
-    private VirtualDeviceRef virtualDevice;
+    private SimplifiedVirtualDevice virtualDevice;
 
     @JsonProperty("linkProtocol")
     private LinkProtocol linkProtocol;
@@ -68,7 +74,7 @@ public class SimpleAccessPoint {
     private CloudRouterRef router;
 
     @JsonProperty("network")
-    private NetworkRef network;
+    private SimplifiedTokenNetwork network;
 
     @JsonProperty("virtualNetwork")
     private VirtualNetwork virtualNetwork;
@@ -81,6 +87,7 @@ public class SimpleAccessPoint {
 
     protected SimpleAccessPoint(AccessPointBuilder accessPointBuilder) {
         this.type = accessPointBuilder.type;
+        this.hideAssetInfo = accessPointBuilder.hideAssetInfo;
         this.port = accessPointBuilder.port;
         this.profile = accessPointBuilder.profile;
         this.virtualDevice = accessPointBuilder.virtualDevice;
@@ -126,11 +133,13 @@ public class SimpleAccessPoint {
 
         private final AccessPointType type;
 
-        private PortRef port;
+        private Boolean hideAssetInfo;
+
+        private SimplifiedMetadataEntity port;
 
         private ServiceProfileRef profile;
 
-        private VirtualDeviceRef virtualDevice;
+        private SimplifiedVirtualDevice virtualDevice;
 
         private LinkProtocol linkProtocol;
 
@@ -144,7 +153,7 @@ public class SimpleAccessPoint {
 
         private CloudRouterRef router;
 
-        private NetworkRef network;
+        private SimplifiedTokenNetwork network;
 
         private VirtualNetwork virtualNetwork;
 
@@ -158,15 +167,26 @@ public class SimpleAccessPoint {
 
         protected AccessPointBuilder(AccessPoint accessPoint) {
             this.type = accessPoint.getType();
-            this.port = accessPoint.getPort() != null ? new PortRef(accessPoint.getPort().getUuid()) : null;
+            this.port = accessPoint.getPort() != null ? new SimplifiedMetadataEntity(accessPoint.getPort().getUuid()) : null;
             this.profile = accessPoint.getProfile() != null ? new ServiceProfileRef(accessPoint.getProfile().getUuid()) : null;
-            this.virtualDevice = accessPoint.getVirtualDevice() != null ? new VirtualDeviceRef(accessPoint.getVirtualDevice().getUuid()) : null;
+            this.virtualDevice = accessPoint.getVirtualDevice() != null ? new SimplifiedVirtualDevice(accessPoint.getVirtualDevice().getUuid()) : null;
             this.linkProtocol = accessPoint.getLinkProtocol() != null ? accessPoint.getLinkProtocol() : null;
             this.deviceInterface = accessPoint.getInterface() != null ? accessPoint.getInterface() : null;
         }
 
         public AccessPointBuilder port(String portUuid) {
-            this.port = new PortRef(portUuid);
+            this.port = new SimplifiedMetadataEntity(portUuid);
+            return this;
+        }
+
+        /**
+         * Hides asset information from the token recipient. Deprecated in the spec but still accepted.
+         *
+         * @param hideAssetInfo whether to hide asset information
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder hideAssetInfo(Boolean hideAssetInfo) {
+            this.hideAssetInfo = hideAssetInfo;
             return this;
         }
 
@@ -184,7 +204,7 @@ public class SimpleAccessPoint {
         }
 
         public AccessPointBuilder virtualDevice(String virtualDeviceUuid) {
-            this.virtualDevice = new VirtualDeviceRef(virtualDeviceUuid);
+            this.virtualDevice = new SimplifiedVirtualDevice(virtualDeviceUuid);
             return this;
         }
 
@@ -198,6 +218,9 @@ public class SimpleAccessPoint {
                 case DOT1Q -> LinkProtocol.dot1q().vlanTag(vlanTag).create();
                 case QINQ -> LinkProtocol.qinq().vlanCTag(vlanCTag).vlanSTag(vlanSTag).create();
                 case UNTAGGED -> LinkProtocol.untagged().create();
+                default -> throw new IllegalArgumentException(
+                        "No typed builder for link protocol type " + linkProtocolType
+                                + "; use linkProtocol(LinkProtocol) instead.");
             };
 
             return this;
@@ -247,7 +270,7 @@ public class SimpleAccessPoint {
          * @return this builder for chaining
          */
         public AccessPointBuilder network(String networkUuid) {
-            this.network = new NetworkRef(networkUuid);
+            this.network = new SimplifiedTokenNetwork(networkUuid);
             return this;
         }
 

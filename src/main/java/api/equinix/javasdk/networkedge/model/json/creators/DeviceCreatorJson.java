@@ -22,6 +22,7 @@ import api.equinix.javasdk.networkedge.enums.Connectivity;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceVendorConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -167,7 +168,11 @@ public class DeviceCreatorJson {
 
     @JsonProperty("sshInterfaceId")
     private Integer sshInterfaceId;
-    
+
+    @JsonProperty("vendorConfig")
+    private DeviceVendorConfig vendorConfig;
+
+
     public DeviceCreatorJson(DeviceOperator.DeviceBuilderSecondary deviceBuilderSecondary) {
         
         this.virtualDeviceName = deviceBuilderSecondary.getDeviceName();
@@ -188,6 +193,9 @@ public class DeviceCreatorJson {
         this.additionalBandwidth = deviceBuilderSecondary.getAdditionalBandwidth();
         this.day0TextFileId = deviceBuilderSecondary.getDay0TextFileId();
         this.cloudInitFileId = deviceBuilderSecondary.getCloudInitFileId();
+        this.vendorConfig = deviceBuilderSecondary.getVendorConfig();
+        this.sshInterfaceId = deviceBuilderSecondary.getSshInterfaceId();
+        this.version = deviceBuilderSecondary.getVersion();
     }
 
     public DeviceCreatorJson(DeviceOperator.DeviceBuilder deviceBuilder) {
@@ -219,6 +227,7 @@ public class DeviceCreatorJson {
         this.ipType = deviceBuilder.getIpType();
         this.systemIpAddress = deviceBuilder.getSystemIpAddress();
         this.sshInterfaceId = deviceBuilder.getSshInterfaceId();
+        this.vendorConfig = deviceBuilder.getVendorConfig();
         this.interfaceCount = deviceBuilder.getInterfaceCount();
         this.additionalBandwidth = deviceBuilder.getAdditionalBandwidth();
 

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.fabric.enums.PriceCategory;
 import api.equinix.javasdk.fabric.enums.PriceType;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.implementation.*;
@@ -32,11 +33,23 @@ import java.util.ArrayList;
 public class PricingJson {
 
 
+    @JsonProperty("href")
+    private String href;
+
     @JsonProperty("type")
     private PriceType type;
 
     @JsonProperty("currency")
     private String currency;
+
+    @JsonProperty("termLength")
+    private Integer termLength;
+
+    /**
+     * Price category. The Fabric v4 spec's own spelling of the wire property is {@code catgory}.
+     */
+    @JsonProperty("catgory")
+    private PriceCategory category;
 
     @JsonProperty("code")
     private String code;
@@ -59,9 +72,12 @@ public class PricingJson {
     @JsonProperty("port")
     private PricingPort port;
 
-    @JsonProperty("gateway")
+    @JsonProperty("router")
     private PricingGateway gateway;
 
     @JsonProperty("ipBlock")
     private PricingIPBlock ipBlock;
+
+    @JsonProperty("timeService")
+    private TimeServicePrice timeService;
 }

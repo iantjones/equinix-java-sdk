@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.networkedge.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
@@ -32,7 +33,13 @@ public enum Vendor {
     VMWWARE("VMWare"),
     SILVER_PEAK("Silver Peak"),
     CHECK_POINT("Check Point"),
-    ARUBA("Aruba");
+    ARUBA("Aruba"),
+    ARISTA("Arista"),
+    F5("F5"),
+    BLUECAT("BlueCat"),
+    ZSCALER("Zscaler"),
+    AVIATRIX("Aviatrix"),
+    UNKNOWN("Unknown");
 
     private final String formatted;
 
@@ -43,5 +50,29 @@ public enum Vendor {
     @JsonValue
     public String getJsonValue() {
         return formatted;
+    }
+
+    /**
+     * <p>The API returns two different wire forms for a vendor: the display form used by
+     * {@code VirtualDeviceType.vendor} (e.g. "Palo Alto Networks") and the uppercase code form used
+     * by {@code VirtualDeviceDetailsResponse.deviceTypeVendor} (e.g. "PALO_ALTO_NETWORKS"). Both are
+     * accepted here; unrecognised values map to {@link #UNKNOWN}.</p>
+     */
+    @JsonCreator
+    public static Vendor fromString(String value) {
+        if (value == null) {
+            return null;
+        }
+        for (Vendor vendor : values()) {
+            if (vendor.name().equalsIgnoreCase(value) || vendor.formatted.equalsIgnoreCase(value)) {
+                return vendor;
+            }
+        }
+        // Spec code forms whose constant name differs.
+        switch (value) {
+            case "JUNIPER": return JUNIPER_NETWORKS;
+            case "VMWARE": return VMWWARE;
+            default: return UNKNOWN;
+        }
     }
 }

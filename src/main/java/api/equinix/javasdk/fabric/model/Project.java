@@ -29,6 +29,13 @@ public class Project {
     @JsonProperty("projectId")
     private String projectId;
 
+    /**
+     * Project URI; populated on responses where the spec declares it (e.g. {@code IpBlockProject}).
+     * Never set on requests.
+     */
+    @JsonProperty("href")
+    private String href;
+
     public Project(String projectId) {
         this.projectId = projectId;
     }

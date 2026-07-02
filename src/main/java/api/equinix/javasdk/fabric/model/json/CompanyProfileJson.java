@@ -18,6 +18,13 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.CompanyLogo;
+import api.equinix.javasdk.fabric.model.implementation.CompanyMetro;
+import api.equinix.javasdk.fabric.model.implementation.CompanyProfileAccount;
+import api.equinix.javasdk.fabric.model.implementation.CompanyProfileChange;
+import api.equinix.javasdk.fabric.model.implementation.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -54,9 +61,36 @@ public class CompanyProfileJson {
     @JsonProperty("state")
     private String state;
 
+    @JsonProperty("account")
+    private CompanyProfileAccount account;
+
+    @JsonProperty("metros")
+    private List<CompanyMetro> metros;
+
+    @JsonProperty("logo")
+    private CompanyLogo logo;
+
+    @JsonProperty("tags")
+    private List<TagJson> tags;
+
+    @JsonProperty("serviceProfiles")
+    private List<CompanyServiceProfile> serviceProfiles;
+
+    @JsonProperty("privateServices")
+    private List<PrivateServiceJson> privateServices;
+
+    @JsonProperty("notifications")
+    private List<Notification> notifications;
+
     @JsonProperty("webUrl")
     private String webUrl;
 
     @JsonProperty("contactUrl")
     private String contactUrl;
+
+    @JsonProperty("change")
+    private CompanyProfileChange change;
+
+    @JsonProperty("changeLog")
+    private ChangeLog changeLog;
 }

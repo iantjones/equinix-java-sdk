@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.networkedge.model.implementation;
 
-import api.equinix.javasdk.networkedge.enums.ChargeType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -31,8 +30,13 @@ import java.math.BigDecimal;
 @Getter
 public class Charge {
 
+    /**
+     * <p>The description of the charge. The spec models this as an open string (for example
+     * {@code VIRTUAL_DEVICE}, {@code DEVICE_LICENSE} or {@code ADDITIONAL_BANDWIDTH}), so it is not
+     * narrowed to an enum here.</p>
+     */
     @JsonProperty("description")
-    private ChargeType chargeType;
+    private String description;
 
     @JsonProperty("monthlyRecurringCharges")
     private BigDecimal monthlyRecurringCharge;

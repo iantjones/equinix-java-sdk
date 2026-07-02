@@ -47,7 +47,7 @@ public class OAuthToken {
     private volatile String sessionToken;
 
     @JsonProperty("token_timeout")
-    private volatile Integer tokenTimeout;
+    private volatile String tokenTimeout;
 
     @JsonProperty("user_name")
     private String userName;
@@ -59,7 +59,7 @@ public class OAuthToken {
     private String refreshToken;
 
     @JsonProperty("refresh_token_timeout")
-    private Integer refreshTokenTimeout;
+    private String refreshTokenTimeout;
 
     @JsonIgnore
     private volatile LocalDateTime sessionStart = LocalDateTime.now();
@@ -69,9 +69,31 @@ public class OAuthToken {
      * @return a boolean.
      */
     public boolean validSession() {
+        Long timeoutSeconds = parseTimeoutSeconds(getTokenTimeout());
         return getSessionToken() != null
                 && getSessionStart() != null
-                && getTokenTimeout() != null
-                && getSessionStart().plusSeconds(getTokenTimeout()).isAfter(LocalDateTime.now());
+                && timeoutSeconds != null
+                && getSessionStart().plusSeconds(timeoutSeconds).isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Parses the numeric seconds out of a timeout value. The spec ({@code Oauth2TokenResponse})
+     * declares {@code token_timeout} as a string whose documented default is annotated prose
+     * ("3599 (60 minutes)"), so only the leading digits are read; a value with no leading digits
+     * yields {@code null}.
+     */
+    private static Long parseTimeoutSeconds(String timeout) {
+        if (timeout == null) {
+            return null;
+        }
+        String trimmed = timeout.trim();
+        int digits = 0;
+        while (digits < trimmed.length() && Character.isDigit(trimmed.charAt(digits))) {
+            digits++;
+        }
+        if (digits == 0) {
+            return null;
+        }
+        return Long.parseLong(trimmed.substring(0, digits));
     }
 }

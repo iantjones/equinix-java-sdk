@@ -47,11 +47,13 @@ public interface CloudRouter {
 
      List<Notification> getNotifications();
 
-     Integer getBgpIpv4RoutesCount();
-
-     Integer getBgpIpv6RoutesCount();
+     Long getEquinixAsn();
 
      Integer getConnectionCount();
+
+     MarketplaceSubscriptionRef getMarketplaceSubscription();
+
+     CloudRouterChange getChange();
 
      ChangeLog getChangeLog();
 

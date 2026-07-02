@@ -17,15 +17,28 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.fabric.enums.PortType;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.PortStatistic;
+import api.equinix.javasdk.fabric.model.implementation.BandwidthUtilization;
 import api.equinix.javasdk.fabric.model.implementation.PortStat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 /**
+ * <p>Port traffic statistics. {@code GET /fabric/v4/ports/{portId}/stats} returns the spec's
+ * {@code Statistics} schema, whose properties ({@code startDateTime}, {@code endDateTime},
+ * {@code viewPoint}, {@code bandwidthUtilization}) are top-level on this model.</p>
+ *
+ * <p>The legacy top-ports listing fields ({@code uuid}, {@code type}, {@code name},
+ * {@code bandwidth}, {@code stats}) are retained for backward compatibility with the
+ * historical top-utilized-ports response shape.</p>
  *
  * @author ianjones
  */
@@ -33,7 +46,19 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortStatisticJson {
 
+    @JsonProperty("startDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime startDateTime;
 
+    @JsonProperty("endDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime endDateTime;
+
+    @JsonProperty("viewPoint")
+    private Side viewPoint;
+
+    @JsonProperty("bandwidthUtilization")
+    private BandwidthUtilization bandwidthUtilization;
 
     @JsonProperty("uuid")
     private String uuid;

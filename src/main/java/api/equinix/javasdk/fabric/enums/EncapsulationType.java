@@ -16,12 +16,32 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
+ * Port encapsulation (the Fabric v4 {@code PortEncapsulation.type} /
+ * {@code ServiceProfileLinkProtocolConfig.encapsulation} enums: {@code QINQ},
+ * {@code DOT1Q}, {@code UNTAGGED}). Unrecognized values deserialize to
+ * {@link #UNKNOWN} rather than failing the whole response.
  *
  * @author ianjones
  */
 public enum EncapsulationType {
     QINQ,
     DOT1Q,
-    UNTAGGEDEPL;
+    UNTAGGED,
+    UNKNOWN;
+
+    /**
+     * Deserializes an encapsulation type leniently: an unrecognized value maps to
+     * {@link #UNKNOWN} instead of failing the enclosing response.
+     *
+     * @param value the raw API value
+     * @return the matching constant, or {@link #UNKNOWN}
+     */
+    @JsonCreator
+    public static EncapsulationType fromString(String value) {
+        try { return EncapsulationType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

@@ -27,6 +27,5 @@ public enum VPNStatus implements APIParam {
     PROVISIONING,
     FAILED,
     DEPROVISIONED,
-    DEPROVISIONING,
-    PROVISIONING_FAILED
+    DEPROVISIONING
 }

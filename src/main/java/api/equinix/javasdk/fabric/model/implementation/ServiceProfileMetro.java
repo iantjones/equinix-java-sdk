@@ -33,6 +33,12 @@ public class ServiceProfileMetro extends MetroSummary {
     @JsonProperty("inTrail")
     private Boolean inTrail;
 
+    /**
+     * Maximum VC speed supported in Mbps.
+     */
+    @JsonProperty("vcBandwidthMax")
+    private Integer vcBandwidthMax;
+
     @JsonProperty("sellerRegions")
     private Map<String, String> sellerRegions;
 }

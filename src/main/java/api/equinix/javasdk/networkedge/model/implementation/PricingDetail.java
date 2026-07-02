@@ -39,7 +39,12 @@ public class PricingDetail {
     @JsonProperty("currency")
     private String currency;
 
+    // Spec property is "billingCommencementDateTime" (PriceResponse); the getter keeps the
+    // historical billingCommencementDate name.
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty("billingCommencementDate")
+    @JsonProperty("billingCommencementDateTime")
     private LocalDateTime billingCommencementDate;
+
+    @JsonProperty("billingEnabled")
+    private Boolean billingEnabled;
 }

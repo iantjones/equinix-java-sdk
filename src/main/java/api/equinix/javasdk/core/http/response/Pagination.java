@@ -35,11 +35,11 @@ import lombok.Setter;
 @Setter(AccessLevel.PRIVATE)
 public class Pagination {
 
-    private Integer offset;
+    private Long offset;
 
-    private Integer limit;
+    private Long limit;
 
-    private Integer total;
+    private Long total;
 
     private String previous;
 
@@ -56,7 +56,7 @@ public class Pagination {
         if (offset == null || limit == null || limit == 0) {
             return 0;
         }
-        return offset / limit;
+        return (int) (offset / limit);
     }
 
     /**
@@ -66,7 +66,7 @@ public class Pagination {
      * @return the number of results per page
      */
     public int getPageSize() {
-        return (limit != null) ? limit : 0;
+        return (limit != null) ? limit.intValue() : 0;
     }
 
     /**

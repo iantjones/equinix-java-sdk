@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.model.implementation.AgentDefinition;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 
 /**
@@ -36,6 +37,13 @@ public interface AgentTemplate {
     String getState();
 
     Boolean getEnabled();
+
+    /**
+     * The template's definition document reference (ReadMe URL).
+     *
+     * @return the agent definition
+     */
+    AgentDefinition getAgentDefinition();
 
     ChangeLog getChangeLog();
 }

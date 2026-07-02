@@ -19,6 +19,7 @@ package api.equinix.javasdk.customerportal.model;
 import api.equinix.javasdk.customerportal.enums.FileType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A generated report in the Report Center (Reports v1 {@code downloadable-report} for the list view,
@@ -157,6 +158,28 @@ public interface Report {
      * @return the attempt count, or {@code null} if not provided
      */
     Integer getNumberOfAttempts();
+
+    /**
+     * Returns the person/entity who accessed this report last (detail view only).
+     *
+     * @return the last accessor, or {@code null} if not provided
+     */
+    String getLastAccessedBy();
+
+    /**
+     * Returns the time this report was last accessed (detail view only).
+     *
+     * @return the last accessed date, or {@code null} if not provided
+     */
+    String getLastAccessedDate();
+
+    /**
+     * Returns the report publish data as a free-form JSON object (detail view only). The Reports
+     * v1 spec declares no concrete properties for this object.
+     *
+     * @return the publisher info, or {@code null} if not provided
+     */
+    Map<String, Object> getPublisherInfo();
 
     /**
      * Returns the parameters used to generate the report (detail view only).

@@ -21,8 +21,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum RouteAggregationRuleState {
     PROVISIONING,
     PROVISIONED,
+    NOT_PROVISIONED,
     DEPROVISIONING,
     DEPROVISIONED,
+    NOT_DEPROVISIONED,
     REPROVISIONING,
     UNKNOWN;
 

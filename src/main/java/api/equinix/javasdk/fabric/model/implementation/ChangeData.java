@@ -21,6 +21,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
+ * A single change operation ({@code ConnectionChangeOperation} / {@code NetworkChangeOperation} /
+ * {@code CloudRouterChangeOperation} in the Fabric v4 spec). The spec declares {@code value} as
+ * {@code type: object} (the new value for the updated parameter, e.g. an ipv6 configuration), so it
+ * is exposed as {@link Object}: scalars deserialize to their natural Java types and structured
+ * values to {@code Map}/{@code List}.
  *
  * @author ianjones
  */
@@ -35,5 +40,5 @@ public class ChangeData {
     private String path;
 
     @JsonProperty("value")
-    private String value;
+    private Object value;
 }

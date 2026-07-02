@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.CloudEvent;
+import api.equinix.javasdk.fabric.model.implementation.CloudEventData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,8 +32,15 @@ public class CloudEventJson implements CloudEvent {
 
     @Getter static TypeReference<List<CloudEventJson>> listTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("uuid")
+    /**
+     * The Cloud Event identifier. The wire property is {@code id} (the CloudEvent schema has no
+     * {@code uuid} property); the accessor keeps its historical {@code getUuid()} name.
+     */
+    @JsonProperty("id")
     private String uuid;
+
+    @JsonProperty("spec")
+    private String spec;
 
     @JsonProperty("type")
     private String type;
@@ -46,6 +54,39 @@ public class CloudEventJson implements CloudEvent {
     @JsonProperty("time")
     private String time;
 
+    @JsonProperty("dataschema")
+    private String dataSchema;
+
+    @JsonProperty("datacontenttype")
+    private String dataContentType;
+
+    @JsonProperty("severitynumber")
+    private String severityNumber;
+
+    @JsonProperty("severitytext")
+    private String severityText;
+
+    @JsonProperty("equinixalert")
+    private String equinixAlert;
+
+    @JsonProperty("equinixorganization")
+    private String equinixOrganization;
+
+    @JsonProperty("equinixproject")
+    private String equinixProject;
+
+    @JsonProperty("authtype")
+    private String authType;
+
+    @JsonProperty("authid")
+    private String authId;
+
+    @JsonProperty("traceparent")
+    private String traceParent;
+
+    @JsonProperty("tracestate")
+    private String traceState;
+
     @JsonProperty("data")
-    private Object data;
+    private CloudEventData data;
 }

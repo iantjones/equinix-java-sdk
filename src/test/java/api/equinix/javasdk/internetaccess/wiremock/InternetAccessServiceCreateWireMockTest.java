@@ -105,7 +105,7 @@ class InternetAccessServiceCreateWireMockTest extends WireMockTestBase {
         assertNotNull(service);
         assertEquals("7a4f6c1e-2b3d-4e5f-8a9b-0c1d2e3f4a5b", service.getUuid());
         assertEquals(ServiceTypeV2.SINGLE, service.getType());
-        assertEquals(Integer.valueOf(1000), service.getBandwidth());
+        assertEquals(Long.valueOf(1000), service.getBandwidth());
         assertEquals(ServiceState.PROVISIONING, service.getState());
 
         String expectedBody = "{\n" +

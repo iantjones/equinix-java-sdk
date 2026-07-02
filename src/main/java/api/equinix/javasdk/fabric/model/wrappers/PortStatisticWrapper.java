@@ -41,8 +41,13 @@ public class PortStatisticWrapper extends ResourceImpl<PortStatistic> implements
     }
 
     public PortStatistic refresh() {
-        this.jsonObject = ((PortStatisticClientImpl)this.serviceClient).refreshStatistics(this.getUuid(),
-                this.getStats().getStartDateTime(), this.getStats().getEndDateTime());
+        java.time.LocalDateTime start = this.getStartDateTime() != null
+                ? this.getStartDateTime()
+                : (this.getStats() != null ? this.getStats().getStartDateTime() : null);
+        java.time.LocalDateTime end = this.getEndDateTime() != null
+                ? this.getEndDateTime()
+                : (this.getStats() != null ? this.getStats().getEndDateTime() : null);
+        this.jsonObject = ((PortStatisticClientImpl)this.serviceClient).refreshStatistics(this.getUuid(), start, end);
         return this;
     }
 

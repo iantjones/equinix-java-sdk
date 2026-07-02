@@ -48,4 +48,7 @@ public class DeviceCore {
 
     @JsonProperty("supported")
     private Boolean supported;
+
+    @JsonProperty("tier")
+    private Integer tier;
 }

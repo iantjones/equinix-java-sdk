@@ -20,6 +20,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * A line-item detail of a support case
  * ({@code SingleCaseResponseV2.otherDetails.details}). Captures the substantive product,
@@ -64,6 +67,19 @@ public class SupportCaseDetail {
 
     @JsonProperty("updatedDateTime")
     private String updatedDateTime;
+
+    @JsonProperty("estimatedCompletion")
+    private SupportCaseEstimatedCompletion estimatedCompletion;
+
+    /**
+     * Additional {@code {key, value}} information on the case line (e.g. {@code IS_RECURRING}).
+     * The wire value is a boolean and is coerced to its {@code String} form.
+     */
+    @JsonProperty("additionalInfo")
+    private List<AdditionalInfo> additionalInfo;
+
+    @JsonProperty("purchaseOrder")
+    private Map<String, Object> purchaseOrder;
 
     @JsonProperty("modifiable")
     private Boolean modifiable;

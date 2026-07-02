@@ -16,11 +16,20 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.model.implementation.ApiServices;
+
+/**
+ * Health of the Fabric API (the Fabric v4 {@code HealthResponse} schema).
+ */
 public interface HealthStatus {
 
-    String getStatus();
+    String getHref();
 
     String getVersion();
 
-    String getTimestamp();
+    String getRelease();
+
+    String getState();
+
+    ApiServices getApiServices();
 }

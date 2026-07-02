@@ -24,6 +24,10 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.Md5;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeOrder;
+import api.equinix.javasdk.fabric.model.implementation.PtpAdvanceConfiguration;
 import api.equinix.javasdk.fabric.model.json.PrecisionTimeJson;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
 import lombok.Getter;
@@ -62,9 +66,13 @@ public class PrecisionTimeOperator extends ResourceImpl<PrecisionTime> {
 
         private PrecisionTimeType type;
         private String name;
-        private String description;
         private PrecisionTimePackageCode packageCode;
+        private List<String> connectionUuids;
+        private PrecisionTimeIpv4 ipv4;
+        private List<Md5> ntpAdvancedConfiguration;
+        private PtpAdvanceConfiguration ptpAdvancedConfiguration;
         private Project project;
+        private PrecisionTimeOrder order;
 
         protected PrecisionTimeBuilder() {
         }
@@ -79,13 +87,65 @@ public class PrecisionTimeOperator extends ResourceImpl<PrecisionTime> {
             return this;
         }
 
-        public PrecisionTimeOperator.PrecisionTimeBuilder withDescription(String description) {
-            this.description = description;
+        public PrecisionTimeOperator.PrecisionTimeBuilder withPackageCode(PrecisionTimePackageCode packageCode) {
+            this.packageCode = packageCode;
             return this;
         }
 
-        public PrecisionTimeOperator.PrecisionTimeBuilder withPackageCode(PrecisionTimePackageCode packageCode) {
-            this.packageCode = packageCode;
+        /**
+         * Sets the Fabric connections to attach the time service to (required by the API;
+         * serialized as the {@code connections} array of connection UUID references).
+         *
+         * @param connectionUuids the Fabric connection UUIDs
+         * @return this builder
+         */
+        public PrecisionTimeOperator.PrecisionTimeBuilder withConnections(List<String> connectionUuids) {
+            this.connectionUuids = connectionUuids;
+            return this;
+        }
+
+        /**
+         * Sets the EPT network information (required by the API): timing server addresses,
+         * network mask and optional default gateway.
+         *
+         * @param ipv4 the ipv4 configuration
+         * @return this builder
+         */
+        public PrecisionTimeOperator.PrecisionTimeBuilder withIpv4(PrecisionTimeIpv4 ipv4) {
+            this.ipv4 = ipv4;
+            return this;
+        }
+
+        /**
+         * Sets the NTP advanced configuration (MD5 authentication entries).
+         *
+         * @param ntpAdvancedConfiguration the MD5 authentication entries
+         * @return this builder
+         */
+        public PrecisionTimeOperator.PrecisionTimeBuilder withNtpAdvancedConfiguration(List<Md5> ntpAdvancedConfiguration) {
+            this.ntpAdvancedConfiguration = ntpAdvancedConfiguration;
+            return this;
+        }
+
+        /**
+         * Sets the PTP advanced configuration.
+         *
+         * @param ptpAdvancedConfiguration the PTP configuration
+         * @return this builder
+         */
+        public PrecisionTimeOperator.PrecisionTimeBuilder withPtpAdvancedConfiguration(PtpAdvanceConfiguration ptpAdvancedConfiguration) {
+            this.ptpAdvancedConfiguration = ptpAdvancedConfiguration;
+            return this;
+        }
+
+        /**
+         * Sets the order details (purchase order / customer reference numbers).
+         *
+         * @param order the order details
+         * @return this builder
+         */
+        public PrecisionTimeOperator.PrecisionTimeBuilder withOrder(PrecisionTimeOrder order) {
+            this.order = order;
             return this;
         }
 

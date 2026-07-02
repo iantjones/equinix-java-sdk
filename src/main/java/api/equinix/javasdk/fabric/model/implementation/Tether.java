@@ -37,12 +37,15 @@ public class Tether {
     @JsonProperty("systemName")
     private String systemName;
 
-    @JsonProperty("patchPanelName")
-    private String patchPanelName;
+    @JsonProperty("patchPanel")
+    private String patchPanel;
 
     @JsonProperty("patchPanelPortA")
     private String patchPanelPortA;
 
     @JsonProperty("patchPanelPortB")
     private String patchPanelPortB;
+
+    @JsonProperty("ibx")
+    private String ibx;
 }

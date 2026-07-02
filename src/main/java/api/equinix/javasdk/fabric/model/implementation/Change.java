@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.ChangeStatus;
 import api.equinix.javasdk.fabric.enums.ChangeType;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  *
@@ -41,17 +43,32 @@ public class Change {
     @JsonProperty("uuid")
     private String uuid;
 
+    @JsonProperty("href")
+    private String href;
+
     @JsonProperty("type")
     private ChangeType type;
 
     @JsonProperty("status")
     private ChangeStatus status;
 
+    /**
+     * The change's patch operations. Network changes carry an array of operations;
+     * connection changes carry a single operation, which is accepted here as a
+     * one-element list.
+     */
     @JsonProperty("data")
-    private ChangeData data;
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    private List<ChangeData> data;
 
     @JsonProperty("information")
     private String information;
+
+    @JsonProperty("createdBy")
+    private String createdBy;
+
+    @JsonProperty("updatedBy")
+    private String updatedBy;
 
     @JsonProperty("createdDateTime")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)

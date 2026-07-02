@@ -21,6 +21,8 @@ import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 
 public interface CloudRouterPackage {
 
+     String getHref();
+
      CloudRouterPackageCode getCode();
 
      String getType();
@@ -31,17 +33,13 @@ public interface CloudRouterPackage {
 
      Integer getTotalIPv6RoutesMax();
 
-     Integer getStaticIPv4RoutesMax();
-
-     Integer getStaticIPv6RoutesMax();
-
-     Integer getNatIPv4RoutesMax();
-
      Boolean getRouteFilterSupported();
 
-     Boolean getRouteAggregationSupported();
+     Integer getVcCountMax();
 
-     Integer getConnectionLimit();
+     Integer getCrCountMax();
+
+     Integer getVcBandwidthMax();
 
      ChangeLog getChangeLog();
 }

@@ -248,8 +248,9 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("interfaces")
     private ArrayList<NetworkInterface> interfaces;
 
+    // Spec type is number; 4-byte ASNs exceed Integer.MAX_VALUE, so Long (matches LinkDevice.asn).
     @JsonProperty("asn")
-    private Integer asn;
+    private Long asn;
 
     @JsonProperty("supportDetails")
     private SupportDetail supportDetails;

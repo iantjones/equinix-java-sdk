@@ -71,10 +71,4 @@ public class LinkDevice {
 
     @JsonProperty("isDeviceAccessible")
     private Boolean isDeviceAccessible;
-
-    @JsonProperty("zoneCode")
-    private String zoneCode;
-
-    @JsonProperty("zoneName")
-    private String zoneName;
 }

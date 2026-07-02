@@ -22,6 +22,8 @@ import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.StreamSubscription;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.StreamSink;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionOperation;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -56,8 +58,17 @@ public class StreamSubscriptionJson {
     @JsonProperty("enabled")
     private Boolean enabled;
 
+    @JsonProperty("metricSelector")
+    private StreamSubscriptionSelector metricSelector;
+
+    @JsonProperty("eventSelector")
+    private StreamSubscriptionSelector eventSelector;
+
     @JsonProperty("sink")
     private StreamSink sink;
+
+    @JsonProperty("operation")
+    private StreamSubscriptionOperation operation;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

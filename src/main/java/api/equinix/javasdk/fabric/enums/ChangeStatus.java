@@ -17,14 +17,34 @@
 package api.equinix.javasdk.fabric.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
+ * Current outcome of a change flow (the Fabric v4 {@code Change.status} /
+ * {@code PortChange.status} attribute). Unrecognized values deserialize to
+ * {@link #UNKNOWN} rather than failing the whole response.
  *
  * @author ianjones
  */
 public enum ChangeStatus implements APIParam {
     COMPLETED,
+    FAILED,
     REJECTED,
+    REQUESTED,
     SUBMITTED_FOR_APPROVAL,
-    APPROVED
+    APPROVED,
+    UNKNOWN;
+
+    /**
+     * Deserializes a change status leniently: an unrecognized value maps to {@link #UNKNOWN}
+     * instead of failing the enclosing response.
+     *
+     * @param value the raw API value
+     * @return the matching constant, or {@link #UNKNOWN}
+     */
+    @JsonCreator
+    public static ChangeStatus fromString(String value) {
+        try { return ChangeStatus.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

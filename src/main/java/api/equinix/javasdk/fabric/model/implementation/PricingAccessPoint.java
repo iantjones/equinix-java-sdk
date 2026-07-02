@@ -25,6 +25,9 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingAccessPoint {
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("type")
     private AccessPointType type;
 
@@ -33,4 +36,53 @@ public class PricingAccessPoint {
 
     @JsonProperty("profile")
     ServiceProfileRef profile;
+
+    @JsonProperty("port")
+    private Port port;
+
+    @JsonProperty("bridge")
+    private Bridge bridge;
+
+    /**
+     * Access point port pricing attributes (spec schema
+     * {@code VirtualConnectionPriceASide_accessPoint_port}).
+     */
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Port {
+
+        @JsonProperty("settings")
+        private Settings settings;
+
+        @Data
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public static class Settings {
+
+            @JsonProperty("buyout")
+            private Boolean buyout;
+        }
+    }
+
+    /**
+     * Z-side bridge pricing attributes (spec schema
+     * {@code VirtualConnectionPriceZSide_accessPoint_bridge}).
+     */
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Bridge {
+
+        @JsonProperty("package")
+        private BridgePackage bridgePackage;
+
+        @Data
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public static class BridgePackage {
+
+            /**
+             * Bridge package code; spec enum {@code REGIONAL} / {@code GLOBAL}.
+             */
+            @JsonProperty("code")
+            private String code;
+        }
+    }
 }

@@ -17,6 +17,8 @@
 package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.DetectionMethod;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import api.equinix.javasdk.fabric.model.json.creators.StreamAlertRuleOperator;
 
 /**
@@ -37,6 +39,12 @@ public interface StreamAlertRule {
     String getState();
 
     Boolean getEnabled();
+
+    StreamSubscriptionSelector getMetricSelector();
+
+    StreamSubscriptionSelector getResourceSelector();
+
+    DetectionMethod getDetectionMethod();
 
     ChangeLog getChangeLog();
 

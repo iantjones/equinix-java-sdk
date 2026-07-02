@@ -19,10 +19,19 @@ package api.equinix.javasdk.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum PrecisionTimeState {
+    CANCELLED,
+    CANCELLING,
+    CONFIGURING,
+    CONFIGURING_FAILED,
+    DRAFT,
     PROVISIONING,
     PROVISIONED,
+    PROVISIONING_FAILED,
+    REPROVISIONING,
+    REPROVISIONING_FAILED,
     DEPROVISIONING,
     DEPROVISIONED,
+    DEPROVISIONING_FAILED,
     UNKNOWN;
 
     @JsonCreator

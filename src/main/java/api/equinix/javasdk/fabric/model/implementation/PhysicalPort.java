@@ -22,13 +22,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
+ * A physical member port backing a virtual port (the Fabric v4 {@code PhysicalPort} schema).
  *
  * @author ianjones
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PhysicalPort {
+
+    @JsonProperty("href")
+    private String href;
 
     @JsonProperty("id")
     private Integer id;
@@ -42,8 +48,14 @@ public class PhysicalPort {
     @JsonProperty("state")
     private PortState state;
 
-    @JsonProperty("bandwidth")
-    private Integer bandwidth;
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("interfaceSpeed")
+    private Integer interfaceSpeed;
+
+    @JsonProperty("interfaceType")
+    private String interfaceType;
 
     @JsonProperty("tether")
     private Tether tether;
@@ -54,6 +66,21 @@ public class PhysicalPort {
     @JsonProperty("settings")
     private PhysicalPortSettings settings;
 
+    @JsonProperty("interface")
+    private PortInterface portInterface;
+
+    @JsonProperty("notifications")
+    private List<PortNotification> notifications;
+
+    @JsonProperty("additionalInfo")
+    private List<PortAdditionalInfo> additionalInfo;
+
+    @JsonProperty("order")
+    private PortOrder order;
+
     @JsonProperty("operation")
     private PortOperation portOperation;
+
+    @JsonProperty("loas")
+    private List<PortLoa> loas;
 }

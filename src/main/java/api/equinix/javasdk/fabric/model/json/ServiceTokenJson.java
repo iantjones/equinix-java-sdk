@@ -24,6 +24,7 @@ import api.equinix.javasdk.fabric.model.implementation.AccountSummary;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Connection;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.ServiceToken;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -56,6 +57,18 @@ public class ServiceTokenJson {
     @JsonProperty("state")
     private ServiceTokenState state;
 
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("description")
+    private String description;
+
+    /**
+     * Information about the side of the connection the token issuer is on. Deprecated in the spec.
+     */
+    @JsonProperty("issuerSide")
+    private String issuerSide;
+
     @JsonProperty("expiry")
     private Integer expiry;
 
@@ -71,6 +84,9 @@ public class ServiceTokenJson {
 
     @JsonProperty("account")
     private AccountSummary account;
+
+    @JsonProperty("project")
+    private Project project;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

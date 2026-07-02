@@ -4,7 +4,6 @@
   "name": "Production-BGP-RoutingProtocol",
   "type": "BGP",
   "state": "PROVISIONED",
-  "description": "BGP routing protocol for production connection",
   "bgpIpv4": {
     "customerPeerIp": "192.168.100.1",
     "equinixPeerIp": "192.168.100.2",
@@ -27,7 +26,7 @@
   },
   "customerAsn": 65001,
   "equinixAsn": 65002,
-  "changeLog": {
+  "changelog": {
     "createdBy": "user1234",
     "createdByFullName": "Jane Doe",
     "createdByEmail": "jane.doe@example.com",

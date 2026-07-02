@@ -42,11 +42,12 @@ public class DeviceRestore {
     @JsonProperty("createdBy")
     private String createdBy;
 
+    // Spec properties are *DateTime (PreviousBackups); the getters keep the historical *Date names.
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty("createdDate")
+    @JsonProperty("createdDateTime")
     private LocalDateTime createdDate;
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty("lastUpdatedDate")
+    @JsonProperty("lastUpdatedDateTime")
     private LocalDateTime lastUpdatedDate;
 }

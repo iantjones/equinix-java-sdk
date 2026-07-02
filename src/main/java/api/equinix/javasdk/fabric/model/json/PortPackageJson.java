@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
+import api.equinix.javasdk.fabric.enums.PortPackageSourceType;
 import api.equinix.javasdk.fabric.model.PortPackage;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,4 +45,10 @@ public final class PortPackageJson implements PortPackage {
 
     @JsonProperty("supportedServiceTypes")
     private List<String> supportedServiceTypes;
+
+    @JsonProperty("supportedSourceTypes")
+    private List<PortPackageSourceType> supportedSourceTypes;
+
+    @JsonProperty("supportedMetros")
+    private List<String> supportedMetros;
 }

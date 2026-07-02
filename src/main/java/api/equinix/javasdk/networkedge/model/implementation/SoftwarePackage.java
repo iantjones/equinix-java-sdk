@@ -17,7 +17,6 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.core.model.APIParam;
-import api.equinix.javasdk.networkedge.enums.PackageCode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -35,8 +34,13 @@ public class SoftwarePackage implements APIParam {
     @JsonProperty("name")
     private String name;
 
+    /**
+     * The software package code. The spec ({@code SoftwarePackage.packageCode}) declares this as an
+     * open string (e.g. {@code SEC}) — vendor package codes are not limited to a fixed enum, so it
+     * is modelled as a {@code String} rather than the request-side {@code PackageCode} enum.
+     */
     @JsonProperty("packageCode")
-    private PackageCode packageCode;
+    private String packageCode;
 
     @JsonProperty("licenseType")
     private String licenseType;

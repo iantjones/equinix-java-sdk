@@ -28,6 +28,7 @@ import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Link;
 import api.equinix.javasdk.fabric.model.implementation.LocationCode;
 import api.equinix.javasdk.fabric.model.implementation.NetworkOperation;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -67,6 +68,9 @@ public class NetworkJson {
 
     @JsonProperty("account")
     private Account account;
+
+    @JsonProperty("notifications")
+    private List<Notification> notifications;
 
     @JsonProperty("operation")
     private NetworkOperation operation;

@@ -26,6 +26,7 @@ import api.equinix.javasdk.fabric.model.StreamSubscription;
 import api.equinix.javasdk.fabric.model.implementation.StreamSink;
 import api.equinix.javasdk.fabric.model.implementation.StreamSinkCredential;
 import api.equinix.javasdk.fabric.model.implementation.StreamSinkSetting;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionFilter;
 import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import api.equinix.javasdk.fabric.model.json.StreamSubscriptionJson;
 import api.equinix.javasdk.fabric.model.wrappers.StreamSubscriptionWrapper;
@@ -68,6 +69,8 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         builder.name = existing.getName();
         builder.description = existing.getDescription();
         builder.enabled = existing.getEnabled();
+        builder.metricSelector = existing.getMetricSelector();
+        builder.eventSelector = existing.getEventSelector();
 
         StreamSink sink = existing.getSink();
         if (sink != null) {
@@ -115,6 +118,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         private String password;
         private StreamSubscriptionSelector metricSelector;
         private StreamSubscriptionSelector eventSelector;
+        private StreamSubscriptionFilter filters;
 
         protected StreamSubscriptionBuilder(String streamId) {
             this.streamId = streamId;
@@ -212,6 +216,18 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
 
         public StreamSubscriptionOperator.StreamSubscriptionBuilder withEventSelector(StreamSubscriptionSelector eventSelector) {
             this.eventSelector = eventSelector;
+            return this;
+        }
+
+        /**
+         * Sets the subscription filters (spec schema {@code StreamSubscriptionFilter}): a
+         * conjunction of up to 8 filter expressions applied to the streamed events or metrics.
+         *
+         * @param filters the subscription filters
+         * @return this builder
+         */
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withFilters(StreamSubscriptionFilter filters) {
+            this.filters = filters;
             return this;
         }
 

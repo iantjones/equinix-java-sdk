@@ -36,15 +36,6 @@ public class DemarcationPoint {
     @JsonProperty("ibx")
     private String ibx;
 
-    @JsonProperty("portReservationId")
-    private String portReservationId;
-
-    @JsonProperty("portGroup")
-    private String portGroup;
-
-    @JsonProperty("correlationId")
-    private String correlationId;
-
     @JsonProperty("patchPanelName")
     private String patchPanelName;
 

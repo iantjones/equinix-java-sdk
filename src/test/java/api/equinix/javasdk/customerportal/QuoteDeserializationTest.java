@@ -75,7 +75,7 @@ class QuoteDeserializationTest {
     void termsOfUse_areTyped() {
         assertNotNull(quote.getTermsOfUse());
         assertEquals(1, quote.getTermsOfUse().size());
-        assertEquals(12, quote.getTermsOfUse().get(0).getValue());
+        assertEquals(0, new BigDecimal("12").compareTo(quote.getTermsOfUse().get(0).getValue()));
         assertEquals("MONTHS", quote.getTermsOfUse().get(0).getPeriod());
         assertEquals("INITIAL_TERM", quote.getTermsOfUse().get(0).getType());
     }

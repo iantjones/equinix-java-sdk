@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum CloudRouterPackageCode {
+    LAB,
     BASIC,
     STANDARD,
     ADVANCED,

@@ -20,17 +20,22 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+
 /**
  * A quote terms-of-use entry ({@code termsOfUse_Details}): a {@code value} measured in
  * {@code period} ({@code MONTHS} or {@code DAYS}) for a given term {@code type}
  * ({@code INITIAL_TERM}, {@code RENEWAL_TERM} or {@code NON_RENEWAL_NOTICE}).
+ *
+ * <p>The spec declares {@code value} as an integer, but its own response example returns decimal
+ * strings (e.g. {@code "12.0"}), so the field is a {@link BigDecimal} to accept both forms.</p>
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QuoteTermsOfUse {
 
     @JsonProperty("value")
-    private Integer value;
+    private BigDecimal value;
 
     @JsonProperty("period")
     private String period;

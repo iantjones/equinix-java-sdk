@@ -40,14 +40,14 @@ public class PortOperation {
     private LocalDateTime opStatusChangedAt;
 
     @JsonProperty("connectionCount")
-    private Integer connectionCount;
+    private Long connectionCount;
 
     @JsonProperty("evplVCCount")
-    private Integer evplVCCount;
+    private Long evplVCCount;
 
     @JsonProperty("fgVCCount")
-    private Integer fgVCCount;
+    private Long fgVCCount;
 
     @JsonProperty("accessVCCount")
-    private Integer accessVCCount;
+    private Long accessVCCount;
 }

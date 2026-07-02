@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-import java.util.List;
-
 /**
  *
  * @author ianjones
@@ -35,39 +33,6 @@ public class AdditionalField {
 
     @JsonProperty("required")
     private Boolean required;
-
-    @JsonProperty("includeInResponse")
-    private Boolean includeInResponse;
-
-    @JsonProperty("onlyForCluster")
-    private Boolean onlyForCluster;
-
-    @JsonProperty("onlyForClusterPrimaryNode")
-    private Boolean onlyForClusterPrimaryNode;
-
-    @JsonProperty("systemGenerated")
-    private Boolean systemGenerated;
-
-    @JsonProperty("shouldHideForSecondary")
-    private Boolean shouldHideForSecondary;
-
-    @JsonProperty("dataType")
-    private String dataType;
-
-    @JsonProperty("dataTypeValues")
-    private List<DataTypeValue> dataTypeValues;
-
-    @JsonProperty("dependsOn")
-    private List<FieldValue> dependsOn;
-
-    @JsonProperty("isEncryptionNeeded")
-    private Boolean isEncryptionNeeded;
-
-    @JsonProperty("isSouthBoundEncryptionNeeded")
-    private Boolean isSouthBoundEncryptionNeeded;
-
-    @JsonProperty("southBoundEncryptonType")
-    private String southBoundEncryptonType;
 
     @JsonProperty("isSameValueAllowedForPrimaryAndSecondary")
     private Boolean isSameValueAllowedForPrimaryAndSecondary;

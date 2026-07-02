@@ -18,6 +18,8 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.AgentActivity;
+import api.equinix.javasdk.fabric.model.implementation.AgentActivityMetadata;
+import api.equinix.javasdk.fabric.model.implementation.AgentRef;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,8 +45,14 @@ public final class AgentActivityJson implements AgentActivity {
     @JsonProperty("uuid")
     private String uuid;
 
+    @JsonProperty("agent")
+    private AgentRef agent;
+
     @JsonProperty("status")
     private String status;
+
+    @JsonProperty("metadata")
+    private AgentActivityMetadata metadata;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

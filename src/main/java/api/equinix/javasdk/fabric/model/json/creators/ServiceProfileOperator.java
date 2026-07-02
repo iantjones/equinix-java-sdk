@@ -25,6 +25,7 @@ import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
 import api.equinix.javasdk.fabric.model.Port;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.json.ServiceProfileJson;
@@ -73,6 +74,7 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
         private List<AccessPointTypeConfig> accessPointTypeConfigs;
         private List<CustomField> customFields;
         private MarketingInfo marketingInfo;
+        private Project project;
 
         protected ServiceProfileBuilder(ServiceProfileType type) {
             this.type = type;
@@ -173,6 +175,29 @@ public class ServiceProfileOperator extends ResourceImpl<ServiceProfile> {
 
         public ServiceProfileBuilder marketingInfo(MarketingInfo marketingInfo) {
             this.marketingInfo = marketingInfo;
+            return this;
+        }
+
+        /**
+         * Sets the project this service profile is created in (the spec
+         * {@code ServiceProfileRequest.project} attribute).
+         *
+         * @param project the project reference
+         * @return this builder
+         */
+        public ServiceProfileBuilder project(Project project) {
+            this.project = project;
+            return this;
+        }
+
+        /**
+         * Sets the project this service profile is created in, by project id.
+         *
+         * @param projectId the project identifier
+         * @return this builder
+         */
+        public ServiceProfileBuilder project(String projectId) {
+            this.project = new Project(projectId);
             return this;
         }
 

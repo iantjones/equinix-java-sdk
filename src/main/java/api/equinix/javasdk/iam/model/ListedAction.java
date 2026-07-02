@@ -52,9 +52,9 @@ public interface ListedAction {
     Map<String, PermissionCode> getPermissionCodes();
 
     /**
-     * @return the action attributes, as raw deserialized JSON
+     * @return the attributes included on this action (may be {@code null})
      */
-    List<Object> getAttributes();
+    List<Attribute> getAttributes();
 
     /**
      * The action mapping to access-management permissions, used when performing authorization via

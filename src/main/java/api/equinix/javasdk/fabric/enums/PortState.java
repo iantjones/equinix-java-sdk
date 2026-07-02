@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  *
  * @author ianjones
@@ -24,9 +26,22 @@ public enum PortState {
     ACTIVE,
     INACTIVE,
     PENDING,
+    PENDING_CROSS_CONNECT,
     PROVISIONING,
+    PROVISIONED,
     REPROVISIONING,
     DEPROVISIONING,
     DEPROVISIONED,
-    TO_BE_DELETED;
+    FAILED,
+    ADDED,
+    DELETED,
+    TO_BE_ADDED,
+    TO_BE_DELETED,
+    UNKNOWN;
+
+    @JsonCreator
+    public static PortState fromString(String value) {
+        try { return PortState.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

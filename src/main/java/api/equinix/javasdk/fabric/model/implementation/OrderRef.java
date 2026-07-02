@@ -39,4 +39,21 @@ public abstract class OrderRef {
 
     @JsonProperty("orderLine")
     private String orderLine;
+
+    protected OrderRef() {
+    }
+
+    /**
+     * Creates an order reference with the request-side attributes populated. The {@code href}
+     * is server-assigned and remains unset.
+     *
+     * @param purchaseOrderNumber the customer purchase-order number
+     * @param orderNumber the order reference number
+     * @param orderLine the order line
+     */
+    protected OrderRef(String purchaseOrderNumber, String orderNumber, String orderLine) {
+        this.purchaseOrderNumber = purchaseOrderNumber;
+        this.orderNumber = orderNumber;
+        this.orderLine = orderLine;
+    }
 }

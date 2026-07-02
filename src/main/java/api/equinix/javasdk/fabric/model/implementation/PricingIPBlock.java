@@ -25,6 +25,9 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingIPBlock {
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("type")
     private IPBlockType type;
 

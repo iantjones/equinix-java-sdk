@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Lifecycle;
+import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.networkedge.enums.BackupRequestType;
 import api.equinix.javasdk.networkedge.enums.BackupStatus;
 import api.equinix.javasdk.networkedge.enums.BackupType;
@@ -27,8 +28,10 @@ import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -65,6 +68,19 @@ public class BackupJson extends Lifecycle {
     @JsonProperty("deleteAllowed")
     private Boolean deleteAllowed;
 
+    @JsonProperty("deviceUuid")
+    private String deviceUuid;
+
+    // Network Edge responses use *DateTime audit fields rather than the shared Lifecycle *Date names.
+    @JsonProperty("lastUpdatedDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime lastUpdatedDateTime;
+
     @JsonProperty("restores")
     List<DeviceRestore> restores;
+
+    @Override
+    public LocalDateTime getLastUpdatedDate() {
+        return lastUpdatedDateTime != null ? lastUpdatedDateTime : super.getLastUpdatedDate();
+    }
 }

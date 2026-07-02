@@ -40,4 +40,13 @@ public class VirtualDeviceSummary {
 
     @JsonProperty("type")
     private VirtualDeviceType type;
+
+    @JsonProperty("account")
+    private AccountSummary account;
+
+    /**
+     * Virtual Device Cluster information.
+     */
+    @JsonProperty("cluster")
+    private String cluster;
 }

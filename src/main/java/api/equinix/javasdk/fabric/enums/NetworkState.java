@@ -18,13 +18,25 @@ package api.equinix.javasdk.fabric.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+/**
+ * Network status (the Fabric v4 {@code NetworkState} schema: {@code ACTIVE},
+ * {@code INACTIVE}, {@code DELETED}). Provisioning lifecycle values are reported
+ * separately on {@code operation.equinixStatus}. Unrecognized values deserialize to
+ * {@link #UNKNOWN} rather than failing the whole response.
+ */
 public enum NetworkState {
-    PROVISIONING,
-    PROVISIONED,
-    DEPROVISIONING,
-    DEPROVISIONED,
+    ACTIVE,
+    INACTIVE,
+    DELETED,
     UNKNOWN;
 
+    /**
+     * Deserializes a network state leniently: an unrecognized value maps to
+     * {@link #UNKNOWN} instead of failing the enclosing response.
+     *
+     * @param value the raw API value
+     * @return the matching constant, or {@link #UNKNOWN}
+     */
     @JsonCreator
     public static NetworkState fromString(String value) {
         try { return NetworkState.valueOf(value); }

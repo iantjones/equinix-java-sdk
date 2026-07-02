@@ -22,6 +22,7 @@ package api.equinix.javasdk.networkedge.enums;
  */
 public enum SSHUserAction {
     CREATE,
+    UPDATE,
     DELETE,
     REUSE
 }

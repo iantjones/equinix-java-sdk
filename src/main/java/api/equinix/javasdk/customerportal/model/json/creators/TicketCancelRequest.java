@@ -20,9 +20,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
  * Request body for cancelling a trouble ticket
- * ({@code POST /v2/tickets/{id}/cancel}, {@code Tickets_Cancel}). {@code reason} is required.
+ * ({@code POST /v2/tickets/{id}/cancel}, {@code Tickets_Cancel}). {@code reason} is required;
+ * up to five previously uploaded {@code attachments} may be referenced.
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -31,7 +34,21 @@ public class TicketCancelRequest {
     @JsonProperty("reason")
     private final String reason;
 
+    @JsonProperty("attachments")
+    private final List<OrderAttachment> attachments;
+
     public TicketCancelRequest(String reason) {
+        this(reason, null);
+    }
+
+    /**
+     * Builds a cancel request with supporting attachments.
+     *
+     * @param reason      the cancellation reason (required)
+     * @param attachments references to previously uploaded attachments (maximum 5)
+     */
+    public TicketCancelRequest(String reason, List<OrderAttachment> attachments) {
         this.reason = reason;
+        this.attachments = attachments;
     }
 }

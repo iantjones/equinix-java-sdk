@@ -18,8 +18,8 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.NotificationType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,11 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A notification recipient set (the Fabric v4 {@code SimplifiedNotification} schema).
  *
  * @author ianjones
  */
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Notification {
@@ -41,6 +41,34 @@ public class Notification {
 
     @JsonProperty("emails")
     private List<String> emails;
+
+    @JsonProperty("sendInterval")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String sendInterval;
+
+    @JsonProperty("registeredUsers")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<String> registeredUsers;
+
+    public Notification(NotificationType type, List<String> emails) {
+        this.type = type;
+        this.emails = emails;
+    }
+
+    /**
+     * Creates a notification recipient set with all spec attributes.
+     *
+     * @param type the notification type
+     * @param emails the recipient email addresses
+     * @param sendInterval the send interval
+     * @param registeredUsers the registered user keys to notify
+     */
+    public Notification(NotificationType type, List<String> emails, String sendInterval, List<String> registeredUsers) {
+        this.type = type;
+        this.emails = emails;
+        this.sendInterval = sendInterval;
+        this.registeredUsers = registeredUsers;
+    }
 
     public void addEmail(String email) {
         if(this.emails == null) {

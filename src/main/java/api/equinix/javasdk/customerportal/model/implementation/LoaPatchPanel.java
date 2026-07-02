@@ -19,4 +19,7 @@ public class LoaPatchPanel {
 
     @JsonProperty("cageSpaceId")
     private String cageSpaceId;
+
+    @JsonProperty("location")
+    private LoaLocation location;
 }

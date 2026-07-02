@@ -31,14 +31,21 @@ public class AgreementStatus {
 
     @Getter static TypeReference<AgreementStatus> singleTypeRef = new TypeReference<>() {};
 
-    @JsonProperty("termsVersionId")
+    @JsonProperty("termsVersionID")
     private String termsVersionId;
 
     @JsonProperty("terms")
     private String terms;
 
-    @JsonProperty("valid")
+    @JsonProperty("isValid")
     private Boolean valid;
+
+    /**
+     * <p>Only populated on the create-agreement response ({@code AgreementAcceptResponse.status});
+     * the API returns {@code SUCCESS} or {@code FAILED}.</p>
+     */
+    @JsonProperty("status")
+    private String status;
 
     @JsonProperty("errorMessage")
     private String errorMessage;

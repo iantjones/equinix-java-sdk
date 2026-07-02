@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.enums.PriceCategory;
 import api.equinix.javasdk.fabric.enums.PriceType;
 import api.equinix.javasdk.fabric.model.implementation.*;
 
@@ -23,10 +24,15 @@ import java.util.ArrayList;
 
 public interface Pricing {
 
+     String getHref();
 
      PriceType getType();
 
      String getCurrency();
+
+     Integer getTermLength();
+
+     PriceCategory getCategory();
 
      String getCode();
 
@@ -45,4 +51,6 @@ public interface Pricing {
      PricingGateway getGateway();
 
      PricingIPBlock getIpBlock();
+
+     TimeServicePrice getTimeService();
 }

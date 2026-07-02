@@ -20,10 +20,13 @@ import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.CompanyProfileClientImpl;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.json.CompanyProfileJson;
 import api.equinix.javasdk.fabric.model.wrappers.CompanyProfileWrapper;
 import lombok.AccessLevel;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * Fluent builder for Fabric company profiles.
@@ -52,6 +55,7 @@ public class CompanyProfileOperator extends ResourceImpl<CompanyProfile> {
         private String description;
         private String webUrl;
         private String contactUrl;
+        private List<Notification> notifications;
 
         protected CompanyProfileBuilder(String type) {
             this.type = type;
@@ -79,6 +83,18 @@ public class CompanyProfileOperator extends ResourceImpl<CompanyProfile> {
 
         public CompanyProfileBuilder contactUrl(String contactUrl) {
             this.contactUrl = contactUrl;
+            return this;
+        }
+
+        /**
+         * Sets the contact notifications for the profile, e.g. a {@code CONTACT} entry and a
+         * {@code NOTIFICATION} entry each carrying the relevant email addresses.
+         *
+         * @param notifications the notification entries
+         * @return this builder
+         */
+        public CompanyProfileBuilder notifications(List<Notification> notifications) {
+            this.notifications = notifications;
             return this;
         }
 

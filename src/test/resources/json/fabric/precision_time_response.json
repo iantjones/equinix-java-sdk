@@ -4,10 +4,43 @@
   "name": "Production-NTP-Service",
   "type": "NTP",
   "state": "PROVISIONED",
-  "description": "Primary NTP time service for production",
-  "packageCode": "NTP_STANDARD",
+  "package": {
+    "href": "https://api.equinix.com/fabric/v4/timeServicePackages/NTP_STANDARD",
+    "code": "NTP_STANDARD"
+  },
+  "operation": {
+    "operationalStatus": "UP"
+  },
+  "connections": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/095be615-a8ad-4c33-8e9c-c7612fbf6c9f",
+      "type": "EVPL_VC",
+      "uuid": "095be615-a8ad-4c33-8e9c-c7612fbf6c9f"
+    }
+  ],
+  "ipv4": {
+    "primary": "192.168.254.241",
+    "secondary": "192.168.254.242",
+    "networkMask": "255.255.255.240",
+    "defaultGateway": "192.168.254.254"
+  },
   "project": {
     "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
   },
-  "connectionsCount": 0
+  "account": {
+    "accountNumber": 270001
+  },
+  "order": {
+    "purchaseOrderNumber": "1-129105284100",
+    "orderNumber": "1-129105284100"
+  },
+  "pricing": {
+    "currency": "USD",
+    "charges": [
+      {
+        "type": "MONTHLY_RECURRING",
+        "price": 300.0
+      }
+    ]
+  }
 }

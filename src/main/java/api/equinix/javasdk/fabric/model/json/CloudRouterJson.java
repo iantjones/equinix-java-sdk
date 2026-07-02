@@ -67,14 +67,17 @@ public final class CloudRouterJson {
     @JsonProperty("notifications")
     private List<Notification> notifications;
 
-    @JsonProperty("bgpIpv4RoutesCount")
-    private Integer bgpIpv4RoutesCount;
+    @JsonProperty("equinixAsn")
+    private Long equinixAsn;
 
-    @JsonProperty("bgpIpv6RoutesCount")
-    private Integer bgpIpv6RoutesCount;
-
-    @JsonProperty("connectionCount")
+    @JsonProperty("connectionsCount")
     private Integer connectionCount;
+
+    @JsonProperty("marketplaceSubscription")
+    private MarketplaceSubscriptionRef marketplaceSubscription;
+
+    @JsonProperty("change")
+    private CloudRouterChange change;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

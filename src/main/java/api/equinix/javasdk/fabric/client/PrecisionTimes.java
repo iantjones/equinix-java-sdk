@@ -86,4 +86,16 @@ public interface PrecisionTimes {
      * @return the updated precision time service
      */
     PrecisionTime fulfill(String uuid, List<String> connectionUuids);
+
+    /**
+     * Fulfills (provisions) an existing precision time service with a full
+     * {@code precisionTimeServiceRequest} body, allowing the required {@code type}, {@code name},
+     * {@code package} and {@code ipv4} properties (and the optional NTP / PTP advanced
+     * configuration, project and order) to be supplied alongside the connections.
+     *
+     * @param uuid the unique identifier of the precision time service
+     * @param request the fulfillment request body
+     * @return the updated precision time service
+     */
+    PrecisionTime fulfill(String uuid, api.equinix.javasdk.fabric.model.implementation.TimeServiceFulfillRequest request);
 }

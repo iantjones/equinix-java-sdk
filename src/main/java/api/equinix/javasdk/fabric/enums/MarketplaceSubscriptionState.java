@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum MarketplaceSubscriptionState {
     ACTIVE,
-    INACTIVE,
     EXPIRED,
     CANCELLED,
+    GRACE_PERIOD,
     UNKNOWN;
 
     @JsonCreator

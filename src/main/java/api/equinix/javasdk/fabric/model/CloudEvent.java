@@ -16,9 +16,19 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.model.implementation.CloudEventData;
+
 public interface CloudEvent {
 
+    /**
+     * The Cloud Event identifier (the {@code id} wire property; the accessor keeps its
+     * historical {@code getUuid()} name).
+     *
+     * @return the Cloud Event identifier
+     */
     String getUuid();
+
+    String getSpec();
 
     String getType();
 
@@ -28,5 +38,27 @@ public interface CloudEvent {
 
     String getTime();
 
-    Object getData();
+    String getDataSchema();
+
+    String getDataContentType();
+
+    String getSeverityNumber();
+
+    String getSeverityText();
+
+    String getEquinixAlert();
+
+    String getEquinixOrganization();
+
+    String getEquinixProject();
+
+    String getAuthType();
+
+    String getAuthId();
+
+    String getTraceParent();
+
+    String getTraceState();
+
+    CloudEventData getData();
 }

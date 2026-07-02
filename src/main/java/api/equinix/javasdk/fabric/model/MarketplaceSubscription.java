@@ -17,6 +17,11 @@
 package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionState;
+import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.SubscriptionEntitlement;
+import api.equinix.javasdk.fabric.model.implementation.SubscriptionTrial;
+
+import java.util.List;
 
 public interface MarketplaceSubscription {
 
@@ -30,7 +35,42 @@ public interface MarketplaceSubscription {
 
     String getMarketplace();
 
+    /**
+     * The marketplace offer type: {@code PUBLIC} or {@code PRIVATE_OFFER}.
+     *
+     * @return the offer type
+     */
+    String getOfferType();
+
     String getOfferId();
 
     Boolean getIsAutoRenew();
+
+    /**
+     * The free-trial details, when the subscription includes one.
+     *
+     * @return the trial details
+     */
+    SubscriptionTrial getTrial();
+
+    /**
+     * The metros in which the subscription is available.
+     *
+     * @return the available metro codes
+     */
+    List<String> getMetroCodes();
+
+    /**
+     * The entitlements associated with the subscription.
+     *
+     * @return the subscription entitlements
+     */
+    List<SubscriptionEntitlement> getEntitlements();
+
+    /**
+     * The subscription change log (wire name {@code changelog}).
+     *
+     * @return the change log
+     */
+    ChangeLog getChangeLog();
 }

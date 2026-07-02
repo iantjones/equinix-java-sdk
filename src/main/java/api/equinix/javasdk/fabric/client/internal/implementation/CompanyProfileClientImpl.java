@@ -27,6 +27,7 @@ import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
 import api.equinix.javasdk.fabric.model.PrivateService;
 import api.equinix.javasdk.fabric.model.Tag;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
+import api.equinix.javasdk.fabric.model.implementation.sort.SortProperty;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CompanyProfileJson;
 import api.equinix.javasdk.fabric.model.json.CompanyServiceProfileListResponseJson;
@@ -51,7 +52,12 @@ public class CompanyProfileClientImpl extends ResourceClientBase<CompanyProfile,
     }
 
     public Page<CompanyProfile, CompanyProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        return searchPage("SearchCompanyProfiles", new FilteredSortedPaginatedPost<>(filter, sort));
+        // The CompanyProfileSearchRequest spec declares "sort" as a single {property, direction}
+        // object (schema Sort), not an array; send the first sort directive in that shape.
+        SortProperty sortProperty = (sort != null && sort.getSortProperties() != null && !sort.getSortProperties().isEmpty())
+                ? sort.getSortProperties().get(0)
+                : null;
+        return searchPage("SearchCompanyProfiles", new FilteredSortedPaginatedPost<>(filter, sortProperty));
     }
 
     public CompanyProfileJson getByUuid(String uuid) {

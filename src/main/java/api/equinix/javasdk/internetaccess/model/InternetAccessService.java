@@ -77,7 +77,7 @@ public interface InternetAccessService {
     /**
      * @return service bandwidth in Mbps
      */
-    Integer getBandwidth();
+    Long getBandwidth();
 
     /**
      * @return the lifecycle state of the service

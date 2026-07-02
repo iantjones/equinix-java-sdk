@@ -1,8 +1,8 @@
 {
-  "termLength": 12,
+  "termLength": "12",
   "primary": {
     "currency": "USD",
-    "billingCommencementDate": "2026-07-01T00:00:00.000Z",
+    "billingCommencementDateTime": "2026-07-01T00:00:00.000Z",
     "charges": [
       {
         "description": "DEVICE_LICENSE",
@@ -16,7 +16,7 @@
   },
   "secondary": {
     "currency": "USD",
-    "billingCommencementDate": "2026-07-01T00:00:00.000Z",
+    "billingCommencementDateTime": "2026-07-01T00:00:00.000Z",
     "charges": [
       {
         "description": "DEVICE_LICENSE",

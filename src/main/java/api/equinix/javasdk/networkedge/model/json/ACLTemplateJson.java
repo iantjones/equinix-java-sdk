@@ -18,13 +18,18 @@ package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Lifecycle;
+import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
+import api.equinix.javasdk.networkedge.enums.DeviceACLStatus;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.implementation.InboundRule;
+import api.equinix.javasdk.networkedge.model.implementation.VirtualDeviceACLDetail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -47,4 +52,20 @@ public class ACLTemplateJson extends Lifecycle {
 
     @JsonProperty("inboundRules")
     List<InboundRule> inboundRules;
+
+    @JsonProperty("virtualDeviceDetails")
+    List<VirtualDeviceACLDetail> virtualDeviceDetails;
+
+    @JsonProperty("status")
+    private DeviceACLStatus status;
+
+    // Network Edge responses use *DateTime audit fields rather than the shared Lifecycle *Date names.
+    @JsonProperty("createdDateTime")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdDateTime;
+
+    @Override
+    public LocalDateTime getCreatedDate() {
+        return createdDateTime != null ? createdDateTime : super.getCreatedDate();
+    }
 }

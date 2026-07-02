@@ -25,6 +25,9 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingConnection {
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("type")
     private ConnectionType type;
 

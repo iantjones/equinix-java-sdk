@@ -18,6 +18,7 @@ package api.equinix.javasdk.customerportal.model;
 
 import api.equinix.javasdk.customerportal.enums.LoaState;
 import api.equinix.javasdk.customerportal.model.implementation.LoaChangeLog;
+import api.equinix.javasdk.customerportal.model.implementation.LoaChangeReference;
 import api.equinix.javasdk.customerportal.model.implementation.LoaLink;
 import api.equinix.javasdk.customerportal.model.implementation.LoaParty;
 import api.equinix.javasdk.customerportal.model.implementation.LoaProduct;
@@ -47,6 +48,21 @@ public interface DigitalLoa {
     String getExpiryDateTime();
 
     LoaChangeLog getChangeLog();
+
+    /**
+     * Returns the reference to the change that produced this document ({@code Change} schema).
+     * Populated on the create response only.
+     *
+     * @return the change reference, or {@code null} if not provided
+     */
+    LoaChangeReference getChange();
+
+    /**
+     * Returns whether this document is a draft. Populated on the create response only.
+     *
+     * @return {@code true} if the document is a draft, or {@code null} if not provided
+     */
+    Boolean getDraft();
 
     List<LoaLink> getLinks();
 

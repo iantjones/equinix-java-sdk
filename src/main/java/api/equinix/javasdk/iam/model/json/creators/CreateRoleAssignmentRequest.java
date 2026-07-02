@@ -99,7 +99,7 @@ public class CreateRoleAssignmentRequest {
         private String type;
 
         @JsonProperty("parent")
-        private Object parent;
+        private Parent parent;
 
         /**
          * Sets the scope resource identifier.
@@ -124,12 +124,13 @@ public class CreateRoleAssignmentRequest {
         }
 
         /**
-         * Sets the optional parent reference of the scope.
+         * Sets the optional parent reference of the scope — required when the scope {@code type}
+         * is {@code PORT}, identifying the owning project.
          *
          * @param parent the parent reference
          * @return this assignment scope for chaining
          */
-        public AssignmentScope parent(Object parent) {
+        public AssignmentScope parent(Parent parent) {
             this.parent = parent;
             return this;
         }
@@ -142,8 +143,54 @@ public class CreateRoleAssignmentRequest {
             return type;
         }
 
-        public Object getParent() {
+        public Parent getParent() {
             return parent;
+        }
+
+        /**
+         * Nested object identifying the parent of an assignment scope — when the scope {@code type}
+         * is {@code PORT}, the owning project (spec: {@code CreateRoleAssignmentInput} →
+         * {@code assignmentScope.parent}; both {@code id} and {@code type} are required, and
+         * {@code type} only admits {@code PROJECT}).
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public static class Parent {
+
+            @JsonProperty("id")
+            private String id;
+
+            @JsonProperty("type")
+            private String type;
+
+            /**
+             * Sets the parent resource identifier (required).
+             *
+             * @param id the parent resource id
+             * @return this parent for chaining
+             */
+            public Parent id(String id) {
+                this.id = id;
+                return this;
+            }
+
+            /**
+             * Sets the parent resource type (required; the spec only admits {@code PROJECT}).
+             *
+             * @param type the parent resource type
+             * @return this parent for chaining
+             */
+            public Parent type(String type) {
+                this.type = type;
+                return this;
+            }
+
+            public String getId() {
+                return id;
+            }
+
+            public String getType() {
+                return type;
+            }
         }
     }
 }

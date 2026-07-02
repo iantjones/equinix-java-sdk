@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
+ * An account summary (the Fabric v4 {@code SimplifiedAccount} schema).
  *
  * @author ianjones
  */
@@ -30,10 +31,39 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccountSummary {
 
-    @JsonProperty("orgId")
-    private Integer orgId;
-
     @JsonProperty("accountNumber")
-    private Integer accountNumber;
+    private Long accountNumber;
 
+    @JsonProperty("accountName")
+    private String accountName;
+
+    @JsonProperty("orgId")
+    private Long orgId;
+
+    @JsonProperty("organizationName")
+    private String organizationName;
+
+    @JsonProperty("globalOrgId")
+    private String globalOrgId;
+
+    @JsonProperty("globalOrganizationName")
+    private String globalOrganizationName;
+
+    @JsonProperty("ucmId")
+    private String ucmId;
+
+    @JsonProperty("globalCustId")
+    private String globalCustId;
+
+    @JsonProperty("resellerAccountNumber")
+    private Long resellerAccountNumber;
+
+    @JsonProperty("resellerAccountName")
+    private String resellerAccountName;
+
+    @JsonProperty("resellerUcmId")
+    private String resellerUcmId;
+
+    @JsonProperty("resellerOrgId")
+    private Long resellerOrgId;
 }

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.networkedge.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -24,6 +25,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public enum LicenseStatus {
     REGISTERED,
+    UNREGISTERED,
+    PENDING,
+    EXPIRED,
     APPLIED,
     APPLYING_LICENSE,
     UNREGISTRATION_FAILED,
@@ -31,5 +35,13 @@ public enum LicenseStatus {
     WAITING_FOR_CLUSTER_SETUP,
     WAITING_FOR_DEVICE,
     @JsonProperty("N/A")
-    NA
+    NA,
+    UNKNOWN;
+
+    @JsonCreator
+    public static LicenseStatus fromString(String value) {
+        if ("N/A".equals(value)) { return NA; }
+        try { return LicenseStatus.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

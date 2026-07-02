@@ -16,8 +16,10 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.enums.*;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -33,8 +35,20 @@ public class ServiceTokenCreatorJson {
     @JsonProperty("type")
     private ServiceTokenType type;
 
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("expiry")
     private Integer expiry;
+
+    @JsonProperty("expirationDateTime")
+    private String expirationDateTime;
+
+    @JsonProperty("project")
+    private Project project;
 
     @JsonProperty("connection")
     private Connection connection;
@@ -80,23 +94,68 @@ public class ServiceTokenCreatorJson {
         List<AccessPointSelector> accessPointSelectors;
     }
 
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class AccessPointSelector {
 
         @JsonProperty("type")
         private AccessPointType type;
 
+        /** Deprecated in the spec but still accepted. */
+        @JsonProperty("hideAssetInfo")
+        private Boolean hideAssetInfo;
+
         @JsonProperty("port")
         private PortSummary port;
 
         @JsonProperty("linkProtocol")
         private LinkProtocol linkProtocol;
+
+        @JsonProperty("virtualDevice")
+        private VirtualDeviceSummary virtualDevice;
+
+        @JsonProperty("interface")
+        private VirtualDeviceInterface vdInterface;
+
+        @JsonProperty("network")
+        private NetworkSummary network;
     }
 
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class PortSummary {
+
+        @JsonProperty("uuid")
+        private String uuid;
+    }
+
+    /** Spec schema {@code SimplifiedVirtualDevice} (writable members). */
+    @AllArgsConstructor(access = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    public static class VirtualDeviceSummary {
+
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("uuid")
+        private String uuid;
+    }
+
+    /** Spec schema {@code VirtualDeviceInterface}. */
+    @AllArgsConstructor(access = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    public static class VirtualDeviceInterface {
+
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("id")
+        private Integer id;
+    }
+
+    /** Spec schema {@code SimplifiedTokenNetwork} (writable members). */
+    @AllArgsConstructor(access = AccessLevel.PACKAGE)
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    public static class NetworkSummary {
 
         @JsonProperty("uuid")
         private String uuid;
@@ -121,14 +180,42 @@ public class ServiceTokenCreatorJson {
 
     public ServiceTokenCreatorJson(ServiceTokenOperator.ServiceTokenBuilder serviceTokenBuilder) {
         this.type = serviceTokenBuilder.getServiceTokenType();
+        this.name = serviceTokenBuilder.getName();
+        this.description = serviceTokenBuilder.getDescription();
         this.expiry = serviceTokenBuilder.getExpiry();
 
-        LinkProtocol linkProtocol = new LinkProtocol(serviceTokenBuilder.getLinkProtocolType(), serviceTokenBuilder.getVLanTag(),
-                serviceTokenBuilder.getVLanCTag(), serviceTokenBuilder.getVLanSTag());
+        if (serviceTokenBuilder.getExpirationDateTime() != null) {
+            this.expirationDateTime = serviceTokenBuilder.getExpirationDateTime().format(Constants.queryParamFormatter);
+        }
 
-        PortSummary port = new PortSummary(serviceTokenBuilder.getPortUuid());
+        if (serviceTokenBuilder.getProjectId() != null) {
+            this.project = new Project(serviceTokenBuilder.getProjectId());
+        }
 
-        AccessPointSelector accessPointSelector = new AccessPointSelector(serviceTokenBuilder.getAccessPointType(), port, linkProtocol);
+        AccessPointSelector accessPointSelector = new AccessPointSelector();
+        accessPointSelector.type = serviceTokenBuilder.getAccessPointType();
+        accessPointSelector.hideAssetInfo = serviceTokenBuilder.getHideAssetInfo();
+
+        if (serviceTokenBuilder.getPortUuid() != null) {
+            accessPointSelector.port = new PortSummary(serviceTokenBuilder.getPortUuid());
+        }
+
+        if (serviceTokenBuilder.getLinkProtocolType() != null) {
+            accessPointSelector.linkProtocol = new LinkProtocol(serviceTokenBuilder.getLinkProtocolType(),
+                    serviceTokenBuilder.getVLanTag(), serviceTokenBuilder.getVLanCTag(), serviceTokenBuilder.getVLanSTag());
+        }
+
+        if (serviceTokenBuilder.getVirtualDeviceUuid() != null) {
+            accessPointSelector.virtualDevice = new VirtualDeviceSummary("EDGE", serviceTokenBuilder.getVirtualDeviceUuid());
+        }
+
+        if (serviceTokenBuilder.getInterfaceId() != null) {
+            accessPointSelector.vdInterface = new VirtualDeviceInterface("NETWORK", serviceTokenBuilder.getInterfaceId());
+        }
+
+        if (serviceTokenBuilder.getNetworkUuid() != null) {
+            accessPointSelector.network = new NetworkSummary(serviceTokenBuilder.getNetworkUuid());
+        }
 
         ConnectionConfig connectionConfig = new ConnectionConfig(List.of(accessPointSelector));
 
@@ -138,6 +225,7 @@ public class ServiceTokenCreatorJson {
         connection.setAllowCustomBandwidth(serviceTokenBuilder.getAllowCustomBandwidth());
         connection.setBandwidthLimit(serviceTokenBuilder.getBandwidthLimit());
         connection.setIssuerSide(serviceTokenBuilder.getIssuerSide());
+        connection.setSupportedBandwidths(serviceTokenBuilder.getSupportedBandwidths());
 
         if(serviceTokenBuilder.getIssuerSide() == Side.A_Side) {
             connection.setASide(connectionConfig);

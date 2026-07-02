@@ -16,10 +16,13 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Setter;
+
+import java.util.List;
 
 @Setter(AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -43,6 +46,9 @@ public class CompanyProfileCreatorJson {
     @JsonProperty("contactUrl")
     private String contactUrl;
 
+    @JsonProperty("notifications")
+    private List<Notification> notifications;
+
     public CompanyProfileCreatorJson(CompanyProfileOperator.CompanyProfileBuilder builder) {
         this.type = builder.getType();
         this.name = builder.getName();
@@ -50,5 +56,6 @@ public class CompanyProfileCreatorJson {
         this.description = builder.getDescription();
         this.webUrl = builder.getWebUrl();
         this.contactUrl = builder.getContactUrl();
+        this.notifications = builder.getNotifications();
     }
 }

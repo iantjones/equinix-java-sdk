@@ -8,6 +8,7 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import org.junit.jupiter.api.*;
@@ -75,8 +76,9 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
             PrecisionTime created = fabric.precisionTimes().define()
                     .withType(PrecisionTimeType.NTP)
                     .withName("Production-NTP-Service")
-                    .withDescription("Primary NTP time service for production")
                     .withPackageCode(PrecisionTimePackageCode.NTP_STANDARD)
+                    .withConnections(List.of("095be615-a8ad-4c33-8e9c-c7612fbf6c9f"))
+                    .withIpv4(new PrecisionTimeIpv4("10.0.0.1", "10.0.0.2", "255.255.255.240", "10.0.0.3"))
                     .withProject(new Project("d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"))
                     .create();
 
@@ -89,8 +91,10 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
                     .withRequestBody(equalToJson(
                             "{\"type\":\"NTP\","
                             + "\"name\":\"Production-NTP-Service\","
-                            + "\"description\":\"Primary NTP time service for production\","
-                            + "\"packageCode\":\"NTP_STANDARD\","
+                            + "\"package\":{\"code\":\"NTP_STANDARD\"},"
+                            + "\"connections\":[{\"uuid\":\"095be615-a8ad-4c33-8e9c-c7612fbf6c9f\"}],"
+                            + "\"ipv4\":{\"primary\":\"10.0.0.1\",\"secondary\":\"10.0.0.2\","
+                            + "\"networkMask\":\"255.255.255.240\",\"defaultGateway\":\"10.0.0.3\"},"
                             + "\"project\":{\"projectId\":\"d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345\"}}",
                             true, true)));
         }

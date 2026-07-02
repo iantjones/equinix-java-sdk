@@ -46,14 +46,9 @@ public class DeviceManagement {
     @JsonProperty("clusteringDetails")
     private ClusteringDetail clusteringDetails;
 
+    // Spec DefaultAclsConfig is a single object ({dnsServers, ntpServers}), not an array.
     @JsonProperty("defaultAcls")
-    private ArrayList<DefaultACL> defaultAcls;
-
-    @JsonProperty("supported")
-    private Boolean supported;
-
-    @JsonProperty("metadata")
-    private DeviceMetadata metadata;
+    private DefaultACL defaultAcls;
 
     @Getter
     static class LicenseOptions {

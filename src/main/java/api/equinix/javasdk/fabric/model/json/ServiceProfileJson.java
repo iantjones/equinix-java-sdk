@@ -20,6 +20,7 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.ServiceProfileState;
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -79,6 +80,24 @@ public final class ServiceProfileJson {
 
     @JsonProperty("ports")
     private List<AccessPointTypeConfigPort> ports;
+
+    @JsonProperty("virtualDevices")
+    private List<ServiceProfileAccessPointVD> virtualDevices;
+
+    @JsonProperty("environments")
+    private List<ProviderEnvironment> environments;
+
+    @JsonProperty("project")
+    private Project project;
+
+    @JsonProperty("projectId")
+    private String projectId;
+
+    @JsonProperty("change")
+    private Change change;
+
+    @JsonProperty("lastMileConfig")
+    private ServiceProfileLastMileConfig lastMileConfig;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

@@ -37,6 +37,15 @@ public class AccessPointTypeConfigPort {
     @JsonProperty("location")
     private LocationSummary location;
 
+    @JsonProperty("sellerRegion")
+    private String sellerRegion;
+
+    @JsonProperty("sellerRegionDescription")
+    private String sellerRegionDescription;
+
+    @JsonProperty("crossConnectId")
+    private String crossConnectId;
+
     public AccessPointTypeConfigPort(String uuid, PortType type) {
         this.uuid = uuid;
         this.type = type;

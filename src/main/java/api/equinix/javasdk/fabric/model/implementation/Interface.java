@@ -28,6 +28,9 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Interface {
 
+    @JsonProperty("href")
+    private String href;
+
     @JsonProperty("uuid")
     private String uuid;
 
@@ -36,6 +39,9 @@ public class Interface {
 
     @JsonProperty("type")
     private InterfaceType type;
+
+    @JsonProperty("projectId")
+    private String projectId;
 
     public Interface(Integer id, InterfaceType type) {
         this.id = id;

@@ -7,6 +7,7 @@ import api.equinix.javasdk.core.model.APIParam;
  */
 public enum LoaChangeType implements APIParam {
     LOA_CREATION,
+    LOA_UPDATE,
     LOA_AUTHORIZATION,
     LOA_CANCELLATION,
     LOA_PATCHING,

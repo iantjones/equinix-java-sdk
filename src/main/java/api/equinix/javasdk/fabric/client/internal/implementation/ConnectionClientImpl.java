@@ -40,6 +40,7 @@ import api.equinix.javasdk.fabric.model.implementation.ConnectionValidationReque
 import api.equinix.javasdk.fabric.model.implementation.ManageConnection;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionActionJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionValidationResponseJson;
@@ -108,9 +109,10 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
         return dryRunCreate("PostConnection", connectionCreatorJson);
     }
 
-    public ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
-        return postOne("ManageConnection", Map.of("uuid", uuid),
-                new ManageConnection(connectionOperationType, description, bodyObject));
+    public ConnectionActionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
+        return postForType("ManageConnection", Map.of("uuid", uuid),
+                new ManageConnection(connectionOperationType, description, bodyObject),
+                ConnectionActionJson.getSingleTypeRef());
     }
 
     public ConnectionJson update(String uuid, List<PatchOperation> operations) {

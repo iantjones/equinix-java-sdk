@@ -254,8 +254,8 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
 
             assertNotNull(profiles);
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
-                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/changeLog/createdDateTime")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
+                    .withRequestBody(matchingJsonPath("$.sort.property", equalTo("/changeLog/createdDateTime")))
+                    .withRequestBody(matchingJsonPath("$.sort.direction", equalTo("DESC"))));
         }
 
         @Test
@@ -273,8 +273,8 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
                     .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
                     .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("COMPANY_PROFILE")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+                    .withRequestBody(matchingJsonPath("$.sort.property", equalTo("/name")))
+                    .withRequestBody(matchingJsonPath("$.sort.direction", equalTo("ASC"))));
         }
     }
 

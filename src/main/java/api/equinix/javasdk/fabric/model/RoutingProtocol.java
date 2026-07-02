@@ -33,8 +33,6 @@ public interface RoutingProtocol {
 
     RoutingProtocolState getState();
 
-    String getDescription();
-
     BGPConnectionIpv4 getBgpIpv4();
 
     BGPConnectionIpv6 getBgpIpv6();
@@ -48,6 +46,16 @@ public interface RoutingProtocol {
     Long getCustomerAsn();
 
     Long getEquinixAsn();
+
+    String getBgpAuthKey();
+
+    Boolean getAsOverrideEnabled();
+
+    RoutingProtocolOperation getOperation();
+
+    Project getProject();
+
+    RoutingProtocolConnection getConnection();
 
     ChangeLog getChangeLog();
 

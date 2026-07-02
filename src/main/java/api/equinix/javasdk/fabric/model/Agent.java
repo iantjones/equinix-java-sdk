@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.model.implementation.AgentConfiguration;
+import api.equinix.javasdk.fabric.model.implementation.AgentTemplateRef;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.json.creators.AgentOperator;
 
@@ -39,6 +41,10 @@ public interface Agent {
     Boolean getEnabled();
 
     Project getProject();
+
+    AgentTemplateRef getAgentTemplate();
+
+    AgentConfiguration getConfiguration();
 
     ChangeLog getChangeLog();
 

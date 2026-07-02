@@ -7,8 +7,8 @@
         "team": "platform"
       },
       "attributes": [
-        "metroCode",
-        "bandwidth"
+        { "attributeId": "attribute:metroCode", "attributeOptional": false },
+        { "attributeId": "attribute:bandwidth", "attributeOptional": true }
       ],
       "rev": "rev-1",
       "createdBy": "user:alice",

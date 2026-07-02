@@ -17,13 +17,25 @@
 package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.PortType;
+import api.equinix.javasdk.fabric.enums.Side;
+import api.equinix.javasdk.fabric.model.implementation.BandwidthUtilization;
 import api.equinix.javasdk.fabric.model.implementation.PortStat;
+
+import java.time.LocalDateTime;
 
 /**
  *
  * @author ianjones
  */
 public interface PortStatistic {
+
+    LocalDateTime getStartDateTime();
+
+    LocalDateTime getEndDateTime();
+
+    Side getViewPoint();
+
+    BandwidthUtilization getBandwidthUtilization();
 
     String getUuid();
 

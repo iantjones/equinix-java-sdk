@@ -68,7 +68,7 @@ class InternetAccessServiceSearchWireMockTest extends WireMockTestBase {
             assertNotNull(service);
             assertEquals(SERVICE_ID, service.getUuid());
             assertEquals("WebServers", service.getName());
-            assertEquals(Integer.valueOf(1000), service.getBandwidth());
+            assertEquals(Long.valueOf(1000), service.getBandwidth());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(SERVICE_PATH)));
         }

@@ -29,14 +29,8 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PhysicalPortSettings {
 
-    @JsonProperty("sharedPortType")
-    private String sharedPortType;
-
     @JsonProperty("packageType")
     private PackageType packageType;
-
-    @JsonProperty("sharedPortProduct")
-    private String sharedPortProduct;
 
     @JsonProperty("errorMessage")
     private String errorMessage;

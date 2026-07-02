@@ -61,4 +61,13 @@ public class StreamJson {
 
     @JsonProperty("enabled")
     private Boolean enabled;
+
+    @JsonProperty("assetsCount")
+    private Integer assetsCount;
+
+    @JsonProperty("streamSubscriptionsCount")
+    private Integer streamSubscriptionsCount;
+
+    @JsonProperty("alertRulesCount")
+    private Integer alertRulesCount;
 }

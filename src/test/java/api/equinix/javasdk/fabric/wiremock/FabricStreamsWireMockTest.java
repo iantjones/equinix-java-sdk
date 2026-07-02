@@ -111,7 +111,7 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
     class Update {
 
         @Test
-        @DisplayName("PUTs the full stream body, seeded from current state with overrides")
+        @DisplayName("PUTs the StreamPutRequest body (name/description only), seeded from current state with overrides")
         void saveUpdatesStream() {
             stubSingleton(wireMock, "/fabric/v4/streams/.*",
                     "/json/fabric/stream_response.json");
@@ -119,15 +119,14 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
                     .willReturn(okJson(loadFixture("/json/fabric/stream_response.json"))));
 
             Stream stream = fabric.streams().getByUuid("d4e5f6a7-b8c9-0123-defa-345678901bcd");
-            Stream updated = stream.update().withName("Renamed-Stream").withEnabled(false).save();
+            Stream updated = stream.update().withName("Renamed-Stream").save();
 
             assertNotNull(updated);
-            // Full-body PUT: unchanged fields preserved from current state, overrides applied.
+            // Spec StreamPutRequest carries only name/description; type/project/enabled are not sent.
             wireMock.verify(putRequestedFor(urlPathMatching("/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd"))
                     .withHeader("Content-Type", containing("application/json"))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("Renamed-Stream")))
-                    .withRequestBody(matchingJsonPath("$.enabled", equalTo("false")))
-                    .withRequestBody(matchingJsonPath("$.type", equalTo("TELEMETRY_STREAM"))));
+                    .withRequestBody(notMatching(".*\"type\".*")));
         }
 
         @Test

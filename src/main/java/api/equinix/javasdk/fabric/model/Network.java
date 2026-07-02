@@ -25,6 +25,7 @@ import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.Link;
 import api.equinix.javasdk.fabric.model.implementation.LocationCode;
 import api.equinix.javasdk.fabric.model.implementation.NetworkOperation;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.json.creators.NetworkOperator;
 
 import java.util.List;
@@ -48,6 +49,13 @@ public interface Network {
     Project getProject();
 
     Account getAccount();
+
+    /**
+     * Preferences for notifications on network configuration or status changes.
+     *
+     * @return the notification preferences
+     */
+    List<Notification> getNotifications();
 
     NetworkOperation getOperation();
 

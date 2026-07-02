@@ -36,4 +36,7 @@ public class LinkAggregationGroup {
 
     @JsonProperty("enabled")
     private Boolean enabled;
+
+    @JsonProperty("memberStatus")
+    private String memberStatus;
 }

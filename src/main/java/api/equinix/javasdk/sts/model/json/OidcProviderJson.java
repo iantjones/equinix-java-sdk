@@ -55,7 +55,7 @@ public class OidcProviderJson implements OidcProvider {
     private String status;
 
     @JsonProperty("jwks")
-    private Object jwks;
+    private JwksJson jwks;
 
     @JsonProperty("jwksRetrievedAt")
     private String jwksRetrievedAt;

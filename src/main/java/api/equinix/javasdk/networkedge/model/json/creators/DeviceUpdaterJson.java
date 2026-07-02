@@ -16,12 +16,12 @@
 
 package api.equinix.javasdk.networkedge.model.json.creators;
 
+import api.equinix.javasdk.networkedge.enums.DeviceStatus;
 import api.equinix.javasdk.networkedge.enums.LicenseStatus;
 import api.equinix.javasdk.networkedge.model.implementation.ClusterDetail;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -63,7 +63,17 @@ public class DeviceUpdaterJson {
     @JsonProperty("vendorConfig")
     private VendorConfigPatch vendorConfig;
 
-    private LicenseStatus status;
+    // WRITE_ONLY (deserialize-only): captured from the device's licenseStatus when an updater is
+    // built via convertValue; it is never part of the PATCH body.
+    @JsonProperty(value = "licenseStatus", access = JsonProperty.Access.WRITE_ONLY)
+    private LicenseStatus licenseStatus;
+
+    // READ_ONLY (serialize-only): the spec's VirtualDeviceInternalPatchRequest.status field
+    // ("Use this field to update the license status of a device", enum PROVISIONED/PROVISIONING/
+    // DEPROVISIONED/DEPROVISIONING/FAILED). Must not be populated from the device's current status
+    // when an updater is built via convertValue, so it is only sent when set explicitly.
+    @JsonProperty(value = "status", access = JsonProperty.Access.READ_ONLY)
+    private DeviceStatus status;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     static class VendorConfigPatch {
@@ -81,11 +91,6 @@ public class DeviceUpdaterJson {
     @JsonProperty("clusterDetails")
     void setClusterDetail(ClusterDetail clusterDetail) {
         clusterName = clusterDetail != null ? clusterDetail.getClusterName() : null;
-    }
-
-    @JsonSetter("licenseStatus")
-    void setStatus(LicenseStatus status) {
-        this.status = status;
     }
 
     @JsonProperty("notifications")

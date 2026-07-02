@@ -272,12 +272,11 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
     @DisplayName("setup().uploadFile(...)")
     class UploadFile {
 
-        // NOTE: The upload endpoint is a plain JSON POST in this SDK (the file contents are carried
-        // as the "file" body field), not a multipart/form-data submission, so the serialized body is
-        // fully assertable here.
+        // NOTE: The spec's FileUploadRequest (POST /ne/v1/files) is a multipart/form-data submission
+        // with the file carried as a binary "file" part, so the parts are asserted with containing().
 
         @Test
-        @DisplayName("POSTs /files with the metro/deviceType/process/management/license/file body and returns fileUuid")
+        @DisplayName("POSTs /files as multipart/form-data with the metro/deviceType/process/management/license parts plus the file part and returns fileUuid")
         void uploadsFile() {
             // UploadFile -> POST /ne/v1/files returning {fileUuid}.
             wireMock.stubFor(post(urlPathEqualTo("/ne/v1/files"))
@@ -293,21 +292,26 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
 
             assertEquals("f1e2d3c4-b5a6-7890-abcd-1234567890ff", fileUuid);
 
-            // metroCode/processType/licenseType serialize by enum name; deviceManagementType uses its @JsonValue form.
+            // metroCode/processType/licenseType use their enum names; deviceManagementType its hyphenated form.
             wireMock.verify(postRequestedFor(urlPathEqualTo("/ne/v1/files"))
-                    .withRequestBody(equalToJson(
-                            "{" +
-                                    "\"metroCode\":\"SV\"," +
-                                    "\"deviceTypeCode\":\"C8000V\"," +
-                                    "\"processType\":\"LICENSE\"," +
-                                    "\"deviceManagementType\":\"SELF-CONFIGURED\"," +
-                                    "\"licenseType\":\"SUB\"," +
-                                    "\"file\":\"license-file-contents\"" +
-                                    "}", true, true)));
+                    .withHeader("content-type", containing("multipart/form-data"))
+                    .withHeader("content-type", containing("boundary="))
+                    .withRequestBody(containing("name=\"metroCode\""))
+                    .withRequestBody(containing("SV"))
+                    .withRequestBody(containing("name=\"deviceTypeCode\""))
+                    .withRequestBody(containing("C8000V"))
+                    .withRequestBody(containing("name=\"processType\""))
+                    .withRequestBody(containing("LICENSE"))
+                    .withRequestBody(containing("name=\"deviceManagementType\""))
+                    .withRequestBody(containing("SELF-CONFIGURED"))
+                    .withRequestBody(containing("name=\"licenseType\""))
+                    .withRequestBody(containing("SUB"))
+                    .withRequestBody(containing("name=\"file\""))
+                    .withRequestBody(containing("license-file-contents")));
         }
 
         @Test
-        @DisplayName("omits null optional fields from the request body")
+        @DisplayName("omits null optional fields from the multipart body")
         void omitsNullOptionalFields() {
             wireMock.stubFor(post(urlPathEqualTo("/ne/v1/files"))
                     .willReturn(okJson(loadFixture("/json/networkedge/file_upload_response.json"))));
@@ -322,16 +326,17 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
 
             assertEquals("f1e2d3c4-b5a6-7890-abcd-1234567890ff", fileUuid);
 
-            // deviceManagementType/licenseType were null and must not appear in the serialized body.
-            // equalToJson with ignoreExtraElements=false (2nd flag) proves the exact key set.
+            // deviceManagementType/licenseType were null and must not appear as form parts.
             wireMock.verify(postRequestedFor(urlPathEqualTo("/ne/v1/files"))
-                    .withRequestBody(equalToJson(
-                            "{" +
-                                    "\"metroCode\":\"SV\"," +
-                                    "\"deviceTypeCode\":\"C8000V\"," +
-                                    "\"processType\":\"CLOUD_INIT\"," +
-                                    "\"file\":\"cloud-init-contents\"" +
-                                    "}", true, false)));
+                    .withHeader("content-type", containing("multipart/form-data"))
+                    .withRequestBody(containing("name=\"metroCode\""))
+                    .withRequestBody(containing("name=\"deviceTypeCode\""))
+                    .withRequestBody(containing("name=\"processType\""))
+                    .withRequestBody(containing("CLOUD_INIT"))
+                    .withRequestBody(containing("name=\"file\""))
+                    .withRequestBody(containing("cloud-init-contents"))
+                    .withRequestBody(notContaining("name=\"deviceManagementType\""))
+                    .withRequestBody(notContaining("name=\"licenseType\"")));
         }
 
         @Test
@@ -505,7 +510,7 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
             Pricing pricing = networkEdge.setup().getPricing(request);
 
             assertNotNull(pricing);
-            assertEquals(12, pricing.getTermLength());
+            assertEquals("12", pricing.getTermLength());
             assertNotNull(pricing.getPrimary());
             assertEquals("USD", pricing.getPrimary().getCurrency());
 
@@ -549,7 +554,7 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
             Pricing pricing = networkEdge.setup().getPricing("d1e2f3a4-b5c6-7890-abcd-ef1234567890");
 
             assertNotNull(pricing);
-            assertEquals(12, pricing.getTermLength());
+            assertEquals("12", pricing.getTermLength());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/prices"))
                     .withQueryParam("virtualDeviceUuid", equalTo("d1e2f3a4-b5c6-7890-abcd-ef1234567890")));

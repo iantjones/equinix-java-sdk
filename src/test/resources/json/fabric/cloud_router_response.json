@@ -30,9 +30,8 @@
       ]
     }
   ],
-  "bgpIpv4RoutesCount": 156,
-  "bgpIpv6RoutesCount": 42,
-  "connectionCount": 5,
+  "equinixAsn": 30000,
+  "connectionsCount": 5,
   "changeLog": {
     "createdBy": "user1234",
     "createdByFullName": "Jane Doe",

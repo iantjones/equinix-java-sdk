@@ -62,9 +62,9 @@ public interface OidcProvider {
     String getStatus();
 
     /**
-     * @return the JSON Web Key Set, as raw deserialized JSON
+     * @return the JSON Web Key Set registered for the provider
      */
-    Object getJwks();
+    Jwks getJwks();
 
     /**
      * @return the timestamp at which the JWKS was last retrieved

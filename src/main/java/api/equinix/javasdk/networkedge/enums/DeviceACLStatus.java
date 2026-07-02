@@ -26,6 +26,7 @@ import api.equinix.javasdk.core.model.APIParam;
 public enum DeviceACLStatus implements APIParam {
     PROVISIONED,
     DEPROVISIONED,
+    DEPROVISIONING,
     DEVICE_NOT_READY,
     FAILED,
     NOT_APPLIED,

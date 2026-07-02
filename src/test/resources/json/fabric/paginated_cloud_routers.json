@@ -36,9 +36,7 @@
           ]
         }
       ],
-      "bgpIpv4RoutesCount": 156,
-      "bgpIpv6RoutesCount": 42,
-      "connectionCount": 5,
+      "connectionsCount": 5,
       "changeLog": {
         "createdBy": "user1234",
         "createdByFullName": "Jane Doe",
@@ -86,9 +84,7 @@
           ]
         }
       ],
-      "bgpIpv4RoutesCount": 312,
-      "bgpIpv6RoutesCount": 87,
-      "connectionCount": 12,
+      "connectionsCount": 12,
       "changeLog": {
         "createdBy": "user1234",
         "createdByFullName": "Jane Doe",

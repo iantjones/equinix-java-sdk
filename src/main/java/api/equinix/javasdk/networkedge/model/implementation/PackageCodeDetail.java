@@ -44,4 +44,7 @@ public class PackageCodeDetail {
 
     @JsonProperty("supported")
     Boolean supported;
+
+    @JsonProperty("supportedLicenseTiers")
+    ArrayList<String> supportedLicenseTiers;
 }

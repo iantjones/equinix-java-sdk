@@ -38,6 +38,7 @@ public enum ConnectionType {
     MC_VC,
     IX_VC,
     IC_VC,
+    VD_CHAIN_VC,
     UNKNOWN;
 
     @JsonCreator

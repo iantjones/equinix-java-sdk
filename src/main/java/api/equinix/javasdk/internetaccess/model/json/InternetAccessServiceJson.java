@@ -62,7 +62,7 @@ public class InternetAccessServiceJson implements InternetAccessService {
     private ServiceTypeV2 type;
 
     @JsonProperty("bandwidth")
-    private Integer bandwidth;
+    private Long bandwidth;
 
     @JsonProperty("state")
     private ServiceState state;
