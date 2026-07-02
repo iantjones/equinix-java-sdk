@@ -144,6 +144,9 @@ Ibx sv5 = registry.ibx("SV5").orElseThrow();       // full EIA record, case-inse
 Ibx la4 = registry.ibx("LA4").orElseThrow();
 double rttFloor = SpeedOfLightLatency.roundTrip().millisBetween(sv5, la4);
 List<Ibx> svIbxes = registry.ibxDetails("SV");     // every enriched IBX in a metro
+
+registry.refresh();   // re-pulls both sources at runtime, atomically, in place —
+                      // existing references see new metros/IBXes immediately
 ```
 
 ## Domain Overview

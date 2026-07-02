@@ -130,6 +130,35 @@ class MetroRegistryEnrichmentWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("refresh() re-reads both sources in place — new IBXes appear on existing references")
+    void refreshReloadsInPlace() throws Exception {
+        try (Fabric fabric = new Fabric(testCredentials(), enrichedConfig())) {
+            redirectToWireMock(fabric);
+            fabric.authenticate();
+
+            MetroRegistry registry = fabric.metroRegistry();
+            assertTrue(registry.ibx("SV5").isPresent());
+            assertTrue(registry.ibx("DA3").isEmpty(), "DA3 not in the initial catalogue");
+
+            // The live catalogue changes: a new IBX appears in EIA.
+            wireMock.stubFor(get(urlPathEqualTo(IBXS_PATH)).willReturn(okJson(
+                    "{\"pagination\":{\"offset\":0,\"limit\":100,\"total\":1},\"data\":[" +
+                    "{\"ibxCode\":\"DA3\",\"metroCode\":\"DA\",\"countryCode\":\"US\"," +
+                    "\"geoCoordinates\":{\"latitude\":32.8,\"longitude\":-96.8}}]}")));
+
+            MetroRegistry refreshed = registry.refresh();
+
+            assertSame(registry, refreshed, "refresh() swaps the snapshot in place");
+            assertTrue(registry.ibx("DA3").isPresent(), "new IBX visible after refresh");
+            assertTrue(registry.ibx("SV5").isEmpty(), "snapshot fully replaced, not merged");
+            assertEquals(32.8, registry.ibx("DA3").orElseThrow().getGeoCoordinates().getLatitude());
+
+            // reloadMetroRegistry() delegates to the same in-place refresh.
+            assertSame(registry, fabric.reloadMetroRegistry());
+        }
+    }
+
+    @Test
     @DisplayName("the option flows through an Equinix session to eq.metroRegistry()")
     void sessionFlow() throws Exception {
         try (Equinix eq = new Equinix(testCredentials(), enrichedConfig())) {

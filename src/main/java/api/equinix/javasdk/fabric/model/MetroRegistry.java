@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * An in-memory snapshot of every metro the Metros API returns, keyed by {@link MetroId} so lookups
@@ -46,13 +47,16 @@ import java.util.Set;
  * math. The registry is deliberately cross-domain in that mode (fabric + internetaccess data, one
  * lookup surface).</p>
  *
- * <p>The snapshot is immutable; call {@link #load(Metros)} again (or {@code Fabric.reloadMetroRegistry()})
- * to pick up metros added since it was built.</p>
+ * <p>Each snapshot is immutable and swapped atomically: {@link #refresh()} re-reads the same
+ * sources the registry was loaded from (the Metros API, plus the per-IBX source when enriched) and
+ * publishes a new snapshot in place, so every existing reference to the registry sees the fresh
+ * catalogue. {@code Fabric.reloadMetroRegistry()} delegates to it.</p>
  *
  * <pre>{@code
  * MetroRegistry registry = fabric.metroRegistry();
  * registry.get("SV").ifPresent(m -> System.out.println(m.getName() + " " + m.getIbxs()));
  * boolean exists = registry.contains(newMetroCode);   // works even if not in the MetroCode enum
+ * registry.refresh();                                  // re-pull metros (+ IBX detail) at runtime
  *
  * // With EquinixConfig.enrichMetroRegistry(true):
  * Ibx sv5 = registry.ibx("SV5").orElseThrow();
@@ -63,13 +67,20 @@ import java.util.Set;
  */
 public final class MetroRegistry {
 
-    private final Map<String, Metro> byCode;
+    /** One immutable generation of the registry's data; replaced wholesale by {@link #refresh()}. */
+    private record Snapshot(Map<String, Metro> byCode, Map<String, Ibx> ibxByCode) {}
 
-    private final Map<String, Ibx> ibxByCode;
+    private final Metros metros;
 
-    private MetroRegistry(Map<String, Metro> byCode, Map<String, Ibx> ibxByCode) {
-        this.byCode = byCode;
-        this.ibxByCode = ibxByCode;
+    /** Re-invocable per-IBX source (the EIA fetch when enriched, an empty supplier otherwise). */
+    private final Supplier<Collection<? extends Ibx>> ibxSource;
+
+    private volatile Snapshot snapshot;
+
+    private MetroRegistry(Metros metros, Supplier<Collection<? extends Ibx>> ibxSource, Snapshot snapshot) {
+        this.metros = metros;
+        this.ibxSource = ibxSource;
+        this.snapshot = snapshot;
     }
 
     /**
@@ -77,22 +88,54 @@ public final class MetroRegistry {
      * {@link MetroId} (the exact wire code), so distinct unlisted metros do not collide.
      *
      * @param metros the Metros client to read from (e.g. {@code fabric.metros()})
-     * @return a populated, immutable registry
+     * @return a populated registry
      */
     public static MetroRegistry load(Metros metros) {
-        return load(metros, Collections.emptyList());
+        return load(metros, Collections::emptyList);
     }
 
     /**
-     * Loads the registry and enriches it with per-IBX detail (typically the EIA ibx catalogue —
-     * see the class notes on cross-source enrichment). IBXes are keyed case-insensitively by
-     * {@code ibxCode}; duplicates keep the first occurrence.
+     * Loads the registry and enriches it with a fixed set of per-IBX records. {@link #refresh()}
+     * re-reads the Metros API but re-applies these same records; prefer
+     * {@link #load(Metros, Supplier)} when the per-IBX source should also be re-queried at refresh
+     * time.
      *
      * @param metros the Metros client to read from (e.g. {@code fabric.metros()})
      * @param ibxDetails per-IBX records to merge in (empty for an un-enriched registry)
-     * @return a populated, immutable registry
+     * @return a populated registry
      */
     public static MetroRegistry load(Metros metros, Collection<? extends Ibx> ibxDetails) {
+        return load(metros, () -> ibxDetails);
+    }
+
+    /**
+     * Loads the registry with a re-invocable per-IBX source (typically the EIA ibx catalogue —
+     * see the class notes on cross-source enrichment). The source is queried once now and again on
+     * every {@link #refresh()}. IBXes are keyed case-insensitively by {@code ibxCode}; duplicates
+     * keep the first occurrence.
+     *
+     * @param metros the Metros client to read from (e.g. {@code fabric.metros()})
+     * @param ibxSource supplies per-IBX records to merge in (empty collection for un-enriched)
+     * @return a populated registry
+     */
+    public static MetroRegistry load(Metros metros, Supplier<Collection<? extends Ibx>> ibxSource) {
+        return new MetroRegistry(metros, ibxSource, buildSnapshot(metros, ibxSource.get()));
+    }
+
+    /**
+     * Re-reads this registry's sources — the Metros API, and the per-IBX source when it was loaded
+     * with one — and atomically replaces the cached snapshot, so the registry reflects the live
+     * catalogue (new metros, new IBXes, coordinate updates) without rebuilding references to it.
+     * Thread-safe: readers see either the old snapshot or the new one, never a mix.
+     *
+     * @return this registry, refreshed
+     */
+    public MetroRegistry refresh() {
+        this.snapshot = buildSnapshot(metros, ibxSource.get());
+        return this;
+    }
+
+    private static Snapshot buildSnapshot(Metros metros, Collection<? extends Ibx> ibxDetails) {
         Map<String, Metro> map = new LinkedHashMap<>();
         // loadAll() pages through the full catalogue — list() alone returns only the first page.
         for (Metro metro : metros.list().loadAll()) {
@@ -107,7 +150,7 @@ public final class MetroRegistry {
                 ibxMap.putIfAbsent(ibx.getIbxCode().trim().toUpperCase(), ibx);
             }
         }
-        return new MetroRegistry(Collections.unmodifiableMap(map), Collections.unmodifiableMap(ibxMap));
+        return new Snapshot(Collections.unmodifiableMap(map), Collections.unmodifiableMap(ibxMap));
     }
 
     /**
@@ -115,7 +158,7 @@ public final class MetroRegistry {
      * @return the metro, or empty if not present (or {@code metroId} is null)
      */
     public Optional<Metro> get(MetroId metroId) {
-        return metroId == null ? Optional.empty() : Optional.ofNullable(byCode.get(metroId.code()));
+        return metroId == null ? Optional.empty() : Optional.ofNullable(snapshot.byCode().get(metroId.code()));
     }
 
     /**
@@ -157,7 +200,7 @@ public final class MetroRegistry {
      * @return all metros in the registry (unmodifiable)
      */
     public Collection<Metro> all() {
-        return Collections.unmodifiableCollection(byCode.values());
+        return Collections.unmodifiableCollection(snapshot.byCode().values());
     }
 
     /**
@@ -165,7 +208,7 @@ public final class MetroRegistry {
      */
     public Set<MetroId> metroIds() {
         Set<MetroId> ids = new java.util.LinkedHashSet<>();
-        for (String code : byCode.keySet()) {
+        for (String code : snapshot.byCode().keySet()) {
             ids.add(MetroId.of(code));
         }
         return Collections.unmodifiableSet(ids);
@@ -184,7 +227,7 @@ public final class MetroRegistry {
      * @return the number of metros in the registry
      */
     public int size() {
-        return byCode.size();
+        return snapshot.byCode().size();
     }
 
     /**
@@ -199,7 +242,7 @@ public final class MetroRegistry {
         if (ibxCode == null || ibxCode.trim().isEmpty()) {
             return Optional.empty();
         }
-        return Optional.ofNullable(ibxByCode.get(ibxCode.trim().toUpperCase()));
+        return Optional.ofNullable(snapshot.ibxByCode().get(ibxCode.trim().toUpperCase()));
     }
 
     /**
@@ -216,7 +259,7 @@ public final class MetroRegistry {
         }
         String normalized = metroCode.trim().toUpperCase();
         List<Ibx> matches = new ArrayList<>();
-        for (Ibx ibx : ibxByCode.values()) {
+        for (Ibx ibx : snapshot.ibxByCode().values()) {
             if (ibx.getMetroCode() != null && normalized.equals(ibx.getMetroCode().trim().toUpperCase())) {
                 matches.add(ibx);
             }
@@ -229,6 +272,6 @@ public final class MetroRegistry {
      *         {@code EquinixConfig.enrichMetroRegistry} and the EIA fetch succeeded)
      */
     public boolean isEnriched() {
-        return !ibxByCode.isEmpty();
+        return !snapshot.ibxByCode().isEmpty();
     }
 }
