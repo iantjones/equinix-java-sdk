@@ -94,6 +94,20 @@ class FabricMetrosWireMockTest extends WireMockTestBase {
             assertNotNull(metro);
             assertEquals(MetroCode.SV, metro.getCode());
             assertEquals("Silicon Valley", metro.getName());
+
+            // Full spec-fidelity of the Metro schema (fabricv4): every property deserializes.
+            assertEquals("US", metro.getCountry());
+            assertEquals(60000L, metro.getEquinixAsn());
+            assertEquals(10000L, metro.getLocalVCBandwidthMax());
+            assertEquals(2, metro.getServices().size());
+            assertEquals("ETHERNET_IP_SERVICE", metro.getServices().get(0).getType());
+            assertEquals(8, metro.getGeoScopes().size());
+            assertTrue(metro.getGeoScopes().contains(api.equinix.javasdk.fabric.enums.GeoScopeType.CONUS));
+            assertEquals(1, metro.getGeoZones().size());
+            assertEquals("EU", metro.getGeoZones().get(0).getCode());
+            assertEquals("European Union", metro.getGeoZones().get(0).getName());
+            assertEquals(10000L, metro.getConnectedMetros().get(0).getRemoteVCBandwidthMax());
+
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/metros/SV")));
         }
     }

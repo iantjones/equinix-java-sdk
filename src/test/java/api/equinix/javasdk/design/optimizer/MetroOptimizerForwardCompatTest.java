@@ -85,6 +85,12 @@ class MetroOptimizerForwardCompatTest {
             @Override public List<String> getIbxs() { return List.of(); }
             @Override public GeoCoordinate geoCoordinates() { return geo; }
             @Override public List<ConnectedMetro> getConnectedMetros() { return List.of(); }
+            @Override public String getCountry() { return null; }
+            @Override public Long getEquinixAsn() { return null; }
+            @Override public Long getLocalVCBandwidthMax() { return null; }
+            @Override public List<api.equinix.javasdk.fabric.model.implementation.MetroService> getServices() { return List.of(); }
+            @Override public List<api.equinix.javasdk.fabric.enums.GeoScopeType> getGeoScopes() { return List.of(); }
+            @Override public List<api.equinix.javasdk.fabric.model.implementation.GeoZone> getGeoZones() { return List.of(); }
             @Override public Metro refresh() { return this; }
         };
     }

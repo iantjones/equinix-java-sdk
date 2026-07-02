@@ -19,9 +19,12 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.core.model.MetroId;
+import api.equinix.javasdk.fabric.enums.GeoScopeType;
 import api.equinix.javasdk.fabric.enums.MetroType;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
+import api.equinix.javasdk.fabric.model.implementation.GeoZone;
+import api.equinix.javasdk.fabric.model.implementation.MetroService;
 
 import java.util.List;
 
@@ -60,6 +63,37 @@ public interface Metro {
     GeoCoordinate geoCoordinates();
 
     List<ConnectedMetro> getConnectedMetros();
+
+    /**
+     * @return the country code in which the data center is located
+     */
+    String getCountry();
+
+    /**
+     * @return the Equinix autonomous system number (ASN) for this Fabric metro
+     */
+    Long getEquinixAsn();
+
+    /**
+     * @return the maximum local (intra-metro) virtual-connection bandwidth in Mbps
+     */
+    Long getLocalVCBandwidthMax();
+
+    /**
+     * @return the service types supported in this metro (e.g. {@code ETHERNET_IP_SERVICE},
+     *         {@code TIME_SERVICE})
+     */
+    List<MetroService> getServices();
+
+    /**
+     * @return the geographic boundaries this metro supports (e.g. {@code CONUS}, {@code EU})
+     */
+    List<GeoScopeType> getGeoScopes();
+
+    /**
+     * @return the geographic zones this metro supports, with per-zone coverage notes
+     */
+    List<GeoZone> getGeoZones();
 
     Metro refresh();
 }

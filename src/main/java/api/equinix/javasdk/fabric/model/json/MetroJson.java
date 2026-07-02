@@ -19,7 +19,10 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
+import api.equinix.javasdk.fabric.enums.GeoScopeType;
 import api.equinix.javasdk.fabric.enums.MetroType;
+import api.equinix.javasdk.fabric.model.implementation.GeoZone;
+import api.equinix.javasdk.fabric.model.implementation.MetroService;
 import api.equinix.javasdk.fabric.model.implementation.MetroSummary;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.Metro;
@@ -46,9 +49,27 @@ public class MetroJson extends MetroSummary {
     @JsonProperty("region")
     private Region region;
 
+    @JsonProperty("country")
+    private String country;
+
+    @JsonProperty("equinixAsn")
+    private Long equinixAsn;
+
+    @JsonProperty("localVCBandwidthMax")
+    private Long localVCBandwidthMax;
+
     @JsonProperty("geoCoordinates")
     private GeoCoordinate geoCoordinates;
 
     @JsonProperty("connectedMetros")
     private List<ConnectedMetro> connectedMetros;
+
+    @JsonProperty("services")
+    private List<MetroService> services;
+
+    @JsonProperty("geoScopes")
+    private List<GeoScopeType> geoScopes;
+
+    @JsonProperty("geoZones")
+    private List<GeoZone> geoZones;
 }
