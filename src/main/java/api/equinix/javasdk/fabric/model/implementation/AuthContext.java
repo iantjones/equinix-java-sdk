@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.CloudEventAuthType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,7 +33,7 @@ import lombok.Getter;
 public class AuthContext {
 
     @JsonProperty("authtype")
-    private String authType;
+    private CloudEventAuthType authType;
 
     @JsonProperty("authid")
     private String authId;

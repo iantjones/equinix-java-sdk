@@ -30,7 +30,7 @@ public interface ConnectionService {
      *
      * @return the connection service name
      */
-    String getName();
+    api.equinix.javasdk.customerportal.enums.ConnectionService getName();
 
     /**
      * Returns the supported media types (each with name, protocol types and circuit counts).

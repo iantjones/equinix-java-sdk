@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
+import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
 import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
 import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -35,7 +36,7 @@ public class PowerDataIBXJson implements PowerDataIBX {
     private String accountNo;
 
     @JsonProperty("levelType")
-    private String levelType;
+    private PowerLevelType levelType;
 
     @JsonProperty("levelValue")
     private String levelValue;

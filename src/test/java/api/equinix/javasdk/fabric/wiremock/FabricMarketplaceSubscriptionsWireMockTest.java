@@ -1,4 +1,7 @@
 package api.equinix.javasdk.fabric.wiremock;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
+import api.equinix.javasdk.fabric.enums.Marketplace;
+import api.equinix.javasdk.fabric.enums.MarketplaceOfferType;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -51,10 +54,10 @@ class FabricMarketplaceSubscriptionsWireMockTest extends WireMockTestBase {
 
             assertNotNull(subscription);
             assertEquals("195be615-a8ad-4c33-8e9c-c7612fbf6c9f", subscription.getUuid());
-            assertEquals("MARKETPLACE_SUBSCRIPTION", subscription.getType());
+            assertEquals(MarketplaceSubscriptionType.AWS_MARKETPLACE_SUBSCRIPTION, subscription.getType());
             assertEquals(MarketplaceSubscriptionState.ACTIVE, subscription.getState());
-            assertEquals("AWS", subscription.getMarketplace());
-            assertEquals("PRIVATE_OFFER", subscription.getOfferType());
+            assertEquals(Marketplace.AWS, subscription.getMarketplace());
+            assertEquals(MarketplaceOfferType.PRIVATE_OFFER, subscription.getOfferType());
             assertEquals("offer-12345", subscription.getOfferId());
             assertTrue(subscription.getIsAutoRenew());
 

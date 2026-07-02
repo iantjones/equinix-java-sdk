@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.EquinixNotFoundException;
 import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.core.exception.EquinixServiceException;
+import api.equinix.javasdk.sts.enums.TokenType;
 import api.equinix.javasdk.sts.model.StsToken;
 import api.equinix.javasdk.sts.model.json.GrantedAccessPolicyPage;
 import api.equinix.javasdk.sts.model.json.creators.ListPoliciesGrantedRequest;
@@ -107,7 +108,7 @@ class STSTokensWireMockTest extends WireMockTestBase {
             assertNotNull(token);
             assertEquals("eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJzdHMtdGVzdCJ9.signature", token.getAccessToken());
             assertEquals("urn:ietf:params:oauth:token-type:access_token", token.getIssuedTokenType());
-            assertEquals("Bearer", token.getTokenType());
+            assertEquals(TokenType.BEARER, token.getTokenType());
             assertEquals(3600, token.getExpiresIn());
 
             // Body is application/x-www-form-urlencoded — assert each RFC 8693 field is present

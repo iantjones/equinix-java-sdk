@@ -15,6 +15,9 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
+import api.equinix.javasdk.fabric.enums.Marketplace;
+import api.equinix.javasdk.fabric.enums.MarketplaceOfferType;
 
 import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionState;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
@@ -29,18 +32,18 @@ public interface MarketplaceSubscription {
 
     String getHref();
 
-    String getType();
+    MarketplaceSubscriptionType getType();
 
     MarketplaceSubscriptionState getState();
 
-    String getMarketplace();
+    Marketplace getMarketplace();
 
     /**
      * The marketplace offer type: {@code PUBLIC} or {@code PRIVATE_OFFER}.
      *
      * @return the offer type
      */
-    String getOfferType();
+    MarketplaceOfferType getOfferType();
 
     String getOfferId();
 

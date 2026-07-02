@@ -1,5 +1,14 @@
 package api.equinix.javasdk.customerportal;
 
+import api.equinix.javasdk.customerportal.enums.OrderLineRequestType;
+import api.equinix.javasdk.customerportal.enums.UnitOfMeasure;
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
+import api.equinix.javasdk.customerportal.enums.PricingChargeType;
+import api.equinix.javasdk.customerportal.enums.PricingValueType;
+import api.equinix.javasdk.customerportal.enums.TermsOfUseType;
+import api.equinix.javasdk.customerportal.enums.TermsOfUsePeriod;
+import api.equinix.javasdk.customerportal.enums.QuoteContactType;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.customerportal.enums.QuoteStatus;
 import api.equinix.javasdk.customerportal.model.implementation.QuoteContact;
@@ -41,7 +50,7 @@ class QuoteDeserializationTest {
 
     @Test
     void quoteRequestType_isDeserialized() {
-        assertEquals("NEW", quote.getQuoteRequestType());
+        assertEquals(QuoteRequestType.NEW, quote.getQuoteRequestType());
     }
 
     @Test
@@ -66,7 +75,7 @@ class QuoteDeserializationTest {
         assertEquals(1, quote.getContacts().size());
         QuoteContact contact = quote.getContacts().get(0);
         assertEquals("john_doe", contact.getRegisteredUser());
-        assertEquals("QUOTATION", contact.getType());
+        assertEquals(QuoteContactType.QUOTATION, contact.getType());
         assertEquals(2, contact.getDetails().size());
         assertEquals("EMAIL", contact.getDetails().get(0).getType());
     }
@@ -76,8 +85,8 @@ class QuoteDeserializationTest {
         assertNotNull(quote.getTermsOfUse());
         assertEquals(1, quote.getTermsOfUse().size());
         assertEquals(0, new BigDecimal("12").compareTo(quote.getTermsOfUse().get(0).getValue()));
-        assertEquals("MONTHS", quote.getTermsOfUse().get(0).getPeriod());
-        assertEquals("INITIAL_TERM", quote.getTermsOfUse().get(0).getType());
+        assertEquals(TermsOfUsePeriod.MONTHS, quote.getTermsOfUse().get(0).getPeriod());
+        assertEquals(TermsOfUseType.INITIAL_TERM, quote.getTermsOfUse().get(0).getType());
     }
 
     @Test
@@ -85,8 +94,8 @@ class QuoteDeserializationTest {
         assertNotNull(quote.getTotalPricing());
         QuotePricing pricing = quote.getTotalPricing().get(0);
         assertEquals(0, new BigDecimal("100").compareTo(pricing.getValue()));
-        assertEquals("ABSOLUTE", pricing.getValueType());
-        assertEquals("MONTHLY_CHARGE", pricing.getType());
+        assertEquals(PricingValueType.ABSOLUTE, pricing.getValueType());
+        assertEquals(PricingChargeType.MONTHLY_CHARGE, pricing.getType());
     }
 
     @Test
@@ -95,12 +104,12 @@ class QuoteDeserializationTest {
         assertEquals(1, quote.getDetails().size());
         QuoteDetail detail = quote.getDetails().get(0);
         assertEquals("1-NEYSNX123", detail.getLineId());
-        assertEquals("SMART_HANDS", detail.getProductType());
+        assertEquals(OrderProductType.SMART_HANDS, detail.getProductType());
         assertEquals("PS00002.PROD", detail.getProductCode());
-        assertEquals("HRS", detail.getUnitOfMeasure());
-        assertEquals("ADD", detail.getRequestType());
+        assertEquals(UnitOfMeasure.HRS, detail.getUnitOfMeasure());
+        assertEquals(OrderLineRequestType.ADD, detail.getRequestType());
         assertEquals(1, detail.getUnitPricing().size());
-        assertEquals("ONE_TIME_CHARGE", detail.getTotalPricing().get(0).getType());
+        assertEquals(PricingChargeType.ONE_TIME_CHARGE, detail.getTotalPricing().get(0).getType());
         assertEquals("ASSET_ID", detail.getAdditionalInfo().get(0).getKey());
     }
 }

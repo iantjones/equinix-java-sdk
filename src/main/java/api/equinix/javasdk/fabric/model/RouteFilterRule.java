@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.RouteFilterRuleType;
 
 import api.equinix.javasdk.fabric.enums.RouteFilterAction;
 import api.equinix.javasdk.fabric.enums.RouteFilterRuleState;
@@ -30,7 +31,7 @@ public interface RouteFilterRule {
 
     String getName();
 
-    String getType();
+    RouteFilterRuleType getType();
 
     RouteFilterRuleState getState();
 

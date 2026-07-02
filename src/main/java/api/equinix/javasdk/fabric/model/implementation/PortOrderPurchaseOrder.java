@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.PortPurchaseOrderType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -56,8 +57,8 @@ public class PortOrderPurchaseOrder {
      */
     @Deprecated
     @JsonProperty("selectionType")
-    private String selectionType;
+    private PortPurchaseOrderType selectionType;
 
     @JsonProperty("type")
-    private String type;
+    private PortPurchaseOrderType type;
 }

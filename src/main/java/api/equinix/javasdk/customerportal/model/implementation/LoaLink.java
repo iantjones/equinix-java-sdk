@@ -1,5 +1,6 @@
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.core.enums.HttpMethod;
 import api.equinix.javasdk.customerportal.enums.LoaLinkRel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,7 +21,7 @@ public class LoaLink {
     private String href;
 
     @JsonProperty("method")
-    private String method;
+    private HttpMethod method;
 
     @JsonProperty("contentType")
     private String contentType;

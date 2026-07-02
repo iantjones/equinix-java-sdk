@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.networkedge.model.implementation;
 
+import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.enums.VersionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -50,8 +51,12 @@ public class VersionDetail {
     @JsonProperty("stableVersion")
     private Boolean stableVersion;
 
+    /**
+     * The supported license types (spec {@code VersionDetails.supportedLicenseTypes}: {@code BYOL} /
+     * {@code Subscription}); {@code Subscription} deserializes to {@link LicenseType#SUB}.
+     */
     @JsonProperty("supportedLicenseTypes")
-    private ArrayList<String> supportedLicenseTypes;
+    private ArrayList<LicenseType> supportedLicenseTypes;
 
     @JsonProperty("maxInterfaceCount")
     private Integer maxInterfaceCount;

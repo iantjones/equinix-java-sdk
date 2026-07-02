@@ -3,7 +3,7 @@
     "name": "power_usage",
     "scheduleType": "WEEKLY",
     "period": "30_DAYS",
-    "control": "CUSTOMER",
+    "control": "ALLOW",
     "categories": [
       "POWER"
     ],
@@ -20,7 +20,7 @@
     "name": "cross_connect_inventory",
     "scheduleType": "MONTHLY",
     "period": "90_DAYS",
-    "control": "CUSTOMER",
+    "control": "ALLOW",
     "categories": [
       "INVENTORY"
     ],

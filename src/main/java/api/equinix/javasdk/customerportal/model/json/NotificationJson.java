@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.NotificationStatus;
+import api.equinix.javasdk.customerportal.enums.NotificationType;
 import api.equinix.javasdk.customerportal.model.Notification;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,7 +44,7 @@ public class NotificationJson implements Notification {
     private String id;
 
     @JsonProperty("type")
-    private String type;
+    private NotificationType type;
 
     @JsonProperty("startTimestamp")
     private String startTimestamp;
@@ -54,7 +56,7 @@ public class NotificationJson implements Notification {
     private List<String> ibxs;
 
     @JsonProperty("status")
-    private String status;
+    private NotificationStatus status;
 
     @JsonProperty("summary")
     private String summary;

@@ -15,6 +15,9 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
+import api.equinix.javasdk.fabric.enums.Marketplace;
+import api.equinix.javasdk.fabric.enums.MarketplaceOfferType;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionState;
@@ -42,16 +45,16 @@ public final class MarketplaceSubscriptionJson implements MarketplaceSubscriptio
     private String href;
 
     @JsonProperty("type")
-    private String type;
+    private MarketplaceSubscriptionType type;
 
     @JsonProperty("state")
     private MarketplaceSubscriptionState state;
 
     @JsonProperty("marketplace")
-    private String marketplace;
+    private Marketplace marketplace;
 
     @JsonProperty("offerType")
-    private String offerType;
+    private MarketplaceOfferType offerType;
 
     @JsonProperty("offerId")
     private String offerId;

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.ReportStatus;
 import api.equinix.javasdk.customerportal.enums.FileType;
 import api.equinix.javasdk.customerportal.model.Report;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -67,7 +68,7 @@ public class ReportJson implements Report {
     private String generatedDate;
 
     @JsonProperty("status")
-    private String status;
+    private ReportStatus status;
 
     @JsonProperty("numberOfDownloads")
     private Integer numberOfDownloads;

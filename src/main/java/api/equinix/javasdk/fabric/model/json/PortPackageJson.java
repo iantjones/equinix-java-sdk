@@ -17,6 +17,8 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.fabric.enums.PortPackageSourceType;
+import api.equinix.javasdk.fabric.enums.PortPackageType;
+import api.equinix.javasdk.fabric.enums.PortServiceType;
 import api.equinix.javasdk.fabric.model.PortPackage;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,7 +34,7 @@ public final class PortPackageJson implements PortPackage {
     private String href;
 
     @JsonProperty("type")
-    private String type;
+    private PortPackageType type;
 
     @JsonProperty("code")
     private String code;
@@ -44,7 +46,7 @@ public final class PortPackageJson implements PortPackage {
     private Boolean vcRemoteSupported;
 
     @JsonProperty("supportedServiceTypes")
-    private List<String> supportedServiceTypes;
+    private List<PortServiceType> supportedServiceTypes;
 
     @JsonProperty("supportedSourceTypes")
     private List<PortPackageSourceType> supportedSourceTypes;

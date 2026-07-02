@@ -19,6 +19,8 @@ package api.equinix.javasdk.ibxsmartview.wiremock;
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.ibxsmartview.enums.HierarchyLevelType;
+import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
 import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerHierarchyNode;
 import org.junit.jupiter.api.*;
@@ -75,14 +77,14 @@ class IBXSmartViewHierarchyWireMockTest extends WireMockTestBase {
             assertNotNull(nodes);
             assertEquals(1, nodes.size());
             HierarchyNode root = nodes.get(0);
-            assertEquals("ibx", root.getLevelType());
+            assertEquals(HierarchyLevelType.IBX, root.getLevelType());
             assertEquals("SV5", root.getLevelValue());
             assertEquals("Silicon Valley 5", root.getLabel());
             assertEquals(1, root.getChildren().size());
             HierarchyNode cage = root.getChildren().get(0);
-            assertEquals("cage", cage.getLevelType());
+            assertEquals(HierarchyLevelType.CAGE, cage.getLevelType());
             assertEquals("SV5:01:0001", cage.getLevelValue());
-            assertEquals("sensor",
+            assertEquals(HierarchyLevelType.SENSOR,
                     cage.getChildren().get(0).getChildren().get(0).getLevelType());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(LOCATION_PATH))
@@ -117,12 +119,12 @@ class IBXSmartViewHierarchyWireMockTest extends WireMockTestBase {
             assertNotNull(nodes);
             assertEquals(1, nodes.size());
             PowerHierarchyNode root = nodes.get(0);
-            assertEquals("ibx", root.getLevelType());
+            assertEquals(PowerLevelType.IBX, root.getLevelType());
             assertEquals("SV5", root.getLevelValue());
             assertEquals("Silicon Valley 5", root.getLabel());
             PowerHierarchyNode cabinet = root.getChildren().get(0).getChildren().get(0);
-            assertEquals("cabinet", cabinet.getLevelType());
-            assertEquals("circuit", cabinet.getChildren().get(0).getLevelType());
+            assertEquals(PowerLevelType.CABINET, cabinet.getLevelType());
+            assertEquals(PowerLevelType.CIRCUIT, cabinet.getChildren().get(0).getLevelType());
             assertEquals("CIRCUIT-A1", cabinet.getChildren().get(0).getLevelValue());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(POWER_PATH))

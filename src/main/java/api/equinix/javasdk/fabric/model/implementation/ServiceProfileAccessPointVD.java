@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.AccessPointType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -31,7 +32,7 @@ import lombok.NoArgsConstructor;
 public class ServiceProfileAccessPointVD {
 
     @JsonProperty("type")
-    private String type;
+    private AccessPointType type;
 
     @JsonProperty("uuid")
     private String uuid;

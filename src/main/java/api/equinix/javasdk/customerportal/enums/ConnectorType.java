@@ -18,8 +18,11 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
- * Cross-connect connector type ({@code connector_types} in the cross-connects v2 spec).
+ * Cross-connect connector type ({@code connector_types} in the cross-connects v2 and lookup v2 specs).
+ * {@link #UNKNOWN} is a read-side fallback — never send it.
  */
 public enum ConnectorType implements APIParam {
     BNC,
@@ -30,5 +33,12 @@ public enum ConnectorType implements APIParam {
     WIRE_WRAP,
     RJ45,
     E2000,
-    RJ11
+    RJ11,
+    UNKNOWN;
+
+    @JsonCreator
+    public static ConnectorType fromString(String value) {
+        try { return ConnectorType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

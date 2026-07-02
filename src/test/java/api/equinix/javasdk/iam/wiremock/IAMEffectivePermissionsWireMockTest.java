@@ -20,6 +20,7 @@ import api.equinix.javasdk.IAM;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.EquinixNotFoundException;
 import api.equinix.javasdk.core.exception.EquinixServerException;
+import api.equinix.javasdk.iam.enums.ServiceAspect;
 import api.equinix.javasdk.iam.model.EffectivePermissions;
 import api.equinix.javasdk.iam.model.json.ActionList;
 import api.equinix.javasdk.iam.model.json.ResourceTypeActionPage;
@@ -239,7 +240,7 @@ class IAMEffectivePermissionsWireMockTest extends WireMockTestBase {
             assertNotNull(page);
             assertEquals(2, page.getList().size());
             assertEquals("action:use/listPermissionSets", page.getList().get(0).getActionId());
-            assertEquals("aspect:use", page.getList().get(0).getServiceAspect());
+            assertEquals(ServiceAspect.USE, page.getList().get(0).getServiceAspect());
             assertEquals("fabric.permissionsets.read",
                     page.getList().get(0).getRbacPermission().getPermission());
             assertTrue(page.getList().get(0).getPermissionCodes().get("READ").getRequiresAll());

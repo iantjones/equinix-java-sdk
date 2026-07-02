@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.EquinixConflictException;
 import api.equinix.javasdk.core.exception.EquinixNotFoundException;
 import api.equinix.javasdk.core.exception.EquinixServerException;
+import api.equinix.javasdk.sts.enums.ProviderStatus;
 import api.equinix.javasdk.sts.model.OidcProvider;
 import api.equinix.javasdk.sts.model.json.OidcProviderPage;
 import api.equinix.javasdk.sts.model.json.creators.CreateOidcProviderRequest;
@@ -97,9 +98,9 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
             assertNotNull(page.getList());
             assertEquals(2, page.getList().size());
             assertEquals("idp:github-actions", page.getList().get(0).getIdpId());
-            assertEquals("ENABLED", page.getList().get(0).getStatus());
+            assertEquals(ProviderStatus.ENABLED, page.getList().get(0).getStatus());
             assertEquals("idp:gitlab-ci", page.getList().get(1).getIdpId());
-            assertEquals("SUSPENDED", page.getList().get(1).getStatus());
+            assertEquals(ProviderStatus.SUSPENDED, page.getList().get(1).getStatus());
             assertEquals("eyJvZmZzZXQiOjJ9", page.getNextPageToken());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(BASE)));
@@ -191,7 +192,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
             assertNotNull(created);
             assertEquals("idp:github-actions", created.getIdpId());
             assertEquals("GitHub Actions OIDC", created.getName());
-            assertEquals("ENABLED", created.getStatus());
+            assertEquals(ProviderStatus.ENABLED, created.getStatus());
             assertEquals("abc123", created.getRev());
             assertEquals(List.of("my-oauth-client-id", "ci-deploy-client"), created.getTrustedClientIds());
 

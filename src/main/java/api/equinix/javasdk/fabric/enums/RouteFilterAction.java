@@ -18,9 +18,15 @@ package api.equinix.javasdk.fabric.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+/**
+ * Route filter actions. {@code PERMIT}/{@code DENY} are the spec values of
+ * {@code RouteFilterRulesData.action}; {@code ALLOW}/{@code DENY} are the spec values of
+ * {@code RouteFiltersData.notMatchedRuleAction} (Fabric v4).
+ */
 public enum RouteFilterAction {
     PERMIT,
     DENY,
+    ALLOW,
     UNKNOWN;
 
     @JsonCreator

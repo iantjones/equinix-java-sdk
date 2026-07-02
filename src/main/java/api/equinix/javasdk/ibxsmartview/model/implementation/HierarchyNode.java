@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.implementation;
 
+import api.equinix.javasdk.ibxsmartview.enums.HierarchyLevelType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -35,7 +36,7 @@ import java.util.List;
 public class HierarchyNode {
 
     @JsonProperty("levelType")
-    private String levelType;
+    private HierarchyLevelType levelType;
 
     @JsonProperty("levelValue")
     private String levelValue;

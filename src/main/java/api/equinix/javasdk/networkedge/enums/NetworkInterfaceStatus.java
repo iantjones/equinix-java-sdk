@@ -17,11 +17,15 @@
 package api.equinix.javasdk.networkedge.enums;
 
 /**
+ * Status of a device interface. Covers both spec {@code InterfaceBasicInfoResponse.status}
+ * ({@code ASSIGNED} / {@code AVAILABLE} / {@code RESERVED}) and spec {@code InterfaceDetails.status}
+ * ({@code AVAILABLE} / {@code UNAVAILABLE} / {@code ASSIGNED}).
  *
  * @author ianjones
  */
 public enum NetworkInterfaceStatus {
     ASSIGNED,
     AVAILABLE,
-    RESERVED
+    RESERVED,
+    UNAVAILABLE
 }

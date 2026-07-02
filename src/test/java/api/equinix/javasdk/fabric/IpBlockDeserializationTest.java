@@ -1,4 +1,5 @@
 package api.equinix.javasdk.fabric;
+import api.equinix.javasdk.fabric.enums.IpBlockAssetType;
 
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.fabric.enums.IpBlockOwnership;
@@ -80,7 +81,7 @@ class IpBlockDeserializationTest {
     void assets_isDeserialized() {
         assertNotNull(ipBlock.getAssets());
         assertEquals(1, ipBlock.getAssets().size());
-        assertEquals("FABRIC", ipBlock.getAssets().get(0).getType());
+        assertEquals(IpBlockAssetType.FABRIC, ipBlock.getAssets().get(0).getType());
         assertEquals("fd8c5042-b553-4d5e-a2ac-c73bf6d4fd92", ipBlock.getAssets().get(0).getUuid());
         assertNotNull(ipBlock.getAssets().get(0).getHref());
     }

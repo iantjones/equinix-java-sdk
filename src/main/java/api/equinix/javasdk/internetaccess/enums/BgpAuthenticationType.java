@@ -1,0 +1,40 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package api.equinix.javasdk.internetaccess.enums;
+
+import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+/**
+ * BGP authentication type of an Equinix Internet Access (EIA) v2 routing protocol (spec schema
+ * {@code BgpAuthenticationType}). {@link #UNKNOWN} is a read-side fallback for values added after
+ * this SDK release — never send it.
+ */
+public enum BgpAuthenticationType implements APIParam {
+    AUTH_KEY,
+    NONE,
+    UNKNOWN;
+
+    @JsonCreator
+    public static BgpAuthenticationType fromString(String value) {
+        try {
+            return BgpAuthenticationType.valueOf(value.toUpperCase());
+        } catch (Exception e) {
+            return UNKNOWN;
+        }
+    }
+}

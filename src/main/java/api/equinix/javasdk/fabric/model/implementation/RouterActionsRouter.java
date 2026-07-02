@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.CloudRouterType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,7 +37,7 @@ public class RouterActionsRouter {
     private String href;
 
     @JsonProperty("type")
-    private String type;
+    private CloudRouterType type;
 
     @JsonProperty("operation")
     private RouterActionsOperation operation;

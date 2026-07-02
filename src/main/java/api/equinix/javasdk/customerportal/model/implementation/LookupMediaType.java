@@ -1,5 +1,6 @@
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.CrossConnectMediaType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -15,7 +16,7 @@ import java.util.List;
 public class LookupMediaType {
 
     @JsonProperty("name")
-    private String name;
+    private CrossConnectMediaType name;
 
     @JsonProperty("protocolTypes")
     private List<LookupProtocolType> protocolTypes;

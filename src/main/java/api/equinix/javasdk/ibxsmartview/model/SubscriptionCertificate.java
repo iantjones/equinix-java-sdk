@@ -16,13 +16,15 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.ChannelType;
+
 /**
  * The certificate used to authenticate a streaming channel
  * ({@code SubscriptionCertificateResponse} in the spec).
  */
 public interface SubscriptionCertificate {
 
-    String getChannelType();
+    ChannelType getChannelType();
 
     String getCertificateBase64();
 

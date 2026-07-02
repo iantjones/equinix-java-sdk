@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.BridgePackageCode;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -82,7 +83,7 @@ public class PricingAccessPoint {
              * Bridge package code; spec enum {@code REGIONAL} / {@code GLOBAL}.
              */
             @JsonProperty("code")
-            private String code;
+            private BridgePackageCode code;
         }
     }
 }

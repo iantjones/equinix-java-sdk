@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.sts.model.json;
 
+import api.equinix.javasdk.sts.enums.ProviderStatus;
 import api.equinix.javasdk.sts.model.OidcProvider;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,7 +53,7 @@ public class OidcProviderJson implements OidcProvider {
     private String groupMembershipClaim;
 
     @JsonProperty("status")
-    private String status;
+    private ProviderStatus status;
 
     @JsonProperty("jwks")
     private JwksJson jwks;

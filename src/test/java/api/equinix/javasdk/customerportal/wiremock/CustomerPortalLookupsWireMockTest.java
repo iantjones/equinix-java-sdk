@@ -145,14 +145,15 @@ class CustomerPortalLookupsWireMockTest extends WireMockTestBase {
         @DisplayName("GET /colocations/v2/connectionServices with ibx query param")
         void listConnectionServices_forwardsIbx() {
             wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/connectionServices"))
-                    .willReturn(okJson("[{\"name\":\"DOT1Q\"}]")));
+                    .willReturn(okJson("[{\"name\":\"SINGLE_MODE_FIBER\"}]")));
 
             List<? extends ConnectionService> services =
                     customerPortal.lookups().listConnectionServices("LD5");
 
             assertNotNull(services);
             assertEquals(1, services.size());
-            assertEquals("DOT1Q", services.get(0).getName());
+            assertEquals(api.equinix.javasdk.customerportal.enums.ConnectionService.SINGLE_MODE_FIBER,
+                    services.get(0).getName());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/connectionServices"))
                     .withQueryParam("ibx", equalTo("LD5")));
         }

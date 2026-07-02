@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.RouteAggregationRuleType;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.RouteAggregationRuleState;
@@ -44,7 +45,7 @@ public class RouteAggregationRuleJson {
     private String name;
 
     @JsonProperty("type")
-    private String type;
+    private RouteAggregationRuleType type;
 
     @JsonProperty("state")
     private RouteAggregationRuleState state;

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.SupportCaseNoteType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -38,5 +39,5 @@ public class SupportCaseNote {
     private String text;
 
     @JsonProperty("type")
-    private String type;
+    private SupportCaseNoteType type;
 }

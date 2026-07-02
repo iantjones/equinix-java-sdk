@@ -20,6 +20,7 @@ import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.ibxsmartview.enums.AlertStatus;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchCondition;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchFilter;
@@ -84,11 +85,11 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
             SystemAlert first = alerts.get(0);
             assertEquals(5001L, first.getId());
             assertEquals("SV5.TEMP#EXCEEDS:27", first.getAlertUid());
-            assertEquals("ACTIVE", first.getStatus());
+            assertEquals(AlertStatus.ACTIVE, first.getStatus());
             assertEquals("SV5:01:A1234", first.getAsset().getAssetUid());
             assertEquals("28.4", first.getValue().getAlertTagValue());
             assertEquals("EXCEEDS", first.getConfiguration().getThresholdType());
-            assertEquals("INACTIVE", alerts.get(1).getStatus());
+            assertEquals(AlertStatus.INACTIVE, alerts.get(1).getStatus());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(SEARCH_PATH))
                     .withQueryParam("status", equalTo("ACTIVE"))

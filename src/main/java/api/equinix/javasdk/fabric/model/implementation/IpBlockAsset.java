@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.IpBlockAssetType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +31,7 @@ import lombok.Getter;
 public class IpBlockAsset {
 
     @JsonProperty("type")
-    private String type;
+    private IpBlockAssetType type;
 
     @JsonProperty("uuid")
     private String uuid;

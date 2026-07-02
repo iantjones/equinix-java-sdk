@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.TicketType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -33,5 +34,5 @@ public class TicketResponseJson {
     private String id;
 
     @JsonProperty("type")
-    private String type;
+    private TicketType type;
 }

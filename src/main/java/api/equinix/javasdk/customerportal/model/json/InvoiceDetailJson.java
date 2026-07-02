@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.TransactionType;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.deserializers.LocalDateDeserializer;
 import api.equinix.javasdk.customerportal.enums.ActivityType;
@@ -56,7 +57,7 @@ public class InvoiceDetailJson {
     private String countryCode;
 
     @JsonProperty("transactionType")
-    private String transactionType;
+    private TransactionType transactionType;
 
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonProperty("transactionDate")

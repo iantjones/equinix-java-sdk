@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.core.model.APIParam;
+import api.equinix.javasdk.networkedge.enums.LicenseType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -42,8 +43,12 @@ public class SoftwarePackage implements APIParam {
     @JsonProperty("packageCode")
     private String packageCode;
 
+    /**
+     * The license type (spec {@code SoftwarePackage.licenseType}: {@code BYOL} / {@code Subscription});
+     * {@code Subscription} deserializes to {@link LicenseType#SUB}.
+     */
     @JsonProperty("licenseType")
-    private String licenseType;
+    private LicenseType licenseType;
 
     @JsonProperty("versionDetails")
     private ArrayList<VersionDetail> versionDetails;

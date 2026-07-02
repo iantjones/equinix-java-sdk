@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
+import api.equinix.javasdk.fabric.enums.TimeServicePackageType;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -39,7 +40,7 @@ public final class TimeServicePackageJson implements TimeServicePackage {
     private String href;
 
     @JsonProperty("type")
-    private String type;
+    private TimeServicePackageType type;
 
     @JsonProperty("code")
     private PrecisionTimePackageCode code;

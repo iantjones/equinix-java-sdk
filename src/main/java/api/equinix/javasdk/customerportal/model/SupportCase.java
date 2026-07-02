@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.SupportCaseStatus;
 import api.equinix.javasdk.customerportal.model.implementation.SupportCaseAttachmentInfo;
 import api.equinix.javasdk.customerportal.model.implementation.SupportCaseContact;
@@ -40,7 +41,7 @@ public interface SupportCase {
 
     String getCustomerReferenceId();
 
-    String getChannel();
+    Channel getChannel();
 
     String getOrderId();
 

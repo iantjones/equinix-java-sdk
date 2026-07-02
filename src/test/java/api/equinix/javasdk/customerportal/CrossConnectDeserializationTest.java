@@ -3,7 +3,7 @@ package api.equinix.javasdk.customerportal;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.customerportal.enums.CrossConnectStatus;
 import api.equinix.javasdk.customerportal.enums.CrossConnectType;
-import api.equinix.javasdk.customerportal.enums.MediaType;
+import api.equinix.javasdk.customerportal.enums.CrossConnectMediaType;
 import api.equinix.javasdk.customerportal.model.json.CrossConnectJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -53,7 +53,7 @@ class CrossConnectDeserializationTest {
 
     @Test
     void mediaType_isDeserialized() {
-        assertEquals(MediaType.SINGLE_MODE_FIBER, crossConnect.getMediaType());
+        assertEquals(CrossConnectMediaType.SINGLE_MODE_FIBER, crossConnect.getMediaType());
     }
 
     @Test

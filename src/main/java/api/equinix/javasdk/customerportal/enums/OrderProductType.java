@@ -19,7 +19,8 @@ package api.equinix.javasdk.customerportal.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Product type of an order line (Orders v2 API). {@link #UNKNOWN} is a read-side fallback for values added after this
+ * Product type of an order line (Orders v2 API; also {@code quote_details.productType} in the Quotes v2 spec,
+ * which adds {@code CLOUD_EXCHANGE_PORTS}). {@link #UNKNOWN} is a read-side fallback for values added after this
  * SDK release — never send it.
  */
 public enum OrderProductType {
@@ -32,6 +33,7 @@ public enum OrderProductType {
     SHIPMENTS,
     NETWORK_PORTS,
     DEINSTALL_CROSS_CONNECT,
+    CLOUD_EXCHANGE_PORTS,
     OTHER,
     UNKNOWN;
 

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
 import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonData;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 
@@ -45,7 +46,7 @@ public interface PowerData {
 
         String getAccountNo();
 
-        String getLevelType();
+        PowerLevelType getLevelType();
 
         String getLevelValue();
 

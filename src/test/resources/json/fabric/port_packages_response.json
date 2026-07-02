@@ -6,7 +6,7 @@
       "code": "STANDARD",
       "vcBandwidthMax": 10000,
       "vcRemoteSupported": true,
-      "supportedServiceTypes": ["EVPL_VC", "EPL_VC"]
+      "supportedServiceTypes": ["MSP"]
     },
     {
       "href": "https://api.equinix.com/fabric/v4/portPackages/UNTAGGED",
@@ -14,7 +14,7 @@
       "code": "UNTAGGED",
       "vcBandwidthMax": 50000,
       "vcRemoteSupported": false,
-      "supportedServiceTypes": ["EPL_VC"]
+      "supportedServiceTypes": ["MSP"]
     }
   ]
 }

@@ -2,7 +2,7 @@
   "name": "power_usage",
   "scheduleType": "WEEKLY",
   "period": "30_DAYS",
-  "control": "CUSTOMER",
+  "control": "ALLOW",
   "categories": [
     "POWER"
   ],

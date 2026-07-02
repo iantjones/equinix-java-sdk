@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.ReportStatus;
 import api.equinix.javasdk.customerportal.enums.FileType;
 
 import java.util.List;
@@ -101,7 +102,7 @@ public interface Report {
      *
      * @return the status
      */
-    String getStatus();
+    ReportStatus getStatus();
 
     /**
      * Returns the number of times this report has been downloaded.

@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.RouteAggregationRuleType;
 
 import api.equinix.javasdk.fabric.enums.RouteAggregationRuleState;
 import api.equinix.javasdk.fabric.model.implementation.Change;
@@ -29,7 +30,7 @@ public interface RouteAggregationRule {
 
     String getName();
 
-    String getType();
+    RouteAggregationRuleType getType();
 
     RouteAggregationRuleState getState();
 

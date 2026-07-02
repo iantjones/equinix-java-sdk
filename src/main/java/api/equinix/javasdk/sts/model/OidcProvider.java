@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.sts.model;
 
+import api.equinix.javasdk.sts.enums.ProviderStatus;
+
 import java.util.List;
 
 /**
@@ -59,7 +61,7 @@ public interface OidcProvider {
     /**
      * @return the status of the identity provider
      */
-    String getStatus();
+    ProviderStatus getStatus();
 
     /**
      * @return the JSON Web Key Set registered for the provider

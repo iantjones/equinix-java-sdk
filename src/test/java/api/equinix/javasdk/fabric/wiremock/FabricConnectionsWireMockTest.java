@@ -99,6 +99,24 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
         }
 
         @Test
+        @DisplayName("termLength(12) patches /order/termLength (on-demand to term upgrade, R2025.5)")
+        void savePatchesTermLength() {
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+            Connection connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+            Connection updated = connection.update().termLength(12).save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/order/termLength\",\"value\":12}]")));
+        }
+
+        @Test
         @DisplayName("save() with no changes throws and makes no request")
         void emptyUpdateThrows() {
             stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",

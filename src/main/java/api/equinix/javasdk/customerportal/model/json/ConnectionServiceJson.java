@@ -32,7 +32,7 @@ import java.util.List;
 public class ConnectionServiceJson implements ConnectionService {
 
     @JsonProperty("name")
-    private String name;
+    private api.equinix.javasdk.customerportal.enums.ConnectionService name;
 
     @JsonProperty("mediaTypes")
     private List<LookupMediaType> mediaTypes;

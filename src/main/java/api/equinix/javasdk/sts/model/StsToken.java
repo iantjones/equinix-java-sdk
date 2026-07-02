@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.sts.model;
 
+import api.equinix.javasdk.sts.enums.TokenType;
+
 /**
  * A security token issued by the Equinix Security Token Service, as returned by the STS token
  * exchange operation.
@@ -37,7 +39,7 @@ public interface StsToken {
     /**
      * @return the token type (e.g. {@code Bearer})
      */
-    String getTokenType();
+    TokenType getTokenType();
 
     /**
      * @return the lifetime of the token in seconds

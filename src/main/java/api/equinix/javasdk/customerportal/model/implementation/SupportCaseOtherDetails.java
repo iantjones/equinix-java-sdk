@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.SupportCaseRecordType;
 import api.equinix.javasdk.customerportal.enums.SubChannel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -72,7 +73,7 @@ public class SupportCaseOtherDetails {
     private String requestedTerminationDate;
 
     @JsonProperty("recordType")
-    private String recordType;
+    private SupportCaseRecordType recordType;
 
     @JsonProperty("subChannel")
     private SubChannel subChannel;

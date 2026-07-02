@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
 import api.equinix.javasdk.ibxsmartview.model.implementation.ComparisonDataTrend;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Status;
 
@@ -47,7 +48,7 @@ public interface TrendingPowerData {
 
         String getIbx();
 
-        String getLevelType();
+        PowerLevelType getLevelType();
 
         String getLevelValue();
 

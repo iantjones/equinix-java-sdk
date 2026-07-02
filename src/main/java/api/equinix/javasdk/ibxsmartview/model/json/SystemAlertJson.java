@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
+import api.equinix.javasdk.ibxsmartview.enums.AlertStatus;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertConfiguration;
@@ -47,7 +48,7 @@ public class SystemAlertJson implements SystemAlert {
     private String assetTagDisplayName;
 
     @JsonProperty("status")
-    private String status;
+    private AlertStatus status;
 
     @JsonProperty("value")
     private ValueReadModel value;

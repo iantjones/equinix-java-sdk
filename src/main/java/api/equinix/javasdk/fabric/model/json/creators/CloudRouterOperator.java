@@ -174,6 +174,18 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
         }
 
         /**
+         * Replaces the order term length ({@code /order/termLength}), e.g. to move the cloud router
+         * onto (or extend) a term commitment (Fabric releases R2025.6/R2026.1).
+         *
+         * @param termLength the new term length in months (for example 12, 24 or 36)
+         * @return this updater
+         */
+        public CloudRouterUpdater termLength(Integer termLength) {
+            operations.add(PatchOperation.replace("/order/termLength", termLength));
+            return this;
+        }
+
+        /**
          * Adds an arbitrary JSON Patch operation, for paths not covered by the typed setters above.
          *
          * @param operation the patch operation

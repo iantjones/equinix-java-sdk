@@ -16,6 +16,10 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.ReportCategory;
+import api.equinix.javasdk.customerportal.enums.ReportControl;
+import api.equinix.javasdk.customerportal.enums.ReportPeriod;
+import api.equinix.javasdk.customerportal.enums.ReportScheduleType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -38,14 +42,14 @@ public class ReportDefinitionJson {
     private List<ReportParameterJson> parameters;
 
     @JsonProperty("scheduleType")
-    private String scheduleType;
+    private ReportScheduleType scheduleType;
 
     @JsonProperty("period")
-    private String period;
+    private ReportPeriod period;
 
     @JsonProperty("control")
-    private String control;
+    private ReportControl control;
 
     @JsonProperty("categories")
-    private List<String> categories;
+    private List<ReportCategory> categories;
 }

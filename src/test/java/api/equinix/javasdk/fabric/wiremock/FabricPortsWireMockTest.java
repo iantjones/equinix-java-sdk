@@ -10,6 +10,7 @@ import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.enums.Direction;
+import api.equinix.javasdk.fabric.enums.LinkProtocolState;
 import api.equinix.javasdk.fabric.enums.PhysicalPortType;
 import api.equinix.javasdk.fabric.enums.PortState;
 import api.equinix.javasdk.fabric.enums.PortType;
@@ -197,7 +198,9 @@ class FabricPortsWireMockTest extends WireMockTestBase {
             assertNotNull(vlans);
             assertEquals(2, vlans.size());
             assertEquals("vlan-1111-2222-3333", vlans.get(0).getUuid());
+            assertEquals(LinkProtocolState.RESERVED, vlans.get(0).getState());
             assertEquals(Integer.valueOf(1001), vlans.get(0).getVlanTag());
+            assertEquals(LinkProtocolState.RELEASED, vlans.get(1).getState());
             assertEquals(Integer.valueOf(2001), vlans.get(1).getVlanSTag());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/" + PORT_ID + "/linkProtocols")));

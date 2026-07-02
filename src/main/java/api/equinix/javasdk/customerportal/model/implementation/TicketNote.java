@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.TicketNoteType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -47,7 +48,7 @@ public class TicketNote {
     private String referenceId;
 
     @JsonProperty("type")
-    private String type;
+    private TicketNoteType type;
 
     @JsonProperty("attachments")
     private List<TicketAttachment> attachments;

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.fabric.enums.LinkProtocolState;
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
 import api.equinix.javasdk.fabric.model.PortVlan;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
@@ -45,7 +46,7 @@ public final class PortVlanJson implements PortVlan {
     private String uuid;
 
     @JsonProperty("state")
-    private String state;
+    private LinkProtocolState state;
 
     @JsonProperty("type")
     private LinkProtocolType type;

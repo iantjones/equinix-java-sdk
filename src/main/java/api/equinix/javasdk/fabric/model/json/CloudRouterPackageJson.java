@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.CloudRouterPackageType;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
@@ -40,7 +41,7 @@ public final class CloudRouterPackageJson implements CloudRouterPackage {
     private CloudRouterPackageCode code;
 
     @JsonProperty("type")
-    private String type;
+    private CloudRouterPackageType type;
 
     @JsonProperty("description")
     private String description;

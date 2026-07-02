@@ -4,7 +4,7 @@
   "type": "METRIC_ALERT",
   "name": "High-Egress-Bandwidth-Alert",
   "description": "Fires when egress bandwidth utilisation exceeds the configured threshold",
-  "state": "PROVISIONED",
+  "state": "ACTIVE",
   "enabled": true,
   "metricSelector": {
     "include": [

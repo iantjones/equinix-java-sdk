@@ -23,13 +23,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  *
  * <p>{@code XF_PORT} is the sole {@code PortType} value defined by the Fabric spec. {@code XF_PHYSICAL_PORT}
  * is retained because the same enum backs the {@code type} attribute of a physical port read response,
- * whose spec value is {@code XF_PHYSICAL_PORT}.</p>
+ * whose spec value is {@code XF_PHYSICAL_PORT}. {@code IX_PORT} and {@code XF_INTERCONNECT_PORT} come from
+ * the {@code ServiceProfileAccessPointCOLO} schema, whose colo port {@code type} this enum also backs.</p>
  *
  * @author ianjones
  */
 public enum PortType implements APIParam {
     XF_PORT,
     XF_PHYSICAL_PORT,
+    IX_PORT,
+    XF_INTERCONNECT_PORT,
     UNKNOWN;
 
     @JsonCreator

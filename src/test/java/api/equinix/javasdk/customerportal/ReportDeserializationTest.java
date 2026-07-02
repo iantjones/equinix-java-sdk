@@ -1,5 +1,9 @@
 package api.equinix.javasdk.customerportal;
 
+import api.equinix.javasdk.customerportal.enums.ReportScheduleStatus;
+import api.equinix.javasdk.customerportal.enums.ReportPeriod;
+import api.equinix.javasdk.customerportal.enums.ReportScheduleType;
+import api.equinix.javasdk.customerportal.enums.ReportStatus;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.customerportal.enums.FileType;
 import api.equinix.javasdk.customerportal.model.json.ReportJson;
@@ -38,7 +42,7 @@ class ReportDeserializationTest {
         assertEquals("power-usage.xls", report.getFileName());
         assertEquals(FileType.XLS, report.getFileType());
         assertEquals(95806395L, report.getFileSize());
-        assertEquals("SUCCESS", report.getStatus());
+        assertEquals(ReportStatus.SUCCESS, report.getStatus());
         assertEquals(1, report.getNumberOfDownloads());
     }
 
@@ -56,11 +60,11 @@ class ReportDeserializationTest {
     void scheduledReport_fields() {
         assertEquals("806f281c-6295-465e-bd41-04559d4d4960", scheduledReport.getScheduledId());
         assertEquals("my_report", scheduledReport.getReportName());
-        assertEquals("WEEKLY", scheduledReport.getScheduleType());
-        assertEquals("30_DAYS", scheduledReport.getPeriod());
+        assertEquals(ReportScheduleType.WEEKLY, scheduledReport.getScheduleType());
+        assertEquals(ReportPeriod.DAYS_30, scheduledReport.getPeriod());
         assertEquals("john.doe", scheduledReport.getCreatedBy());
         assertEquals(44010, scheduledReport.getCustomerOrganizationId());
-        assertEquals("ACTIVE", scheduledReport.getStatus());
+        assertEquals(ReportScheduleStatus.ACTIVE, scheduledReport.getStatus());
         assertEquals(0, scheduledReport.getNumberOfFailedAttempts());
     }
 

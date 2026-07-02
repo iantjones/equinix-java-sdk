@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.NotificationStatus;
+import api.equinix.javasdk.customerportal.enums.NotificationType;
 import java.util.List;
 
 /**
@@ -41,7 +43,7 @@ public interface Notification {
      *
      * @return the notification type
      */
-    String getType();
+    NotificationType getType();
 
     /**
      * Returns the event/notification start timestamp.
@@ -69,7 +71,7 @@ public interface Notification {
      *
      * @return the status
      */
-    String getStatus();
+    NotificationStatus getStatus();
 
     /**
      * Returns summary information about the event/notification.

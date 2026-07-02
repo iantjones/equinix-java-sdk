@@ -15,6 +15,8 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleType;
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleState;
 
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.DetectionMethod;
@@ -30,13 +32,13 @@ public interface StreamAlertRule {
 
     String getUuid();
 
-    String getType();
+    StreamAlertRuleType getType();
 
     String getName();
 
     String getDescription();
 
-    String getState();
+    StreamAlertRuleState getState();
 
     Boolean getEnabled();
 

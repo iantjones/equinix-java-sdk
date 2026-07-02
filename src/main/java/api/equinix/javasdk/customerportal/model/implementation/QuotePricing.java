@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.PricingChargeType;
+import api.equinix.javasdk.customerportal.enums.PricingValueType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -35,8 +37,8 @@ public class QuotePricing {
     private BigDecimal value;
 
     @JsonProperty("valueType")
-    private String valueType;
+    private PricingValueType valueType;
 
     @JsonProperty("type")
-    private String type;
+    private PricingChargeType type;
 }

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.OrderHistoryLinkRel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -29,7 +30,7 @@ import lombok.Getter;
 public class OrderHistoryLink {
 
     @JsonProperty("rel")
-    private String rel;
+    private OrderHistoryLinkRel rel;
 
     @JsonProperty("href")
     private String href;

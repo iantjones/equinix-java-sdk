@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.Md5Type;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -36,7 +37,7 @@ import lombok.NoArgsConstructor;
 public class Md5 {
 
     @JsonProperty("type")
-    private String type;
+    private Md5Type type;
 
     @JsonProperty("keyNumber")
     private Integer keyNumber;

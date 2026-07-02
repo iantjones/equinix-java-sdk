@@ -1,4 +1,6 @@
 package api.equinix.javasdk.fabric.wiremock;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
+import api.equinix.javasdk.fabric.enums.ChangeType;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -75,12 +77,12 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
             // Nested marketplaceSubscription reference.
             assertNotNull(router.getMarketplaceSubscription());
             assertEquals("2823b8ae-b24c-4a86-9dca-4a4e797d94e7", router.getMarketplaceSubscription().getUuid());
-            assertEquals("AWS_MARKETPLACE_SUBSCRIPTION", router.getMarketplaceSubscription().getType());
+            assertEquals(MarketplaceSubscriptionType.AWS_MARKETPLACE_SUBSCRIPTION, router.getMarketplaceSubscription().getType());
 
             // Latest CloudRouterChange block.
             assertNotNull(router.getChange());
             assertEquals("5c1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8", router.getChange().getUuid());
-            assertEquals("ROUTER_UPDATE", router.getChange().getType());
+            assertEquals(ChangeType.ROUTER_UPDATE, router.getChange().getType());
             assertEquals(ChangeStatus.COMPLETED, router.getChange().getStatus());
             assertEquals("Router package updated", router.getChange().getInformation());
             assertNotNull(router.getChange().getUpdatedDateTime());
@@ -149,6 +151,25 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                     .withHeader("Content-Type", containing("application/json-patch+json"))
                     .withRequestBody(equalToJson(
                             "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Router\"}]")));
+        }
+
+        @Test
+        @DisplayName("changePackage + termLength patch /package/code and /order/termLength (R2025.6/R2026.1)")
+        void savePatchesPackageAndTermLength() {
+            stubSingleton(wireMock, "/fabric/v4/routers/.*",
+                    "/json/fabric/cloud_router_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/routers/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+
+            CloudRouter router = fabric.cloudRouters().getByUuid("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+            CloudRouter updated = router.update().changePackage("PREMIUM").termLength(12).save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/package/code\",\"value\":\"PREMIUM\"},"
+                            + "{\"op\":\"replace\",\"path\":\"/order/termLength\",\"value\":12}]")));
         }
 
         @Test

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
+import api.equinix.javasdk.ibxsmartview.enums.ChannelType;
 import api.equinix.javasdk.ibxsmartview.model.SubscriptionCertificate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class SubscriptionCertificateJson implements SubscriptionCertificate {
 
     @JsonProperty("channelType")
-    private String channelType;
+    private ChannelType channelType;
 
     @JsonProperty("certificateBase64")
     private String certificateBase64;

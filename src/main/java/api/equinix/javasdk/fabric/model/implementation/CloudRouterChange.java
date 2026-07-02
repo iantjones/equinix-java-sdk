@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.ChangeType;
 
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.fabric.enums.ChangeStatus;
@@ -40,7 +41,7 @@ public class CloudRouterChange {
     private String uuid;
 
     @JsonProperty("type")
-    private String type;
+    private ChangeType type;
 
     @JsonProperty("status")
     private ChangeStatus status;

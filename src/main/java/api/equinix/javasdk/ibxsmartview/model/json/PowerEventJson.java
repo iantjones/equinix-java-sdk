@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
+import api.equinix.javasdk.ibxsmartview.enums.AlertStatus;
 import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerEventAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerEventProcessing;
@@ -39,7 +40,7 @@ public class PowerEventJson implements PowerEvent {
     private String traceUid;
 
     @JsonProperty("status")
-    private String status;
+    private AlertStatus status;
 
     @JsonProperty("asset")
     private PowerEventAsset asset;

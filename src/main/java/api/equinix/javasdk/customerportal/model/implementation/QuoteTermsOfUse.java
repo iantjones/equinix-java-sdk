@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.TermsOfUseType;
+import api.equinix.javasdk.customerportal.enums.TermsOfUsePeriod;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -38,8 +40,8 @@ public class QuoteTermsOfUse {
     private BigDecimal value;
 
     @JsonProperty("period")
-    private String period;
+    private TermsOfUsePeriod period;
 
     @JsonProperty("type")
-    private String type;
+    private TermsOfUseType type;
 }

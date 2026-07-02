@@ -45,7 +45,7 @@ public class AgreementStatus {
      * the API returns {@code SUCCESS} or {@code FAILED}.</p>
      */
     @JsonProperty("status")
-    private String status;
+    private api.equinix.javasdk.networkedge.enums.AgreementStatus status;
 
     @JsonProperty("errorMessage")
     private String errorMessage;

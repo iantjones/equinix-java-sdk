@@ -63,7 +63,7 @@ class IBXSmartViewLegacyPowerWireMockTest extends WireMockTestBase {
             assertEquals(2, data.size());
             assertEquals("SV5", data.get(0).getIbx());
             assertEquals("123456", data.get(0).getAccountNo());
-            assertEquals("cage", data.get(0).getLevelType());
+            assertEquals(PowerLevelType.CAGE, data.get(0).getLevelType());
             assertEquals(3.42, data.get(0).getKva());
             assertEquals("true", data.get(1).getIsAlarm());
 
@@ -111,7 +111,7 @@ class IBXSmartViewLegacyPowerWireMockTest extends WireMockTestBase {
             assertNotNull(result.getPayLoad());
             assertEquals("SV5", result.getPayLoad().getIbx());
             assertEquals("123456", result.getPayLoad().getAccountNo());
-            assertEquals("cage", result.getPayLoad().getLevelType());
+            assertEquals(PowerLevelType.CAGE, result.getPayLoad().getLevelType());
             assertEquals("SV5:01:001000", result.getPayLoad().getLevelValue());
             assertEquals(3.42, result.getPayLoad().getKva());
             assertEquals("false", result.getPayLoad().getIsAlarm());
@@ -145,7 +145,7 @@ class IBXSmartViewLegacyPowerWireMockTest extends WireMockTestBase {
             assertNotNull(result.getPayLoad());
             assertEquals("123456", result.getPayLoad().getAccountNumber());
             assertEquals("SV5", result.getPayLoad().getIbx());
-            assertEquals("cage", result.getPayLoad().getLevelType());
+            assertEquals(PowerLevelType.CAGE, result.getPayLoad().getLevelType());
             assertEquals("hourly", result.getPayLoad().getInterval());
             assertNotNull(result.getPayLoad().getData());
             assertEquals(3, result.getPayLoad().getData().size());

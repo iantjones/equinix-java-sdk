@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.TransactionType;
 import api.equinix.javasdk.customerportal.enums.ActivityType;
 import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.Frequency;
@@ -40,7 +41,7 @@ public interface InvoiceDetail {
 
     String getCountryCode();
 
-    String getTransactionType();
+    TransactionType getTransactionType();
 
     LocalDate getTransactionDate();
 

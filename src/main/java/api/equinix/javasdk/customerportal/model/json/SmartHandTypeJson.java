@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.SmartHandsType;
 import api.equinix.javasdk.customerportal.model.SmartHandType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +27,7 @@ import lombok.Getter;
 public class SmartHandTypeJson implements SmartHandType {
 
     @JsonProperty("type")
-    private String type;
+    private SmartHandsType type;
 
     @JsonProperty("typeDescription")
     private String typeDescription;

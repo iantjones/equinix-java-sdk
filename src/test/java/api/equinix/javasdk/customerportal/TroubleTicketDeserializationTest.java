@@ -1,5 +1,7 @@
 package api.equinix.javasdk.customerportal;
 
+import api.equinix.javasdk.customerportal.enums.OrderContactType;
+import api.equinix.javasdk.customerportal.enums.TicketNoteType;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.customerportal.enums.TicketStatus;
 import api.equinix.javasdk.customerportal.model.implementation.TicketContact;
@@ -104,7 +106,7 @@ class TroubleTicketDeserializationTest {
         assertEquals("Provide more details to understand the issue.", note.getText());
         assertEquals("Equinix Support", note.getAuthor());
         assertEquals("5-2000000000", note.getReferenceId());
-        assertEquals("TECHNICIAN_QUERY", note.getType());
+        assertEquals(TicketNoteType.TECHNICIAN_QUERY, note.getType());
         assertEquals(1, note.getAttachments().size());
         assertEquals("c77c5f58-a7ea-4e88-9fc4-1a2900027425", note.getAttachments().get(0).getId());
         assertEquals("error-log", note.getAttachments().get(0).getName());
@@ -122,12 +124,12 @@ class TroubleTicketDeserializationTest {
         assertEquals(2, troubleTicket.getContacts().size());
         TicketContact registered = troubleTicket.getContacts().get(0);
         assertEquals("john_doe", registered.getRegisteredUser());
-        assertEquals("NOTIFICATION", registered.getType());
+        assertEquals(OrderContactType.NOTIFICATION, registered.getType());
 
         TicketContact nonRegistered = troubleTicket.getContacts().get(1);
         assertEquals("John", nonRegistered.getFirstName());
         assertEquals("Doe", nonRegistered.getLastName());
-        assertEquals("TECHNICAL", nonRegistered.getType());
+        assertEquals(OrderContactType.TECHNICAL, nonRegistered.getType());
         assertEquals(2, nonRegistered.getDetails().size());
         assertEquals("EMAIL", nonRegistered.getDetails().get(0).getType());
         assertEquals("john.doe@example.com", nonRegistered.getDetails().get(0).getValue());

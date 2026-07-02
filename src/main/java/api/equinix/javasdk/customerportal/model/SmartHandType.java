@@ -16,12 +16,13 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.SmartHandsType;
 /**
  * A supported smart hands order type, as returned by the reference types endpoint.
  */
 public interface SmartHandType {
 
-    String getType();
+    SmartHandsType getType();
 
     String getTypeDescription();
 }

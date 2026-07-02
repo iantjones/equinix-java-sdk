@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.StreamSubscriptionClientImpl;
+import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkCredentialType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.Stream;
@@ -83,7 +84,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
             builder.sinkSettings = sink.getSettings();
             StreamSinkCredential credential = sink.getCredential();
             if (credential != null) {
-                builder.credentialType = credential.getType();
+                builder.credentialType = credential.getType() != null ? credential.getType().name() : null;
                 builder.accessToken = credential.getAccessToken();
                 builder.integrationKey = credential.getIntegrationKey();
                 builder.apiKey = credential.getApiKey();
@@ -156,6 +157,18 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
 
         public StreamSubscriptionOperator.StreamSubscriptionBuilder withCredentialType(String credentialType) {
             this.credentialType = credentialType;
+            return this;
+        }
+
+        /**
+         * Sets the sink credential type from the typed spec enum
+         * ({@code StreamSubscriptionSinkCredential.type}).
+         *
+         * @param credentialType the sink credential type
+         * @return this builder
+         */
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withCredentialType(StreamSubscriptionSinkCredentialType credentialType) {
+            this.credentialType = credentialType != null ? credentialType.name() : null;
             return this;
         }
 

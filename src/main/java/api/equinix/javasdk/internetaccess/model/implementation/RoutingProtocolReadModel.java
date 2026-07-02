@@ -16,8 +16,12 @@
 
 package api.equinix.javasdk.internetaccess.model.implementation;
 
+import api.equinix.javasdk.internetaccess.enums.BgpAuthenticationType;
 import api.equinix.javasdk.internetaccess.enums.CustomerAsnRange;
 import api.equinix.javasdk.internetaccess.enums.ExportPolicy;
+import api.equinix.javasdk.internetaccess.enums.IpBlockAnswer;
+import api.equinix.javasdk.internetaccess.enums.IpBlockQuestionType;
+import api.equinix.javasdk.internetaccess.enums.IpBlockType;
 import api.equinix.javasdk.internetaccess.enums.PurposeOfIpBlock;
 import api.equinix.javasdk.internetaccess.enums.RoutingProtocolType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -78,7 +82,7 @@ public class RoutingProtocolReadModel {
     private Long equinixAsn;
 
     @JsonProperty("bgpAuthenticationType")
-    private String bgpAuthenticationType;
+    private BgpAuthenticationType bgpAuthenticationType;
 
     @JsonProperty("exportPolicy")
     private ExportPolicy exportPolicy;
@@ -130,7 +134,7 @@ public class RoutingProtocolReadModel {
         private String uuid;
 
         @JsonProperty("type")
-        private String type;
+        private IpBlockType type;
 
         @JsonProperty("prefix")
         private String prefix;
@@ -172,10 +176,10 @@ public class RoutingProtocolReadModel {
     public static class IpBlockQuestion {
 
         @JsonProperty("type")
-        private String type;
+        private IpBlockQuestionType type;
 
         @JsonProperty("answer")
-        private String answer;
+        private IpBlockAnswer answer;
     }
 
     /**

@@ -1,5 +1,6 @@
 package api.equinix.javasdk.customerportal.wiremock;
 
+import api.equinix.javasdk.customerportal.enums.NotificationType;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.customerportal.model.Notification;
@@ -154,7 +155,7 @@ class CustomerPortalNotificationsWireMockTest extends WireMockTestBase {
 
             assertNotNull(notification);
             assertEquals("5-122719992195", notification.getId());
-            assertEquals("IBX_MAINTENANCE", notification.getType());
+            assertEquals(NotificationType.IBX_MAINTENANCE, notification.getType());
             assertEquals(List.of("SV5", "SV1"), notification.getIbxs());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/notifications/ibx/5-122719992195")));
@@ -170,7 +171,7 @@ class CustomerPortalNotificationsWireMockTest extends WireMockTestBase {
 
             assertNotNull(notification);
             assertEquals("n-42", notification.getId());
-            assertEquals("NETWORK_INCIDENT", notification.getType());
+            assertEquals(NotificationType.NETWORK_INCIDENT, notification.getType());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/notifications/network/n-42")));
         }

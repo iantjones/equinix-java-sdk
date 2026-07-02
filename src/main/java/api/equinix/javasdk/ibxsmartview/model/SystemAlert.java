@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.AlertStatus;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertConfiguration;
 import api.equinix.javasdk.ibxsmartview.model.implementation.AlertProcessing;
@@ -36,7 +37,7 @@ public interface SystemAlert {
 
     String getAssetTagDisplayName();
 
-    String getStatus();
+    AlertStatus getStatus();
 
     ValueReadModel getValue();
 

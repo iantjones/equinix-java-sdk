@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.SubChannel;
+import api.equinix.javasdk.customerportal.enums.Channel;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
 import api.equinix.javasdk.customerportal.enums.QuoteStatus;
 import api.equinix.javasdk.customerportal.model.implementation.QuoteContact;
 import api.equinix.javasdk.customerportal.model.implementation.QuoteDetail;
@@ -58,7 +61,7 @@ public interface Quote {
      *
      * @return the quote request type
      */
-    String getQuoteRequestType();
+    QuoteRequestType getQuoteRequestType();
 
     /**
      * Returns the related parties associated with the quote.
@@ -100,14 +103,14 @@ public interface Quote {
      *
      * @return the channel
      */
-    String getChannel();
+    Channel getChannel();
 
     /**
      * Returns the sub-channel the quote was requested through.
      *
      * @return the sub-channel
      */
-    String getSubChannel();
+    SubChannel getSubChannel();
 
     /**
      * Returns the customer / external reference id.

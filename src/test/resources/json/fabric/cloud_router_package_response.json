@@ -1,7 +1,7 @@
 {
   "href": "https://api.equinix.com/fabric/v4/routers/routerPackages/PREMIUM",
   "code": "PREMIUM",
-  "type": "XF_ROUTER_PACKAGE",
+  "type": "ROUTER_PACKAGE",
   "description": "Premium Fabric Cloud Router package",
   "totalIPv4RoutesMax": 4000,
   "totalIPv6RoutesMax": 4000,
