@@ -83,7 +83,6 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
         private Integer bfdInterval;
 
         private Long customerAsn;
-        private Long equinixAsn;
 
         private String bgpAuthKey;
         private Boolean asOverrideEnabled;
@@ -167,23 +166,6 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
 
         public RoutingProtocolOperator.RoutingProtocolBuilder withCustomerAsn(Long customerAsn) {
             this.customerAsn = customerAsn;
-            return this;
-        }
-
-        /**
-         * Sets the Equinix ASN on the create request.
-         *
-         * @param equinixAsn the Equinix ASN
-         * @return this builder
-         * @deprecated Fabric release R2025.5 removed {@code equinixASN} from the BGP routing
-         * protocol create request payload (the {@code RoutingProtocolBGPType} request schema no
-         * longer declares it); the Equinix ASN is assigned by the platform and returned on the
-         * response only ({@code RoutingProtocol.getEquinixAsn()}). Any value set here is ignored
-         * by the API. This setter will be removed in a future release.
-         */
-        @Deprecated
-        public RoutingProtocolOperator.RoutingProtocolBuilder withEquinixAsn(Long equinixAsn) {
-            this.equinixAsn = equinixAsn;
             return this;
         }
 

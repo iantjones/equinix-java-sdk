@@ -54,17 +54,6 @@ Fabric fabric = new Fabric(credentials);
 // Authentication happens automatically on first API call
 ```
 
-The password grant is also supported for accounts that still require it (Equinix deprecates it in
-favour of client credentials):
-
-```java
-import api.equinix.javasdk.core.auth.PasswordEquinixCredentials;
-
-PasswordEquinixCredentials credentials =
-        new PasswordEquinixCredentials("YOUR_CLIENT_ID", "YOUR_CLIENT_SECRET", "username", "password");
-Fabric fabric = new Fabric(credentials);
-```
-
 To resolve or rotate credentials at runtime — from a secrets manager, for example — implement
 `EquinixCredentialsProvider` and pass it instead of a fixed credentials object. It is consulted on
 each authentication (the first call and re-auth on expiry), so a rotated secret takes effect without

@@ -53,9 +53,6 @@ public class RoutingProtocolCreatorJson {
     @JsonProperty("customerAsn")
     private Long customerAsn;
 
-    @JsonProperty("equinixAsn")
-    private Long equinixAsn;
-
     @JsonProperty("bgpAuthKey")
     private String bgpAuthKey;
 
@@ -143,7 +140,6 @@ public class RoutingProtocolCreatorJson {
         this.type = routingProtocolBuilder.getType();
         this.name = routingProtocolBuilder.getName();
         this.customerAsn = routingProtocolBuilder.getCustomerAsn();
-        this.equinixAsn = routingProtocolBuilder.getEquinixAsn();
         this.bgpAuthKey = routingProtocolBuilder.getBgpAuthKey();
         this.asOverrideEnabled = routingProtocolBuilder.getAsOverrideEnabled();
 

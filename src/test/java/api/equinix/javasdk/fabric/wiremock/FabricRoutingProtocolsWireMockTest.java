@@ -261,8 +261,8 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
                             .withHeader("Content-Type", "application/json")
                             .withBody(loadFixture("/json/fabric/routing_protocol_response.json"))));
 
-            // R2025.5 removed equinixASN from the BGP create request payload; the builder's
-            // withEquinixAsn(...) is deprecated and intentionally not used here.
+            // R2025.5 removed equinixASN from the BGP create request payload; the platform
+            // assigns it and returns it on the response only.
             RoutingProtocol created = fabric.routingProtocols().define()
                     .ofType(RoutingProtocolType.BGP)
                     .withName("New-BGP-RoutingProtocol")
