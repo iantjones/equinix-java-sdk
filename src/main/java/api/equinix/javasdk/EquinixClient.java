@@ -97,6 +97,13 @@ public class EquinixClient implements Closeable {
     protected final String peeringDbApiKey;
 
     /**
+     * Whether the metro registry should be enriched with per-IBX detail from EIA. Set from
+     * {@code EquinixConfig.isEnrichMetroRegistry()}; only acted on by domains with a metro
+     * catalog (Fabric).
+     */
+    protected final boolean enrichMetroRegistry;
+
+    /**
      * Creates a new Equinix client using the provided credentials.
      * Authentication occurs automatically on the first API call.
      *
@@ -160,6 +167,7 @@ public class EquinixClient implements Closeable {
         this.ownsCore = true;
         this.autoLoadMetros = config.isAutoLoadMetros();
         this.peeringDbApiKey = config.getPeeringDbApiKey();
+        this.enrichMetroRegistry = config.isEnrichMetroRegistry();
         equinixClient.setAuthenticator(() -> core().authenticate());
         if (config.getRetryPolicy() != null) {
             equinixClient.setRetryPolicy(config.getRetryPolicy());
@@ -184,14 +192,15 @@ public class EquinixClient implements Closeable {
      * the session). Package-private: used by {@link Equinix} for domains that consume them (Fabric).
      *
      * @param sharedCore the core client to share
-     * @param peeringDbApiKey the session-configured PeeringDB API key, or {@code null}
+     * @param sessionConfig the owning session's config, or {@code null} for defaults
      */
-    EquinixClient(api.equinix.javasdk.core.client.EquinixClient sharedCore, String peeringDbApiKey) {
+    EquinixClient(api.equinix.javasdk.core.client.EquinixClient sharedCore, EquinixConfig sessionConfig) {
         this.equinixClient = sharedCore;
         this.coreConfig = new CoreConfigImpl(sharedCore);
         this.ownsCore = false;
         this.autoLoadMetros = false;
-        this.peeringDbApiKey = peeringDbApiKey;
+        this.peeringDbApiKey = sessionConfig != null ? sessionConfig.getPeeringDbApiKey() : null;
+        this.enrichMetroRegistry = sessionConfig != null && sessionConfig.isEnrichMetroRegistry();
         sharedCore.setAuthenticator(() -> core().authenticate());
     }
 

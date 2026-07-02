@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Cross-source metro-registry enrichment** — `EquinixConfig.enrichMetroRegistry(true)` makes the
+  metro registry the SDK's most complete location directory: alongside Fabric's metro-level data it
+  pulls the EIA per-IBX catalogue (the only Equinix API with per-data-center coordinates; both EIA
+  connection types unioned) over the same client transport. New `MetroRegistry.ibx(String)`,
+  `ibxDetails(String)` and `isEnriched()` expose the merged records — ready for
+  `SpeedOfLightLatency` IBX-to-IBX math without wiring up the InternetAccess domain yourself. The
+  fetch is best-effort: an EIA outage never fails the registry load. Works on a standalone `Fabric`
+  and flows through an `Equinix` session to `eq.metroRegistry()`.
+- **SpeedOfLightLatency Metro/mixed overloads** — `millisBetween`/`distanceKm` now accept
+  `(Metro, Metro)`, `(Ibx, Metro)` and `(Metro, Ibx)` in addition to `(Ibx, Ibx)`, normalizing the
+  Fabric and EIA coordinate types internally; missing coordinates throw naming the offending
+  IBX/metro.
+- **Fabric Metro model completed against the spec** — `country`, `equinixAsn`,
+  `localVCBandwidthMax`, `services[]`, `geoScopes[]`, `geoZones[]` and
+  `connectedMetros[].remoteVCBandwidthMax` now deserialize (previously silently dropped).
 - **PeeringDB API key as a first-class option.** The Peering Intelligence entry points now resolve
   the PeeringDB credential in a documented order: an explicit `peeringIntelligence("key")` argument,
   then the new `EquinixConfig.peeringDbApiKey` option (works on a standalone `Fabric` and on an

@@ -126,9 +126,24 @@ construction-time options — with `EquinixConfig`:
 Fabric fabric = new Fabric(credentials, EquinixConfig.builder()
     .sandbox(false)
     .autoLoadMetros(false)              // keep the catalog lazy instead of loading it at auth
-    .retryPolicy(RetryPolicy.none())   // override the default retry behavior
+    .enrichMetroRegistry(true)          // merge EIA per-IBX detail into the metro registry
+    .retryPolicy(RetryPolicy.none())    // override the default retry behavior
+    .peeringDbApiKey("...")             // PeeringDB credential for peeringIntelligence()
     .build());
 // Equinix and every domain client accept EquinixConfig the same way.
+```
+
+`enrichMetroRegistry` turns the registry into the SDK's cross-source location directory: Fabric
+supplies the metro-level picture (centroids, connected-metro latency, IBX codes) and EIA supplies
+the per-IBX detail (coordinates, country) — the only API that has it. The merge is best-effort
+(an EIA outage never fails the registry load), and it feeds IBX-to-IBX latency directly:
+
+```java
+MetroRegistry registry = fabric.metroRegistry();   // or eq.metroRegistry() on a session
+Ibx sv5 = registry.ibx("SV5").orElseThrow();       // full EIA record, case-insensitive lookup
+Ibx la4 = registry.ibx("LA4").orElseThrow();
+double rttFloor = SpeedOfLightLatency.roundTrip().millisBetween(sv5, la4);
+List<Ibx> svIbxes = registry.ibxDetails("SV");     // every enriched IBX in a metro
 ```
 
 ## Domain Overview
