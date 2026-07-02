@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.design.geo;
 
+import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import api.equinix.javasdk.internetaccess.model.implementation.GeoCoordinates;
@@ -40,18 +41,41 @@ import api.equinix.javasdk.internetaccess.model.implementation.GeoCoordinates;
  * using each IBX's own {@linkplain Ibx#getGeoCoordinates() coordinates} — not between metro
  * centroids, so two IBXes in the same metro have a real (small, non-zero) distance.</p>
  *
- * <p>The EIA availability response only guarantees {@code href}; {@code geoCoordinates} is optional,
- * so {@link #millisBetween(Ibx, Ibx)} / {@link #distanceKm(Ibx, Ibx)} throw
- * {@link IllegalArgumentException} (naming the offending IBX code) when an IBX has no coordinates —
- * fail loud rather than return a bogus zero. Callers iterating {@code availability(...)} results
- * should handle that per IBX.</p>
+ * <h3>Endpoint types</h3>
+ * <p>Latency can be computed between any mix of the SDK's location-bearing types:</p>
+ * <ul>
+ *   <li><b>IBX ↔ IBX</b> — {@link #millisBetween(Ibx, Ibx)}: the most precise figure, using each
+ *       data center's own coordinates (from {@code internetAccess.ibxs()}); two IBXes in the same
+ *       metro get a real, small, non-zero distance.</li>
+ *   <li><b>Metro ↔ Metro</b> — {@link #millisBetween(Metro, Metro)}: metro-centroid figure using
+ *       Fabric's metro coordinates (from {@code fabric.metros()} / {@code fabric.metroRegistry()}).
+ *       Fine for city-to-city planning; same-metro pairs compute as 0.</li>
+ *   <li><b>IBX ↔ Metro</b> — {@link #millisBetween(Ibx, Metro)} / {@link #millisBetween(Metro, Ibx)}:
+ *       mixed precision, e.g. "from my cage in LA4 to the Dallas metro".</li>
+ *   <li><b>Raw</b> — {@link #millisBetween(GeoCoordinate, GeoCoordinate)},
+ *       {@link #distanceKm(double, double, double, double)} and {@link #millisForKm(double)} for
+ *       arbitrary coordinates or known distances, fully offline.</li>
+ * </ul>
+ *
+ * <p>Coordinates are optional in both source APIs, so every typed overload throws
+ * {@link IllegalArgumentException} naming the offending IBX/metro when coordinates are missing —
+ * fail loud rather than return a bogus zero.</p>
+ *
+ * <p>For metro-to-metro, compare the calculated floor against Equinix's <em>measured</em>
+ * inter-metro RTT: {@code metro.getConnectedMetros()} carries {@code avgLatency} (ms) observed on
+ * the Fabric backbone. The floor tells you what physics allows; {@code avgLatency} tells you what
+ * the network delivers.</p>
  *
  * <pre>{@code
  * Ibx la4 = internetAccess.ibxs().getByCode("LA4");
  * Ibx sv5 = internetAccess.ibxs().getByCode("SV5");
+ * Metro dc = fabric.metros().getByMetroCode(MetroCode.DC);
+ * Metro sv = fabric.metros().getByMetroCode(MetroCode.SV);
  *
  * SpeedOfLightLatency rtt = SpeedOfLightLatency.roundTrip();   // default
- * double ms = rtt.millisBetween(la4, sv5);                     // round-trip floor, LA4 <-> SV5
+ * double ibxToIbx     = rtt.millisBetween(la4, sv5);           // precise, IBX-to-IBX
+ * double metroToMetro = rtt.millisBetween(dc, sv);             // metro centroids
+ * double ibxToMetro   = rtt.millisBetween(la4, dc);            // mixed
  *
  * SpeedOfLightLatency realistic = SpeedOfLightLatency.builder()
  *         .mode(Mode.ONE_WAY).routeFactor(1.4).build();
@@ -154,6 +178,46 @@ public final class SpeedOfLightLatency {
     }
 
     /**
+     * Fibre latency between two Equinix metros, using each metro's Fabric centroid
+     * {@linkplain Metro#geoCoordinates() coordinates}. This is a metro-level figure: two IBXes in
+     * the same metro compute as 0 — use {@link #millisBetween(Ibx, Ibx)} for per-data-center
+     * precision.
+     *
+     * @param a one metro
+     * @param b the other metro
+     * @return the estimated latency in milliseconds
+     * @throws IllegalArgumentException if either metro is null or has no coordinates
+     */
+    public double millisBetween(Metro a, Metro b) {
+        return millisForKm(distanceKm(a, b));
+    }
+
+    /**
+     * Fibre latency between an IBX data center and a metro centroid (mixed precision) — e.g.
+     * "from my cage in LA4 to the Dallas metro".
+     *
+     * @param a the IBX
+     * @param b the metro
+     * @return the estimated latency in milliseconds
+     * @throws IllegalArgumentException if either endpoint is null or has no coordinates
+     */
+    public double millisBetween(Ibx a, Metro b) {
+        return millisForKm(distanceKm(a, b));
+    }
+
+    /**
+     * Fibre latency between a metro centroid and an IBX data center (mixed precision).
+     *
+     * @param a the metro
+     * @param b the IBX
+     * @return the estimated latency in milliseconds
+     * @throws IllegalArgumentException if either endpoint is null or has no coordinates
+     */
+    public double millisBetween(Metro a, Ibx b) {
+        return millisForKm(distanceKm(a, b));
+    }
+
+    /**
      * Great-circle (haversine) distance between two coordinates.
      *
      * @param a one endpoint
@@ -191,9 +255,78 @@ public final class SpeedOfLightLatency {
         return distanceKm(ca.getLatitude(), ca.getLongitude(), cb.getLatitude(), cb.getLongitude());
     }
 
+    /**
+     * Great-circle (haversine) distance between two Equinix metro centroids.
+     *
+     * @param a one metro
+     * @param b the other metro
+     * @return the distance in kilometres
+     * @throws IllegalArgumentException if either metro is null or is missing its coordinates
+     */
+    public static double distanceKm(Metro a, Metro b) {
+        double[] ca = requireCoordinates(a);
+        double[] cb = requireCoordinates(b);
+        return distanceKm(ca[0], ca[1], cb[0], cb[1]);
+    }
+
+    /**
+     * Great-circle (haversine) distance between an IBX data center and a metro centroid.
+     *
+     * @param a the IBX
+     * @param b the metro
+     * @return the distance in kilometres
+     * @throws IllegalArgumentException if either endpoint is null or is missing its coordinates
+     */
+    public static double distanceKm(Ibx a, Metro b) {
+        double[] ca = requireCoordinates(a);
+        double[] cb = requireCoordinates(b);
+        return distanceKm(ca[0], ca[1], cb[0], cb[1]);
+    }
+
+    /**
+     * Great-circle (haversine) distance between a metro centroid and an IBX data center.
+     *
+     * @param a the metro
+     * @param b the IBX
+     * @return the distance in kilometres
+     * @throws IllegalArgumentException if either endpoint is null or is missing its coordinates
+     */
+    public static double distanceKm(Metro a, Ibx b) {
+        return distanceKm(b, a);
+    }
+
+    private static double[] requireCoordinates(Ibx ibx) {
+        if (ibx == null) {
+            throw new IllegalArgumentException("the IBX must be non-null");
+        }
+        GeoCoordinates c = ibx.getGeoCoordinates();
+        if (c == null || c.getLatitude() == null || c.getLongitude() == null) {
+            throw new IllegalArgumentException(
+                    "IBX " + ibxLabel(ibx) + " has no geo coordinates");
+        }
+        return new double[] {c.getLatitude(), c.getLongitude()};
+    }
+
+    private static double[] requireCoordinates(Metro metro) {
+        if (metro == null) {
+            throw new IllegalArgumentException("the metro must be non-null");
+        }
+        GeoCoordinate c = metro.geoCoordinates();
+        if (c == null || c.getLatitude() == null || c.getLongitude() == null) {
+            throw new IllegalArgumentException(
+                    "metro " + metroLabel(metro) + " has no geo coordinates");
+        }
+        return new double[] {c.getLatitude(), c.getLongitude()};
+    }
+
     private static String ibxLabel(Ibx ibx) {
         String code = ibx.getIbxCode();
         return code != null ? code : "<unknown IBX>";
+    }
+
+    private static String metroLabel(Metro metro) {
+        return metro.metroId() != null ? metro.metroId().code()
+                : (metro.getName() != null ? metro.getName() : "<unknown metro>");
     }
 
     /**
