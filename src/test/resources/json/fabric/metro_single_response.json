@@ -5,6 +5,9 @@
   "ibxs": ["SV1", "SV2", "SV5", "SV8", "SV10"],
   "type": "XF_METRO",
   "region": "AMER",
+  "country": "US",
+  "equinixAsn": 60000,
+  "localVCBandwidthMax": 10000,
   "geoCoordinates": {
     "latitude": 37.3382,
     "longitude": -121.8863
@@ -13,12 +16,26 @@
     {
       "code": "LA",
       "href": "https://api.equinix.com/fabric/v4/metros/LA",
-      "avgLatency": 8.52
+      "avgLatency": 8.52,
+      "remoteVCBandwidthMax": 10000
     },
     {
       "code": "DC",
       "href": "https://api.equinix.com/fabric/v4/metros/DC",
-      "avgLatency": 62.17
+      "avgLatency": 62.17,
+      "remoteVCBandwidthMax": 5000
+    }
+  ],
+  "services": [
+    { "type": "ETHERNET_IP_SERVICE" },
+    { "type": "TIME_SERVICE" }
+  ],
+  "geoScopes": ["CANADA", "CONUS", "JAPAN", "UK", "AUSTRALIA", "BRAZIL", "SWITZERLAND", "EU"],
+  "geoZones": [
+    {
+      "code": "EU",
+      "name": "European Union",
+      "description": "Note that Ireland and Italy are not currently included"
     }
   ]
 }

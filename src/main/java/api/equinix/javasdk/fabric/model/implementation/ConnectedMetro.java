@@ -45,6 +45,9 @@ public class ConnectedMetro {
     @JsonProperty("avgLatency")
     private Double avgLatency;
 
+    @JsonProperty("remoteVCBandwidthMax")
+    private Long remoteVCBandwidthMax;
+
     /**
      * @return the connected metro's code as a {@link MetroCode} enum, or {@link MetroCode#UNKNOWN}
      *         for a metro this enum does not list; prefer {@link #metroId()} for the exact code
