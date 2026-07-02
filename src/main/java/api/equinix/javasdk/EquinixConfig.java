@@ -68,6 +68,22 @@ public class EquinixConfig {
     private final RetryPolicy retryPolicy;
 
     /**
+     * Whether to enrich the metro registry with per-IBX detail from Equinix Internet Access (EIA) —
+     * today the only Equinix API that returns per-data-center geo coordinates. When enabled,
+     * {@code fabric.metroRegistry()} / {@code Equinix.metroRegistry()} also queries
+     * {@code GET /internetAccess/v2/ibxs} (both EIA connection types, unioned) and exposes the
+     * result through {@code MetroRegistry.ibx(String)} / {@code ibxDetails(String)} — giving
+     * IBX-to-IBX latency math ({@code design.geo.SpeedOfLightLatency}) live coordinates without
+     * wiring up the InternetAccess domain yourself.
+     *
+     * <p>The extra calls are best-effort: if EIA is unavailable the registry still loads from
+     * Fabric alone (and reports {@code isEnriched() == false}). Defaults to {@code false} (no
+     * extra API calls).</p>
+     */
+    @Builder.Default
+    private final boolean enrichMetroRegistry = false;
+
+    /**
      * A PeeringDB API key used by the Peering Intelligence entry points
      * ({@code fabric.peeringIntelligence()} / {@code design.peeringIntelligence()}) when no key is
      * passed explicitly. This is a separate credential from the Equinix OAuth client — it is created

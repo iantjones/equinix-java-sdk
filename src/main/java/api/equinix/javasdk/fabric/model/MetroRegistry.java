@@ -19,7 +19,9 @@ package api.equinix.javasdk.fabric.model;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.client.Metros;
+import api.equinix.javasdk.internetaccess.model.Ibx;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -35,6 +37,15 @@ import java.util.Set;
  * and caching the result — for code that needs to discover or validate metros rather than hard-code
  * the enum.
  *
+ * <p><b>Cross-source enrichment.</b> Fabric's metros carry the metro-level picture (centroid
+ * coordinates, connected-metro latency, IBX <em>codes</em>) but no per-IBX detail; that lives in
+ * EIA's {@code /internetAccess/v2/ibxs} (per-IBX coordinates, country, metro association). When
+ * built with {@code EquinixConfig.enrichMetroRegistry} (or via {@link #load(Metros, Collection)}),
+ * the registry merges both so it is the SDK's most complete location directory: {@link #ibx(String)}
+ * returns the full EIA {@link Ibx} — ready for {@code design.geo.SpeedOfLightLatency} IBX-to-IBX
+ * math. The registry is deliberately cross-domain in that mode (fabric + internetaccess data, one
+ * lookup surface).</p>
+ *
  * <p>The snapshot is immutable; call {@link #load(Metros)} again (or {@code Fabric.reloadMetroRegistry()})
  * to pick up metros added since it was built.</p>
  *
@@ -42,6 +53,10 @@ import java.util.Set;
  * MetroRegistry registry = fabric.metroRegistry();
  * registry.get("SV").ifPresent(m -> System.out.println(m.getName() + " " + m.getIbxs()));
  * boolean exists = registry.contains(newMetroCode);   // works even if not in the MetroCode enum
+ *
+ * // With EquinixConfig.enrichMetroRegistry(true):
+ * Ibx sv5 = registry.ibx("SV5").orElseThrow();
+ * double ms = SpeedOfLightLatency.roundTrip().millisBetween(sv5, registry.ibx("LA4").orElseThrow());
  * }</pre>
  *
  * @author ianjones
@@ -50,8 +65,11 @@ public final class MetroRegistry {
 
     private final Map<String, Metro> byCode;
 
-    private MetroRegistry(Map<String, Metro> byCode) {
+    private final Map<String, Ibx> ibxByCode;
+
+    private MetroRegistry(Map<String, Metro> byCode, Map<String, Ibx> ibxByCode) {
         this.byCode = byCode;
+        this.ibxByCode = ibxByCode;
     }
 
     /**
@@ -62,6 +80,19 @@ public final class MetroRegistry {
      * @return a populated, immutable registry
      */
     public static MetroRegistry load(Metros metros) {
+        return load(metros, Collections.emptyList());
+    }
+
+    /**
+     * Loads the registry and enriches it with per-IBX detail (typically the EIA ibx catalogue —
+     * see the class notes on cross-source enrichment). IBXes are keyed case-insensitively by
+     * {@code ibxCode}; duplicates keep the first occurrence.
+     *
+     * @param metros the Metros client to read from (e.g. {@code fabric.metros()})
+     * @param ibxDetails per-IBX records to merge in (empty for an un-enriched registry)
+     * @return a populated, immutable registry
+     */
+    public static MetroRegistry load(Metros metros, Collection<? extends Ibx> ibxDetails) {
         Map<String, Metro> map = new LinkedHashMap<>();
         // loadAll() pages through the full catalogue — list() alone returns only the first page.
         for (Metro metro : metros.list().loadAll()) {
@@ -70,7 +101,13 @@ public final class MetroRegistry {
                 map.put(id.code(), metro);
             }
         }
-        return new MetroRegistry(Collections.unmodifiableMap(map));
+        Map<String, Ibx> ibxMap = new LinkedHashMap<>();
+        for (Ibx ibx : ibxDetails) {
+            if (ibx != null && ibx.getIbxCode() != null) {
+                ibxMap.putIfAbsent(ibx.getIbxCode().trim().toUpperCase(), ibx);
+            }
+        }
+        return new MetroRegistry(Collections.unmodifiableMap(map), Collections.unmodifiableMap(ibxMap));
     }
 
     /**
@@ -148,5 +185,50 @@ public final class MetroRegistry {
      */
     public int size() {
         return byCode.size();
+    }
+
+    /**
+     * Looks up per-IBX detail (coordinates, country, metro association) merged in at load time.
+     * Populated only when the registry was built with enrichment — see
+     * {@code EquinixConfig.enrichMetroRegistry} and the class notes.
+     *
+     * @param ibxCode the IBX data-center code (e.g. {@code "SV5"}); case-insensitive
+     * @return the IBX record, or empty if unknown or the registry is not enriched
+     */
+    public Optional<Ibx> ibx(String ibxCode) {
+        if (ibxCode == null || ibxCode.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(ibxByCode.get(ibxCode.trim().toUpperCase()));
+    }
+
+    /**
+     * Returns the enriched per-IBX records associated with a metro (matched on the record's own
+     * {@code metroCode}). Empty when the registry is not enriched or the metro has no records —
+     * {@link #ibxs(String)} still lists the metro's IBX <em>codes</em> from Fabric either way.
+     *
+     * @param metroCode the metro code (e.g. {@code "SV"}); case-insensitive
+     * @return the IBX records within that metro (unmodifiable)
+     */
+    public List<Ibx> ibxDetails(String metroCode) {
+        if (metroCode == null || metroCode.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        String normalized = metroCode.trim().toUpperCase();
+        List<Ibx> matches = new ArrayList<>();
+        for (Ibx ibx : ibxByCode.values()) {
+            if (ibx.getMetroCode() != null && normalized.equals(ibx.getMetroCode().trim().toUpperCase())) {
+                matches.add(ibx);
+            }
+        }
+        return Collections.unmodifiableList(matches);
+    }
+
+    /**
+     * @return {@code true} if this registry carries merged per-IBX detail (built with
+     *         {@code EquinixConfig.enrichMetroRegistry} and the EIA fetch succeeded)
+     */
+    public boolean isEnriched() {
+        return !ibxByCode.isEmpty();
     }
 }

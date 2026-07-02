@@ -24,6 +24,10 @@ import api.equinix.javasdk.fabric.client.*;
 import api.equinix.javasdk.fabric.client.implementation.*;
 import api.equinix.javasdk.fabric.model.HealthStatus;
 import api.equinix.javasdk.fabric.model.MetroRegistry;
+import api.equinix.javasdk.internetaccess.enums.ConnectionType;
+import api.equinix.javasdk.internetaccess.model.Ibx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import api.equinix.javasdk.mcp.McpClientConfig;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.MetroOptimizer;
@@ -84,9 +88,17 @@ import api.equinix.javasdk.design.value.tco.TcoCalculator;
  */
 public final class Fabric extends EquinixClient implements FabricGateway {
 
+    private static final Logger log = LoggerFactory.getLogger(Fabric.class);
+
     private Metros metros;
 
     private MetroRegistry metroRegistry;
+
+    /**
+     * Lazily-built EIA facade over this client's own core (shared token + pool), used only when
+     * {@code EquinixConfig.enrichMetroRegistry} is on to pull per-IBX detail into the registry.
+     */
+    private InternetAccess enrichmentInternetAccess;
 
     private ServiceTokens serviceTokens;
 
@@ -218,10 +230,11 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
      * shared core client (one OAuth token + connection pool across domains), carrying the
-     * session-configured PeeringDB API key (or {@code null}).
+     * session-configured options this domain consumes (PeeringDB API key, metro-registry
+     * enrichment).
      */
-    Fabric(api.equinix.javasdk.core.client.EquinixClient sharedCore, String peeringDbApiKey) {
-        super(sharedCore, peeringDbApiKey);
+    Fabric(api.equinix.javasdk.core.client.EquinixClient sharedCore, EquinixConfig sessionConfig) {
+        super(sharedCore, sessionConfig);
         equinixClient.appendApiParams("json/apiParams_Fabric.json");
         this.fabricConfig = new FabricConfigImpl(equinixClient);
     }
@@ -267,24 +280,60 @@ public final class Fabric extends EquinixClient implements FabricGateway {
      * metros the {@link api.equinix.javasdk.core.enums.MetroCode} enum does not list. Loaded lazily
      * on first access from {@link #metros()}; call {@link #reloadMetroRegistry()} to refresh it.
      *
+     * <p>When {@code EquinixConfig.enrichMetroRegistry} is enabled, the load also pulls the EIA
+     * per-IBX catalogue (the only Equinix API with per-data-center coordinates) over this client's
+     * own transport and exposes it via {@code MetroRegistry.ibx(String)} — see
+     * {@link EquinixConfig#isEnrichMetroRegistry()}.</p>
+     *
      * @return the metro registry
      */
     public MetroRegistry metroRegistry() {
         if (this.metroRegistry == null) {
-            this.metroRegistry = MetroRegistry.load(metros());
+            this.metroRegistry = loadMetroRegistry();
         }
         return metroRegistry;
     }
 
     /**
-     * Rebuilds the {@link #metroRegistry()} from a fresh Metros API call, picking up any metros added
-     * since it was last loaded.
+     * Rebuilds the {@link #metroRegistry()} from a fresh Metros API call (re-running EIA enrichment
+     * when configured), picking up any metros added since it was last loaded.
      *
      * @return the refreshed metro registry
      */
     public MetroRegistry reloadMetroRegistry() {
-        this.metroRegistry = MetroRegistry.load(metros());
+        this.metroRegistry = loadMetroRegistry();
         return metroRegistry;
+    }
+
+    private MetroRegistry loadMetroRegistry() {
+        return MetroRegistry.load(metros(), enrichMetroRegistry ? fetchIbxDetails() : java.util.List.of());
+    }
+
+    /**
+     * Best-effort fetch of the EIA per-IBX catalogue for registry enrichment, unioned across both
+     * EIA connection types (the {@code /internetAccess/v2/ibxs} listing is scoped per connection
+     * type). A failure never fails the registry load — it just leaves the registry un-enriched.
+     */
+    private java.util.List<Ibx> fetchIbxDetails() {
+        java.util.List<Ibx> details = new java.util.ArrayList<>();
+        try {
+            if (enrichmentInternetAccess == null) {
+                enrichmentInternetAccess = new InternetAccess(equinixClient);
+            }
+            for (ConnectionType connectionType : ConnectionType.values()) {
+                try {
+                    for (Ibx ibx : enrichmentInternetAccess.ibxs().availability(connectionType).loadAll()) {
+                        details.add(ibx);
+                    }
+                } catch (RuntimeException e) {
+                    log.warn("Metro-registry enrichment: EIA ibxs fetch failed for connection type {} ({})",
+                            connectionType, e.getMessage());
+                }
+            }
+        } catch (RuntimeException e) {
+            log.warn("Metro-registry enrichment unavailable: {}", e.getMessage());
+        }
+        return details;
     }
 
     /**
