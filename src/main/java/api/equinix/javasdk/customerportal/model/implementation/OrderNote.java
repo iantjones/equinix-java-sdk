@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.OrderNoteType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -48,7 +49,7 @@ public class OrderNote {
     private String author;
 
     @JsonProperty("type")
-    private String type;
+    private OrderNoteType type;
 
     @JsonProperty("attachments")
     private List<OrderAttachmentInfo> attachments;

@@ -3,9 +3,20 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.Channel;
+import api.equinix.javasdk.customerportal.enums.ContactAvailability;
 import api.equinix.javasdk.customerportal.enums.NegotiationAction;
+import api.equinix.javasdk.customerportal.enums.OrderContactType;
+import api.equinix.javasdk.customerportal.enums.OrderLineRequestType;
+import api.equinix.javasdk.customerportal.enums.OrderNoteType;
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
+import api.equinix.javasdk.customerportal.enums.PricingChargeType;
+import api.equinix.javasdk.customerportal.enums.PricingValueType;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.customerportal.model.Order;
 import api.equinix.javasdk.customerportal.model.OrderNegotiation;
+import api.equinix.javasdk.customerportal.model.implementation.OrderLine;
 import api.equinix.javasdk.customerportal.model.json.creators.AttachmentReference;
 import org.junit.jupiter.api.*;
 
@@ -59,6 +70,25 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
             assertNotNull(order);
             assertEquals(ORDER_ID, order.getOrderId());
             assertEquals(api.equinix.javasdk.customerportal.enums.OrderStatus.IN_PROGRESS, order.getStatus());
+
+            // Every enum the ordersv2 spec declares is now typed — lock the full GET Order details shape.
+            assertEquals(QuoteRequestType.NEW, order.getQuoteRequestType());
+            assertEquals(Channel.PORTAL, order.getChannel());
+            assertEquals(SubChannel.ECP, order.getSubChannel());
+            assertEquals(OrderContactType.ORDERING, order.getContacts().get(0).getType());
+            assertEquals(ContactAvailability.ANYTIME, order.getContacts().get(0).getAvailability());
+            assertEquals("EMAIL", order.getContacts().get(0).getDetails().get(0).getType());
+            assertEquals(OrderNoteType.CUSTOMER_NOTES, order.getNotes().get(0).getType());
+
+            OrderLine line = order.getDetails().get(0);
+            assertEquals(OrderProductType.CROSS_CONNECT, line.getProductType());
+            assertEquals(OrderLineRequestType.ADD, line.getRequestType());
+            assertEquals(PricingValueType.ABSOLUTE, line.getUnitPricing().get(0).getValueType());
+            assertEquals(PricingChargeType.MONTHLY_CHARGE, line.getUnitPricing().get(0).getType());
+
+            // Forward-compat: an order line whose enums gain new API values must not read as null.
+            assertNotEquals(OrderProductType.UNKNOWN, line.getProductType());
+
             wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID)));
         }
 

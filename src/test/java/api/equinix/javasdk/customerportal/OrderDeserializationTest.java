@@ -1,6 +1,16 @@
 package api.equinix.javasdk.customerportal;
 
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.customerportal.enums.Channel;
+import api.equinix.javasdk.customerportal.enums.ContactAvailability;
+import api.equinix.javasdk.customerportal.enums.OrderContactType;
+import api.equinix.javasdk.customerportal.enums.OrderLineRequestType;
+import api.equinix.javasdk.customerportal.enums.OrderNoteType;
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
+import api.equinix.javasdk.customerportal.enums.PricingChargeType;
+import api.equinix.javasdk.customerportal.enums.PurchaseOrderType;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.customerportal.enums.OrderStatus;
 import api.equinix.javasdk.customerportal.model.implementation.OrderContactInfo;
 import api.equinix.javasdk.customerportal.model.implementation.OrderLine;
@@ -41,7 +51,7 @@ class OrderDeserializationTest {
 
     @Test
     void quoteRequestType_isDeserialized() {
-        assertEquals("NEW", order.getQuoteRequestType());
+        assertEquals(QuoteRequestType.NEW, order.getQuoteRequestType());
     }
 
     @Test
@@ -58,8 +68,8 @@ class OrderDeserializationTest {
     @Test
     void currencyAndChannel_areDeserialized() {
         assertEquals("USD", order.getCurrencyCode());
-        assertEquals("PORTAL", order.getChannel());
-        assertEquals("ECP", order.getSubChannel());
+        assertEquals(Channel.PORTAL, order.getChannel());
+        assertEquals(SubChannel.ECP, order.getSubChannel());
     }
 
     @Test
@@ -78,8 +88,8 @@ class OrderDeserializationTest {
         assertNotNull(order.getContacts());
         OrderContactInfo contact = order.getContacts().get(0);
         assertEquals("john_doe", contact.getRegisteredUser());
-        assertEquals("ORDERING", contact.getType());
-        assertEquals("ANYTIME", contact.getAvailability());
+        assertEquals(OrderContactType.ORDERING, contact.getType());
+        assertEquals(ContactAvailability.ANYTIME, contact.getAvailability());
         assertEquals("EMAIL", contact.getDetails().get(0).getType());
     }
 
@@ -88,7 +98,7 @@ class OrderDeserializationTest {
         assertNotNull(order.getNotes());
         OrderNote note = order.getNotes().get(0);
         assertEquals("1-NOTE-001", note.getId());
-        assertEquals("CUSTOMER_NOTES", note.getType());
+        assertEquals(OrderNoteType.CUSTOMER_NOTES, note.getType());
         assertEquals("johndoe@acme.com", note.getAuthor());
         assertEquals("error-log", note.getAttachments().get(0).getName());
     }
@@ -105,15 +115,15 @@ class OrderDeserializationTest {
         assertEquals(1, order.getDetails().size());
         OrderLine line = order.getDetails().get(0);
         assertEquals("1-NEYSNX123", line.getLineId());
-        assertEquals("CROSS_CONNECT", line.getProductType());
+        assertEquals(OrderProductType.CROSS_CONNECT, line.getProductType());
         assertEquals("CC00001", line.getProductCode());
         assertEquals("SV5", line.getIbx());
         assertEquals("SV5:01:0101", line.getCage());
         assertEquals("SV5:01:0101:01", line.getCabinets().get(0));
-        assertEquals("ADD", line.getRequestType());
+        assertEquals(OrderLineRequestType.ADD, line.getRequestType());
         assertEquals(0, new BigDecimal("500").compareTo(line.getUnitPricing().get(0).getValue()));
-        assertEquals("MONTHLY_CHARGE", line.getTotalPricing().get(0).getType());
-        assertEquals("NEW", line.getPurchaseOrder().getType());
+        assertEquals(PricingChargeType.MONTHLY_CHARGE, line.getTotalPricing().get(0).getType());
+        assertEquals(PurchaseOrderType.NEW, line.getPurchaseOrder().getType());
         assertEquals("PO-2020-0042", line.getPurchaseOrder().getNumber());
         assertEquals("floor-plan", line.getAttachments().get(0).getName());
         assertEquals("SERIAL_NUMBER", line.getAdditionalInfo().get(0).getKey());

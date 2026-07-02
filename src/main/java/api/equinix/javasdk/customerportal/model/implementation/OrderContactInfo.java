@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.ContactAvailability;
+import api.equinix.javasdk.customerportal.enums.OrderContactType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -43,10 +45,10 @@ public class OrderContactInfo {
     private String lastName;
 
     @JsonProperty("type")
-    private String type;
+    private OrderContactType type;
 
     @JsonProperty("availability")
-    private String availability;
+    private ContactAvailability availability;
 
     @JsonProperty("timezone")
     private String timezone;

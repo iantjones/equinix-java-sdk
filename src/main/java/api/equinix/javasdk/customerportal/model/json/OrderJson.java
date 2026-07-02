@@ -16,7 +16,10 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.OrderStatus;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.customerportal.model.implementation.AdditionalInfo;
 import api.equinix.javasdk.customerportal.model.implementation.OrderContactInfo;
 import api.equinix.javasdk.customerportal.model.implementation.OrderLine;
@@ -48,7 +51,7 @@ public class OrderJson {
     private String accountNumber;
 
     @JsonProperty("quoteRequestType")
-    private String quoteRequestType;
+    private QuoteRequestType quoteRequestType;
 
     @JsonProperty("contacts")
     private List<OrderContactInfo> contacts;
@@ -72,10 +75,10 @@ public class OrderJson {
     private String currencyCode;
 
     @JsonProperty("channel")
-    private String channel;
+    private Channel channel;
 
     @JsonProperty("subChannel")
-    private String subChannel;
+    private SubChannel subChannel;
 
     @JsonProperty("notes")
     private List<OrderNote> notes;

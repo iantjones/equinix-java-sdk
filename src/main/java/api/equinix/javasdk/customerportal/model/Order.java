@@ -16,7 +16,10 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.OrderStatus;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import api.equinix.javasdk.customerportal.model.implementation.AdditionalInfo;
 import api.equinix.javasdk.customerportal.model.implementation.OrderContactInfo;
 import api.equinix.javasdk.customerportal.model.implementation.OrderLine;
@@ -58,7 +61,7 @@ public interface Order {
      *
      * @return the quote request type
      */
-    String getQuoteRequestType();
+    QuoteRequestType getQuoteRequestType();
 
     /**
      * Returns the related parties associated with the order.
@@ -115,14 +118,14 @@ public interface Order {
      *
      * @return the channel
      */
-    String getChannel();
+    Channel getChannel();
 
     /**
      * Returns the sub-channel the order was placed through.
      *
      * @return the sub-channel
      */
-    String getSubChannel();
+    SubChannel getSubChannel();
 
     /**
      * Returns the notes associated with the order.
