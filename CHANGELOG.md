@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ibxDetails(String)` and `isEnriched()` expose the merged records — ready for
   `SpeedOfLightLatency` IBX-to-IBX math without wiring up the InternetAccess domain yourself. The
   fetch is best-effort: an EIA outage never fails the registry load. Works on a standalone `Fabric`
-  and flows through an `Equinix` session to `eq.metroRegistry()`.
+  and flows through an `Equinix` session to `eq.metroRegistry()`. `MetroRegistry.refresh()` re-reads
+  both sources at runtime and swaps the snapshot atomically in place, so existing references see
+  new metros/IBXes immediately (`Fabric.reloadMetroRegistry()` now delegates to it).
 - **SpeedOfLightLatency Metro/mixed overloads** — `millisBetween`/`distanceKm` now accept
   `(Metro, Metro)`, `(Ibx, Metro)` and `(Metro, Ibx)` in addition to `(Ibx, Ibx)`, normalizing the
   Fabric and EIA coordinate types internally; missing coordinates throw naming the offending

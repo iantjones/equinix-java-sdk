@@ -295,18 +295,20 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     }
 
     /**
-     * Rebuilds the {@link #metroRegistry()} from a fresh Metros API call (re-running EIA enrichment
-     * when configured), picking up any metros added since it was last loaded.
+     * Refreshes the {@link #metroRegistry()} in place from a fresh Metros API call (re-running EIA
+     * enrichment when configured), picking up any metros or IBXes added since it was last loaded.
+     * Existing references to the registry see the fresh data — this delegates to
+     * {@code MetroRegistry.refresh()}.
      *
      * @return the refreshed metro registry
      */
     public MetroRegistry reloadMetroRegistry() {
-        this.metroRegistry = loadMetroRegistry();
-        return metroRegistry;
+        return metroRegistry == null ? metroRegistry() : metroRegistry.refresh();
     }
 
     private MetroRegistry loadMetroRegistry() {
-        return MetroRegistry.load(metros(), enrichMetroRegistry ? fetchIbxDetails() : java.util.List.of());
+        return MetroRegistry.load(metros(),
+                enrichMetroRegistry ? this::fetchIbxDetails : java.util.Collections::emptyList);
     }
 
     /**
