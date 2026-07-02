@@ -39,7 +39,7 @@ public class CloudEventJson implements CloudEvent {
     @JsonProperty("id")
     private String uuid;
 
-    @JsonProperty("spec")
+    @JsonProperty("specversion")
     private String spec;
 
     @JsonProperty("type")

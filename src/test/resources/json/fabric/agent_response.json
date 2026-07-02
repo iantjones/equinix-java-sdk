@@ -9,6 +9,12 @@
   "project": {
     "projectId": "291639000636111"
   },
+  "agentTemplate": {
+    "uuid": "657400f8-c0af-430c-8216-43d44f08c1c5"
+  },
+  "configuration": {
+    "prompt": "Connection uuid is <connection_uuid>. Alert rule is <alert_rule_uuid>. Upgrade bandwidth to 10GB."
+  },
   "changeLog": {
     "createdBy": "test-user",
     "createdDateTime": "2026-07-01T12:00:00.000Z"

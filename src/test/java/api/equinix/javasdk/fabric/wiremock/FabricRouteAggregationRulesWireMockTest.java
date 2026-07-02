@@ -5,6 +5,7 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.RouteAggregationRuleState;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
@@ -71,6 +72,10 @@ class FabricRouteAggregationRulesWireMockTest extends WireMockTestBase {
             assertEquals(2, rules.size());
             assertEquals("c2d3e4f5-a6b7-8901-cdef-012345678901", rules.get(0).getUuid());
             assertEquals("Aggregate-10-0-0-0-8", rules.get(0).getName());
+
+            // Spec state values round-trip, including the NOT_PROVISIONED addition.
+            assertEquals(RouteAggregationRuleState.PROVISIONED, rules.get(0).getState());
+            assertEquals(RouteAggregationRuleState.NOT_PROVISIONED, rules.get(1).getState());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH)));
         }

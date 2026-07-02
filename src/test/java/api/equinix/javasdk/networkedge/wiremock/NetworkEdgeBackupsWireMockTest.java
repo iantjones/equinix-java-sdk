@@ -9,6 +9,8 @@ import api.equinix.javasdk.networkedge.enums.BackupStatus;
 import api.equinix.javasdk.networkedge.model.Backup;
 import org.junit.jupiter.api.*;
 
+import java.time.LocalDateTime;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,6 +53,10 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
             assertNotNull(backup);
             assertEquals("bkp-1111-2222-3333-444455556666", backup.getUuid());
             assertEquals("test-backup", backup.getName());
+            // Spec DeviceBackupInfoVerbose carries deviceUuid and lastUpdatedDateTime (not the
+            // shared Lifecycle lastUpdatedDate name) — both must map.
+            assertEquals("dev-9999-8888-7777-666655554444", backup.getDeviceUuid());
+            assertEquals(LocalDateTime.of(2018, 1, 30, 10, 30, 31), backup.getLastUpdatedDate());
         }
 
         @Test
@@ -82,6 +88,7 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
             assertEquals(2, backups.size());
             assertEquals("bkp-1111-2222-3333-444455556666", backups.get(0).getUuid());
             assertEquals("test-backup", backups.get(0).getName());
+            assertEquals("dev-9999-8888-7777-666655554444", backups.get(0).getDeviceUuid());
             assertEquals("bkp-7777-8888-9999-aaaabbbbcccc", backups.get(1).getUuid());
             assertEquals("second-backup", backups.get(1).getName());
 

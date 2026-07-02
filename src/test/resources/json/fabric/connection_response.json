@@ -24,6 +24,17 @@
     }
   },
   "zSide": {
+    "serviceToken": {
+      "href": "https://api.equinix.com/fabric/v4/serviceTokens/e05f4e14-cf3e-44b7-b0a6-085fcc93e2ea",
+      "uuid": "e05f4e14-cf3e-44b7-b0a6-085fcc93e2ea",
+      "type": "VC_TOKEN",
+      "state": "ACTIVE",
+      "name": "Zside-Token-01",
+      "description": "Z-side token this connection was redeemed from",
+      "issuerSide": "z",
+      "expiry": 30,
+      "expirationDateTime": "2024-06-30T23:59:59Z"
+    },
     "accessPoint": {
       "type": "SP",
       "profile": {
@@ -73,6 +84,11 @@
     "orgId": 100100
   },
   "order": {
-    "purchaseOrderNumber": "PO-12345"
+    "purchaseOrderNumber": "PO-12345",
+    "customerReferenceNumber": "CR-98765",
+    "orderId": "1-323292",
+    "orderNumber": "1-323333",
+    "termLength": 24,
+    "billingTier": "Up to 1 Gbps"
   }
 }

@@ -158,6 +158,8 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
             assertEquals(Vendor.CISCO, first.getVendor());
             assertEquals(DeviceCategory.ROUTER, first.getCategory());
             assertEquals(10, first.getMaxInterfaceCount());
+            // Multi-word display form maps to its enum constant, not UNKNOWN.
+            assertEquals(Vendor.PALO_ALTO_NETWORKS, deviceTypes.get(1).getVendor());
         }
 
         @Test
@@ -189,7 +191,10 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
 
             assertNotNull(status);
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", status.getTermsVersionId());
+            // Spec AgreementStatusResponse names the wire property "isValid" (required).
             assertTrue(status.getValid());
+            // AgreementAcceptResponse.status is only populated on the create response.
+            assertEquals("SUCCESS", status.getStatus());
 
             // The create body carries the account number and the terms version id (serialized as apttusId).
             wireMock.verify(postRequestedFor(urlPathEqualTo("/ne/v1/agreements/accounts"))
@@ -406,7 +411,9 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
 
             assertNotNull(status);
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", status.getTermsVersionId());
+            // Spec AgreementStatusResponse names the wire property "isValid" (required).
             assertTrue(status.getValid());
+            assertEquals("https://docs.equinix.com/legal/network-edge-terms", status.getTerms());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/agreements/accounts"))
                     .withQueryParam("accountNumber", equalTo("123456")));

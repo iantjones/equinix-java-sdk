@@ -17,6 +17,7 @@ import api.equinix.javasdk.customerportal.model.json.creators.Layer1DeinstallDet
 import api.equinix.javasdk.customerportal.model.json.creators.Layer1Detail;
 import api.equinix.javasdk.customerportal.model.json.creators.Layer1PatchPanel;
 import api.equinix.javasdk.customerportal.model.json.creators.Layer1ZSide;
+import api.equinix.javasdk.customerportal.model.json.creators.OrderPurchaseOrder;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -79,6 +80,8 @@ class CustomerPortalCrossConnectsWireMockTest extends WireMockTestBase {
                                     List.of(Layer1Detail.builder(aSide, zSide).build()))
                             .customerReferenceId("XC-1042")
                             .description("Primary DB cross connect")
+                            .purchaseOrder(new OrderPurchaseOrder("NEW", "PO-12345", "2020-03-04",
+                                    "2021-03-04", 10000.0, "85d9660a-f877-405a-b38e-8e61a4f77f44"))
                             .build());
 
             assertNotNull(response);
@@ -89,6 +92,13 @@ class CustomerPortalCrossConnectsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.details[0].aSide.connectionService", equalTo("SINGLE_MODE_FIBER")))
                     .withRequestBody(matchingJsonPath("$.details[0].aSide.protocolType", equalTo("GIGABIT_ETHERNET")))
                     .withRequestBody(matchingJsonPath("$.details[0].zSide.connectorType", equalTo("LC")))
+                    .withRequestBody(matchingJsonPath("$.purchaseOrder.type", equalTo("NEW")))
+                    .withRequestBody(matchingJsonPath("$.purchaseOrder.number", equalTo("PO-12345")))
+                    .withRequestBody(matchingJsonPath("$.purchaseOrder.startDate", equalTo("2020-03-04")))
+                    .withRequestBody(matchingJsonPath("$.purchaseOrder.endDate", equalTo("2021-03-04")))
+                    .withRequestBody(matchingJsonPath("$.purchaseOrder.amount", equalTo("10000.0")))
+                    .withRequestBody(matchingJsonPath("$.purchaseOrder.attachmentId",
+                            equalTo("85d9660a-f877-405a-b38e-8e61a4f77f44")))
                     .withRequestBody(matchingJsonPath("$.details")));
         }
     }

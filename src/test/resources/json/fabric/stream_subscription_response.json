@@ -6,6 +6,19 @@
   "state": "PROVISIONED",
   "description": "Delivers production telemetry events to the Splunk HEC sink",
   "enabled": true,
+  "metricSelector": {
+    "include": [
+      "equinix.fabric.connection.*"
+    ],
+    "except": [
+      "equinix.fabric.connection.bandwidth_rx.usage"
+    ]
+  },
+  "eventSelector": {
+    "include": [
+      "equinix.fabric.connection.*"
+    ]
+  },
   "sink": {
     "type": "SPLUNK_HEC",
     "uri": "https://splunk.example.com:8088/services/collector",

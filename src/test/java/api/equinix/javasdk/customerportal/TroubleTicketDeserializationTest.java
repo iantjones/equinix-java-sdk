@@ -78,6 +78,14 @@ class TroubleTicketDeserializationTest {
     }
 
     @Test
+    void details_areDeserializedAsFreeFormMap() {
+        assertNotNull(troubleTicket.getDetails());
+        assertEquals(2, troubleTicket.getDetails().size());
+        assertEquals(Boolean.FALSE, troubleTicket.getDetails().get("callFromCage"));
+        assertEquals("ANYTIME", troubleTicket.getDetails().get("availability"));
+    }
+
+    @Test
     void resolutions_areDeserialized() {
         assertEquals(1, troubleTicket.getResolutions().size());
         TicketResolution resolution = troubleTicket.getResolutions().get(0);

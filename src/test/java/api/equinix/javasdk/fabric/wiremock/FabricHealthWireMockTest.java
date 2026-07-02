@@ -41,6 +41,13 @@ class FabricHealthWireMockTest extends WireMockTestBase {
 
         HealthStatus health = fabric.health();
         assertNotNull(health);
+        assertEquals("https://api.equinix.com/fabric/v4/health", health.getHref());
+        assertEquals("4.0", health.getVersion());
+        assertEquals("2024.11", health.getRelease());
+        assertEquals("UP", health.getState());
+        assertNotNull(health.getApiServices());
+        assertEquals("/fabric/v4/connections", health.getApiServices().getRoute());
+        assertEquals("UP", health.getApiServices().getStatus());
     }
 
     @Test

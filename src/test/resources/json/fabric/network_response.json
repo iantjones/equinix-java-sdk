@@ -6,7 +6,10 @@
   "state": "ACTIVE",
   "scope": "REGIONAL",
   "location": {
-    "metroCode": "SV"
+    "metroHref": "https://api.equinix.com/fabric/v4/metros/SV",
+    "metroCode": "SV",
+    "metroName": "Silicon Valley",
+    "region": "AMER"
   },
   "project": {
     "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"

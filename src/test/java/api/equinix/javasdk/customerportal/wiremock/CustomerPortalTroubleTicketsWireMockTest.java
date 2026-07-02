@@ -13,6 +13,7 @@ import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreat
 import org.junit.jupiter.api.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -62,13 +63,16 @@ class CustomerPortalTroubleTicketsWireMockTest extends WireMockTestBase {
                                     "Intermittent packet loss on cross-connect XC-1042",
                                     "2024-11-10T03:00:00Z", "SV5:01:000ABC")
                             .customerReferenceId("REF-9981")
+                            .details(Map.of("callFromCage", true, "availability", "WORK_HOURS"))
                             .build());
 
             assertEquals("1-34891", ticketId);
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/v2/tickets"))
                     .withRequestBody(matchingJsonPath("$.code", equalTo("0001-0000")))
-                    .withRequestBody(matchingJsonPath("$.primaryId", equalTo("SV5:01:000ABC"))));
+                    .withRequestBody(matchingJsonPath("$.primaryId", equalTo("SV5:01:000ABC")))
+                    .withRequestBody(matchingJsonPath("$.details.callFromCage", equalTo("true")))
+                    .withRequestBody(matchingJsonPath("$.details.availability", equalTo("WORK_HOURS"))));
         }
     }
 

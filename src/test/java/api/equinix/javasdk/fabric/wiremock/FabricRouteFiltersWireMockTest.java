@@ -58,6 +58,10 @@ class FabricRouteFiltersWireMockTest extends WireMockTestBase {
             RouteFilter filter = fabric.routeFilters().getByUuid("e5f6a7b8-c9d0-1234-efab-456789012cde");
             assertNotNull(filter);
             assertEquals("e5f6a7b8-c9d0-1234-efab-456789012cde", filter.getUuid());
+
+            // The response-example wire name "changeLog" still maps.
+            assertNotNull(filter.getChangeLog());
+            assertEquals("user1234", filter.getChangeLog().getCreatedBy());
         }
 
         @Test
@@ -87,6 +91,11 @@ class FabricRouteFiltersWireMockTest extends WireMockTestBase {
             assertNotNull(filters);
             assertEquals(2, filters.size());
             assertEquals("e5f6a7b8-c9d0-1234-efab-456789012cde", filters.get(0).getUuid());
+
+            // The RouteFiltersData schema names the property "changelog" (lowercase);
+            // the @JsonAlias must map it onto changeLog.
+            assertNotNull(filters.get(0).getChangeLog());
+            assertEquals("user1234", filters.get(0).getChangeLog().getCreatedBy());
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routeFilters/search")));
         }

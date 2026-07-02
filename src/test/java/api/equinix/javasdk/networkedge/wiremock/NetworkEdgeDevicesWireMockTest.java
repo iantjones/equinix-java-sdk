@@ -3,7 +3,9 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.ACLInterfaceType;
@@ -13,6 +15,7 @@ import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.model.Device;
 import api.equinix.javasdk.networkedge.model.implementation.AllowedInterfaceResponse;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceACL;
+import api.equinix.javasdk.networkedge.model.implementation.DeviceVendorConfig;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceReboot;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceUpgrade;
 import api.equinix.javasdk.networkedge.model.implementation.DownloadableImage;
@@ -141,6 +144,10 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
             assertNotNull(interfaces);
             assertEquals(2, interfaces.size());
             assertEquals("eth0", interfaces.get(0).getName());
+            // Spec InterfaceBasicInfoResponse names the wire property "operationStatus";
+            // the model keeps the historical getOperationalStatus() accessor.
+            assertEquals(OperationalStatus.UP, interfaces.get(0).getOperationalStatus());
+            assertEquals(OperationalStatus.DOWN, interfaces.get(1).getOperationalStatus());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces")));
         }
 
@@ -307,7 +314,7 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
 
         @Test
         @DisplayName("POSTs the create body, reads the uuid from the response, and GETs the new device")
-        void createsDevice() {
+        void createsDevice() throws Exception {
             // POST /ne/v1/devices -> 201 Created with a body carrying the new device uuid.
             wireMock.stubFor(post(urlPathMatching("/ne/v1/devices/?"))
                     .willReturn(aResponse()
@@ -317,12 +324,19 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
             // GET /ne/v1/devices/{uuid} -> the impl re-fetches the created device.
             stubSingleton(wireMock, "/ne/v1/devices/" + NEW_UUID, "/json/networkedge/device_response.json");
 
+            // DeviceVendorConfig is a read-model (@Getter only), so build the spec-shaped
+            // VendorConfig via Jackson — which also locks its wire property names.
+            DeviceVendorConfig vendorConfig = Constants.objectMapper.readValue(
+                    "{\"siteId\":\"567\",\"systemIpAddress\":\"192.168.7.100\",\"adminPassword\":\"srb@dm1n\"}",
+                    DeviceVendorConfig.class);
+
             Device device = networkEdge.devices()
                     .define("My-CSR1000V-Device")
                     .withDeviceTypeCode("CSR1000V")
                     .withMetroCode(MetroCode.SV)
                     .withAccountNumber("123456")
                     .withNotification("ops@example.com")
+                    .withVendorConfig(vendorConfig)
                     .create();
 
             assertNotNull(device);
@@ -334,7 +348,11 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.deviceTypeCode", equalTo("CSR1000V")))
                     .withRequestBody(matchingJsonPath("$.metroCode", equalTo("SV")))
                     .withRequestBody(matchingJsonPath("$.accountNumber", equalTo("123456")))
-                    .withRequestBody(matchingJsonPath("$.notifications[0]", equalTo("ops@example.com"))));
+                    .withRequestBody(matchingJsonPath("$.notifications[0]", equalTo("ops@example.com")))
+                    // Spec VirtualDeviceRequest.vendorConfig — the create body must carry the nested object.
+                    .withRequestBody(matchingJsonPath("$.vendorConfig.siteId", equalTo("567")))
+                    .withRequestBody(matchingJsonPath("$.vendorConfig.systemIpAddress", equalTo("192.168.7.100")))
+                    .withRequestBody(matchingJsonPath("$.vendorConfig.adminPassword", equalTo("srb@dm1n"))));
             // Verify the follow-up GET for the uuid parsed from the create response body.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + NEW_UUID)));
         }

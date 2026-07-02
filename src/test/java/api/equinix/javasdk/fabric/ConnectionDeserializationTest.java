@@ -2,7 +2,13 @@ package api.equinix.javasdk.fabric;
 
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.fabric.enums.ConnectionState;
+import api.equinix.javasdk.fabric.enums.ConnectionStatus;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.LinkProtocolType;
+import api.equinix.javasdk.fabric.enums.ServiceTokenState;
+import api.equinix.javasdk.fabric.enums.ServiceTokenType;
+import api.equinix.javasdk.fabric.model.implementation.LinkProtocol;
+import api.equinix.javasdk.fabric.model.implementation.ServiceToken;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -128,5 +134,86 @@ class ConnectionDeserializationTest {
     @Test
     void order_isDeserialized() {
         assertNotNull(connection.getOrder());
+        assertEquals("PO-12345", connection.getOrder().getPurchaseOrderNumber());
+        assertEquals("CR-98765", connection.getOrder().getCustomerReferenceNumber());
+        assertEquals("1-323292", connection.getOrder().getOrderId());
+        assertEquals("1-323333", connection.getOrder().getOrderNumber());
+        assertEquals(24, connection.getOrder().getTermLength());
+        assertEquals("Up to 1 Gbps", connection.getOrder().getBillingTier());
+    }
+
+    @Test
+    void zSide_serviceToken_isDeserialized() {
+        ServiceToken token = connection.getZSide().getServiceToken();
+        assertNotNull(token);
+        assertEquals("e05f4e14-cf3e-44b7-b0a6-085fcc93e2ea", token.getUuid());
+        assertEquals("https://api.equinix.com/fabric/v4/serviceTokens/e05f4e14-cf3e-44b7-b0a6-085fcc93e2ea",
+                token.getHref());
+        assertEquals(ServiceTokenType.VC_TOKEN, token.getType());
+        assertEquals(ServiceTokenState.ACTIVE, token.getState());
+        assertEquals("Zside-Token-01", token.getName());
+        assertEquals("Z-side token this connection was redeemed from", token.getDescription());
+        assertEquals("z", token.getIssuerSide());
+        assertEquals(30, token.getExpiry());
+        assertNotNull(token.getExpirationDateTime());
+        assertEquals(2024, token.getExpirationDateTime().getYear());
+        assertEquals(6, token.getExpirationDateTime().getMonthValue());
+        assertEquals(30, token.getExpirationDateTime().getDayOfMonth());
+    }
+
+    // ConnectionStatus is exercised through Jackson (the @JsonCreator wire path) directly:
+    // ConnectionOperation deserializes these fields but currently exposes no getters.
+
+    @Test
+    void connectionStatus_draft_isReadAsDraft() throws Exception {
+        assertEquals(ConnectionStatus.DRAFT,
+                objectMapper.readValue("\"DRAFT\"", ConnectionStatus.class));
+    }
+
+    @Test
+    void connectionStatus_cancelled_isReadAsCancelled() throws Exception {
+        assertEquals(ConnectionStatus.CANCELLED,
+                objectMapper.readValue("\"CANCELLED\"", ConnectionStatus.class));
+    }
+
+    @Test
+    void connectionStatus_pendingAutoApproval_isReadAsPendingAutoApproval() throws Exception {
+        assertEquals(ConnectionStatus.PENDING_AUTO_APPROVAL,
+                objectMapper.readValue("\"PENDING_AUTO_APPROVAL\"", ConnectionStatus.class));
+    }
+
+    @Test
+    void connectionStatus_unknownValue_fallsBackToUnknownNotNull() throws Exception {
+        ConnectionStatus status = objectMapper.readValue("\"SOME_FUTURE_STATUS\"", ConnectionStatus.class);
+        assertNotNull(status);
+        assertEquals(ConnectionStatus.UNKNOWN, status);
+    }
+
+    @Test
+    void connectionStatus_notApplicableWireValue_isReadAsNotApplicable() throws Exception {
+        assertEquals(ConnectionStatus.NOT_APPLICABLE,
+                objectMapper.readValue("\"N/A\"", ConnectionStatus.class));
+    }
+
+    @Test
+    void linkProtocolType_vxlan_isReadAsVxlan() throws Exception {
+        LinkProtocol linkProtocol = objectMapper.readValue(
+                "{\"type\":\"VXLAN\",\"vni\":12345}", LinkProtocol.class);
+        assertEquals(LinkProtocolType.VXLAN, linkProtocol.getType());
+    }
+
+    @Test
+    void linkProtocolType_evpnVxlan_isReadAsEvpnVxlan() throws Exception {
+        LinkProtocol linkProtocol = objectMapper.readValue(
+                "{\"type\":\"EVPN_VXLAN\"}", LinkProtocol.class);
+        assertEquals(LinkProtocolType.EVPN_VXLAN, linkProtocol.getType());
+    }
+
+    @Test
+    void linkProtocolType_unknownValue_fallsBackToUnknownNotNull() throws Exception {
+        LinkProtocol linkProtocol = objectMapper.readValue(
+                "{\"type\":\"SOME_FUTURE_PROTOCOL\"}", LinkProtocol.class);
+        assertNotNull(linkProtocol.getType());
+        assertEquals(LinkProtocolType.UNKNOWN, linkProtocol.getType());
     }
 }

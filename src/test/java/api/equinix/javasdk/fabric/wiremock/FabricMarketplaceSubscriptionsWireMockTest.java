@@ -54,8 +54,30 @@ class FabricMarketplaceSubscriptionsWireMockTest extends WireMockTestBase {
             assertEquals("MARKETPLACE_SUBSCRIPTION", subscription.getType());
             assertEquals(MarketplaceSubscriptionState.ACTIVE, subscription.getState());
             assertEquals("AWS", subscription.getMarketplace());
+            assertEquals("PRIVATE_OFFER", subscription.getOfferType());
             assertEquals("offer-12345", subscription.getOfferId());
             assertTrue(subscription.getIsAutoRenew());
+
+            assertNotNull(subscription.getTrial());
+            assertTrue(subscription.getTrial().getEnabled());
+            assertEquals("2026-08-21T10:30:00Z", subscription.getTrial().getExpiryDateTime());
+
+            assertEquals(java.util.List.of("SV", "DC"), subscription.getMetroCodes());
+
+            assertNotNull(subscription.getEntitlements());
+            assertEquals(2, subscription.getEntitlements().size());
+            assertEquals("a15b6b20-b765-4bf7-a661-a3e9372d5435", subscription.getEntitlements().get(0).getUuid());
+            assertEquals(1, subscription.getEntitlements().get(0).getQuantityEntitled());
+            assertEquals(0, subscription.getEntitlements().get(0).getQuantityConsumed());
+            assertEquals(1, subscription.getEntitlements().get(0).getQuantityAvailable());
+            assertEquals("XF_ROUTER", subscription.getEntitlements().get(0).getAsset().getType());
+            assertEquals("STANDARD", subscription.getEntitlements().get(0).getAsset().getAssetPackage().getCode());
+            assertEquals("IP_VC", subscription.getEntitlements().get(1).getAsset().getType());
+            assertEquals(500, subscription.getEntitlements().get(1).getAsset().getBandwidth());
+
+            // Wire property is lowercase "changelog" on this resource (spec SubscriptionResponse).
+            assertNotNull(subscription.getChangeLog());
+            assertEquals("adminuser", subscription.getChangeLog().getCreatedBy());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/marketplaceSubscriptions/195be615-a8ad-4c33-8e9c-c7612fbf6c9f")));

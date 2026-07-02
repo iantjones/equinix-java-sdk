@@ -1,5 +1,6 @@
 {
   "termsVersionID": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "terms": "https://docs.equinix.com/legal/network-edge-terms",
-  "isValid": true
+  "isValid": true,
+  "status": "SUCCESS"
 }

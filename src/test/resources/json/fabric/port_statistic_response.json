@@ -1,27 +1,27 @@
 {
-  "uuid": "p1234567-89ab-cdef-0123-456789abcdef",
-  "type": "XF_PORT",
-  "name": "test-port-stats",
-  "bandwidth": 10000,
-  "stats": {
-    "startDateTime": "2026-06-01T00:00:00.000Z",
-    "endDateTime": "2026-06-02T00:00:00.000Z",
-    "capacity": 10000,
-    "bandwidthUtilization": {
-      "unit": "MB",
-      "metricInterval": "PT1H",
-      "inbound": {
-        "max": 8200.0,
-        "mean": 3100.5,
-        "lastPolled": 2900.0,
-        "metrics": []
-      },
-      "outbound": {
-        "max": 7600.25,
-        "mean": 2850.75,
-        "lastPolled": 2700.0,
-        "metrics": []
-      }
+  "startDateTime": "2026-06-01T00:00:00.000Z",
+  "endDateTime": "2026-06-02T00:00:00.000Z",
+  "viewPoint": "aSide",
+  "bandwidthUtilization": {
+    "unit": "Mbps",
+    "metricInterval": "PT1H",
+    "inbound": {
+      "max": 8200.0,
+      "mean": 3100.5,
+      "lastPolled": 2900.0,
+      "metrics": [
+        {
+          "intervalEndTimestamp": "2026-06-01T01:00:00.000Z",
+          "max": 8200.0,
+          "mean": 3100.5
+        }
+      ]
+    },
+    "outbound": {
+      "max": 7600.25,
+      "mean": 2850.75,
+      "lastPolled": 2700.0,
+      "metrics": []
     }
   }
 }
