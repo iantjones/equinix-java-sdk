@@ -1,5 +1,6 @@
 package api.equinix.javasdk.customerportal.wiremock;
 
+import api.equinix.javasdk.customerportal.enums.SmartHandsType;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.customerportal.enums.PhonePreferenceToCall;
@@ -283,7 +284,7 @@ class CustomerPortalSmartHandsWireMockTest extends WireMockTestBase {
 
         assertNotNull(types);
         assertEquals(1, types.size());
-        assertEquals("EQUIPMENT_INSTALL", types.get(0).getType());
+        assertEquals(SmartHandsType.EQUIPMENT_INSTALL, types.get(0).getType());
         assertEquals("Equipment Install", types.get(0).getTypeDescription());
         wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/smarthands/types")));
     }

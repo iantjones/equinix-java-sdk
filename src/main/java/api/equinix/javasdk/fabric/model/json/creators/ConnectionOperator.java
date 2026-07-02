@@ -444,7 +444,7 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
     /**
      * Fluent updater for an existing connection. Typed setters record RFC&nbsp;6902 replace
      * operations (the API accepts a JSON Patch array at {@code PATCH /connections/{uuid}}); use
-     * {@link #patch(PatchOperation)} for any path not covered by a typed setter (e.g. term length,
+     * {@link #patch(PatchOperation)} for any path not covered by a typed setter (e.g.
      * notifications, A-side migration). Call {@link #save()} to apply.
      */
     public class ConnectionUpdater {
@@ -463,6 +463,18 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
 
         public ConnectionUpdater bandwidth(Integer bandwidth) {
             operations.add(PatchOperation.replace("/bandwidth", bandwidth));
+            return this;
+        }
+
+        /**
+         * Replaces the order term length ({@code /order/termLength}), e.g. to upgrade an on-demand
+         * connection to a term-based connection (Fabric release R2025.5).
+         *
+         * @param termLength the new term length in months (for example 12, 24 or 36)
+         * @return this updater
+         */
+        public ConnectionUpdater termLength(Integer termLength) {
+            operations.add(PatchOperation.replace("/order/termLength", termLength));
             return this;
         }
 

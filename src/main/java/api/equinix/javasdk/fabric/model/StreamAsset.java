@@ -15,6 +15,8 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.StreamAssetType;
+import api.equinix.javasdk.fabric.enums.StreamAssetAttachmentStatus;
 
 /**
  * An asset (port, connection, router, etc.) attached to a Fabric stream for telemetry. Read-only.
@@ -25,9 +27,9 @@ public interface StreamAsset {
 
     String getUuid();
 
-    String getType();
+    StreamAssetType getType();
 
     Boolean getMetricsEnabled();
 
-    String getAttachmentStatus();
+    StreamAssetAttachmentStatus getAttachmentStatus();
 }

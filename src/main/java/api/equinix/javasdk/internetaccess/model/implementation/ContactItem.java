@@ -17,6 +17,7 @@
 package api.equinix.javasdk.internetaccess.model.implementation;
 
 import api.equinix.javasdk.internetaccess.enums.ContactAvailability;
+import api.equinix.javasdk.internetaccess.enums.ContactDetailType;
 import api.equinix.javasdk.internetaccess.enums.ContactType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -67,7 +68,7 @@ public class ContactItem {
     public static class ContactItemDetails {
 
         @JsonProperty("type")
-        private String type;
+        private ContactDetailType type;
 
         @JsonProperty("value")
         private String value;

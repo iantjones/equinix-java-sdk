@@ -1,5 +1,9 @@
 package api.equinix.javasdk.customerportal;
 
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
+import api.equinix.javasdk.customerportal.enums.SupportCaseNoteType;
+import api.equinix.javasdk.customerportal.enums.OrderContactType;
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.customerportal.enums.AttachmentSource;
 import api.equinix.javasdk.customerportal.enums.SupportCaseStatus;
@@ -31,7 +35,7 @@ class SupportCaseDeserializationTest {
         assertEquals("182389736", supportCase.getAccountNumber());
         assertEquals("VjT Existing Reseller New BA", supportCase.getAccountName());
         assertEquals("REF-44211", supportCase.getCustomerReferenceId());
-        assertEquals("PORTAL", supportCase.getChannel());
+        assertEquals(Channel.PORTAL, supportCase.getChannel());
         assertEquals("1-204976070710", supportCase.getOrderId());
         assertEquals(SupportCaseStatus.IN_PROGRESS, supportCase.getStatus());
         assertEquals("2024-11-09T13:00:00Z", supportCase.getCreatedDateTime());
@@ -47,7 +51,7 @@ class SupportCaseDeserializationTest {
     void contacts_areDeserialized() {
         assertEquals(1, supportCase.getContacts().size());
         assertEquals("John", supportCase.getContacts().get(0).getFirstName());
-        assertEquals("NOTIFICATION", supportCase.getContacts().get(0).getType());
+        assertEquals(OrderContactType.NOTIFICATION, supportCase.getContacts().get(0).getType());
         assertEquals("EMAIL", supportCase.getContacts().get(0).getDetails().get(0).getType());
         assertEquals("SomeContact@email.com", supportCase.getContacts().get(0).getDetails().get(0).getValue());
     }
@@ -56,7 +60,7 @@ class SupportCaseDeserializationTest {
     void notes_areDeserialized() {
         assertEquals(1, supportCase.getNotes().size());
         assertEquals("note-1", supportCase.getNotes().get(0).getId());
-        assertEquals("RESOLUTION_NOTES", supportCase.getNotes().get(0).getType());
+        assertEquals(SupportCaseNoteType.RESOLUTION_NOTES, supportCase.getNotes().get(0).getType());
     }
 
     @Test
@@ -81,7 +85,7 @@ class SupportCaseDeserializationTest {
         assertEquals(1, supportCase.getOtherDetails().getStatusHistory().size());
         assertEquals(SupportCaseStatus.SUBMITTED, supportCase.getOtherDetails().getStatusHistory().get(0).getStatus());
         assertEquals(1, supportCase.getOtherDetails().getDetails().size());
-        assertEquals("SMART_HANDS", supportCase.getOtherDetails().getDetails().get(0).getProductType());
+        assertEquals(OrderProductType.SMART_HANDS, supportCase.getOtherDetails().getDetails().get(0).getProductType());
         assertTrue(supportCase.getOtherDetails().getCancellable());
         assertFalse(supportCase.getOtherDetails().getModifiable());
     }

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,7 +38,7 @@ public final class TimeServiceConnectionJson implements TimeServiceConnection {
     private String href;
 
     @JsonProperty("type")
-    private String type;
+    private ConnectionType type;
 
     @JsonProperty("uuid")
     private String uuid;

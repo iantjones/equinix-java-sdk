@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.ReportScheduleStatus;
+import api.equinix.javasdk.customerportal.enums.ReportPeriod;
+import api.equinix.javasdk.customerportal.enums.ReportScheduleType;
 import api.equinix.javasdk.customerportal.model.ScheduledReport;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,10 +40,10 @@ public class ScheduledReportJson implements ScheduledReport {
     private String reportName;
 
     @JsonProperty("scheduleType")
-    private String scheduleType;
+    private ReportScheduleType scheduleType;
 
     @JsonProperty("period")
-    private String period;
+    private ReportPeriod period;
 
     @JsonProperty("createdBy")
     private String createdBy;
@@ -70,7 +73,7 @@ public class ScheduledReportJson implements ScheduledReport {
     private Integer numberOfFailedAttempts;
 
     @JsonProperty("status")
-    private String status;
+    private ReportScheduleStatus status;
 
     @JsonProperty("parameters")
     private List<ReportParameterJson> parameters;

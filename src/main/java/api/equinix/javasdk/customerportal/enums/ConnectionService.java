@@ -18,9 +18,12 @@ package api.equinix.javasdk.customerportal.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * The name of the available cross-connect connection service
- * ({@code Connection_services} in the cross-connects v2 spec).
+ * ({@code Connection_services} in the cross-connects v2 and lookup v2 specs).
+ * {@link #UNKNOWN} is a read-side fallback — never send it.
  */
 public enum ConnectionService implements APIParam {
     COAX,
@@ -28,5 +31,12 @@ public enum ConnectionService implements APIParam {
     MULTI_MODE_FIBER,
     POTS,
     SINGLE_MODE_FIBER,
-    UTP
+    UTP,
+    UNKNOWN;
+
+    @JsonCreator
+    public static ConnectionService fromString(String value) {
+        try { return ConnectionService.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

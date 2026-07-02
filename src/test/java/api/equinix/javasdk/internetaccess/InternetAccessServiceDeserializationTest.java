@@ -1,6 +1,7 @@
 package api.equinix.javasdk.internetaccess;
 
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.internetaccess.enums.ChangeType;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
 import api.equinix.javasdk.internetaccess.enums.ContactType;
 import api.equinix.javasdk.internetaccess.enums.CustomerAsnRange;
@@ -76,7 +77,7 @@ class InternetAccessServiceDeserializationTest {
     @Test
     void change_isDeserialized() {
         assertNotNull(service.getChange());
-        assertEquals("SERVICE_CREATION", service.getChange().getType());
+        assertEquals(ChangeType.SERVICE_CREATION, service.getChange().getType());
         assertEquals("COMPLETED", service.getChange().getStatus());
         assertNotNull(service.getChange().getData());
         assertEquals("e1f2a3b4-c5d6-4e7f-8091-021324354657",

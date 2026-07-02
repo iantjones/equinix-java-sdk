@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json;
 
+import api.equinix.javasdk.ibxsmartview.enums.AlertConfigurationState;
 import api.equinix.javasdk.ibxsmartview.model.PowerAlertConfiguration;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertCondition;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertConfigurationAsset;
@@ -41,7 +42,7 @@ public class PowerAlertConfigurationJson implements PowerAlertConfiguration {
     private String ibx;
 
     @JsonProperty("state")
-    private String state;
+    private AlertConfigurationState state;
 
     @JsonProperty("section")
     private String section;

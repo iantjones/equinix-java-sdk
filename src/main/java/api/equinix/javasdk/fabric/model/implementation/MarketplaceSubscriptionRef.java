@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +34,7 @@ public class MarketplaceSubscriptionRef {
     private String href;
 
     @JsonProperty("type")
-    private String type;
+    private MarketplaceSubscriptionType type;
 
     @JsonProperty("uuid")
     private String uuid;

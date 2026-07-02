@@ -16,10 +16,21 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
+ * Virtual device type (Fabric v4 {@code SimplifiedVirtualDevice} / {@code VirtualDevice} schemas).
+ * {@link #UNKNOWN} is a read-side fallback for values added after this SDK release &mdash; never send it.
  *
  * @author ianjones
  */
 public enum VirtualDeviceType {
-    EDGE
+    EDGE,
+    UNKNOWN;
+
+    @JsonCreator
+    public static VirtualDeviceType fromString(String value) {
+        try { return VirtualDeviceType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

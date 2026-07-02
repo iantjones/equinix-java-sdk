@@ -20,9 +20,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Request body for creating an IAM role assignment via {@code POST
- * /v1/projects/{projectId}/roleAssignments} (operationId {@code createRoleAssignment}, spec schema
- * {@code CreateRoleAssignmentInput}).
+ * Request body for creating an IAM role assignment via {@code POST /v1/roleAssignments}
+ * (operationId {@code createRoleAssignment}, spec schema {@code CreateRoleAssignmentInput}).
  *
  * <p>The {@code assignmentScope} property is a nested object modelled by the {@link AssignmentScope}
  * inner class.</p>

@@ -17,6 +17,8 @@
 package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.PortPackageSourceType;
+import api.equinix.javasdk.fabric.enums.PortPackageType;
+import api.equinix.javasdk.fabric.enums.PortServiceType;
 
 import java.util.List;
 
@@ -27,7 +29,7 @@ public interface PortPackage {
 
     String getHref();
 
-    String getType();
+    PortPackageType getType();
 
     String getCode();
 
@@ -35,7 +37,7 @@ public interface PortPackage {
 
     Boolean getVcRemoteSupported();
 
-    List<String> getSupportedServiceTypes();
+    List<PortServiceType> getSupportedServiceTypes();
 
     List<PortPackageSourceType> getSupportedSourceTypes();
 

@@ -1,4 +1,6 @@
 package api.equinix.javasdk.fabric.wiremock;
+import api.equinix.javasdk.fabric.enums.StreamAssetType;
+import api.equinix.javasdk.fabric.enums.StreamAssetAttachmentStatus;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -54,9 +56,9 @@ class FabricStreamAssetsWireMockTest extends WireMockTestBase {
 
             assertNotNull(asset);
             assertEquals(ASSET_ID, asset.getUuid());
-            assertEquals("CONNECTION", asset.getType());
+            assertEquals(StreamAssetType.IP_VC, asset.getType());
             assertEquals(Boolean.TRUE, asset.getMetricsEnabled());
-            assertEquals("ATTACHED", asset.getAttachmentStatus());
+            assertEquals(StreamAssetAttachmentStatus.ATTACHED, asset.getAttachmentStatus());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(ASSET_PATH)));
         }
@@ -86,9 +88,9 @@ class FabricStreamAssetsWireMockTest extends WireMockTestBase {
 
             assertNotNull(asset);
             assertEquals(ASSET_ID, asset.getUuid());
-            assertEquals("CONNECTION", asset.getType());
+            assertEquals(StreamAssetType.IP_VC, asset.getType());
             assertEquals(Boolean.TRUE, asset.getMetricsEnabled());
-            assertEquals("ATTACHED", asset.getAttachmentStatus());
+            assertEquals(StreamAssetAttachmentStatus.ATTACHED, asset.getAttachmentStatus());
 
             wireMock.verify(putRequestedFor(urlPathEqualTo(ASSET_PATH))
                     .withRequestBody(equalToJson("{\"metricsEnabled\":true}", true, true)));

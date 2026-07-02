@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.ReportScheduleStatus;
+import api.equinix.javasdk.customerportal.enums.ReportPeriod;
+import api.equinix.javasdk.customerportal.enums.ReportScheduleType;
 import java.util.List;
 
 /**
@@ -42,14 +45,14 @@ public interface ScheduledReport {
      *
      * @return the schedule type, or {@code null} if not provided
      */
-    String getScheduleType();
+    ReportScheduleType getScheduleType();
 
     /**
      * Returns the period (e.g. {@code 30_DAYS}, {@code 1_DAY}).
      *
      * @return the period, or {@code null} if not provided
      */
-    String getPeriod();
+    ReportPeriod getPeriod();
 
     /**
      * Returns the person/entity who created this schedule.
@@ -119,7 +122,7 @@ public interface ScheduledReport {
      *
      * @return the status, or {@code null} if not provided
      */
-    String getStatus();
+    ReportScheduleStatus getStatus();
 
     /**
      * Returns the parameters used to generate the reports.

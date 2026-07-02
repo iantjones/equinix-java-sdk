@@ -227,7 +227,7 @@ class IBXSmartViewStreamingSubscriptionsWireMockTest extends WireMockTestBase {
                     .getCertificate(ChannelType.AWS_IOT_CORE.name());
 
             assertNotNull(certificate);
-            assertEquals("AWS_IOT_CORE", certificate.getChannelType());
+            assertEquals(ChannelType.AWS_IOT_CORE, certificate.getChannelType());
             assertNotNull(certificate.getCertificateBase64());
             assertEquals("2025-12-31T23:59:59Z", certificate.getExpiryDate());
 

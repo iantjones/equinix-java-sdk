@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.internetaccess.model.implementation;
 
+import api.equinix.javasdk.internetaccess.enums.ChangeType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -38,7 +39,7 @@ public class Change {
     private String uuid;
 
     @JsonProperty("type")
-    private String type;
+    private ChangeType type;
 
     @JsonProperty("status")
     private String status;

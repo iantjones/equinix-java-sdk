@@ -15,6 +15,8 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.StreamAssetType;
+import api.equinix.javasdk.fabric.enums.StreamAssetAttachmentStatus;
 
 import api.equinix.javasdk.fabric.model.StreamAsset;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -35,11 +37,11 @@ public final class StreamAssetJson implements StreamAsset {
     private String uuid;
 
     @JsonProperty("type")
-    private String type;
+    private StreamAssetType type;
 
     @JsonProperty("metricsEnabled")
     private Boolean metricsEnabled;
 
     @JsonProperty("attachmentStatus")
-    private String attachmentStatus;
+    private StreamAssetAttachmentStatus attachmentStatus;
 }

@@ -1,5 +1,7 @@
 package api.equinix.javasdk.customerportal;
 
+import api.equinix.javasdk.customerportal.enums.NotificationStatus;
+import api.equinix.javasdk.customerportal.enums.NotificationType;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.customerportal.model.json.NotificationJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +32,7 @@ class NotificationDeserializationTest {
 
     @Test
     void type_isDeserialized() {
-        assertEquals("IBX_MAINTENANCE", notification.getType());
+        assertEquals(NotificationType.IBX_MAINTENANCE, notification.getType());
     }
 
     @Test
@@ -52,7 +54,7 @@ class NotificationDeserializationTest {
 
     @Test
     void status_isDeserialized() {
-        assertEquals("NEW", notification.getStatus());
+        assertEquals(NotificationStatus.NEW, notification.getStatus());
     }
 
     @Test

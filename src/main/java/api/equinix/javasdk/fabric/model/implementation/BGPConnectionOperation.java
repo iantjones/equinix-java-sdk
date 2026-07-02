@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.BGPConnectionOperationalStatus;
 
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -39,7 +40,7 @@ public class BGPConnectionOperation {
      * BGP connection operational status: {@code UP}, {@code DOWN} or {@code UNKNOWN}.
      */
     @JsonProperty("operationalStatus")
-    private String operationalStatus;
+    private BGPConnectionOperationalStatus operationalStatus;
 
     /**
      * Last BGP state update date and time.

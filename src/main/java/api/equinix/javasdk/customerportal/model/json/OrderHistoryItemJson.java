@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.OrderHistoryStatus;
 import api.equinix.javasdk.customerportal.model.OrderHistoryItem;
 import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryAccount;
 import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryContact;
@@ -44,7 +45,7 @@ public class OrderHistoryItemJson implements OrderHistoryItem {
     private List<String> type;
 
     @JsonProperty("orderStatus")
-    private String orderStatus;
+    private OrderHistoryStatus orderStatus;
 
     @JsonProperty("createdAt")
     private String createdAt;

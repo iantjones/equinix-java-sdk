@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.ReportParameterType;
 /**
  * An input parameter for a report (Reports v1 {@code parameter}).
  */
@@ -40,7 +41,7 @@ public interface ReportParameter {
      *
      * @return the type, or {@code null} if not provided
      */
-    String getType();
+    ReportParameterType getType();
 
     /**
      * Returns whether the parameter is required.

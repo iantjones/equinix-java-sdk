@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.networkedge.enums.AccountStatus;
 
 import java.util.ArrayList;
 
@@ -32,7 +33,7 @@ public interface Account {
 
     String getAccountUcmId();
 
-    String getAccountStatus();
+    AccountStatus getAccountStatus();
 
     String getPortalOrgId();
 

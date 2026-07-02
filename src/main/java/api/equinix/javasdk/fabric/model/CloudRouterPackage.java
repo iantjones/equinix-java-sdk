@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.CloudRouterPackageType;
 
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
@@ -25,7 +26,7 @@ public interface CloudRouterPackage {
 
      CloudRouterPackageCode getCode();
 
-     String getType();
+     CloudRouterPackageType getType();
 
      String getDescription();
 

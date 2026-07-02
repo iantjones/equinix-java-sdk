@@ -1,6 +1,7 @@
 package api.equinix.javasdk.ibxsmartview;
 
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.ibxsmartview.enums.AlertStatus;
 import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataJson;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerEventJson;
 import api.equinix.javasdk.ibxsmartview.model.json.SensorReadingJson;
@@ -78,7 +79,7 @@ class SmartViewDeserializationTest {
 
     @Test
     void powerEvent_status_isDeserialized() {
-        assertEquals("ACTIVE", powerEvent.getStatus());
+        assertEquals(AlertStatus.ACTIVE, powerEvent.getStatus());
     }
 
     @Test

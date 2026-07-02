@@ -1,5 +1,7 @@
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.ConnectorType;
+import api.equinix.javasdk.customerportal.enums.ProtocolType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -16,8 +18,8 @@ import java.util.List;
 public class LookupProtocolType {
 
     @JsonProperty("name")
-    private String name;
+    private ProtocolType name;
 
     @JsonProperty("connectorTypes")
-    private List<String> connectorTypes;
+    private List<ConnectorType> connectorTypes;
 }

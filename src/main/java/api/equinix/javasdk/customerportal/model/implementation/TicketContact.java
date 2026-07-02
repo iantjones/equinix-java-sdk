@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.OrderContactType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public class TicketContact {
     private String lastName;
 
     @JsonProperty("type")
-    private String type;
+    private OrderContactType type;
 
     @JsonProperty("details")
     private List<TicketContactDetail> details;

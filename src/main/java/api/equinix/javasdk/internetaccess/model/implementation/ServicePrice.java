@@ -16,7 +16,12 @@
 
 package api.equinix.javasdk.internetaccess.model.implementation;
 
+import api.equinix.javasdk.internetaccess.enums.AccessPointType;
+import api.equinix.javasdk.internetaccess.enums.BillingType;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
+import api.equinix.javasdk.internetaccess.enums.Redundancy;
+import api.equinix.javasdk.internetaccess.enums.RoutingProtocolType;
+import api.equinix.javasdk.internetaccess.enums.UseCase;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -33,7 +38,7 @@ public class ServicePrice {
     private String uuid;
 
     @JsonProperty("type")
-    private String type;
+    private Redundancy type;
 
     @JsonProperty("bandwidth")
     private Integer bandwidth;
@@ -42,10 +47,10 @@ public class ServicePrice {
     private Integer minBandwidthCommit;
 
     @JsonProperty("billing")
-    private String billing;
+    private BillingType billing;
 
     @JsonProperty("useCase")
-    private String useCase;
+    private UseCase useCase;
 
     @JsonProperty("connection")
     private ConnectionPrice connection;
@@ -89,7 +94,7 @@ public class ServicePrice {
     public static class AccessPointPrice {
 
         @JsonProperty("type")
-        private String type;
+        private AccessPointType type;
 
         @JsonProperty("location")
         private IbxLocation location;
@@ -134,7 +139,7 @@ public class ServicePrice {
     public static class RoutingProtocolPrice {
 
         @JsonProperty("type")
-        private String type;
+        private RoutingProtocolType type;
 
         @JsonProperty("ipv4")
         private RoutingProtocolIpBlock ipv4;

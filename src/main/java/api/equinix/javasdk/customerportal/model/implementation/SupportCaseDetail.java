@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.OrderLineRequestType;
+import api.equinix.javasdk.customerportal.enums.SupportCaseStatus;
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -39,7 +42,7 @@ public class SupportCaseDetail {
     private String parentLineId;
 
     @JsonProperty("productType")
-    private String productType;
+    private OrderProductType productType;
 
     @JsonProperty("productOfferingCode")
     private String productOfferingCode;
@@ -51,7 +54,7 @@ public class SupportCaseDetail {
     private String productName;
 
     @JsonProperty("status")
-    private String status;
+    private SupportCaseStatus status;
 
     @JsonProperty("ibx")
     private String ibx;
@@ -60,7 +63,7 @@ public class SupportCaseDetail {
     private String cage;
 
     @JsonProperty("requestType")
-    private String requestType;
+    private OrderLineRequestType requestType;
 
     @JsonProperty("activityId")
     private String activityId;

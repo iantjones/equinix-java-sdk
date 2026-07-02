@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.VirtualDeviceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -48,7 +49,7 @@ public class SimplifiedVirtualDevice extends VirtualDeviceRef {
      * Type of virtual device ({@code EDGE}).
      */
     @JsonProperty("type")
-    private String type;
+    private VirtualDeviceType type;
 
     @JsonProperty("account")
     private AccountSummary account;

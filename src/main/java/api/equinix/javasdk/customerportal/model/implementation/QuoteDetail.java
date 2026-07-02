@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.OrderLineRequestType;
+import api.equinix.javasdk.customerportal.enums.UnitOfMeasure;
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -54,7 +57,7 @@ public class QuoteDetail {
     private String productDescription;
 
     @JsonProperty("productType")
-    private String productType;
+    private OrderProductType productType;
 
     @JsonProperty("productCode")
     private String productCode;
@@ -72,7 +75,7 @@ public class QuoteDetail {
     private BigDecimal quantity;
 
     @JsonProperty("unitOfMeasure")
-    private String unitOfMeasure;
+    private UnitOfMeasure unitOfMeasure;
 
     @JsonProperty("unitPricing")
     private List<QuotePricing> unitPricing;
@@ -81,7 +84,7 @@ public class QuoteDetail {
     private List<QuotePricing> totalPricing;
 
     @JsonProperty("requestType")
-    private String requestType;
+    private OrderLineRequestType requestType;
 
     @JsonProperty("additionalInfo")
     private List<AdditionalInfo> additionalInfo;

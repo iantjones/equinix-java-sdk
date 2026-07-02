@@ -3,6 +3,8 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.EquinixServerException;
+import api.equinix.javasdk.fabric.enums.PortPackageType;
+import api.equinix.javasdk.fabric.enums.PortServiceType;
 import api.equinix.javasdk.fabric.model.PortPackage;
 import org.junit.jupiter.api.*;
 
@@ -56,10 +58,10 @@ class FabricPortPackagesWireMockTest extends WireMockTestBase {
 
             PortPackage first = packages.get(0);
             assertEquals("STANDARD", first.getCode());
-            assertEquals("PORT_PACKAGE", first.getType());
+            assertEquals(PortPackageType.PORT_PACKAGE, first.getType());
             assertEquals(Integer.valueOf(10000), first.getVcBandwidthMax());
             assertTrue(first.getVcRemoteSupported());
-            assertEquals(List.of("EVPL_VC", "EPL_VC"), first.getSupportedServiceTypes());
+            assertEquals(List.of(PortServiceType.MSP), first.getSupportedServiceTypes());
 
             assertEquals("UNTAGGED", packages.get(1).getCode());
 

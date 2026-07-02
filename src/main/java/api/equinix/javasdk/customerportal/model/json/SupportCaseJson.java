@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.Channel;
 import api.equinix.javasdk.customerportal.enums.SupportCaseStatus;
 import api.equinix.javasdk.customerportal.model.SupportCase;
 import api.equinix.javasdk.customerportal.model.implementation.SupportCaseAttachmentInfo;
@@ -51,7 +52,7 @@ public class SupportCaseJson implements SupportCase {
     private String customerReferenceId;
 
     @JsonProperty("channel")
-    private String channel;
+    private Channel channel;
 
     @JsonProperty("orderId")
     private String orderId;

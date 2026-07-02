@@ -1,4 +1,7 @@
 package api.equinix.javasdk.fabric.wiremock;
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleType;
+import api.equinix.javasdk.fabric.enums.DetectionMethodType;
+import api.equinix.javasdk.fabric.enums.DetectionMethodOperand;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -60,7 +63,7 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
             assertNotNull(rule);
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", rule.getUuid());
             assertEquals("High-Egress-Bandwidth-Alert", rule.getName());
-            assertEquals("METRIC_ALERT", rule.getType());
+            assertEquals(StreamAlertRuleType.METRIC_ALERT, rule.getType());
             assertTrue(rule.getEnabled());
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/streams/" + STREAM_ID + "/alertRules"))
@@ -107,7 +110,8 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", rules.get(0).getUuid());
             assertEquals("High-Egress-Bandwidth-Alert", rules.get(0).getName());
             assertEquals("b2c3d4e5-f6a7-8901-bcde-f01234567890", rules.get(1).getUuid());
-            assertEquals("HEALTH_ALERT", rules.get(1).getType());
+            // "HEALTH_ALERT" is not a spec-declared StreamAlertRule type; the typed enum falls back to UNKNOWN.
+            assertEquals(StreamAlertRuleType.UNKNOWN, rules.get(1).getType());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/streams/" + STREAM_ID + "/alertRules")));
@@ -131,7 +135,7 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
             assertNotNull(rule);
             assertEquals(RULE_UUID, rule.getUuid());
             assertEquals("High-Egress-Bandwidth-Alert", rule.getName());
-            assertEquals("METRIC_ALERT", rule.getType());
+            assertEquals(StreamAlertRuleType.METRIC_ALERT, rule.getType());
             assertTrue(rule.getEnabled());
 
             assertNotNull(rule.getMetricSelector());
@@ -141,9 +145,9 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
             assertEquals(java.util.List.of("/fabric/v4/connections/8b140c74-0331-46d1-9cb3-2981be84dd1b"),
                     rule.getResourceSelector().getInclude());
             assertNotNull(rule.getDetectionMethod());
-            assertEquals("THRESHOLD", rule.getDetectionMethod().getType());
+            assertEquals(DetectionMethodType.THRESHOLD, rule.getDetectionMethod().getType());
             assertEquals("PT15M", rule.getDetectionMethod().getWindowSize());
-            assertEquals("ABOVE", rule.getDetectionMethod().getOperand());
+            assertEquals(DetectionMethodOperand.ABOVE, rule.getDetectionMethod().getOperand());
             assertEquals("35000000", rule.getDetectionMethod().getWarningThreshold());
             assertEquals("45000000", rule.getDetectionMethod().getCriticalThreshold());
 

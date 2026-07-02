@@ -1,4 +1,5 @@
 package api.equinix.javasdk.fabric;
+import api.equinix.javasdk.fabric.enums.CloudRouterType;
 
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.fabric.enums.CloudRouterActionState;
@@ -69,7 +70,7 @@ class CloudRouterActionAndAttachmentDeserializationTest {
     void action_router_isDeserialized() {
         assertNotNull(action.getRouter());
         assertEquals("a1c6b7fd-aead-410a-96b4-b1dfa1071700", action.getRouter().getUuid());
-        assertEquals("XF_ROUTER", action.getRouter().getType());
+        assertEquals(CloudRouterType.XF_ROUTER, action.getRouter().getType());
         assertNotNull(action.getRouter().getOperation());
         assertEquals(12, action.getRouter().getOperation().getBgpIpv4RoutesCount());
     }

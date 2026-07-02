@@ -1,5 +1,8 @@
 package api.equinix.javasdk.customerportal.wiremock;
 
+import api.equinix.javasdk.customerportal.enums.ReportPeriod;
+import api.equinix.javasdk.customerportal.enums.ReportScheduleType;
+import api.equinix.javasdk.customerportal.enums.ReportStatus;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -55,9 +58,9 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
         assertNotNull(results);
         assertEquals(2, results.size());
         assertEquals("r1", results.get(0).getReportId());
-        assertEquals("SUCCESS", results.get(0).getStatus());
+        assertEquals(ReportStatus.SUCCESS, results.get(0).getStatus());
         assertEquals("r2", results.get(1).getReportId());
-        assertEquals("ERROR", results.get(1).getStatus());
+        assertEquals(ReportStatus.ERROR, results.get(1).getStatus());
         wireMock.verify(deleteRequestedFor(urlPathEqualTo("/v1/reportCenter/reports"))
                 .withQueryParam("reportIds", equalTo("r1"))
                 .withQueryParam("reportIds", equalTo("r2")));
@@ -90,7 +93,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertNotNull(created);
             assertEquals("806f281c-6295-465e-bd41-04559d4d4960", created.getScheduledId());
             assertEquals("my_report", created.getReportName());
-            assertEquals("WEEKLY", created.getScheduleType());
+            assertEquals(ReportScheduleType.WEEKLY, created.getScheduleType());
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler"))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("my_report")))
@@ -215,7 +218,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
 
             assertNotNull(generated);
             assertEquals("8f204c59-f70f-437b-92d5-dbbde2932de5", generated.getReportId());
-            assertEquals("SUCCESS", generated.getStatus());
+            assertEquals(ReportStatus.SUCCESS, generated.getStatus());
             wireMock.verify(postRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId + "/report")));
         }
     }
@@ -236,7 +239,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertEquals(2, reports.size());
             assertEquals("8f204c59-f70f-437b-92d5-dbbde2932de5", reports.get(0).getReportId());
             assertEquals("Power Usage", reports.get(0).getReportName());
-            assertEquals("SUCCESS", reports.get(0).getStatus());
+            assertEquals(ReportStatus.SUCCESS, reports.get(0).getStatus());
             assertEquals("71df1306-94f9-4cbd-b6b0-735098bf7f87", reports.get(1).getReportId());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports")));
@@ -259,7 +262,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertNotNull(report);
             assertEquals(reportId, report.getReportId());
             assertEquals("Power Usage", report.getReportName());
-            assertEquals("SUCCESS", report.getStatus());
+            assertEquals(ReportStatus.SUCCESS, report.getStatus());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/" + reportId)));
         }
@@ -281,7 +284,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertEquals(2, scheduled.size());
             assertEquals("806f281c-6295-465e-bd41-04559d4d4960", scheduled.get(0).getScheduledId());
             assertEquals("my_report", scheduled.get(0).getReportName());
-            assertEquals("WEEKLY", scheduled.get(0).getScheduleType());
+            assertEquals(ReportScheduleType.WEEKLY, scheduled.get(0).getScheduleType());
             assertEquals("power_report", scheduled.get(1).getReportName());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler")));
@@ -304,7 +307,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertNotNull(scheduled);
             assertEquals(scheduledId, scheduled.getScheduledId());
             assertEquals("my_report", scheduled.getReportName());
-            assertEquals("WEEKLY", scheduled.getScheduleType());
+            assertEquals(ReportScheduleType.WEEKLY, scheduled.getScheduleType());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/scheduler/" + scheduledId)));
         }
@@ -325,7 +328,7 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertNotNull(definitions);
             assertEquals(2, definitions.size());
             assertEquals("power_usage", definitions.get(0).getName());
-            assertEquals("WEEKLY", definitions.get(0).getScheduleType());
+            assertEquals(ReportScheduleType.WEEKLY, definitions.get(0).getScheduleType());
             assertEquals("cross_connect_inventory", definitions.get(1).getName());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/definitions")));
@@ -347,8 +350,8 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
 
             assertNotNull(definition);
             assertEquals("power_usage", definition.getName());
-            assertEquals("WEEKLY", definition.getScheduleType());
-            assertEquals("30_DAYS", definition.getPeriod());
+            assertEquals(ReportScheduleType.WEEKLY, definition.getScheduleType());
+            assertEquals(ReportPeriod.DAYS_30, definition.getPeriod());
             assertNotNull(definition.getParameters());
             assertEquals(2, definition.getParameters().size());
 

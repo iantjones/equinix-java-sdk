@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.AgentState;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.Agent;
@@ -53,7 +54,7 @@ public class AgentJson {
     private String description;
 
     @JsonProperty("state")
-    private String state;
+    private AgentState state;
 
     @JsonProperty("enabled")
     private Boolean enabled;

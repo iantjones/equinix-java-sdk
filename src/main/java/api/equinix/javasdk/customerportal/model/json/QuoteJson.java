@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.SubChannel;
+import api.equinix.javasdk.customerportal.enums.Channel;
+import api.equinix.javasdk.customerportal.enums.QuoteRequestType;
 import api.equinix.javasdk.customerportal.enums.QuoteStatus;
 import api.equinix.javasdk.customerportal.model.implementation.QuoteContact;
 import api.equinix.javasdk.customerportal.model.implementation.QuoteDetail;
@@ -48,7 +51,7 @@ public class QuoteJson {
     private String accountNumber;
 
     @JsonProperty("quoteRequestType")
-    private String quoteRequestType;
+    private QuoteRequestType quoteRequestType;
 
     @JsonProperty("contacts")
     private List<QuoteContact> contacts;
@@ -66,10 +69,10 @@ public class QuoteJson {
     private String expirationDateTime;
 
     @JsonProperty("channel")
-    private String channel;
+    private Channel channel;
 
     @JsonProperty("subChannel")
-    private String subChannel;
+    private SubChannel subChannel;
 
     @JsonProperty("customerReferenceId")
     private String customerReferenceId;

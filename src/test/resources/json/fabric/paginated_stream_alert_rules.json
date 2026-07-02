@@ -11,7 +11,7 @@
       "type": "METRIC_ALERT",
       "name": "High-Egress-Bandwidth-Alert",
       "description": "Fires when egress bandwidth utilisation exceeds the configured threshold",
-      "state": "PROVISIONED",
+      "state": "ACTIVE",
       "enabled": true
     },
     {
@@ -20,7 +20,7 @@
       "type": "HEALTH_ALERT",
       "name": "Stream-Health-Alert",
       "description": "Fires when the stream health degrades",
-      "state": "PROVISIONED",
+      "state": "ACTIVE",
       "enabled": false
     }
   ]

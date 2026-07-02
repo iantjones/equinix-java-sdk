@@ -15,6 +15,8 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.DetectionMethodType;
+import api.equinix.javasdk.fabric.enums.DetectionMethodOperand;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,13 +32,13 @@ import lombok.Getter;
 public class DetectionMethod {
 
     @JsonProperty("type")
-    private String type;
+    private DetectionMethodType type;
 
     @JsonProperty("windowSize")
     private String windowSize;
 
     @JsonProperty("operand")
-    private String operand;
+    private DetectionMethodOperand operand;
 
     @JsonProperty("warningThreshold")
     private String warningThreshold;

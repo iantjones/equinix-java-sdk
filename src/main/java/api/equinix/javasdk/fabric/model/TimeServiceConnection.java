@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.enums.ConnectionType;
+
 /**
  * An L2 connection link associated with a Precision Time (EPT) service instance. Read-only.
  */
@@ -23,7 +25,7 @@ public interface TimeServiceConnection {
 
     String getHref();
 
-    String getType();
+    ConnectionType getType();
 
     String getUuid();
 }

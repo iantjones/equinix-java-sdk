@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.implementation;
+import api.equinix.javasdk.fabric.enums.ChangeOperationType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,7 +35,7 @@ import lombok.Getter;
 public class ChangeData {
 
     @JsonProperty("op")
-    private String op;
+    private ChangeOperationType op;
 
     @JsonProperty("path")
     private String path;

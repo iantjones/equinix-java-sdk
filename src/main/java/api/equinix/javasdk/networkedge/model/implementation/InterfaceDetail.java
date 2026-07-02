@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.networkedge.model.implementation;
 
+import api.equinix.javasdk.networkedge.enums.NetworkInterfaceStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -39,5 +40,5 @@ public class InterfaceDetail {
     private String interfaceId;
 
     @JsonProperty("status")
-    private String status;
+    private NetworkInterfaceStatus status;
 }

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json;
 
+import api.equinix.javasdk.iam.enums.ServiceAspect;
 import api.equinix.javasdk.iam.model.Attribute;
 import api.equinix.javasdk.iam.model.ListedAction;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -39,7 +40,7 @@ public class ListedActionJson implements ListedAction {
     private String actionId;
 
     @JsonProperty("serviceAspect")
-    private String serviceAspect;
+    private ServiceAspect serviceAspect;
 
     @JsonProperty("tags")
     private Map<String, String> tags;

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
+import api.equinix.javasdk.fabric.enums.TimeServicePackageType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 
 /**
@@ -26,7 +27,7 @@ public interface TimeServicePackage {
 
     String getHref();
 
-    String getType();
+    TimeServicePackageType getType();
 
     PrecisionTimePackageCode getCode();
 

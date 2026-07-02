@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.sts.model.json;
 
+import api.equinix.javasdk.sts.enums.TokenType;
 import api.equinix.javasdk.sts.model.StsToken;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,7 +39,7 @@ public class StsTokenJson implements StsToken {
     private String issuedTokenType;
 
     @JsonProperty("tokenType")
-    private String tokenType;
+    private TokenType tokenType;
 
     @JsonProperty("expiresIn")
     private Integer expiresIn;

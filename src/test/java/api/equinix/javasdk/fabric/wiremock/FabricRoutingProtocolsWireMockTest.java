@@ -1,4 +1,5 @@
 package api.equinix.javasdk.fabric.wiremock;
+import api.equinix.javasdk.fabric.enums.BGPConnectionOperationalStatus;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -67,11 +68,11 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
             // BGPConnectionIpv4/Ipv6 fidelity: routesMax + nested operation block.
             assertEquals(1000L, protocol.getBgpIpv4().getRoutesMax());
             assertNotNull(protocol.getBgpIpv4().getOperation());
-            assertEquals("UP", protocol.getBgpIpv4().getOperation().getOperationalStatus());
+            assertEquals(BGPConnectionOperationalStatus.UP, protocol.getBgpIpv4().getOperation().getOperationalStatus());
             assertNotNull(protocol.getBgpIpv4().getOperation().getOpStatusChangedAt());
             assertEquals(500L, protocol.getBgpIpv6().getRoutesMax());
             assertNotNull(protocol.getBgpIpv6().getOperation());
-            assertEquals("DOWN", protocol.getBgpIpv6().getOperation().getOperationalStatus());
+            assertEquals(BGPConnectionOperationalStatus.DOWN, protocol.getBgpIpv6().getOperation().getOperationalStatus());
 
             // Top-level spec fields added by the fidelity wave.
             assertEquals("testAuthKey", protocol.getBgpAuthKey());
@@ -260,13 +261,14 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
                             .withHeader("Content-Type", "application/json")
                             .withBody(loadFixture("/json/fabric/routing_protocol_response.json"))));
 
+            // R2025.5 removed equinixASN from the BGP create request payload; the builder's
+            // withEquinixAsn(...) is deprecated and intentionally not used here.
             RoutingProtocol created = fabric.routingProtocols().define()
                     .ofType(RoutingProtocolType.BGP)
                     .withName("New-BGP-RoutingProtocol")
                     .withBGPIpv4("192.168.100.1", "192.168.100.2", true)
                     .withBgpAuthKey("secret-key")
                     .withCustomerAsn(65001L)
-                    .withEquinixAsn(65002L)
                     .create(CONNECTION_ID);
 
             assertNotNull(created);
@@ -278,8 +280,11 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
                                     + "\"bgpIpv4\":{\"customerPeerIp\":\"192.168.100.1\","
                                     + "\"equinixPeerIp\":\"192.168.100.2\",\"enabled\":true},"
                                     + "\"bgpAuthKey\":\"secret-key\","
-                                    + "\"customerAsn\":65001,\"equinixAsn\":65002}",
+                                    + "\"customerAsn\":65001}",
                             true, true)));
+            wireMock.verify(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols"))
+                    .withRequestBody(notMatching(".*equinixAsn.*")));
         }
 
         @Test

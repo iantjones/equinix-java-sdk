@@ -19,14 +19,18 @@ package api.equinix.javasdk.customerportal.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Charge type of an order line price (Orders v2 API). {@link #UNKNOWN} is a read-side fallback for values added after this
- * SDK release — never send it.
+ * Charge type of an order line price (Orders v2 API; also {@code pricingDetails.type} in the Quotes v2 spec,
+ * which adds the {@code NET_*} and {@code TAX} values). {@link #UNKNOWN} is a read-side fallback for values
+ * added after this SDK release — never send it.
  */
 public enum PricingChargeType {
     ONE_TIME_CHARGE,
     MONTHLY_CHARGE,
     MONTHLY_DISCOUNT,
     ONE_TIME_DISCOUNT,
+    NET_MONTHLY_CHARGE,
+    NET_ONE_TIME_CHARGE,
+    TAX,
     UNKNOWN;
 
     @JsonCreator

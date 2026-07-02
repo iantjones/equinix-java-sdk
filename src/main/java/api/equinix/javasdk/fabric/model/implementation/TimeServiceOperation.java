@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.TimeServiceOperationalStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -31,5 +32,5 @@ import lombok.Getter;
 public class TimeServiceOperation {
 
     @JsonProperty("operationalStatus")
-    private String operationalStatus;
+    private TimeServiceOperationalStatus operationalStatus;
 }

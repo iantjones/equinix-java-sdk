@@ -44,10 +44,16 @@ public class LicenseTypeDeserializer extends StdDeserializer<LicenseType> {
             throws IOException {
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
         String licenseTypeString = node.toString();
-        LicenseType licenseType = null;
 
         if(licenseTypeString != null) {
             licenseTypeString = licenseTypeString.toUpperCase().replace("\"", "");
+        }
+
+        // The catalog/pricing surface spells the value "Subscription"
+        // (spec SoftwarePackage.licenseType / VersionDetails.supportedLicenseTypes),
+        // while device bodies use "SUB".
+        if ("SUBSCRIPTION".equals(licenseTypeString)) {
+            return LicenseType.SUB;
         }
 
         return LicenseType.valueOf(licenseTypeString);

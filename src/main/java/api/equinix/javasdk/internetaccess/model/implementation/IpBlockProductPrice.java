@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.internetaccess.model.implementation;
 
+import api.equinix.javasdk.internetaccess.enums.IpBlockType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -32,7 +33,7 @@ public class IpBlockProductPrice {
     private String uuid;
 
     @JsonProperty("type")
-    private String type;
+    private IpBlockType type;
 
     @JsonProperty("location")
     private IbxLocation location;

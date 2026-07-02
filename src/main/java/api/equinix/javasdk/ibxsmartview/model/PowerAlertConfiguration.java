@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.AlertConfigurationState;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertCondition;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertConfigurationAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertCreator;
@@ -52,7 +53,7 @@ public interface PowerAlertConfiguration {
      *
      * @return the configuration state
      */
-    String getState();
+    AlertConfigurationState getState();
 
     /**
      * Returns the section type of the alert configuration (e.g. {@code POWER}).

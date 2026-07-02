@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.RouteFilterRuleType;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.RouteFilterAction;
@@ -46,7 +47,7 @@ public class RouteFilterRuleJson {
     private String name;
 
     @JsonProperty("type")
-    private String type;
+    private RouteFilterRuleType type;
 
     @JsonProperty("state")
     private RouteFilterRuleState state;

@@ -5,9 +5,12 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.ChargeFrequency;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeState;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
+import api.equinix.javasdk.fabric.enums.TimeServiceOperationalStatus;
+import api.equinix.javasdk.fabric.enums.TimeServicePackageType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
@@ -73,6 +76,7 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
 
             assertEquals(PrecisionTimeType.NTP, ts.getType());
             assertEquals(PrecisionTimeState.PROVISIONED, ts.getState());
+            assertEquals(TimeServiceOperationalStatus.UP, ts.getOperation().getOperationalStatus());
 
             // "package" -> getServicePackage() (+ getPackageCode() convenience)
             TimeServicePackage servicePackage = ts.getServicePackage();
@@ -87,6 +91,7 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
             assertNotNull(connections);
             assertEquals(1, connections.size());
             assertEquals("095be615-a8ad-4c33-8e9c-c7612fbf6c9f", connections.get(0).getUuid());
+            assertEquals(ConnectionType.EVPL_VC, connections.get(0).getType());
 
             // ipv4
             PrecisionTimeIpv4 ipv4 = ts.getIpv4();
@@ -271,6 +276,7 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
 
             assertNotNull(pkg);
             assertEquals(PrecisionTimePackageCode.NTP_STANDARD, pkg.getCode());
+            assertEquals(TimeServicePackageType.TIME_SERVICE_PACKAGE, pkg.getType());
             assertEquals(Integer.valueOf(5), pkg.getBandwidth());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServicePackages/NTP_STANDARD")));

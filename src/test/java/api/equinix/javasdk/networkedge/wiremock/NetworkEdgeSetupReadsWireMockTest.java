@@ -7,6 +7,7 @@ import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
+import api.equinix.javasdk.networkedge.enums.AccountStatus;
 import api.equinix.javasdk.networkedge.enums.DeviceCategory;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.FileProcessType;
@@ -74,7 +75,8 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
             Account first = accounts.get(0);
             assertEquals("Acme Corp", first.getAccountName());
             assertEquals(123456, first.getAccountNumber());
-            assertEquals("Active", first.getAccountStatus());
+            // Wire value is mixed-case "Active"; AccountStatus.fromString parses case-insensitively.
+            assertEquals(AccountStatus.ACTIVE, first.getAccountStatus());
         }
 
         @Test
@@ -194,7 +196,7 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
             // Spec AgreementStatusResponse names the wire property "isValid" (required).
             assertTrue(status.getValid());
             // AgreementAcceptResponse.status is only populated on the create response.
-            assertEquals("SUCCESS", status.getStatus());
+            assertEquals(api.equinix.javasdk.networkedge.enums.AgreementStatus.SUCCESS, status.getStatus());
 
             // The create body carries the account number and the terms version id (serialized as apttusId).
             wireMock.verify(postRequestedFor(urlPathEqualTo("/ne/v1/agreements/accounts"))

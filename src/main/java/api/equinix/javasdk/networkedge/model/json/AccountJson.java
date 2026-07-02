@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.json;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.networkedge.enums.AccountStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -57,7 +58,7 @@ public class AccountJson {
     private String accountUcmId;
 
     @JsonProperty("accountStatus")
-    private String accountStatus;
+    private AccountStatus accountStatus;
 
     @JsonProperty("portalOrgId")
     private String portalOrgId;

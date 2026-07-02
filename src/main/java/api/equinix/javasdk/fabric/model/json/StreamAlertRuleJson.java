@@ -15,6 +15,8 @@
  */
 
 package api.equinix.javasdk.fabric.model.json;
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleType;
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleState;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.StreamAlertRule;
@@ -43,7 +45,7 @@ public class StreamAlertRuleJson {
     private String uuid;
 
     @JsonProperty("type")
-    private String type;
+    private StreamAlertRuleType type;
 
     @JsonProperty("name")
     private String name;
@@ -52,7 +54,7 @@ public class StreamAlertRuleJson {
     private String description;
 
     @JsonProperty("state")
-    private String state;
+    private StreamAlertRuleState state;
 
     @JsonProperty("enabled")
     private Boolean enabled;

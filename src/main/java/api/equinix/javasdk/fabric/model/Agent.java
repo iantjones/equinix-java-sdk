@@ -15,6 +15,7 @@
  */
 
 package api.equinix.javasdk.fabric.model;
+import api.equinix.javasdk.fabric.enums.AgentState;
 
 import api.equinix.javasdk.fabric.model.implementation.AgentConfiguration;
 import api.equinix.javasdk.fabric.model.implementation.AgentTemplateRef;
@@ -36,7 +37,7 @@ public interface Agent {
 
     String getDescription();
 
-    String getState();
+    AgentState getState();
 
     Boolean getEnabled();
 

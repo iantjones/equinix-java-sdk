@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model;
 
+import api.equinix.javasdk.ibxsmartview.enums.AlertStatus;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerEventAsset;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerEventProcessing;
 
@@ -52,7 +53,7 @@ public interface PowerEvent {
      *
      * @return the status of the power event
      */
-    String getStatus();
+    AlertStatus getStatus();
 
     /**
      * Returns the asset associated with this power event.

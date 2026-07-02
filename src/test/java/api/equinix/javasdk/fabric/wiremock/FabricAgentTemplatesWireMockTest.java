@@ -1,4 +1,5 @@
 package api.equinix.javasdk.fabric.wiremock;
+import api.equinix.javasdk.fabric.enums.AgentState;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
@@ -77,7 +78,7 @@ class FabricAgentTemplatesWireMockTest extends WireMockTestBase {
             assertNotNull(template);
             assertEquals("tmpl-1234", template.getUuid());
             assertEquals("Network-Operations-Template", template.getName());
-            assertEquals("ACTIVE", template.getState());
+            assertEquals(AgentState.PROVISIONED, template.getState());
             assertNotNull(template.getChangeLog());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/agentTemplates/tmpl-1234")));

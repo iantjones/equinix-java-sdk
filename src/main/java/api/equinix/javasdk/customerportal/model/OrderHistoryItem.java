@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model;
 
+import api.equinix.javasdk.customerportal.enums.OrderHistoryStatus;
 import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryAccount;
 import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryContact;
 import api.equinix.javasdk.customerportal.model.implementation.OrderHistoryLink;
@@ -48,7 +49,7 @@ public interface OrderHistoryItem {
      *
      * @return the order status
      */
-    String getOrderStatus();
+    OrderHistoryStatus getOrderStatus();
 
     /**
      * Returns the order created date and time in ISO date format.

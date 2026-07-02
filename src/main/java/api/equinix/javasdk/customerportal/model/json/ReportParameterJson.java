@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json;
 
+import api.equinix.javasdk.customerportal.enums.ReportParameterType;
 import api.equinix.javasdk.customerportal.model.ReportParameter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,7 +36,7 @@ public class ReportParameterJson implements ReportParameter {
     private String value;
 
     @JsonProperty("type")
-    private String type;
+    private ReportParameterType type;
 
     @JsonProperty("required")
     private Boolean required;

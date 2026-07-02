@@ -17,6 +17,7 @@
 package api.equinix.javasdk.networkedge.model.implementation;
 
 import api.equinix.javasdk.networkedge.enums.CvpType;
+import api.equinix.javasdk.networkedge.enums.VendorManagementType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public class DeviceVendorConfig {
     private String licenseSecret;
 
     @JsonProperty("managementType")
-    private String managementType;
+    private VendorManagementType managementType;
 
     @JsonProperty("localId")
     private String localId;

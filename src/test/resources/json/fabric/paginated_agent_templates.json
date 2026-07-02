@@ -11,7 +11,7 @@
       "uuid": "tmpl-1234",
       "name": "Network-Operations-Template",
       "description": "Baseline automated network operations template",
-      "state": "ACTIVE",
+      "state": "PROVISIONED",
       "enabled": true,
       "changeLog": {
         "createdBy": "test-user",
@@ -24,7 +24,7 @@
       "uuid": "tmpl-5678",
       "name": "Security-Monitoring-Template",
       "description": "Security posture monitoring template",
-      "state": "ACTIVE",
+      "state": "PROVISIONED",
       "enabled": false,
       "changeLog": {
         "createdBy": "test-user",

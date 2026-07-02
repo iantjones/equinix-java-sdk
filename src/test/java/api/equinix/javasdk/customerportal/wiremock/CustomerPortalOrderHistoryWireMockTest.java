@@ -1,5 +1,7 @@
 package api.equinix.javasdk.customerportal.wiremock;
 
+import api.equinix.javasdk.customerportal.enums.OrderHistoryLinkRel;
+import api.equinix.javasdk.customerportal.enums.OrderHistoryStatus;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
@@ -77,13 +79,13 @@ class CustomerPortalOrderHistoryWireMockTest extends WireMockTestBase {
             assertNotNull(results);
             assertEquals(2, results.size());
             assertEquals("1-234567890", results.get(0).getOrderNumber());
-            assertEquals("IN_PROGRESS", results.get(0).getOrderStatus());
+            assertEquals(OrderHistoryStatus.IN_PROGRESS, results.get(0).getOrderStatus());
             assertEquals(List.of("LD5", "LD6"), results.get(0).getIbx());
             assertEquals("Acme Corp", results.get(0).getAccount().getName());
             assertEquals("Ada Lovelace", results.get(0).getOrderingContact().getName());
-            assertEquals("orderFullDetails", results.get(0).getLinks().get(1).getRel());
+            assertEquals(OrderHistoryLinkRel.ORDER_FULL_DETAILS, results.get(0).getLinks().get(1).getRel());
             assertEquals("1-234567891", results.get(1).getOrderNumber());
-            assertEquals("CLOSED", results.get(1).getOrderStatus());
+            assertEquals(OrderHistoryStatus.CLOSED, results.get(1).getOrderStatus());
 
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_PATH))
                     .withRequestBody(matchingJsonPath("$.q", equalTo("1-2345")))

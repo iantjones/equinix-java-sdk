@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.PtpTimeScale;
+import api.equinix.javasdk.fabric.enums.PtpTransportMode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -36,7 +38,7 @@ import lombok.NoArgsConstructor;
 public class PtpAdvanceConfiguration {
 
     @JsonProperty("timeScale")
-    private String timeScale;
+    private PtpTimeScale timeScale;
 
     @JsonProperty("domain")
     private Integer domain;
@@ -57,7 +59,7 @@ public class PtpAdvanceConfiguration {
     private Integer logDelayReqInterval;
 
     @JsonProperty("transportMode")
-    private String transportMode;
+    private PtpTransportMode transportMode;
 
     @JsonProperty("grantTime")
     private Integer grantTime;

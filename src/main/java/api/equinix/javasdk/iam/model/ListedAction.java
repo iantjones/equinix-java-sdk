@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.iam.model;
 
+import api.equinix.javasdk.iam.enums.ServiceAspect;
+
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ public interface ListedAction {
     /**
      * @return the service aspect the action belongs to
      */
-    String getServiceAspect();
+    ServiceAspect getServiceAspect();
 
     /**
      * @return the user-controlled tags on the action

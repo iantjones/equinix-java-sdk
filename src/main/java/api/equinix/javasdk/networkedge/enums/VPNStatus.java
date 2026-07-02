@@ -19,13 +19,23 @@ package api.equinix.javasdk.networkedge.enums;
 import api.equinix.javasdk.core.model.APIParam;
 
 /**
+ * Status of a Network Edge VPN. The union of the spec's {@code VpnResponse.status} values and the
+ * {@code GET /ne/v1/vpn} {@code status[]} filter values (which additionally declare the retrying /
+ * updating / phase-failed states).
  *
  * @author ianjones
  */
 public enum VPNStatus implements APIParam {
     PROVISIONED,
     PROVISIONING,
+    PROVISIONING_RETRYING,
+    UPDATING,
+    PROVISIONING_UPDATE_RETRYING,
     FAILED,
+    PROVISIONING_FAILED,
+    PROVISIONING_UPDATE_FAILED,
     DEPROVISIONED,
-    DEPROVISIONING
+    DEPROVISIONING,
+    DEPROVISIONING_RETRYING,
+    DEPROVISIONING_FAILED
 }

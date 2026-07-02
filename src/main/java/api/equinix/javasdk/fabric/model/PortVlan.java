@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.enums.LinkProtocolState;
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.LinkProtocolConnection;
@@ -31,7 +32,7 @@ public interface PortVlan {
 
     String getUuid();
 
-    String getState();
+    LinkProtocolState getState();
 
     LinkProtocolType getType();
 
