@@ -2,8 +2,9 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.exception.*;
-import api.equinix.javasdk.fabric.enums.PortType;
+import api.equinix.javasdk.fabric.enums.Side;
 import api.equinix.javasdk.fabric.model.PortStatistic;
 import org.junit.jupiter.api.*;
 
@@ -43,7 +44,7 @@ class FabricPortStatisticsWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("getStatistics() returns port statistics with bandwidth utilization")
+    @DisplayName("getStatistics() returns the spec Statistics shape (top-level interval, viewPoint and utilization)")
     void returnsStatistics() {
         stubSingleton(wireMock, "/fabric/v4/ports/.*/stats",
                 "/json/fabric/port_statistic_response.json");
@@ -51,14 +52,17 @@ class FabricPortStatisticsWireMockTest extends WireMockTestBase {
         PortStatistic stats = fabric.ports().getStatistics(UUID, START, END);
 
         assertNotNull(stats);
-        assertEquals(UUID, stats.getUuid());
-        assertEquals(PortType.XF_PORT, stats.getType());
-        assertEquals("test-port-stats", stats.getName());
-        assertEquals(10000, stats.getBandwidth());
-        assertNotNull(stats.getStats());
-        assertEquals(10000L, stats.getStats().getCapacity());
-        assertNotNull(stats.getStats().getBandwidthUtilization());
-        assertEquals(8200.0f, stats.getStats().getBandwidthUtilization().getInbound().getMax());
+        // The spec's Statistics schema is top-level, not nested under "stats"
+        assertEquals(START, stats.getStartDateTime());
+        assertEquals(END, stats.getEndDateTime());
+        assertEquals(Side.A_Side, stats.getViewPoint());
+        assertNotNull(stats.getBandwidthUtilization());
+        assertEquals(BandwidthUnit.MBPS, stats.getBandwidthUtilization().getUnit());
+        assertEquals("PT1H", stats.getBandwidthUtilization().getMetricInterval());
+        assertEquals(8200.0f, stats.getBandwidthUtilization().getInbound().getMax());
+        assertEquals(3100.5f, stats.getBandwidthUtilization().getInbound().getMean());
+        assertEquals(7600.25f, stats.getBandwidthUtilization().getOutbound().getMax());
+        assertEquals(2850.75f, stats.getBandwidthUtilization().getOutbound().getMean());
     }
 
     @Test

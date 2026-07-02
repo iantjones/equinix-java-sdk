@@ -4,6 +4,45 @@
   "type": "MARKETPLACE_SUBSCRIPTION",
   "state": "ACTIVE",
   "marketplace": "AWS",
+  "offerType": "PRIVATE_OFFER",
   "offerId": "offer-12345",
-  "isAutoRenew": true
+  "isAutoRenew": true,
+  "trial": {
+    "enabled": true,
+    "expiryDateTime": "2026-08-21T10:30:00Z"
+  },
+  "metroCodes": [
+    "SV",
+    "DC"
+  ],
+  "entitlements": [
+    {
+      "uuid": "a15b6b20-b765-4bf7-a661-a3e9372d5435",
+      "quantityEntitled": 1,
+      "quantityConsumed": 0,
+      "quantityAvailable": 1,
+      "asset": {
+        "type": "XF_ROUTER",
+        "package": {
+          "code": "STANDARD"
+        }
+      }
+    },
+    {
+      "uuid": "2e3a9041-19ce-4c80-add3-3e3a069fc5e9",
+      "quantityEntitled": 1,
+      "quantityConsumed": 0,
+      "quantityAvailable": 1,
+      "asset": {
+        "type": "IP_VC",
+        "bandwidth": 500
+      }
+    }
+  ],
+  "changelog": {
+    "createdBy": "adminuser",
+    "createdDateTime": "2020-05-21T10:30:00Z",
+    "updatedBy": "adminuser",
+    "updatedDateTime": "2020-05-21T10:30:00Z"
+  }
 }

@@ -9,7 +9,36 @@
       "href": "https://api.equinix.com/fabric/v4/agents/d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10/activities/act-1",
       "type": "CONFIG_APPLY",
       "uuid": "act-1",
-      "status": "COMPLETED"
+      "agent": {
+        "uuid": "d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10",
+        "type": "ANO_AGENT"
+      },
+      "status": "COMPLETED",
+      "metadata": {
+        "chatMessage": {
+          "messages": [
+            {
+              "type": "user",
+              "content": "Here are additional parameters. Follow the instructions step by step and complete all the operations."
+            },
+            {
+              "type": "assistant",
+              "content": "The agent setup process has been successfully completed."
+            }
+          ]
+        },
+        "toolCallInformation": [
+          {
+            "name": "search_connections",
+            "input": "{\"query\":{\"filter\":{\"and\":[{\"property\":\"/uuid\",\"operator\":\"=\",\"values\":[\"456e4567-e89b-12d3-a456-426614174000\"]}]},\"pagination\":{\"limit\":5}}}",
+            "response": "{\"results\":[{\"uuid\":\"456e4567-e89b-12d3-a456-426614174000\",\"name\":\"Primary Connection\",\"bandwidth\":\"1Gbps\"}]}"
+          }
+        ]
+      },
+      "changeLog": {
+        "createdBy": "testuser",
+        "createdDateTime": "2024-05-06T16:21:18.545214Z"
+      }
     },
     {
       "href": "https://api.equinix.com/fabric/v4/agents/d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10/activities/act-2",

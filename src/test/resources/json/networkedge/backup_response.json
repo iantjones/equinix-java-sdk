@@ -7,5 +7,7 @@
   "downloadUrl": "https://example.com/backups/test-backup",
   "version": "1.0",
   "deleteAllowed": true,
+  "deviceUuid": "dev-9999-8888-7777-666655554444",
+  "lastUpdatedDateTime": "2018-01-30T10:30:31Z",
   "restores": []
 }

@@ -15,7 +15,7 @@
         "metroCode": "SV"
       },
       "package": {
-        "code": "BASIC"
+        "code": "STANDARD"
       },
       "order": {
         "purchaseOrderNumber": "PO-2024-198234",
@@ -36,6 +36,7 @@
           ]
         }
       ],
+      "equinixAsn": 30000,
       "connectionsCount": 5,
       "changeLog": {
         "createdBy": "user1234",
@@ -62,7 +63,7 @@
         "metroCode": "DC"
       },
       "package": {
-        "code": "PREMIUM"
+        "code": "LAB"
       },
       "order": {
         "purchaseOrderNumber": "PO-2024-198235",

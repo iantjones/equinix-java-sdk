@@ -7,6 +7,8 @@ import api.equinix.javasdk.fabric.model.CompanyProfile;
 import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
 import api.equinix.javasdk.fabric.model.PrivateService;
 import api.equinix.javasdk.fabric.model.Tag;
+import api.equinix.javasdk.fabric.enums.NotificationType;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
@@ -69,6 +71,8 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
                     .description("Acme Networks offers low-latency interconnection across major metros.")
                     .webUrl("https://acme.example.com")
                     .contactUrl("https://acme.example.com/contact")
+                    .notifications(List.of(
+                            new Notification(NotificationType.NOTIFICATION, List.of("example@example.com"))))
                     .create();
 
             assertNotNull(created);
@@ -83,7 +87,9 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
                             + "\"summary\":\"Global interconnection provider\","
                             + "\"description\":\"Acme Networks offers low-latency interconnection across major metros.\","
                             + "\"webUrl\":\"https://acme.example.com\","
-                            + "\"contactUrl\":\"https://acme.example.com/contact\"}", true, true)));
+                            + "\"contactUrl\":\"https://acme.example.com/contact\","
+                            + "\"notifications\":[{\"type\":\"NOTIFICATION\",\"emails\":[\"example@example.com\"]}]}",
+                            true, true)));
         }
     }
 
@@ -293,6 +299,19 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
             assertNotNull(profile);
             assertEquals(CP_ID, profile.getUuid());
             assertEquals("Acme Networks", profile.getName());
+
+            assertNotNull(profile.getTags());
+            assertEquals(1, profile.getTags().size());
+            assertEquals("260af68b-42f0-4f2e-9c5c-2fbd44b4b387", profile.getTags().get(0).getUuid());
+            assertEquals("equinix.fabric.spotlight.category.featured", profile.getTags().get(0).getName());
+
+            assertNotNull(profile.getServiceProfiles());
+            assertEquals(1, profile.getServiceProfiles().size());
+            assertEquals("423af68b-42f0-4f2e-9c5c-2fbd44b4b387", profile.getServiceProfiles().get(0).getUuid());
+
+            assertNotNull(profile.getChangeLog());
+            assertEquals("user1234", profile.getChangeLog().getCreatedBy());
+            assertEquals("user5678", profile.getChangeLog().getUpdatedBy());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/companyProfiles/" + CP_ID)));
         }

@@ -134,6 +134,19 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
             assertEquals("METRIC_ALERT", rule.getType());
             assertTrue(rule.getEnabled());
 
+            assertNotNull(rule.getMetricSelector());
+            assertEquals(java.util.List.of("equinix.fabric.connection.bandwidth_tx.usage"),
+                    rule.getMetricSelector().getInclude());
+            assertNotNull(rule.getResourceSelector());
+            assertEquals(java.util.List.of("/fabric/v4/connections/8b140c74-0331-46d1-9cb3-2981be84dd1b"),
+                    rule.getResourceSelector().getInclude());
+            assertNotNull(rule.getDetectionMethod());
+            assertEquals("THRESHOLD", rule.getDetectionMethod().getType());
+            assertEquals("PT15M", rule.getDetectionMethod().getWindowSize());
+            assertEquals("ABOVE", rule.getDetectionMethod().getOperand());
+            assertEquals("35000000", rule.getDetectionMethod().getWarningThreshold());
+            assertEquals("45000000", rule.getDetectionMethod().getCriticalThreshold());
+
             wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/streams/" + STREAM_ID + "/alertRules/" + RULE_UUID)));
         }

@@ -3,6 +3,9 @@
   "type": "VC_TOKEN",
   "href": "https://api.equinix.com/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f",
   "state": "ACTIVE",
+  "name": "Az-Token-Primary",
+  "description": "Az-side service token for partner hand-off",
+  "issuerSide": "z",
   "expiry": 30,
   "expirationDateTime": "2024-03-15T10:30:00Z",
   "connection": {
@@ -20,6 +23,10 @@
   "account": {
     "accountNumber": 123456,
     "orgId": 100100
+  },
+  "project": {
+    "projectId": "44f4c4f8-2f39-494a-838c-5350c32f0a2e",
+    "href": "https://api.equinix.com/resourceManager/v1/projects/44f4c4f8-2f39-494a-838c-5350c32f0a2e"
   },
   "changeLog": {
     "createdBy": "tokenCreator",

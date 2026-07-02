@@ -125,6 +125,12 @@ class FabricAgentsWireMockTest extends WireMockTestBase {
             assertEquals("My-Fabric-Agent", agent.getName());
             assertEquals("ANO_AGENT", agent.getType());
 
+            assertNotNull(agent.getAgentTemplate());
+            assertEquals("657400f8-c0af-430c-8216-43d44f08c1c5", agent.getAgentTemplate().getUuid());
+            assertNotNull(agent.getConfiguration());
+            assertEquals("Connection uuid is <connection_uuid>. Alert rule is <alert_rule_uuid>. Upgrade bandwidth to 10GB.",
+                    agent.getConfiguration().getPrompt());
+
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/agents/" + uuid)));
         }
     }
@@ -147,6 +153,23 @@ class FabricAgentsWireMockTest extends WireMockTestBase {
             assertEquals("act-1", activities.get(0).getUuid());
             assertEquals("COMPLETED", activities.get(0).getStatus());
             assertEquals("IN_PROGRESS", activities.get(1).getStatus());
+
+            AgentActivity first = activities.get(0);
+            assertNotNull(first.getAgent());
+            assertEquals("d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10", first.getAgent().getUuid());
+            assertEquals("ANO_AGENT", first.getAgent().getType());
+
+            assertNotNull(first.getMetadata());
+            assertNotNull(first.getMetadata().getChatMessage());
+            assertEquals(2, first.getMetadata().getChatMessage().getMessages().size());
+            assertEquals("user", first.getMetadata().getChatMessage().getMessages().get(0).getType());
+            assertEquals("The agent setup process has been successfully completed.",
+                    first.getMetadata().getChatMessage().getMessages().get(1).getContent());
+            assertNotNull(first.getMetadata().getToolCallInformation());
+            assertEquals(1, first.getMetadata().getToolCallInformation().size());
+            assertEquals("search_connections", first.getMetadata().getToolCallInformation().get(0).getName());
+            assertTrue(first.getMetadata().getToolCallInformation().get(0).getInput().contains("/uuid"));
+            assertTrue(first.getMetadata().getToolCallInformation().get(0).getResponse().contains("Primary Connection"));
 
             wireMock.verify(getRequestedFor(
                     urlPathEqualTo("/fabric/v4/agents/" + agentId + "/activities")));

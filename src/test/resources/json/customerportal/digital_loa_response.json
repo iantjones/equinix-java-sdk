@@ -6,8 +6,33 @@
   "expiryDateTime": "2026-12-31T23:59:59Z",
   "products": [
     {
+      "uuid": "prod-1",
       "type": "CROSS_CONNECT",
-      "ibx": "AM11"
+      "ibx": "AM11",
+      "crossConnect": {
+        "connectionService": "INTERNET_ACCESS",
+        "mediaType": "SINGLE_MODE_FIBER",
+        "protocolType": "GIGABIT_ETHERNET",
+        "aSide": {
+          "circuitId": "34234535",
+          "connectorType": "LC",
+          "patchPanel": {
+            "id": "CP:0218:0102:13008148",
+            "cabinetSpaceId": "AM11:04:000050:1613-S14",
+            "cageSpaceId": "AM11:04:000050",
+            "location": {
+              "ibx": "AM11",
+              "region": "EMEA",
+              "metroName": "Amsterdam",
+              "metroCode": "AM",
+              "countryCode": "NL",
+              "address": "8 Buckingham Avenue, Slough Trading Estate, SL1 4AX Slough, England"
+            }
+          },
+          "portA": 12,
+          "portB": 13
+        }
+      }
     }
   ],
   "requestor": {

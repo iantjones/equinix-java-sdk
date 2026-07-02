@@ -5,8 +5,10 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.ChangeStatus;
 import api.equinix.javasdk.fabric.enums.CloudRouterCommandType;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.CloudRouterAction;
 import api.equinix.javasdk.fabric.model.CloudRouterCommand;
@@ -65,6 +67,23 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
             CloudRouter router = fabric.cloudRouters().getByUuid("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
             assertNotNull(router);
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", router.getUuid());
+
+            // Spec-fidelity fields: equinixAsn + connectionsCount wire names.
+            assertEquals(30000L, router.getEquinixAsn());
+            assertEquals(5, router.getConnectionCount());
+
+            // Nested marketplaceSubscription reference.
+            assertNotNull(router.getMarketplaceSubscription());
+            assertEquals("2823b8ae-b24c-4a86-9dca-4a4e797d94e7", router.getMarketplaceSubscription().getUuid());
+            assertEquals("AWS_MARKETPLACE_SUBSCRIPTION", router.getMarketplaceSubscription().getType());
+
+            // Latest CloudRouterChange block.
+            assertNotNull(router.getChange());
+            assertEquals("5c1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8", router.getChange().getUuid());
+            assertEquals("ROUTER_UPDATE", router.getChange().getType());
+            assertEquals(ChangeStatus.COMPLETED, router.getChange().getStatus());
+            assertEquals("Router package updated", router.getChange().getInformation());
+            assertNotNull(router.getChange().getUpdatedDateTime());
         }
 
         @Test
@@ -91,6 +110,7 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                     .name("My-Cloud-Router-Primary")
                     .inMetro("SV")
                     .withPackage("PREMIUM")
+                    .order("PO-9876", 24, "CR-REF-001")
                     .create();
 
             assertNotNull(router);
@@ -102,7 +122,10 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.type", equalTo("XF_ROUTER")))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("My-Cloud-Router-Primary")))
                     .withRequestBody(matchingJsonPath("$.location.metroCode", equalTo("SV")))
-                    .withRequestBody(matchingJsonPath("$.package.code", equalTo("PREMIUM"))));
+                    .withRequestBody(matchingJsonPath("$.package.code", equalTo("PREMIUM")))
+                    .withRequestBody(matchingJsonPath("$.order.purchaseOrderNumber", equalTo("PO-9876")))
+                    .withRequestBody(matchingJsonPath("$.order.termLength", equalTo("24")))
+                    .withRequestBody(matchingJsonPath("$.order.customerReferenceNumber", equalTo("CR-REF-001"))));
         }
     }
 
@@ -249,6 +272,12 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
             assertNotNull(routers);
             assertEquals(2, routers.size());
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", routers.get(0).getUuid());
+
+            // RouterPackageCode spec values STANDARD and LAB round-trip (not UNKNOWN).
+            assertEquals(GatewayPackageCode.STANDARD, routers.get(0).getRouterPackage().getCode());
+            assertEquals(GatewayPackageCode.LAB, routers.get(1).getRouterPackage().getCode());
+            assertEquals(30000L, routers.get(0).getEquinixAsn());
+            assertEquals(5, routers.get(0).getConnectionCount());
 
             // Default no-arg search sends an (empty) filter, no sort.
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))

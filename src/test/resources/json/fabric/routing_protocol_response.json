@@ -7,12 +7,22 @@
   "bgpIpv4": {
     "customerPeerIp": "192.168.100.1",
     "equinixPeerIp": "192.168.100.2",
-    "enabled": true
+    "enabled": true,
+    "routesMax": 1000,
+    "operation": {
+      "operationalStatus": "UP",
+      "opStatusChangedAt": "2024-10-18T15:00:00.000Z"
+    }
   },
   "bgpIpv6": {
     "customerPeerIp": "2001:db8::1",
     "equinixPeerIp": "2001:db8::2",
-    "enabled": false
+    "enabled": false,
+    "routesMax": 500,
+    "operation": {
+      "operationalStatus": "DOWN",
+      "opStatusChangedAt": "2024-10-17T09:30:00.000Z"
+    }
   },
   "directIpv4": {
     "equinixIfaceIp": "192.168.100.2"
@@ -26,6 +36,24 @@
   },
   "customerAsn": 65001,
   "equinixAsn": 65002,
+  "bgpAuthKey": "testAuthKey",
+  "asOverrideEnabled": true,
+  "operation": {
+    "errors": [
+      {
+        "errorCode": "EQ-3044019",
+        "errorMessage": "Failed to provision the BGP IPv6 session"
+      }
+    ]
+  },
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345",
+    "href": "https://api.equinix.com/resourceManager/v1/projects/d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "connection": {
+    "uuid": "c0ffee00-1111-2222-3333-444455556666",
+    "platformUuid": "9a8b7c6d-5e4f-3210-abcd-ef9876543210"
+  },
   "changelog": {
     "createdBy": "user1234",
     "createdByFullName": "Jane Doe",

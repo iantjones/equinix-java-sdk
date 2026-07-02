@@ -4,15 +4,19 @@ import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.fabric.enums.ChargeFrequency;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
+import api.equinix.javasdk.fabric.enums.PrecisionTimeState;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeOrder;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import org.junit.jupiter.api.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
@@ -58,6 +62,54 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
             assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", ts.getUuid());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def")));
         }
+
+        @Test
+        @DisplayName("deserializes package, connections, ipv4, order and pricing from the wire response")
+        void deserializesFullServiceShape() {
+            stubSingleton(wireMock, "/fabric/v4/timeServices/.*",
+                    "/json/fabric/precision_time_response.json");
+
+            PrecisionTime ts = fabric.precisionTimes().getByUuid("f6a7b8c9-d0e1-2345-fabc-567890123def");
+
+            assertEquals(PrecisionTimeType.NTP, ts.getType());
+            assertEquals(PrecisionTimeState.PROVISIONED, ts.getState());
+
+            // "package" -> getServicePackage() (+ getPackageCode() convenience)
+            TimeServicePackage servicePackage = ts.getServicePackage();
+            assertNotNull(servicePackage);
+            assertEquals(PrecisionTimePackageCode.NTP_STANDARD, servicePackage.getCode());
+            assertEquals("https://api.equinix.com/fabric/v4/timeServicePackages/NTP_STANDARD",
+                    servicePackage.getHref());
+            assertEquals(PrecisionTimePackageCode.NTP_STANDARD, ts.getPackageCode());
+
+            // connections
+            List<TimeServiceConnection> connections = ts.getConnections();
+            assertNotNull(connections);
+            assertEquals(1, connections.size());
+            assertEquals("095be615-a8ad-4c33-8e9c-c7612fbf6c9f", connections.get(0).getUuid());
+
+            // ipv4
+            PrecisionTimeIpv4 ipv4 = ts.getIpv4();
+            assertNotNull(ipv4);
+            assertEquals("192.168.254.241", ipv4.getPrimary());
+            assertEquals("192.168.254.242", ipv4.getSecondary());
+            assertEquals("255.255.255.240", ipv4.getNetworkMask());
+            assertEquals("192.168.254.254", ipv4.getDefaultGateway());
+
+            // order
+            assertNotNull(ts.getOrder());
+            assertEquals("1-129105284100", ts.getOrder().getPurchaseOrderNumber());
+            assertEquals("Ref-2200", ts.getOrder().getCustomerReferenceNumber());
+            assertEquals("1-129105284100", ts.getOrder().getOrderNumber());
+
+            // pricing
+            assertNotNull(ts.getPricing());
+            assertEquals("USD", ts.getPricing().getCurrency());
+            assertEquals(1, ts.getPricing().getCharges().size());
+            assertEquals(ChargeFrequency.MONTHLY_RECURRING, ts.getPricing().getCharges().get(0).getType());
+            assertEquals(0, ts.getPricing().getCharges().get(0).getPrice()
+                    .compareTo(new BigDecimal("300.0")));
+        }
     }
 
     @Nested
@@ -80,6 +132,7 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
                     .withConnections(List.of("095be615-a8ad-4c33-8e9c-c7612fbf6c9f"))
                     .withIpv4(new PrecisionTimeIpv4("10.0.0.1", "10.0.0.2", "255.255.255.240", "10.0.0.3"))
                     .withProject(new Project("d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"))
+                    .withOrder(new PrecisionTimeOrder("PO-7654321", "CR-2200", null))
                     .create();
 
             assertNotNull(created);
@@ -95,7 +148,9 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
                             + "\"connections\":[{\"uuid\":\"095be615-a8ad-4c33-8e9c-c7612fbf6c9f\"}],"
                             + "\"ipv4\":{\"primary\":\"10.0.0.1\",\"secondary\":\"10.0.0.2\","
                             + "\"networkMask\":\"255.255.255.240\",\"defaultGateway\":\"10.0.0.3\"},"
-                            + "\"project\":{\"projectId\":\"d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345\"}}",
+                            + "\"project\":{\"projectId\":\"d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345\"},"
+                            + "\"order\":{\"purchaseOrderNumber\":\"PO-7654321\","
+                            + "\"customerReferenceNumber\":\"CR-2200\"}}",
                             true, true)));
         }
     }

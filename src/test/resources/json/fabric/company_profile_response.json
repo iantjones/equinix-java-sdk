@@ -6,6 +6,29 @@
   "summary": "Global interconnection provider",
   "description": "Acme Networks offers low-latency interconnection across major metros.",
   "state": "ACTIVE",
+  "tags": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/tags/260af68b-42f0-4f2e-9c5c-2fbd44b4b387",
+      "uuid": "260af68b-42f0-4f2e-9c5c-2fbd44b4b387",
+      "name": "equinix.fabric.spotlight.category.featured"
+    }
+  ],
+  "serviceProfiles": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/423af68b-42f0-4f2e-9c5c-2fbd44b4b387",
+      "uuid": "423af68b-42f0-4f2e-9c5c-2fbd44b4b387"
+    }
+  ],
   "webUrl": "https://acme.example.com",
-  "contactUrl": "https://acme.example.com/contact"
+  "contactUrl": "https://acme.example.com/contact",
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-05-20T13:00:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-11-01T09:15:00.000Z"
+  }
 }

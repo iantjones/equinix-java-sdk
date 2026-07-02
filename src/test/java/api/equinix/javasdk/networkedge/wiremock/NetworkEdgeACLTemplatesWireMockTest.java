@@ -4,9 +4,14 @@ import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.networkedge.enums.ACLInterfaceType;
+import api.equinix.javasdk.networkedge.enums.DeviceACLStatus;
 import api.equinix.javasdk.networkedge.enums.Protocol;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
+import api.equinix.javasdk.networkedge.model.implementation.VirtualDeviceACLDetail;
 import org.junit.jupiter.api.*;
+
+import java.time.LocalDateTime;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -50,6 +55,18 @@ class NetworkEdgeACLTemplatesWireMockTest extends WireMockTestBase {
             assertNotNull(template);
             assertEquals("acl-1111-2222-3333-444455556666", template.getUuid());
             assertEquals("test-acl-template", template.getName());
+
+            // Spec ACLTemplateDetailsResponse.virtualDeviceDetails (VirtualDeviceACLDetails[]) —
+            // the devices this template is attached to must map.
+            assertNotNull(template.getVirtualDeviceDetails());
+            assertEquals(1, template.getVirtualDeviceDetails().size());
+            VirtualDeviceACLDetail detail = template.getVirtualDeviceDetails().get(0);
+            assertEquals("Test Device", detail.getName());
+            assertEquals("ce7ef79e-31e7-4769-be5b-e192496f48ab", detail.getUuid());
+            assertEquals(ACLInterfaceType.WAN, detail.getInterfaceType());
+            assertEquals(DeviceACLStatus.PROVISIONED, detail.getAclStatus());
+            // Spec createdDateTime maps through the Lifecycle createdDate accessor.
+            assertEquals(LocalDateTime.of(2020, 10, 3, 19, 41, 17), template.getCreatedDate());
         }
 
         @Test

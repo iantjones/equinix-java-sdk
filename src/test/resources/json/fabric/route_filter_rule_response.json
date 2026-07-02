@@ -8,7 +8,7 @@
   "action": "PERMIT",
   "prefixMatch": "exact",
   "description": "Permit the 10/8 private range",
-  "changeLog": {
+  "changelog": {
     "createdBy": "user1234",
     "createdByFullName": "Jane Doe",
     "createdByEmail": "jane.doe@example.com",

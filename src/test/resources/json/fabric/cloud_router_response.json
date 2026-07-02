@@ -32,6 +32,19 @@
   ],
   "equinixAsn": 30000,
   "connectionsCount": 5,
+  "marketplaceSubscription": {
+    "href": "https://api.equinix.com/fabric/v4/marketplaceSubscriptions/2823b8ae-b24c-4a86-9dca-4a4e797d94e7",
+    "type": "AWS_MARKETPLACE_SUBSCRIPTION",
+    "uuid": "2823b8ae-b24c-4a86-9dca-4a4e797d94e7"
+  },
+  "change": {
+    "uuid": "5c1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8",
+    "type": "ROUTER_UPDATE",
+    "status": "COMPLETED",
+    "createdDateTime": "2024-09-20T14:40:00.000Z",
+    "updatedDateTime": "2024-09-20T14:45:00.000Z",
+    "information": "Router package updated"
+  },
   "changeLog": {
     "createdBy": "user1234",
     "createdByFullName": "Jane Doe",

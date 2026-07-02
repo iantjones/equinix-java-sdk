@@ -6,6 +6,23 @@
   "description": "Fires when egress bandwidth utilisation exceeds the configured threshold",
   "state": "PROVISIONED",
   "enabled": true,
+  "metricSelector": {
+    "include": [
+      "equinix.fabric.connection.bandwidth_tx.usage"
+    ]
+  },
+  "resourceSelector": {
+    "include": [
+      "/fabric/v4/connections/8b140c74-0331-46d1-9cb3-2981be84dd1b"
+    ]
+  },
+  "detectionMethod": {
+    "type": "THRESHOLD",
+    "windowSize": "PT15M",
+    "operand": "ABOVE",
+    "warningThreshold": "35000000",
+    "criticalThreshold": "45000000"
+  },
   "changeLog": {
     "createdBy": "user1234",
     "createdByFullName": "Jane Doe",

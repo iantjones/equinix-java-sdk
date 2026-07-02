@@ -1,0 +1,78 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 3
+  },
+  "data": [
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "code": "ECX00003.PROD",
+      "name": "Equinix Fabric Virtual Connection Product",
+      "description": "Fabric Virtual Connection",
+      "account": {
+        "accountNumber": 200001
+      },
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 250.00 }
+      ],
+      "currency": "USD",
+      "termLength": 24,
+      "catgory": "COUNTRY",
+      "connection": {
+        "bandwidth": 100
+      }
+    },
+    {
+      "type": "CLOUD_ROUTER_PRODUCT",
+      "code": "ECX00014.PROD",
+      "name": "Equinix Cloud Router Product",
+      "description": "Equinix Cloud Router",
+      "account": {
+        "accountNumber": 200001
+      },
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 5000 }
+      ],
+      "currency": "USD",
+      "termLength": 1,
+      "router": {
+        "package": {
+          "code": "ADVANCED"
+        },
+        "location": {
+          "metroCode": "CH"
+        }
+      }
+    },
+    {
+      "type": "PRECISION_TIME_PRODUCT",
+      "code": "EDG00009.PROD",
+      "name": "Equinix Precision Time Product",
+      "description": "Equinix Precision Time Product",
+      "account": {
+        "accountNumber": 270001
+      },
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 495 }
+      ],
+      "currency": "USD",
+      "timeService": {
+        "type": "NTP",
+        "package": {
+          "code": "NTP_STANDARD"
+        },
+        "connection": {
+          "aSide": {
+            "accessPoint": {
+              "location": {
+                "metroCode": "CH",
+                "ibx": "CH3"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

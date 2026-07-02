@@ -21,7 +21,7 @@
       "href": "https://api.equinix.com/fabric/v4/routeAggregations/b1c2d3e4-f5a6-7890-bcde-f01234567890/routeAggregationRules/d3e4f5a6-b7c8-9012-def0-123456789012",
       "name": "Aggregate-192-168-0-0-16",
       "type": "BGP_IPv4_PREFIX_AGGREGATION_RULE",
-      "state": "PROVISIONED",
+      "state": "NOT_PROVISIONED",
       "prefix": "192.168.0.0/16",
       "description": "Aggregate the 192.168/16 private range"
     }

@@ -11,6 +11,7 @@ import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.PhysicalPortType;
+import api.equinix.javasdk.fabric.enums.PortState;
 import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Port;
@@ -95,6 +96,9 @@ class FabricPortsWireMockTest extends WireMockTestBase {
             assertEquals(2, ports.size());
             assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", ports.get(0).getUuid());
             assertEquals("a1b2c3d4-e5f6-7890-abcd-ef1234567890", ports.get(1).getUuid());
+            // PortState spec values round-trip (PROVISIONED is a real spec state, not UNKNOWN)
+            assertEquals(PortState.ACTIVE, ports.get(0).getState());
+            assertEquals(PortState.PROVISIONED, ports.get(1).getState());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports")));
         }

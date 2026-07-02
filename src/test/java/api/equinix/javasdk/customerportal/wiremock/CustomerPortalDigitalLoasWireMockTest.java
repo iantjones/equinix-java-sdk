@@ -2,11 +2,14 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
 import api.equinix.javasdk.customerportal.model.LoaCustomerOrganization;
 import api.equinix.javasdk.customerportal.model.PrivateBetaPermission;
+import api.equinix.javasdk.customerportal.model.implementation.LoaLocation;
+import api.equinix.javasdk.customerportal.model.implementation.LoaPatchPanel;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.DigitalLoaSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessRequest;
@@ -293,6 +296,25 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
 
             assertNotNull(loa);
             assertEquals("loa-abc-123", loa.getUuid());
+
+            // Cross-connect a-side patch panel including its spec-required location object
+            // (diLOA v1 PatchPanel.location, Location schema).
+            LoaPatchPanel patchPanel = loa.getProducts().get(0).getCrossConnect().getASide().getPatchPanel();
+            assertNotNull(patchPanel);
+            assertEquals("CP:0218:0102:13008148", patchPanel.getId());
+            assertEquals("AM11:04:000050:1613-S14", patchPanel.getCabinetSpaceId());
+            assertEquals("AM11:04:000050", patchPanel.getCageSpaceId());
+
+            LoaLocation location = patchPanel.getLocation();
+            assertNotNull(location);
+            assertEquals("AM11", location.getIbx());
+            assertEquals(Region.EMEA, location.getRegion());
+            assertEquals("Amsterdam", location.getMetroName());
+            assertEquals("AM", location.getMetroCode());
+            assertEquals("NL", location.getCountryCode());
+            assertEquals("8 Buckingham Avenue, Slough Trading Estate, SL1 4AX Slough, England",
+                    location.getAddress());
+
             wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/digitalLoas/loa-abc-123")));
         }
     }

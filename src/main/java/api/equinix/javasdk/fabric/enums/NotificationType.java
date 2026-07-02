@@ -28,5 +28,6 @@ public enum NotificationType {
     PROFILE_LIFECYCLE,
     SALES_REP_NOTIFICATIONS,
     TECHNICAL,
-    ORDERING
+    ORDERING,
+    CONTACT
 }

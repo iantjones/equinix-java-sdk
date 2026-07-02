@@ -5,8 +5,10 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.enums.NetworkEquinixStatus;
 import api.equinix.javasdk.fabric.enums.NetworkScope;
+import api.equinix.javasdk.fabric.enums.NetworkState;
 import api.equinix.javasdk.fabric.enums.NetworkType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
@@ -72,11 +74,32 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
 
             assertNotNull(network.getAccount());
             assertEquals("Acme Corp", network.getAccount().getAccountName());
+            assertEquals(NetworkState.ACTIVE, network.getState());
+            assertNotNull(network.getLocation());
+            assertEquals(api.equinix.javasdk.core.enums.MetroCode.SV, network.getLocation().getMetroCode());
+            assertEquals("Silicon Valley", network.getLocation().getMetroName());
+            assertEquals(Region.AMER, network.getLocation().getRegion());
             assertNotNull(network.getOperation());
             assertEquals(NetworkEquinixStatus.PROVISIONED, network.getOperation().getEquinixStatus());
             assertNotNull(network.getLinks());
             assertEquals(1, network.getLinks().size());
             assertEquals("getNetworkConnections", network.getLinks().get(0).getRel());
+        }
+
+        @Test
+        @DisplayName("reads the spec NetworkState value DELETED (not null/UNKNOWN)")
+        void readsDeletedState() {
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/networks/.*"))
+                    .willReturn(okJson("{"
+                            + "\"uuid\":\"c3d4e5f6-a7b8-9012-cdef-234567890abc\","
+                            + "\"name\":\"Decommissioned-Network\","
+                            + "\"type\":\"EVPLAN\","
+                            + "\"state\":\"DELETED\","
+                            + "\"scope\":\"REGIONAL\""
+                            + "}")));
+
+            Network network = fabric.networks().getByUuid("c3d4e5f6-a7b8-9012-cdef-234567890abc");
+            assertEquals(NetworkState.DELETED, network.getState());
         }
 
         @Test
@@ -257,6 +280,8 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
             assertNotNull(networks);
             assertEquals(2, networks.size());
             assertEquals("c3d4e5f6-a7b8-9012-cdef-234567890abc", networks.get(0).getUuid());
+            assertEquals(NetworkState.ACTIVE, networks.get(0).getState());
+            assertEquals(NetworkState.INACTIVE, networks.get(1).getState());
 
             // Default no-arg search sends an (empty) filter, no sort.
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))

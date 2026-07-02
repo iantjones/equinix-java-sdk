@@ -19,7 +19,13 @@
       },
       "rulesCount": 24,
       "notMatchedRuleAction": "DENY",
-      "connectionsCount": 3
+      "connectionsCount": 3,
+      "changelog": {
+        "createdBy": "user1234",
+        "createdByFullName": "Jane Doe",
+        "createdByEmail": "jane.doe@example.com",
+        "createdDateTime": "2024-04-12T07:45:00.000Z"
+      }
     },
     {
       "uuid": "f6a7b8c9-d0e1-2345-fabc-56789012cdef",

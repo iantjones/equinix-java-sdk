@@ -6,6 +6,7 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.enums.RouteFilterAction;
+import api.equinix.javasdk.fabric.enums.RouteFilterRuleState;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
@@ -63,6 +64,10 @@ class FabricRouteFilterRulesWireMockTest extends WireMockTestBase {
             assertEquals("b1c2d3e4-f5a6-7890-bcde-f01234567890", rules.get(0).getUuid());
             assertEquals("Allow-10-0-0-0-8", rules.get(0).getName());
 
+            // Spec state values round-trip, including the NOT_PROVISIONED addition.
+            assertEquals(RouteFilterRuleState.PROVISIONED, rules.get(0).getState());
+            assertEquals(RouteFilterRuleState.NOT_PROVISIONED, rules.get(1).getState());
+
             wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/routeFilters/" + ROUTE_FILTER_ID + "/routeFilterRules")));
         }
@@ -81,6 +86,11 @@ class FabricRouteFilterRulesWireMockTest extends WireMockTestBase {
             RouteFilterRule rule = fabric.routeFilterRules().getByUuid(ROUTE_FILTER_ID, RULE_UUID);
             assertNotNull(rule);
             assertEquals(RULE_UUID, rule.getUuid());
+
+            // The RouteFilterRulesData schema names the property "changelog" (lowercase);
+            // the @JsonAlias must map it onto changeLog.
+            assertNotNull(rule.getChangeLog());
+            assertEquals("user1234", rule.getChangeLog().getCreatedBy());
         }
     }
 

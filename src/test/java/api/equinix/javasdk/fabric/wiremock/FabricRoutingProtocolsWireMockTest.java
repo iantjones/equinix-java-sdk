@@ -63,6 +63,31 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
             RoutingProtocol protocol = fabric.routingProtocols().getByUuid(CONNECTION_ID, PROTOCOL_UUID);
             assertNotNull(protocol);
             assertEquals(PROTOCOL_UUID, protocol.getUuid());
+
+            // BGPConnectionIpv4/Ipv6 fidelity: routesMax + nested operation block.
+            assertEquals(1000L, protocol.getBgpIpv4().getRoutesMax());
+            assertNotNull(protocol.getBgpIpv4().getOperation());
+            assertEquals("UP", protocol.getBgpIpv4().getOperation().getOperationalStatus());
+            assertNotNull(protocol.getBgpIpv4().getOperation().getOpStatusChangedAt());
+            assertEquals(500L, protocol.getBgpIpv6().getRoutesMax());
+            assertNotNull(protocol.getBgpIpv6().getOperation());
+            assertEquals("DOWN", protocol.getBgpIpv6().getOperation().getOperationalStatus());
+
+            // Top-level spec fields added by the fidelity wave.
+            assertEquals("testAuthKey", protocol.getBgpAuthKey());
+            assertEquals(Boolean.TRUE, protocol.getAsOverrideEnabled());
+            assertNotNull(protocol.getOperation());
+            assertEquals(1, protocol.getOperation().getErrors().size());
+            assertEquals("EQ-3044019", protocol.getOperation().getErrors().get(0).getErrorCode());
+            assertNotNull(protocol.getProject());
+            assertEquals("d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345", protocol.getProject().getProjectId());
+            assertNotNull(protocol.getConnection());
+            assertEquals(CONNECTION_ID, protocol.getConnection().getUuid());
+            assertEquals("9a8b7c6d-5e4f-3210-abcd-ef9876543210", protocol.getConnection().getPlatformUuid());
+
+            // The spec names this wire property "changelog" (lowercase), unlike most resources.
+            assertNotNull(protocol.getChangeLog());
+            assertEquals("user1234", protocol.getChangeLog().getCreatedBy());
         }
 
         @Test

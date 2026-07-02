@@ -17,6 +17,8 @@ import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
+import java.time.LocalDateTime;
+
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -205,6 +207,72 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
                             "$.connection.aSide.accessPointSelectors[0].linkProtocol.type", equalTo("DOT1Q")))
                     .withRequestBody(matchingJsonPath(
                             "$.connection.aSide.accessPointSelectors[0].linkProtocol.vlanTag", equalTo("1001"))));
+        }
+
+        @Test
+        @DisplayName("POSTs name/description/expirationDateTime/project and the virtual-device selector")
+        void createsVirtualDeviceTokenWithMetadata() {
+            stubCreate(wireMock, "/fabric/v4/serviceTokens",
+                    "/json/fabric/service_token_response.json");
+
+            ServiceToken created = fabric.serviceTokens().define(Side.Z_Side)
+                    .ofType(ServiceTokenType.VC_TOKEN)
+                    .withName("Zside-VD-Token")
+                    .withDescription("Token targeting a Network Edge device")
+                    .withExpirationDateTime(LocalDateTime.of(2025, 12, 31, 23, 59, 59))
+                    .inProject("44f4c4f8-2f39-494a-838c-5350c32f0a2e")
+                    .forConnectionType(ConnectionType.EVPL_VC)
+                    .forAccessPointType(AccessPointType.VD)
+                    .onVirtualDeviceUuid("3c7687dc-3b3d-4d22-a0a3-9a64116cae83")
+                    .withNetworkInterfaceId(5)
+                    .create();
+
+            assertNotNull(created);
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/serviceTokens"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("VC_TOKEN")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Zside-VD-Token")))
+                    .withRequestBody(matchingJsonPath("$.description",
+                            equalTo("Token targeting a Network Edge device")))
+                    .withRequestBody(matchingJsonPath("$.expirationDateTime",
+                            equalTo("2025-12-31T23:59:59Z")))
+                    .withRequestBody(matchingJsonPath("$.project.projectId",
+                            equalTo("44f4c4f8-2f39-494a-838c-5350c32f0a2e")))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.zSide.accessPointSelectors[0].type", equalTo("VD")))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.zSide.accessPointSelectors[0].virtualDevice.type", equalTo("EDGE")))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.zSide.accessPointSelectors[0].virtualDevice.uuid",
+                            equalTo("3c7687dc-3b3d-4d22-a0a3-9a64116cae83")))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.zSide.accessPointSelectors[0].interface.type", equalTo("NETWORK")))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.zSide.accessPointSelectors[0].interface.id", equalTo("5"))));
+        }
+
+        @Test
+        @DisplayName("POSTs the network access-point selector for NETWORK tokens")
+        void createsNetworkTokenSelector() {
+            stubCreate(wireMock, "/fabric/v4/serviceTokens",
+                    "/json/fabric/service_token_response.json");
+
+            ServiceToken created = fabric.serviceTokens().define(Side.A_Side)
+                    .ofType(ServiceTokenType.VC_TOKEN)
+                    .withExpiry(30)
+                    .forConnectionType(ConnectionType.EVPLAN_VC)
+                    .forAccessPointType(AccessPointType.NETWORK)
+                    .onNetworkUuid("94a494a4-f4a4-44b4-b4b4-c4c4c4c4c4c4")
+                    .create();
+
+            assertNotNull(created);
+
+            wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/serviceTokens"))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.aSide.accessPointSelectors[0].type", equalTo("NETWORK")))
+                    .withRequestBody(matchingJsonPath(
+                            "$.connection.aSide.accessPointSelectors[0].network.uuid",
+                            equalTo("94a494a4-f4a4-44b4-b4b4-c4c4c4c4c4c4"))));
         }
     }
 

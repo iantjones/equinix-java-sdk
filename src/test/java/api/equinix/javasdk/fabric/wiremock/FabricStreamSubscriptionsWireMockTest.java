@@ -76,6 +76,15 @@ class FabricStreamSubscriptionsWireMockTest extends WireMockTestBase {
             assertNotNull(subscription);
             assertEquals(SUBSCRIPTION_ID, subscription.getUuid());
             assertEquals("Production-Splunk-Subscription", subscription.getName());
+
+            assertNotNull(subscription.getMetricSelector());
+            assertEquals(java.util.List.of("equinix.fabric.connection.*"),
+                    subscription.getMetricSelector().getInclude());
+            assertEquals(java.util.List.of("equinix.fabric.connection.bandwidth_rx.usage"),
+                    subscription.getMetricSelector().getExcept());
+            assertNotNull(subscription.getEventSelector());
+            assertEquals(java.util.List.of("equinix.fabric.connection.*"),
+                    subscription.getEventSelector().getInclude());
         }
 
         @Test
