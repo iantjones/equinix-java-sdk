@@ -18,8 +18,8 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,13 +29,21 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Redundancy {
+
+    @JsonProperty("enabled")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean enabled;
 
     @JsonProperty("group")
     private String group;
 
     @JsonProperty("priority")
     private RedundancyPriority priority;
+
+    public Redundancy(String group, RedundancyPriority priority) {
+        this.group = group;
+        this.priority = priority;
+    }
 }

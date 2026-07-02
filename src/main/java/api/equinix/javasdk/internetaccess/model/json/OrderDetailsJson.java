@@ -71,7 +71,7 @@ public class OrderDetailsJson implements OrderDetails {
     @JsonProperty("signature")
     private OrderSignature signature;
 
-    @JsonProperty("status")
+    @JsonProperty("state")
     private OrderState status;
 
     @JsonProperty("changeLog")

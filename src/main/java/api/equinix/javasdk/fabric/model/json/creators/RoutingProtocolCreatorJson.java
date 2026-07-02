@@ -73,6 +73,18 @@ public class RoutingProtocolCreatorJson {
 
         @JsonProperty("enabled")
         private Boolean enabled;
+
+        @JsonProperty("outboundASPrependCount")
+        private Long outboundASPrependCount;
+
+        @JsonProperty("inboundMED")
+        private Long inboundMED;
+
+        @JsonProperty("outboundMED")
+        private Long outboundMED;
+
+        @JsonProperty("routesMax")
+        private Long routesMax;
     }
 
     @Setter(AccessLevel.PACKAGE)
@@ -86,6 +98,18 @@ public class RoutingProtocolCreatorJson {
 
         @JsonProperty("enabled")
         private Boolean enabled;
+
+        @JsonProperty("outboundASPrependCount")
+        private Long outboundASPrependCount;
+
+        @JsonProperty("inboundMED")
+        private Long inboundMED;
+
+        @JsonProperty("outboundMED")
+        private Long outboundMED;
+
+        @JsonProperty("routesMax")
+        private Long routesMax;
     }
 
     @Setter(AccessLevel.PACKAGE)
@@ -108,8 +132,11 @@ public class RoutingProtocolCreatorJson {
         @JsonProperty("enabled")
         private Boolean enabled;
 
+        /**
+         * Serialized as a JSON string per the spec ({@code RoutingProtocolBFD.interval: string}).
+         */
         @JsonProperty("interval")
-        private Integer interval;
+        private String interval;
     }
 
     public RoutingProtocolCreatorJson(RoutingProtocolOperator.RoutingProtocolBuilder routingProtocolBuilder) {
@@ -125,6 +152,10 @@ public class RoutingProtocolCreatorJson {
             ipv4Config.setCustomerPeerIp(routingProtocolBuilder.getBgpIpv4CustomerPeerIp());
             ipv4Config.setEquinixPeerIp(routingProtocolBuilder.getBgpIpv4EquinixPeerIp());
             ipv4Config.setEnabled(routingProtocolBuilder.getBgpIpv4Enabled());
+            ipv4Config.setOutboundASPrependCount(routingProtocolBuilder.getBgpIpv4OutboundASPrependCount());
+            ipv4Config.setInboundMED(routingProtocolBuilder.getBgpIpv4InboundMED());
+            ipv4Config.setOutboundMED(routingProtocolBuilder.getBgpIpv4OutboundMED());
+            ipv4Config.setRoutesMax(routingProtocolBuilder.getBgpIpv4RoutesMax());
             this.bgpIpv4 = ipv4Config;
         }
 
@@ -133,6 +164,10 @@ public class RoutingProtocolCreatorJson {
             ipv6Config.setCustomerPeerIp(routingProtocolBuilder.getBgpIpv6CustomerPeerIp());
             ipv6Config.setEquinixPeerIp(routingProtocolBuilder.getBgpIpv6EquinixPeerIp());
             ipv6Config.setEnabled(routingProtocolBuilder.getBgpIpv6Enabled());
+            ipv6Config.setOutboundASPrependCount(routingProtocolBuilder.getBgpIpv6OutboundASPrependCount());
+            ipv6Config.setInboundMED(routingProtocolBuilder.getBgpIpv6InboundMED());
+            ipv6Config.setOutboundMED(routingProtocolBuilder.getBgpIpv6OutboundMED());
+            ipv6Config.setRoutesMax(routingProtocolBuilder.getBgpIpv6RoutesMax());
             this.bgpIpv6 = ipv6Config;
         }
 
@@ -151,7 +186,8 @@ public class RoutingProtocolCreatorJson {
         if (routingProtocolBuilder.getBfdEnabled() != null) {
             BFDConfigCreate bfdConfig = new BFDConfigCreate();
             bfdConfig.setEnabled(routingProtocolBuilder.getBfdEnabled());
-            bfdConfig.setInterval(routingProtocolBuilder.getBfdInterval());
+            bfdConfig.setInterval(routingProtocolBuilder.getBfdInterval() != null
+                    ? String.valueOf(routingProtocolBuilder.getBfdInterval()) : null);
             this.bfd = bfdConfig;
         }
     }

@@ -17,14 +17,64 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.core.enums.MetroCode;
+import api.equinix.javasdk.core.enums.Region;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+/**
+ * A simplified location (the Fabric v4 {@code SimplifiedLocation} /
+ * {@code SimplifiedLocationWithoutIBX} schemas): metro code plus the metro's URI, name
+ * and region.
+ */
 @Getter
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LocationCode {
 
     @JsonProperty("metroCode")
     private MetroCode metroCode;
+
+    @JsonProperty("metroHref")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String metroHref;
+
+    @JsonProperty("metroName")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String metroName;
+
+    @JsonProperty("region")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Region region;
+
+    /**
+     * IBX identifier; populated on pricing responses (spec schema {@code PriceLocation})
+     * and, deprecated, on {@code SimplifiedLocation} reads.
+     */
+    @JsonProperty("ibx")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String ibx;
+
+    /**
+     * Creates a location keyed by metro code (for METRO-scoped resources).
+     *
+     * @param metroCode the metro code
+     */
+    public LocationCode(MetroCode metroCode) {
+        this.metroCode = metroCode;
+    }
+
+    /**
+     * Creates a location keyed by metro code and/or region (REGIONAL-scope networks are
+     * located by region rather than metro code).
+     *
+     * @param metroCode the metro code, or {@code null} for region-scoped locations
+     * @param region the region, or {@code null} for metro-scoped locations
+     */
+    public LocationCode(MetroCode metroCode, Region region) {
+        this.metroCode = metroCode;
+        this.region = region;
+    }
 }

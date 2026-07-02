@@ -27,6 +27,9 @@ public class BFDConfig {
     @JsonProperty("enabled")
     private Boolean enabled;
 
+    /**
+     * BFD interval; the spec declares this as a string (e.g. {@code "100"}).
+     */
     @JsonProperty("interval")
-    private Integer interval;
+    private String interval;
 }

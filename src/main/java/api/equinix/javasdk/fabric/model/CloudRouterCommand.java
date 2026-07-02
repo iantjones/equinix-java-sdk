@@ -20,8 +20,7 @@ import api.equinix.javasdk.fabric.enums.CloudRouterCommandState;
 import api.equinix.javasdk.fabric.enums.CloudRouterCommandType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.CloudRouterCommandRequest;
-
-import java.util.Map;
+import api.equinix.javasdk.fabric.model.implementation.CloudRouterCommandResponse;
 
 /**
  * A Fabric Cloud Router diagnostic command (ping / traceroute) and its result. Read-only.
@@ -44,7 +43,7 @@ public interface CloudRouterCommand {
 
     CloudRouterCommandRequest getRequest();
 
-    Map<String, Object> getResponse();
+    CloudRouterCommandResponse getResponse();
 
     ChangeLog getChangeLog();
 }

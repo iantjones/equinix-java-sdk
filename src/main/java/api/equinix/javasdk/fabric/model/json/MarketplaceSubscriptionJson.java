@@ -19,6 +19,9 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionState;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
+import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.SubscriptionEntitlement;
+import api.equinix.javasdk.fabric.model.implementation.SubscriptionTrial;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -47,9 +50,24 @@ public final class MarketplaceSubscriptionJson implements MarketplaceSubscriptio
     @JsonProperty("marketplace")
     private String marketplace;
 
+    @JsonProperty("offerType")
+    private String offerType;
+
     @JsonProperty("offerId")
     private String offerId;
 
     @JsonProperty("isAutoRenew")
     private Boolean isAutoRenew;
+
+    @JsonProperty("trial")
+    private SubscriptionTrial trial;
+
+    @JsonProperty("metroCodes")
+    private List<String> metroCodes;
+
+    @JsonProperty("entitlements")
+    private List<SubscriptionEntitlement> entitlements;
+
+    @JsonProperty("changelog")
+    private ChangeLog changeLog;
 }

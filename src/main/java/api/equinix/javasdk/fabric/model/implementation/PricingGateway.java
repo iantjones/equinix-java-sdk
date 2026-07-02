@@ -24,6 +24,9 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingGateway {
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("package")
     private GatewayPackageRef gatewayPackage;
 

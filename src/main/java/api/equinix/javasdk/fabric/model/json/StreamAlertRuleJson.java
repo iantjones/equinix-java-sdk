@@ -19,6 +19,8 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.StreamAlertRule;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.DetectionMethod;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -54,6 +56,15 @@ public class StreamAlertRuleJson {
 
     @JsonProperty("enabled")
     private Boolean enabled;
+
+    @JsonProperty("metricSelector")
+    private StreamSubscriptionSelector metricSelector;
+
+    @JsonProperty("resourceSelector")
+    private StreamSubscriptionSelector resourceSelector;
+
+    @JsonProperty("detectionMethod")
+    private DetectionMethod detectionMethod;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

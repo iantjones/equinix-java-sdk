@@ -5,12 +5,10 @@
   "description": "Premium Fabric Cloud Router package",
   "totalIPv4RoutesMax": 4000,
   "totalIPv6RoutesMax": 4000,
-  "staticIPv4RoutesMax": 1000,
-  "staticIPv6RoutesMax": 1000,
-  "natIPv4RoutesMax": 500,
   "routeFilterSupported": true,
-  "routeAggregationSupported": true,
-  "connectionLimit": 100,
+  "vcCountMax": 100,
+  "crCountMax": 3,
+  "vcBandwidthMax": 50,
   "changeLog": {
     "createdBy": "user1234",
     "createdDateTime": "2024-06-15T09:30:00.000Z"

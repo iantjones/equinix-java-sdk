@@ -19,6 +19,10 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
 import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.LinkProtocolConnection;
+import api.equinix.javasdk.fabric.model.implementation.LinkProtocolServiceToken;
+import api.equinix.javasdk.fabric.model.implementation.SubInterface;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -69,4 +73,16 @@ public final class PortVlanJson implements PortVlan {
 
     @JsonProperty("vlanCTagMax")
     private Integer vlanCTagMax;
+
+    @JsonProperty("subInterface")
+    private SubInterface subInterface;
+
+    @JsonProperty("asset")
+    private LinkProtocolConnection asset;
+
+    @JsonProperty("serviceToken")
+    private LinkProtocolServiceToken serviceToken;
+
+    @JsonProperty("changeLog")
+    private ChangeLog changeLog;
 }

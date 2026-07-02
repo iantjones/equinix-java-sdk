@@ -38,14 +38,20 @@ public class VersionDetail {
     @JsonProperty("imageName")
     private String imageName;
 
-    @JsonProperty("versionDate")
-    private Timestamp versionDate;
-    
+    @JsonProperty("versionDateTime")
+    private Timestamp versionDateTime;
+
+    @JsonProperty("retireDateTime")
+    private Timestamp retireDateTime;
+
     @JsonProperty("status")
     private VersionStatus status;
 
     @JsonProperty("stableVersion")
     private Boolean stableVersion;
+
+    @JsonProperty("supportedLicenseTypes")
+    private ArrayList<String> supportedLicenseTypes;
 
     @JsonProperty("maxInterfaceCount")
     private Integer maxInterfaceCount;

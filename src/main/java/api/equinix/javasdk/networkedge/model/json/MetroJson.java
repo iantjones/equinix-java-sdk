@@ -45,9 +45,6 @@ public class MetroJson {
     @JsonProperty("region")
     private Region region;
 
-    @JsonProperty("defaultIbx")
-    private String defaultIbx;
-
     @JsonProperty("availableZones")
     private ArrayList<Zone> availableZones;
 

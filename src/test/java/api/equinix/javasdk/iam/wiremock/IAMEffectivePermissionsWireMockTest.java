@@ -173,6 +173,9 @@ class IAMEffectivePermissionsWireMockTest extends WireMockTestBase {
             assertEquals("ern:fabric::service:fabric:resourceType/connection", page.getList().get(0).getErn());
             assertEquals("platform", page.getList().get(0).getTags().get("team"));
             assertEquals("rev-1", page.getList().get(0).getRev());
+            // attributes are objects per the accessv1 AttributeSet schema, not bare strings
+            assertEquals(2, page.getList().get(0).getAttributes().size());
+            assertEquals("attribute:metroCode", page.getList().get(0).getAttributes().get(0).getAttributeId());
             assertEquals("port", page.getList().get(1).getResourceType());
             assertEquals("next-page-token-abc", page.getNextPageToken());
 

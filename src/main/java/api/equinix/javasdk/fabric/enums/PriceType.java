@@ -16,13 +16,30 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
+ * Fabric price product type (spec schema {@code ProductType}).
  *
  * @author ianjones
  */
 public enum PriceType {
     VIRTUAL_CONNECTION_PRODUCT,
     IP_BLOCK_PRODUCT,
+    VIRTUAL_PORT_PRODUCT,
+    CLOUD_ROUTER_PRODUCT,
+    PRECISION_TIME_PRODUCT,
+    METRO_CONNECT_PRODUCT,
+    /**
+     * Not part of the current spec {@code ProductType} enum; retained for backward compatibility
+     * with pre-Cloud-Router price rows. Prefer {@link #CLOUD_ROUTER_PRODUCT}.
+     */
     FABRIC_GATEWAY_PRODUCT,
-    VIRTUAL_PORT_PRODUCT;
+    UNKNOWN;
+
+    @JsonCreator
+    public static PriceType fromString(String value) {
+        try { return PriceType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

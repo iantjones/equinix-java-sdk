@@ -63,10 +63,18 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
         private String bgpIpv4CustomerPeerIp;
         private String bgpIpv4EquinixPeerIp;
         private Boolean bgpIpv4Enabled;
+        private Long bgpIpv4OutboundASPrependCount;
+        private Long bgpIpv4InboundMED;
+        private Long bgpIpv4OutboundMED;
+        private Long bgpIpv4RoutesMax;
 
         private String bgpIpv6CustomerPeerIp;
         private String bgpIpv6EquinixPeerIp;
         private Boolean bgpIpv6Enabled;
+        private Long bgpIpv6OutboundASPrependCount;
+        private Long bgpIpv6InboundMED;
+        private Long bgpIpv6OutboundMED;
+        private Long bgpIpv6RoutesMax;
 
         private String directIpv4EquinixIfaceIp;
         private String directIpv6EquinixIfaceIp;
@@ -104,6 +112,40 @@ public class RoutingProtocolOperator extends ResourceImpl<RoutingProtocol> {
             this.bgpIpv6CustomerPeerIp = customerPeerIp;
             this.bgpIpv6EquinixPeerIp = equinixPeerIp;
             this.bgpIpv6Enabled = enabled;
+            return this;
+        }
+
+        /**
+         * Sets the optional BGP IPv4 route-policy attributes.
+         *
+         * @param outboundASPrependCount AS path prepend count (0-5)
+         * @param inboundMED inbound Multi Exit Discriminator attribute
+         * @param outboundMED outbound Multi Exit Discriminator attribute
+         * @param routesMax maximum learnt prefixes limit
+         * @return this builder
+         */
+        public RoutingProtocolOperator.RoutingProtocolBuilder withBGPIpv4Options(Long outboundASPrependCount, Long inboundMED, Long outboundMED, Long routesMax) {
+            this.bgpIpv4OutboundASPrependCount = outboundASPrependCount;
+            this.bgpIpv4InboundMED = inboundMED;
+            this.bgpIpv4OutboundMED = outboundMED;
+            this.bgpIpv4RoutesMax = routesMax;
+            return this;
+        }
+
+        /**
+         * Sets the optional BGP IPv6 route-policy attributes.
+         *
+         * @param outboundASPrependCount AS path prepend count (0-5)
+         * @param inboundMED inbound Multi Exit Discriminator attribute
+         * @param outboundMED outbound Multi Exit Discriminator attribute
+         * @param routesMax maximum learnt prefixes limit
+         * @return this builder
+         */
+        public RoutingProtocolOperator.RoutingProtocolBuilder withBGPIpv6Options(Long outboundASPrependCount, Long inboundMED, Long outboundMED, Long routesMax) {
+            this.bgpIpv6OutboundASPrependCount = outboundASPrependCount;
+            this.bgpIpv6InboundMED = inboundMED;
+            this.bgpIpv6OutboundMED = outboundMED;
+            this.bgpIpv6RoutesMax = routesMax;
             return this;
         }
 

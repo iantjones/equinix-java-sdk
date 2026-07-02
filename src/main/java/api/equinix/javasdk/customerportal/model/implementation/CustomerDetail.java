@@ -18,6 +18,9 @@ public class CustomerDetail {
     @JsonProperty("legalEntity")
     private String legalEntity;
 
+    @JsonProperty("accountContact")
+    private String accountContact;
+
     @JsonProperty("countryCode")
     private String countryCode;
 

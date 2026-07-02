@@ -17,7 +17,10 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.enums.BmmrType;
 import api.equinix.javasdk.fabric.enums.PhysicalPortType;
+import api.equinix.javasdk.fabric.enums.PortServiceCode;
+import api.equinix.javasdk.fabric.enums.PortServiceType;
 import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.model.json.creators.PortOperator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,12 +29,17 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Typed request body for creating a single Fabric port ({@code POST /fabric/v4/ports}, schema
- * {@code PortRequest}). Only the spec's required and most commonly used fields are modelled:
- * {@code type}, {@code physicalPortsSpeed}, {@code physicalPortsType}, {@code physicalPortsCount},
- * {@code connectivitySourceType}, {@code project}, {@code account}, {@code location},
- * {@code encapsulation}, {@code order}, {@code lagEnabled}, and {@code name}.
+ * {@code PortRequest}). Models the spec's request properties: {@code type},
+ * {@code physicalPortsSpeed}, {@code physicalPortsType}, {@code physicalPortsCount},
+ * {@code connectivitySourceType}, {@code bmmrType}, {@code project}, {@code account},
+ * {@code location}, {@code encapsulation}, {@code order}, {@code lagEnabled},
+ * {@code demarcationPointIbx}, {@code tetherIbx}, {@code demarcationPoint}, {@code redundancy},
+ * {@code package}, {@code settings}, {@code notifications}, {@code physicalPorts}, {@code loas},
+ * plus the deprecated {@code serviceType} and {@code bandwidth} and the {@code serviceCode}.
  *
  * <p>The {@code account} and {@code location} members follow the spec's
  * {@code SimplifiedAccountRequest} ({@code accountNumber}) and {@code SimplifiedLocationRequest}
@@ -63,6 +71,9 @@ public class PortCreatorJson {
     @JsonProperty("connectivitySourceType")
     private String connectivitySourceType;
 
+    @JsonProperty("bmmrType")
+    private BmmrType bmmrType;
+
     @JsonProperty("lagEnabled")
     private Boolean lagEnabled;
 
@@ -79,7 +90,43 @@ public class PortCreatorJson {
     private Encapsulation encapsulation;
 
     @JsonProperty("order")
-    private Order order;
+    private PortOrder order;
+
+    @JsonProperty("demarcationPointIbx")
+    private String demarcationPointIbx;
+
+    @JsonProperty("tetherIbx")
+    private String tetherIbx;
+
+    @JsonProperty("demarcationPoint")
+    private DemarcationPoint demarcationPoint;
+
+    @JsonProperty("redundancy")
+    private Redundancy redundancy;
+
+    @JsonProperty("package")
+    private PackageRef portPackage;
+
+    @JsonProperty("settings")
+    private PortSettings settings;
+
+    @JsonProperty("notifications")
+    private List<PortNotification> notifications;
+
+    @JsonProperty("physicalPorts")
+    private List<PhysicalPort> physicalPorts;
+
+    @JsonProperty("loas")
+    private List<PortLoa> loas;
+
+    @JsonProperty("serviceType")
+    private PortServiceType serviceType;
+
+    @JsonProperty("serviceCode")
+    private PortServiceCode serviceCode;
+
+    @JsonProperty("bandwidth")
+    private Integer bandwidth;
 
     /**
      * Constructs the request from a configured {@link PortOperator.PortBuilder}.
@@ -93,10 +140,23 @@ public class PortCreatorJson {
         this.physicalPortsType = builder.getPhysicalPortsType();
         this.physicalPortsCount = builder.getPhysicalPortsCount();
         this.connectivitySourceType = builder.getConnectivitySourceType();
+        this.bmmrType = builder.getBmmrType();
         this.lagEnabled = builder.getLagEnabled();
         this.project = builder.getProject();
         this.encapsulation = builder.getEncapsulation();
         this.order = builder.getOrder();
+        this.demarcationPointIbx = builder.getDemarcationPointIbx();
+        this.tetherIbx = builder.getTetherIbx();
+        this.demarcationPoint = builder.getDemarcationPoint();
+        this.redundancy = builder.getRedundancy();
+        this.portPackage = builder.getPortPackage();
+        this.settings = builder.getSettings();
+        this.notifications = builder.getNotifications();
+        this.physicalPorts = builder.getPhysicalPorts();
+        this.loas = builder.getLoas();
+        this.serviceType = builder.getServiceType();
+        this.serviceCode = builder.getServiceCode();
+        this.bandwidth = builder.getBandwidth();
         if (builder.getAccountNumber() != null) {
             this.account = new SimplifiedAccountRequest(builder.getAccountNumber());
         }

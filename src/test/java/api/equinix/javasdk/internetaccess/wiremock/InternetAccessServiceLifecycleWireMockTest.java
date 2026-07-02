@@ -85,7 +85,7 @@ class InternetAccessServiceLifecycleWireMockTest extends WireMockTestBase {
         List<ChangeOperationUpdate> ops = List.of(ChangeOperationUpdate.replace("/bandwidth", "2000"));
         InternetAccessService service = internetAccess.services().update(SERVICE_ID, ops, true);
 
-        assertEquals(Integer.valueOf(2000), service.getBandwidth());
+        assertEquals(Long.valueOf(2000), service.getBandwidth());
 
         wireMock.verify(patchRequestedFor(urlPathEqualTo(SERVICE_PATH))
                 .withQueryParam("dryRun", equalTo("true")));

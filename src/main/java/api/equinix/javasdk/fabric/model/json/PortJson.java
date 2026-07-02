@@ -17,8 +17,14 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
+import api.equinix.javasdk.fabric.enums.BmmrType;
+import api.equinix.javasdk.fabric.enums.ConnectivitySourceType;
+import api.equinix.javasdk.fabric.enums.PhysicalPortType;
+import api.equinix.javasdk.fabric.enums.PortServiceCode;
+import api.equinix.javasdk.fabric.enums.PortServiceType;
 import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.enums.PortState;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 
 import api.equinix.javasdk.fabric.model.Port;
@@ -52,6 +58,9 @@ public final class PortJson {
     @JsonProperty("href")
     private String href;
 
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("state")
     private PortState state;
 
@@ -67,17 +76,62 @@ public final class PortJson {
     @JsonProperty("availableBandwidth")
     private Integer availableBandwidth;
 
+    @JsonProperty("physicalPortsSpeed")
+    private Integer physicalPortsSpeed;
+
+    @JsonProperty("physicalPortsType")
+    private PhysicalPortType physicalPortsType;
+
+    @JsonProperty("physicalPortsCount")
+    private Integer physicalPortsCount;
+
+    @JsonProperty("physicalPortQuantity")
+    private Integer physicalPortQuantity;
+
+    @JsonProperty("connectionsCount")
+    private Integer connectionsCount;
+
+    @JsonProperty("connectivitySourceType")
+    private ConnectivitySourceType connectivitySourceType;
+
+    @JsonProperty("bmmrType")
+    private BmmrType bmmrType;
+
+    @JsonProperty("serviceType")
+    private PortServiceType serviceType;
+
+    @JsonProperty("serviceCode")
+    private PortServiceCode serviceCode;
+
+    @JsonProperty("asn")
+    private Long asn;
+
     @JsonProperty("location")
     private Location location;
 
     @JsonProperty("device")
     private Device device;
 
+    @JsonProperty("interface")
+    private PortInterface portInterface;
+
+    @JsonProperty("demarcationPointIbx")
+    private String demarcationPointIbx;
+
+    @JsonProperty("tetherIbx")
+    private String tetherIbx;
+
+    @JsonProperty("demarcationPoint")
+    private DemarcationPoint demarcationPoint;
+
     @JsonProperty("encapsulation")
     private Encapsulation encapsulation;
 
     @JsonProperty("lag")
     LinkAggregationGroup lag;
+
+    @JsonProperty("package")
+    private PackageRef portPackage;
 
     @JsonProperty("settings")
     PortSettings settings;
@@ -97,9 +151,41 @@ public final class PortJson {
     @JsonProperty("account")
     private Account account;
 
+    @JsonProperty("order")
+    private PortOrder order;
+
+    @JsonProperty("change")
+    private PortChange change;
+
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
 
-    @JsonProperty("projectId")
-    private String projectId;
+    @JsonProperty("project")
+    private Project project;
+
+    @JsonProperty("notifications")
+    private List<PortNotification> notifications;
+
+    @JsonProperty("additionalInfo")
+    private List<PortAdditionalInfo> additionalInfo;
+
+    @JsonProperty("endCustomer")
+    private EndCustomer endCustomer;
+
+    @JsonProperty("loas")
+    private List<PortLoa> loas;
+
+    @JsonProperty("marketplaceSubscription")
+    private MarketplaceSubscriptionRef marketplaceSubscription;
+
+    /**
+     * Convenience accessor for the subscriber-assigned project identifier, sourced from the
+     * nested {@code project.projectId} response attribute (the Port schema has no top-level
+     * {@code projectId} property).
+     *
+     * @return the project identifier, or {@code null} if the port carries no project
+     */
+    public String getProjectId() {
+        return this.project != null ? this.project.getProjectId() : null;
+    }
 }

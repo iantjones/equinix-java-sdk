@@ -21,8 +21,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 public enum StreamSubscriptionState {
     PROVISIONING,
     PROVISIONED,
+    REPROVISIONING,
     DEPROVISIONING,
     DEPROVISIONED,
+    FAILED,
     UNKNOWN;
 
     @JsonCreator

@@ -18,7 +18,16 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
+import java.util.List;
+
+/**
+ * An error reported inline on a resource (the Fabric v4 {@code Error} schema), e.g. in
+ * {@code ConnectionOperation.errors} or {@code IpBlock.error}. The {@code correlationId}
+ * is the diagnostic reference Equinix support asks for.
+ */
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Error {
 
@@ -27,4 +36,16 @@ public class Error {
 
     @JsonProperty("errorMessage")
     private String errorMessage;
+
+    @JsonProperty("correlationId")
+    private String correlationId;
+
+    @JsonProperty("details")
+    private String details;
+
+    @JsonProperty("help")
+    private String help;
+
+    @JsonProperty("additionalInfo")
+    private List<ErrorAdditionalInfo> additionalInfo;
 }

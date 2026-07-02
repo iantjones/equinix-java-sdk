@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A trouble ticket as returned by the Tickets v2 API ({@code Tickets}). A record of an issue in
@@ -58,6 +59,14 @@ public class TroubleTicketJson {
 
     @JsonProperty("occurredDateTime")
     private String occurredDateTime;
+
+    /**
+     * Category-specific trouble details ({@code Tickets.details}, {@code anyOf} eleven
+     * category schemas such as {@code LAYER1_0000_XXXX} or {@code POWER_0002_XXXX}), captured as a
+     * free-form map because the shape depends on the ticket category.
+     */
+    @JsonProperty("details")
+    private Map<String, Object> details;
 
     @JsonProperty("resolutionDateTime")
     private String resolutionDateTime;

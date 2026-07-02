@@ -187,7 +187,7 @@ public interface Device {
 
     ArrayList<NetworkInterface> getInterfaces();
 
-    Integer getAsn();
+    Long getAsn();
 
     SupportDetail getSupportDetails();
 

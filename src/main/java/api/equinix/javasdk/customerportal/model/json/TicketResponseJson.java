@@ -20,9 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * Response body returned when a support case / trouble ticket is created via the support v2 API
  * ({@code TicketResponse}). Carries the generated case or order number ({@code getId()}) and the
@@ -37,7 +34,4 @@ public class TicketResponseJson {
 
     @JsonProperty("type")
     private String type;
-
-    @JsonProperty("additionalInfo")
-    private List<Map<String, Object>> additionalInfo;
 }

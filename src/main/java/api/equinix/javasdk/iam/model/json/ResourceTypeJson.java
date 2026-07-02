@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json;
 
+import api.equinix.javasdk.iam.model.Attribute;
 import api.equinix.javasdk.iam.model.ResourceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,7 +45,7 @@ public class ResourceTypeJson implements ResourceType {
     private Map<String, String> tags;
 
     @JsonProperty("attributes")
-    private List<Object> attributes;
+    private List<AttributeJson> attributes;
 
     @JsonProperty("rev")
     private String rev;
@@ -66,4 +67,12 @@ public class ResourceTypeJson implements ResourceType {
 
     @JsonProperty("approvedAt")
     private String approvedAt;
+
+    @Override
+    public List<Attribute> getAttributes() {
+        if (attributes == null) {
+            return null;
+        }
+        return java.util.Collections.unmodifiableList(attributes);
+    }
 }

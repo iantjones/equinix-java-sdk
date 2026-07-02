@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.AgentTemplate;
+import api.equinix.javasdk.fabric.model.implementation.AgentDefinition;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,6 +55,9 @@ public final class AgentTemplateJson implements AgentTemplate {
 
     @JsonProperty("enabled")
     private Boolean enabled;
+
+    @JsonProperty("agentDefinition")
+    private AgentDefinition agentDefinition;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

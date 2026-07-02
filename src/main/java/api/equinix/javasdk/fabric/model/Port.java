@@ -16,6 +16,11 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.enums.BmmrType;
+import api.equinix.javasdk.fabric.enums.ConnectivitySourceType;
+import api.equinix.javasdk.fabric.enums.PhysicalPortType;
+import api.equinix.javasdk.fabric.enums.PortServiceCode;
+import api.equinix.javasdk.fabric.enums.PortServiceType;
 import api.equinix.javasdk.fabric.enums.PortType;
 import api.equinix.javasdk.fabric.enums.PortState;
 import api.equinix.javasdk.fabric.model.implementation.*;
@@ -36,6 +41,8 @@ public interface Port extends AccessPointable {
 
     String getHref();
 
+    String getDescription();
+
     PortState getState();
 
     String getCvpId();
@@ -46,13 +53,43 @@ public interface Port extends AccessPointable {
 
     Integer getAvailableBandwidth();
 
+    Integer getPhysicalPortsSpeed();
+
+    PhysicalPortType getPhysicalPortsType();
+
+    Integer getPhysicalPortsCount();
+
+    Integer getPhysicalPortQuantity();
+
+    Integer getConnectionsCount();
+
+    ConnectivitySourceType getConnectivitySourceType();
+
+    BmmrType getBmmrType();
+
+    PortServiceType getServiceType();
+
+    PortServiceCode getServiceCode();
+
+    Long getAsn();
+
     Location getLocation();
 
     Device getDevice();
 
+    PortInterface getPortInterface();
+
+    String getDemarcationPointIbx();
+
+    String getTetherIbx();
+
+    DemarcationPoint getDemarcationPoint();
+
     Encapsulation getEncapsulation();
 
     LinkAggregationGroup getLag();
+
+    PackageRef getPortPackage();
 
     PortSettings getSettings();
 
@@ -66,7 +103,23 @@ public interface Port extends AccessPointable {
 
     Account getAccount();
 
+    PortOrder getOrder();
+
+    PortChange getChange();
+
+    Project getProject();
+
     String getProjectId();
+
+    List<PortNotification> getNotifications();
+
+    List<PortAdditionalInfo> getAdditionalInfo();
+
+    EndCustomer getEndCustomer();
+
+    List<PortLoa> getLoas();
+
+    MarketplaceSubscriptionRef getMarketplaceSubscription();
 
     ChangeLog getChangeLog();
 }

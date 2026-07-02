@@ -133,7 +133,6 @@ class FabricNetworkScenarioTest extends IntegrationTestBase {
                     () -> fabric.precisionTimes().define()
                             .withType(PrecisionTimeType.NTP)
                             .withName(name)
-                            .withDescription("SDK test precision time")
                             .withPackageCode(PrecisionTimePackageCode.NTP_STANDARD)
                             .create());
 

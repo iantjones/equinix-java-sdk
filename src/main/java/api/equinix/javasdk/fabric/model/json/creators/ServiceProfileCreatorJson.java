@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.fabric.enums.ServiceProfileType;
 import api.equinix.javasdk.fabric.enums.ServiceProfileVisibility;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -61,6 +62,9 @@ public class ServiceProfileCreatorJson {
     @JsonProperty("marketingInfo")
     private MarketingInfo marketingInfo;
 
+    @JsonProperty("project")
+    private Project project;
+
     public ServiceProfileCreatorJson(ServiceProfileOperator.ServiceProfileBuilder serviceProfileBuilder) {
         this.type = serviceProfileBuilder.getType();
         this.name = serviceProfileBuilder.getName();
@@ -73,5 +77,6 @@ public class ServiceProfileCreatorJson {
         this.accessPointTypeConfigs = serviceProfileBuilder.getAccessPointTypeConfigs();
         this.customFields = serviceProfileBuilder.getCustomFields();
         this.marketingInfo = serviceProfileBuilder.getMarketingInfo();
+        this.project = serviceProfileBuilder.getProject();
     }
 }

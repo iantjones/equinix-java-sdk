@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.model.json;
 
 import api.equinix.javasdk.fabric.model.HealthStatus;
+import api.equinix.javasdk.fabric.model.implementation.ApiServices;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,12 +28,18 @@ import lombok.Getter;
 public class HealthStatusJson implements HealthStatus {
 
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("href")
+    private String href;
 
     @JsonProperty("version")
     private String version;
 
-    @JsonProperty("timestamp")
-    private String timestamp;
+    @JsonProperty("release")
+    private String release;
+
+    @JsonProperty("state")
+    private String state;
+
+    @JsonProperty("apiServices")
+    private ApiServices apiServices;
 }

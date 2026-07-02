@@ -1,5 +1,11 @@
 {
-  "status": "UP",
+  "href": "https://api.equinix.com/fabric/v4/health",
   "version": "4.0",
-  "timestamp": "2024-11-15T12:00:00.000Z"
+  "release": "2024.11",
+  "state": "UP",
+  "apiServices": {
+    "route": "/fabric/v4/connections",
+    "status": "UP",
+    "changedDateTime": "2024-11-15T12:00:00.000Z"
+  }
 }

@@ -22,6 +22,7 @@ import api.equinix.javasdk.fabric.enums.RouteFilterRuleState;
 import api.equinix.javasdk.fabric.model.RouteFilterRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -62,7 +63,12 @@ public class RouteFilterRuleJson {
     @JsonProperty("description")
     private String description;
 
+    /**
+     * The RouteFilterRulesData schema names this property {@code changelog} (lowercase) while the
+     * spec's own response examples use {@code changeLog}; accept both.
+     */
     @JsonProperty("changeLog")
+    @JsonAlias("changelog")
     private ChangeLog changeLog;
 
     @JsonProperty("change")

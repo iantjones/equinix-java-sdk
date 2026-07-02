@@ -47,7 +47,7 @@ class InternetAccessServiceDeserializationTest {
         assertEquals("WebServers", service.getName());
         assertEquals("Customer facing web servers", service.getDescription());
         assertEquals(ServiceTypeV2.SINGLE, service.getType());
-        assertEquals(Integer.valueOf(1000), service.getBandwidth());
+        assertEquals(Long.valueOf(1000), service.getBandwidth());
         assertEquals(ServiceState.ACTIVE, service.getState());
         assertEquals(UseCase.MAIN, service.getUseCase());
     }

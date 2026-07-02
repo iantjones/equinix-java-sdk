@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.SubChannel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -49,8 +50,35 @@ public class SupportCaseOtherDetails {
     @JsonProperty("products")
     private List<String> products;
 
+    @JsonProperty("productOfferingCodes")
+    private List<String> productOfferingCodes;
+
+    @JsonProperty("additionalInfo")
+    private List<AdditionalInfo> additionalInfo;
+
     @JsonProperty("details")
     private List<SupportCaseDetail> details;
+
+    @JsonProperty("updatedDateTime")
+    private String updatedDateTime;
+
+    @JsonProperty("updatedByFullName")
+    private String updatedByFullName;
+
+    @JsonProperty("finalScheduledDate")
+    private String finalScheduledDate;
+
+    @JsonProperty("requestedTerminationDate")
+    private String requestedTerminationDate;
+
+    @JsonProperty("recordType")
+    private String recordType;
+
+    @JsonProperty("subChannel")
+    private SubChannel subChannel;
+
+    @JsonProperty("contactUCMID")
+    private String contactUCMID;
 
     @JsonProperty("modifiable")
     private Boolean modifiable;

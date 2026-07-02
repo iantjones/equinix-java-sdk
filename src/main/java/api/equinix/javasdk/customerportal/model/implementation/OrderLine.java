@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -39,9 +40,11 @@ public class OrderLine {
     private String lineId;
 
     @JsonProperty("parentlineId")
+    @JsonAlias("parentLineId")
     private String parentlineId;
 
     @JsonProperty("rootlineId")
+    @JsonAlias("rootLineId")
     private String rootlineId;
 
     @JsonProperty("status")

@@ -17,6 +17,7 @@
 package api.equinix.javasdk.fabric.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  *
@@ -50,5 +51,25 @@ public enum ConnectionStatus implements APIParam {
     NOT_DEPROVISIONED,
     AUTO_APPROVAL_FAILED,
     PENDING_BGP_PEERING,
-    DELETING;
+    DELETING,
+    PENDING_AUTO_APPROVAL,
+    PENDING_PROVIDER_VLAN,
+    PENDING_PROVIDER_VLAN_ERROR,
+    DRAFT,
+    CANCELLED,
+    PENDING_INTERFACE_CONFIGURATION,
+    PENDING_CONFIGURATION,
+    PENDING_BGP,
+    ERROR,
+    /** Wire value {@code "N/A"} (provider status not applicable). */
+    NOT_APPLICABLE,
+    UNKNOWN;
+
+    @JsonCreator
+    public static ConnectionStatus fromString(String value) {
+        if (value == null) { return UNKNOWN; }
+        if ("N/A".equals(value)) { return NOT_APPLICABLE; }
+        try { return ConnectionStatus.valueOf(value.replace(' ', '_')); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

@@ -30,6 +30,7 @@ public enum AccessPointType {
     COLO,
     SUBNET,
     CLOUD_ROUTER,
+    CHAINGROUP,
     NETWORK,
     METAL_NETWORK,
     VPIC_INTERFACE,

@@ -44,7 +44,4 @@ public class ConnectionOperation {
     @JsonProperty("opStatusChangedAt")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime opStatusChangedAt;
-
-    @JsonProperty("connectionCount")
-    private Integer connectionCount;
 }

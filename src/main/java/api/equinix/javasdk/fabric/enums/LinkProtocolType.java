@@ -16,14 +16,33 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
+ * Link protocol type (the Fabric v4 {@code LinkProtocolType} schema: {@code UNTAGGED},
+ * {@code DOT1Q}, {@code QINQ}, {@code EVPN_VXLAN}, {@code VXLAN}). Unrecognized values
+ * deserialize to {@link #UNKNOWN} rather than failing the whole response.
  *
  * @author ianjones
  */
 public enum LinkProtocolType {
     UNTAGGED,
     DOT1Q,
-    QINQ;
+    QINQ,
+    EVPN_VXLAN,
+    VXLAN,
+    UNKNOWN;
 
-    //EVPN_VXLAN;
+    /**
+     * Deserializes a link protocol type leniently: an unrecognized value maps to
+     * {@link #UNKNOWN} instead of failing the enclosing response.
+     *
+     * @param value the raw API value
+     * @return the matching constant, or {@link #UNKNOWN}
+     */
+    @JsonCreator
+    public static LinkProtocolType fromString(String value) {
+        try { return LinkProtocolType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

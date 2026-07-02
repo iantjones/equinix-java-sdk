@@ -33,6 +33,9 @@ public final class CloudRouterPackageJson implements CloudRouterPackage {
 
     @Getter static TypeReference<List<CloudRouterPackageJson>> listTypeRef = new TypeReference<>() {};
 
+    @JsonProperty("href")
+    private String href;
+
     @JsonProperty("code")
     private CloudRouterPackageCode code;
 
@@ -48,23 +51,17 @@ public final class CloudRouterPackageJson implements CloudRouterPackage {
     @JsonProperty("totalIPv6RoutesMax")
     private Integer totalIPv6RoutesMax;
 
-    @JsonProperty("staticIPv4RoutesMax")
-    private Integer staticIPv4RoutesMax;
-
-    @JsonProperty("staticIPv6RoutesMax")
-    private Integer staticIPv6RoutesMax;
-
-    @JsonProperty("natIPv4RoutesMax")
-    private Integer natIPv4RoutesMax;
-
     @JsonProperty("routeFilterSupported")
     private Boolean routeFilterSupported;
 
-    @JsonProperty("routeAggregationSupported")
-    private Boolean routeAggregationSupported;
+    @JsonProperty("vcCountMax")
+    private Integer vcCountMax;
 
-    @JsonProperty("connectionLimit")
-    private Integer connectionLimit;
+    @JsonProperty("crCountMax")
+    private Integer crCountMax;
+
+    @JsonProperty("vcBandwidthMax")
+    private Integer vcBandwidthMax;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

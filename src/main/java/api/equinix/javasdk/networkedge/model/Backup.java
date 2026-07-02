@@ -23,6 +23,7 @@ import api.equinix.javasdk.networkedge.model.implementation.DeviceRestore;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupUpdaterJson;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -46,6 +47,10 @@ public interface Backup {
     String getVersion();
 
     Boolean getDeleteAllowed();
+
+    String getDeviceUuid();
+
+    LocalDateTime getLastUpdatedDate();
 
     List<DeviceRestore> getRestores();
 

@@ -32,6 +32,7 @@ public class CloudRouterCreatorJson {
     @JsonProperty("order") private OrderRef order;
     @JsonProperty("project") private ProjectRef project;
     @JsonProperty("account") private AccountRef account;
+    @JsonProperty("marketplaceSubscription") private MarketplaceSubscriptionRef marketplaceSubscription;
     @JsonProperty("notifications") private List<NotificationRef> notifications;
 
     public CloudRouterCreatorJson(CloudRouterOperator.CloudRouterBuilder builder) {
@@ -42,6 +43,7 @@ public class CloudRouterCreatorJson {
         this.order = builder.getOrder();
         this.project = builder.getProject();
         this.account = builder.getAccount();
+        this.marketplaceSubscription = builder.getMarketplaceSubscription();
         this.notifications = builder.getNotifications();
     }
 
@@ -60,7 +62,30 @@ public class CloudRouterCreatorJson {
     @Getter
     public static class OrderRef {
         @JsonProperty("purchaseOrderNumber") private String purchaseOrderNumber;
+        /** Term length in months (1, 12, 24 or 36). */
+        @JsonProperty("termLength") private Integer termLength;
+        @JsonProperty("customerReferenceNumber") private String customerReferenceNumber;
+
         public OrderRef(String purchaseOrderNumber) { this.purchaseOrderNumber = purchaseOrderNumber; }
+
+        public OrderRef(String purchaseOrderNumber, Integer termLength, String customerReferenceNumber) {
+            this.purchaseOrderNumber = purchaseOrderNumber;
+            this.termLength = termLength;
+            this.customerReferenceNumber = customerReferenceNumber;
+        }
+    }
+
+    /** Spec schema {@code marketplaceSubscription} (writable members: type, uuid). */
+    @Getter
+    public static class MarketplaceSubscriptionRef {
+        /** e.g. {@code AWS_MARKETPLACE_SUBSCRIPTION}, {@code GCP_MARKETPLACE_SUBSCRIPTION}. */
+        @JsonProperty("type") private String type;
+        @JsonProperty("uuid") private String uuid;
+
+        public MarketplaceSubscriptionRef(String type, String uuid) {
+            this.type = type;
+            this.uuid = uuid;
+        }
     }
 
     @Getter

@@ -16,6 +16,29 @@
 
 package api.equinix.javasdk.fabric.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+/**
+ * Type of port package (the Fabric v4 {@code Package.code} / {@code PortSettings.packageType}
+ * attribute: {@code STANDARD}, {@code UNLIMITED}, {@code UNLIMITED_PLUS}). Unrecognized values
+ * deserialize to {@link #UNKNOWN} rather than failing the whole response.
+ */
 public enum PackageType {
-    STANDARD;
+    STANDARD,
+    UNLIMITED,
+    UNLIMITED_PLUS,
+    UNKNOWN;
+
+    /**
+     * Deserializes a package type leniently: an unrecognized value maps to {@link #UNKNOWN}
+     * instead of failing the enclosing response.
+     *
+     * @param value the raw API value
+     * @return the matching constant, or {@link #UNKNOWN}
+     */
+    @JsonCreator
+    public static PackageType fromString(String value) {
+        try { return PackageType.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

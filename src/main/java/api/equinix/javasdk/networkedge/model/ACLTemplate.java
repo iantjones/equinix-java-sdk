@@ -16,10 +16,13 @@
 
 package api.equinix.javasdk.networkedge.model;
 
+import api.equinix.javasdk.networkedge.enums.DeviceACLStatus;
 import api.equinix.javasdk.networkedge.model.implementation.InboundRule;
+import api.equinix.javasdk.networkedge.model.implementation.VirtualDeviceACLDetail;
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJson;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -35,6 +38,12 @@ public interface ACLTemplate {
     String getDescription();
 
     List<InboundRule> getInboundRules();
+
+    List<VirtualDeviceACLDetail> getVirtualDeviceDetails();
+
+    DeviceACLStatus getStatus();
+
+    LocalDateTime getCreatedDate();
 
     ACLTemplateOperator.ACLTemplateUpdater update();
 

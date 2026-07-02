@@ -25,6 +25,7 @@ import api.equinix.javasdk.networkedge.client.internal.implementation.DeviceClie
 import api.equinix.javasdk.networkedge.enums.ACLInterfaceType;
 import api.equinix.javasdk.networkedge.enums.Connectivity;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
+import api.equinix.javasdk.networkedge.enums.DeviceStatus;
 import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
 import api.equinix.javasdk.networkedge.enums.SSHUserAction;
@@ -405,6 +406,7 @@ public class DeviceOperator extends ResourceImpl<Device> {
         private String smartLicenseUrl;
         private String day0TextFileId;
         private String cloudInitFileId;
+        private String version;
 
         protected DeviceBuilderSecondary(String secondaryDeviceName, DeviceCreatorJson deviceCreatorJson) {
             this.deviceName = secondaryDeviceName;
@@ -466,6 +468,15 @@ public class DeviceOperator extends ResourceImpl<Device> {
 
         public DeviceBuilderSecondary withSmartLicenseUrl(String smartLicenseUrl) {
             this.smartLicenseUrl = smartLicenseUrl;
+            return this;
+        }
+
+        /**
+         * <p>The software version of the secondary device. Only applicable when adding a secondary
+         * device to an existing device ({@code VirtualDevicHARequest.version}).</p>
+         */
+        public DeviceBuilderSecondary withVersion(String version) {
+            this.version = version;
             return this;
         }
 
@@ -596,6 +607,16 @@ public class DeviceOperator extends ResourceImpl<Device> {
 
         public DeviceOperator.DeviceUpdater withAutoRenewalOptOut(Boolean autoRenewalOptOut) {
             this.updaterJson.setAutoRenewalOptOut(autoRenewalOptOut);
+            return this;
+        }
+
+        /**
+         * <p>Updates the license status of the device ({@code VirtualDeviceInternalPatchRequest.status}).
+         * The API accepts {@code PROVISIONED}, {@code PROVISIONING}, {@code DEPROVISIONED},
+         * {@code DEPROVISIONING} and {@code FAILED}.</p>
+         */
+        public DeviceOperator.DeviceUpdater withStatus(DeviceStatus status) {
+            this.updaterJson.setStatus(status);
             return this;
         }
 

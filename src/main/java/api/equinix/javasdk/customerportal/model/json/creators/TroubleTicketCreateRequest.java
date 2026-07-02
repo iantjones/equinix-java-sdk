@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Request body for creating a trouble ticket
@@ -55,6 +56,9 @@ public class TroubleTicketCreateRequest {
     @JsonProperty("customerReferenceId")
     private final String customerReferenceId;
 
+    @JsonProperty("details")
+    private final Map<String, Object> details;
+
     @JsonProperty("contacts")
     private final List<OrderContact> contacts;
 
@@ -68,6 +72,7 @@ public class TroubleTicketCreateRequest {
         this.primaryId = builder.primaryId;
         this.secondaryId = builder.secondaryId;
         this.customerReferenceId = builder.customerReferenceId;
+        this.details = builder.details;
         this.contacts = builder.contacts;
         this.attachments = builder.attachments;
     }
@@ -92,6 +97,7 @@ public class TroubleTicketCreateRequest {
         private final String primaryId;
         private String secondaryId;
         private String customerReferenceId;
+        private Map<String, Object> details;
         private List<OrderContact> contacts;
         private List<OrderAttachment> attachments;
 
@@ -109,6 +115,20 @@ public class TroubleTicketCreateRequest {
 
         public Builder customerReferenceId(String customerReferenceId) {
             this.customerReferenceId = customerReferenceId;
+            return this;
+        }
+
+        /**
+         * Sets the category-specific trouble details ({@code Tickets_Create.details},
+         * {@code anyOf} eleven category schemas such as {@code LAYER1_0000_XXXX} or
+         * {@code POWER_0002_XXXX}). Supplied as a free-form map because the expected shape
+         * depends on the ticket {@code code}.
+         *
+         * @param details the category-specific detail properties
+         * @return this builder
+         */
+        public Builder details(Map<String, Object> details) {
+            this.details = details;
             return this;
         }
 

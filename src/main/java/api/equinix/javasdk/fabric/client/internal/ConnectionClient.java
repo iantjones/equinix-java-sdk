@@ -31,6 +31,7 @@ import api.equinix.javasdk.fabric.model.RouteFilterAttachment;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
+import api.equinix.javasdk.fabric.model.json.ConnectionActionJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionJson;
 import api.equinix.javasdk.fabric.model.json.PricingJson;
 import api.equinix.javasdk.fabric.model.json.ConnectionStatisticJson;
@@ -60,7 +61,7 @@ public interface ConnectionClient<T> extends PageablePost<T> {
 
     ConnectionJson dryRunCreate(ConnectionCreatorJson connectionCreatorJson);
 
-    ConnectionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject);
+    ConnectionActionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject);
 
     ConnectionJson update(String uuid, List<PatchOperation> operations);
 

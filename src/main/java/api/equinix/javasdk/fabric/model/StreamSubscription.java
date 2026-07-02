@@ -20,6 +20,8 @@ import api.equinix.javasdk.fabric.enums.StreamSubscriptionState;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.StreamSink;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionOperation;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionOperator;
 
 public interface StreamSubscription {
@@ -38,7 +40,13 @@ public interface StreamSubscription {
 
     Boolean getEnabled();
 
+    StreamSubscriptionSelector getMetricSelector();
+
+    StreamSubscriptionSelector getEventSelector();
+
     StreamSink getSink();
+
+    StreamSubscriptionOperation getOperation();
 
     ChangeLog getChangeLog();
 

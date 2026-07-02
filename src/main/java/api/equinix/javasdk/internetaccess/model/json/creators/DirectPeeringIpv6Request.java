@@ -26,13 +26,17 @@ import java.util.List;
 
 /**
  * IP Version 6 (IPv6) peering nested in a direct routing protocol request.
+ *
+ * <p>Unlike the IPv4 variant ({@link DirectPeeringIpv4Request}, which wraps the connection in an
+ * object), the spec {@code DirectPeeringIpv6Request} takes {@code connection} as a plain
+ * {@code ConnectionId} uuid string.</p>
  */
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DirectPeeringIpv6Request {
 
-    @JsonProperty("connection") private PeeringConnection connection;
+    @JsonProperty("connection") private String connection;
 
     @Singular("equinixPeerIp")
     @JsonProperty("equinixPeerIps") private List<String> equinixPeerIps;

@@ -34,8 +34,8 @@ import java.time.LocalDateTime;
 public class Metric {
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty("intervalEndDateTime")
-    private LocalDateTime intervalEndDateTime;
+    @JsonProperty("intervalEndTimestamp")
+    private LocalDateTime intervalEndTimestamp;
 
     @JsonProperty("max")
     private Float max;

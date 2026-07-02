@@ -24,6 +24,7 @@ public enum RoutingProtocolState {
     DEPROVISIONING,
     DEPROVISIONED,
     REPROVISIONING,
+    FAILED,
     UNKNOWN;
 
     @JsonCreator

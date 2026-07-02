@@ -40,21 +40,6 @@ public class LicenseOption {
     @JsonProperty("fileUploadSupportedCluster")
     private Boolean fileUploadSupportedCluster;
 
-    @JsonProperty("requireLicenseAtCreateCluster")
-    private Boolean requireLicenseAtCreateCluster;
-
-    @JsonProperty("smartLicenseSupported")
-    private Boolean smartLicenseSupported;
-
     @JsonProperty("cores")
     private ArrayList<DeviceCore> cores;
-
-    @JsonProperty("supported")
-    private Boolean supported;
-
-    @JsonProperty("day0TextFileRequired")
-    private Boolean day0TextFileRequired;
-
-    @JsonProperty("day0XmlFileRequired")
-    private Boolean day0XmlFileRequired;
 }

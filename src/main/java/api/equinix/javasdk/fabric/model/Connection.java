@@ -76,11 +76,21 @@ public interface Connection {
 
     Change getChange();
 
-    void performOperation(ConnectionOperationType connectionOperation, String description, Object bodyObject);
+    /**
+     * Performs a connection action (accept, reject, retry...) and returns the action result
+     * (spec schema {@code ConnectionAction}). Call {@code refresh()} afterwards to re-read the
+     * connection's updated state.
+     *
+     * @param connectionOperation the action type
+     * @param description action description (e.g. rejection reason)
+     * @param bodyObject optional action data
+     * @return the {@link ConnectionAction} returned by the API
+     */
+    ConnectionAction performOperation(ConnectionOperationType connectionOperation, String description, Object bodyObject);
 
-    void performOperation(ConnectionOperationType connectionOperation, String description);
+    ConnectionAction performOperation(ConnectionOperationType connectionOperation, String description);
 
-    void performOperation(ConnectionOperationType connectionOperation);
+    ConnectionAction performOperation(ConnectionOperationType connectionOperation);
 
     api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator.ConnectionUpdater update();
 

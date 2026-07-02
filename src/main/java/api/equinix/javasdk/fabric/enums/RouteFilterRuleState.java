@@ -24,6 +24,8 @@ public enum RouteFilterRuleState {
     DEPROVISIONING,
     DEPROVISIONED,
     REPROVISIONING,
+    NOT_PROVISIONED,
+    NOT_DEPROVISIONED,
     UNKNOWN;
 
     @JsonCreator

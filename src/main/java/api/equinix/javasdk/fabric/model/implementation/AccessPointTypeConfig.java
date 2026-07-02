@@ -49,6 +49,18 @@ public class AccessPointTypeConfig {
     @JsonProperty("allowBandwidthAutoApproval")
     private Boolean allowBandwidthAutoApproval;
 
+    /**
+     * Availability of a bandwidth upgrade.
+     */
+    @JsonProperty("allowBandwidthUpgrade")
+    private Boolean allowBandwidthUpgrade;
+
+    /**
+     * Optional redundant connections.
+     */
+    @JsonProperty("selectiveRedundancy")
+    private Boolean selectiveRedundancy;
+
     @JsonProperty("linkProtocolConfig")
     private LinkProtocolConfig linkProtocolConfig;
 
@@ -68,7 +80,7 @@ public class AccessPointTypeConfig {
     private AuthenticationKey authenticationKey;
 
     @JsonProperty("bandwidthAlertThreshold")
-    private Integer bandwidthAlertThreshold;
+    private Double bandwidthAlertThreshold;
 
     @JsonProperty("metadata")
     private AccessPointMetadata metadata;

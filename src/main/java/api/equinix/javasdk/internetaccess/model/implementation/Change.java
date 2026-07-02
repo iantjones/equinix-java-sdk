@@ -108,5 +108,23 @@ public class Change {
 
         @JsonProperty("help")
         private String help;
+
+        @JsonProperty("additionalInfo")
+        private List<ErrorAdditionalInfo> additionalInfo;
+    }
+
+    /**
+     * Additional per-property information ({@code ErrorAdditionalInfo}) attached to a
+     * {@link ChangeError}: the reason of the error and the request property that caused it.
+     */
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ErrorAdditionalInfo {
+
+        @JsonProperty("reason")
+        private String reason;
+
+        @JsonProperty("property")
+        private String property;
     }
 }

@@ -17,6 +17,10 @@
 package api.equinix.javasdk.fabric.model;
 
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
+import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.LinkProtocolConnection;
+import api.equinix.javasdk.fabric.model.implementation.LinkProtocolServiceToken;
+import api.equinix.javasdk.fabric.model.implementation.SubInterface;
 
 /**
  * A VLAN (link protocol) configured on a Fabric port. Read-only.
@@ -46,4 +50,12 @@ public interface PortVlan {
     Integer getVlanCTagMin();
 
     Integer getVlanCTagMax();
+
+    SubInterface getSubInterface();
+
+    LinkProtocolConnection getAsset();
+
+    LinkProtocolServiceToken getServiceToken();
+
+    ChangeLog getChangeLog();
 }

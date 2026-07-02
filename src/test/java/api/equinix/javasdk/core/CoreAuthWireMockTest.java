@@ -35,7 +35,7 @@ class CoreAuthWireMockTest extends WireMockTestBase {
         assertNotNull(fabric.getEquinixClient().getOAuthToken());
         assertEquals("test-token-abc123", fabric.getEquinixClient().getOAuthToken().getSessionToken());
         assertEquals("bearer", fabric.getEquinixClient().getOAuthToken().getTokenType());
-        assertEquals(3600, fabric.getEquinixClient().getOAuthToken().getTokenTimeout());
+        assertEquals("3600", fabric.getEquinixClient().getOAuthToken().getTokenTimeout());
     }
 
     @Test
@@ -105,7 +105,7 @@ class CoreAuthWireMockTest extends WireMockTestBase {
             OAuthToken expired = new OAuthToken();
             expired.setSessionToken("stale-token");
             expired.setTokenType("bearer");
-            expired.setTokenTimeout(1);
+            expired.setTokenTimeout("1");
             expired.setSessionStart(LocalDateTime.now().minusHours(1));
             fresh.getEquinixClient().setOAuthToken(expired);
             assertFalse(expired.validSession(), "the injected token is already expired");

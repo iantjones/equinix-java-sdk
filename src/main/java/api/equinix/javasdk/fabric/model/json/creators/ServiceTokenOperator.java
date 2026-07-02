@@ -28,6 +28,7 @@ import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,7 +106,11 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
     public class ServiceTokenBuilder {
 
         private ServiceTokenType serviceTokenType;
+        private String name;
+        private String description;
         private Integer expiry;
+        private LocalDateTime expirationDateTime;
+        private String projectId;
 
         private final Side issuerSide;
 
@@ -113,9 +118,15 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
         private Boolean allowRemoteConnection = false;
         private Boolean allowCustomBandwidth = false;
         private Integer bandwidthLimit;
+        private List<Integer> supportedBandwidths;
 
         private AccessPointType accessPointType;
         private String portUuid;
+        private Boolean hideAssetInfo;
+
+        private String virtualDeviceUuid;
+        private Integer interfaceId;
+        private String networkUuid;
 
         private LinkProtocolType linkProtocolType;
         private Integer vLanTag;
@@ -134,8 +145,34 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
             return this;
         }
 
+        public ServiceTokenOperator.ServiceTokenBuilder withName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ServiceTokenOperator.ServiceTokenBuilder withDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
         public ServiceTokenOperator.ServiceTokenBuilder withExpiry(Integer expiry) {
             this.expiry = expiry;
+            return this;
+        }
+
+        /**
+         * Sets the expiration date and time of the service token.
+         *
+         * @param expirationDateTime the expiration instant, sent as {@code expirationDateTime}
+         * @return this builder
+         */
+        public ServiceTokenOperator.ServiceTokenBuilder withExpirationDateTime(LocalDateTime expirationDateTime) {
+            this.expirationDateTime = expirationDateTime;
+            return this;
+        }
+
+        public ServiceTokenOperator.ServiceTokenBuilder inProject(String projectId) {
+            this.projectId = projectId;
             return this;
         }
 
@@ -159,6 +196,11 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
             return this;
         }
 
+        public ServiceTokenOperator.ServiceTokenBuilder withSupportedBandwidths(List<Integer> supportedBandwidths) {
+            this.supportedBandwidths = supportedBandwidths;
+            return this;
+        }
+
         public ServiceTokenOperator.ServiceTokenBuilder forAccessPointType(AccessPointType accessPointType) {
             this.accessPointType = accessPointType;
             return this;
@@ -171,6 +213,50 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
 
         public ServiceTokenOperator.ServiceTokenBuilder onPort(Port port) {
             return onPortUuid(port.getUuid());
+        }
+
+        /**
+         * Targets a Network Edge virtual device (access point selector type {@code VD}).
+         *
+         * @param virtualDeviceUuid the Network Edge assigned virtual device identifier
+         * @return this builder
+         */
+        public ServiceTokenOperator.ServiceTokenBuilder onVirtualDeviceUuid(String virtualDeviceUuid) {
+            this.virtualDeviceUuid = virtualDeviceUuid;
+            return this;
+        }
+
+        /**
+         * Selects a network interface on the targeted virtual device.
+         *
+         * @param interfaceId the Network Edge assigned interface identifier
+         * @return this builder
+         */
+        public ServiceTokenOperator.ServiceTokenBuilder withNetworkInterfaceId(Integer interfaceId) {
+            this.interfaceId = interfaceId;
+            return this;
+        }
+
+        /**
+         * Targets a Fabric network (access point selector type {@code NETWORK}), e.g. for
+         * EVPLAN/EPLAN tokens.
+         *
+         * @param networkUuid the network identifier
+         * @return this builder
+         */
+        public ServiceTokenOperator.ServiceTokenBuilder onNetworkUuid(String networkUuid) {
+            this.networkUuid = networkUuid;
+            return this;
+        }
+
+        /**
+         * Hides asset information from the token recipient. Deprecated in the spec but still accepted.
+         *
+         * @return this builder
+         */
+        public ServiceTokenOperator.ServiceTokenBuilder hideAssetInfo() {
+            this.hideAssetInfo = true;
+            return this;
         }
 
         public ServiceTokenOperator.ServiceTokenBuilder usingProtocolDot1q(Integer vLanTag) {

@@ -41,10 +41,25 @@ public class StreamCreatorJson {
     private Boolean enabled;
 
     public StreamCreatorJson(StreamOperator.StreamBuilder streamBuilder) {
-        this.type = streamBuilder.getType();
+        this(streamBuilder, false);
+    }
+
+    /**
+     * Builds the request body. Create ({@code POST}) uses the full {@code StreamPostRequest}
+     * shape; update ({@code PUT}) uses the {@code StreamPutRequest} shape, which only accepts
+     * {@code name} and {@code description} (unset fields are omitted via the mapper's
+     * {@code NON_NULL} inclusion).
+     *
+     * @param streamBuilder the source builder
+     * @param forUpdate {@code true} to produce a {@code StreamPutRequest}-shaped body
+     */
+    public StreamCreatorJson(StreamOperator.StreamBuilder streamBuilder, boolean forUpdate) {
         this.name = streamBuilder.getName();
         this.description = streamBuilder.getDescription();
-        this.project = streamBuilder.getProject();
-        this.enabled = streamBuilder.getEnabled();
+        if (!forUpdate) {
+            this.type = streamBuilder.getType();
+            this.project = streamBuilder.getProject();
+            this.enabled = streamBuilder.getEnabled();
+        }
     }
 }

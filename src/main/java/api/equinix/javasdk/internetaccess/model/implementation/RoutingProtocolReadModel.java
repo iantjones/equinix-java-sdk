@@ -18,6 +18,7 @@ package api.equinix.javasdk.internetaccess.model.implementation;
 
 import api.equinix.javasdk.internetaccess.enums.CustomerAsnRange;
 import api.equinix.javasdk.internetaccess.enums.ExportPolicy;
+import api.equinix.javasdk.internetaccess.enums.PurposeOfIpBlock;
 import api.equinix.javasdk.internetaccess.enums.RoutingProtocolType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -136,6 +137,45 @@ public class RoutingProtocolReadModel {
 
         @JsonProperty("prefixLength")
         private Integer prefixLength;
+
+        @JsonProperty("addressingPlans")
+        private List<IpBlockAddressingPlan> addressingPlans;
+
+        @JsonProperty("questions")
+        private List<IpBlockQuestion> questions;
+    }
+
+    /**
+     * Addressing plan ({@code IpBlockAddressingPlans}) echoed back on a provider-assigned IPv4
+     * {@link RoutingIpBlock}: the size of the requested subnet and its regulatory purpose.
+     */
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class IpBlockAddressingPlan {
+
+        @JsonProperty("size")
+        private Integer size;
+
+        @JsonProperty("purpose")
+        private PurposeOfIpBlock purpose;
+    }
+
+    /**
+     * RIR justification question/answer pair ({@code IpBlockQuestions}) echoed back on a
+     * provider-assigned IPv4 {@link RoutingIpBlock}.
+     *
+     * <p>{@code type} is one of {@code PRIVATE_SPACE_CONSIDERED}, {@code REFUSED_PREVIOUSLY},
+     * {@code RETURNING_ADDRESS_SPACE}; {@code answer} is one of {@code YES}, {@code NO}.</p>
+     */
+    @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class IpBlockQuestion {
+
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("answer")
+        private String answer;
     }
 
     /**

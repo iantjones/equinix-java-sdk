@@ -38,6 +38,12 @@ public class PortSettings {
     @JsonProperty("viewPortPermission")
     private Boolean viewPortPermission;
 
+    /**
+     * Whether layer 3 is enabled on the port. Deprecated in the Fabric v4 spec.
+     */
+    @JsonProperty("layer3Enabled")
+    private Boolean layer3Enabled;
+
     @JsonProperty("packageType")
     private PackageType packageType;
 }

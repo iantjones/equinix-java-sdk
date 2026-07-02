@@ -27,4 +27,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IpBlockOrder extends OrderRef {
+
+    /**
+     * Creates order details for an IP block submission (spec schema {@code IpBlockOrderRequest}).
+     * All attributes are optional; pass {@code null} for those not required.
+     *
+     * @param purchaseOrderNumber the customer purchase-order number
+     * @param orderNumber the order reference number
+     * @param orderLine the order line
+     */
+    public IpBlockOrder(String purchaseOrderNumber, String orderNumber, String orderLine) {
+        super(purchaseOrderNumber, orderNumber, orderLine);
+    }
 }

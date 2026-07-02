@@ -16,10 +16,21 @@
 
 package api.equinix.javasdk.networkedge.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  *
  * @author ianjones
  */
 public enum VersionStatus {
-    ACTIVE
+    ACTIVE,
+    INACTIVE,
+    RETIRED,
+    UNKNOWN;
+
+    @JsonCreator
+    public static VersionStatus fromString(String value) {
+        try { return VersionStatus.valueOf(value); }
+        catch (Exception e) { return UNKNOWN; }
+    }
 }

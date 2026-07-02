@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.implementation.StreamSinkSetting;
+import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionFilter;
 import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -46,6 +47,9 @@ public class StreamSubscriptionCreatorJson {
 
     @JsonProperty("eventSelector")
     private StreamSubscriptionSelector eventSelector;
+
+    @JsonProperty("filters")
+    private StreamSubscriptionFilter filters;
 
     @JsonProperty("sink")
     private Sink sink;
@@ -110,6 +114,7 @@ public class StreamSubscriptionCreatorJson {
         this.enabled = streamSubscriptionBuilder.getEnabled();
         this.metricSelector = streamSubscriptionBuilder.getMetricSelector();
         this.eventSelector = streamSubscriptionBuilder.getEventSelector();
+        this.filters = streamSubscriptionBuilder.getFilters();
 
         Credential credential = new Credential(
                 streamSubscriptionBuilder.getCredentialType(),

@@ -14,23 +14,27 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.networkedge.model.implementation;
+package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
+ * Chat transcript and tool-call information captured during an agent operation
+ * (spec schema {@code AgentActivities_metadata}).
  *
  * @author ianjones
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
-public class DataTypeValue {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AgentActivityMetadata {
 
-    @JsonProperty("label")
-    private String label;
+    @JsonProperty("chatMessage")
+    private AgentChatMessage chatMessage;
 
-    @JsonProperty("value")
-    private String value;
+    @JsonProperty("toolCallInformation")
+    private List<AgentToolCall> toolCallInformation;
 }

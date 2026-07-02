@@ -16,13 +16,15 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.CloudRouterState;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Simplified Fabric Cloud Router reference returned on an access point.
+ * Simplified Fabric Cloud Router reference returned on an access point (spec schema
+ * {@code CloudRouter}).
  */
 @Getter
 @NoArgsConstructor
@@ -37,4 +39,28 @@ public class CloudRouterSummary {
 
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("state")
+    private CloudRouterState state;
+
+    /**
+     * Equinix ASN.
+     */
+    @JsonProperty("equinixAsn")
+    private Long equinixAsn;
+
+    /**
+     * Number of connections associated with this Fabric Cloud Router.
+     */
+    @JsonProperty("connectionsCount")
+    private Integer connectionsCount;
+
+    @JsonProperty("marketplaceSubscription")
+    private MarketplaceSubscriptionRef marketplaceSubscription;
+
+    @JsonProperty("change")
+    private CloudRouterChange change;
+
+    @JsonProperty("changeLog")
+    private ChangeLog changeLog;
 }

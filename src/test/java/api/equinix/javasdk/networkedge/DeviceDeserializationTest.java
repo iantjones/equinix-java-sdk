@@ -147,7 +147,7 @@ class DeviceDeserializationTest {
 
     @Test
     void asn_isDeserialized() {
-        assertEquals(65000, device.getAsn());
+        assertEquals(65000L, device.getAsn());
     }
 
     @Test

@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolState;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
+import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -51,9 +52,6 @@ public class RoutingProtocolJson {
     @JsonProperty("state")
     private RoutingProtocolState state;
 
-    @JsonProperty("description")
-    private String description;
-
     @JsonProperty("bgpIpv4")
     private BGPConnectionIpv4 bgpIpv4;
 
@@ -75,7 +73,22 @@ public class RoutingProtocolJson {
     @JsonProperty("equinixAsn")
     private Long equinixAsn;
 
-    @JsonProperty("changeLog")
+    @JsonProperty("bgpAuthKey")
+    private String bgpAuthKey;
+
+    @JsonProperty("asOverrideEnabled")
+    private Boolean asOverrideEnabled;
+
+    @JsonProperty("operation")
+    private RoutingProtocolOperation operation;
+
+    @JsonProperty("project")
+    private Project project;
+
+    @JsonProperty("connection")
+    private RoutingProtocolConnection connection;
+
+    @JsonProperty("changelog")
     private ChangeLog changeLog;
 
     @JsonProperty("change")

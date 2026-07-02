@@ -27,6 +27,9 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingPort {
 
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("type")
     private PortType type;
 
@@ -36,9 +39,27 @@ public class PricingPort {
     @JsonProperty("location")
     LocationCode location;
 
+    @JsonProperty("lag")
+    private LinkAggregationGroup lag;
+
     @JsonProperty("physicalPortsQuantity")
     Integer physicalPortsQuantity;
 
+    @JsonProperty("redundancy")
+    private VirtualPortRedundancy redundancy;
+
+    @JsonProperty("connectivitySource")
+    private ConnectivitySource connectivitySource;
+
     @JsonProperty("serviceType")
     PortServiceType serviceType;
+
+    @JsonProperty("settings")
+    private VirtualPortConfiguration settings;
+
+    @JsonProperty("package")
+    private VirtualPortPackage virtualPortPackage;
+
+    @JsonProperty("serviceCode")
+    private String serviceCode;
 }

@@ -31,6 +31,12 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Connection {
 
+    @JsonProperty("href")
+    private String href;
+
+    @JsonProperty("uuid")
+    private String uuid;
+
     @JsonProperty("type")
     private ConnectionType type;
 

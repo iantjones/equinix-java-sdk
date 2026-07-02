@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * JSON model for a Report Center report.
@@ -93,6 +94,15 @@ public class ReportJson implements Report {
 
     @JsonProperty("numberOfAttempts")
     private Integer numberOfAttempts;
+
+    @JsonProperty("lastAccessedBy")
+    private String lastAccessedBy;
+
+    @JsonProperty("lastAccessedDate")
+    private String lastAccessedDate;
+
+    @JsonProperty("publisherInfo")
+    private Map<String, Object> publisherInfo;
 
     @JsonProperty("parameters")
     private List<ReportParameterJson> parameters;

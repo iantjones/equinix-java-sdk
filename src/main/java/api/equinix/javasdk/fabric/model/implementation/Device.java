@@ -33,4 +33,7 @@ public class Device {
 
     @JsonProperty("redundancy")
     private Redundancy redundancy;
+
+    @JsonProperty("vcBandwidthMax")
+    private Long vcBandwidthMax;
 }

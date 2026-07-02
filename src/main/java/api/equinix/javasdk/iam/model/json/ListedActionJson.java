@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.iam.model.json;
 
+import api.equinix.javasdk.iam.model.Attribute;
 import api.equinix.javasdk.iam.model.ListedAction;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -50,7 +51,15 @@ public class ListedActionJson implements ListedAction {
     private Map<String, PermissionCodeJson> permissionCodes;
 
     @JsonProperty("attributes")
-    private List<Object> attributes;
+    private List<AttributeJson> attributes;
+
+    @Override
+    public List<Attribute> getAttributes() {
+        if (attributes == null) {
+            return null;
+        }
+        return java.util.Collections.unmodifiableList(attributes);
+    }
 
     @Override
     public ListedAction.RbacPermission getRbacPermission() {

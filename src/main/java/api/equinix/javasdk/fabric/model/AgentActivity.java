@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.model.implementation.AgentActivityMetadata;
+import api.equinix.javasdk.fabric.model.implementation.AgentRef;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 
 /**
@@ -29,7 +31,11 @@ public interface AgentActivity {
 
     String getUuid();
 
+    AgentRef getAgent();
+
     String getStatus();
+
+    AgentActivityMetadata getMetadata();
 
     ChangeLog getChangeLog();
 }

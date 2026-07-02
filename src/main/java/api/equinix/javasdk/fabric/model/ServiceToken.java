@@ -40,6 +40,17 @@ public interface ServiceToken {
 
     ServiceTokenState getState();
 
+    String getName();
+
+    String getDescription();
+
+    /**
+     * Information about the side of the connection the token issuer is on. Deprecated in the spec.
+     *
+     * @return the issuer side
+     */
+    String getIssuerSide();
+
     Integer getExpiry();
 
     LocalDateTime getExpirationDateTime();
@@ -49,6 +60,8 @@ public interface ServiceToken {
     List<Notification> getNotifications();
 
     AccountSummary getAccount();
+
+    Project getProject();
 
     ChangeLog getChangeLog();
 

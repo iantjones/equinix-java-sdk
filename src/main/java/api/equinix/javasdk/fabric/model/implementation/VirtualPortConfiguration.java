@@ -14,23 +14,24 @@
  * governing permissions and limitations under the License.
  */
 
-package api.equinix.javasdk.networkedge.model.implementation;
+package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- *
- * @author ianjones
+ * Port configuration (the Fabric v4 {@code VirtualPortConfiguration} schema): buyout
+ * ({@code true}) or standard ({@code false}) configuration of the port.
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Getter
-public class FieldValue {
+public class VirtualPortConfiguration {
 
-    @JsonProperty("field")
-    private String field;
-
-    @JsonProperty("value")
-    private String value;
+    @JsonProperty("buyout")
+    private Boolean buyout;
 }

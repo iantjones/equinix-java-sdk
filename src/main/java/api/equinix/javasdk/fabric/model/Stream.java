@@ -41,6 +41,12 @@ public interface Stream {
 
     Boolean getEnabled();
 
+    Integer getAssetsCount();
+
+    Integer getStreamSubscriptionsCount();
+
+    Integer getAlertRulesCount();
+
     /**
      * Begins a fluent full-body update of this stream, pre-populated with its current state, e.g.
      * {@code stream.update().withName("New-Name").save()}.

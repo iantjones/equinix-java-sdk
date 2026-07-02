@@ -19,6 +19,7 @@ package api.equinix.javasdk.customerportal.model.json;
 import api.equinix.javasdk.customerportal.enums.LoaState;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.implementation.LoaChangeLog;
+import api.equinix.javasdk.customerportal.model.implementation.LoaChangeReference;
 import api.equinix.javasdk.customerportal.model.implementation.LoaLink;
 import api.equinix.javasdk.customerportal.model.implementation.LoaParty;
 import api.equinix.javasdk.customerportal.model.implementation.LoaProduct;
@@ -58,6 +59,12 @@ public class DigitalLoaJson implements DigitalLoa {
 
     @JsonProperty("changeLog")
     private LoaChangeLog changeLog;
+
+    @JsonProperty("change")
+    private LoaChangeReference change;
+
+    @JsonProperty("draft")
+    private Boolean draft;
 
     @JsonProperty("links")
     private List<LoaLink> links;

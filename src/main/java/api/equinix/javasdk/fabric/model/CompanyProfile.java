@@ -16,6 +16,16 @@
 
 package api.equinix.javasdk.fabric.model;
 
+import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.CompanyLogo;
+import api.equinix.javasdk.fabric.model.implementation.CompanyMetro;
+import api.equinix.javasdk.fabric.model.implementation.CompanyProfileAccount;
+import api.equinix.javasdk.fabric.model.implementation.CompanyProfileChange;
+import api.equinix.javasdk.fabric.model.implementation.CompanyServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.Notification;
+
+import java.util.List;
+
 /**
  * A Fabric company profile (the public, marketplace-facing profile for an organization).
  */
@@ -35,9 +45,27 @@ public interface CompanyProfile {
 
     String getState();
 
+    CompanyProfileAccount getAccount();
+
+    List<CompanyMetro> getMetros();
+
+    CompanyLogo getLogo();
+
+    List<? extends Tag> getTags();
+
+    List<CompanyServiceProfile> getServiceProfiles();
+
+    List<? extends PrivateService> getPrivateServices();
+
+    List<Notification> getNotifications();
+
     String getWebUrl();
 
     String getContactUrl();
+
+    CompanyProfileChange getChange();
+
+    ChangeLog getChangeLog();
 
     Boolean delete();
 

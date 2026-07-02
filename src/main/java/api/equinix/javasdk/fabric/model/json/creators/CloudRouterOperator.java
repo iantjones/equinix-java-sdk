@@ -61,6 +61,7 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
         private CloudRouterCreatorJson.OrderRef order;
         private CloudRouterCreatorJson.ProjectRef project;
         private CloudRouterCreatorJson.AccountRef account;
+        private CloudRouterCreatorJson.MarketplaceSubscriptionRef marketplaceSubscription;
         private List<CloudRouterCreatorJson.NotificationRef> notifications = new ArrayList<>();
 
         public CloudRouterBuilder name(String name) {
@@ -84,6 +85,31 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
 
         public CloudRouterBuilder purchaseOrderNumber(String purchaseOrderNumber) {
             this.order = new CloudRouterCreatorJson.OrderRef(purchaseOrderNumber);
+            return this;
+        }
+
+        /**
+         * Sets the full order details, including an optional term commitment.
+         *
+         * @param purchaseOrderNumber the purchase order number, or {@code null}
+         * @param termLength term length in months (1, 12, 24 or 36), or {@code null}
+         * @param customerReferenceNumber the customer reference number, or {@code null}
+         * @return this builder
+         */
+        public CloudRouterBuilder order(String purchaseOrderNumber, Integer termLength, String customerReferenceNumber) {
+            this.order = new CloudRouterCreatorJson.OrderRef(purchaseOrderNumber, termLength, customerReferenceNumber);
+            return this;
+        }
+
+        /**
+         * Orders this Fabric Cloud Router via a cloud marketplace subscription.
+         *
+         * @param type the subscription type (e.g. {@code AWS_MARKETPLACE_SUBSCRIPTION})
+         * @param uuid the subscription identifier
+         * @return this builder
+         */
+        public CloudRouterBuilder marketplaceSubscription(String type, String uuid) {
+            this.marketplaceSubscription = new CloudRouterCreatorJson.MarketplaceSubscriptionRef(type, uuid);
             return this;
         }
 

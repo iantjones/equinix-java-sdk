@@ -12,8 +12,7 @@
       "totalIPv4RoutesMax": 1000,
       "totalIPv6RoutesMax": 1000,
       "routeFilterSupported": false,
-      "routeAggregationSupported": false,
-      "connectionLimit": 10
+      "vcCountMax": 10
     },
     {
       "code": "PREMIUM",
@@ -22,8 +21,7 @@
       "totalIPv4RoutesMax": 4000,
       "totalIPv6RoutesMax": 4000,
       "routeFilterSupported": true,
-      "routeAggregationSupported": true,
-      "connectionLimit": 100
+      "vcCountMax": 100
     }
   ]
 }

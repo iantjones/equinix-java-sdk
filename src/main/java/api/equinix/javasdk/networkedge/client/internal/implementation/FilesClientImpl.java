@@ -19,14 +19,23 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.exception.EquinixClientException;
+import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.FilesClient;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.FileProcessType;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 
-import java.util.HashMap;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  *
@@ -38,27 +47,79 @@ public class FilesClientImpl extends ClientBase implements FilesClient {
         super(configClient, "NetworkEdge", "Files");
     }
 
+    /**
+     * Uploads a license / cloud-init file via a {@code multipart/form-data} request, as the spec's
+     * {@code FileUploadRequest} for {@code POST /ne/v1/files} requires ({@code file} is declared
+     * {@code type: string, format: binary}).
+     *
+     * <p>The scalar fields are sent as plain form parts and the file contents as a binary
+     * {@code file} part. The multipart entity is assembled by hand (httpmime /
+     * {@code MultipartEntityBuilder} is not a dependency) using only httpcore classes and attached
+     * directly to the request.</p>
+     */
     public String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
                              DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents) {
-        Map<String, Object> body = new HashMap<>();
+        EquinixRequest<Object> request = buildRequest("UploadFile", RequestType.SINGLE, Object.class);
+
+        Map<String, String> formFields = new LinkedHashMap<>();
         if (metroCode != null) {
-            body.put("metroCode", metroCode);
+            formFields.put("metroCode", metroCode.name());
         }
         if (deviceTypeCode != null) {
-            body.put("deviceTypeCode", deviceTypeCode);
+            formFields.put("deviceTypeCode", deviceTypeCode);
         }
         if (processType != null) {
-            body.put("processType", processType);
+            formFields.put("processType", processType.name());
         }
         if (deviceManagementType != null) {
-            body.put("deviceManagementType", deviceManagementType);
+            formFields.put("deviceManagementType", deviceManagementType.getJsonValue());
         }
         if (licenseType != null) {
-            body.put("licenseType", licenseType);
+            formFields.put("licenseType", licenseType.name());
         }
-        if (fileContents != null) {
-            body.put("file", fileContents);
+
+        String boundary = "----EquinixSdkBoundary" + UUID.randomUUID().toString().replace("-", "");
+        byte[] body = buildMultipartBody(boundary, formFields, "file", "file",
+                fileContents != null ? fileContents.getBytes(StandardCharsets.UTF_8) : null);
+        request.setContentType("multipart/form-data; boundary=" + boundary);
+        request.setHttpEntity(new ByteArrayEntity(body, ContentType.create("multipart/form-data")));
+
+        return Utils.handleMapResponse(request, invoke(request)).get("fileUuid");
+    }
+
+    /**
+     * Builds a {@code multipart/form-data} body with plain-text form fields followed by a single
+     * binary file part, using an explicit boundary.
+     *
+     * @param boundary      the multipart boundary string
+     * @param formFields    the plain form fields (name → value), in order
+     * @param fileFieldName the form field name of the file part (e.g. {@code file})
+     * @param fileName      the file name to advertise in the file part's Content-Disposition
+     * @param fileBytes     the raw file content
+     * @return the encoded multipart body
+     */
+    private byte[] buildMultipartBody(String boundary, Map<String, String> formFields,
+                                      String fileFieldName, String fileName, byte[] fileBytes) {
+        StringBuilder fields = new StringBuilder();
+        for (Map.Entry<String, String> field : formFields.entrySet()) {
+            fields.append("--").append(boundary).append("\r\n")
+                    .append("Content-Disposition: form-data; name=\"").append(field.getKey()).append("\"\r\n\r\n")
+                    .append(field.getValue()).append("\r\n");
         }
-        return mapOp("UploadFile", RequestType.SINGLE, null, null, body).get("fileUuid");
+        String fileHeader = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"" + fileFieldName + "\"; filename=\"" + fileName + "\"\r\n"
+                + "Content-Type: application/octet-stream\r\n\r\n";
+        String footer = "\r\n--" + boundary + "--\r\n";
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            out.write(fields.toString().getBytes(StandardCharsets.UTF_8));
+            out.write(fileHeader.getBytes(StandardCharsets.UTF_8));
+            if (fileBytes != null) {
+                out.write(fileBytes);
+            }
+            out.write(footer.getBytes(StandardCharsets.UTF_8));
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new EquinixClientException("Failed to assemble multipart upload body.", e);
+        }
     }
 }

@@ -195,7 +195,7 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"href\": \"https://api.equinix.com/internetAccess/v1/orders/abc-123\", "
                                 + "\"uuid\": \"abc-123\", \"number\": \"1-9234239473\", \"type\": \"NEW\", "
-                                + "\"status\": \"AWAITING_SIGNATURE\", \"signature\": { \"signatory\": \"DELEGATE\", "
+                                + "\"state\": \"AWAITING_SIGNATURE\", \"signature\": { \"signatory\": \"DELEGATE\", "
                                 + "\"delegate\": { \"email\": \"d@e.com\" } } }")));
 
         OrderDetails order = internetAccess.orders().get("abc-123");
@@ -208,17 +208,17 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    void getOrder_deserializesSubmittedStatus() {
+    void getOrder_deserializesProcessingState() {
         wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/orders/sub-1"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
                         .withBody("{ \"href\": \"https://api.equinix.com/internetAccess/v1/orders/sub-1\", "
                                 + "\"uuid\": \"sub-1\", \"number\": \"1-9234239474\", \"type\": \"NEW\", "
-                                + "\"status\": \"SUBMITTED\", \"draft\": false }")));
+                                + "\"state\": \"PROCESSING\", \"draft\": false }")));
 
         OrderDetails order = internetAccess.orders().get("sub-1");
 
         assertEquals("sub-1", order.getUuid());
-        assertEquals(OrderState.SUBMITTED, order.getStatus());
+        assertEquals(OrderState.PROCESSING, order.getStatus());
     }
 
     @Test

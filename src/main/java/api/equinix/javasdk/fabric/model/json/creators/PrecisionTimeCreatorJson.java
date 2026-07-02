@@ -16,13 +16,25 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
-import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.implementation.Md5;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeOrder;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimePackageRequest;
+import api.equinix.javasdk.fabric.model.implementation.PtpAdvanceConfiguration;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceFulfillRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Setter;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Request body for creating a Precision Time service (the Fabric v4
+ * {@code precisionTimeServiceRequest} schema).
+ */
 @Setter(AccessLevel.PRIVATE)
 public class PrecisionTimeCreatorJson {
 
@@ -32,20 +44,40 @@ public class PrecisionTimeCreatorJson {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("package")
+    private PrecisionTimePackageRequest timePackage;
 
-    @JsonProperty("packageCode")
-    private PrecisionTimePackageCode packageCode;
+    @JsonProperty("connections")
+    private List<TimeServiceFulfillRequest.Connection> connections;
+
+    @JsonProperty("ipv4")
+    private PrecisionTimeIpv4 ipv4;
+
+    @JsonProperty("ntpAdvancedConfiguration")
+    private List<Md5> ntpAdvancedConfiguration;
+
+    @JsonProperty("ptpAdvancedConfiguration")
+    private PtpAdvanceConfiguration ptpAdvancedConfiguration;
 
     @JsonProperty("project")
     private Project project;
 
+    @JsonProperty("order")
+    private PrecisionTimeOrder order;
+
     public PrecisionTimeCreatorJson(PrecisionTimeOperator.PrecisionTimeBuilder precisionTimeBuilder) {
         this.type = precisionTimeBuilder.getType();
         this.name = precisionTimeBuilder.getName();
-        this.description = precisionTimeBuilder.getDescription();
-        this.packageCode = precisionTimeBuilder.getPackageCode();
+        this.timePackage = precisionTimeBuilder.getPackageCode() != null
+                ? new PrecisionTimePackageRequest(precisionTimeBuilder.getPackageCode()) : null;
+        this.connections = precisionTimeBuilder.getConnectionUuids() != null
+                ? precisionTimeBuilder.getConnectionUuids().stream()
+                        .map(TimeServiceFulfillRequest.Connection::new).collect(Collectors.toList())
+                : null;
+        this.ipv4 = precisionTimeBuilder.getIpv4();
+        this.ntpAdvancedConfiguration = precisionTimeBuilder.getNtpAdvancedConfiguration();
+        this.ptpAdvancedConfiguration = precisionTimeBuilder.getPtpAdvancedConfiguration();
         this.project = precisionTimeBuilder.getProject();
+        this.order = precisionTimeBuilder.getOrder();
     }
 }

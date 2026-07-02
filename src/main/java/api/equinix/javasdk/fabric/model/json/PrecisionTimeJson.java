@@ -22,10 +22,20 @@ import api.equinix.javasdk.fabric.enums.PrecisionTimeState;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
+import api.equinix.javasdk.fabric.model.TimeServiceConnection;
+import api.equinix.javasdk.fabric.model.TimeServicePackage;
+import api.equinix.javasdk.fabric.model.implementation.Account;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
+import api.equinix.javasdk.fabric.model.implementation.Md5;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeOrder;
+import api.equinix.javasdk.fabric.model.implementation.PrecisionTimePrice;
+import api.equinix.javasdk.fabric.model.implementation.PtpAdvanceConfiguration;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceOperation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
 import java.util.List;
@@ -51,18 +61,47 @@ public class PrecisionTimeJson {
     @JsonProperty("state")
     private PrecisionTimeState state;
 
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("package")
+    @JsonDeserialize(as = TimeServicePackageJson.class)
+    private TimeServicePackage servicePackage;
 
-    @JsonProperty("packageCode")
-    private PrecisionTimePackageCode packageCode;
+    @JsonProperty("operation")
+    private TimeServiceOperation operation;
+
+    @JsonProperty("connections")
+    @JsonDeserialize(contentAs = TimeServiceConnectionJson.class)
+    private List<TimeServiceConnection> connections;
+
+    @JsonProperty("ipv4")
+    private PrecisionTimeIpv4 ipv4;
+
+    @JsonProperty("ntpAdvancedConfiguration")
+    private List<Md5> ntpAdvancedConfiguration;
+
+    @JsonProperty("ptpAdvancedConfiguration")
+    private PtpAdvanceConfiguration ptpAdvancedConfiguration;
 
     @JsonProperty("project")
     private Project project;
 
+    @JsonProperty("account")
+    private Account account;
+
+    @JsonProperty("order")
+    private PrecisionTimeOrder order;
+
+    @JsonProperty("pricing")
+    private PrecisionTimePrice pricing;
+
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
 
-    @JsonProperty("connectionsCount")
-    private Integer connectionsCount;
+    /**
+     * Convenience accessor for the package code of the service's {@code package} member.
+     *
+     * @return the package code, or {@code null} when no package is present
+     */
+    public PrecisionTimePackageCode getPackageCode() {
+        return this.servicePackage == null ? null : this.servicePackage.getCode();
+    }
 }

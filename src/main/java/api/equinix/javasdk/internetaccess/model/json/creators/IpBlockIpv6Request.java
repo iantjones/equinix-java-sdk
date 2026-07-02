@@ -20,14 +20,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
-
-import java.util.List;
 
 /**
  * IP Version 6 (IPv6) block request nested in a {@link CustomerRouteIpv6Request}. Either
  * references an existing block by {@code uuid} or describes a new public block via
- * {@code prefixLength} together with addressing plans and questions.
+ * {@code prefixLength}. Unlike the IPv4 variant ({@link IpBlockIpv4Request}), the IPv6 block
+ * takes no addressing plans or questions.
  */
 @Getter
 @Builder
@@ -35,12 +33,6 @@ import java.util.List;
 public class IpBlockIpv6Request {
 
     @JsonProperty("uuid") private String uuid;
-
-    @Singular("addressingPlan")
-    @JsonProperty("addressingPlans") private List<IpBlockAddressingPlan> addressingPlans;
-
-    @Singular("question")
-    @JsonProperty("questions") private List<IpBlockQuestion> questions;
 
     @JsonProperty("prefixLength") private Integer prefixLength;
 }

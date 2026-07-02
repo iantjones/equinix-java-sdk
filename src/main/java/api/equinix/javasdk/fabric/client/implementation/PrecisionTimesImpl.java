@@ -68,7 +68,11 @@ public class PrecisionTimesImpl implements PrecisionTimes {
     }
 
     public PrecisionTime fulfill(String uuid, List<String> connectionUuids) {
-        PrecisionTimeJson precisionTimeJson = this.serviceClient.fulfill(uuid, new TimeServiceFulfillRequest(connectionUuids));
+        return fulfill(uuid, new TimeServiceFulfillRequest(connectionUuids));
+    }
+
+    public PrecisionTime fulfill(String uuid, TimeServiceFulfillRequest request) {
+        PrecisionTimeJson precisionTimeJson = this.serviceClient.fulfill(uuid, request);
         return new PrecisionTimeWrapper(precisionTimeJson, this.serviceClient);
     }
 }

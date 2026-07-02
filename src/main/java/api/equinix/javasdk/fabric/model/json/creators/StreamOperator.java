@@ -44,8 +44,9 @@ public class StreamOperator extends ResourceImpl<Stream> {
     }
 
     /**
-     * <p>Begins a fluent full-body update of an existing stream, pre-populated with its current
-     * state. Streams are updated with a full {@code PUT}; the returned builder is seeded from
+     * <p>Begins a fluent update of an existing stream, pre-populated with its current
+     * state. Streams are updated with a {@code PUT} whose body carries the writable fields
+     * ({@code name}, {@code description}); the returned builder is seeded from
      * {@code existing} so callers need only change the fields they want, then call {@code save()}.</p>
      *
      * @param existing the current JSON state of the stream to update
@@ -110,7 +111,8 @@ public class StreamOperator extends ResourceImpl<Stream> {
         }
 
         /**
-         * Applies the accumulated changes to the existing stream (full-body {@code PUT}) and returns
+         * Applies the accumulated changes to the existing stream ({@code PUT} carrying the
+         * writable {@code name}/{@code description} fields) and returns
          * the model refreshed from the server. Only valid on a builder obtained via
          * {@link StreamOperator#update(StreamJson)}.
          *
@@ -120,7 +122,7 @@ public class StreamOperator extends ResourceImpl<Stream> {
             if (targetUuid == null) {
                 throw new IllegalStateException("save() requires update(...); use create() for new streams.");
             }
-            StreamCreatorJson streamCreatorJson = new StreamCreatorJson(this);
+            StreamCreatorJson streamCreatorJson = new StreamCreatorJson(this, true);
             StreamJson streamJson = ((StreamClientImpl) StreamOperator.this.getServiceClient()).update(targetUuid, streamCreatorJson);
             return new StreamWrapper(streamJson, StreamOperator.this.getServiceClient());
         }

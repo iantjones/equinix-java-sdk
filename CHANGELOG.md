@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Exhaustive model-fidelity pass against the full API catalog** — every SDK model was diffed
+  property-by-property (including nested objects, array items, request bodies, and enum value sets)
+  against all 33 authoritative OpenAPI specs; 322 of 358 verified discrepancies fixed across 171
+  files (+92 new model classes). Highlights: Connection/Port/Change status enums gained their
+  missing spec values (`DRAFT`, `CANCELLED`, `PROVISIONED`, …) with forward-compat `UNKNOWN`
+  fallbacks; service tokens can now be created with `name`/`description`/`expirationDateTime`/
+  `project` and virtual-device / network access-point selectors (`VXLAN`/`EVPN_VXLAN` link
+  protocols included); `Order` supports `termLength` for term-discounted pricing; PrecisionTime
+  create/read gained the `package`/`connections`/`ipv4`/MD5/PTP configuration family; Port
+  responses expose their full schema (package, project, order, notifications, interface, LOAs, …);
+  Stream alert rules/subscriptions gained `metricSelector`/`resourceSelector`/`eventSelector` and
+  the detection-method model; marketplace subscriptions gained `entitlements`/`trial`/`metroCodes`;
+  misnamed wire mappings (silent nulls) were corrected (e.g. CloudEvent `id`); 4-byte-unsafe
+  `Integer` ASN/bandwidth fields retyped to `Long`. The 36 remaining findings are deliberate holds
+  (breaking public-API removals awaiting owner sign-off, or spec-vs-live-API conflicts) — see the
+  session report.
+
 ### Added
 - **Cross-source metro-registry enrichment** — `EquinixConfig.enrichMetroRegistry(true)` makes the
   metro registry the SDK's most complete location directory: alongside Fabric's metro-level data it

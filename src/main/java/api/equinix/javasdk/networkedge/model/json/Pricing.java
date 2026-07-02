@@ -31,8 +31,12 @@ import lombok.Getter;
 public class Pricing {
 
 
+    /**
+     * Term length in months. The spec ({@code CompositePriceResponse.termLength}) declares this as a
+     * string (example {@code "24"}), matching the sibling {@code PricingSiebelConfig.termLength}.
+     */
     @JsonProperty("termLength")
-    private Integer termLength;
+    private String termLength;
 
     @JsonProperty("primary")
     PricingDetail primary;

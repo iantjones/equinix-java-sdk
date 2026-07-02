@@ -48,11 +48,25 @@ public interface ServiceProfile extends AccessPointable {
 
     List<AccessPointTypeConfig> getAccessPointTypeConfigs();
 
+    List<AccessPointTypeConfigPort> getPorts();
+
+    List<ServiceProfileAccessPointVD> getVirtualDevices();
+
+    List<ProviderEnvironment> getEnvironments();
+
     List<ServiceProfileMetro> metros();
 
     MarketingInfo getMarketingInfo();
 
     Boolean getSelfProfile();
+
+    Project getProject();
+
+    String getProjectId();
+
+    Change getChange();
+
+    ServiceProfileLastMileConfig getLastMileConfig();
 
     ChangeLog getChangeLog();
 

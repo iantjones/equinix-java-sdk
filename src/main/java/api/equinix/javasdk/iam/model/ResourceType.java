@@ -43,9 +43,9 @@ public interface ResourceType {
     Map<String, String> getTags();
 
     /**
-     * @return the resource type attributes, as raw deserialized JSON
+     * @return the attributes included on this resource type (may be {@code null})
      */
-    List<Object> getAttributes();
+    List<Attribute> getAttributes();
 
     /**
      * @return the opaque revision of the resource type (used as {@code lastRev})
