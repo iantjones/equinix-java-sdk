@@ -16,22 +16,20 @@
 
 package api.equinix.javasdk.customerportal.enums;
 
-import api.equinix.javasdk.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Purchase order selection type (SmartHands orders + Orders v2 line-item purchase orders). When
- * {@code EXEMPTED}, a purchase order number is not required. {@link #UNKNOWN} is a read-side
- * fallback for values added after this SDK release — never send it.
+ * How an order line price value is expressed (Orders v2 API). {@link #UNKNOWN} is a read-side fallback for values added after this
+ * SDK release — never send it.
  */
-public enum PurchaseOrderType implements APIParam {
-    EXISTING,
-    NEW,
-    EXEMPTED,
+public enum PricingValueType {
+    ABSOLUTE,
+    PERCENTAGE,
     UNKNOWN;
 
-    @com.fasterxml.jackson.annotation.JsonCreator
-    public static PurchaseOrderType fromString(String value) {
-        try { return PurchaseOrderType.valueOf(value); }
+    @JsonCreator
+    public static PricingValueType fromString(String value) {
+        try { return PricingValueType.valueOf(value); }
         catch (Exception e) { return UNKNOWN; }
     }
 }

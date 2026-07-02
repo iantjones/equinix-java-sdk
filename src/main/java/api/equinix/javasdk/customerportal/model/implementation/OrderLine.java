@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.customerportal.model.implementation;
 
+import api.equinix.javasdk.customerportal.enums.OrderLineRequestType;
+import api.equinix.javasdk.customerportal.enums.OrderProductType;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -66,7 +68,7 @@ public class OrderLine {
     private List<OrderPricing> totalPricing;
 
     @JsonProperty("productType")
-    private String productType;
+    private OrderProductType productType;
 
     @JsonProperty("productCode")
     private String productCode;
@@ -84,7 +86,7 @@ public class OrderLine {
     private List<String> cabinets;
 
     @JsonProperty("requestType")
-    private String requestType;
+    private OrderLineRequestType requestType;
 
     @JsonProperty("attachments")
     private List<OrderAttachmentInfo> attachments;
