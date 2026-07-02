@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **`PasswordEquinixCredentials` and the `PASSWORD` grant type** — the OAuth2 resource-owner
+  password grant reached end-of-life in January 2025 per the Equinix API release notes; the token
+  endpoint only supports client credentials. Use `BasicEquinixCredentials` (or a custom
+  `EquinixCredentialsProvider`).
+- **`RoutingProtocolBuilder.withEquinixAsn(...)`** — Fabric release R2025.5 removed `equinixASN`
+  from the BGP routing-protocol create request; the platform assigns the ASN and returns it on the
+  response (`RoutingProtocol.getEquinixAsn()` is unchanged).
+
 ### Fixed
 - **Exhaustive model-fidelity pass against the full API catalog** — every SDK model was diffed
   property-by-property (including nested objects, array items, request bodies, and enum value sets)

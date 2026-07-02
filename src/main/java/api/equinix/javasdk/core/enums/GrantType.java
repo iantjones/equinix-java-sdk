@@ -26,20 +26,11 @@ package api.equinix.javasdk.core.enums;
 public enum GrantType {
 
     /**
-     * The OAuth2 client-credentials grant — the SDK default. Authenticates with a
-     * Client ID and Client Secret only; no refresh token is issued.
+     * The OAuth2 client-credentials grant — the SDK default and the only grant the Equinix
+     * token endpoint still supports (the resource-owner password grant reached end-of-life
+     * in January 2025 and was removed from this SDK).
      */
-    CLIENT_CREDENTIALS("client_credentials"),
-
-    /**
-     * The OAuth2 resource-owner password grant. Authenticates with a Client ID and
-     * Client Secret plus an Equinix portal username and password.
-     *
-     * <p>Equinix marks this grant deprecated and recommends {@link #CLIENT_CREDENTIALS}.
-     * It is supported here for accounts that still require it; see
-     * {@link api.equinix.javasdk.core.auth.PasswordEquinixCredentials}.</p>
-     */
-    PASSWORD("password");
+    CLIENT_CREDENTIALS("client_credentials");
 
     private final String grantType;
 
