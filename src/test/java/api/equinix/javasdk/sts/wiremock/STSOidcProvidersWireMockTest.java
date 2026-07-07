@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@code /v1/projects/{projectId}/oidcProviders}. Exercises the full lifecycle exposed by
  * {@link api.equinix.javasdk.sts.client.STSOidcProviders}:</p>
  * <ul>
- *   <li>{@code page(...)} — GET (operationId {@code pageOidcProviders}), including the empty-list
+ *   <li>{@code list(...)} — GET (operationId {@code pageOidcProviders}), including the empty-list
  *       case, the {@code includeSuspended}/{@code pageSize} query params and opaque-token
  *       ({@code nextPageToken}) two-page paging.</li>
  *   <li>{@code create(...)} — POST (operationId {@code createOidcProvider}), asserting the request body.</li>
@@ -92,7 +92,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
         void pagesProviders() {
             stubPaginatedGet(wireMock, BASE, "/json/sts/oidc_providers_page1.json");
 
-            OidcProviderPage page = sts.oidcProviders().page(PROJECT_ID);
+            OidcProviderPage page = sts.oidcProviders().list(PROJECT_ID);
 
             assertNotNull(page);
             assertNotNull(page.getList());
@@ -111,7 +111,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
         void emptyPage() {
             stubPaginatedGet(wireMock, BASE, "/json/sts/oidc_providers_empty.json");
 
-            OidcProviderPage page = sts.oidcProviders().page(PROJECT_ID);
+            OidcProviderPage page = sts.oidcProviders().list(PROJECT_ID);
 
             assertNotNull(page);
             assertNotNull(page.getList());
@@ -126,7 +126,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
         void passesQueryParams() {
             stubPaginatedGet(wireMock, BASE, "/json/sts/oidc_providers_page1.json");
 
-            sts.oidcProviders().page(PROJECT_ID, true, "tok-123", 50);
+            sts.oidcProviders().list(PROJECT_ID, true, "tok-123", 50);
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(BASE))
                     .withQueryParam("includeSuspended", equalTo("true"))
@@ -146,10 +146,10 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
                     .withQueryParam("pageToken", equalTo("eyJvZmZzZXQiOjJ9"))
                     .willReturn(okJson(loadFixture("/json/sts/oidc_providers_page2.json"))));
 
-            OidcProviderPage first = sts.oidcProviders().page(PROJECT_ID);
+            OidcProviderPage first = sts.oidcProviders().list(PROJECT_ID);
             assertEquals("eyJvZmZzZXQiOjJ9", first.getNextPageToken());
 
-            OidcProviderPage second = sts.oidcProviders().page(PROJECT_ID, null, first.getNextPageToken(), null);
+            OidcProviderPage second = sts.oidcProviders().list(PROJECT_ID, null, first.getNextPageToken(), null);
             assertNotNull(second);
             assertEquals(1, second.getList().size());
             assertEquals("idp:okta-workforce", second.getList().get(0).getIdpId());
@@ -166,7 +166,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
             stubErrorInline(wireMock, BASE, 500,
                     "{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}");
 
-            assertThrows(EquinixServerException.class, () -> sts.oidcProviders().page(PROJECT_ID));
+            assertThrows(EquinixServerException.class, () -> sts.oidcProviders().list(PROJECT_ID));
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(BASE)));
         }
@@ -232,7 +232,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
             wireMock.stubFor(patch(urlPathEqualTo(BASE + "/" + IDP_ID))
                     .willReturn(okJson(loadFixture("/json/sts/oidc_provider_patched_response.json"))));
 
-            OidcProvider updated = sts.oidcProviders().patch(PROJECT_ID, IDP_ID,
+            OidcProvider updated = sts.oidcProviders().update(PROJECT_ID, IDP_ID,
                     new PatchOidcProviderRequest()
                             .name("GitHub Actions OIDC (renamed)")
                             .trustedClientIds(List.of("my-oauth-client-id"))
@@ -254,7 +254,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
             wireMock.stubFor(patch(urlPathEqualTo(BASE + "/" + IDP_ID))
                     .willReturn(okJson(loadFixture("/json/sts/oidc_provider_patched_response.json"))));
 
-            sts.oidcProviders().patch(PROJECT_ID, IDP_ID,
+            sts.oidcProviders().update(PROJECT_ID, IDP_ID,
                     new PatchOidcProviderRequest().lastRev("abc123").unsetGroupMembershipClaim());
 
             wireMock.verify(patchRequestedFor(urlPathEqualTo(BASE + "/" + IDP_ID))
@@ -267,7 +267,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
         void notFound() {
             stubError(wireMock, BASE + "/.*", 404, "/json/core/error_404_response.json");
 
-            assertThrows(EquinixNotFoundException.class, () -> sts.oidcProviders().patch(PROJECT_ID, IDP_ID,
+            assertThrows(EquinixNotFoundException.class, () -> sts.oidcProviders().update(PROJECT_ID, IDP_ID,
                     new PatchOidcProviderRequest().name("nope").lastRev("abc123")));
 
             wireMock.verify(patchRequestedFor(urlPathEqualTo(BASE + "/" + IDP_ID)));

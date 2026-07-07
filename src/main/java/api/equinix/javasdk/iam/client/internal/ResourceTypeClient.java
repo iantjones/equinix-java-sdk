@@ -80,7 +80,7 @@ public interface ResourceTypeClient {
      * @param projectErn the project ERN (optional, mutually exclusive with {@code projectId}), or {@code null}
      * @return the requested page of resource-type actions
      */
-    ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+    ResourceTypeActionPage listResourceTypeActions(String projectId, String serviceId, String resourceType,
                                                    String resourceTypeServiceId, String lastAction, Integer pageSize,
                                                    String projectErn);
 

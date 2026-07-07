@@ -29,11 +29,11 @@ import api.equinix.javasdk.sts.model.json.creators.PatchOidcProviderRequest;
  */
 public interface OidcProviderClient {
 
-    OidcProviderPage page(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize);
+    OidcProviderPage list(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize);
 
     OidcProvider create(String projectId, CreateOidcProviderRequest request);
 
-    OidcProvider patch(String projectId, String idpId, PatchOidcProviderRequest request);
+    OidcProvider update(String projectId, String idpId, PatchOidcProviderRequest request);
 
     Boolean delete(String projectId, String idpId);
 

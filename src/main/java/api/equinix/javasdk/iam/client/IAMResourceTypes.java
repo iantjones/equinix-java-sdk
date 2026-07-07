@@ -29,7 +29,7 @@ import api.equinix.javasdk.iam.model.json.ServiceActionSetList;
  *
  * <p>Most list results are opaque-token paginated: each response carries a {@code nextPageToken};
  * pass it back as the {@code pageToken} argument to fetch the next page. The
- * {@code pageResourceTypeActions} operation is an exception — it uses cursor-based pagination keyed
+ * {@code listResourceTypeActions} operation is an exception — it uses cursor-based pagination keyed
  * on {@code lastAction} (the {@code action} of the last item received).</p>
  */
 public interface IAMResourceTypes {
@@ -114,7 +114,7 @@ public interface IAMResourceTypes {
      * @param resourceType the resource type within the service (required)
      * @return the first page of resource-type actions
      */
-    ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType);
+    ResourceTypeActionPage listResourceTypeActions(String projectId, String serviceId, String resourceType);
 
     /**
      * Pages the resource-type-to-action mappings for a service and resource type within a project,
@@ -133,7 +133,7 @@ public interface IAMResourceTypes {
      * @param projectErn the project ERN (optional, mutually exclusive with {@code projectId}), or {@code null}
      * @return the requested page of resource-type actions
      */
-    ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+    ResourceTypeActionPage listResourceTypeActions(String projectId, String serviceId, String resourceType,
                                                    String resourceTypeServiceId, String lastAction, Integer pageSize,
                                                    String projectErn);
 

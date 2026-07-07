@@ -83,7 +83,7 @@ public interface DigitalLoas {
      * @param operations the JSON patch documents to apply
      * @return the modified Digital LOA
      */
-    DigitalLoa patch(String uuid, List<Map<String, Object>> operations);
+    DigitalLoa update(String uuid, List<Map<String, Object>> operations);
 
     /**
      * Cancels (invalidates) a Digital LOA document.
@@ -137,7 +137,7 @@ public interface DigitalLoas {
      * @param ibx the IBX data center identifier (e.g. {@code AM11}); required
      * @return the customer organizations
      */
-    List<? extends LoaCustomerOrganization> findOrganizations(String ibx);
+    List<? extends LoaCustomerOrganization> listOrganizations(String ibx);
 
     /**
      * Lists the customer organizations available in the given IBX data center, filtered by product
@@ -150,7 +150,7 @@ public interface DigitalLoas {
      * @param productTypes the product types to filter by (e.g. {@code CROSS_CONNECT}), or {@code null}
      * @return the customer organizations
      */
-    List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes);
+    List<? extends LoaCustomerOrganization> listOrganizations(String ibx, List<String> productTypes);
 
     /**
      * Returns whether the current user is permitted to use the Digital LOA application in its

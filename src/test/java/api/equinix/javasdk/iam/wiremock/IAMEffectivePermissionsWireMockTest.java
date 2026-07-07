@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Every operation here is a project-scoped read resolved against
  * {@code v1/projects/{projectId}/...} (see {@code apiParams_IAM.json}). The {@code serviceId} is a
  * required query parameter throughout; the token-paginated lists carry an opaque
- * {@code nextPageToken} and accept {@code pageToken}/{@code pageSize}; {@code pageResourceTypeActions}
+ * {@code nextPageToken} and accept {@code pageToken}/{@code pageSize}; {@code listResourceTypeActions}
  * uses cursor-based paging keyed on {@code lastAction}. Each test asserts the HTTP verb + path (and
  * the relevant query params), and at least one error mapping is exercised per family.</p>
  */
@@ -310,7 +310,7 @@ class IAMEffectivePermissionsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("resourceTypes().pageResourceTypeActions()")
+    @DisplayName("resourceTypes().listResourceTypeActions()")
     class PageResourceTypeActions {
 
         @Test
@@ -320,7 +320,7 @@ class IAMEffectivePermissionsWireMockTest extends WireMockTestBase {
                     "/json/iam/resource_type_action_page_response.json");
 
             ResourceTypeActionPage page = iam.resourceTypes()
-                    .pageResourceTypeActions(PROJECT_ID, SERVICE_ID, "resourcetype:connection");
+                    .listResourceTypeActions(PROJECT_ID, SERVICE_ID, "resourcetype:connection");
 
             assertNotNull(page);
             assertEquals(2, page.getList().size());
@@ -341,7 +341,7 @@ class IAMEffectivePermissionsWireMockTest extends WireMockTestBase {
             stubPaginatedGet(wireMock, RESOURCE_TYPE_ACTIONS_PATH,
                     "/json/iam/resource_type_action_page_response.json");
 
-            iam.resourceTypes().pageResourceTypeActions(PROJECT_ID, SERVICE_ID, "resourcetype:connection",
+            iam.resourceTypes().listResourceTypeActions(PROJECT_ID, SERVICE_ID, "resourcetype:connection",
                     null, "action:use/getConnection", 10, null);
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(RESOURCE_TYPE_ACTIONS_PATH))

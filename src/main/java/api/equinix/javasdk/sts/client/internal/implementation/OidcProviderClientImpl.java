@@ -43,7 +43,7 @@ public class OidcProviderClientImpl extends ClientBase implements OidcProviderCl
     }
 
     @Override
-    public OidcProviderPage page(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize) {
+    public OidcProviderPage list(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize) {
         Map<String, List<String>> queryParams = QueryParamBuilder.builder()
                 .add("includeSuspended", includeSuspended)
                 .add("pageToken", pageToken)
@@ -60,7 +60,7 @@ public class OidcProviderClientImpl extends ClientBase implements OidcProviderCl
     }
 
     @Override
-    public OidcProvider patch(String projectId, String idpId, PatchOidcProviderRequest request) {
+    public OidcProvider update(String projectId, String idpId, PatchOidcProviderRequest request) {
         return postForType("PatchOidcProvider", Map.of("projectId", projectId, "idpId", idpId), request,
                 new TypeReference<OidcProviderJson>() {
                 });
