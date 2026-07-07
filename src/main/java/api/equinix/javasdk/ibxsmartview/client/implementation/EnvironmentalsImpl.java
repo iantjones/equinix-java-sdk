@@ -17,7 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client.implementation;
 
 import api.equinix.javasdk.IBXSmartView;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.client.Environmentals;
@@ -44,8 +44,8 @@ public class EnvironmentalsImpl implements Environmentals {
     }
 
     public PaginatedList<SensorReading> list(String ibx, String type, String zone, Integer offset, Integer limit) {
-        Page<SensorReading, SensorReadingJson> responsePage = serviceClient.list(ibx, type, zone, offset, limit);
-        PaginatedList<SensorReading> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, SensorReadingWrapper::new);
+        Page<SensorReadingJson> responsePage = serviceClient.list(ibx, type, zone, offset, limit);
+        PaginatedList<SensorReading> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, SensorReadingWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

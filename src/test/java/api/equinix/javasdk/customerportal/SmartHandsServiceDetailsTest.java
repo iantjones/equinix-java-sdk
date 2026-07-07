@@ -34,7 +34,7 @@ class SmartHandsServiceDetailsTest {
 
     @BeforeAll
     static void setUp() {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
     }
 
     private static List<ContactInfo> contacts() {

@@ -36,7 +36,7 @@ public class StreamClientImpl extends ResourceClientBase<Stream, StreamJson> imp
         return new StreamWrapper(json, this);
     }
 
-    public Page<Stream, StreamJson> list() {
+    public Page<StreamJson> list() {
         return listPage("GetStreams");
     }
 

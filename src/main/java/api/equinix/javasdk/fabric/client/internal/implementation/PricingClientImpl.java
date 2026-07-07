@@ -37,7 +37,7 @@ public class PricingClientImpl extends ResourceClientBase<Pricing, PricingJson> 
         return new PricingWrapper(json, this);
     }
 
-    public Page<Pricing, PricingJson> list(FilterPropertyList filter) {
+    public Page<PricingJson> list(FilterPropertyList filter) {
         return searchPage("GetPricing", new FilteredPaginatedPost<>(filter));
     }
 }

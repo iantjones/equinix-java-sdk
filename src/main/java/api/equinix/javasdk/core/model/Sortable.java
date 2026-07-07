@@ -20,14 +20,12 @@ import api.equinix.javasdk.core.enums.SortOrder;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
 /**
  *
  * @author ianjones
  */
 @Getter
-@Setter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Sortable implements APIParam {
 

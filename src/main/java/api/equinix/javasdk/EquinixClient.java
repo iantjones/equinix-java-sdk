@@ -172,6 +172,9 @@ public class EquinixClient implements Closeable {
         if (config.getRetryPolicy() != null) {
             equinixClient.setRetryPolicy(config.getRetryPolicy());
         }
+        if (config.getCircuitBreaker() != null) {
+            equinixClient.setCircuitBreaker(config.getCircuitBreaker());
+        }
     }
 
     /**

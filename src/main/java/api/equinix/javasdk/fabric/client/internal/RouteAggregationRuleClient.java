@@ -30,7 +30,7 @@ import java.util.List;
 
 public interface RouteAggregationRuleClient<T> extends PageablePost<T> {
 
-    Page<RouteAggregationRule, RouteAggregationRuleJson> list(String routeAggregationId);
+    Page<RouteAggregationRuleJson> list(String routeAggregationId);
 
     RouteAggregationRuleJson getByUuid(String routeAggregationId, String uuid);
 
@@ -46,7 +46,7 @@ public interface RouteAggregationRuleClient<T> extends PageablePost<T> {
 
     List<RouteAggregationRuleJson> createBulk(String routeAggregationId, List<RouteAggregationRuleCreatorJson> routeAggregationRuleCreatorJsonList);
 
-    Page<RouteAggregationRule, RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort);
 
     List<Change> getChanges(String routeAggregationId, String uuid);
 

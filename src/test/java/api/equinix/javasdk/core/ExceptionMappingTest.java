@@ -105,6 +105,73 @@ class ExceptionMappingTest {
     }
 
     @Test
+    void serviceException_messageOnlyCtor_preservesConstructorMessage() {
+        EquinixServiceException ex = new EquinixServiceException("Could not determine deserialization target.");
+
+        // The constructor-supplied summary must survive the getMessage() override, and the
+        // null status/path must not surface as literal "null" lines.
+        assertEquals("Could not determine deserialization target.", ex.getMessage());
+        assertFalse(ex.getMessage().contains("null"));
+    }
+
+    @Test
+    void serviceException_fullCtor_messageStartsWithSummary() {
+        EquinixServiceException ex = new EquinixServiceException(
+                "Rate limit exceeded (HTTP 429).", 429, "/fabric/v4/ports", null, null);
+
+        assertTrue(ex.getMessage().startsWith("Rate limit exceeded (HTTP 429)."));
+    }
+
+    @Test
+    void serviceException_correlationId_carriedAndRendered() {
+        EquinixServiceException ex = new EquinixServiceException(
+                "Server error (HTTP 503).", 503, "/fabric/v4/ports", null, null, "cid-1234");
+
+        assertEquals("cid-1234", ex.getCorrelationId());
+        assertTrue(ex.getMessage().contains("Correlation Id: cid-1234"));
+    }
+
+    @Test
+    void serviceException_collectionsAreImmutable() {
+        java.util.List<ExceptionDetail> details = new java.util.ArrayList<>();
+        details.add(new ExceptionDetail());
+        java.util.Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("Retry-After", "30");
+
+        EquinixServiceException ex = new EquinixServiceException(
+                "test error", 429, "/fabric/v4/ports", headers, details);
+
+        // The exception snapshots its inputs: later caller-side mutation must not leak in...
+        details.clear();
+        headers.clear();
+        assertEquals(1, ex.getExceptionDetails().size());
+        assertEquals("30", ex.getHttpHeaders().get("Retry-After"));
+
+        // ...and the exposed collections themselves reject mutation.
+        assertThrows(UnsupportedOperationException.class, () -> ex.getExceptionDetails().clear());
+        assertThrows(UnsupportedOperationException.class, () -> ex.getHttpHeaders().put("x", "y"));
+    }
+
+    @Test
+    void serviceException_isJavaSerializable() throws Exception {
+        EquinixServiceException ex = new EquinixServiceException(
+                "test error", 503, "/fabric/v4/ports", java.util.Map.of("Retry-After", "30"),
+                java.util.List.of(new ExceptionDetail()), "cid-1234");
+
+        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+        try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(bos)) {
+            oos.writeObject(ex);
+        }
+        try (java.io.ObjectInputStream ois = new java.io.ObjectInputStream(
+                new java.io.ByteArrayInputStream(bos.toByteArray()))) {
+            EquinixServiceException roundTripped = (EquinixServiceException) ois.readObject();
+            assertEquals(503, roundTripped.getStatusCode());
+            assertEquals("cid-1234", roundTripped.getCorrelationId());
+            assertEquals(1, roundTripped.getExceptionDetails().size());
+        }
+    }
+
+    @Test
     void serviceException_causeConstructor() {
         Exception cause = new RuntimeException("root cause");
         EquinixServiceException ex = new EquinixServiceException("wrapper", cause);

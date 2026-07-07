@@ -34,7 +34,7 @@ class CloudRouterActionAndAttachmentDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         action = read("/json/fabric/cloud_router_action_response.json", CloudRouterActionJson.class);
         routeFilterAttachment = read("/json/fabric/connection_route_filter_attachment_response.json", RouteFilterAttachmentJson.class);

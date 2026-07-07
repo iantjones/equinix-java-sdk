@@ -18,7 +18,7 @@ package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.EnvironmentalClient;
@@ -42,7 +42,7 @@ public class EnvironmentalClientImpl extends ResourceClientBase<SensorReading, S
         return new SensorReadingWrapper(json, this);
     }
 
-    public Page<SensorReading, SensorReadingJson> list(String ibx, String type, String zone, Integer offset, Integer limit) {
+    public Page<SensorReadingJson> list(String ibx, String type, String zone, Integer offset, Integer limit) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (type != null) {
             qParams.put("type", List.of(type));
@@ -58,7 +58,7 @@ public class EnvironmentalClientImpl extends ResourceClientBase<SensorReading, S
         }
         EquinixRequest<SensorReading> request = buildRequest(
                 "ListSensorReadings", RequestType.PAGINATED, Map.of("ibx", ibx), qParams, SensorReadingJson.class);
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     public SensorReadingJson getSensorReading(String ibx, String sensorId) {

@@ -37,7 +37,7 @@ public class SupportPlanClientImpl extends ResourceClientBase<SupportPlan, Suppo
         return json;
     }
 
-    public Page<SupportPlan, SupportPlanJson> list(Map<String, List<String>> queryParams) {
+    public Page<SupportPlanJson> list(Map<String, List<String>> queryParams) {
         if (queryParams == null || queryParams.isEmpty()) {
             return listPage("ListSupportPlans");
         }

@@ -19,7 +19,7 @@ class SupportPlanDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        ObjectMapper objectMapper = Constants.objectMapper;
+        ObjectMapper objectMapper = Constants.mapper();
         InputStream is = SupportPlanDeserializationTest.class.getResourceAsStream("/json/customerportal/support_plan_response.json");
         assertNotNull(is, "support_plan_response.json fixture not found on classpath");
         plan = objectMapper.readValue(is, SupportPlanJson.class);

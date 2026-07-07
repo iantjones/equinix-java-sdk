@@ -15,15 +15,20 @@
  */
 
 /**
- * HTTP request construction for the Equinix Java SDK. Contains
- * {@link api.equinix.javasdk.core.http.request.EquinixRequest} for representing
- * typed API requests with query parameters, path variables, and request bodies.
- * The {@link api.equinix.javasdk.core.http.request.RequestFactory} builds
- * {@code EquinixRequest} instances from API parameter definitions loaded at
- * startup. {@link api.equinix.javasdk.core.http.request.PaginatedRequest} extends
- * the base request to support offset and limit parameters for paginated endpoints.
+ * HTTP request model for the Equinix Java SDK.
+ * {@link api.equinix.javasdk.core.http.request.EquinixRequest} represents a typed API request —
+ * headers, query parameters, path variables, and a single
+ * {@link api.equinix.javasdk.core.http.request.RequestBody} (JSON payload, form fields, or raw
+ * bytes). {@link api.equinix.javasdk.core.http.request.PaginatedRequest} adds offset/limit paging
+ * state for paginated GET endpoints, and
+ * {@link api.equinix.javasdk.core.http.request.PaginatedPostRequest} carries POST-search bodies
+ * whose paging state lives in the body itself. At dispatch,
+ * {@link api.equinix.javasdk.core.http.request.RequestFactory} converts the populated request
+ * into the transport (Apache HttpClient) request that goes on the wire, building the entity from
+ * the {@code RequestBody} once per attempt; no transport type appears in the request model's API.
  *
  * @see api.equinix.javasdk.core.http.request.EquinixRequest
+ * @see api.equinix.javasdk.core.http.request.RequestBody
  * @see api.equinix.javasdk.core.http.request.RequestFactory
  */
 package api.equinix.javasdk.core.http.request;

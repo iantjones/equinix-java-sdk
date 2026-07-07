@@ -38,7 +38,7 @@ public class StreamSubscriptionClientImpl extends ResourceClientBase<StreamSubsc
         return new StreamSubscriptionWrapper(json, this);
     }
 
-    public Page<StreamSubscription, StreamSubscriptionJson> list(String streamId) {
+    public Page<StreamSubscriptionJson> list(String streamId) {
         return listPagePath("GetStreamSubscriptions", Map.of("streamId", streamId));
     }
 

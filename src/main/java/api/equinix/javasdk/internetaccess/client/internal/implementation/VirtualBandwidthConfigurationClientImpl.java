@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.VirtualBandwidthConfigurationClient;
@@ -51,11 +51,11 @@ public class VirtualBandwidthConfigurationClientImpl
         return json;
     }
 
-    public Page<VirtualBandwidthConfiguration, VirtualBandwidthConfigurationJson> list(UseCase useCase, BillingType billing) {
+    public Page<VirtualBandwidthConfigurationJson> list(UseCase useCase, BillingType billing) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "useCase", useCase.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "useCase", useCase.toString());
         if (billing != null) {
-            Utils.addAdditionalValue(queryParams, "billing", billing.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "billing", billing.toString());
         }
         return listPage("ListVirtualBandwidthConfigurations", queryParams);
     }

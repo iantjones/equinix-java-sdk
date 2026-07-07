@@ -2,6 +2,7 @@ package api.equinix.javasdk.core;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.core.http.CircuitBreaker;
 import api.equinix.javasdk.core.http.RetryPolicy;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,8 +35,10 @@ class ResiliencyTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
-        // Default every test to no-retry; the Retry nested class opts in explicitly.
+        // Default every test to no-retry and no breaker; the Retry / CircuitBreaking nested
+        // classes opt in explicitly.
         fabric.getEquinixClient().setRetryPolicy(RetryPolicy.none());
+        fabric.getEquinixClient().setCircuitBreaker(null);
     }
 
     @Nested
@@ -321,6 +324,121 @@ class ResiliencyTest extends WireMockTestBase {
             assertThrows(EquinixServerException.class, () -> fabric.connections().search());
             // 1 initial + 2 retries = 3 POSTs once non-idempotent retry is opted in.
             wireMock.verify(3, postRequestedFor(urlPathMatching("/fabric/v4/connections/search")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Correlation id")
+    class CorrelationId {
+
+        private static final String UUID_REGEX =
+                "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+        @Test
+        @DisplayName("every request carries a generated X-Correlation-Id header")
+        void requestCarriesCorrelationIdHeader() {
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(okJson(TestFixtures.load("/json/fabric/connection_response.json"))));
+
+            fabric.connections().getByUuid("test-uuid");
+
+            wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/connections/.*"))
+                    .withHeader("X-Correlation-Id", matching(UUID_REGEX)));
+        }
+
+        @Test
+        @DisplayName("service exceptions carry the correlation id (field and message)")
+        void serviceExceptionCarriesCorrelationId() {
+            stubErrorInline(wireMock, "/fabric/v4/connections/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Not found\"}]");
+
+            EquinixNotFoundException ex = assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.connections().getByUuid("test-uuid"));
+
+            assertNotNull(ex.getCorrelationId());
+            assertTrue(ex.getCorrelationId().matches(UUID_REGEX));
+            assertTrue(ex.getMessage().contains("Correlation Id: " + ex.getCorrelationId()));
+            // The id the exception reports is the id that was actually sent to the API.
+            wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/connections/.*"))
+                    .withHeader("X-Correlation-Id", equalTo(ex.getCorrelationId())));
+        }
+
+        @Test
+        @DisplayName("all retry attempts of one logical request share a single correlation id")
+        void retriesShareOneCorrelationId() {
+            fabric.getEquinixClient().setRetryPolicy(
+                    new RetryPolicy(2, 1, 5, java.util.Set.of(503), true, true));
+            stubErrorInline(wireMock, "/fabric/v4/networks/.*",
+                    503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]");
+
+            EquinixServerException ex = assertThrows(EquinixServerException.class,
+                    () -> fabric.networks().getByUuid("test-uuid"));
+
+            // 3 attempts, all sent with the exception's correlation id.
+            wireMock.verify(3, getRequestedFor(urlPathMatching("/fabric/v4/networks/.*"))
+                    .withHeader("X-Correlation-Id", equalTo(ex.getCorrelationId())));
+        }
+    }
+
+    @Nested
+    @DisplayName("Circuit breaker")
+    class CircuitBreaking {
+
+        @Test
+        @DisplayName("opens after N consecutive 5xx failures and fails fast without touching the network")
+        void opensAfterConsecutiveServerErrorsAndFailsFast() {
+            fabric.getEquinixClient().setCircuitBreaker(new CircuitBreaker(2, 60_000));
+            stubErrorInline(wireMock, "/fabric/v4/connections/.*",
+                    503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]");
+
+            // Two real failures trip the breaker...
+            assertThrows(EquinixServerException.class, () -> fabric.connections().getByUuid("test-uuid"));
+            assertThrows(EquinixServerException.class, () -> fabric.connections().getByUuid("test-uuid"));
+
+            // ...the third call is rejected client-side with CircuitOpenException.
+            CircuitOpenException rejection = assertThrows(CircuitOpenException.class,
+                    () -> fabric.connections().getByUuid("test-uuid"));
+            assertTrue(rejection.getRemainingCooldownMillis() > 0);
+
+            // Only the two real attempts reached the wire.
+            wireMock.verify(2, getRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
+        }
+
+        @Test
+        @DisplayName("4xx responses do not trip the breaker (the service is answering)")
+        void clientErrorsDoNotTripBreaker() {
+            fabric.getEquinixClient().setCircuitBreaker(new CircuitBreaker(2, 60_000));
+            stubErrorInline(wireMock, "/fabric/v4/connections/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Not found\"}]");
+
+            for (int i = 0; i < 4; i++) {
+                assertThrows(EquinixNotFoundException.class,
+                        () -> fabric.connections().getByUuid("test-uuid"));
+            }
+
+            // All four calls reached the wire — the breaker never opened.
+            wireMock.verify(4, getRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
+        }
+
+        @Test
+        @DisplayName("after the cooldown a successful half-open probe closes the breaker")
+        void recoversViaHalfOpenProbe() throws InterruptedException {
+            fabric.getEquinixClient().setCircuitBreaker(new CircuitBreaker(1, 100));
+            stubErrorInline(wireMock, "/fabric/v4/connections/.*",
+                    503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]");
+
+            // One failure opens the breaker (threshold 1); while open, calls are rejected.
+            assertThrows(EquinixServerException.class, () -> fabric.connections().getByUuid("test-uuid"));
+            assertThrows(CircuitOpenException.class, () -> fabric.connections().getByUuid("test-uuid"));
+
+            // Service recovers; after the cooldown the probe goes through and closes the circuit.
+            resetStubs();
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(okJson(TestFixtures.load("/json/fabric/connection_response.json"))));
+            Thread.sleep(150);
+
+            assertNotNull(fabric.connections().getByUuid("test-uuid")); // the probe
+            assertNotNull(fabric.connections().getByUuid("test-uuid")); // circuit closed again
         }
     }
 }

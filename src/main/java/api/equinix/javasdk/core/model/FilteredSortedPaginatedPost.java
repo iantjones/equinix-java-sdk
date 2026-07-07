@@ -34,7 +34,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class FilteredSortedPaginatedPost<F, S> {
+public class FilteredSortedPaginatedPost<F, S> implements PaginatedPostBody {
 
     private F filter;
 

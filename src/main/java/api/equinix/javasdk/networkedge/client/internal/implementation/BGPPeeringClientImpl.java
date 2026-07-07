@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -52,8 +52,8 @@ public class BGPPeeringClientImpl extends ResourceClientBase<BGPPeering, BGPPeer
      * {@inheritDoc}
      *
      */
-    public Page<BGPPeering, BGPPeeringJson> list(RequestBuilder.BGP requestBuilder) {
-        Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
+    public Page<BGPPeeringJson> list(RequestBuilder.BGP requestBuilder) {
+        Map<String, List<String>> qParams = ParameterMapper.newMap(requestBuilder);
         return listPage("ListBGP", qParams);
     }
 

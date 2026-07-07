@@ -78,7 +78,7 @@ public class BackupOperator extends ResourceImpl<Backup> {
 
         protected BackupUpdater(BackupJson json) {
             this.json = json;
-            this.updaterJson = Constants.JSON_CONVERTOR.convertValue(this.json, BackupUpdaterJson.class);
+            this.updaterJson = Constants.converter().convertValue(this.json, BackupUpdaterJson.class);
         }
 
         public BackupUpdater withConfigName(String backupName) {

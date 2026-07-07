@@ -17,7 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client.implementation;
 
 import api.equinix.javasdk.IBXSmartView;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -45,8 +45,8 @@ public class PowerEventsImpl implements PowerEvents {
     }
 
     public PaginatedList<PowerEvent> search(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit) {
-        Page<PowerEvent, PowerEventJson> responsePage = serviceClient.getPowerEvents(ibx, status, edgeCollectedOn, offset, limit);
-        PaginatedList<PowerEvent> eventList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<PowerEventJson> responsePage = serviceClient.getPowerEvents(ibx, status, edgeCollectedOn, offset, limit);
+        PaginatedList<PowerEvent> eventList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(eventList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -55,15 +55,13 @@ public class PowerEventsImpl implements PowerEvents {
     }
 
     public PaginatedList<PowerAlertConfiguration> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit) {
-        Page<PowerAlertConfiguration, PowerAlertConfigurationJson> responsePage = serviceClient.searchAlertConfigurations(ibx, state, offset, limit);
+        Page<PowerAlertConfigurationJson> responsePage = serviceClient.searchAlertConfigurations(ibx, state, offset, limit);
         // Configuration paging needs a dedicated Pageable: the internal client is a Pageable<PowerEvent>
         // whose inherited nextPage(...) wraps with a PowerEventJson checkcast, which would
         // ClassCastException on the deserialized PowerAlertConfigurationJson items. The dedicated
         // pageable deserializes the nested AlertPaginatedResponse and wraps with identity.
         Pageable<PowerAlertConfiguration> pageableClient = serviceClient.alertConfigurationPageable();
-        java.util.ArrayList<PowerAlertConfigurationJson> items = responsePage.getItems() != null
-                ? responsePage.getItems() : new java.util.ArrayList<>();
-        PaginatedList<PowerAlertConfiguration> configList = Utils.mapPaginatedList(items, pageableClient, (json, client) -> json);
+        PaginatedList<PowerAlertConfiguration> configList = ResponseHandler.mapPaginatedList(responsePage.getItems(), pageableClient, (json, client) -> json);
         return new PaginatedList<>(configList, pageableClient, responsePage.getAssociatedRequest(),
                 responsePage.getAssociatedResponse(), responsePage.getPagination());
     }

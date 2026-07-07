@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.NetworkEdge;
@@ -54,8 +54,8 @@ public class VPNsImpl implements VPNs {
      *
      */
     public PaginatedList<VPN> list(RequestBuilder.VPN requestBuilder) {
-        Page<VPN, VPNJson> responsePage = serviceClient.list(requestBuilder);
-        PaginatedList<VPN> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, VPNWrapper::new);
+        Page<VPNJson> responsePage = serviceClient.list(requestBuilder);
+        PaginatedList<VPN> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, VPNWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

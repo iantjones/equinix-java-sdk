@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.Prices;
@@ -35,8 +35,8 @@ public class PricesImpl implements Prices {
     }
 
     public PaginatedFilteredList<Pricing> list(FilterPropertyList filter) {
-        Page<Pricing, PricingJson> responsePage = serviceClient.list(filter);
-        PaginatedFilteredList<Pricing> PricingList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PricingWrapper::new);
+        Page<PricingJson> responsePage = serviceClient.list(filter);
+        PaginatedFilteredList<Pricing> PricingList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PricingWrapper::new);
         return new PaginatedFilteredList<>(PricingList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

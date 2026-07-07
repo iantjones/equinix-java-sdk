@@ -17,7 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.HierarchyClient;
 import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
@@ -35,15 +35,15 @@ public class HierarchyClientImpl extends ClientBase implements HierarchyClient {
 
     public List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
         return listAs("GetLocationHierarchy", Map.of(), qParams, HierarchyNode.class);
     }
 
     public List<PowerHierarchyNode> getPowerHierarchy(String accountNo, String ibx) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
         return listAs("GetPowerHierarchy", Map.of(), qParams, PowerHierarchyNode.class);
     }
 }

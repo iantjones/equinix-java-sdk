@@ -24,7 +24,7 @@ import api.equinix.javasdk.fabric.model.json.creators.StreamSubscriptionCreatorJ
 
 public interface StreamSubscriptionClient<T> extends Pageable<T> {
 
-    Page<StreamSubscription, StreamSubscriptionJson> list(String streamId);
+    Page<StreamSubscriptionJson> list(String streamId);
 
     StreamSubscriptionJson getByUuid(String streamId, String uuid);
 

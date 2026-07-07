@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.Tags;
@@ -33,8 +33,8 @@ public class TagsImpl implements Tags {
     }
 
     public PaginatedList<Tag> list() {
-        Page<Tag, TagJson> responsePage = this.serviceClient.list();
-        PaginatedList<Tag> tagList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<TagJson> responsePage = this.serviceClient.list();
+        PaginatedList<Tag> tagList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(tagList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

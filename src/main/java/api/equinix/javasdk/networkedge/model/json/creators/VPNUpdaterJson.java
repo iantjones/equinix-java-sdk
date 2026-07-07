@@ -60,7 +60,7 @@ public class VPNUpdaterJson {
     private String tunnelIp;
 
     // Required so update() can seed this updater from an existing VPNJson via
-    // Constants.JSON_CONVERTOR.convertValue(...); the declared builder constructor below otherwise
+    // Constants.converter().convertValue(...); the declared builder constructor below otherwise
     // suppresses the implicit no-arg constructor (unlike the other *UpdaterJson types).
     VPNUpdaterJson() {
     }

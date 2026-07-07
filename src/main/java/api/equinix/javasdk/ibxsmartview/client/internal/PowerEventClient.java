@@ -30,13 +30,13 @@ import java.util.List;
 
 public interface PowerEventClient<T> extends Pageable<T> {
 
-    Page<PowerEvent, PowerEventJson> getPowerEvents(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit);
+    Page<PowerEventJson> getPowerEvents(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit);
 
     PowerAlertConfigurationCreateResponseJson createPowerAlertConfiguration(PowerAlertConfigurationCreatorJson creatorJson);
 
     void updatePowerAlertConfiguration(PowerAlertConfigurationUpdateJson updateJson);
 
-    Page<PowerAlertConfiguration, PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit);
+    Page<PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit);
 
     Pageable<PowerAlertConfiguration> alertConfigurationPageable();
 

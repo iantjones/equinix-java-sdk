@@ -28,5 +28,5 @@ import api.equinix.javasdk.internetaccess.model.json.DedicatedPortDefaultConfigu
  */
 public interface DedicatedPortDefaultConfigurationClient extends Pageable<DedicatedPortDefaultConfiguration> {
 
-    Page<DedicatedPortDefaultConfiguration, DedicatedPortDefaultConfigurationJson> list(String ibx);
+    Page<DedicatedPortDefaultConfigurationJson> list(String ibx);
 }

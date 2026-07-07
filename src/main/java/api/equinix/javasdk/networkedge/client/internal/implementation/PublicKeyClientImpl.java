@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.PublicKeyClient;
 import api.equinix.javasdk.networkedge.model.PublicKey;
@@ -44,7 +44,7 @@ public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKey
     }
 
     public List<PublicKeyJson> list(String accountUcmId) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
+        Map<String, List<String>> qParams = ParameterMapper.singleParamMap("accountUcmId" , accountUcmId);
         PublicKeyJson.NestedList nestedList = getAs("ListPublicKeys", null, qParams, PublicKeyJson.NestedList.class);
         return nestedList.getData();
     }

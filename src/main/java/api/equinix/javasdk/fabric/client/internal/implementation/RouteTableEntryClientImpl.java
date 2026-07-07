@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
@@ -52,22 +53,22 @@ public class RouteTableEntryClientImpl extends ResourceClientBase<RouteTableEntr
         return json;
     }
 
-    public Page<RouteTableEntry, RouteTableEntryJson> searchAdvertisedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteTableEntryJson> searchAdvertisedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort) {
         return searchUnder("SearchAdvertisedRoutes", Map.of("uuid", connectionId), filter, sort);
     }
 
-    public Page<RouteTableEntry, RouteTableEntryJson> searchReceivedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteTableEntryJson> searchReceivedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort) {
         return searchUnder("SearchReceivedRoutes", Map.of("uuid", connectionId), filter, sort);
     }
 
-    public Page<RouteTableEntry, RouteTableEntryJson> searchCloudRouterRoutes(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteTableEntryJson> searchCloudRouterRoutes(String routerId, FilterPropertyList filter, SortPropertyList sort) {
         return searchUnder("SearchCloudRouterRoutes", Map.of("uuid", routerId), filter, sort);
     }
 
-    private Page<RouteTableEntry, RouteTableEntryJson> searchUnder(String serviceEndpoint, Map<String, String> pathParams,
+    private Page<RouteTableEntryJson> searchUnder(String serviceEndpoint, Map<String, String> pathParams,
                                                                   FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<RouteTableEntry> request = buildRequestWithPathParams(serviceEndpoint, RequestType.PAGINATED_POST, pathParams, RouteTableEntryJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 }

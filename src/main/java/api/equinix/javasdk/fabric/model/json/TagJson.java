@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.Tag;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +32,6 @@ public final class TagJson implements Tag {
 
     @Getter static TypeReference<List<TagJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<Tag, TagJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

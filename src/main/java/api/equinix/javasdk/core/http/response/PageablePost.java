@@ -16,15 +16,23 @@
 
 package api.equinix.javasdk.core.http.response;
 
-import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.http.request.PaginatedRequest;
 
 /**
+ * A client that can fetch the next page of a POST-based search and map the response. The search
+ * body (whose pagination state has been advanced by the paging pipeline) is re-serialized
+ * automatically when the request is dispatched.
  *
  * @author ianjones
  */
 public interface PageablePost<T> extends Pageable<T> {
 
+    /**
+     * Fetches the next page for the given POST-search request (its body's pagination has already
+     * been advanced by the paging pipeline).
+     *
+     * @param equinixRequest the search request carrying the live search body
+     * @return the next page of mapped results
+     */
     PaginatedFilteredList<T> nextPage(PaginatedPostRequest<T> equinixRequest);
 }

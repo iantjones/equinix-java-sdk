@@ -27,5 +27,5 @@ import api.equinix.javasdk.internetaccess.model.json.SignaturePolicyJson;
  */
 public interface SignaturePolicyClient extends Pageable<SignaturePolicy> {
 
-    Page<SignaturePolicy, SignaturePolicyJson> list(String countryCode);
+    Page<SignaturePolicyJson> list(String countryCode);
 }

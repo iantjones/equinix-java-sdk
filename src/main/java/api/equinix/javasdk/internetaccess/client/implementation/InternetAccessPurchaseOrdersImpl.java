@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessPurchaseOrders;
@@ -42,8 +42,8 @@ public class InternetAccessPurchaseOrdersImpl implements InternetAccessPurchaseO
     }
 
     public PaginatedList<PurchaseOrder> list(String accountNumber, String ibx, PurchaseOrderCategory category) {
-        Page<PurchaseOrder, PurchaseOrderJson> responsePage = this.serviceClient.list(accountNumber, ibx, category);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<PurchaseOrderJson> responsePage = this.serviceClient.list(accountNumber, ibx, category);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 
     public PurchaseOrder get(String accountNumber, String number) {

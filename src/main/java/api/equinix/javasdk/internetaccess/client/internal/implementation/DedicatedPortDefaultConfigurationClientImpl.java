@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.DedicatedPortDefaultConfigurationClient;
@@ -48,9 +48,9 @@ public class DedicatedPortDefaultConfigurationClientImpl
         return json;
     }
 
-    public Page<DedicatedPortDefaultConfiguration, DedicatedPortDefaultConfigurationJson> list(String ibx) {
+    public Page<DedicatedPortDefaultConfigurationJson> list(String ibx) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "connection.aside.accessPoint.location.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "connection.aside.accessPoint.location.ibx", ibx);
         return listPage("ListDedicatedPortDefaultConfigurations", queryParams);
     }
 }

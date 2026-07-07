@@ -20,32 +20,29 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.exception.EquinixClientException;
+import api.equinix.javasdk.core.http.CircuitBreaker;
 import api.equinix.javasdk.core.http.EquinixHttpClient;
+import api.equinix.javasdk.core.http.RequestAssembler;
 import api.equinix.javasdk.core.http.RetryPolicy;
-import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.model.OAuthToken;
-import api.equinix.javasdk.core.enums.Protocol;
 import api.equinix.javasdk.core.util.ApacheUtils;
 import api.equinix.javasdk.core.util.ModelUtils;
 import api.equinix.javasdk.core.util.ResourceFileUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
-import lombok.Setter;
-import org.apache.http.HttpHost;
-import org.apache.http.client.utils.URIUtils;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.TreeMap;
 
 /**
  * Low-level transport client: owns the OAuth2 token lifecycle, the pooled HTTP client, the
@@ -60,14 +57,20 @@ public class EquinixClient implements Closeable {
     @Getter
     final private EquinixCredentialsProvider equinixCredentialsProvider;
 
-    @Getter @Setter
-    private JsonNode clientResourceFile;
+    /**
+     * The merged apiParams catalogue. Published via a {@code volatile} field and only ever
+     * replaced wholesale (copy-on-write in {@link #appendApiParams}) so request threads can read
+     * it without locking. Deliberately has no public setter — the registry is owned by this
+     * client.
+     */
+    @Getter
+    private volatile JsonNode clientResourceFile;
+
+    /** Guards the copy-on-write merge in {@link #appendApiParams}. */
+    private final Object apiParamsLock = new Object();
 
     @Getter
-    private URI endPoint;
-
-    @Getter
-    private HttpHost httpHost;
+    private volatile URI endPoint;
 
     private volatile OAuthToken oAuthToken;
 
@@ -95,11 +98,11 @@ public class EquinixClient implements Closeable {
      */
     private final ThreadLocal<Boolean> authenticating = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
-    private final Boolean isSandBoxed;
+    private final boolean isSandBoxed;
 
     private final EquinixHttpClient equinixHttpClient;
 
-    public EquinixClient(EquinixCredentials equinixCredentials, Boolean isSandBoxed) {
+    public EquinixClient(EquinixCredentials equinixCredentials, boolean isSandBoxed) {
         this(new EquinixStaticCredentialsProvider(equinixCredentials), isSandBoxed);
     }
 
@@ -111,7 +114,7 @@ public class EquinixClient implements Closeable {
      * @param credentialsProvider supplies the OAuth2 credentials to authenticate with
      * @param isSandBoxed {@code true} for the sandbox environment; {@code false} for production
      */
-    public EquinixClient(EquinixCredentialsProvider credentialsProvider, Boolean isSandBoxed) {
+    public EquinixClient(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
         this.equinixCredentialsProvider = Objects.requireNonNull(credentialsProvider, "credentialsProvider");
         this.isSandBoxed = isSandBoxed;
         equinixHttpClient = new EquinixHttpClient();
@@ -119,22 +122,27 @@ public class EquinixClient implements Closeable {
     }
 
     private void init() throws EquinixClientException {
+        String coreParams = "json/apiParams_Core.json";
         try {
-            String hostName;
-            String hostNameLookup;
+            JsonNode coreResourceFile = ResourceFileUtils.loadResourceFileJson(coreParams);
+            // The resource loader returns null (not an exception) for a missing classpath
+            // resource; name the file explicitly rather than NPE-ing into a generic message.
+            if (coreResourceFile == null) {
+                throw new EquinixClientException("Core apiParams resource not found on classpath: " + coreParams);
+            }
+            clientResourceFile = coreResourceFile;
 
-            String coreParams = "json/apiParams_Core.json";
-            clientResourceFile = ResourceFileUtils.loadResourceFileJson(coreParams);
+            String hostNameLookup = isSandBoxed() ? "sandboxHostName" : "hostName";
+            String hostName = coreResourceFile.path("coreConfig").path(hostNameLookup).textValue();
 
-            hostNameLookup = isSandBoxed() ? "sandboxHostName" : "hostName";
-            hostName = clientResourceFile.path("coreConfig").path(hostNameLookup).textValue();
-
-            httpHost = URIUtils.extractHost(new URI(hostName));
-            endPoint = new URI(hostName);
             setEndPoint(hostName);
         }
+        catch (EquinixClientException ece) {
+            throw ece;
+        }
         catch (Exception e) {
-            throw new EquinixClientException("Unable to initialize the EquinixClient with necessary JSON configuration.", e);
+            throw new EquinixClientException("Unable to initialize the EquinixClient with the JSON configuration from '"
+                    + coreParams + "'.", e);
         }
     }
 
@@ -155,21 +163,62 @@ public class EquinixClient implements Closeable {
         equinixHttpClient.setRetryPolicy(retryPolicy);
     }
 
+    /**
+     * Enables (or, with {@code null}, disables) the opt-in circuit breaker consulted for every
+     * request attempt. See {@link api.equinix.javasdk.core.http.CircuitBreaker} for the
+     * open/half-open/closed semantics. Disabled by default.
+     *
+     * @param circuitBreaker the breaker to enforce, or {@code null} to disable
+     */
+    public void setCircuitBreaker(CircuitBreaker circuitBreaker) {
+        equinixHttpClient.setCircuitBreaker(circuitBreaker);
+    }
+
+    /**
+     * Merges a domain's apiParams resource into the shared catalogue. Thread-safe: the merge is
+     * copy-on-write under {@link #apiParamsLock} and published atomically through the
+     * {@code volatile} {@link #getClientResourceFile() clientResourceFile} field, so request
+     * threads reading the tree concurrently (Jackson's {@code ObjectNode} is not safe for
+     * concurrent read/write) always see either the old or the fully-merged catalogue.
+     *
+     * @param fileName the classpath resource name (e.g. {@code json/apiParams_Fabric.json})
+     * @throws api.equinix.javasdk.core.exception.EquinixClientException if the resource is
+     *         missing, malformed, or does not declare a {@code functionalAreas} object
+     */
     public void appendApiParams(String fileName) throws EquinixClientException {
         try {
             JsonNode additionalResourceFile = ResourceFileUtils.loadResourceFileJson(fileName);
+            // The resource loader returns null (not an exception) for a missing classpath
+            // resource; fail fast naming the file instead of NPE-ing into a generic message.
+            if (additionalResourceFile == null) {
+                throw new EquinixClientException("apiParams resource not found on classpath: " + fileName);
+            }
+            JsonNode additionalFunctionalAreas = additionalResourceFile.get("functionalAreas");
+            if (additionalFunctionalAreas == null || !additionalFunctionalAreas.isObject()) {
+                throw new EquinixClientException("apiParams resource '" + fileName
+                        + "' does not declare a 'functionalAreas' object.");
+            }
 
-            assert additionalResourceFile != null;
-            Iterator<Entry<String, JsonNode>> functionalAreasFields = additionalResourceFile.get("functionalAreas").fields();
-            JsonNode coreFunctionalAreas = clientResourceFile.get("functionalAreas");
-
-            while(functionalAreasFields.hasNext()) {
-                Entry<String, JsonNode> functionalAreaField = functionalAreasFields.next();
-                ((ObjectNode) coreFunctionalAreas).set(functionalAreaField.getKey(), functionalAreaField.getValue());
+            synchronized (apiParamsLock) {
+                JsonNode merged = clientResourceFile.deepCopy();
+                JsonNode coreFunctionalAreas = merged.get("functionalAreas");
+                if (!(coreFunctionalAreas instanceof ObjectNode mergedAreas)) {
+                    throw new EquinixClientException("Core apiParams catalogue is missing its 'functionalAreas' object.");
+                }
+                Iterator<Entry<String, JsonNode>> functionalAreasFields = additionalFunctionalAreas.fields();
+                while (functionalAreasFields.hasNext()) {
+                    Entry<String, JsonNode> functionalAreaField = functionalAreasFields.next();
+                    mergedAreas.set(functionalAreaField.getKey(), functionalAreaField.getValue());
+                }
+                clientResourceFile = merged;
             }
         }
+        catch (EquinixClientException ece) {
+            throw ece;
+        }
         catch (Exception e) {
-            throw new EquinixClientException("Unable to append the EquinixClient with necessary JSON configuration.", e);
+            throw new EquinixClientException("Unable to append the EquinixClient with the JSON configuration from '"
+                    + fileName + "'.", e);
         }
     }
 
@@ -180,22 +229,13 @@ public class EquinixClient implements Closeable {
     public <T> EquinixResponse<T> invoke(EquinixRequest<T> equinixRequest) {
 
         EquinixResponse<T> equinixResponse;
-        Utils.addRequestParams(equinixRequest);
+        RequestAssembler.addRequestParams(equinixRequest);
 
         if(equinixRequest instanceof PaginatedRequest) {
             ((PaginatedRequest<T>) equinixRequest).setPagination();
         }
 
         equinixRequest.setQueryParameters(ModelUtils.cleanseQueryParameterList(equinixRequest.getQueryParameters()));
-
-        try {
-            if (equinixRequest.getHttpEntity() != null) {
-                equinixRequest.setContent(equinixRequest.getHttpEntity().getContent());
-            }
-        }
-        catch (IOException ioe) {
-            throw new EquinixClientException(ioe);
-        }
 
         setStandardHeaders(equinixRequest);
         equinixResponse = equinixHttpClient.executeWithRetries(equinixRequest);
@@ -272,7 +312,9 @@ public class EquinixClient implements Closeable {
             try {
                 auth.run();
             } finally {
-                authenticating.set(Boolean.FALSE);
+                // remove() (not set(FALSE)) so pooled/container worker threads don't retain a
+                // per-thread entry referencing the SDK's classloader after the call completes.
+                authenticating.remove();
             }
         }
     }
@@ -302,7 +344,9 @@ public class EquinixClient implements Closeable {
             try {
                 auth.run();
             } finally {
-                authenticating.set(Boolean.FALSE);
+                // remove() (not set(FALSE)) so pooled/container worker threads don't retain a
+                // per-thread entry referencing the SDK's classloader after the call completes.
+                authenticating.remove();
             }
         }
     }
@@ -321,7 +365,10 @@ public class EquinixClient implements Closeable {
     private <T> void setStandardHeaders(EquinixRequest<T> equinixRequest){
         ensureAuthenticated();
 
-        Map<String, String> standardHeaders = new HashMap<>();
+        // Case-insensitive keys: HTTP header names are case-insensitive, so a caller-supplied
+        // "Authorization"/"Content-Type" must be recognized as the same header as the lowercase
+        // standard ones below (a case-sensitive merge would emit both, which some gateways reject).
+        Map<String, String> standardHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         OAuthToken currentToken = oAuthToken;
         if (currentToken != null && currentToken.getSessionToken() != null) {
             standardHeaders.put("authorization", "Bearer " + currentToken.getSessionToken());

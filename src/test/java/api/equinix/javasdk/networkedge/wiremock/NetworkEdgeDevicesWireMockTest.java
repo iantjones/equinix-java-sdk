@@ -7,6 +7,7 @@ import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.ACLInterfaceType;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
@@ -326,7 +327,7 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
 
             // DeviceVendorConfig is a read-model (@Getter only), so build the spec-shaped
             // VendorConfig via Jackson — which also locks its wire property names.
-            DeviceVendorConfig vendorConfig = Constants.objectMapper.readValue(
+            DeviceVendorConfig vendorConfig = Constants.mapper().readValue(
                     "{\"siteId\":\"567\",\"systemIpAddress\":\"192.168.7.100\",\"adminPassword\":\"srb@dm1n\"}",
                     DeviceVendorConfig.class);
 
@@ -381,6 +382,67 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.primaryDeviceUuid", equalTo("aaaa1111-2222-3333-4444-555566667777")))
                     .withRequestBody(matchingJsonPath("$.metroCode", equalTo("DC"))));
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + NEW_UUID)));
+        }
+
+        @Test
+        @DisplayName("withSystemIpAddress(IPAddress) POSTs a byte-identical create body to the String setter")
+        void typedSystemIpMatchesStringPath() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/devices/?"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{\"uuid\":\"" + NEW_UUID + "\"}")));
+            stubSingleton(wireMock, "/ne/v1/devices/" + NEW_UUID, "/json/networkedge/device_response.json");
+
+            // Same create issued twice: once via the String setter, once via the typed
+            // IPAddress overload (which formats via IPAddress.toCidr()).
+            networkEdge.devices()
+                    .define("My-CSR1000V-Device")
+                    .withDeviceTypeCode("CSR1000V")
+                    .withMetroCode(MetroCode.SV)
+                    .withSystemIpAddress("192.168.7.100")
+                    .create();
+            networkEdge.devices()
+                    .define("My-CSR1000V-Device")
+                    .withDeviceTypeCode("CSR1000V")
+                    .withMetroCode(MetroCode.SV)
+                    .withSystemIpAddress(IPAddress.parse("192.168.7.100"))
+                    .create();
+
+            var posts = wireMock.findAll(postRequestedFor(urlPathMatching("/ne/v1/devices/?")));
+            assertEquals(2, posts.size());
+            // The typed overload serializes byte-for-byte identically to the String path.
+            assertEquals(posts.get(0).getBodyAsString(), posts.get(1).getBodyAsString());
+            wireMock.verify(2, postRequestedFor(urlPathMatching("/ne/v1/devices/?"))
+                    .withRequestBody(matchingJsonPath("$.systemIpAddress", equalTo("192.168.7.100"))));
+        }
+
+        @Test
+        @DisplayName("defineSecondary() withSystemIpAddress(IPAddress) POSTs a byte-identical create body to the String setter")
+        void typedSecondarySystemIpMatchesStringPath() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/devices/?"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{\"uuid\":\"" + NEW_UUID + "\"}")));
+            stubSingleton(wireMock, "/ne/v1/devices/" + NEW_UUID, "/json/networkedge/device_response.json");
+
+            networkEdge.devices()
+                    .defineSecondary("My-Secondary-Device", "aaaa1111-2222-3333-4444-555566667777")
+                    .withMetroCode(MetroCode.DC)
+                    .withSystemIpAddress("192.168.7.101")
+                    .create();
+            networkEdge.devices()
+                    .defineSecondary("My-Secondary-Device", "aaaa1111-2222-3333-4444-555566667777")
+                    .withMetroCode(MetroCode.DC)
+                    .withSystemIpAddress(IPAddress.parse("192.168.7.101"))
+                    .create();
+
+            var posts = wireMock.findAll(postRequestedFor(urlPathMatching("/ne/v1/devices/?")));
+            assertEquals(2, posts.size());
+            assertEquals(posts.get(0).getBodyAsString(), posts.get(1).getBodyAsString());
+            wireMock.verify(2, postRequestedFor(urlPathMatching("/ne/v1/devices/?"))
+                    .withRequestBody(matchingJsonPath("$.systemIpAddress", equalTo("192.168.7.101"))));
         }
     }
 

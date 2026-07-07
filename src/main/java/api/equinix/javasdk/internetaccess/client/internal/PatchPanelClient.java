@@ -28,6 +28,6 @@ import api.equinix.javasdk.internetaccess.model.json.PatchPanelJson;
  */
 public interface PatchPanelClient extends Pageable<PatchPanel> {
 
-    Page<PatchPanel, PatchPanelJson> list(String ibx, String accountNumber, String cageSpaceId,
+    Page<PatchPanelJson> list(String ibx, String accountNumber, String cageSpaceId,
                                           String cabinetSpaceId, String mediaTypesName);
 }

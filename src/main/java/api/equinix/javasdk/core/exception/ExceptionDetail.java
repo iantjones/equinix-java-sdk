@@ -19,15 +19,19 @@ package api.equinix.javasdk.core.exception;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
 /**
+ * One structured error entry parsed from an Equinix API error response body. {@link Serializable}
+ * because it is carried by the (serializable) {@link EquinixServiceException} family.
  *
  * @author ianjones
  */
 @Getter
-public class ExceptionDetail {
+public class ExceptionDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @JsonProperty("errorCode")
     private String errorCode;

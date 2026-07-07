@@ -17,7 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyPowerClient;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerDataIBXJson;
@@ -39,10 +39,10 @@ public class LegacyPowerClientImpl extends ClientBase implements LegacyPowerClie
 
     public PowerDataJson getCurrent(String accountNo, String ibx, String levelType, String levelValue) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
-        Utils.addAdditionalValue(qParams, "levelType", levelType);
-        Utils.addAdditionalValue(qParams, "levelValue", levelValue);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "levelType", levelType);
+        ParameterMapper.addAdditionalValue(qParams, "levelValue", levelValue);
         return getAs("GetCurrentPower", null, qParams, PowerDataJson.class);
     }
 
@@ -58,13 +58,13 @@ public class LegacyPowerClientImpl extends ClientBase implements LegacyPowerClie
                                              String levelValue, String interval,
                                              String fromDate, String toDate) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
-        Utils.addAdditionalValue(qParams, "levelType", levelType);
-        Utils.addAdditionalValue(qParams, "levelValue", levelValue);
-        Utils.addAdditionalValue(qParams, "interval", interval);
-        Utils.addAdditionalValue(qParams, "fromDate", fromDate);
-        Utils.addAdditionalValue(qParams, "toDate", toDate);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "levelType", levelType);
+        ParameterMapper.addAdditionalValue(qParams, "levelValue", levelValue);
+        ParameterMapper.addAdditionalValue(qParams, "interval", interval);
+        ParameterMapper.addAdditionalValue(qParams, "fromDate", fromDate);
+        ParameterMapper.addAdditionalValue(qParams, "toDate", toDate);
         return getAs("GetTrendingPower", null, qParams, TrendingPowerDataJson.class);
     }
 }

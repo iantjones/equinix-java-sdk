@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessConnectionServices;
@@ -37,7 +37,7 @@ public class InternetAccessConnectionServicesImpl implements InternetAccessConne
     }
 
     public PaginatedList<ConnectionService> list(String ibx) {
-        Page<ConnectionService, ConnectionServiceJson> responsePage = this.serviceClient.list(ibx);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<ConnectionServiceJson> responsePage = this.serviceClient.list(ibx);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

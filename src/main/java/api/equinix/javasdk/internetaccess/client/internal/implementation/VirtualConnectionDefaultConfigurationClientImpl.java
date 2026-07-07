@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.VirtualConnectionDefaultConfigurationClient;
@@ -49,11 +49,11 @@ public class VirtualConnectionDefaultConfigurationClientImpl
         return json;
     }
 
-    public Page<VirtualConnectionDefaultConfiguration, VirtualConnectionDefaultConfigurationJson> list(String ibx, String metroCode) {
+    public Page<VirtualConnectionDefaultConfigurationJson> list(String ibx, String metroCode) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "connection.aside.accessPoint.location.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "connection.aside.accessPoint.location.ibx", ibx);
         if (metroCode != null) {
-            Utils.addAdditionalValue(queryParams, "connection.aside.accessPoint.location.metroCode", metroCode);
+            ParameterMapper.addAdditionalValue(queryParams, "connection.aside.accessPoint.location.metroCode", metroCode);
         }
         return listPage("ListVirtualConnectionDefaultConfigurations", queryParams);
     }

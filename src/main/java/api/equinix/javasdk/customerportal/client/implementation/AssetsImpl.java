@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Assets;
@@ -38,8 +38,8 @@ public class AssetsImpl implements Assets {
     }
 
     public PaginatedList<Asset> search(AssetSearchRequest request) {
-        Page<Asset, AssetJson> responsePage = this.serviceClient.search(request);
-        PaginatedList<Asset> assetList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<AssetJson> responsePage = this.serviceClient.search(request);
+        PaginatedList<Asset> assetList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(assetList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

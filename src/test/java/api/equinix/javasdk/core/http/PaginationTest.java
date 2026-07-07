@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PaginationTest {
 
     private static Pagination parse(String json) throws Exception {
-        return Constants.objectMapper.readValue(json, Pagination.class);
+        return Constants.mapper().readValue(json, Pagination.class);
     }
 
     @Test
@@ -40,24 +40,24 @@ class PaginationTest {
         Pagination p = parse("{\"offset\":20,\"limit\":20,\"total\":100}");
         assertEquals(1, p.getPageNumber());
         assertEquals(20, p.getPageSize());
-        assertFalse(p.getIsFirstPage());
-        assertFalse(p.getIsLastPage());
+        assertFalse(p.isFirstPage());
+        assertFalse(p.isLastPage());
     }
 
     @Test
     void lastPageDetected() throws Exception {
         Pagination p = parse("{\"offset\":80,\"limit\":20,\"total\":100}");
         assertEquals(4, p.getPageNumber());
-        assertTrue(p.getIsLastPage());
+        assertTrue(p.isLastPage());
     }
 
     @Test
     void missingTotalIsTreatedAsLastPageWithoutNpe() throws Exception {
         Pagination p = parse("{\"offset\":0,\"limit\":20}");
         assertEquals(0, p.getPageNumber());
-        assertTrue(p.getIsFirstPage());
+        assertTrue(p.isFirstPage());
         // total absent -> stop paging (do not loop / NPE)
-        assertTrue(p.getIsLastPage());
+        assertTrue(p.isLastPage());
     }
 
     @Test
@@ -65,7 +65,17 @@ class PaginationTest {
         Pagination p = parse("{}");
         assertEquals(0, p.getPageNumber());
         assertEquals(0, p.getPageSize());
-        assertTrue(p.getIsFirstPage());
-        assertTrue(p.getIsLastPage());
+        assertTrue(p.isFirstPage());
+        assertTrue(p.isLastPage());
+    }
+
+    @Test
+    void unknownPaginationFieldsAreIgnoredForwardCompatibly() throws Exception {
+        // The API adding a new pagination metadata key (e.g. totalPages) must not fail every
+        // list call — Pagination is @JsonIgnoreProperties(ignoreUnknown = true) because the
+        // shared wire mapper keeps FAIL_ON_UNKNOWN_PROPERTIES enabled.
+        Pagination p = parse("{\"offset\":0,\"limit\":20,\"total\":100,\"totalPages\":5,\"nextCursor\":\"abc\"}");
+        assertEquals(0, p.getPageNumber());
+        assertFalse(p.isLastPage());
     }
 }

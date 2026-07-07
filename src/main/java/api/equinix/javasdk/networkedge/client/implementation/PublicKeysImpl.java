@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.networkedge.client.PublicKeys;
 import api.equinix.javasdk.networkedge.client.internal.PublicKeyClient;
@@ -51,7 +51,7 @@ public class PublicKeysImpl implements PublicKeys {
 
     public List<PublicKey> list(String accountUcmId) {
         List<PublicKeyJson> publicKeyList = serviceClient.list(accountUcmId);
-        return Utils.mapList(publicKeyList, this.serviceClient, PublicKeyWrapper::new);
+        return ResponseHandler.mapList(publicKeyList, this.serviceClient, PublicKeyWrapper::new);
     }
 
     public PublicKeyOperator.PublicKeyBuilder define(String keyName, String keyValue) {

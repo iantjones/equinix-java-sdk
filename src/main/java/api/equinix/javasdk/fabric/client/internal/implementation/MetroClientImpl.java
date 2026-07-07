@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.MetroClient;
@@ -46,13 +46,13 @@ public class MetroClientImpl extends ResourceClientBase<Metro, MetroJson> implem
         return new MetroWrapper(json, this);
     }
 
-    public Page<Metro, MetroJson> list() {
+    public Page<MetroJson> list() {
         return list(null);
     }
 
-    public Page<Metro, MetroJson> list(MetroPresence metroPresence) {
+    public Page<MetroJson> list(MetroPresence metroPresence) {
         Map<String, List<String>> queryParams = metroPresence != null
-                ? Map.of("presence", Utils.singleParamList(metroPresence)) : null;
+                ? Map.of("presence", ParameterMapper.singleParamList(metroPresence)) : null;
         return listPage("GetMetros", queryParams);
     }
 

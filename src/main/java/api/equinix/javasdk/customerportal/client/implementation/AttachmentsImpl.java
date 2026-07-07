@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Attachments;
@@ -45,8 +45,8 @@ public class AttachmentsImpl implements Attachments {
     }
 
     public PaginatedList<Attachment> list(List<String> attachmentIds) {
-        Page<Attachment, AttachmentJson> responsePage = this.serviceClient.list(attachmentIds);
-        PaginatedList<Attachment> attachmentList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, AttachmentWrapper::new);
+        Page<AttachmentJson> responsePage = this.serviceClient.list(attachmentIds);
+        PaginatedList<Attachment> attachmentList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, AttachmentWrapper::new);
         return new PaginatedList<>(attachmentList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

@@ -46,7 +46,7 @@ import java.util.List;
  */
 public interface ConnectionClient<T> extends PageablePost<T> {
 
-    Page<Connection, ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<ConnectionJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     /**
      * <p>Validates connections against the supplied filter (auth key or VLAN availability).</p>

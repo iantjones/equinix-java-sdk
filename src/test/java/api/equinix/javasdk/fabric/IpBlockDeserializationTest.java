@@ -24,7 +24,7 @@ class IpBlockDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        ObjectMapper objectMapper = Constants.objectMapper;
+        ObjectMapper objectMapper = Constants.mapper();
 
         InputStream is = IpBlockDeserializationTest.class.getResourceAsStream("/json/fabric/ip_block_response.json");
         assertNotNull(is, "ip_block_response.json fixture not found on classpath");

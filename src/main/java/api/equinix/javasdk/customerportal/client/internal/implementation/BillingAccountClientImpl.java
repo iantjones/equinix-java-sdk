@@ -38,11 +38,11 @@ public class BillingAccountClientImpl extends ResourceClientBase<BillingAccount,
         return json;
     }
 
-    public Page<BillingAccount, BillingAccountJson> summaries() {
+    public Page<BillingAccountJson> summaries() {
         return listPage("ListBillingAccounts");
     }
 
-    public Page<BillingAccount, BillingAccountJson> summaries(String sorts) {
+    public Page<BillingAccountJson> summaries(String sorts) {
         if (sorts == null) {
             return listPage("ListBillingAccounts");
         }

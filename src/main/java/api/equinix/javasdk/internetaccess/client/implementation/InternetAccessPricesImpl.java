@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessPrices;
@@ -38,7 +38,7 @@ public class InternetAccessPricesImpl implements InternetAccessPrices {
     }
 
     public PaginatedFilteredList<Price> search(PriceSearchRequest searchRequest) {
-        Page<Price, PriceJson> responsePage = this.serviceClient.search(searchRequest);
-        return Utils.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<PriceJson> responsePage = this.serviceClient.search(searchRequest);
+        return ResponseHandler.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

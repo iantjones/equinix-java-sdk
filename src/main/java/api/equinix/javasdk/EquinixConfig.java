@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk;
 
+import api.equinix.javasdk.core.http.CircuitBreaker;
 import api.equinix.javasdk.core.http.RetryPolicy;
 import lombok.Builder;
 import lombok.Getter;
@@ -66,6 +67,17 @@ public class EquinixConfig {
      * {@link RetryPolicy#none()} to disable retries, or a custom policy to override it.
      */
     private final RetryPolicy retryPolicy;
+
+    /**
+     * An opt-in circuit breaker enforced on every request attempt, alongside the retry policy.
+     * After the configured number of <em>consecutive</em> service failures (5xx responses or
+     * transport {@code IOException}s) the breaker opens and requests fail fast with a
+     * {@link api.equinix.javasdk.core.exception.CircuitOpenException} — no HTTP call is made —
+     * until the cooldown elapses and a half-open probe succeeds. Example:
+     * {@code .circuitBreaker(new CircuitBreaker(5, 30_000))} (open after 5 consecutive failures,
+     * probe after 30s). {@code null} (the default) disables circuit breaking entirely.
+     */
+    private final CircuitBreaker circuitBreaker;
 
     /**
      * Whether to enrich the metro registry with per-IBX detail from Equinix Internet Access (EIA) —

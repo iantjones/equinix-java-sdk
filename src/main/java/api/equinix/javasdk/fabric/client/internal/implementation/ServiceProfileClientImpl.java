@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -51,7 +51,9 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
         implements ServiceProfileClient<ServiceProfile> {
 
     public ServiceProfileClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "ServiceProfiles", ServiceProfileJson.class);
+        // "ServiceProfile" drives the derived endpoint names (ListServiceProfiles,
+        // SearchServiceProfiles, GetServiceProfile, DeleteServiceProfile, ...).
+        super(configClient, "Fabric", "ServiceProfiles", ServiceProfileJson.class, "ServiceProfile");
     }
 
     @Override
@@ -59,19 +61,20 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
         return new ServiceProfileWrapper(json, this);
     }
 
-    public Page<ServiceProfile, ServiceProfileJson> list() {
-        return listPage("ListServiceProfiles");
+    public Page<ServiceProfileJson> list() {
+        return listPage();
     }
 
-    public Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        return searchPage("SearchServiceProfiles", new FilteredSortedPaginatedPost<>(filter, sort));
+    public Page<ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage(new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public ServiceProfileJson getByUuid(String uuid) {
-        return getOne("GetServiceProfile", uuid);
+        return getOneByUuid(uuid);
     }
 
     public ServiceProfileJson create(ServiceProfileCreatorJson serviceProfileCreatorJson) {
+        // apiParams names this operation PostServiceProfile (not CreateServiceProfile) — explicit.
         return postOne("PostServiceProfile", serviceProfileCreatorJson);
     }
 
@@ -84,7 +87,7 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
     }
 
     public ServiceProfileJson delete(String uuid) {
-        return deleteOne("DeleteServiceProfile", uuid);
+        return deleteOneByUuid(uuid);
     }
 
     public ServiceProfileAction createAction(String uuid, String type, String description) {
@@ -95,7 +98,7 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
     public List<ServiceMetro> getMetros(String uuid) {
         EquinixRequest<ServiceMetro> request = buildRequestWithPathParams("GetServiceProfileMetros", RequestType.PAGINATED,
                 Map.of("uuid", uuid), ServiceMetro.class);
-        Page<ServiceMetro, ServiceMetro> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<ServiceMetro> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 

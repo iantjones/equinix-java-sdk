@@ -19,6 +19,7 @@ package api.equinix.javasdk.core.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,6 +29,10 @@ import java.io.InputStream;
  */
 public class ResourceFileUtils {
 
+    private ResourceFileUtils() {
+        // static holder — not instantiable
+    }
+
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 
     /**
@@ -36,13 +41,18 @@ public class ResourceFileUtils {
      * or packed inside a jar (where the URL is a {@code jar:file:...!/...} entry that cannot be
      * turned into a {@link java.nio.file.Path}).
      *
-     * @throws java.io.IOException if any.
+     * @param fileName the classpath-relative resource name (e.g. {@code "json/apiParams_Core.json"})
+     * @return the parsed JSON tree; never {@code null}
+     * @throws FileNotFoundException if no such resource exists on the classpath — a missing
+     *         resource fails fast with the resource name rather than surfacing later as an
+     *         opaque NPE during client bootstrap
+     * @throws IOException if the resource exists but cannot be read or parsed
      */
     public static JsonNode loadResourceFileJson(String fileName) throws IOException {
 
         try (InputStream resourceStream = ResourceFileUtils.class.getClassLoader().getResourceAsStream(fileName)) {
-            if(resourceStream == null) {
-                return null;
+            if (resourceStream == null) {
+                throw new FileNotFoundException("Classpath resource not found: " + fileName);
             }
             return jsonMapper.readTree(resourceStream);
         }

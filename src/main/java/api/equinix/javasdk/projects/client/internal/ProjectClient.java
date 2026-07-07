@@ -35,5 +35,5 @@ public interface ProjectClient<T> extends Pageable<T> {
      * @param includeInbox whether to include inbox-classified projects, or {@code null} for the default
      * @return a page of projects
      */
-    Page<Project, ProjectJson> list(Boolean includePermissions, Boolean includeInbox);
+    Page<ProjectJson> list(Boolean includePermissions, Boolean includeInbox);
 }

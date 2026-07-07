@@ -17,31 +17,40 @@
 package api.equinix.javasdk.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
-import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
+ * An OAuth2 access token as returned by the Equinix token endpoint, plus the local
+ * session-start instant used to judge expiry.
  *
  * <h3>Concurrency contract</h3>
- * <p>An {@code OAuthToken} instance is effectively immutable once populated by
- * deserialization, but the SDK may publish a freshly authenticated instance to
- * multiple threads (see {@code EquinixClient#getOAuthToken()} /
- * {@code setOAuthToken}). The mutable fields that participate in the validity
- * check ({@link #sessionStart}, {@link #sessionToken} and {@link #tokenTimeout})
- * are therefore declared {@code volatile} so that a thread reading the token
- * always observes the fully-written, most recent values rather than a stale or
- * partially-constructed view. The getters and setters are retained unchanged.</p>
+ * <p>An {@code OAuthToken} instance is immutable once populated by deserialization —
+ * there are no setters, so the documented contract is enforced rather than merely
+ * promised. The SDK publishes a freshly authenticated instance to multiple threads
+ * (see {@code EquinixClient#getOAuthToken()} / {@code setOAuthToken}); the fields that
+ * participate in the validity check ({@link #sessionStart}, {@link #sessionToken} and
+ * {@link #tokenTimeout}) are declared {@code volatile} so a thread reading the token
+ * always observes the fully-written values even when the instance is handed over
+ * without further synchronization.</p>
+ *
+ * <h3>Expiry clock</h3>
+ * <p>Validity is measured on the machine-independent {@link Instant} timeline, not local
+ * wall-clock time, so DST transitions and system-clock adjustments cannot make an expired
+ * token appear valid. A small safety margin (30s) treats the token as expired slightly
+ * early so in-flight requests do not race the server-side expiry.</p>
  *
  * @author ianjones
  */
 @Getter
-@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OAuthToken {
 
+    /** Seconds before the nominal expiry at which the token is already treated as expired. */
+    static final long EXPIRY_SAFETY_MARGIN_SECONDS = 30;
 
     @JsonProperty("access_token")
     private volatile String sessionToken;
@@ -55,32 +64,51 @@ public class OAuthToken {
     @JsonProperty("token_type")
     private String tokenType;
 
-    @JsonProperty("refresh_token")
-    private String refreshToken;
-
-    @JsonProperty("refresh_token_timeout")
-    private String refreshTokenTimeout;
-
     @JsonIgnore
-    private volatile LocalDateTime sessionStart = LocalDateTime.now();
+    private volatile Instant sessionStart = Instant.now();
 
     /**
+     * For Jackson: field-bound deserialization of the token endpoint response.
+     */
+    public OAuthToken() {
+    }
+
+    /**
+     * Constructs a fully populated token — intended for tests and for advanced callers that
+     * inject a token obtained out-of-band via {@code EquinixClient#setOAuthToken}.
      *
-     * @return a boolean.
+     * @param sessionToken the bearer access token
+     * @param tokenType the token type (e.g. {@code "bearer"})
+     * @param tokenTimeout the validity window in seconds, as returned by the token endpoint
+     * @param sessionStart the instant the validity window started
+     */
+    public OAuthToken(String sessionToken, String tokenType, String tokenTimeout, Instant sessionStart) {
+        this.sessionToken = sessionToken;
+        this.tokenType = tokenType;
+        this.tokenTimeout = tokenTimeout;
+        this.sessionStart = sessionStart;
+    }
+
+    /**
+     * Whether this token is still usable: it has a bearer value and its validity window
+     * (less the safety margin) has not elapsed on the {@link Instant} timeline.
+     *
+     * @return {@code true} if the token can still sign requests
      */
     public boolean validSession() {
         Long timeoutSeconds = parseTimeoutSeconds(getTokenTimeout());
         return getSessionToken() != null
                 && getSessionStart() != null
                 && timeoutSeconds != null
-                && getSessionStart().plusSeconds(timeoutSeconds).isAfter(LocalDateTime.now());
+                && Instant.now().isBefore(
+                        getSessionStart().plusSeconds(timeoutSeconds - EXPIRY_SAFETY_MARGIN_SECONDS));
     }
 
     /**
      * Parses the numeric seconds out of a timeout value. The spec ({@code Oauth2TokenResponse})
      * declares {@code token_timeout} as a string whose documented default is annotated prose
      * ("3599 (60 minutes)"), so only the leading digits are read; a value with no leading digits
-     * yields {@code null}.
+     * (or a digit run that does not fit in a {@code long}) yields {@code null}.
      */
     private static Long parseTimeoutSeconds(String timeout) {
         if (timeout == null) {
@@ -94,6 +122,10 @@ public class OAuthToken {
         if (digits == 0) {
             return null;
         }
-        return Long.parseLong(trimmed.substring(0, digits));
+        try {
+            return Long.parseLong(trimmed.substring(0, digits));
+        } catch (NumberFormatException overflow) {
+            return null;
+        }
     }
 }

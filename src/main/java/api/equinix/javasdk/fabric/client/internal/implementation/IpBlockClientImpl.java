@@ -42,7 +42,7 @@ public class IpBlockClientImpl extends ResourceClientBase<IpBlock, IpBlockJson> 
         return new IpBlockWrapper(json, this);
     }
 
-    public Page<IpBlock, IpBlockJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<IpBlockJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchIpBlocks", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 

@@ -21,16 +21,30 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Client-side pagination state serialized into POST-search request bodies and advanced by the
+ * paging pipeline between page fetches. Fields are primitives so paging arithmetic can never
+ * throw a null-unboxing {@code NullPointerException}.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
 public class Pagination {
 
-    private Integer offset;
+    private int offset;
 
-    private Integer limit;
+    private int limit;
 
     public void nextPage() {
         this.offset = this.offset + this.limit;
+    }
+
+    /**
+     * Rolls the offset back one page (floored at zero). Used by the paging pipeline to restore
+     * the pre-advance state when a page fetch fails, so a retried {@code next()} re-requests the
+     * same page instead of silently skipping one.
+     */
+    public void previousPage() {
+        this.offset = Math.max(0, this.offset - this.limit);
     }
 }

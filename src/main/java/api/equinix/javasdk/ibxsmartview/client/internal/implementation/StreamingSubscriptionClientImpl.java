@@ -18,7 +18,8 @@ package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
@@ -53,7 +54,7 @@ public class StreamingSubscriptionClientImpl extends ResourceClientBase<Streamin
     public List<StreamingSubscriptionJson> list() {
         EquinixRequest<StreamingSubscription> equinixRequest = this.buildRequest("ListSubscriptions", RequestType.LIST, StreamingSubscriptionJson.class);
         EquinixResponse<StreamingSubscription> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleListResponse(equinixResponse, equinixRequest);
+        return ResponseHandler.handleListResponse(equinixResponse, equinixRequest);
     }
 
     public StreamingSubscriptionJson getByUuid(String uuid) {
@@ -64,8 +65,8 @@ public class StreamingSubscriptionClientImpl extends ResourceClientBase<Streamin
     // so we parse the new subscription id from Location and re-fetch the created resource.
     public StreamingSubscriptionJson create(StreamingSubscriptionCreatorJson creatorJson) {
         EquinixRequest<Object> request = buildRequest("CreateSubscription", RequestType.SINGLE, Object.class);
-        Utils.serializeJson(request, creatorJson);
-        String id = Utils.extractFromHeader(invoke(request), "Location", LOCATION_ID_PATTERN);
+        SerializationHelper.serializeJson(request, creatorJson);
+        String id = ResponseHandler.extractFromHeader(invoke(request), "Location", LOCATION_ID_PATTERN);
         return getByUuid(id);
     }
 

@@ -30,5 +30,5 @@ import api.equinix.javasdk.internetaccess.model.json.DedicatedBandwidthConfigura
  */
 public interface DedicatedBandwidthConfigurationClient extends Pageable<DedicatedBandwidthConfiguration> {
 
-    Page<DedicatedBandwidthConfiguration, DedicatedBandwidthConfigurationJson> list(UseCase useCase, BillingType billing, Integer speed);
+    Page<DedicatedBandwidthConfigurationJson> list(UseCase useCase, BillingType billing, Integer speed);
 }

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
@@ -51,8 +51,8 @@ public class VPNClientImpl extends ResourceClientBase<VPN, VPNJson> implements V
      * {@inheritDoc}
      *
      */
-    public Page<VPN, VPNJson> list(RequestBuilder.VPN requestBuilder) {
-        Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
+    public Page<VPNJson> list(RequestBuilder.VPN requestBuilder) {
+        Map<String, List<String>> qParams = ParameterMapper.newMap(requestBuilder);
         return listPage("ListVPNs", qParams);
     }
 

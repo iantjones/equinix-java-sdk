@@ -29,5 +29,5 @@ import api.equinix.javasdk.internetaccess.model.json.IbxJson;
  */
 public interface IbxClient extends Pageable<Ibx> {
 
-    Page<Ibx, IbxJson> list(ConnectionType connectionType, String accessPointType, String assetType);
+    Page<IbxJson> list(ConnectionType connectionType, String accessPointType, String assetType);
 }

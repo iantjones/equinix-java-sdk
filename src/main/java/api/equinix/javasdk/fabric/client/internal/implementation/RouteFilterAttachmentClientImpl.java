@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
@@ -58,7 +59,7 @@ public class RouteFilterAttachmentClientImpl extends ResourceClientBase<RouteFil
     public List<RouteFilterAttachment> getConnectionRouteFilters(String connectionId) {
         EquinixRequest<RouteFilterAttachment> request = buildRequestWithPathParams("GetConnectionRouteFilters", RequestType.PAGINATED,
                 Map.of("connectionId", connectionId), RouteFilterAttachmentJson.class);
-        Page<RouteFilterAttachment, RouteFilterAttachmentJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<RouteFilterAttachmentJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -76,10 +77,10 @@ public class RouteFilterAttachmentClientImpl extends ResourceClientBase<RouteFil
                 Map.of("connectionId", connectionId, "routeFilterId", routeFilterId), null, null);
     }
 
-    public Page<RouteFilterAttachment, RouteFilterAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteFilterAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<RouteFilterAttachment> request = buildRequestWithPathParams("SearchCloudRouterRouteFilterAttachments", RequestType.PAGINATED_POST,
                 Map.of("routerId", routerId), RouteFilterAttachmentJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 }

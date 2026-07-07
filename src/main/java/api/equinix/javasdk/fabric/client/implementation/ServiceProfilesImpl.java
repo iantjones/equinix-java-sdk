@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -56,7 +56,7 @@ public class ServiceProfilesImpl implements ServiceProfiles {
     }
 
     public PaginatedList<ServiceProfile> list() {
-        return Utils.toPaginatedList(this.serviceClient.list(), this.serviceClient, ServiceProfileWrapper::new);
+        return ResponseHandler.toPaginatedList(this.serviceClient.list(), this.serviceClient, ServiceProfileWrapper::new);
     }
 
     public PaginatedFilteredList<ServiceProfile> search() {
@@ -72,7 +72,7 @@ public class ServiceProfilesImpl implements ServiceProfiles {
     }
 
     public PaginatedFilteredList<ServiceProfile> search(FilterPropertyList filter, SortPropertyList sort) {
-        return Utils.toPaginatedFilteredList(serviceClient.search(filter, sort), this.serviceClient, ServiceProfileWrapper::new);
+        return ResponseHandler.toPaginatedFilteredList(serviceClient.search(filter, sort), this.serviceClient, ServiceProfileWrapper::new);
     }
 
     public ServiceProfile getByUuid(String uuid) {

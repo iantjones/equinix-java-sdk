@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.ConnectionAttachmentStatus;
 import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.RouteFilterType;
@@ -37,7 +36,6 @@ public final class RouteFilterAttachmentJson implements RouteFilterAttachment {
 
     @Getter static TypeReference<List<RouteFilterAttachmentJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<RouteFilterAttachment, RouteFilterAttachmentJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

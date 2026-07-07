@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.PricingClient;
@@ -37,11 +37,11 @@ public class PricingClientImpl extends ClientBase implements PricingClient {
     }
 
     public Pricing getPricing(RequestBuilder.Pricing requestBuilder) {
-        Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
+        Map<String, List<String>> qParams = ParameterMapper.newMap(requestBuilder);
         return getAs("GetPricing", null, qParams, Pricing.class);
     }
 
     public Pricing getPricing(String deviceUuid) {
-        return getAs("GetPricing", null, Utils.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
+        return getAs("GetPricing", null, ParameterMapper.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
     }
 }

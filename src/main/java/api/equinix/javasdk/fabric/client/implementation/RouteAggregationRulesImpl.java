@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -43,8 +43,8 @@ public class RouteAggregationRulesImpl implements RouteAggregationRules {
     }
 
     public PaginatedList<RouteAggregationRule> list(String routeAggregationId) {
-        Page<RouteAggregationRule, RouteAggregationRuleJson> responsePage = this.serviceClient.list(routeAggregationId);
-        PaginatedList<RouteAggregationRule> routeAggregationRuleList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, RouteAggregationRuleWrapper::new);
+        Page<RouteAggregationRuleJson> responsePage = this.serviceClient.list(routeAggregationId);
+        PaginatedList<RouteAggregationRule> routeAggregationRuleList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, RouteAggregationRuleWrapper::new);
         return new PaginatedList<>(routeAggregationRuleList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -69,8 +69,8 @@ public class RouteAggregationRulesImpl implements RouteAggregationRules {
     }
 
     public PaginatedFilteredList<RouteAggregationRule> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteAggregationRule, RouteAggregationRuleJson> responsePage = this.serviceClient.search(routeAggregationId, filter, sort);
-        PaginatedFilteredList<RouteAggregationRule> routeAggregationRuleList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteAggregationRuleWrapper::new);
+        Page<RouteAggregationRuleJson> responsePage = this.serviceClient.search(routeAggregationId, filter, sort);
+        PaginatedFilteredList<RouteAggregationRule> routeAggregationRuleList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteAggregationRuleWrapper::new);
         return new PaginatedFilteredList<>(routeAggregationRuleList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

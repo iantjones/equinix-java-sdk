@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -62,8 +62,8 @@ public class NetworksImpl implements Networks {
     }
 
     public PaginatedFilteredList<Network> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<Network, NetworkJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<Network> networkList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, NetworkWrapper::new);
+        Page<NetworkJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<Network> networkList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, NetworkWrapper::new);
         return new PaginatedFilteredList<>(networkList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -77,8 +77,8 @@ public class NetworksImpl implements Networks {
     }
 
     public PaginatedList<Connection> getConnections(String networkId) {
-        Page<Connection, ConnectionJson> responsePage = this.serviceClient.getConnections(networkId);
-        PaginatedList<Connection> connectionList = Utils.mapPaginatedList(responsePage.getItems(), this.connectionClient, ConnectionWrapper::new);
+        Page<ConnectionJson> responsePage = this.serviceClient.getConnections(networkId);
+        PaginatedList<Connection> connectionList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.connectionClient, ConnectionWrapper::new);
         return new PaginatedList<>(connectionList, this.connectionClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -44,8 +44,8 @@ public class InternetAccessAccountsImpl implements InternetAccessAccounts {
     }
 
     public PaginatedList<AccountDetails> list(String operationalUnitsIbx, String projectId) {
-        Page<AccountDetails, AccountDetailsJson> responsePage = this.serviceClient.list(operationalUnitsIbx, projectId);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<AccountDetailsJson> responsePage = this.serviceClient.list(operationalUnitsIbx, projectId);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 
     public AccountDetails getByNumber(String accountNumber) {
@@ -54,12 +54,12 @@ public class InternetAccessAccountsImpl implements InternetAccessAccounts {
 
     @SuppressWarnings("unchecked")
     public PaginatedList<AccountAgreement> agreements(String accountNumber, String ibx) {
-        Page<AccountAgreement, AccountAgreementJson> responsePage = this.serviceClient.agreements(accountNumber, ibx);
+        Page<AccountAgreementJson> responsePage = this.serviceClient.agreements(accountNumber, ibx);
         // The internal client is a Pageable<AccountDetails>; its inherited nextPage(...) deserializes
         // each subsequent page using the request's own response type (AccountAgreementJson), so reusing
         // it for agreement paging is correct — only the generic parameter is laundered.
         Pageable<AccountAgreement> pageableClient = (Pageable<AccountAgreement>) (Object) this.serviceClient;
-        PaginatedList<AccountAgreement> agreementList = Utils.mapPaginatedList(responsePage.getItems(), pageableClient, (json, client) -> json);
+        PaginatedList<AccountAgreement> agreementList = ResponseHandler.mapPaginatedList(responsePage.getItems(), pageableClient, (json, client) -> json);
         return new PaginatedList<>(agreementList, pageableClient, responsePage.getAssociatedRequest(),
                 responsePage.getAssociatedResponse(), responsePage.getPagination());
     }

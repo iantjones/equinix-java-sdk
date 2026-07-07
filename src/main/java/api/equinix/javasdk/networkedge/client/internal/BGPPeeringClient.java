@@ -30,7 +30,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringUpdaterJson
  */
 public interface BGPPeeringClient<T> extends Pageable<T> {
 
-    Page<BGPPeering, BGPPeeringJson> list(RequestBuilder.BGP requestBuilder);
+    Page<BGPPeeringJson> list(RequestBuilder.BGP requestBuilder);
 
     BGPPeeringJson getByUuid(String uuid);
 

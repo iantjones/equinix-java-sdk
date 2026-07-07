@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.DedicatedBandwidthConfigurationClient;
@@ -51,14 +51,14 @@ public class DedicatedBandwidthConfigurationClientImpl
         return json;
     }
 
-    public Page<DedicatedBandwidthConfiguration, DedicatedBandwidthConfigurationJson> list(UseCase useCase, BillingType billing, Integer speed) {
+    public Page<DedicatedBandwidthConfigurationJson> list(UseCase useCase, BillingType billing, Integer speed) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "useCase", useCase.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "useCase", useCase.toString());
         if (billing != null) {
-            Utils.addAdditionalValue(queryParams, "billing", billing.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "billing", billing.toString());
         }
         if (speed != null) {
-            Utils.addAdditionalValue(queryParams, "connection.aside.accessPoint.port.physicalPort.speed", speed.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "connection.aside.accessPoint.port.physicalPort.speed", speed.toString());
         }
         return listPage("ListDedicatedBandwidthConfigurations", queryParams);
     }

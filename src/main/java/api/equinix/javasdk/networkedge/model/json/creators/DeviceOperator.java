@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import api.equinix.javasdk.core.enums.MetroCode;
@@ -324,6 +325,14 @@ public class DeviceOperator extends ResourceImpl<Device> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withSystemIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+        public DeviceBuilder withSystemIpAddress(IPAddress systemIpAddress) {
+            return withSystemIpAddress(systemIpAddress == null ? null : systemIpAddress.toCidr());
+        }
+
         public DeviceBuilder withSshInterfaceId(Integer sshInterfaceId) {
             this.sshInterfaceId = sshInterfaceId;
             return this;
@@ -516,6 +525,14 @@ public class DeviceOperator extends ResourceImpl<Device> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withSystemIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+        public DeviceBuilderSecondary withSystemIpAddress(IPAddress systemIpAddress) {
+            return withSystemIpAddress(systemIpAddress == null ? null : systemIpAddress.toCidr());
+        }
+
         public DeviceBuilderSecondary withAdditionalBandwidth(Integer additionalBandwidth) {
             this.additionalBandwidth = additionalBandwidth;
             return this;
@@ -573,7 +590,7 @@ public class DeviceOperator extends ResourceImpl<Device> {
 
         protected DeviceUpdater(DeviceJson json) {
             this.json = json;
-            this.updaterJson = Constants.JSON_CONVERTOR.convertValue(this.json, DeviceUpdaterJson.class);
+            this.updaterJson = Constants.converter().convertValue(this.json, DeviceUpdaterJson.class);
         }
 
         public DeviceOperator.DeviceUpdater withDeviceName(String deviceName) {

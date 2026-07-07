@@ -16,7 +16,8 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
@@ -77,14 +78,14 @@ public class DevicesImpl implements Devices {
      *
      */
     public PaginatedList<Device> list(RequestBuilder.Device requestBuilder) {
-        Page<Device, DeviceJson> responsePage = serviceClient.list(requestBuilder);
-        PaginatedList<Device> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, DeviceWrapper::new);
+        Page<DeviceJson> responsePage = serviceClient.list(requestBuilder);
+        PaginatedList<Device> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, DeviceWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PaginatedList<DeviceType> listDeviceTypes() {
-        Page<DeviceType, DeviceTypeJson> responsePage = deviceTypesServiceClient.list();
-        PaginatedList<DeviceType> deviceTypeList = Utils.mapPaginatedList(responsePage.getItems(), this.deviceTypesServiceClient, DeviceTypeWrapper::new);
+        Page<DeviceTypeJson> responsePage = deviceTypesServiceClient.list();
+        PaginatedList<DeviceType> deviceTypeList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.deviceTypesServiceClient, DeviceTypeWrapper::new);
         return new PaginatedList<>(deviceTypeList, this.deviceTypesServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -93,7 +94,7 @@ public class DevicesImpl implements Devices {
     }
 
     public AllowedInterfaceResponse listAllowedInterfaces(RequestBuilder.AllowedInterfaces requestBuilder) {
-        return serviceClient.getAllowedInterfaces(requestBuilder.getDeviceType(), Utils.newMap(requestBuilder));
+        return serviceClient.getAllowedInterfaces(requestBuilder.getDeviceType(), ParameterMapper.newMap(requestBuilder));
     }
 
     public List<DeviceReboot> listReloadHistory(String uuid) {

@@ -29,7 +29,7 @@ import java.util.List;
 
 public interface AgentClient<T> extends PageablePost<T> {
 
-    Page<Agent, AgentJson> list();
+    Page<AgentJson> list();
 
     AgentJson getByUuid(String uuid);
 

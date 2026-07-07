@@ -29,7 +29,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateUpdaterJso
  */
 public interface ACLTemplateClient<T> extends Pageable<T> {
 
-    Page<ACLTemplate, ACLTemplateJson> list(String accountUcmId);
+    Page<ACLTemplateJson> list(String accountUcmId);
 
     ACLTemplateJson getByUuid(String uuid, String accountUcmId);
 

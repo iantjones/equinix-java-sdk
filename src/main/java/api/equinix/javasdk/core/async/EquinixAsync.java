@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -58,13 +59,21 @@ import java.util.function.Supplier;
  * original throwable as its cause, surfaced through {@link CompletableFuture#join()} /
  * {@link CompletableFuture#get()} as usual.</p>
  *
- * <p>This class is {@link AutoCloseable}; closing it shuts down the backing executor. Calls
- * submitted after {@link #close()} are rejected. Instances are thread-safe and intended to be
- * shared, typically for the lifetime of the work being parallelised.</p>
+ * <p>This class is {@link AutoCloseable}; closing it shuts down the backing executor and waits
+ * (up to a bounded grace period) for in-flight calls to finish, so exiting a try-with-resources
+ * block does not silently abandon submitted work. Calls submitted after {@link #close()} are
+ * rejected. Instances are thread-safe and intended to be shared, typically for the lifetime of
+ * the work being parallelised.</p>
  *
  * @author ianjones
  */
 public final class EquinixAsync implements AutoCloseable {
+
+    /**
+     * How long {@link #close()} waits for in-flight calls to finish before forcibly interrupting
+     * them via {@link ExecutorService#shutdownNow()}.
+     */
+    private static final long CLOSE_GRACE_PERIOD_SECONDS = 60L;
 
     private final ExecutorService executor;
 
@@ -156,11 +165,26 @@ public final class EquinixAsync implements AutoCloseable {
     }
 
     /**
-     * Shuts down the backing virtual-thread executor. In-flight calls are allowed to finish; new
-     * submissions via {@link #call} or {@link #run} after this point are rejected. Idempotent.
+     * Shuts down the backing virtual-thread executor and blocks until in-flight calls finish.
+     * New submissions via {@link #call} or {@link #run} after this point are rejected.
+     *
+     * <p>In-flight calls are given a bounded grace period (60 seconds) to complete; anything still
+     * running after that is interrupted via {@link ExecutorService#shutdownNow()}. Virtual threads
+     * are daemon threads, so without this wait a fire-and-forget {@code run(...)} inside
+     * try-with-resources could be silently killed by JVM exit. If the closing thread is itself
+     * interrupted while waiting, remaining work is interrupted immediately and the interrupt flag
+     * is restored. Idempotent.</p>
      */
     @Override
     public void close() {
         executor.shutdown();
+        try {
+            if (!executor.awaitTermination(CLOSE_GRACE_PERIOD_SECONDS, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException ie) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }

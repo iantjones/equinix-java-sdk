@@ -27,5 +27,5 @@ import api.equinix.javasdk.networkedge.model.json.DeviceTypeJson;
  */
 public interface DeviceTypeClient<T> extends Pageable<T> {
 
-    Page<DeviceType, DeviceTypeJson> list();
+    Page<DeviceTypeJson> list();
 }

@@ -28,5 +28,5 @@ import api.equinix.javasdk.internetaccess.model.json.creators.PriceSearchRequest
  */
 public interface PriceClient extends PageablePost<Price> {
 
-    Page<Price, PriceJson> search(PriceSearchRequest searchRequest);
+    Page<PriceJson> search(PriceSearchRequest searchRequest);
 }

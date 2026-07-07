@@ -18,7 +18,8 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
@@ -42,15 +43,15 @@ public class AssetClientImpl extends ResourceClientBase<Asset, AssetJson> implem
         return json;
     }
 
-    public Page<Asset, AssetJson> search(AssetSearchRequest request) {
+    public Page<AssetJson> search(AssetSearchRequest request) {
         Map<String, List<String>> queryParams = buildQueryParams(request);
         if (queryParams.isEmpty()) {
             return searchPage("SearchAssets", request);
         }
         EquinixRequest<Asset> equinixRequest = buildRequestWithQueryParams("SearchAssets",
                 RequestType.PAGINATED_POST, queryParams, AssetJson.class);
-        Utils.serializeJson(equinixRequest, request);
-        return Utils.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
+        SerializationHelper.serializeJson(equinixRequest, request);
+        return ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
     }
 
     public AssetJson getByUuid(String assetId) {

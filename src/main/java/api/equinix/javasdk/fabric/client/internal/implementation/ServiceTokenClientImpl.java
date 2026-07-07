@@ -27,27 +27,20 @@ import api.equinix.javasdk.fabric.model.ServiceToken;
 import api.equinix.javasdk.fabric.model.implementation.ServiceTokenActionRequest;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
-import api.equinix.javasdk.fabric.model.json.SerializationFilters;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenCreatorJson;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * Internal client for Fabric Service Tokens. Standard plumbing/paging come from
- * {@link ResourceClientBase}; {@code create}/{@code dryRunCreate} remain bespoke because they apply
- * the {@code createServiceTokenFilter} Jackson serialization filter.
+ * {@link ResourceClientBase}.
  *
  * @author ianjones
  */
 public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, ServiceTokenJson> implements ServiceTokenClient<ServiceToken> {
-
-    private static final FilterProvider CREATE_FILTER =
-            new SimpleFilterProvider().addFilter("createServiceTokenFilter", SerializationFilters.createServiceTokenFilter);
 
     public ServiceTokenClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "ServiceTokens", ServiceTokenJson.class);
@@ -58,11 +51,11 @@ public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, Ser
         return new ServiceTokenWrapper(json, this);
     }
 
-    public Page<ServiceToken, ServiceTokenJson> list() {
+    public Page<ServiceTokenJson> list() {
         return listPage("GetServiceTokens");
     }
 
-    public Page<ServiceToken, ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchServiceTokens", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
@@ -80,11 +73,14 @@ public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, Ser
     }
 
     public ServiceTokenJson create(ServiceTokenCreatorJson serviceTokenCreatorJson) {
-        return postOne("PostServiceToken", serviceTokenCreatorJson, CREATE_FILTER);
+        // The former createServiceTokenFilter was inert: no class carried
+        // @JsonFilter("createServiceTokenFilter"), so the body always serialized unfiltered.
+        // The filter machinery has been removed; behaviour on the wire is unchanged.
+        return postOne("PostServiceToken", serviceTokenCreatorJson);
     }
 
     public ServiceTokenJson dryRunCreate(ServiceTokenCreatorJson serviceTokenCreatorJson) {
-        return dryRunCreate("PostServiceToken", serviceTokenCreatorJson, CREATE_FILTER);
+        return dryRunCreate("PostServiceToken", serviceTokenCreatorJson);
     }
 
     public ServiceTokenJson delete(String uuid) {

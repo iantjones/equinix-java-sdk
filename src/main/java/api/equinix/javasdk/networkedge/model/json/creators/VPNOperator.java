@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.internal.implementation.VPNClientImpl;
@@ -88,6 +89,14 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withPeerIp(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+         public VPNBuilder withPeerIp(IPAddress peerIp) {
+            return withPeerIp(peerIp == null ? null : peerIp.toCidr());
+        }
+
          public VPNBuilder withPeerSharedKey(String peerSharedKey) {
             this.peerSharedKey = peerSharedKey;
             return this;
@@ -101,6 +110,14 @@ public class VPNOperator extends ResourceImpl<VPN> {
          public VPNBuilder withRemoteIpAddress(String remoteIpAddress) {
             this.remoteIpAddress = remoteIpAddress;
             return this;
+        }
+
+        /**
+         * Typed variant of {@code withRemoteIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+         public VPNBuilder withRemoteIpAddress(IPAddress remoteIpAddress) {
+            return withRemoteIpAddress(remoteIpAddress == null ? null : remoteIpAddress.toCidr());
         }
 
          public VPNBuilder withPassword(String password) {
@@ -118,6 +135,15 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withTunnelIp(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, so a subnet prefix (e.g. {@code /30}) is preserved and the
+         * wire value is identical to passing the equivalent string.
+         */
+         public VPNBuilder withTunnelIp(IPAddress tunnelIp) {
+            return withTunnelIp(tunnelIp == null ? null : tunnelIp.toCidr());
+        }
+
         public VPN save() {
             VPNCreatorJson deviceLinkCreatorJson = new VPNCreatorJson(this);
             VPNJson deviceLinkJson = ((VPNClientImpl) VPNOperator.this.getServiceClient()).create(deviceLinkCreatorJson);
@@ -132,7 +158,7 @@ public class VPNOperator extends ResourceImpl<VPN> {
 
         protected VPNUpdater(VPNJson json) {
             this.json = json;
-            this.updaterJson = Constants.JSON_CONVERTOR.convertValue(this.json, VPNUpdaterJson.class);
+            this.updaterJson = Constants.converter().convertValue(this.json, VPNUpdaterJson.class);
         }
 
         public VPNUpdater withConfigName(String configName) {
@@ -143,6 +169,14 @@ public class VPNOperator extends ResourceImpl<VPN> {
         public VPNUpdater withPeerIp(String peerIp) {
             this.updaterJson.setPeerIp(peerIp);
             return this;
+        }
+
+        /**
+         * Typed variant of {@code withPeerIp(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+        public VPNUpdater withPeerIp(IPAddress peerIp) {
+            return withPeerIp(peerIp == null ? null : peerIp.toCidr());
         }
 
         public VPNUpdater withPeerSharedKey(String peerSharedKey) {
@@ -160,6 +194,14 @@ public class VPNOperator extends ResourceImpl<VPN> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withRemoteIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+        public VPNUpdater withRemoteIpAddress(IPAddress remoteIpAddress) {
+            return withRemoteIpAddress(remoteIpAddress == null ? null : remoteIpAddress.toCidr());
+        }
+
         public VPNUpdater withPassword(String password) {
             this.updaterJson.setPassword(password);
             return this;
@@ -173,6 +215,15 @@ public class VPNOperator extends ResourceImpl<VPN> {
         public VPNUpdater withTunnelIp(String tunnelIp) {
             this.updaterJson.setTunnelIp(tunnelIp);
             return this;
+        }
+
+        /**
+         * Typed variant of {@code withTunnelIp(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, so a subnet prefix (e.g. {@code /30}) is preserved and the
+         * wire value is identical to passing the equivalent string.
+         */
+        public VPNUpdater withTunnelIp(IPAddress tunnelIp) {
+            return withTunnelIp(tunnelIp == null ? null : tunnelIp.toCidr());
         }
 
         public VPN save() {

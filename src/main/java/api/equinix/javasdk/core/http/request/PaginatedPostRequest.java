@@ -16,9 +16,26 @@
 
 package api.equinix.javasdk.core.http.request;
 
-import lombok.Getter;
+/**
+ * Request carrier for POST-based search operations whose paging state lives in the request
+ * <em>body</em> (a {@link api.equinix.javasdk.core.model.PaginatedPostBody}) rather than in
+ * {@code offset}/{@code limit} query parameters. The paging pipeline advances the body's
+ * pagination between pages; because the wire entity is rebuilt from the {@link RequestBody}
+ * at every dispatch, the advanced offset is re-serialized automatically.
+ *
+ * @param <T> the operation's model type
+ * @author ianjones
+ */
+public final class PaginatedPostRequest<T> extends EquinixRequest<T> {
 
-@Getter
-public class PaginatedPostRequest<T> extends EquinixRequest<T> {
-
+    /**
+     * Convenience accessor for the live search body: the payload of this request's JSON
+     * {@link RequestBody}.
+     *
+     * @return the search body payload, or {@code null} when no JSON body is attached
+     */
+    public Object getSearchBody() {
+        RequestBody requestBody = getBody();
+        return requestBody != null ? requestBody.getPayload() : null;
+    }
 }

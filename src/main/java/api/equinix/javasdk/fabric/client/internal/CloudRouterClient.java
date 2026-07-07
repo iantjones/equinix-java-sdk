@@ -34,7 +34,7 @@ import java.util.List;
 
 public interface CloudRouterClient<T> extends PageablePost<T> {
 
-    Page<CloudRouter, CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     CloudRouterJson getByUuid(String uuid);
 

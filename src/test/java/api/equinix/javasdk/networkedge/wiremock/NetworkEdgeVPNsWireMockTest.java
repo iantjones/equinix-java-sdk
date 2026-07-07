@@ -4,6 +4,7 @@ import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.UserStatus;
 import api.equinix.javasdk.networkedge.enums.VPNStatus;
@@ -208,6 +209,43 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.peerIp", equalTo("203.0.113.10"))));
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + NEW_UUID)));
         }
+
+        @Test
+        @DisplayName("withPeerIp/withRemoteIpAddress/withTunnelIp(IPAddress) POST a byte-identical body to the String setters")
+        void typedIpOverloadsMatchStringPath() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/vpn/?"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Location", "https://localhost/ne/v1/vpn/" + NEW_UUID)));
+            stubSingleton(wireMock, "/ne/v1/vpn/.*", "/json/networkedge/vpn_response.json");
+
+            // Same create issued twice: once via the String setters, once via the typed
+            // IPAddress overloads (which format via IPAddress.toCidr()).
+            networkEdge.vpns()
+                    .define("test-vpn-config")
+                    .onDeviceUuid("dev-1234-5678-90ab-cdef12345678")
+                    .withPeerIp("203.0.113.10")
+                    .withRemoteIpAddress("192.0.2.5")
+                    .withTunnelIp("172.16.0.30/30")
+                    .save();
+            networkEdge.vpns()
+                    .define("test-vpn-config")
+                    .onDeviceUuid("dev-1234-5678-90ab-cdef12345678")
+                    .withPeerIp(IPAddress.parse("203.0.113.10"))
+                    .withRemoteIpAddress(IPAddress.parse("192.0.2.5"))
+                    .withTunnelIp(IPAddress.parse("172.16.0.30/30"))
+                    .save();
+
+            var posts = wireMock.findAll(postRequestedFor(urlPathMatching("/ne/v1/vpn/?")));
+            assertEquals(2, posts.size());
+            // The typed overloads serialize byte-for-byte identically to the String path.
+            assertEquals(posts.get(0).getBodyAsString(), posts.get(1).getBodyAsString());
+            // And both carry the expected wire values (the CIDR subnet on tunnelIp survives).
+            wireMock.verify(2, postRequestedFor(urlPathMatching("/ne/v1/vpn/?"))
+                    .withRequestBody(matchingJsonPath("$.peerIp", equalTo("203.0.113.10")))
+                    .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("192.0.2.5")))
+                    .withRequestBody(matchingJsonPath("$.tunnelIp", equalTo("172.16.0.30/30"))));
+        }
     }
 
     @Nested
@@ -245,6 +283,37 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
                             equalTo("dev-1234-5678-90ab-cdef12345678"))));
             // save() re-fetches the object after the PUT.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + VPN_UUID)));
+        }
+
+        @Test
+        @DisplayName("updater withPeerIp/withRemoteIpAddress/withTunnelIp(IPAddress) PUT a byte-identical body to the String setters")
+        void typedIpOverloadsMatchStringPathOnUpdate() {
+            stubSingleton(wireMock, "/ne/v1/vpn/.*", "/json/networkedge/vpn_response.json");
+            wireMock.stubFor(put(urlPathMatching("/ne/v1/vpn/.*"))
+                    .willReturn(aResponse().withStatus(200)));
+
+            VPN vpn = networkEdge.vpns().getByUuid(VPN_UUID);
+
+            // Same update issued twice: once via the String setters, once via the typed
+            // IPAddress overloads (which format via IPAddress.toCidr()).
+            vpn.update()
+                    .withPeerIp("198.51.100.20")
+                    .withRemoteIpAddress("192.0.2.5")
+                    .withTunnelIp("172.16.0.30/30")
+                    .save();
+            vpn.update()
+                    .withPeerIp(IPAddress.parse("198.51.100.20"))
+                    .withRemoteIpAddress(IPAddress.parse("192.0.2.5"))
+                    .withTunnelIp(IPAddress.parse("172.16.0.30/30"))
+                    .save();
+
+            var puts = wireMock.findAll(putRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + VPN_UUID)));
+            assertEquals(2, puts.size());
+            assertEquals(puts.get(0).getBodyAsString(), puts.get(1).getBodyAsString());
+            wireMock.verify(2, putRequestedFor(urlPathEqualTo("/ne/v1/vpn/" + VPN_UUID))
+                    .withRequestBody(matchingJsonPath("$.peerIp", equalTo("198.51.100.20")))
+                    .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("192.0.2.5")))
+                    .withRequestBody(matchingJsonPath("$.tunnelIp", equalTo("172.16.0.30/30"))));
         }
     }
 

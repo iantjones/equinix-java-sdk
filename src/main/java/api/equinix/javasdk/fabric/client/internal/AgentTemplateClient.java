@@ -23,7 +23,7 @@ import api.equinix.javasdk.fabric.model.json.AgentTemplateJson;
 
 public interface AgentTemplateClient<T> extends Pageable<T> {
 
-    Page<AgentTemplate, AgentTemplateJson> list();
+    Page<AgentTemplateJson> list();
 
     AgentTemplateJson getByUuid(String uuid);
 

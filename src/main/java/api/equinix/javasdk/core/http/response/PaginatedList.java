@@ -60,29 +60,29 @@ import java.util.stream.Stream;
  * @author ianjones
  * @see Pagination
  */
-@Getter
 public class PaginatedList<T> implements Iterable<T> {
 
-    @Getter(AccessLevel.NONE)
     private final List<T> items = new ArrayList<>();
 
+    // Internal paging machinery — deliberately not exposed on the public list type. The
+    // request/response element types are unbounded: the carried request may be typed over
+    // the public model or the resource's JSON model (see Page), and paging never needs it.
+    @Getter(AccessLevel.PACKAGE)
     private Pageable<T> pageableClient;
-    private EquinixRequest<T> equinixRequest;
-    private EquinixResponse<T> equinixResponse;
-    private Pagination pagination;
+    @Getter(AccessLevel.PACKAGE)
+    private EquinixRequest<?> equinixRequest;
+    @Getter(AccessLevel.PACKAGE)
+    private EquinixResponse<?> equinixResponse;
 
-    /**
-     * No-arg constructor; pagination metadata and items are attached afterwards.
-     */
-    public PaginatedList() {
-    }
+    @Getter
+    private Pagination pagination;
 
     /**
      *
      * @param initialItems the items for the current page (any iterable; copied in).
      */
     public PaginatedList(Iterable<? extends T> initialItems, Pageable<T> pageableClient,
-                         EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse, Pagination pagination) {
+                         EquinixRequest<?> equinixRequest, EquinixResponse<?> equinixResponse, Pagination pagination) {
 
         initialItems.forEach(this.items::add);
         this.pageableClient = pageableClient;
@@ -140,9 +140,19 @@ public class PaginatedList<T> implements Iterable<T> {
         return Collections.unmodifiableList(new ArrayList<>(items));
     }
 
+    @SuppressWarnings("unchecked") // the request's element type is erased and never used by paging
     private PaginatedList<T> fetchNextPage() {
-        ((PaginatedRequest<T>)equinixRequest).nextPage();
-        return (PaginatedList<T>) this.pageableClient.nextPage((PaginatedRequest<T>)equinixRequest);
+        PaginatedRequest<T> paginatedRequest = (PaginatedRequest<T>) equinixRequest;
+        paginatedRequest.nextPage();
+        try {
+            return (PaginatedList<T>) this.pageableClient.nextPage(paginatedRequest);
+        }
+        catch (RuntimeException e) {
+            // Roll the shared request's offset back so a caller that catches the failure and
+            // retries next() re-fetches the SAME page instead of silently skipping one.
+            paginatedRequest.previousPage();
+            throw e;
+        }
     }
 
     private void loadNextPage() {
@@ -159,7 +169,7 @@ public class PaginatedList<T> implements Iterable<T> {
      * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
-        return this.pagination != null && !this.pagination.getIsLastPage();
+        return this.pagination != null && !this.pagination.isLastPage();
     }
 
     /**
@@ -188,21 +198,8 @@ public class PaginatedList<T> implements Iterable<T> {
         return this;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof PaginatedList)) {
-            return false;
-        }
-        return items.equals(((PaginatedList<?>) o).items);
-    }
-
-    @Override
-    public int hashCode() {
-        return items.hashCode();
-    }
+    // No equals()/hashCode(): a live, page-growing view has identity semantics (its loaded-item
+    // set mutates on next()/loadAll(), which would silently break hash-keyed usage).
 
     @Override
     public String toString() {

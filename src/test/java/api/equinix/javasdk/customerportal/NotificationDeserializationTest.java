@@ -19,7 +19,7 @@ class NotificationDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = NotificationDeserializationTest.class.getResourceAsStream("/json/customerportal/notification_response.json");
         assertNotNull(is, "notification_response.json fixture not found on classpath");
         notification = objectMapper.readValue(is, NotificationJson.class);

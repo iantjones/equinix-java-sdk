@@ -26,7 +26,7 @@ class SmartViewDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream sensorIs = SmartViewDeserializationTest.class.getResourceAsStream("/json/ibxsmartview/sensor_reading_response.json");
         assertNotNull(sensorIs, "sensor_reading_response.json fixture not found on classpath");

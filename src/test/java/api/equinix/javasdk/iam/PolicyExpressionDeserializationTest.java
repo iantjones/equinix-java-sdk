@@ -36,7 +36,7 @@ class PolicyExpressionDeserializationTest {
 
     @BeforeAll
     static void setUp() {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
     }
 
     private static JsonNode load(String resource) throws Exception {

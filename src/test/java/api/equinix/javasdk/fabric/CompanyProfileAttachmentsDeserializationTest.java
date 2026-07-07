@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CompanyProfileAttachmentsDeserializationTest {
 
-    private static final ObjectMapper objectMapper = Constants.objectMapper;
+    private static final ObjectMapper objectMapper = Constants.mapper();
 
     @Test
     void serviceProfiles_areDeserialized() throws Exception {

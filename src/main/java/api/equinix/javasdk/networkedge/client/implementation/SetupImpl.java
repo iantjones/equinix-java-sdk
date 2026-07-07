@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
@@ -79,7 +79,7 @@ public class SetupImpl implements Setup {
 
     public List<Account> listAccounts(MetroCode metroCode) {
         List<AccountJson> publicKeyList = serviceClientAccounts.list(metroCode);
-        return Utils.mapList(publicKeyList, this.serviceClientAccounts, AccountWrapper::new);
+        return ResponseHandler.mapList(publicKeyList, this.serviceClientAccounts, AccountWrapper::new);
     }
 
     public List<Account> listAllAccounts() {
@@ -88,7 +88,7 @@ public class SetupImpl implements Setup {
 
         for(Metro metro : metrosList) {
             accountList.addAll(
-                    Utils.mapList(serviceClientAccounts.list(metro.getMetroCode()),
+                    ResponseHandler.mapList(serviceClientAccounts.list(metro.getMetroCode()),
                             this.serviceClientAccounts, AccountWrapper::new));
         }
 
@@ -111,8 +111,8 @@ public class SetupImpl implements Setup {
     }
 
     public PaginatedList<Metro> listMetrosByRegion(Region region) {
-        Page<Metro, MetroJson> responsePage = serviceClientMetros.list(region);
-        PaginatedList<Metro> metroList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClientMetros, MetroWrapper::new);
+        Page<MetroJson> responsePage = serviceClientMetros.list(region);
+        PaginatedList<Metro> metroList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClientMetros, MetroWrapper::new);
         return new PaginatedList<>(metroList, this.serviceClientMetros, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

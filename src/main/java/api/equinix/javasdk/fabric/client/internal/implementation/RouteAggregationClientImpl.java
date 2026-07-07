@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -55,7 +55,7 @@ public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregat
         return new RouteAggregationWrapper(json, this);
     }
 
-    public Page<RouteAggregation, RouteAggregationJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteAggregationJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchRouteAggregations", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
@@ -82,7 +82,7 @@ public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregat
     public List<Change> getChanges(String uuid) {
         EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteAggregationChanges", RequestType.PAGINATED,
                 Map.of("uuid", uuid), Change.class);
-        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<Change> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -93,7 +93,7 @@ public class RouteAggregationClientImpl extends ResourceClientBase<RouteAggregat
     public List<Connection> getConnections(String uuid) {
         EquinixRequest<Connection> request = buildRequestWithPathParams("GetRouteAggregationConnections", RequestType.PAGINATED,
                 Map.of("uuid", uuid), ConnectionJson.class);
-        Page<Connection, ConnectionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<ConnectionJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         if (page == null || page.getItems() == null) {
             return Collections.emptyList();
         }

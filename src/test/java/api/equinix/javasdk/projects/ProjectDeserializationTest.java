@@ -20,7 +20,7 @@ class ProjectDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = ProjectDeserializationTest.class
                 .getResourceAsStream("/json/projects/project_single.json");
         assertNotNull(is, "project_single.json fixture not found on classpath");

@@ -28,7 +28,7 @@ import api.equinix.javasdk.fabric.model.json.creators.RoutingProtocolCreatorJson
 
 public interface RoutingProtocolClient<T> extends Pageable<T> {
 
-    Page<RoutingProtocol, RoutingProtocolJson> list(String connectionId);
+    Page<RoutingProtocolJson> list(String connectionId);
 
     RoutingProtocolJson getByUuid(String connectionId, String uuid);
 

@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.IpBlocks;
@@ -50,8 +50,8 @@ public class IpBlocksImpl implements IpBlocks {
     }
 
     public PaginatedFilteredList<IpBlock> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<IpBlock, IpBlockJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<IpBlock> ipBlockList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, IpBlockWrapper::new);
+        Page<IpBlockJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<IpBlock> ipBlockList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, IpBlockWrapper::new);
         return new PaginatedFilteredList<>(ipBlockList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

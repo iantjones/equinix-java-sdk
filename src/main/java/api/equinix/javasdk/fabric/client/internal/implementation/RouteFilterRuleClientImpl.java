@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -49,7 +50,7 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
         return new RouteFilterRuleWrapper(json, this);
     }
 
-    public Page<RouteFilterRule, RouteFilterRuleJson> list(String routeFilterId) {
+    public Page<RouteFilterRuleJson> list(String routeFilterId) {
         return listPagePath("GetRouteFilterRules", Map.of("routeFilterId", routeFilterId));
     }
 
@@ -83,24 +84,24 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
     public List<RouteFilterRuleJson> createBulk(String routeFilterId, List<RouteFilterRuleCreatorJson> routeFilterRuleCreatorJsonList) {
         EquinixRequest<RouteFilterRule> request = buildRequestWithPathParams("PostRouteFilterRulesBulk", RequestType.PAGINATED_POST,
                 Map.of("routeFilterId", routeFilterId), RouteFilterRuleJson.class);
-        Utils.serializeJson(request, new RouteFilterRulesBulkRequest(routeFilterRuleCreatorJsonList));
-        Page<RouteFilterRule, RouteFilterRuleJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new RouteFilterRulesBulkRequest(routeFilterRuleCreatorJsonList));
+        Page<RouteFilterRuleJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
-    public Page<RouteFilterRule, RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort) {
         // POST /routeFilters/{routeFilterId}/routeFilterRules/search — searchPage cannot carry path
         // params, so build the paginated-post request manually (mirrors RouteFilter.search otherwise).
         EquinixRequest<RouteFilterRule> request = buildRequestWithPathParams("SearchRouteFilterRules", RequestType.PAGINATED_POST,
                 Map.of("routeFilterId", routeFilterId), RouteFilterRuleJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     public List<Change> getChanges(String routeFilterId, String uuid) {
         EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteFilterRuleChanges", RequestType.PAGINATED,
                 Map.of("routeFilterId", routeFilterId, "uuid", uuid), Change.class);
-        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<Change> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 

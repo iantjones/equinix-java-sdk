@@ -16,12 +16,23 @@
 
 package api.equinix.javasdk.core.enums;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+
 /**
+ * Operational status of a resource as reported by the API.
+ *
+ * <p>{@link #UNKNOWN} is a forward-compatibility sentinel: a status value the API returns that
+ * this enum does not yet list deserializes to {@code UNKNOWN} rather than failing the whole
+ * response (see {@code OperationalStatusDeserializer}).</p>
  *
  * @author ianjones
  */
 public enum OperationalStatus {
     UP,
     DOWN,
-    PARTIAL
+    PARTIAL,
+
+    /** Forward-compatibility sentinel for status values this enum does not yet list. */
+    @JsonEnumDefaultValue
+    UNKNOWN
 }

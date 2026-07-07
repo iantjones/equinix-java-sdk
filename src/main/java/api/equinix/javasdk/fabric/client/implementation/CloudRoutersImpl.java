@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -80,8 +80,8 @@ public class CloudRoutersImpl implements CloudRouters {
     }
 
     public PaginatedFilteredList<CloudRouter> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<CloudRouter, CloudRouterJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<CloudRouter> cloudRouterList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, CloudRouterWrapper::new);
+        Page<CloudRouterJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<CloudRouter> cloudRouterList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, CloudRouterWrapper::new);
         return new PaginatedFilteredList<>(cloudRouterList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -95,8 +95,8 @@ public class CloudRoutersImpl implements CloudRouters {
     }
 
     public PaginatedList<CloudRouterPackage> routerPackages() {
-        Page<CloudRouterPackage, CloudRouterPackageJson> responsePage = this.cloudRouterPackageServiceClient.list();
-        PaginatedList<CloudRouterPackage> cloudRouterPackageList = Utils.mapPaginatedList(responsePage.getItems(), this.cloudRouterPackageServiceClient, (json, client) -> json);
+        Page<CloudRouterPackageJson> responsePage = this.cloudRouterPackageServiceClient.list();
+        PaginatedList<CloudRouterPackage> cloudRouterPackageList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.cloudRouterPackageServiceClient, (json, client) -> json);
         return new PaginatedList<>(cloudRouterPackageList, this.cloudRouterPackageServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -109,8 +109,8 @@ public class CloudRoutersImpl implements CloudRouters {
     }
 
     public PaginatedFilteredList<RouteTableEntry> searchRoutes(String routerId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchCloudRouterRoutes(routerId, filter, sort);
-        PaginatedFilteredList<RouteTableEntry> routes = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
+        Page<RouteTableEntryJson> responsePage = this.routesClient.searchCloudRouterRoutes(routerId, filter, sort);
+        PaginatedFilteredList<RouteTableEntry> routes = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
         return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -119,8 +119,8 @@ public class CloudRoutersImpl implements CloudRouters {
     }
 
     public PaginatedList<CloudRouterCommand> commands(String routerId) {
-        Page<CloudRouterCommand, CloudRouterCommandJson> responsePage = this.commandsClient.list(routerId);
-        PaginatedList<CloudRouterCommand> commandList = Utils.mapPaginatedList(responsePage.getItems(), this.commandsClient, (json, client) -> json);
+        Page<CloudRouterCommandJson> responsePage = this.commandsClient.list(routerId);
+        PaginatedList<CloudRouterCommand> commandList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.commandsClient, (json, client) -> json);
         return new PaginatedList<>(commandList, this.commandsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -150,8 +150,8 @@ public class CloudRoutersImpl implements CloudRouters {
     }
 
     public PaginatedFilteredList<CloudRouterCommand> searchCommands(String routerId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<CloudRouterCommand, CloudRouterCommandJson> responsePage = this.commandsClient.search(routerId, filter, sort);
-        PaginatedFilteredList<CloudRouterCommand> commands = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.commandsClient, (json, client) -> json);
+        Page<CloudRouterCommandJson> responsePage = this.commandsClient.search(routerId, filter, sort);
+        PaginatedFilteredList<CloudRouterCommand> commands = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.commandsClient, (json, client) -> json);
         return new PaginatedFilteredList<>(commands, this.commandsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

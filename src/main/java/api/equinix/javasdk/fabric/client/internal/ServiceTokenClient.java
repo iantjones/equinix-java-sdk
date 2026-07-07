@@ -34,9 +34,9 @@ import java.util.List;
  */
 public interface ServiceTokenClient<T> extends PageablePost<T> {
 
-    Page<ServiceToken, ServiceTokenJson> list();
+    Page<ServiceTokenJson> list();
 
-    Page<ServiceToken, ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<ServiceTokenJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     ServiceTokenJson update(String uuid, List<PatchOperation> operations);
 

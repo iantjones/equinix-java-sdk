@@ -18,7 +18,8 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.DigitalLoasClient;
@@ -76,8 +77,8 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
     public DigitalLoa update(String uuid, List<Map<String, Object>> operations) {
         EquinixRequest<DigitalLoaJson> request =
                 buildRequestWithPathParams("PatchDigitalLoa", RequestType.SINGLE, Map.of("uuid", uuid), DigitalLoaJson.class);
-        Utils.serializeJson(request, operations);
-        return Utils.handleSingletonResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, operations);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public Boolean cancel(String uuid) {
@@ -87,8 +88,8 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
     public DigitalLoa performAction(String uuid, Map<String, Object> action) {
         EquinixRequest<DigitalLoaJson> request =
                 buildRequestWithPathParams("PerformDigitalLoaAction", RequestType.SINGLE, Map.of("uuid", uuid), DigitalLoaJson.class);
-        Utils.serializeJson(request, action);
-        return Utils.handleSingletonResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, action);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public Boolean createRequest(Map<String, Object> request) {

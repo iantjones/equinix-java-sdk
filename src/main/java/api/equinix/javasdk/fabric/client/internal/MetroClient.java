@@ -29,9 +29,9 @@ import api.equinix.javasdk.fabric.model.json.MetroJson;
  */
 public interface MetroClient<T> extends Pageable<T> {
 
-    Page<Metro, MetroJson> list();
+    Page<MetroJson> list();
 
-    Page<Metro, MetroJson> list(MetroPresence metroPresence);
+    Page<MetroJson> list(MetroPresence metroPresence);
 
     MetroJson getByMetroCode(MetroCode metroCode);
 

@@ -20,15 +20,14 @@ import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.core.exception.EquinixClientException;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.FilesClient;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.FileProcessType;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.ContentType;
+import api.equinix.javasdk.core.http.request.RequestBody;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,9 +52,9 @@ public class FilesClientImpl extends ClientBase implements FilesClient {
      * {@code type: string, format: binary}).
      *
      * <p>The scalar fields are sent as plain form parts and the file contents as a binary
-     * {@code file} part. The multipart entity is assembled by hand (httpmime /
-     * {@code MultipartEntityBuilder} is not a dependency) using only httpcore classes and attached
-     * directly to the request.</p>
+     * {@code file} part. The multipart body is assembled by hand (httpmime /
+     * {@code MultipartEntityBuilder} is not a dependency) and attached as a raw-bytes
+     * {@code RequestBody}.</p>
      */
     public String uploadFile(MetroCode metroCode, String deviceTypeCode, FileProcessType processType,
                              DeviceManagementType deviceManagementType, LicenseType licenseType, String fileContents) {
@@ -82,9 +81,9 @@ public class FilesClientImpl extends ClientBase implements FilesClient {
         byte[] body = buildMultipartBody(boundary, formFields, "file", "file",
                 fileContents != null ? fileContents.getBytes(StandardCharsets.UTF_8) : null);
         request.setContentType("multipart/form-data; boundary=" + boundary);
-        request.setHttpEntity(new ByteArrayEntity(body, ContentType.create("multipart/form-data")));
+        request.setBody(RequestBody.bytes(body, "multipart/form-data"));
 
-        return Utils.handleMapResponse(request, invoke(request)).get("fileUuid");
+        return ResponseHandler.handleMapResponse(request, invoke(request)).get("fileUuid");
     }
 
     /**

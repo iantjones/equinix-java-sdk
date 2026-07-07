@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.NetworkEdge;
@@ -54,8 +54,8 @@ public class DeviceLinksImpl implements DeviceLinks {
      *
      */
     public PaginatedList<DeviceLink> list(RequestBuilder.DeviceLink requestBuilder) {
-        Page<DeviceLink, DeviceLinkJson> responsePage = serviceClient.list(requestBuilder);
-        PaginatedList<DeviceLink> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, DeviceLinkWrapper::new);
+        Page<DeviceLinkJson> responsePage = serviceClient.list(requestBuilder);
+        PaginatedList<DeviceLink> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, DeviceLinkWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client.implementation;
 
 import api.equinix.javasdk.IBXSmartView;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.client.SystemAlerts;
@@ -40,14 +40,14 @@ public class SystemAlertsImpl implements SystemAlerts {
     }
 
     public PaginatedList<SystemAlert> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit) {
-        Page<SystemAlert, SystemAlertJson> responsePage = serviceClient.search(status, assetClassification, edgeCollectedOn, offset, limit);
-        PaginatedList<SystemAlert> alertList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<SystemAlertJson> responsePage = serviceClient.search(status, assetClassification, edgeCollectedOn, offset, limit);
+        PaginatedList<SystemAlert> alertList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(alertList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PaginatedList<SystemAlert> searchPost(SearchRequest filterBody) {
-        Page<SystemAlert, SystemAlertJson> responsePage = serviceClient.searchPost(filterBody);
-        PaginatedList<SystemAlert> alertList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<SystemAlertJson> responsePage = serviceClient.searchPost(filterBody);
+        PaginatedList<SystemAlert> alertList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(alertList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

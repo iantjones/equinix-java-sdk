@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -50,7 +50,7 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
         return new PrecisionTimeWrapper(json, this);
     }
 
-    public Page<PrecisionTime, PrecisionTimeJson> list() {
+    public Page<PrecisionTimeJson> list() {
         return listPage("GetTimeServices");
     }
 
@@ -76,7 +76,7 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
 
     public List<TimeServicePackage> getPackages() {
         EquinixRequest<TimeServicePackage> request = buildRequest("GetTimeServicePackages", RequestType.PAGINATED, TimeServicePackageJson.class);
-        Page<TimeServicePackage, TimeServicePackageJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<TimeServicePackageJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -87,7 +87,7 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
     public List<TimeServiceConnection> getConnections(String serviceId) {
         EquinixRequest<TimeServiceConnection> request = buildRequestWithPathParams("GetTimeServiceConnections", RequestType.PAGINATED,
                 Map.of("serviceId", serviceId), TimeServiceConnectionJson.class);
-        Page<TimeServiceConnection, TimeServiceConnectionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<TimeServiceConnectionJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 

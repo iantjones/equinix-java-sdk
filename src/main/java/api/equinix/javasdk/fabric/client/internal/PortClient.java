@@ -36,9 +36,9 @@ import java.util.List;
  */
 public interface PortClient<T> extends PageablePost<T> {
 
-    Page<Port, PortJson> list();
+    Page<PortJson> list();
 
-    Page<Port, PortJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<PortJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     List<PortVlan> getVlans(String portUuid);
 

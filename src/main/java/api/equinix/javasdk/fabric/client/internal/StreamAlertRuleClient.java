@@ -25,7 +25,7 @@ import api.equinix.javasdk.fabric.model.json.creators.StreamAlertRulePutJson;
 
 public interface StreamAlertRuleClient<T> extends Pageable<T> {
 
-    Page<StreamAlertRule, StreamAlertRuleJson> list(String streamId);
+    Page<StreamAlertRuleJson> list(String streamId);
 
     StreamAlertRuleJson getByUuid(String streamId, String uuid);
 

@@ -40,5 +40,5 @@ public interface RouteAggregationAttachmentClient<T> extends PageablePost<T> {
 
     boolean detachConnectionRouteAggregation(String connectionId, String routeAggregationId);
 
-    Page<RouteAggregationAttachment, RouteAggregationAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteAggregationAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
 }

@@ -24,7 +24,7 @@ class StreamingSubscriptionDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream is = StreamingSubscriptionDeserializationTest.class.getResourceAsStream("/json/ibxsmartview/streaming_subscription_response.json");
         assertNotNull(is, "streaming_subscription_response.json fixture not found on classpath");

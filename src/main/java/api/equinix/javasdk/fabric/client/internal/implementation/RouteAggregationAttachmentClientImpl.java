@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
@@ -56,7 +57,7 @@ public class RouteAggregationAttachmentClientImpl extends ResourceClientBase<Rou
     public List<RouteAggregationAttachment> getConnectionRouteAggregations(String connectionId) {
         EquinixRequest<RouteAggregationAttachment> request = buildRequestWithPathParams("GetConnectionRouteAggregations", RequestType.PAGINATED,
                 Map.of("connectionId", connectionId), RouteAggregationAttachmentJson.class);
-        Page<RouteAggregationAttachment, RouteAggregationAttachmentJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<RouteAggregationAttachmentJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -69,7 +70,7 @@ public class RouteAggregationAttachmentClientImpl extends ResourceClientBase<Rou
         // (which would serialize a literal "null" body).
         EquinixRequest<RouteAggregationAttachmentJson> request = buildRequestWithPathParams("AttachConnectionRouteAggregation",
                 RequestType.SINGLE, Map.of("connectionId", connectionId, "routeAggregationId", routeAggregationId), RouteAggregationAttachmentJson.class);
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public boolean detachConnectionRouteAggregation(String connectionId, String routeAggregationId) {
@@ -77,10 +78,10 @@ public class RouteAggregationAttachmentClientImpl extends ResourceClientBase<Rou
                 Map.of("connectionId", connectionId, "routeAggregationId", routeAggregationId), null, null);
     }
 
-    public Page<RouteAggregationAttachment, RouteAggregationAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteAggregationAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<RouteAggregationAttachment> request = buildRequestWithPathParams("SearchCloudRouterRouteAggregationAttachments", RequestType.PAGINATED_POST,
                 Map.of("routerId", routerId), RouteAggregationAttachmentJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 }

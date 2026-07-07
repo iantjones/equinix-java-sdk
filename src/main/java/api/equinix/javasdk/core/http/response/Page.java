@@ -24,25 +24,38 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * A deserialized page of a list/search response: the raw JSON items plus the response's
+ * pagination metadata and the request/response pair used to fetch it (for lazy paging).
  *
+ * @param <J> the item type the page's {@code items}/{@code data} array deserializes into
+ *            (usually the resource's JSON model class)
  * @author ianjones
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
-public class Page<T, S> {
+public class Page<J> {
+
+    // The request/response pair is carried for lazy paging only; its element type is
+    // deliberately unbounded (the request may be typed over the public model while the
+    // page is typed over the JSON model).
+    @JsonIgnore
+    private EquinixRequest<?> associatedRequest;
 
     @JsonIgnore
-    private EquinixRequest<T> associatedRequest;
+    private EquinixResponse<?> associatedResponse;
 
-    @JsonIgnore
-    private EquinixResponse<T> associatedResponse;
-
+    /**
+     * The page's items. Initialized so a response that omits the {@code items}/{@code data}
+     * array (some endpoints do this on empty results) reads as an empty page rather than
+     * {@code null} — a {@code null} here used to NPE deep inside the list-mapping helpers.
+     */
     @JsonAlias("data")
-    private ArrayList<S> items;
+    private List<J> items = new ArrayList<>();
 
     private Pagination pagination;
 }

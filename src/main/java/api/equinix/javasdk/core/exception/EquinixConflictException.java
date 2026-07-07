@@ -25,6 +25,7 @@ package api.equinix.javasdk.core.exception;
  * @author ianjones
  */
 public class EquinixConflictException extends EquinixServiceException {
+    private static final long serialVersionUID = 1L;
 
     public EquinixConflictException(String errorMessage) {
         super(errorMessage);
@@ -38,5 +39,23 @@ public class EquinixConflictException extends EquinixServiceException {
                                     java.util.Map<String, String> httpHeaders,
                                     java.util.List<ExceptionDetail> exceptionDetails) {
         super(errorMessage, statusCode, path, httpHeaders, exceptionDetails);
+    }
+
+    /**
+     * Full constructor carrying the SDK-generated request correlation id; used by
+     * {@link api.equinix.javasdk.core.http.ResponseErrorMapper ResponseErrorMapper}.
+     *
+     * @param errorMessage     a human-readable summary message.
+     * @param statusCode       the HTTP status code returned by the API.
+     * @param path             the request URI that produced the error.
+     * @param httpHeaders      relevant response headers; may be {@code null}.
+     * @param exceptionDetails structured error details from the response body; may be {@code null}.
+     * @param correlationId    the SDK-generated {@code X-Correlation-Id} of the failed request; may be {@code null}.
+     */
+    public EquinixConflictException(String errorMessage, Integer statusCode, String path,
+            java.util.Map<String, String> httpHeaders,
+            java.util.List<ExceptionDetail> exceptionDetails,
+            String correlationId) {
+        super(errorMessage, statusCode, path, httpHeaders, exceptionDetails, correlationId);
     }
 }

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.TermsClient;
@@ -48,17 +48,17 @@ public class TermsClientImpl extends ResourceClientBase<TermsAndConditions, Term
         return json;
     }
 
-    public Page<TermsAndConditions, TermsAndConditionsJson> list(String accountNumber, String ibx, TermsProduct product, TermsType type, String language) {
+    public Page<TermsAndConditionsJson> list(String accountNumber, String ibx, TermsProduct product, TermsType type, String language) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "account.accountNumber", accountNumber);
-        Utils.addAdditionalValue(queryParams, "location.ibx", ibx);
-        Utils.addAdditionalValue(queryParams, "connectivitySource.type", ConnectivitySourceType.COLO.toString());
-        Utils.addAdditionalValue(queryParams, "product", product.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "account.accountNumber", accountNumber);
+        ParameterMapper.addAdditionalValue(queryParams, "location.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "connectivitySource.type", ConnectivitySourceType.COLO.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "product", product.toString());
         if (type != null) {
-            Utils.addAdditionalValue(queryParams, "type", type.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "type", type.toString());
         }
         if (language != null) {
-            Utils.addAdditionalValue(queryParams, "language", language);
+            ParameterMapper.addAdditionalValue(queryParams, "language", language);
         }
         return listPage("ListTerms", queryParams);
     }

@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -56,11 +57,11 @@ public class PortClientImpl extends ResourceClientBase<Port, PortJson> implement
         return new PortWrapper(json, this);
     }
 
-    public Page<Port, PortJson> list() {
+    public Page<PortJson> list() {
         return listPage("GetPorts");
     }
 
-    public Page<Port, PortJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<PortJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchPorts", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
@@ -71,7 +72,7 @@ public class PortClientImpl extends ResourceClientBase<Port, PortJson> implement
     public List<PortVlan> getVlans(String portUuid) {
         EquinixRequest<PortVlan> request = buildRequestWithPathParams("GetVlans", RequestType.PAGINATED,
                 Map.of("portUuid", portUuid), PortVlanJson.class);
-        Page<PortVlan, PortVlanJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<PortVlanJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -98,7 +99,7 @@ public class PortClientImpl extends ResourceClientBase<Port, PortJson> implement
         // returning an AllPhysicalPortsResponse.
         EquinixRequest<PhysicalPortsResponseJson> request = buildRequestWithPathParams("AddToLag",
                 RequestType.SINGLE, Map.of("portId", portId), PhysicalPortsResponseJson.class);
-        Utils.serializeJson(request, Map.of("data", physicalPorts != null ? physicalPorts : Collections.emptyList()));
-        return Utils.handleSingletonResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, Map.of("data", physicalPorts != null ? physicalPorts : Collections.emptyList()));
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 }

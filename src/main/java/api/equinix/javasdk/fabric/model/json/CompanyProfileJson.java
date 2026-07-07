@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.CompanyLogo;
@@ -38,7 +37,6 @@ public class CompanyProfileJson {
 
     @Getter static TypeReference<List<CompanyProfileJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<CompanyProfile, CompanyProfileJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

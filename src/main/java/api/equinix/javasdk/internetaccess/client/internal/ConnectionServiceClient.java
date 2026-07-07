@@ -28,5 +28,5 @@ import api.equinix.javasdk.internetaccess.model.json.ConnectionServiceJson;
  */
 public interface ConnectionServiceClient extends Pageable<ConnectionService> {
 
-    Page<ConnectionService, ConnectionServiceJson> list(String ibx);
+    Page<ConnectionServiceJson> list(String ibx);
 }

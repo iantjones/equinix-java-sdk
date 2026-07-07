@@ -18,12 +18,17 @@
  * HTTP communication layer for the Equinix Java SDK. Contains
  * {@link api.equinix.javasdk.core.http.EquinixHttpClient} for executing authenticated
  * HTTP requests against the Equinix API, including OAuth token management and
- * automatic error-to-exception mapping. The {@link api.equinix.javasdk.core.http.Utils}
- * class provides URI construction helpers for building API endpoint URLs with
- * path variables and query parameters. Sub-packages handle request construction
- * and response deserialization.
+ * automatic error-to-exception mapping. Request assembly and response handling are split into
+ * cohesive helpers: {@link api.equinix.javasdk.core.http.RequestAssembler} (request construction
+ * and URI-template resolution), {@link api.equinix.javasdk.core.http.ResponseHandler} (body
+ * deserialization and model mapping), {@link api.equinix.javasdk.core.http.ParameterMapper}
+ * (query-parameter maps and wire formatting) and
+ * {@link api.equinix.javasdk.core.http.SerializationHelper} (JSON request-body attachment; the
+ * wire entity itself is built by the request factory at dispatch).
+ * Sub-packages handle request and response types.
  *
  * @see api.equinix.javasdk.core.http.EquinixHttpClient
- * @see api.equinix.javasdk.core.http.Utils
+ * @see api.equinix.javasdk.core.http.RequestAssembler
+ * @see api.equinix.javasdk.core.http.ResponseHandler
  */
 package api.equinix.javasdk.core.http;

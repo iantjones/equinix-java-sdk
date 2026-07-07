@@ -23,7 +23,7 @@ class TroubleTicketDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = TroubleTicketDeserializationTest.class.getResourceAsStream("/json/customerportal/trouble_ticket_response.json");
         assertNotNull(is, "trouble_ticket_response.json fixture not found on classpath");
         troubleTicket = objectMapper.readValue(is, TroubleTicketJson.class);

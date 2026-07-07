@@ -13,10 +13,6 @@
           "Authenticate": {
             "httpMethod": "POST",
             "requestUri": "token"
-          },
-          "RefreshToken": {
-            "httpMethod": "POST",
-            "requestUri": "refreshaccesstoken"
           }
         }
       }

@@ -19,12 +19,14 @@ package api.equinix.javasdk.core.model.deserializers;
 import api.equinix.javasdk.core.enums.OperationalStatus;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import java.io.IOException;
 
 /**
+ * Case-insensitive {@link OperationalStatus} deserializer with a forward-compatible fallback:
+ * a status value this SDK does not yet list maps to {@link OperationalStatus#UNKNOWN} rather
+ * than failing the whole response (mirroring {@code MetroCodeDeserializer}).
  *
  * @author ianjones
  */
@@ -41,8 +43,17 @@ public class OperationalStatusDeserializer extends StdDeserializer<OperationalSt
     @Override
     public OperationalStatus deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {
-        JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-        String operationalStatus = node.toString().replace("\"","");
-        return OperationalStatus.valueOf(operationalStatus.toUpperCase());
+        String operationalStatus = jsonParser.getText();
+        if (operationalStatus == null || operationalStatus.isBlank()) {
+            return null;
+        }
+
+        try {
+            return OperationalStatus.valueOf(operationalStatus.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // A status the API has introduced that this enum does not yet list: map to the
+            // forward-compatible UNKNOWN sentinel rather than failing the whole response.
+            return OperationalStatus.UNKNOWN;
+        }
     }
 }

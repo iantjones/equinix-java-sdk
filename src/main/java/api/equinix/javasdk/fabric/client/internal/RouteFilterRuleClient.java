@@ -30,7 +30,7 @@ import java.util.List;
 
 public interface RouteFilterRuleClient<T> extends PageablePost<T> {
 
-    Page<RouteFilterRule, RouteFilterRuleJson> list(String routeFilterId);
+    Page<RouteFilterRuleJson> list(String routeFilterId);
 
     RouteFilterRuleJson getByUuid(String routeFilterId, String uuid);
 
@@ -46,7 +46,7 @@ public interface RouteFilterRuleClient<T> extends PageablePost<T> {
 
     List<RouteFilterRuleJson> createBulk(String routeFilterId, List<RouteFilterRuleCreatorJson> routeFilterRuleCreatorJsonList);
 
-    Page<RouteFilterRule, RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort);
 
     List<Change> getChanges(String routeFilterId, String uuid);
 

@@ -18,6 +18,7 @@ package api.equinix.javasdk.core.waiter;
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -94,30 +95,44 @@ public final class ResourceWaiter<T> {
     }
 
     /**
-     * Maximum total time to wait (default 5 minutes).
+     * Maximum total time to wait (default 5 minutes). The final sleep is clamped to the remaining
+     * budget, so {@link #await()} never overruns the timeout by a full poll interval.
      *
-     * @param timeout the overall timeout
+     * @param timeout the overall timeout; must not be negative
      * @return this waiter
      */
     public ResourceWaiter<T> timeout(Duration timeout) {
-        this.timeout = Objects.requireNonNull(timeout, "timeout must not be null");
+        Objects.requireNonNull(timeout, "timeout must not be null");
+        if (timeout.isNegative()) {
+            throw new IllegalArgumentException("timeout must not be negative: " + timeout);
+        }
+        this.timeout = timeout;
         return this;
     }
 
     /**
      * Delay between polls (default 5 seconds). Use {@link Duration#ZERO} to poll without sleeping.
      *
-     * @param pollInterval the inter-poll delay
+     * @param pollInterval the inter-poll delay; must not be negative
      * @return this waiter
      */
     public ResourceWaiter<T> pollInterval(Duration pollInterval) {
-        this.pollInterval = Objects.requireNonNull(pollInterval, "poll interval must not be null");
+        Objects.requireNonNull(pollInterval, "poll interval must not be null");
+        if (pollInterval.isNegative()) {
+            throw new IllegalArgumentException("poll interval must not be negative: " + pollInterval);
+        }
+        this.pollInterval = pollInterval;
         return this;
     }
 
     /**
      * Polls until the success condition holds (returning the resource), the failure condition holds
      * ({@link WaiterFailedException}), or the timeout elapses ({@link WaiterTimeoutException}).
+     * Each sleep is clamped to the remaining timeout budget, so the total wait never exceeds the
+     * configured timeout by more than one final fetch.
+     *
+     * <p>If the polling thread is interrupted while sleeping, a plain {@link WaiterException} is
+     * thrown and the thread's interrupt flag is restored.</p>
      *
      * @return the resource once the success condition is met
      */
@@ -141,12 +156,15 @@ public final class ResourceWaiter<T> {
                 throw new WaiterFailedException(
                         "Resource reached a failure state after " + attempts + " attempt(s).", current);
             }
-            if (System.nanoTime() >= deadlineNanos) {
+            long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadlineNanos - System.nanoTime());
+            if (remainingMillis <= 0L) {
                 throw new WaiterTimeoutException(
                         "Timed out after " + timeout + " (" + attempts + " attempt(s)) waiting for the resource condition.",
                         current);
             }
-            sleep(pollMillis);
+            // Never sleep past the deadline: the last sleep is clamped to the remaining budget so
+            // the configured timeout is an actual upper bound (plus at most one final fetch).
+            sleep(Math.min(pollMillis, remainingMillis));
         }
     }
 

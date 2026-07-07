@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.CloudEvents;
@@ -50,8 +50,8 @@ public class CloudEventsImpl implements CloudEvents {
     }
 
     public PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<CloudEvent, CloudEventJson> responsePage = this.serviceClient.search(filter, sort);
-        PaginatedFilteredList<CloudEvent> cloudEventList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<CloudEventJson> responsePage = this.serviceClient.search(filter, sort);
+        PaginatedFilteredList<CloudEvent> cloudEventList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedFilteredList<>(cloudEventList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

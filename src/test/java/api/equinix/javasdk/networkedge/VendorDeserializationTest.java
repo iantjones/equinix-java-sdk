@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class VendorDeserializationTest {
 
-    private static final ObjectMapper objectMapper = Constants.objectMapper;
+    private static final ObjectMapper objectMapper = Constants.mapper();
 
     private static Vendor read(String wireValue) throws Exception {
         return objectMapper.readValue("\"" + wireValue + "\"", Vendor.class);

@@ -32,9 +32,23 @@ public class WaiterFailedException extends WaiterException {
     }
 
     /**
-     * @return the resource in its failure state
+     * @return the resource in its failure state, or {@code null} (always {@code null} after
+     *         serialization, as the payload is transient)
      */
     public Object getResource() {
         return resource;
+    }
+
+    /**
+     * Typed convenience accessor for the failed resource, e.g.
+     * {@code ex.getResource(Connection.class)}.
+     *
+     * @param type the expected resource type
+     * @param <T> the expected resource type
+     * @return the resource cast to {@code type}, or {@code null} if absent
+     * @throws ClassCastException if the resource is not of the given type
+     */
+    public <T> T getResource(Class<T> type) {
+        return type.cast(resource);
     }
 }

@@ -30,7 +30,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.BackupCreatorJson;
  */
 public interface BackupClient<T> extends Pageable<T> {
 
-    Page<Backup, BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder);
+    Page<BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder);
 
     BackupJson getByUuid(String uuid);
 

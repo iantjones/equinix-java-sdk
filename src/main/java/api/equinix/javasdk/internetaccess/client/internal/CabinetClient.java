@@ -28,5 +28,5 @@ import api.equinix.javasdk.internetaccess.model.json.CabinetJson;
  */
 public interface CabinetClient extends Pageable<Cabinet> {
 
-    Page<Cabinet, CabinetJson> list(String cageSpaceId, String ibx, String accountNumber);
+    Page<CabinetJson> list(String cageSpaceId, String ibx, String accountNumber);
 }

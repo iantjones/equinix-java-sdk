@@ -19,7 +19,6 @@ package api.equinix.javasdk.core.exception;
 import api.equinix.javasdk.core.util.StringUtils;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -58,28 +57,36 @@ import java.util.Map;
  */
 @Getter
 public class EquinixServiceException extends BaseException {
+    private static final long serialVersionUID = 1L;
 
     private final List<ExceptionDetail> exceptionDetails;
     private final Integer statusCode;
     private final Map<String, String> httpHeaders;
     private final String path;
 
+    /**
+     * The SDK-generated request correlation id ({@code X-Correlation-Id} header value) of the
+     * request that produced this error, or {@code null} for errors constructed outside the HTTP
+     * layer. Quote this id when raising the failure with Equinix support — the same id was sent
+     * to the API and appears in the SDK's request/retry logs.
+     */
+    private final String correlationId;
+
     public EquinixServiceException(String errorMessage) {
-        this(errorMessage, null, null, null, null);
+        this(errorMessage, null, null, null, null, null);
     }
 
     public EquinixServiceException(String errorMessage, Exception cause) {
         super(errorMessage, cause);
-        this.exceptionDetails = new ArrayList<>();
+        this.exceptionDetails = List.of();
         this.statusCode = null;
         this.httpHeaders = null;
         this.path = null;
+        this.correlationId = null;
     }
 
     /**
-     * Full constructor used by {@link api.equinix.javasdk.core.http.ResponseErrorMapper ResponseErrorMapper} when mapping an HTTP error response
-     * into a typed exception. All API-error metadata is supplied at construction time so the
-     * exception is immutable.
+     * Convenience constructor without a correlation id; see the full constructor.
      *
      * @param errorMessage     a human-readable summary message.
      * @param statusCode       the HTTP status code returned by the API.
@@ -89,22 +96,54 @@ public class EquinixServiceException extends BaseException {
      */
     public EquinixServiceException(String errorMessage, Integer statusCode, String path,
                                    Map<String, String> httpHeaders, List<ExceptionDetail> exceptionDetails) {
+        this(errorMessage, statusCode, path, httpHeaders, exceptionDetails, null);
+    }
+
+    /**
+     * Full constructor used by {@link api.equinix.javasdk.core.http.ResponseErrorMapper ResponseErrorMapper} when mapping an HTTP error response
+     * into a typed exception. All API-error metadata is supplied at construction time and stored
+     * as immutable copies, so the exception's state cannot change after construction.
+     *
+     * @param errorMessage     a human-readable summary message.
+     * @param statusCode       the HTTP status code returned by the API.
+     * @param path             the request URI that produced the error.
+     * @param httpHeaders      relevant response headers (e.g. {@code Retry-After}); may be {@code null}.
+     * @param exceptionDetails structured error details parsed from the response body; may be {@code null}.
+     * @param correlationId    the SDK-generated {@code X-Correlation-Id} of the failed request; may be {@code null}.
+     */
+    public EquinixServiceException(String errorMessage, Integer statusCode, String path,
+                                   Map<String, String> httpHeaders, List<ExceptionDetail> exceptionDetails,
+                                   String correlationId) {
         super(errorMessage);
         this.statusCode = statusCode;
         this.path = path;
-        this.httpHeaders = httpHeaders;
-        this.exceptionDetails = (exceptionDetails != null) ? exceptionDetails : new ArrayList<>();
+        this.httpHeaders = (httpHeaders != null) ? Map.copyOf(httpHeaders) : null;
+        this.exceptionDetails = (exceptionDetails != null) ? List.copyOf(exceptionDetails) : List.of();
+        this.correlationId = correlationId;
     }
 
+    @Override
     public String getMessage() {
         StringBuilder errorString = new StringBuilder();
 
-        errorString.append("Status Code: ").append(getStatusCode()).append("\nURI: ").append(getPath());
+        String summary = super.getMessage();
+        if (!StringUtils.isNullOrEmpty(summary)) {
+            errorString.append(summary);
+        }
+        if (statusCode != null) {
+            appendLine(errorString, "Status Code: " + statusCode);
+        }
+        if (path != null) {
+            appendLine(errorString, "URI: " + path);
+        }
+        if (correlationId != null) {
+            appendLine(errorString, "Correlation Id: " + correlationId);
+        }
 
         for(ExceptionDetail exceptionDetail : exceptionDetails) {
             errorString.append(!StringUtils.isNullOrEmpty(exceptionDetail.getErrorMessage()) ? "\nError Message: " + exceptionDetail.getErrorMessage() : "")
                     .append(!StringUtils.isNullOrEmpty(exceptionDetail.getFault()) ? "\nFault: " + exceptionDetail.getFault() : "")
-                    .append(!StringUtils.isNullOrEmpty(exceptionDetail.getError()) ? "\nError Message: " + exceptionDetail.getError() : "")
+                    .append(!StringUtils.isNullOrEmpty(exceptionDetail.getError()) ? "\nError: " + exceptionDetail.getError() : "")
                     .append(!StringUtils.isNullOrEmpty(exceptionDetail.getDetails()) ? "\nDetails: " + exceptionDetail.getDetails() : "")
                     .append(!StringUtils.isNullOrEmpty(exceptionDetail.getMoreInfo()) ? "\nMore Info: " + exceptionDetail.getMoreInfo() : "")
                     .append(!StringUtils.isNullOrEmpty(exceptionDetail.getErrorCode()) ? "\nError Code: " + exceptionDetail.getErrorCode() : "")
@@ -122,5 +161,12 @@ public class EquinixServiceException extends BaseException {
         }
 
         return errorString.toString();
+    }
+
+    private static void appendLine(StringBuilder errorString, String line) {
+        if (errorString.length() > 0) {
+            errorString.append('\n');
+        }
+        errorString.append(line);
     }
 }

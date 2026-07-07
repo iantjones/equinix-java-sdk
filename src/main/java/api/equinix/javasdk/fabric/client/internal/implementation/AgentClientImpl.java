@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -46,7 +46,7 @@ public class AgentClientImpl extends ResourceClientBase<Agent, AgentJson> implem
         return new AgentWrapper(json, this);
     }
 
-    public Page<Agent, AgentJson> list() {
+    public Page<AgentJson> list() {
         return listPage("GetAgents");
     }
 
@@ -69,7 +69,7 @@ public class AgentClientImpl extends ResourceClientBase<Agent, AgentJson> implem
     public List<AgentActivity> activities(String agentId) {
         EquinixRequest<AgentActivity> request = buildRequestWithPathParams("GetAgentActivities", RequestType.PAGINATED,
                 Map.of("agentId", agentId), AgentActivityJson.class);
-        Page<AgentActivity, AgentActivityJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<AgentActivityJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 

@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.ConnectionAttachmentStatus;
 import api.equinix.javasdk.fabric.enums.RouteAggregationType;
 import api.equinix.javasdk.fabric.model.RouteAggregationAttachment;
@@ -36,7 +35,6 @@ public final class RouteAggregationAttachmentJson implements RouteAggregationAtt
 
     @Getter static TypeReference<List<RouteAggregationAttachmentJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<RouteAggregationAttachment, RouteAggregationAttachmentJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

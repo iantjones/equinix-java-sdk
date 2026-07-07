@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCages;
@@ -37,7 +37,7 @@ public class InternetAccessCagesImpl implements InternetAccessCages {
     }
 
     public PaginatedList<Cage> list(String ibx, String accountNumber) {
-        Page<Cage, CageJson> responsePage = this.serviceClient.list(ibx, accountNumber);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<CageJson> responsePage = this.serviceClient.list(ibx, accountNumber);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

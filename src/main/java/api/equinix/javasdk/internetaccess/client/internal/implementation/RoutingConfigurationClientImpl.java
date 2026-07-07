@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.RoutingConfigurationClient;
@@ -50,11 +50,11 @@ public class RoutingConfigurationClientImpl
         return json;
     }
 
-    public Page<RoutingProtocolConfiguration, RoutingProtocolConfigurationJson> list(UseCase useCase, Redundancy type) {
+    public Page<RoutingProtocolConfigurationJson> list(UseCase useCase, Redundancy type) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "useCase", useCase.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "useCase", useCase.toString());
         if (type != null) {
-            Utils.addAdditionalValue(queryParams, "type", type.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "type", type.toString());
         }
         return listPage("ListRoutingConfigurations", queryParams);
     }

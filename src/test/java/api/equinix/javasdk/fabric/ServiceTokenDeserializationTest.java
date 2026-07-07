@@ -23,7 +23,7 @@ class ServiceTokenDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream is = ServiceTokenDeserializationTest.class.getResourceAsStream("/json/fabric/service_token_response.json");
         assertNotNull(is, "service_token_response.json fixture not found on classpath");

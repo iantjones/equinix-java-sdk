@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -45,8 +45,8 @@ public class ServiceTokensImpl implements ServiceTokens {
     }
 
     public PaginatedList<ServiceToken> list() {
-        Page<ServiceToken, ServiceTokenJson> responsePage = this.serviceClient.list();
-        PaginatedList<ServiceToken> serviceTokenList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, ServiceTokenWrapper::new);
+        Page<ServiceTokenJson> responsePage = this.serviceClient.list();
+        PaginatedList<ServiceToken> serviceTokenList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, ServiceTokenWrapper::new);
         return new PaginatedList<>(serviceTokenList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -72,8 +72,8 @@ public class ServiceTokensImpl implements ServiceTokens {
     }
 
     public PaginatedFilteredList<ServiceToken> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<ServiceToken, ServiceTokenJson> responsePage = this.serviceClient.search(filter, sort);
-        PaginatedFilteredList<ServiceToken> serviceTokenList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ServiceTokenWrapper::new);
+        Page<ServiceTokenJson> responsePage = this.serviceClient.search(filter, sort);
+        PaginatedFilteredList<ServiceToken> serviceTokenList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ServiceTokenWrapper::new);
         return new PaginatedFilteredList<>(serviceTokenList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

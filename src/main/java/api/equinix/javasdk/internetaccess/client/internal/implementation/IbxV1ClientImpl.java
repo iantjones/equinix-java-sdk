@@ -53,6 +53,6 @@ public class IbxV1ClientImpl extends ResourceClientBase<Ibx, IbxJson> implements
         if (accessPointType != null) {
             request.addSingleQueryParameter("connection.aside.accessPoint.type", accessPointType);
         }
-        return api.equinix.javasdk.core.http.Utils.handleSingletonResponse(invoke(request), request);
+        return api.equinix.javasdk.core.http.ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 }

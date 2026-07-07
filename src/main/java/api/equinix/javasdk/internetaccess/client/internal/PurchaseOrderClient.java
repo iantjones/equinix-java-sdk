@@ -29,7 +29,7 @@ import api.equinix.javasdk.internetaccess.model.json.PurchaseOrderJson;
  */
 public interface PurchaseOrderClient extends Pageable<PurchaseOrder> {
 
-    Page<PurchaseOrder, PurchaseOrderJson> list(String accountNumber, String ibx, PurchaseOrderCategory category);
+    Page<PurchaseOrderJson> list(String accountNumber, String ibx, PurchaseOrderCategory category);
 
     PurchaseOrderJson getOne(String accountNumber, String number);
 }

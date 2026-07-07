@@ -24,7 +24,7 @@ import api.equinix.javasdk.fabric.model.json.CloudRouterPackageJson;
 
 public interface CloudRouterPackageClient<T> extends Pageable<T> {
 
-    Page<CloudRouterPackage, CloudRouterPackageJson> list();
+    Page<CloudRouterPackageJson> list();
 
     CloudRouterPackageJson getByPackageCode(CloudRouterPackageCode packageCode);
 }

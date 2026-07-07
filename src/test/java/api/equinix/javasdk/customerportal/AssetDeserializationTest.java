@@ -18,7 +18,7 @@ class AssetDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = AssetDeserializationTest.class.getResourceAsStream("/json/customerportal/asset_response.json");
         assertNotNull(is, "asset_response.json fixture not found on classpath");
         asset = objectMapper.readValue(is, AssetJson.class);

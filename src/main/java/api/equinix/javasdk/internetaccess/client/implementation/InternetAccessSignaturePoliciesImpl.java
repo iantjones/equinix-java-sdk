@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessSignaturePolicies;
@@ -41,7 +41,7 @@ public class InternetAccessSignaturePoliciesImpl implements InternetAccessSignat
     }
 
     public PaginatedList<SignaturePolicy> list(String countryCode) {
-        Page<SignaturePolicy, SignaturePolicyJson> responsePage = this.serviceClient.list(countryCode);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<SignaturePolicyJson> responsePage = this.serviceClient.list(countryCode);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

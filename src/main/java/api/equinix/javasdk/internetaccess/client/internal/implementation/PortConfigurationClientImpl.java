@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.PortConfigurationClient;
@@ -48,10 +48,10 @@ public class PortConfigurationClientImpl
         return json;
     }
 
-    public Page<PortConfiguration, PortConfigurationJson> list(String ibx, UseCase useCase) {
+    public Page<PortConfigurationJson> list(String ibx, UseCase useCase) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "connection.aside.accessPoint.port.location.ibx", ibx);
-        Utils.addAdditionalValue(queryParams, "useCase", useCase.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "connection.aside.accessPoint.port.location.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "useCase", useCase.toString());
         return listPage("ListPortConfigurations", queryParams);
     }
 }

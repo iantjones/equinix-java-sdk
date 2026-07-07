@@ -5,6 +5,7 @@ import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.fabric.enums.RouteAggregationRuleState;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
 import api.equinix.javasdk.fabric.model.implementation.Change;
@@ -143,6 +144,29 @@ class FabricRouteAggregationRulesWireMockTest extends WireMockTestBase {
             assertThrows(IllegalStateException.class, () -> rule.update(PARENT).save());
             wireMock.verify(0, patchRequestedFor(urlPathMatching(RULE_PATH_PATTERN)));
         }
+
+        @Test
+        @DisplayName("prefix(IPAddress) PATCHes a byte-identical op/path/value body to prefix(String)")
+        void typedPrefixMatchesStringPathOnUpdate() {
+            stubSingleton(wireMock, RULE_PATH_PATTERN,
+                    "/json/fabric/route_aggregation_rule_response.json");
+            wireMock.stubFor(patch(urlPathMatching(RULE_PATH_PATTERN))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_rule_response.json"))));
+
+            RouteAggregationRule rule = fabric.routeAggregationRules().getByUuid(PARENT, RULE);
+
+            // Same update issued twice: once via the String setter, once via the typed
+            // IPAddress overload (which formats via IPAddress.toCidr(), preserving the CIDR subnet).
+            rule.update(PARENT).prefix("192.168.0.0/16").save();
+            rule.update(PARENT).prefix(IPAddress.parse("192.168.0.0/16")).save();
+
+            var patches = wireMock.findAll(patchRequestedFor(urlPathMatching(RULE_PATH)));
+            assertEquals(2, patches.size());
+            assertEquals(patches.get(0).getBodyAsString(), patches.get(1).getBodyAsString());
+            wireMock.verify(2, patchRequestedFor(urlPathMatching(RULE_PATH))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/prefix\",\"value\":\"192.168.0.0/16\"}]")));
+        }
     }
 
     @Nested
@@ -175,6 +199,38 @@ class FabricRouteAggregationRulesWireMockTest extends WireMockTestBase {
                             + "\"prefix\":\"10.0.0.0/8\","
                             + "\"description\":\"Aggregate the 10/8 private range\"}",
                             true, true)));
+        }
+
+        @Test
+        @DisplayName("withPrefix(IPAddress) POSTs a byte-identical create body to the String setter")
+        void typedPrefixMatchesStringPath() {
+            wireMock.stubFor(post(urlPathMatching(
+                    "/fabric/v4/routeAggregations/.*/routeAggregationRules"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/route_aggregation_rule_response.json"))));
+
+            // Same create issued twice: once via the String setter, once via the typed
+            // IPAddress overload (which formats via IPAddress.toCidr(), preserving the CIDR subnet).
+            fabric.routeAggregationRules().define(PARENT)
+                    .withName("Aggregate-10-0-0-0-8")
+                    .withPrefix("10.0.0.0/8")
+                    .withDescription("Aggregate the 10/8 private range")
+                    .create();
+            fabric.routeAggregationRules().define(PARENT)
+                    .withName("Aggregate-10-0-0-0-8")
+                    .withPrefix(IPAddress.parse("10.0.0.0/8"))
+                    .withDescription("Aggregate the 10/8 private range")
+                    .create();
+
+            var posts = wireMock.findAll(postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routeAggregations/" + PARENT + "/routeAggregationRules")));
+            assertEquals(2, posts.size());
+            assertEquals(posts.get(0).getBodyAsString(), posts.get(1).getBodyAsString());
+            wireMock.verify(2, postRequestedFor(urlPathEqualTo(
+                    "/fabric/v4/routeAggregations/" + PARENT + "/routeAggregationRules"))
+                    .withRequestBody(matchingJsonPath("$.prefix", equalTo("10.0.0.0/8"))));
         }
     }
 

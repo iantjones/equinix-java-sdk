@@ -135,6 +135,9 @@ public final class Equinix implements Closeable {
         if (config.getRetryPolicy() != null) {
             this.core.setRetryPolicy(config.getRetryPolicy());
         }
+        if (config.getCircuitBreaker() != null) {
+            this.core.setCircuitBreaker(config.getCircuitBreaker());
+        }
     }
 
     public Fabric fabric() {

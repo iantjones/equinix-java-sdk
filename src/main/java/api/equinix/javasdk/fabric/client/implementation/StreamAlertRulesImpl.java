@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.StreamAlertRules;
@@ -35,8 +35,8 @@ public class StreamAlertRulesImpl implements StreamAlertRules {
     }
 
     public PaginatedList<StreamAlertRule> list(String streamId) {
-        Page<StreamAlertRule, StreamAlertRuleJson> responsePage = this.serviceClient.list(streamId);
-        PaginatedList<StreamAlertRule> alertRuleList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, StreamAlertRuleWrapper::new);
+        Page<StreamAlertRuleJson> responsePage = this.serviceClient.list(streamId);
+        PaginatedList<StreamAlertRule> alertRuleList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, StreamAlertRuleWrapper::new);
         return new PaginatedList<>(alertRuleList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

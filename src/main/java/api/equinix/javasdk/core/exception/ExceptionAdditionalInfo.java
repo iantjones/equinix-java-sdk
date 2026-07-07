@@ -19,12 +19,17 @@ package api.equinix.javasdk.core.exception;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.io.Serializable;
+
 /**
+ * A property-level error annotation nested inside an {@link ExceptionDetail}. {@link Serializable}
+ * because it is carried by the (serializable) {@link EquinixServiceException} family.
  *
  * @author ianjones
  */
 @Getter
-public class ExceptionAdditionalInfo {
+public class ExceptionAdditionalInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @JsonProperty("property")
     private String property;

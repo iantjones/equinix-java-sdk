@@ -24,7 +24,7 @@ import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest
 
 public interface AssetClient<T> extends Pageable<T> {
 
-    Page<Asset, AssetJson> search(AssetSearchRequest request);
+    Page<AssetJson> search(AssetSearchRequest request);
 
     AssetJson getByUuid(String assetId);
 }

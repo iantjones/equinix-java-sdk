@@ -16,8 +16,6 @@
 
 package api.equinix.javasdk.core.auth;
 
-import api.equinix.javasdk.core.enums.GrantType;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
@@ -38,24 +36,26 @@ import lombok.Getter;
 @Getter
 public class BasicEquinixCredentials implements EquinixCredentials {
 
-    @JsonProperty("client_id")
     private final String accessKey;
 
-    @JsonProperty("client_secret")
     private final String secretKey;
-
-    @JsonProperty("grant_type")
-    private final String grantType;
 
     /**
      * Creates credentials using the given OAuth2 Client ID and Client Secret.
      *
      * @param accessKey the OAuth2 Client ID from the Equinix Developer Portal
      * @param secretKey the OAuth2 Client Secret from the Equinix Developer Portal
+     * @throws IllegalArgumentException if either value is null or blank — failing here with a
+     *         clear message rather than as a confusing 400/401 on the first API call
      */
     public BasicEquinixCredentials(String accessKey, String secretKey) {
+        if (accessKey == null || accessKey.isBlank()) {
+            throw new IllegalArgumentException("accessKey (OAuth2 Client ID) must not be null or blank.");
+        }
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalArgumentException("secretKey (OAuth2 Client Secret) must not be null or blank.");
+        }
         this.accessKey = accessKey;
         this.secretKey = secretKey;
-        this.grantType = GrantType.CLIENT_CREDENTIALS.toString();
     }
 }

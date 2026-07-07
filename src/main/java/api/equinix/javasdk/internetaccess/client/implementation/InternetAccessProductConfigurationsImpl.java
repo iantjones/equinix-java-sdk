@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessProductConfigurations;
@@ -88,9 +88,9 @@ public class InternetAccessProductConfigurationsImpl implements InternetAccessPr
     }
 
     public PaginatedList<RoutingProtocolConfiguration> routingConfigurations(UseCase useCase, Redundancy type) {
-        Page<RoutingProtocolConfiguration, RoutingProtocolConfigurationJson> responsePage =
+        Page<RoutingProtocolConfigurationJson> responsePage =
                 this.routingConfigurationClient.list(useCase, type);
-        return Utils.toPaginatedList(responsePage, this.routingConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.routingConfigurationClient, (json, client) -> json);
     }
 
     public PaginatedList<DedicatedBandwidthConfiguration> dedicatedBandwidthConfigurations(UseCase useCase) {
@@ -98,9 +98,9 @@ public class InternetAccessProductConfigurationsImpl implements InternetAccessPr
     }
 
     public PaginatedList<DedicatedBandwidthConfiguration> dedicatedBandwidthConfigurations(UseCase useCase, BillingType billing, Integer physicalPortSpeed) {
-        Page<DedicatedBandwidthConfiguration, DedicatedBandwidthConfigurationJson> responsePage =
+        Page<DedicatedBandwidthConfigurationJson> responsePage =
                 this.dedicatedBandwidthConfigurationClient.list(useCase, billing, physicalPortSpeed);
-        return Utils.toPaginatedList(responsePage, this.dedicatedBandwidthConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.dedicatedBandwidthConfigurationClient, (json, client) -> json);
     }
 
     public PaginatedList<VirtualBandwidthConfiguration> virtualBandwidthConfigurations(UseCase useCase) {
@@ -108,9 +108,9 @@ public class InternetAccessProductConfigurationsImpl implements InternetAccessPr
     }
 
     public PaginatedList<VirtualBandwidthConfiguration> virtualBandwidthConfigurations(UseCase useCase, BillingType billing) {
-        Page<VirtualBandwidthConfiguration, VirtualBandwidthConfigurationJson> responsePage =
+        Page<VirtualBandwidthConfigurationJson> responsePage =
                 this.virtualBandwidthConfigurationClient.list(useCase, billing);
-        return Utils.toPaginatedList(responsePage, this.virtualBandwidthConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.virtualBandwidthConfigurationClient, (json, client) -> json);
     }
 
     public PaginatedList<VirtualConnectionDefaultConfiguration> virtualConnectionDefaultConfigurations(String ibx) {
@@ -118,9 +118,9 @@ public class InternetAccessProductConfigurationsImpl implements InternetAccessPr
     }
 
     public PaginatedList<VirtualConnectionDefaultConfiguration> virtualConnectionDefaultConfigurations(String ibx, String metroCode) {
-        Page<VirtualConnectionDefaultConfiguration, VirtualConnectionDefaultConfigurationJson> responsePage =
+        Page<VirtualConnectionDefaultConfigurationJson> responsePage =
                 this.virtualConnectionDefaultConfigurationClient.list(ibx, metroCode);
-        return Utils.toPaginatedList(responsePage, this.virtualConnectionDefaultConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.virtualConnectionDefaultConfigurationClient, (json, client) -> json);
     }
 
     public PaginatedList<CustomerRouteConfiguration> customerRouteConfigurations(UseCase useCase) {
@@ -128,20 +128,20 @@ public class InternetAccessProductConfigurationsImpl implements InternetAccessPr
     }
 
     public PaginatedList<CustomerRouteConfiguration> customerRouteConfigurations(UseCase useCase, Redundancy type, RoutingProtocolType routingProtocolType) {
-        Page<CustomerRouteConfiguration, CustomerRouteConfigurationJson> responsePage =
+        Page<CustomerRouteConfigurationJson> responsePage =
                 this.customerRouteConfigurationClient.list(useCase, type, routingProtocolType);
-        return Utils.toPaginatedList(responsePage, this.customerRouteConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.customerRouteConfigurationClient, (json, client) -> json);
     }
 
     public PaginatedList<DedicatedPortDefaultConfiguration> dedicatedPortDefaultConfigurations(String ibx) {
-        Page<DedicatedPortDefaultConfiguration, DedicatedPortDefaultConfigurationJson> responsePage =
+        Page<DedicatedPortDefaultConfigurationJson> responsePage =
                 this.dedicatedPortDefaultConfigurationClient.list(ibx);
-        return Utils.toPaginatedList(responsePage, this.dedicatedPortDefaultConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.dedicatedPortDefaultConfigurationClient, (json, client) -> json);
     }
 
     public PaginatedList<PortConfiguration> portConfigurations(String ibx, UseCase useCase) {
-        Page<PortConfiguration, PortConfigurationJson> responsePage =
+        Page<PortConfigurationJson> responsePage =
                 this.portConfigurationClient.list(ibx, useCase);
-        return Utils.toPaginatedList(responsePage, this.portConfigurationClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.portConfigurationClient, (json, client) -> json);
     }
 }

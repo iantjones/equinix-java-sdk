@@ -17,15 +17,17 @@
 package api.equinix.javasdk.core.client;
 
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.RequestAssembler;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.internal.Constants;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -112,77 +114,42 @@ public class ClientBase {
         }
 
         public <T> EquinixRequest<T> build() {
-            return Utils.buildRequest(functionalArea, requestParent,
+            Objects.requireNonNull(requestType, "withType(RequestType) must be called before build()");
+            return RequestAssembler.buildRequest(functionalArea, requestParent,
                     serviceEndpoint, requestType, configClient.getEquinixClient(),
                     pathParams, queryParams, typeRef);
         }
     }
 
     // -----------------------------------------------------------------------
-    // Legacy convenience methods (delegate to the core buildRequest)
-    // -----------------------------------------------------------------------
-
-    protected  <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams) {
-        return buildRequest(serviceEndpoint, requestType, pathParams, null, (TypeReference<?>) null);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType, Map<String, List<String>> queryParams) {
-        return buildRequest(serviceEndpoint, requestType, null, queryParams, (TypeReference<?>) null);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams, Map<String, List<String>> queryParams) {
-        return buildRequest(serviceEndpoint, requestType, pathParams, queryParams, (TypeReference<?>) null);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, TypeReference<?> typeRef) {
-        return buildRequest(serviceEndpoint, requestType, null, null, typeRef);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType) {
-        return buildRequest(serviceEndpoint, requestType, null, null, (TypeReference<?>) null);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams, TypeReference<?> typeRef) {
-        return buildRequest(serviceEndpoint, requestType, pathParams, null, typeRef);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType, Map<String, List<String>> queryParams, TypeReference<?> typeRef) {
-        return buildRequest(serviceEndpoint, requestType, null, queryParams, typeRef);
-    }
-
-    protected  <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType,
-                                                  Map<String, String> pathParams, Map<String, List<String>> queryParams,
-                                                  TypeReference<?> typeRef) {
-        return Utils.buildRequest(this.functionalArea, this.requestParent,
-                serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, queryParams, typeRef);
-    }
-
-    // -----------------------------------------------------------------------
-    // Derived-type variants: response type is inferred from the resource's JSON
-    // class (no hand-declared TypeReference needed). See Utils.deriveResponseType.
+    // Request-build helpers: the response type is derived from the resource's JSON
+    // class (no hand-declared TypeReference needed). See RequestAssembler.deriveResponseType.
+    // Requests that genuinely need a hand-declared TypeReference (generic response
+    // envelopes, secondary types) use the fluent builder's withTypeRef(...) instead —
+    // the old String+TypeReference buildRequest overloads have been removed.
     // -----------------------------------------------------------------------
 
     protected <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType, Class<?> jsonClass) {
-        return Utils.buildRequest(this.functionalArea, this.requestParent,
+        return RequestAssembler.buildRequest(this.functionalArea, this.requestParent,
                 serviceEndpoint, requestType, this.configClient.getEquinixClient(), null, null, jsonClass);
     }
 
     protected <T> EquinixRequest<T> buildRequestWithPathParams(String serviceEndpoint, RequestType requestType,
                                                                Map<String, String> pathParams, Class<?> jsonClass) {
-        return Utils.buildRequest(this.functionalArea, this.requestParent,
+        return RequestAssembler.buildRequest(this.functionalArea, this.requestParent,
                 serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, null, jsonClass);
     }
 
     protected <T> EquinixRequest<T> buildRequestWithQueryParams(String serviceEndpoint, RequestType requestType,
                                                                 Map<String, List<String>> queryParams, Class<?> jsonClass) {
-        return Utils.buildRequest(this.functionalArea, this.requestParent,
+        return RequestAssembler.buildRequest(this.functionalArea, this.requestParent,
                 serviceEndpoint, requestType, this.configClient.getEquinixClient(), null, queryParams, jsonClass);
     }
 
     protected <T> EquinixRequest<T> buildRequest(String serviceEndpoint, RequestType requestType,
                                                  Map<String, String> pathParams, Map<String, List<String>> queryParams,
                                                  Class<?> jsonClass) {
-        return Utils.buildRequest(this.functionalArea, this.requestParent,
+        return RequestAssembler.buildRequest(this.functionalArea, this.requestParent,
                 serviceEndpoint, requestType, this.configClient.getEquinixClient(), pathParams, queryParams, jsonClass);
     }
 
@@ -201,69 +168,65 @@ public class ClientBase {
     protected <R> R getAs(String serviceEndpoint, Map<String, String> pathParams,
                           Map<String, List<String>> queryParams, Class<R> responseType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, responseType);
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     protected <R> R postAs(String serviceEndpoint, Object body, Class<R> responseType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, responseType);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     protected <R> R postForType(String serviceEndpoint, Object body, TypeReference<?> typeReference) {
-        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, typeReference);
-        if (body != null) {
-            Utils.serializeJson(request, body);
-        }
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return postForType(serviceEndpoint, null, null, body, typeReference);
     }
 
     protected <R> List<R> listAs(String serviceEndpoint, Map<String, String> pathParams,
                                  Map<String, List<String>> queryParams, Class<R> elementType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.LIST, pathParams, queryParams, elementType);
-        return Utils.handleListResponse(invoke(request), request);
+        return ResponseHandler.handleListResponse(invoke(request), request);
     }
 
     protected <R> List<R> postListAs(String serviceEndpoint, Object body, Class<R> elementType) {
         EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.LIST, elementType);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.handleListResponse(invoke(request), request);
+        return ResponseHandler.handleListResponse(invoke(request), request);
     }
 
     protected Map<String, String> mapOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
                                         Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.handleMapResponse(request, invoke(request));
+        return ResponseHandler.handleMapResponse(request, invoke(request));
     }
 
     protected boolean booleanOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
                                 Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.handleBooleanResponse(invoke(request), request);
+        return ResponseHandler.handleBooleanResponse(invoke(request), request);
     }
 
     protected String stringOp(String serviceEndpoint, RequestType requestType, Map<String, String> pathParams,
                               Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.handleStringResponse(invoke(request));
+        return ResponseHandler.handleStringResponse(invoke(request));
     }
 
     protected byte[] bytesOp(String serviceEndpoint, Map<String, String> pathParams, Map<String, List<String>> queryParams) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, Object.class);
-        return Utils.handleByteResponse(invoke(request));
+        return ResponseHandler.handleByteResponse(invoke(request));
     }
 
     /**
@@ -275,26 +238,23 @@ public class ClientBase {
                           Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, requestType, pathParams, queryParams, Object.class);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        Utils.handleBooleanResponse(invoke(request), request);
+        ResponseHandler.handleBooleanResponse(invoke(request), request);
     }
 
     protected <R> R postForType(String serviceEndpoint, Map<String, String> pathParams, Object body, TypeReference<?> typeReference) {
-        EquinixRequest<R> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, pathParams, typeReference);
-        if (body != null) {
-            Utils.serializeJson(request, body);
-        }
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return postForType(serviceEndpoint, pathParams, null, body, typeReference);
     }
 
     protected <R> R postForType(String serviceEndpoint, Map<String, String> pathParams,
                                 Map<String, List<String>> queryParams, Object body, TypeReference<?> typeReference) {
-        EquinixRequest<R> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, typeReference);
+        EquinixRequest<R> request = this.newRequest(serviceEndpoint).withType(RequestType.SINGLE)
+                .withPathParams(pathParams).withQueryParams(queryParams).withTypeRef(typeReference).build();
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     /**
@@ -306,8 +266,8 @@ public class ClientBase {
                                                  Map<String, List<String>> queryParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, Object.class);
         if (body != null) {
-            Utils.serializeJson(request, body);
+            SerializationHelper.serializeJson(request, body);
         }
-        return Utils.extractFromHeader(invoke(request), "Location", Constants.UUID_PATTERN);
+        return ResponseHandler.extractFromHeader(invoke(request), "Location", Constants.UUID_PATTERN);
     }
 }

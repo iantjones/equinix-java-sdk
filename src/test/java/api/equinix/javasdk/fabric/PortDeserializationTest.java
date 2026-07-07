@@ -23,7 +23,7 @@ class PortDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream is = PortDeserializationTest.class.getResourceAsStream("/json/fabric/port_response.json");
         assertNotNull(is, "port_response.json fixture not found on classpath");

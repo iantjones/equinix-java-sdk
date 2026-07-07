@@ -75,8 +75,8 @@ public class PolicyMaskClientImpl extends ClientBase implements PolicyMaskClient
     @Override
     public Boolean delete(String projectId, String policyMaskId, String lastRev) {
         // The spec requires the LastRevBody {lastRev} on the DELETE for optimistic concurrency.
-        // The body is serialized here; the core HTTP layer must enclose entities on DELETE for it
-        // to reach the wire (see RequestFactory).
+        // A DELETE that carries a RequestBody is sent as a body-enclosing DELETE by the core
+        // request factory (HttpDeleteWithBody), so the lastRev payload reaches the wire.
         return booleanOp("DeletePolicyMask", RequestType.SINGLE,
                 Map.of("projectId", projectId, "policyMaskId", policyMaskId), null, new LastRevRequest(lastRev));
     }

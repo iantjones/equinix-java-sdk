@@ -35,7 +35,7 @@ class InternetAccessServiceDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = InternetAccessServiceDeserializationTest.class
                 .getResourceAsStream("/json/internetaccess/internet_access_service_response.json");
         assertNotNull(is, "internet_access_service_response.json fixture not found on classpath");

@@ -29,9 +29,9 @@ import api.equinix.javasdk.fabric.model.json.RouteTableEntryJson;
  */
 public interface RouteTableEntryClient<T> extends PageablePost<T> {
 
-    Page<RouteTableEntry, RouteTableEntryJson> searchAdvertisedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteTableEntryJson> searchAdvertisedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort);
 
-    Page<RouteTableEntry, RouteTableEntryJson> searchReceivedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteTableEntryJson> searchReceivedRoutes(String connectionId, FilterPropertyList filter, SortPropertyList sort);
 
-    Page<RouteTableEntry, RouteTableEntryJson> searchCloudRouterRoutes(String routerId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteTableEntryJson> searchCloudRouterRoutes(String routerId, FilterPropertyList filter, SortPropertyList sort);
 }

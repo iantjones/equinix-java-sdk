@@ -30,9 +30,9 @@ import api.equinix.javasdk.internetaccess.model.json.AccountDetailsJson;
  */
 public interface AccountClient extends Pageable<AccountDetails> {
 
-    Page<AccountDetails, AccountDetailsJson> list(String operationalUnitsIbx, String projectId);
+    Page<AccountDetailsJson> list(String operationalUnitsIbx, String projectId);
 
     AccountDetailsJson getByNumber(String accountNumber);
 
-    Page<AccountAgreement, AccountAgreementJson> agreements(String accountNumber, String ibx);
+    Page<AccountAgreementJson> agreements(String accountNumber, String ibx);
 }
