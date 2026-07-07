@@ -16,12 +16,12 @@
 
 /**
  * HTTP response handling for the Equinix Java SDK. Contains
- * {@link api.equinix.javasdk.core.http.response.EquinixResponse} for wrapping
- * raw HTTP responses with status codes and deserialized bodies.
- * {@link api.equinix.javasdk.core.http.response.Pagination} holds page metadata
- * (offset, limit, total), and {@link api.equinix.javasdk.core.http.response.PaginatedList}
- * provides an iterable collection with automatic pagination support for
- * traversing multi-page API result sets.
+ * {@link api.equinix.javasdk.core.http.response.EquinixResponse}, which wraps the raw HTTP
+ * response (status code, headers and the raw body stream — deserialization happens later in the
+ * response handlers). {@link api.equinix.javasdk.core.http.response.Pagination} holds page
+ * metadata (offset, limit, total), and {@link api.equinix.javasdk.core.http.response.PaginatedList}
+ * provides an iterable view over the loaded results with explicit page loading via
+ * {@code next()}/{@code loadAll()}.
  *
  * @see api.equinix.javasdk.core.http.response.EquinixResponse
  * @see api.equinix.javasdk.core.http.response.PaginatedList

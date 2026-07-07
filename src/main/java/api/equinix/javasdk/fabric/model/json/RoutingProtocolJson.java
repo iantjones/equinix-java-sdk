@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolState;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.Project;
@@ -35,7 +34,6 @@ public class RoutingProtocolJson {
 
     @Getter static TypeReference<List<RoutingProtocolJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<RoutingProtocol, RoutingProtocolJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

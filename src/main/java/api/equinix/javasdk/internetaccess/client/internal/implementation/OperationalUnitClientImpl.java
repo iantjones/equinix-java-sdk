@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.OperationalUnitClient;
@@ -45,9 +45,9 @@ public class OperationalUnitClientImpl extends ResourceClientBase<OperationalUni
         return json;
     }
 
-    public Page<OperationalUnit, OperationalUnitJson> list(String ibx) {
+    public Page<OperationalUnitJson> list(String ibx) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "location.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "location.ibx", ibx);
         return listPage("ListOperationalUnits", queryParams);
     }
 }

@@ -22,17 +22,30 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
+ * Request carrier for offset/limit-paginated GET list operations. Holds the raw paging state
+ * ({@code offset}/{@code pageSize}) as plain fields; {@link #setPagination()} writes them onto
+ * the wire as {@code offset}/{@code limit} query parameters at dispatch.
  *
+ * @param <T> the operation's model type
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
-public class PaginatedRequest<T> extends EquinixRequest<T> {
-    protected Integer offset = 0;
-    protected Integer pageSize = Constants.PAGE_LIMIT;
+public final class PaginatedRequest<T> extends EquinixRequest<T> {
+    private int offset = 0;
+    private int pageSize = Constants.PAGE_LIMIT;
 
     public void nextPage() {
         this.offset += this.pageSize;
+    }
+
+    /**
+     * Rolls the offset back one page (floored at zero). Used by the paging pipeline to restore
+     * the pre-advance state when a page fetch fails, so a retried {@code next()} re-requests the
+     * same page instead of silently skipping one.
+     */
+    public void previousPage() {
+        this.offset = Math.max(0, this.offset - this.pageSize);
     }
 
     /**
@@ -72,8 +85,8 @@ public class PaginatedRequest<T> extends EquinixRequest<T> {
     }
 
     public void setPagination() {
-        replaceQueryParameter("offset", ModelUtils.process(this.offset.toString()));
-        replaceQueryParameter("limit", ModelUtils.process(this.pageSize.toString()));
+        replaceQueryParameter("offset", ModelUtils.process(Integer.toString(this.offset)));
+        replaceQueryParameter("limit", ModelUtils.process(Integer.toString(this.pageSize)));
     }
 
 }

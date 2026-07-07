@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.Metrics;
@@ -51,8 +51,8 @@ public class MetricsImpl implements Metrics {
     }
 
     public PaginatedFilteredList<Metric> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<Metric, MetricJson> responsePage = serviceClient.search(filter, sort);
-        return Utils.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<MetricJson> responsePage = serviceClient.search(filter, sort);
+        return ResponseHandler.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
     }
 
     public List<Metric> getMetricsByName(String name, String value) {

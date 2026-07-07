@@ -24,7 +24,7 @@ import api.equinix.javasdk.customerportal.model.json.creators.BillingAccountSear
 
 public interface BillingAccountSearchClient<T> extends Pageable<T> {
 
-    Page<BillingAccountV2, BillingAccountV2Json> search(BillingAccountSearchRequest request);
+    Page<BillingAccountV2Json> search(BillingAccountSearchRequest request);
 
     BillingAccountV2Json getByAccountNumber(String accountNumber);
 

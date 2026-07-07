@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -46,7 +46,9 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
     private final FabricConfigImpl configClient;
 
     public RouteFilterClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "RouteFilters", RouteFilterJson.class);
+        // "RouteFilter" drives the derived endpoint names (SearchRouteFilters, GetRouteFilter,
+        // DeleteRouteFilter).
+        super(configClient, "Fabric", "RouteFilters", RouteFilterJson.class, "RouteFilter");
         this.configClient = configClient;
     }
 
@@ -55,12 +57,12 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
         return new RouteFilterWrapper(json, this);
     }
 
-    public Page<RouteFilter, RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        return searchPage("SearchRouteFilters", new FilteredSortedPaginatedPost<>(filter, sort));
+    public Page<RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage(new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public RouteFilterJson getByUuid(String uuid) {
-        return getOne("GetRouteFilter", uuid);
+        return getOneByUuid(uuid);
     }
 
     public RouteFilterJson create(RouteFilterCreatorJson routeFilterCreatorJson) {
@@ -74,7 +76,7 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
     }
 
     public RouteFilterJson delete(String uuid) {
-        return deleteOne("DeleteRouteFilter", uuid);
+        return deleteOneByUuid(uuid);
     }
 
     public RouteFilterJson refresh(String uuid) {
@@ -84,7 +86,7 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
     public List<Change> getChanges(String uuid) {
         EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteFilterChanges", RequestType.PAGINATED,
                 Map.of("uuid", uuid), Change.class);
-        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<Change> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -95,7 +97,7 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
     public List<Connection> getConnections(String uuid) {
         EquinixRequest<Connection> request = buildRequestWithPathParams("GetRouteFilterConnections", RequestType.PAGINATED,
                 Map.of("uuid", uuid), ConnectionJson.class);
-        Page<Connection, ConnectionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<ConnectionJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         if (page == null || page.getItems() == null) {
             return Collections.emptyList();
         }

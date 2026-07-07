@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Reports;
@@ -42,8 +42,8 @@ public class ReportsImpl implements Reports {
     }
 
     public PaginatedList<Report> getReports() {
-        Page<Report, ReportJson> responsePage = this.serviceClient.getReports();
-        PaginatedList<Report> reportList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<ReportJson> responsePage = this.serviceClient.getReports();
+        PaginatedList<Report> reportList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(reportList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

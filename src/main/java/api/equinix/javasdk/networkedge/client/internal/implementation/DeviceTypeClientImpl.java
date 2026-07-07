@@ -39,7 +39,7 @@ public class DeviceTypeClientImpl extends ResourceClientBase<DeviceType, DeviceT
         return new DeviceTypeWrapper(json, this);
     }
 
-    public Page<DeviceType, DeviceTypeJson> list() {
+    public Page<DeviceTypeJson> list() {
         return listPage("ListDeviceTypes");
     }
 }

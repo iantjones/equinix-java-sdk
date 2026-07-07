@@ -17,7 +17,7 @@
 package api.equinix.javasdk.projects.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.projects.client.implementation.ProjectsConfigImpl;
 import api.equinix.javasdk.projects.client.internal.ProjectClient;
@@ -47,13 +47,13 @@ public class ProjectClientImpl extends ResourceClientBase<Project, ProjectJson> 
         return json;
     }
 
-    public Page<Project, ProjectJson> list(Boolean includePermissions, Boolean includeInbox) {
+    public Page<ProjectJson> list(Boolean includePermissions, Boolean includeInbox) {
         Map<String, List<String>> queryParams = new HashMap<>();
         if (includePermissions != null) {
-            queryParams.put("includePermissions", Utils.singleParamList(includePermissions));
+            queryParams.put("includePermissions", ParameterMapper.singleParamList(includePermissions));
         }
         if (includeInbox != null) {
-            queryParams.put("includeInbox", Utils.singleParamList(includeInbox));
+            queryParams.put("includeInbox", ParameterMapper.singleParamList(includeInbox));
         }
         return listPage("ListProjects", queryParams.isEmpty() ? null : queryParams);
     }

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.SignaturePolicyClient;
@@ -45,10 +45,10 @@ public class SignaturePolicyClientImpl extends ResourceClientBase<SignaturePolic
         return json;
     }
 
-    public Page<SignaturePolicy, SignaturePolicyJson> list(String countryCode) {
+    public Page<SignaturePolicyJson> list(String countryCode) {
         Map<String, List<String>> queryParams = new HashMap<>();
         if (countryCode != null) {
-            Utils.addAdditionalValue(queryParams, "location.countryCode", countryCode);
+            ParameterMapper.addAdditionalValue(queryParams, "location.countryCode", countryCode);
         }
         return listPage("ListSignaturePolicies", queryParams);
     }

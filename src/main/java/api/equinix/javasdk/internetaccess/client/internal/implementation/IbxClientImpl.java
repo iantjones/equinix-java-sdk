@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.IbxClient;
@@ -45,14 +45,14 @@ public class IbxClientImpl extends ResourceClientBase<Ibx, IbxJson> implements I
         return json;
     }
 
-    public Page<Ibx, IbxJson> list(ConnectionType connectionType, String accessPointType, String assetType) {
+    public Page<IbxJson> list(ConnectionType connectionType, String accessPointType, String assetType) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "service.connection.type", connectionType.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "service.connection.type", connectionType.toString());
         if (accessPointType != null) {
-            Utils.addAdditionalValue(queryParams, "connection.aside.accessPoint.type", accessPointType);
+            ParameterMapper.addAdditionalValue(queryParams, "connection.aside.accessPoint.type", accessPointType);
         }
         if (assetType != null) {
-            Utils.addAdditionalValue(queryParams, "asset.type", assetType);
+            ParameterMapper.addAdditionalValue(queryParams, "asset.type", assetType);
         }
         return listPage("ListIbxs", queryParams);
     }

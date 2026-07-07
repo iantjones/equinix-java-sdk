@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCabinets;
@@ -41,7 +41,7 @@ public class InternetAccessCabinetsImpl implements InternetAccessCabinets {
     }
 
     public PaginatedList<Cabinet> list(String cageSpaceId, String ibx, String accountNumber) {
-        Page<Cabinet, CabinetJson> responsePage = this.serviceClient.list(cageSpaceId, ibx, accountNumber);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<CabinetJson> responsePage = this.serviceClient.list(cageSpaceId, ibx, accountNumber);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

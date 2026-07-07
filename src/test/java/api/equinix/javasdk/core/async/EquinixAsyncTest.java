@@ -151,6 +151,27 @@ class EquinixAsyncTest {
     }
 
     @Test
+    void closeAwaitsInFlightWork() {
+        AtomicBoolean finished = new AtomicBoolean(false);
+        EquinixAsync async = EquinixAsync.create();
+
+        // Fire-and-forget: the caller never joins the future, only closes the facade.
+        async.run(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+            finished.set(true);
+        });
+
+        async.close();
+
+        assertTrue(finished.get(),
+                "close() must await in-flight calls; otherwise daemon virtual threads can be killed mid-flight at JVM exit");
+    }
+
+    @Test
     void closeIsIdempotent() {
         EquinixAsync async = EquinixAsync.create();
         async.close();

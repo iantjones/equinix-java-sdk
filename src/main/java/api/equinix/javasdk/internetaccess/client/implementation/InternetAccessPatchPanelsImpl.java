@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessPatchPanels;
@@ -42,8 +42,8 @@ public class InternetAccessPatchPanelsImpl implements InternetAccessPatchPanels 
 
     public PaginatedList<PatchPanel> list(String ibx, String accountNumber, String cageSpaceId, String cabinetSpaceId,
                                           String mediaTypesName) {
-        Page<PatchPanel, PatchPanelJson> responsePage =
+        Page<PatchPanelJson> responsePage =
                 this.serviceClient.list(ibx, accountNumber, cageSpaceId, cabinetSpaceId, mediaTypesName);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

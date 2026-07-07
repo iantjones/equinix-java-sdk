@@ -17,7 +17,7 @@
 package api.equinix.javasdk.projects.client.implementation;
 
 import api.equinix.javasdk.Projects;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.projects.client.ProjectList;
@@ -41,8 +41,8 @@ public class ProjectListImpl implements ProjectList {
     }
 
     public PaginatedList<Project> list(Boolean includePermissions, Boolean includeInbox) {
-        Page<Project, ProjectJson> responsePage = this.serviceClient.list(includePermissions, includeInbox);
-        PaginatedList<Project> projectList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<ProjectJson> responsePage = this.serviceClient.list(includePermissions, includeInbox);
+        PaginatedList<Project> projectList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(projectList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

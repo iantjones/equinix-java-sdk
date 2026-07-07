@@ -24,7 +24,7 @@ class ReportDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream reportIs = ReportDeserializationTest.class.getResourceAsStream("/json/customerportal/report_response.json");
         assertNotNull(reportIs, "report_response.json fixture not found on classpath");

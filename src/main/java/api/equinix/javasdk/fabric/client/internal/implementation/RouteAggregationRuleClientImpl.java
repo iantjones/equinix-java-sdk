@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -49,7 +50,7 @@ public class RouteAggregationRuleClientImpl extends ResourceClientBase<RouteAggr
         return new RouteAggregationRuleWrapper(json, this);
     }
 
-    public Page<RouteAggregationRule, RouteAggregationRuleJson> list(String routeAggregationId) {
+    public Page<RouteAggregationRuleJson> list(String routeAggregationId) {
         return listPagePath("GetRouteAggregationRules", Map.of("routeAggregationId", routeAggregationId));
     }
 
@@ -81,24 +82,24 @@ public class RouteAggregationRuleClientImpl extends ResourceClientBase<RouteAggr
     public List<RouteAggregationRuleJson> createBulk(String routeAggregationId, List<RouteAggregationRuleCreatorJson> routeAggregationRuleCreatorJsonList) {
         EquinixRequest<RouteAggregationRule> request = buildRequestWithPathParams("PostRouteAggregationRulesBulk", RequestType.PAGINATED_POST,
                 Map.of("routeAggregationId", routeAggregationId), RouteAggregationRuleJson.class);
-        Utils.serializeJson(request, new RouteAggregationRulesBulkRequest(routeAggregationRuleCreatorJsonList));
-        Page<RouteAggregationRule, RouteAggregationRuleJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new RouteAggregationRulesBulkRequest(routeAggregationRuleCreatorJsonList));
+        Page<RouteAggregationRuleJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
-    public Page<RouteAggregationRule, RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort) {
         // POST /routeAggregations/{routeAggregationId}/routeAggregationRules/search — searchPage cannot carry
         // path params, so build the paginated-post request manually (mirrors RouteAggregation.search otherwise).
         EquinixRequest<RouteAggregationRule> request = buildRequestWithPathParams("SearchRouteAggregationRules", RequestType.PAGINATED_POST,
                 Map.of("routeAggregationId", routeAggregationId), RouteAggregationRuleJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     public List<Change> getChanges(String routeAggregationId, String uuid) {
         EquinixRequest<Change> request = buildRequestWithPathParams("GetRouteAggregationRuleChanges", RequestType.PAGINATED,
                 Map.of("routeAggregationId", routeAggregationId, "uuid", uuid), Change.class);
-        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<Change> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 

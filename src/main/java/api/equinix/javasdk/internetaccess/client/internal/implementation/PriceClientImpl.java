@@ -41,7 +41,7 @@ public class PriceClientImpl extends ResourceClientBase<Price, PriceJson> implem
         return json;
     }
 
-    public Page<Price, PriceJson> search(PriceSearchRequest searchRequest) {
+    public Page<PriceJson> search(PriceSearchRequest searchRequest) {
         return searchPage("SearchPrices", searchRequest);
     }
 }

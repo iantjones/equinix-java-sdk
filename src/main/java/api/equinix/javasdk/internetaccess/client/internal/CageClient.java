@@ -27,5 +27,5 @@ import api.equinix.javasdk.internetaccess.model.json.CageJson;
  */
 public interface CageClient extends Pageable<Cage> {
 
-    Page<Cage, CageJson> list(String ibx, String accountNumber);
+    Page<CageJson> list(String ibx, String accountNumber);
 }

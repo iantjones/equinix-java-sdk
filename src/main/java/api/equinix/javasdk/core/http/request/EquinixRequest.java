@@ -22,10 +22,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
-import lombok.*;
-import org.apache.http.HttpEntity;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,22 +38,35 @@ import java.util.Map;
  * GET/single/list cases; {@link PaginatedRequest} and {@link PaginatedPostRequest} extend it to add
  * offset/limit paging and POST-search paging respectively.
  *
+ * <p>The request body — when the operation has one — is carried as a single {@link RequestBody}
+ * (JSON payload, form fields, or raw bytes); the wire entity is built from it by
+ * {@link RequestFactory} at dispatch time. No transport (Apache HttpClient) type appears in this
+ * class's API.</p>
+ *
+ * <p>The type parameter {@code T} threads the operation's model type from request construction
+ * through {@link api.equinix.javasdk.core.http.response.EquinixResponse} handling; it carries no
+ * state on the request itself.</p>
+ *
  * @author ianjones
  */
 @Getter
 @Setter
 @NoArgsConstructor
-public class EquinixRequest<T> implements Request<T> {
+public class EquinixRequest<T> {
 
     private EquinixCredentialsProvider equinixCredentialsProvider;
     private URI endPoint;
     private String resourcePath;
     private HttpMethod httpMethod;
-    private HttpEntity httpEntity;
-    private InputStream content;
-    private Request<T> originalRequest;
+
+    /**
+     * The request body, or {@code null} for body-less operations. This is the request's only
+     * payload representation; serialization to the wire happens in {@link RequestFactory} once
+     * per dispatch attempt.
+     */
+    private RequestBody body;
+
     private JsonNode functionalAreaJson;
-    private Object objectToSerialize;
 
     private String functionalArea;
     private String requestParent;
@@ -75,32 +89,66 @@ public class EquinixRequest<T> implements Request<T> {
     private FilterProvider filters;
 
     protected Map<String, List<String>> queryParameters = new HashMap<>();
+
+    @Setter(AccessLevel.NONE)
     private Map<String, String> headers = new HashMap<>();
+
+    @Setter(AccessLevel.NONE)
     private Map<String, String> pathParameters = new HashMap<>();
 
     /**
-     * Sets the query parameters, defensively copying into a mutable map. Callers frequently pass
-     * immutable maps ({@code Map.of(...)}, {@code Collections.emptyMap()}); pagination later mutates
-     * this map (adding {@code offset}/{@code limit}), so storing an immutable instance directly would
-     * throw {@link java.lang.UnsupportedOperationException}. This override (in place of Lombok's
-     * generated setter) guarantees the stored map is always mutable.
+     * Sets the query parameters, defensively deep-copying into a mutable map with mutable value
+     * lists. Callers frequently pass immutable maps and lists ({@code Map.of("category",
+     * List.of("COLO"))}); pagination later mutates the map (adding {@code offset}/{@code limit})
+     * and {@code addQueryParameter}/{@code addSingleQueryParameter} append to the value lists, so
+     * storing the caller's instances directly would throw
+     * {@link java.lang.UnsupportedOperationException} (and alias the caller's collections). This
+     * override (in place of Lombok's generated setter) guarantees both levels are always mutable
+     * and unaliased.
      *
      * @param queryParameters the query parameters (may be {@code null} or immutable)
      */
     public void setQueryParameters(Map<String, List<String>> queryParameters) {
-        this.queryParameters = (queryParameters == null) ? new HashMap<>() : new HashMap<>(queryParameters);
+        this.queryParameters = copyOfListValuedMap(queryParameters);
     }
 
-    @Override
+    /**
+     * Sets the headers, defensively copying into a mutable map (mirrors
+     * {@link #setQueryParameters}: {@code addHeader} mutates the stored map, so an immutable
+     * caller-supplied map must not be stored by reference).
+     *
+     * @param headers the headers (may be {@code null} or immutable)
+     */
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
+    }
+
+    /**
+     * Sets the path parameters, defensively copying into a mutable map (mirrors
+     * {@link #setQueryParameters}: {@code addPathParameter} mutates the stored map, so an
+     * immutable caller-supplied map — e.g. {@code Map.of("uuid", uuid)} — must not be stored by
+     * reference).
+     *
+     * @param pathParameters the path parameters (may be {@code null} or immutable)
+     */
+    public void setPathParameters(Map<String, String> pathParameters) {
+        this.pathParameters = (pathParameters == null) ? new HashMap<>() : new HashMap<>(pathParameters);
+    }
+
+    private static Map<String, List<String>> copyOfListValuedMap(Map<String, List<String>> source) {
+        Map<String, List<String>> copy = new HashMap<>();
+        if (source != null) {
+            source.forEach((key, values) -> copy.put(key, values == null ? null : new ArrayList<>(values)));
+        }
+        return copy;
+    }
+
     public void addHeader(String headerName, String headerValue) {
         headers.put(headerName, headerValue);
     }
 
-    @Override
     public void addQueryParameter(String parameterName, List<String> parameterValues) {
-        List<String> parameterList = queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>());
-        parameterList.addAll(parameterValues);
-        queryParameters.put(parameterName, parameterList);
+        queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>()).addAll(parameterValues);
     }
 
     public void addQueryParameters(Map<String, List<String>> parameterValues) {
@@ -108,20 +156,13 @@ public class EquinixRequest<T> implements Request<T> {
     }
 
     public void replaceQueryParameter(String parameterName, List<String> parameterValues) {
-        queryParameters.remove(parameterName);
-
-        List<String> parameterList = queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>());
-        parameterList.addAll(parameterValues);
-        queryParameters.put(parameterName, parameterList);
+        queryParameters.put(parameterName, new ArrayList<>(parameterValues));
     }
 
     public void addSingleQueryParameter(String parameterName, String parameterValue) {
-        List<String> parameterList = queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>());
-        parameterList.add(parameterValue);
-        queryParameters.put(parameterName, parameterList);
+        queryParameters.computeIfAbsent(parameterName, k -> new ArrayList<>()).add(parameterValue);
     }
 
-    @Override
     public void addPathParameter(String parameterName, String parameterValue) {
         pathParameters.put(parameterName, parameterValue);
     }

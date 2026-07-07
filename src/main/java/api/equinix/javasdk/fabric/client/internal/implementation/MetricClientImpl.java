@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
@@ -54,48 +55,48 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
         return json;
     }
 
-    public Page<Metric, MetricJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<MetricJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchMetrics", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public List<Metric> getMetricsByName(String name, String value) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {
-            Utils.addAdditionalValue(qParams, "name", name);
+            ParameterMapper.addAdditionalValue(qParams, "name", name);
         }
         if (value != null) {
-            Utils.addAdditionalValue(qParams, "value", value);
+            ParameterMapper.addAdditionalValue(qParams, "value", value);
         }
 
         EquinixRequest<Metric> request = buildRequestWithQueryParams("GetMetricByName", RequestType.PAGINATED,
-                qParams, MetricJson.getPagedTypeRef());
+                qParams, MetricJson.class);
         return toMetricList(request);
     }
 
     public List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {
-            Utils.addAdditionalValue(qParams, "name", name);
+            ParameterMapper.addAdditionalValue(qParams, "name", name);
         }
         addDateRange(qParams, fromDateTime, toDateTime);
 
         EquinixRequest<Metric> request = buildRequest("GetMetricByAssetId", RequestType.PAGINATED,
-                Map.of("asset", asset, "assetId", assetId), qParams, MetricJson.getPagedTypeRef());
+                Map.of("asset", asset, "assetId", assetId), qParams, MetricJson.class);
         return toMetricList(request);
     }
 
     private static void addDateRange(Map<String, List<String>> qParams, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         if (fromDateTime != null) {
-            Utils.addAdditionalValue(qParams, "fromDateTime", Utils.dateTimeForQuery(fromDateTime));
+            ParameterMapper.addAdditionalValue(qParams, "fromDateTime", ParameterMapper.dateTimeForQuery(fromDateTime));
         }
         if (toDateTime != null) {
-            Utils.addAdditionalValue(qParams, "toDateTime", Utils.dateTimeForQuery(toDateTime));
+            ParameterMapper.addAdditionalValue(qParams, "toDateTime", ParameterMapper.dateTimeForQuery(toDateTime));
         }
     }
 
     private List<Metric> toMetricList(EquinixRequest<Metric> request) {
         EquinixResponse<Metric> response = invoke(request);
-        Page<Metric, MetricJson> page = Utils.handlePaginatedListResponse(response, request);
+        Page<MetricJson> page = ResponseHandler.handlePaginatedListResponse(response, request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 }

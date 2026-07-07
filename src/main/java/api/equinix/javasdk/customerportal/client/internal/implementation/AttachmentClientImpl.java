@@ -18,7 +18,7 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
@@ -27,8 +27,7 @@ import api.equinix.javasdk.customerportal.enums.AttachmentPurpose;
 import api.equinix.javasdk.customerportal.model.Attachment;
 import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
 import api.equinix.javasdk.customerportal.model.wrappers.AttachmentWrapper;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.ContentType;
+import api.equinix.javasdk.core.http.request.RequestBody;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -48,11 +47,11 @@ public class AttachmentClientImpl extends ResourceClientBase<Attachment, Attachm
         return new AttachmentWrapper(json, this);
     }
 
-    public Page<Attachment, AttachmentJson> list() {
+    public Page<AttachmentJson> list() {
         return listPage("ListAttachments");
     }
 
-    public Page<Attachment, AttachmentJson> list(List<String> attachmentIds) {
+    public Page<AttachmentJson> list(List<String> attachmentIds) {
         if (attachmentIds == null || attachmentIds.isEmpty()) {
             return listPage("ListAttachments");
         }
@@ -68,8 +67,8 @@ public class AttachmentClientImpl extends ResourceClientBase<Attachment, Attachm
      *
      * <p>Maps to {@code POST /v1/attachments/file}. The file bytes are sent as the required
      * {@code uploadFile} form part and the {@code purpose} is passed as a query parameter. The
-     * multipart entity is assembled by hand (httpmime/{@code MultipartEntityBuilder} is not a
-     * dependency) using only httpcore classes and attached directly to the request.</p>
+     * multipart body is assembled by hand (httpmime/{@code MultipartEntityBuilder} is not a
+     * dependency) and attached as a raw-bytes {@code RequestBody}.</p>
      */
     public AttachmentJson upload(byte[] fileBytes, String fileName, AttachmentPurpose purpose) {
         EquinixRequest<AttachmentJson> request = buildRequest("UploadAttachment", RequestType.SINGLE, AttachmentJson.class);
@@ -79,8 +78,8 @@ public class AttachmentClientImpl extends ResourceClientBase<Attachment, Attachm
         String boundary = "----EquinixSdkBoundary" + UUID.randomUUID().toString().replace("-", "");
         byte[] body = buildMultipartBody(boundary, "uploadFile", fileName, fileBytes);
         request.setContentType("multipart/form-data; boundary=" + boundary);
-        request.setHttpEntity(new ByteArrayEntity(body, ContentType.create("multipart/form-data")));
-        return Utils.handleSingletonResponse(invoke(request), request);
+        request.setBody(RequestBody.bytes(body, "multipart/form-data"));
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public byte[] download(String attachmentId) {

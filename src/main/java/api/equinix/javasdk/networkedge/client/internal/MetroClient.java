@@ -28,5 +28,5 @@ import api.equinix.javasdk.networkedge.model.json.MetroJson;
  */
 public interface MetroClient<T> extends Pageable<T> {
 
-    Page<Metro, MetroJson> list(Region region);
+    Page<MetroJson> list(Region region);
 }

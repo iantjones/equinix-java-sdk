@@ -26,5 +26,5 @@ import java.util.Map;
 
 public interface SupportPlanClient<T> extends Pageable<T> {
 
-    Page<SupportPlan, SupportPlanJson> list(Map<String, List<String>> queryParams);
+    Page<SupportPlanJson> list(Map<String, List<String>> queryParams);
 }

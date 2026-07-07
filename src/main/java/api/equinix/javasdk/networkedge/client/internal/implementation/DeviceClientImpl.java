@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.RequestType;
@@ -67,8 +67,8 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
      * {@inheritDoc}
      *
      */
-    public Page<Device, DeviceJson> list(RequestBuilder.Device requestBuilder) {
-        Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
+    public Page<DeviceJson> list(RequestBuilder.Device requestBuilder) {
+        Map<String, List<String>> qParams = ParameterMapper.newMap(requestBuilder);
         return listPage("ListDevices", qParams);
     }
 
@@ -97,10 +97,10 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
     public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime) {
         Map<String, List<String>> qParams = new java.util.HashMap<>();
         if (startDateTime != null) {
-            qParams.put("startDateTime", Utils.singleParamList(startDateTime));
+            qParams.put("startDateTime", ParameterMapper.singleParamList(startDateTime));
         }
         if (endDateTime != null) {
-            qParams.put("endDateTime", Utils.singleParamList(endDateTime));
+            qParams.put("endDateTime", ParameterMapper.singleParamList(endDateTime));
         }
         return getAs("GetInterfaceStatistics", Map.of("uuid", uuid, "interfaceId", interfaceId),
                 qParams.isEmpty() ? null : qParams, InterfaceStats.class);
@@ -119,12 +119,12 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
         // Per spec restoreDeviceBackupByUuid: PATCH /ne/v1/devices/{uuid}/restore where {uuid} is the
         // BACKUP uuid; the body is DeviceBackupUpdateRequest (required name). No query parameter.
         return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("uuid", backupUuid),
-                null, Utils.singlePropertyBody("name", backupName));
+                null, ParameterMapper.singlePropertyBody("name", backupName));
     }
 
     public DeviceJson updateAdditionalBandwidth(String uuid, Integer additionalBandwidth) {
         voidOp("UpdateAdditionalBandwidth", RequestType.SINGLE, Map.of("uuid", uuid), null,
-                Utils.singlePropertyBody("additionalBandwidth", additionalBandwidth));
+                ParameterMapper.singlePropertyBody("additionalBandwidth", additionalBandwidth));
         return getByUuid(uuid);
     }
 
@@ -142,13 +142,13 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
 
     public DeviceACL addACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
         voidOp("AddDeviceACL", RequestType.SINGLE, Map.of("uuid", uuid),
-                Utils.singleParamMap("accountUcmId", accountUcmId), deviceACLRequest);
+                ParameterMapper.singleParamMap("accountUcmId", accountUcmId), deviceACLRequest);
         return getACL(uuid);
     }
 
     public DeviceACL updateACL(String uuid, DeviceACLRequest deviceACLRequest, String accountUcmId) {
         voidOp("UpdateDeviceACL", RequestType.SINGLE, Map.of("uuid", uuid),
-                Utils.singleParamMap("accountUcmId", accountUcmId), deviceACLRequest);
+                ParameterMapper.singleParamMap("accountUcmId", accountUcmId), deviceACLRequest);
         return getACL(uuid);
     }
 
@@ -157,9 +157,9 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
     }
 
     public String postLicenseFile(MetroCode metroCode, String deviceTypeCode, LicenseType licenseType, String fileContents) {
-        Map<String, List<String>> qParams = Map.of("metroCode", Utils.singleParamList(metroCode),
-                "deviceTypeCode", Utils.singleParamList(deviceTypeCode),
-                "licenseType", Utils.singleParamList(licenseType));
+        Map<String, List<String>> qParams = Map.of("metroCode", ParameterMapper.singleParamList(metroCode),
+                "deviceTypeCode", ParameterMapper.singleParamList(deviceTypeCode),
+                "licenseType", ParameterMapper.singleParamList(licenseType));
         return mapOp("PostLicense", RequestType.SINGLE, null, qParams, Map.of("file", fileContents)).get("fileId");
     }
 
@@ -174,11 +174,11 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
     }
 
     public Pricing getPricing(String deviceUuid) {
-        return getAs("GetPricing", null, Utils.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
+        return getAs("GetPricing", null, ParameterMapper.singleParamMap("virtualDeviceUuid", deviceUuid), Pricing.class);
     }
 
     public DeviceJson create(DeviceCreatorJson deviceCreatorJson, Boolean draft) {
-        UUIDResult uuidResult = postForType("CreateDevice", null, Utils.singleParamMap("draft", draft),
+        UUIDResult uuidResult = postForType("CreateDevice", null, ParameterMapper.singleParamMap("draft", draft),
                 deviceCreatorJson, DeviceJson.getCreateTypeRef());
         return getByUuid(uuidResult.getUuid());
     }

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.RequestBuilder;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
@@ -40,8 +40,8 @@ public class InvoiceSummaryClientImpl extends ResourceClientBase<InvoiceSummary,
         return new InvoiceSummaryWrapper(json, this);
     }
 
-    public Page<InvoiceSummary, InvoiceSummaryJson> list(RequestBuilder.Invoice requestBuilder) {
-        Map<String, List<String>> qParams = Utils.processRequestBuilder(requestBuilder);
+    public Page<InvoiceSummaryJson> list(RequestBuilder.Invoice requestBuilder) {
+        Map<String, List<String>> qParams = ParameterMapper.processRequestBuilder(requestBuilder);
         return listPage("ListInvoiceSummaries", qParams);
     }
 }

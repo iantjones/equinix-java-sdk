@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -42,7 +42,8 @@ import java.util.Map;
 public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> implements NetworkClient<Network> {
 
     public NetworkClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "Networks", NetworkJson.class);
+        // "Network" drives the derived endpoint names (SearchNetworks, GetNetwork, DeleteNetwork).
+        super(configClient, "Fabric", "Networks", NetworkJson.class, "Network");
     }
 
     @Override
@@ -50,20 +51,20 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
         return new NetworkWrapper(json, this);
     }
 
-    public Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        return searchPage("SearchNetworks", new FilteredSortedPaginatedPost<>(filter, sort));
+    public Page<NetworkJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage(new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
-    public Page<Connection, ConnectionJson> getConnections(String networkId) {
+    public Page<ConnectionJson> getConnections(String networkId) {
         EquinixRequest<Connection> request = buildRequestWithPathParams("GetNetworkConnections", RequestType.PAGINATED,
                 Map.of("networkId", networkId), ConnectionJson.class);
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     public List<Change> getChanges(String uuid) {
         EquinixRequest<Change> request = buildRequestWithPathParams("GetNetworkChanges", RequestType.PAGINATED,
                 Map.of("uuid", uuid), Change.class);
-        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<Change> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -72,10 +73,11 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
     }
 
     public NetworkJson getByUuid(String uuid) {
-        return getOne("GetNetwork", uuid);
+        return getOneByUuid(uuid);
     }
 
     public NetworkJson create(NetworkCreatorJson networkCreatorJson) {
+        // apiParams names this operation PostNetwork (not CreateNetwork) — explicit.
         return postOne("PostNetwork", networkCreatorJson);
     }
 
@@ -84,7 +86,7 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
     }
 
     public NetworkJson delete(String uuid) {
-        return deleteOne("DeleteNetwork", uuid);
+        return deleteOneByUuid(uuid);
     }
 
     public NetworkJson refresh(String uuid) {

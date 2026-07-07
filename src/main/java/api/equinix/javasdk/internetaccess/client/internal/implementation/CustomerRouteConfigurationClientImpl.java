@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.CustomerRouteConfigurationClient;
@@ -51,14 +51,14 @@ public class CustomerRouteConfigurationClientImpl
         return json;
     }
 
-    public Page<CustomerRouteConfiguration, CustomerRouteConfigurationJson> list(UseCase useCase, Redundancy type, RoutingProtocolType routingProtocolType) {
+    public Page<CustomerRouteConfigurationJson> list(UseCase useCase, Redundancy type, RoutingProtocolType routingProtocolType) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "useCase", useCase.toString());
+        ParameterMapper.addAdditionalValue(queryParams, "useCase", useCase.toString());
         if (type != null) {
-            Utils.addAdditionalValue(queryParams, "type", type.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "type", type.toString());
         }
         if (routingProtocolType != null) {
-            Utils.addAdditionalValue(queryParams, "routingProtocol.type", routingProtocolType.toString());
+            ParameterMapper.addAdditionalValue(queryParams, "routingProtocol.type", routingProtocolType.toString());
         }
         return listPage("ListCustomerRouteConfigurations", queryParams);
     }

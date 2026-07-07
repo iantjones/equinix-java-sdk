@@ -40,5 +40,5 @@ public interface RouteFilterAttachmentClient<T> extends PageablePost<T> {
 
     boolean detachConnectionRouteFilter(String connectionId, String routeFilterId);
 
-    Page<RouteFilterAttachment, RouteFilterAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteFilterAttachmentJson> searchCloudRouterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort);
 }

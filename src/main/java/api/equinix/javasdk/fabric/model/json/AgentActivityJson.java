@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.AgentActivity;
 import api.equinix.javasdk.fabric.model.implementation.AgentActivityMetadata;
 import api.equinix.javasdk.fabric.model.implementation.AgentRef;
@@ -34,7 +33,6 @@ public final class AgentActivityJson implements AgentActivity {
 
     @Getter static TypeReference<List<AgentActivityJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<AgentActivity, AgentActivityJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

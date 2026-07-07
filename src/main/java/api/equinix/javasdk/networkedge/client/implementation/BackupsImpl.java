@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.NetworkEdge;
@@ -57,8 +57,8 @@ public class BackupsImpl implements Backups {
      *
      */
     public PaginatedList<Backup> list(String deviceUuid, RequestBuilder.Backup requestBuilder) {
-        Page<Backup, BackupJson> responsePage = serviceClient.list(deviceUuid, requestBuilder);
-        PaginatedList<Backup> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, BackupWrapper::new);
+        Page<BackupJson> responsePage = serviceClient.list(deviceUuid, requestBuilder);
+        PaginatedList<Backup> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, BackupWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

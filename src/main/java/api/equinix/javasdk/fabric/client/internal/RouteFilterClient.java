@@ -31,7 +31,7 @@ import java.util.List;
 
 public interface RouteFilterClient<T> extends PageablePost<T> {
 
-    Page<RouteFilter, RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteFilterJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     RouteFilterJson getByUuid(String uuid);
 

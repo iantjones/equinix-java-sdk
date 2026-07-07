@@ -18,7 +18,6 @@ package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.fabric.enums.StreamAlertRuleType;
 import api.equinix.javasdk.fabric.enums.StreamAlertRuleState;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.StreamAlertRule;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
 import api.equinix.javasdk.fabric.model.implementation.DetectionMethod;
@@ -36,7 +35,6 @@ public class StreamAlertRuleJson {
 
     @Getter static TypeReference<List<StreamAlertRuleJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<StreamAlertRule, StreamAlertRuleJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

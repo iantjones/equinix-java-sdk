@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
@@ -54,7 +55,7 @@ public class CloudRouterActionClientImpl extends ResourceClientBase<CloudRouterA
     public List<CloudRouterAction> list(String routerId) {
         EquinixRequest<CloudRouterAction> request = buildRequestWithPathParams("GetCloudRouterActions", RequestType.PAGINATED,
                 Map.of("routerId", routerId), CloudRouterActionJson.class);
-        Page<CloudRouterAction, CloudRouterActionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+        Page<CloudRouterActionJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -62,10 +63,10 @@ public class CloudRouterActionClientImpl extends ResourceClientBase<CloudRouterA
         return getOne("GetCloudRouterAction", Map.of("routerId", routerId, "uuid", uuid));
     }
 
-    public Page<CloudRouterAction, CloudRouterActionJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<CloudRouterActionJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<CloudRouterAction> request = buildRequestWithPathParams("SearchRouterActions", RequestType.PAGINATED_POST,
                 Map.of("routerId", routerId), CloudRouterActionJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 }

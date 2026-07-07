@@ -27,10 +27,12 @@ import java.util.concurrent.ThreadLocalRandom;
  * using exponential backoff with full jitter and honoring a {@code Retry-After} header when present.
  *
  * <p>To avoid duplicate side effects, retries are by default applied <em>only to idempotent
- * methods</em> (everything except {@code POST}): a transient failure that occurs after the server
- * has already processed a {@code POST} create would otherwise re-send it and create a second
- * resource. Set {@code retryNonIdempotentMethods} if your endpoints are safe to retry (e.g. they
- * dedupe via an idempotency key, or the POST is a side-effect-free search).</p>
+ * methods</em> — everything except {@code POST} and {@code PATCH} (RFC&nbsp;5789: PATCH is not
+ * idempotent in general, and the SDK sends RFC&nbsp;6902 documents whose {@code add} operations
+ * would apply twice). A transient failure that occurs after the server has already processed a
+ * {@code POST} create or a {@code PATCH} would otherwise re-send it and duplicate the side effect.
+ * Set {@code retryNonIdempotentMethods} if your endpoints are safe to retry (e.g. they dedupe via
+ * an idempotency key, or the POST is a side-effect-free search).</p>
  *
  * <p>Retries are bounded by {@link #getMaxRetries()} attempts beyond the initial request. Pass
  * {@link #none()} to disable retries entirely, or build a custom policy via the constructor.</p>
@@ -48,7 +50,7 @@ public final class RetryPolicy {
     private final boolean retryNonIdempotentMethods;
 
     /**
-     * Constructor for RetryPolicy that retries only idempotent methods (POST is never retried).
+     * Constructor for RetryPolicy that retries only idempotent methods (POST and PATCH are never retried).
      *
      * @param maxRetries maximum retry attempts beyond the initial request (0 disables retries)
      * @param baseDelayMillis base backoff delay; the n-th retry waits up to {@code base * 2^n}
@@ -71,8 +73,8 @@ public final class RetryPolicy {
      * @param retryableStatusCodes HTTP status codes that trigger a retry
      * @param retryOnIoException whether transient {@link java.io.IOException}s are retried
      * @param honorRetryAfter whether a {@code Retry-After} response header overrides the computed backoff
-     * @param retryNonIdempotentMethods whether non-idempotent methods (POST) are also retried — leave
-     *                                  {@code false} unless your endpoints dedupe retried requests
+     * @param retryNonIdempotentMethods whether non-idempotent methods (POST, PATCH) are also retried —
+     *                                  leave {@code false} unless your endpoints dedupe retried requests
      */
     public RetryPolicy(int maxRetries, long baseDelayMillis, long maxDelayMillis,
                        Set<Integer> retryableStatusCodes, boolean retryOnIoException, boolean honorRetryAfter,
@@ -87,14 +89,15 @@ public final class RetryPolicy {
     }
 
     /**
-     * Whether a request with the given HTTP method is eligible for retry. POST is treated as the
-     * only non-idempotent method and is not retried unless {@code retryNonIdempotentMethods} is set.
+     * Whether a request with the given HTTP method is eligible for retry. POST and PATCH are treated
+     * as non-idempotent (per RFC 5789 a PATCH — such as the SDK's RFC 6902 {@code add} operations —
+     * may not be safely re-applied) and are not retried unless {@code retryNonIdempotentMethods} is set.
      *
      * @param method the request method (may be {@code null}, treated as retryable)
      * @return {@code true} if retries are permitted for this method
      */
     public boolean isRetryableMethod(HttpMethod method) {
-        return retryNonIdempotentMethods || method != HttpMethod.POST;
+        return retryNonIdempotentMethods || (method != HttpMethod.POST && method != HttpMethod.PATCH);
     }
 
     /**

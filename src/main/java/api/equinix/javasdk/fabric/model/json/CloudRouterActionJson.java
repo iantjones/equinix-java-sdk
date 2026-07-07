@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.CloudRouterActionState;
 import api.equinix.javasdk.fabric.enums.CloudRouterActionType;
 import api.equinix.javasdk.fabric.model.CloudRouterAction;
@@ -36,7 +35,6 @@ public final class CloudRouterActionJson implements CloudRouterAction {
 
     @Getter static TypeReference<List<CloudRouterActionJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<CloudRouterAction, CloudRouterActionJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

@@ -33,16 +33,16 @@ class MetroCodeDeserializerTest {
     @Test
     @DisplayName("known metro codes deserialize to their constant (case-insensitive)")
     void knownCodes() throws Exception {
-        assertEquals(MetroCode.SV, Constants.objectMapper.readValue("\"SV\"", MetroCode.class));
-        assertEquals(MetroCode.DC, Constants.objectMapper.readValue("\"dc\"", MetroCode.class));
+        assertEquals(MetroCode.SV, Constants.mapper().readValue("\"SV\"", MetroCode.class));
+        assertEquals(MetroCode.DC, Constants.mapper().readValue("\"dc\"", MetroCode.class));
     }
 
     @Test
     @DisplayName("a new/unknown metro code maps to UNKNOWN instead of crashing the response")
     void unknownCodeMapsToUnknown() throws Exception {
-        assertEquals(MetroCode.UNKNOWN, Constants.objectMapper.readValue("\"ZZ\"", MetroCode.class));
+        assertEquals(MetroCode.UNKNOWN, Constants.mapper().readValue("\"ZZ\"", MetroCode.class));
         assertEquals(MetroCode.UNKNOWN,
-                Constants.objectMapper.readValue("\"NEW_METRO_2027\"", MetroCode.class));
-        assertDoesNotThrow(() -> Constants.objectMapper.readValue("\"QQ\"", MetroCode.class));
+                Constants.mapper().readValue("\"NEW_METRO_2027\"", MetroCode.class));
+        assertDoesNotThrow(() -> Constants.mapper().readValue("\"QQ\"", MetroCode.class));
     }
 }

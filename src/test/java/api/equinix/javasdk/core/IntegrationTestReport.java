@@ -179,7 +179,7 @@ public final class IntegrationTestReport {
             report.put("calls", records);
 
             Files.createDirectories(outputPath.getParent());
-            String json = Constants.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(report);
+            String json = Constants.mapper().writerWithDefaultPrettyPrinter().writeValueAsString(report);
             Files.writeString(outputPath, json);
 
             System.out.println("  JSON report written to: " + outputPath.toAbsolutePath());

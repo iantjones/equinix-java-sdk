@@ -39,7 +39,7 @@ public class SystemAlertClientImpl extends ResourceClientBase<SystemAlert, Syste
         return json;
     }
 
-    public Page<SystemAlert, SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit) {
+    public Page<SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit) {
         // status, assetClassification and edgeCollectedOn are optional (required:false in the spec);
         // only add them when non-null so an unfiltered search(null, null, null, ...) does not NPE.
         Map<String, List<String>> qParams = new HashMap<>();
@@ -57,7 +57,7 @@ public class SystemAlertClientImpl extends ResourceClientBase<SystemAlert, Syste
         return listPage("SearchAlertsGet", qParams);
     }
 
-    public Page<SystemAlert, SystemAlertJson> searchPost(SearchRequest filterBody) {
+    public Page<SystemAlertJson> searchPost(SearchRequest filterBody) {
         return searchPage("SearchAlertsPost", filterBody);
     }
 }

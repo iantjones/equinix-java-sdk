@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.core.http.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ import lombok.Setter;
  * @author ianjones
  * @see PaginatedList
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter(AccessLevel.PRIVATE)
 public class Pagination {
@@ -74,7 +76,7 @@ public class Pagination {
      *
      * @return {@code true} if this is page 0
      */
-    public Boolean getIsFirstPage() {
+    public boolean isFirstPage() {
         return getPageNumber() == 0;
     }
 
@@ -85,7 +87,7 @@ public class Pagination {
      *
      * @return {@code true} if there are no more pages after this one
      */
-    public Boolean getIsLastPage() {
+    public boolean isLastPage() {
         if (total == null || limit == null || limit == 0) {
             return true;
         }

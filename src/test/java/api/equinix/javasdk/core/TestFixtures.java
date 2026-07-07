@@ -46,7 +46,7 @@ public final class TestFixtures {
      */
     public static <T> T deserialize(String classpathResource, Class<T> clazz) {
         try (InputStream is = loadStream(classpathResource)) {
-            return Constants.objectMapper.readValue(is, clazz);
+            return Constants.mapper().readValue(is, clazz);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deserialize fixture: " + classpathResource, e);
         }

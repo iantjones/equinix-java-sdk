@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
@@ -55,8 +56,8 @@ public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, P
 
     public PortStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         Map<String, List<String>> qParams = Map.of(
-                "startDateTime", Utils.singleParamList(Utils.dateTimeForQuery(startDateTime)),
-                "endDateTime", Utils.singleParamList(Utils.dateTimeForQuery(endDateTime))
+                "startDateTime", ParameterMapper.singleParamList(ParameterMapper.dateTimeForQuery(startDateTime)),
+                "endDateTime", ParameterMapper.singleParamList(ParameterMapper.dateTimeForQuery(endDateTime))
         );
         return getAs("GetStatistics", Map.of("uuid", uuid), qParams, PortStatisticJson.class);
     }
@@ -68,19 +69,19 @@ public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, P
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (name != null) {
-            Utils.addAdditionalValue(qParams, "name", name);
+            ParameterMapper.addAdditionalValue(qParams, "name", name);
         }
         if (fromDateTime != null) {
-            Utils.addAdditionalValue(qParams, "fromDateTime", Utils.dateTimeForQuery(fromDateTime));
+            ParameterMapper.addAdditionalValue(qParams, "fromDateTime", ParameterMapper.dateTimeForQuery(fromDateTime));
         }
         if (toDateTime != null) {
-            Utils.addAdditionalValue(qParams, "toDateTime", Utils.dateTimeForQuery(toDateTime));
+            ParameterMapper.addAdditionalValue(qParams, "toDateTime", ParameterMapper.dateTimeForQuery(toDateTime));
         }
 
         EquinixRequest<Metric> equinixRequest = buildRequest("GetMetrics", RequestType.PAGINATED,
-                Map.of("uuid", uuid), qParams, MetricJson.getPagedTypeRef());
+                Map.of("uuid", uuid), qParams, MetricJson.class);
         EquinixResponse<Metric> equinixResponse = invoke(equinixRequest);
-        Page<Metric, MetricJson> page = Utils.handlePaginatedListResponse(equinixResponse, equinixRequest);
+        Page<MetricJson> page = ResponseHandler.handlePaginatedListResponse(equinixResponse, equinixRequest);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 }

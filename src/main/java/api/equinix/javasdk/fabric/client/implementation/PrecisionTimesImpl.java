@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.PrecisionTimes;
@@ -41,8 +41,8 @@ public class PrecisionTimesImpl implements PrecisionTimes {
     }
 
     public PaginatedList<PrecisionTime> list() {
-        Page<PrecisionTime, PrecisionTimeJson> responsePage = this.serviceClient.list();
-        PaginatedList<PrecisionTime> precisionTimeList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, PrecisionTimeWrapper::new);
+        Page<PrecisionTimeJson> responsePage = this.serviceClient.list();
+        PaginatedList<PrecisionTime> precisionTimeList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, PrecisionTimeWrapper::new);
         return new PaginatedList<>(precisionTimeList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

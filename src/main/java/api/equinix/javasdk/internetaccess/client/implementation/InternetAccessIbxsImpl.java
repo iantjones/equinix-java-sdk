@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessIbxs;
@@ -46,8 +46,8 @@ public class InternetAccessIbxsImpl implements InternetAccessIbxs {
     }
 
     public PaginatedList<Ibx> availability(ConnectionType connectionType, String accessPointType, String assetType) {
-        Page<Ibx, IbxJson> responsePage = this.serviceClient.list(connectionType, accessPointType, assetType);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<IbxJson> responsePage = this.serviceClient.list(connectionType, accessPointType, assetType);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 
     public Ibx getByCode(String ibx) {

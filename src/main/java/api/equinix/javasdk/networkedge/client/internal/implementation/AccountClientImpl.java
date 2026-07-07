@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -50,6 +50,6 @@ public class AccountClientImpl extends ResourceClientBase<Account, AccountJson> 
     }
 
     public byte[] getOrderSummary(RequestBuilder.OrderSummary requestBuilder) {
-        return bytesOp("GetOrderSummary", null, Utils.newMap(requestBuilder));
+        return bytesOp("GetOrderSummary", null, ParameterMapper.newMap(requestBuilder));
     }
 }

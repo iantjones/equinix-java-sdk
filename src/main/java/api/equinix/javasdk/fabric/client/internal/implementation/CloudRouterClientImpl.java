@@ -17,7 +17,7 @@
 package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
@@ -66,7 +66,7 @@ public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, Cloud
         return new CloudRouterWrapper(json, this);
     }
 
-    public Page<CloudRouter, CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<CloudRouterJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchCloudRouters", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
@@ -104,20 +104,20 @@ public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, Cloud
     }
 
     public PaginatedFilteredList<CloudRouterAction> searchActions(String routerId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<CloudRouterAction, CloudRouterActionJson> responsePage = this.actionsClient.search(routerId, filter, sort);
-        PaginatedFilteredList<CloudRouterAction> actions = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.actionsClient, (json, client) -> json);
+        Page<CloudRouterActionJson> responsePage = this.actionsClient.search(routerId, filter, sort);
+        PaginatedFilteredList<CloudRouterAction> actions = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.actionsClient, (json, client) -> json);
         return new PaginatedFilteredList<>(actions, this.actionsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PaginatedFilteredList<RouteFilterAttachment> searchRouteFilterAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteFilterAttachment, RouteFilterAttachmentJson> responsePage = this.routeFilterAttachmentsClient.searchCloudRouterAttachments(routerId, filter, sort);
-        PaginatedFilteredList<RouteFilterAttachment> attachments = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routeFilterAttachmentsClient, (json, client) -> json);
+        Page<RouteFilterAttachmentJson> responsePage = this.routeFilterAttachmentsClient.searchCloudRouterAttachments(routerId, filter, sort);
+        PaginatedFilteredList<RouteFilterAttachment> attachments = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.routeFilterAttachmentsClient, (json, client) -> json);
         return new PaginatedFilteredList<>(attachments, this.routeFilterAttachmentsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PaginatedFilteredList<RouteAggregationAttachment> searchRouteAggregationAttachments(String routerId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteAggregationAttachment, RouteAggregationAttachmentJson> responsePage = this.routeAggregationAttachmentsClient.searchCloudRouterAttachments(routerId, filter, sort);
-        PaginatedFilteredList<RouteAggregationAttachment> attachments = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routeAggregationAttachmentsClient, (json, client) -> json);
+        Page<RouteAggregationAttachmentJson> responsePage = this.routeAggregationAttachmentsClient.searchCloudRouterAttachments(routerId, filter, sort);
+        PaginatedFilteredList<RouteAggregationAttachment> attachments = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.routeAggregationAttachmentsClient, (json, client) -> json);
         return new PaginatedFilteredList<>(attachments, this.routeAggregationAttachmentsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

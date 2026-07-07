@@ -23,9 +23,9 @@ import api.equinix.javasdk.customerportal.model.json.BillingAccountJson;
 
 public interface BillingAccountClient<T> extends Pageable<T> {
 
-    Page<BillingAccount, BillingAccountJson> summaries();
+    Page<BillingAccountJson> summaries();
 
-    Page<BillingAccount, BillingAccountJson> summaries(String sorts);
+    Page<BillingAccountJson> summaries(String sorts);
 
     BillingAccountJson getByAccountNumber(String accountNumber);
 

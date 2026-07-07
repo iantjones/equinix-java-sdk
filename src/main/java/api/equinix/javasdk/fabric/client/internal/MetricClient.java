@@ -38,7 +38,7 @@ public interface MetricClient<T> extends PageablePost<T> {
      * <p>Searches metrics matching the supplied filter and sort criteria.</p>
      *
      */
-    Page<Metric, MetricJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<MetricJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     /**
      * Retrieves metrics by wildcard metric name ({@code GET /fabric/v4/metrics}). Only the

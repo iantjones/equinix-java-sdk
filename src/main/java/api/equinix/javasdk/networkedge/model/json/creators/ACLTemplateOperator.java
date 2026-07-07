@@ -105,7 +105,7 @@ public class ACLTemplateOperator extends ResourceImpl<ACLTemplate> {
 
         protected ACLTemplateUpdater(ACLTemplateJson json) {
             this.json = json;
-            this.updaterJson = Constants.JSON_CONVERTOR.convertValue(this.json, ACLTemplateUpdaterJson.class);
+            this.updaterJson = Constants.converter().convertValue(this.json, ACLTemplateUpdaterJson.class);
         }
 
         public ACLTemplateUpdater forCustomer(String accountUcmId) {

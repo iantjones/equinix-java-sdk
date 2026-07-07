@@ -32,9 +32,9 @@ import java.util.List;
 
 public interface NetworkClient<T> extends PageablePost<T> {
 
-    Page<Network, NetworkJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<NetworkJson> search(FilterPropertyList filter, SortPropertyList sort);
 
-    Page<Connection, ConnectionJson> getConnections(String networkId);
+    Page<ConnectionJson> getConnections(String networkId);
 
     List<Change> getChanges(String uuid);
 

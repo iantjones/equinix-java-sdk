@@ -34,5 +34,5 @@ public interface CloudRouterActionClient<T> extends PageablePost<T> {
 
     CloudRouterActionJson getByUuid(String routerId, String uuid);
 
-    Page<CloudRouterAction, CloudRouterActionJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort);
+    Page<CloudRouterActionJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort);
 }

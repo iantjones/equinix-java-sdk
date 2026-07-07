@@ -18,7 +18,7 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -52,9 +52,9 @@ public class BackupClientImpl extends ResourceClientBase<Backup, BackupJson> imp
         return new BackupWrapper(json, this);
     }
 
-    public Page<Backup, BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder) {
-        Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        qParams.put("virtualDeviceUuid", Utils.singleParamList(deviceUuid));
+    public Page<BackupJson> list(String deviceUuid, RequestBuilder.Backup requestBuilder) {
+        Map<String, List<String>> qParams = ParameterMapper.newMap(requestBuilder);
+        qParams.put("virtualDeviceUuid", ParameterMapper.singleParamList(deviceUuid));
         return listPage("ListBackups", qParams);
     }
 
@@ -64,14 +64,14 @@ public class BackupClientImpl extends ResourceClientBase<Backup, BackupJson> imp
 
     public RestoreFeasibilityJson checkRestoreFeasibility(String uuid, String deviceUuid) {
         return getAs("GetRestoreAnalysis", Map.of("deviceUuid", deviceUuid),
-                Map.of("backupUuid", Utils.singleParamList(uuid)), RestoreFeasibilityJson.class);
+                Map.of("backupUuid", ParameterMapper.singleParamList(uuid)), RestoreFeasibilityJson.class);
     }
 
     public Boolean restore(String uuid, String name) {
         // Per spec restoreDeviceBackupByUuid: PATCH /ne/v1/devices/{uuid}/restore where {uuid} is the
         // BACKUP uuid; the body is DeviceBackupUpdateRequest (required name). No query parameter.
         return booleanOp("RestoreBackup", RequestType.SINGLE, Map.of("backupUuid", uuid),
-                null, Utils.singlePropertyBody("name", name));
+                null, ParameterMapper.singlePropertyBody("name", name));
     }
 
     public String download(String uuid) {

@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,7 +31,6 @@ public final class TimeServiceConnectionJson implements TimeServiceConnection {
 
     @Getter static TypeReference<List<TimeServiceConnectionJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<TimeServiceConnection, TimeServiceConnectionJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

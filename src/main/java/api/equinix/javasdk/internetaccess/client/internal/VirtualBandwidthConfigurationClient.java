@@ -30,5 +30,5 @@ import api.equinix.javasdk.internetaccess.model.json.VirtualBandwidthConfigurati
  */
 public interface VirtualBandwidthConfigurationClient extends Pageable<VirtualBandwidthConfiguration> {
 
-    Page<VirtualBandwidthConfiguration, VirtualBandwidthConfigurationJson> list(UseCase useCase, BillingType billing);
+    Page<VirtualBandwidthConfigurationJson> list(UseCase useCase, BillingType billing);
 }

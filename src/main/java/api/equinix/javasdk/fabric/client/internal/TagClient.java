@@ -23,7 +23,7 @@ import api.equinix.javasdk.fabric.model.json.TagJson;
 
 public interface TagClient<T> extends Pageable<T> {
 
-    Page<Tag, TagJson> list();
+    Page<TagJson> list();
 
     TagJson create(String type, String name, String displayName);
 }

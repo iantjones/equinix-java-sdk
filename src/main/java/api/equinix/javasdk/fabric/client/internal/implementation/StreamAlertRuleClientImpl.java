@@ -39,7 +39,7 @@ public class StreamAlertRuleClientImpl extends ResourceClientBase<StreamAlertRul
         return new StreamAlertRuleWrapper(json, this);
     }
 
-    public Page<StreamAlertRule, StreamAlertRuleJson> list(String streamId) {
+    public Page<StreamAlertRuleJson> list(String streamId) {
         return listPagePath("GetStreamAlertRules", Map.of("streamId", streamId));
     }
 

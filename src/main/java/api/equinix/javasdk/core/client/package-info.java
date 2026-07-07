@@ -16,12 +16,12 @@
 
 /**
  * Core client infrastructure for the Equinix Java SDK. Contains the
- * {@link api.equinix.javasdk.core.client.Config} interface that defines the contract
- * for domain-specific configuration classes, and the
- * {@link api.equinix.javasdk.core.client.EquinixClient} base class that manages HTTP
- * communication, OAuth token lifecycle, and API parameter loading. The
- * {@link api.equinix.javasdk.core.client.ClientBase} provides request-building
- * utilities, and {@link api.equinix.javasdk.core.client.ResourceClientBase} adds
+ * {@link api.equinix.javasdk.core.client.Config} holder (a concrete class that domain
+ * {@code *ConfigImpl} configuration classes extend), and the
+ * {@link api.equinix.javasdk.core.client.EquinixClient} transport client that the domain facades
+ * hold by composition — it manages HTTP communication, the OAuth token lifecycle, and the merged
+ * apiParams catalogue. The {@link api.equinix.javasdk.core.client.ClientBase} provides
+ * request-building utilities, and {@link api.equinix.javasdk.core.client.ResourceClientBase} adds
  * CRUD + pagination helpers for internal client implementations.
  *
  * @see api.equinix.javasdk.core.client.Config

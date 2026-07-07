@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.BillingAccountsSearch;
@@ -38,8 +38,8 @@ public class BillingAccountsSearchImpl implements BillingAccountsSearch {
     }
 
     public PaginatedList<BillingAccountV2> search(BillingAccountSearchRequest request) {
-        Page<BillingAccountV2, BillingAccountV2Json> responsePage = this.serviceClient.search(request);
-        PaginatedList<BillingAccountV2> accountList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<BillingAccountV2Json> responsePage = this.serviceClient.search(request);
+        PaginatedList<BillingAccountV2> accountList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(accountList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

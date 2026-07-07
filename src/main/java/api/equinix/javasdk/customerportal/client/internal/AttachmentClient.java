@@ -26,9 +26,9 @@ import java.util.List;
 
 public interface AttachmentClient<T> extends Pageable<T> {
 
-    Page<Attachment, AttachmentJson> list();
+    Page<AttachmentJson> list();
 
-    Page<Attachment, AttachmentJson> list(List<String> attachmentIds);
+    Page<AttachmentJson> list(List<String> attachmentIds);
 
     AttachmentJson getByUuid(String uuid);
 

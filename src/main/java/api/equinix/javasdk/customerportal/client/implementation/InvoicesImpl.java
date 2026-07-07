@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.Invoices;
@@ -51,8 +51,8 @@ public class InvoicesImpl implements Invoices {
     }
 
     public PaginatedList<InvoiceSummary> summaries(RequestBuilder.Invoice requestBuilder) {
-        Page<InvoiceSummary, InvoiceSummaryJson> responsePage = this.serviceClientSummary.list(requestBuilder);
-        PaginatedList<InvoiceSummary> invoiceSummaryList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClientSummary, InvoiceSummaryWrapper::new);
+        Page<InvoiceSummaryJson> responsePage = this.serviceClientSummary.list(requestBuilder);
+        PaginatedList<InvoiceSummary> invoiceSummaryList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClientSummary, InvoiceSummaryWrapper::new);
         return new PaginatedList<>(invoiceSummaryList, this.serviceClientSummary, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -61,8 +61,8 @@ public class InvoicesImpl implements Invoices {
     }
 
     public PaginatedList<InvoiceDetail> details(RequestBuilder.Invoice requestBuilder) {
-        Page<InvoiceDetail, InvoiceDetailJson> responsePage = this.serviceClientDetail.list(requestBuilder);
-        PaginatedList<InvoiceDetail> invoiceDetailList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClientDetail, InvoiceDetailWrapper::new);
+        Page<InvoiceDetailJson> responsePage = this.serviceClientDetail.list(requestBuilder);
+        PaginatedList<InvoiceDetail> invoiceDetailList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClientDetail, InvoiceDetailWrapper::new);
         return new PaginatedList<>(invoiceDetailList, this.serviceClientDetail, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 }

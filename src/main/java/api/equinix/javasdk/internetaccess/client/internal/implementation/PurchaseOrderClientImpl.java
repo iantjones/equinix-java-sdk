@@ -18,7 +18,7 @@ package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
@@ -47,7 +47,7 @@ public class PurchaseOrderClientImpl extends ResourceClientBase<PurchaseOrder, P
         return json;
     }
 
-    public Page<PurchaseOrder, PurchaseOrderJson> list(String accountNumber, String ibx, PurchaseOrderCategory category) {
+    public Page<PurchaseOrderJson> list(String accountNumber, String ibx, PurchaseOrderCategory category) {
         EquinixRequest<PurchaseOrder> request = buildRequestWithPathParams("ListPurchaseOrders", RequestType.PAGINATED,
                 Map.of("accountNumber", accountNumber), PurchaseOrderJson.class);
         if (ibx != null) {
@@ -56,7 +56,7 @@ public class PurchaseOrderClientImpl extends ResourceClientBase<PurchaseOrder, P
         if (category != null) {
             request.addSingleQueryParameter("category", category.toString());
         }
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     public PurchaseOrderJson getOne(String accountNumber, String number) {

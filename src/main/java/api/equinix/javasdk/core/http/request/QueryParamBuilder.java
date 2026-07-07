@@ -43,7 +43,8 @@ public final class QueryParamBuilder {
     }
 
     /**
-     * Adds a string parameter unless its value is {@code null}.
+     * Adds a string parameter unless its value is {@code null}. Adding the same name again
+     * replaces the previous value (these are single-valued optional filters).
      *
      * @param name the parameter name
      * @param value the parameter value (skipped when {@code null})
@@ -87,11 +88,15 @@ public final class QueryParamBuilder {
     }
 
     /**
-     * Builds the assembled query-parameter map.
+     * Builds the assembled query-parameter map. A fresh deep copy is returned so the builder's
+     * internal state can never be aliased or mutated through the result (the builder itself may
+     * be reused afterwards).
      *
      * @return the query-parameter map (may be empty, never {@code null})
      */
     public Map<String, List<String>> build() {
-        return params;
+        Map<String, List<String>> copy = new HashMap<>();
+        params.forEach((name, values) -> copy.put(name, new ArrayList<>(values)));
+        return copy;
     }
 }

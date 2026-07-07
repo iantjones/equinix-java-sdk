@@ -26,9 +26,9 @@ import api.equinix.javasdk.fabric.model.json.creators.CloudRouterCommandCreatorJ
 
 public interface CloudRouterCommandClient<T> extends PageablePost<T> {
 
-    Page<CloudRouterCommand, CloudRouterCommandJson> list(String routerId);
+    Page<CloudRouterCommandJson> list(String routerId);
 
-    Page<CloudRouterCommand, CloudRouterCommandJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort);
+    Page<CloudRouterCommandJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort);
 
     CloudRouterCommandJson getByUuid(String routerId, String uuid);
 

@@ -43,7 +43,7 @@ public class CloudRouterPackageClientImpl extends ResourceClientBase<CloudRouter
         return json;
     }
 
-    public Page<CloudRouterPackage, CloudRouterPackageJson> list() {
+    public Page<CloudRouterPackageJson> list() {
         return listPage("GetCloudRouterPackages");
     }
 

@@ -110,7 +110,7 @@ public class DeviceLinkOperator extends ResourceImpl<DeviceLink> {
 
         protected DeviceLinkUpdater(DeviceLinkJson json) {
             this.json = json;
-            this.updaterJson = Constants.JSON_CONVERTOR.convertValue(this.json, DeviceLinkUpdaterJson.class);
+            this.updaterJson = Constants.converter().convertValue(this.json, DeviceLinkUpdaterJson.class);
         }
 
         public DeviceLinkUpdater withGroupName(String groupName) {

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.PatchPanelClient;
@@ -45,15 +45,15 @@ public class PatchPanelClientImpl extends ResourceClientBase<PatchPanel, PatchPa
         return json;
     }
 
-    public Page<PatchPanel, PatchPanelJson> list(String ibx, String accountNumber, String cageSpaceId,
+    public Page<PatchPanelJson> list(String ibx, String accountNumber, String cageSpaceId,
                                                  String cabinetSpaceId, String mediaTypesName) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "location.ibx", ibx);
-        Utils.addAdditionalValue(queryParams, "account.accountNumber", accountNumber);
-        Utils.addAdditionalValue(queryParams, "cage.spaceId", cageSpaceId);
-        Utils.addAdditionalValue(queryParams, "cabinet.spaceId", cabinetSpaceId);
+        ParameterMapper.addAdditionalValue(queryParams, "location.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "account.accountNumber", accountNumber);
+        ParameterMapper.addAdditionalValue(queryParams, "cage.spaceId", cageSpaceId);
+        ParameterMapper.addAdditionalValue(queryParams, "cabinet.spaceId", cabinetSpaceId);
         if (mediaTypesName != null) {
-            Utils.addAdditionalValue(queryParams, "mediaTypes.name", mediaTypesName);
+            ParameterMapper.addAdditionalValue(queryParams, "mediaTypes.name", mediaTypesName);
         }
         return listPage("ListPatchPanels", queryParams);
     }

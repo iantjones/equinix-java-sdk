@@ -18,7 +18,8 @@ package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
@@ -54,8 +55,8 @@ public class InternetAccessServiceClientImpl
     public InternetAccessService create(ServiceRequest serviceRequest) {
         EquinixRequest<InternetAccessServiceJson> equinixRequest =
                 buildRequest("CreateService", RequestType.SINGLE, InternetAccessServiceJson.class);
-        Utils.serializeJson(equinixRequest, serviceRequest);
-        return Utils.handleSingletonResponse(invoke(equinixRequest), equinixRequest);
+        SerializationHelper.serializeJson(equinixRequest, serviceRequest);
+        return ResponseHandler.handleSingletonResponse(invoke(equinixRequest), equinixRequest);
     }
 
     public InternetAccessServiceJson getByUuid(String serviceId) {
@@ -68,8 +69,8 @@ public class InternetAccessServiceClientImpl
         if (dryRun) {
             request.addSingleQueryParameter("dryRun", "true");
         }
-        Utils.serializeJson(request, operations);
-        return Utils.handleSingletonResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, operations);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public Boolean delete(String serviceId, boolean dryRun) {
@@ -77,7 +78,7 @@ public class InternetAccessServiceClientImpl
         return booleanOp("DeleteService", RequestType.SINGLE, Map.of("uuid", serviceId), queryParams, null);
     }
 
-    public Page<InternetAccessService, InternetAccessServiceJson> search(ServiceSearchRequest searchRequest) {
+    public Page<InternetAccessServiceJson> search(ServiceSearchRequest searchRequest) {
         return searchPage("SearchServices", searchRequest);
     }
 }

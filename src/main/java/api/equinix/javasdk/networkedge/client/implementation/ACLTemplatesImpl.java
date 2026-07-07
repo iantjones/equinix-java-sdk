@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.NetworkEdge;
@@ -49,8 +49,8 @@ public class ACLTemplatesImpl implements ACLTemplates {
     }
 
     public PaginatedList<ACLTemplate> list(String accountUcmId) {
-        Page<ACLTemplate, ACLTemplateJson> responsePage = serviceClient.list(accountUcmId);
-        PaginatedList<ACLTemplate> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, ACLTemplateWrapper::new);
+        Page<ACLTemplateJson> responsePage = serviceClient.list(accountUcmId);
+        PaginatedList<ACLTemplate> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, ACLTemplateWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

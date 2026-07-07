@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.CompanyProfiles;
@@ -55,8 +55,8 @@ public class CompanyProfilesImpl implements CompanyProfiles {
     }
 
     public PaginatedFilteredList<CompanyProfile> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<CompanyProfile, CompanyProfileJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<CompanyProfile> profileList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, CompanyProfileWrapper::new);
+        Page<CompanyProfileJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<CompanyProfile> profileList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, CompanyProfileWrapper::new);
         return new PaginatedFilteredList<>(profileList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

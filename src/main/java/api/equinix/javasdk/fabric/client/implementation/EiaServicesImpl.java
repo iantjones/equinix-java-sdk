@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.EiaServices;
@@ -50,8 +50,8 @@ public class EiaServicesImpl implements EiaServices {
     }
 
     public PaginatedFilteredList<EiaService> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<EiaService, EiaServiceJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<EiaService> eiaServiceList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, EiaServiceWrapper::new);
+        Page<EiaServiceJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<EiaService> eiaServiceList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, EiaServiceWrapper::new);
         return new PaginatedFilteredList<>(eiaServiceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

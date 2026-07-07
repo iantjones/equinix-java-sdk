@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.Module;
 
 /**
  * Service-provider interface that lets each domain contribute its own Jackson
- * (de)serializers to the SDK's shared {@link Constants#objectMapper} without core
+ * (de)serializers to the SDK's shared {@link Constants#mapper()} without core
  * having to depend on any domain package.
  *
  * <p>Implementations are discovered at mapper-construction time via {@link java.util.ServiceLoader}

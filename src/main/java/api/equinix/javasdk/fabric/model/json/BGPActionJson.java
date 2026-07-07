@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.BGPActionState;
 import api.equinix.javasdk.fabric.enums.BGPActionType;
 import api.equinix.javasdk.fabric.model.BGPAction;
@@ -36,7 +35,6 @@ public final class BGPActionJson implements BGPAction {
 
     @Getter static TypeReference<List<BGPActionJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<BGPAction, BGPActionJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

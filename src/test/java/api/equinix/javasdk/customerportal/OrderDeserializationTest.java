@@ -32,7 +32,7 @@ class OrderDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = OrderDeserializationTest.class.getResourceAsStream("/json/customerportal/order_response.json");
         assertNotNull(is, "order_response.json fixture not found on classpath");
         order = objectMapper.readValue(is, OrderJson.class);

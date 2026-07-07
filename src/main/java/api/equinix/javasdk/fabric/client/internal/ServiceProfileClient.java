@@ -36,9 +36,9 @@ import java.util.List;
  */
 public interface ServiceProfileClient<T> extends PageablePost<T> {
 
-    Page<ServiceProfile, ServiceProfileJson> list();
+    Page<ServiceProfileJson> list();
 
-    Page<ServiceProfile, ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<ServiceProfileJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     ServiceProfileJson getByUuid(String uuid);
 

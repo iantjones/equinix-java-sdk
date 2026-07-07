@@ -18,6 +18,7 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.networkedge.client.internal.implementation.BGPPeeringClientImpl;
 import api.equinix.javasdk.fabric.model.Connection;
@@ -76,9 +77,26 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withLocalIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, so a subnet prefix (e.g. {@code /30}) is preserved and the
+         * wire value is identical to passing the equivalent string.
+         */
+         public BGPPeeringBuilder withLocalIpAddress(IPAddress localIpAddress) {
+            return withLocalIpAddress(localIpAddress == null ? null : localIpAddress.toCidr());
+        }
+
          public BGPPeeringBuilder withRemoteIpAddress(String remoteIpAddress) {
             this.remoteIpAddress = remoteIpAddress;
             return this;
+        }
+
+        /**
+         * Typed variant of {@code withRemoteIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+         public BGPPeeringBuilder withRemoteIpAddress(IPAddress remoteIpAddress) {
+            return withRemoteIpAddress(remoteIpAddress == null ? null : remoteIpAddress.toCidr());
         }
 
          public BGPPeeringBuilder withLocalAsn(Long localAsn) {
@@ -110,7 +128,7 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
 
         protected BGPPeeringUpdater(BGPPeeringJson json) {
             this.json = json;
-            this.updaterJson = Constants.JSON_CONVERTOR.convertValue(this.json, BGPPeeringUpdaterJson.class);
+            this.updaterJson = Constants.converter().convertValue(this.json, BGPPeeringUpdaterJson.class);
         }
 
         public BGPPeeringUpdater withLocalIpAddress(String localIpAddress) {
@@ -118,9 +136,26 @@ public class BGPPeeringOperator extends ResourceImpl<BGPPeering> {
             return this;
         }
 
+        /**
+         * Typed variant of {@code withLocalIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, so a subnet prefix (e.g. {@code /30}) is preserved and the
+         * wire value is identical to passing the equivalent string.
+         */
+        public BGPPeeringUpdater withLocalIpAddress(IPAddress localIpAddress) {
+            return withLocalIpAddress(localIpAddress == null ? null : localIpAddress.toCidr());
+        }
+
         public BGPPeeringUpdater withRemoteIpAddress(String remoteIpAddress) {
             this.updaterJson.setRemoteIpAddress(remoteIpAddress);
             return this;
+        }
+
+        /**
+         * Typed variant of {@code withRemoteIpAddress(String)}. Serializes the address via
+         * {@link IPAddress#toCidr()}, producing the identical wire value to the String setter.
+         */
+        public BGPPeeringUpdater withRemoteIpAddress(IPAddress remoteIpAddress) {
+            return withRemoteIpAddress(remoteIpAddress == null ? null : remoteIpAddress.toCidr());
         }
 
         public BGPPeeringUpdater withLocalAsn(Long localAsn) {

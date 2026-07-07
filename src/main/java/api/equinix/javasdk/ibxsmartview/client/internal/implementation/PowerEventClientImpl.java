@@ -18,7 +18,7 @@ package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
@@ -61,8 +61,8 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     // the TOP LEVEL rather than under a nested 'pagination' object, so the response cannot be
     // deserialized directly into the core Page (which expects {data/items, pagination{offset,limit,
     // total}}). We deserialize the flat shape ourselves and assemble a Page with a Pagination whose
-    // total is mapped from totalCount, so getIsLastPage()/total are correct for the returned page.
-    public Page<PowerEvent, PowerEventJson> getPowerEvents(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit) {
+    // total is mapped from totalCount, so isLastPage()/total are correct for the returned page.
+    public Page<PowerEventJson> getPowerEvents(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (ibx != null && !ibx.isEmpty()) {
             qParams.put("ibx", List.of(String.join(",", ibx)));
@@ -84,12 +84,12 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     // Deserializes the flat PowerEventsPaginatedResponse and synthesizes a core Page (mapping
     // totalCount → Pagination.total). Shared by the initial getPowerEvents call and the paging
     // nextPage override so subsequent pages keep a non-null Pagination instead of NPE-ing.
-    private Page<PowerEvent, PowerEventJson> flatPowerEventsPage(EquinixRequest<PowerEvent> request, EquinixResponse<PowerEvent> response) {
+    private Page<PowerEventJson> flatPowerEventsPage(EquinixRequest<PowerEvent> request, EquinixResponse<PowerEvent> response) {
         // Re-target deserialization at the flat response holder before reading the body.
-        request.setJavaType(Constants.objectMapper.getTypeFactory().constructType(PowerEventsPaginatedResponseJson.class));
-        PowerEventsPaginatedResponseJson flat = Utils.handleSingletonResponse(response, request);
+        request.setJavaType(Constants.mapper().getTypeFactory().constructType(PowerEventsPaginatedResponseJson.class));
+        PowerEventsPaginatedResponseJson flat = ResponseHandler.handleSingletonResponse(response, request);
 
-        Page<PowerEvent, PowerEventJson> page = new Page<>();
+        Page<PowerEventJson> page = new Page<>();
         page.setItems(flat != null && flat.getItems() != null ? flat.getItems() : new ArrayList<>());
         page.setPagination(toPagination(flat));
         page.setAssociatedRequest(request);
@@ -102,8 +102,8 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     // pagination and NPE on hasNextPage(). Reuse the flat deserialization + Pagination synthesis here.
     @Override
     public PaginatedList<PowerEvent> nextPage(PaginatedRequest<PowerEvent> equinixRequest) {
-        Page<PowerEvent, PowerEventJson> page = flatPowerEventsPage(equinixRequest, invoke(equinixRequest));
-        return Utils.toPaginatedList(page, this, (json, client) -> json);
+        Page<PowerEventJson> page = flatPowerEventsPage(equinixRequest, invoke(equinixRequest));
+        return ResponseHandler.toPaginatedList(page, this, (json, client) -> json);
     }
 
     private Pagination toPagination(PowerEventsPaginatedResponseJson flat) {
@@ -111,7 +111,7 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         values.put("offset", flat != null ? flat.getOffset() : null);
         values.put("limit", flat != null ? flat.getLimit() : null);
         values.put("total", flat != null ? flat.getTotalCount() : null);
-        return Constants.objectMapper.convertValue(values, Pagination.class);
+        return Constants.mapper().convertValue(values, Pagination.class);
     }
 
     // POST /dcim/v3/powerEvents/configurations — operationId createPowerAlertConfiguration
@@ -125,7 +125,7 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     }
 
     // GET /dcim/v3/powerEvents/configurations/search — operationId searchAlertConfigurations
-    public Page<PowerAlertConfiguration, PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit) {
+    public Page<PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (ibx != null && !ibx.isEmpty()) {
             qParams.put("ibx", List.of(String.join(",", ibx)));
@@ -137,7 +137,7 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         qParams.put("limit", List.of(String.valueOf(limit)));
         EquinixRequest<PowerAlertConfiguration> request = buildRequestWithQueryParams(
                 "SearchAlertConfigurations", RequestType.PAGINATED, qParams, PowerAlertConfigurationJson.class);
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     /**
@@ -152,9 +152,9 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         return new Pageable<>() {
             @Override
             public PaginatedList<PowerAlertConfiguration> nextPage(PaginatedRequest<PowerAlertConfiguration> equinixRequest) {
-                Page<PowerAlertConfiguration, PowerAlertConfigurationJson> page =
-                        Utils.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
-                return Utils.toPaginatedList(page, this, (json, client) -> json);
+                Page<PowerAlertConfigurationJson> page =
+                        ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
+                return ResponseHandler.toPaginatedList(page, this, (json, client) -> json);
             }
         };
     }

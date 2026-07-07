@@ -42,7 +42,7 @@ public class EiaServiceClientImpl extends ResourceClientBase<EiaService, EiaServ
         return new EiaServiceWrapper(json, this);
     }
 
-    public Page<EiaService, EiaServiceJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<EiaServiceJson> search(FilterPropertyList filter, SortPropertyList sort) {
         return searchPage("SearchEiaServices", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 

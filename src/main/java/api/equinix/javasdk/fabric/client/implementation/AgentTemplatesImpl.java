@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.AgentTemplates;
@@ -33,8 +33,8 @@ public class AgentTemplatesImpl implements AgentTemplates {
     }
 
     public PaginatedList<AgentTemplate> list() {
-        Page<AgentTemplate, AgentTemplateJson> responsePage = this.serviceClient.list();
-        PaginatedList<AgentTemplate> templateList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<AgentTemplateJson> responsePage = this.serviceClient.list();
+        PaginatedList<AgentTemplate> templateList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(templateList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

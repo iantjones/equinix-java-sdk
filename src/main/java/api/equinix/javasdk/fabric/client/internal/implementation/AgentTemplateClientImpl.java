@@ -40,7 +40,7 @@ public class AgentTemplateClientImpl extends ResourceClientBase<AgentTemplate, A
         return json;
     }
 
-    public Page<AgentTemplate, AgentTemplateJson> list() {
+    public Page<AgentTemplateJson> list() {
         return listPage("GetAgentTemplates");
     }
 

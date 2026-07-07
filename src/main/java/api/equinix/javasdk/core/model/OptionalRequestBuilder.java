@@ -27,7 +27,7 @@ public interface OptionalRequestBuilder<R> {
 
     R build();
 
-    Boolean wasBuilt();
+    boolean wasBuilt();
 
     Map<String, List<String>> getQueryParameters();
 }

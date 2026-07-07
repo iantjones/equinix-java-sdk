@@ -29,7 +29,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkCreatorJson
  */
 public interface DeviceLinkClient<T> extends Pageable<T> {
 
-    Page<DeviceLink, DeviceLinkJson> list(RequestBuilder.DeviceLink requestBuilder);
+    Page<DeviceLinkJson> list(RequestBuilder.DeviceLink requestBuilder);
 
     DeviceLinkJson getByUuid(String uuid);
 

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.CabinetClient;
@@ -45,16 +45,16 @@ public class CabinetClientImpl extends ResourceClientBase<Cabinet, CabinetJson> 
         return json;
     }
 
-    public Page<Cabinet, CabinetJson> list(String cageSpaceId, String ibx, String accountNumber) {
+    public Page<CabinetJson> list(String cageSpaceId, String ibx, String accountNumber) {
         Map<String, List<String>> queryParams = new HashMap<>();
         if (cageSpaceId != null) {
-            Utils.addAdditionalValue(queryParams, "cage.spaceId", cageSpaceId);
+            ParameterMapper.addAdditionalValue(queryParams, "cage.spaceId", cageSpaceId);
         }
         if (ibx != null) {
-            Utils.addAdditionalValue(queryParams, "location.ibx", ibx);
+            ParameterMapper.addAdditionalValue(queryParams, "location.ibx", ibx);
         }
         if (accountNumber != null) {
-            Utils.addAdditionalValue(queryParams, "account.accountNumber", accountNumber);
+            ParameterMapper.addAdditionalValue(queryParams, "account.accountNumber", accountNumber);
         }
         return listPage("ListCabinets", queryParams);
     }

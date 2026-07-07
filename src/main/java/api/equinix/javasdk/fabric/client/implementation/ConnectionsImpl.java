@@ -19,7 +19,7 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.Direction;
 import api.equinix.javasdk.fabric.enums.Side;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.Connections;
@@ -78,8 +78,8 @@ public class ConnectionsImpl implements Connections {
     }
 
     public PaginatedFilteredList<Connection> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<Connection, ConnectionJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<Connection> connectionList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ConnectionWrapper::new);
+        Page<ConnectionJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<Connection> connectionList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, ConnectionWrapper::new);
         return new PaginatedFilteredList<>(connectionList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -122,8 +122,8 @@ public class ConnectionsImpl implements Connections {
 
     @Override
     public PaginatedFilteredList<RouteTableEntry> searchAdvertisedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchAdvertisedRoutes(uuid, filter, sort);
-        PaginatedFilteredList<RouteTableEntry> routes = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
+        Page<RouteTableEntryJson> responsePage = this.routesClient.searchAdvertisedRoutes(uuid, filter, sort);
+        PaginatedFilteredList<RouteTableEntry> routes = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
         return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -134,8 +134,8 @@ public class ConnectionsImpl implements Connections {
 
     @Override
     public PaginatedFilteredList<RouteTableEntry> searchReceivedRoutes(String uuid, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteTableEntry, RouteTableEntryJson> responsePage = this.routesClient.searchReceivedRoutes(uuid, filter, sort);
-        PaginatedFilteredList<RouteTableEntry> routes = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
+        Page<RouteTableEntryJson> responsePage = this.routesClient.searchReceivedRoutes(uuid, filter, sort);
+        PaginatedFilteredList<RouteTableEntry> routes = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.routesClient, (json, client) -> json);
         return new PaginatedFilteredList<>(routes, this.routesClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

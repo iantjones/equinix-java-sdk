@@ -33,8 +33,22 @@ public class WaiterTimeoutException extends WaiterException {
 
     /**
      * @return the most recently fetched resource (the state observed at timeout), or {@code null}
+     *         (always {@code null} after serialization, as the payload is transient)
      */
     public Object getLastObserved() {
         return lastObserved;
+    }
+
+    /**
+     * Typed convenience accessor for the last-observed resource, e.g.
+     * {@code ex.getLastObserved(Connection.class)}.
+     *
+     * @param type the expected resource type
+     * @param <T> the expected resource type
+     * @return the last-observed resource cast to {@code type}, or {@code null} if absent
+     * @throws ClassCastException if the resource is not of the given type
+     */
+    public <T> T getLastObserved(Class<T> type) {
+        return type.cast(lastObserved);
     }
 }

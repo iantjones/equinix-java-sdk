@@ -44,5 +44,5 @@ public interface InternetAccessServiceClient extends PageablePost<InternetAccess
 
     Boolean delete(String serviceId, boolean dryRun);
 
-    Page<InternetAccessService, InternetAccessServiceJson> search(ServiceSearchRequest searchRequest);
+    Page<InternetAccessServiceJson> search(ServiceSearchRequest searchRequest);
 }

@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.json;
 import api.equinix.javasdk.fabric.enums.AgentState;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.model.AgentTemplate;
 import api.equinix.javasdk.fabric.model.implementation.AgentDefinition;
 import api.equinix.javasdk.fabric.model.implementation.ChangeLog;
@@ -34,7 +33,6 @@ public final class AgentTemplateJson implements AgentTemplate {
 
     @Getter static TypeReference<List<AgentTemplateJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<AgentTemplate, AgentTemplateJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

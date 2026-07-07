@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.client.RouteFilters;
@@ -54,8 +54,8 @@ public class RouteFiltersImpl implements RouteFilters {
     }
 
     public PaginatedFilteredList<RouteFilter> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteFilter, RouteFilterJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<RouteFilter> routeFilterList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteFilterWrapper::new);
+        Page<RouteFilterJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<RouteFilter> routeFilterList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteFilterWrapper::new);
         return new PaginatedFilteredList<>(routeFilterList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

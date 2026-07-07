@@ -18,7 +18,8 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
@@ -45,7 +46,7 @@ public class ReportClientImpl extends ResourceClientBase<Report, ReportJson> imp
         return json;
     }
 
-    public Page<Report, ReportJson> getReports() {
+    public Page<ReportJson> getReports() {
         return listPage("GetReports");
     }
 
@@ -81,14 +82,14 @@ public class ReportClientImpl extends ResourceClientBase<Report, ReportJson> imp
     public ScheduledReportJson updateScheduledReport(String scheduledId, ScheduleReportRequest request) {
         EquinixRequest<ScheduledReportJson> equinixRequest = buildRequestWithPathParams("UpdateScheduledReport",
                 RequestType.SINGLE, Map.of("scheduledId", scheduledId), ScheduledReportJson.class);
-        Utils.serializeJson(equinixRequest, request);
-        return Utils.handleSingletonResponse(invoke(equinixRequest), equinixRequest);
+        SerializationHelper.serializeJson(equinixRequest, request);
+        return ResponseHandler.handleSingletonResponse(invoke(equinixRequest), equinixRequest);
     }
 
     public ReportJson generateReport(String scheduledId) {
         EquinixRequest<ReportJson> request = buildRequestWithPathParams("GenerateReport", RequestType.SINGLE,
                 Map.of("scheduledId", scheduledId), ReportJson.class);
-        return Utils.handleSingletonResponse(invoke(request), request);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public List<ReportDefinitionJson> getReportDefinitions() {

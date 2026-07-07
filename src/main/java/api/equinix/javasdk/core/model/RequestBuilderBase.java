@@ -31,7 +31,7 @@ public abstract class RequestBuilderBase<R> implements OptionalRequestBuilder<R>
 
     @Accessors(fluent = true)
     @Getter
-    protected Boolean wasBuilt = false;
+    protected boolean wasBuilt = false;
 
     @Getter
     protected Map<String, List<String>> queryParameters;

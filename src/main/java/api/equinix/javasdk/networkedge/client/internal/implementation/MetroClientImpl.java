@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -44,8 +44,8 @@ public class MetroClientImpl extends ResourceClientBase<Metro, MetroJson> implem
         return new MetroWrapper(json, this);
     }
 
-    public Page<Metro, MetroJson> list(Region region) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("region" , region);
+    public Page<MetroJson> list(Region region) {
+        Map<String, List<String>> qParams = ParameterMapper.singleParamMap("region" , region);
         return listPage("ListMetros", qParams);
     }
 }

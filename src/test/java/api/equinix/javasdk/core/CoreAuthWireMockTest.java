@@ -4,7 +4,7 @@ import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.model.OAuthToken;
 import org.junit.jupiter.api.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -102,11 +102,8 @@ class CoreAuthWireMockTest extends WireMockTestBase {
             wireMock.stubFor(get(urlPathMatching("/fabric/v4/metros"))
                     .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
 
-            OAuthToken expired = new OAuthToken();
-            expired.setSessionToken("stale-token");
-            expired.setTokenType("bearer");
-            expired.setTokenTimeout("1");
-            expired.setSessionStart(LocalDateTime.now().minusHours(1));
+            OAuthToken expired = new OAuthToken(
+                    "stale-token", "bearer", "1", Instant.now().minusSeconds(3600));
             fresh.getEquinixClient().setOAuthToken(expired);
             assertFalse(expired.validSession(), "the injected token is already expired");
 

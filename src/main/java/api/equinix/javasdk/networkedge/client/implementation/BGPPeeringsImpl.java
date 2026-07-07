@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.networkedge.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.NetworkEdge;
@@ -54,8 +54,8 @@ public class BGPPeeringsImpl implements BGPPeerings {
      *
      */
     public PaginatedList<BGPPeering> list(RequestBuilder.BGP requestBuilder) {
-        Page<BGPPeering, BGPPeeringJson> responsePage = serviceClient.list(requestBuilder);
-        PaginatedList<BGPPeering> deviceList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, BGPPeeringWrapper::new);
+        Page<BGPPeeringJson> responsePage = serviceClient.list(requestBuilder);
+        PaginatedList<BGPPeering> deviceList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, BGPPeeringWrapper::new);
         return new PaginatedList<>(deviceList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

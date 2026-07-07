@@ -45,7 +45,7 @@ import java.util.Map;
  */
 public interface DeviceClient<T> extends Pageable<T> {
 
-    Page<Device, DeviceJson> list(RequestBuilder.Device requestBuilder);
+    Page<DeviceJson> list(RequestBuilder.Device requestBuilder);
 
     DeviceJson getByUuid(String uuid);
 

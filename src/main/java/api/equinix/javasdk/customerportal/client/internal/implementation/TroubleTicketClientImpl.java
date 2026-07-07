@@ -18,7 +18,8 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.TroubleTicketClient;
@@ -45,8 +46,8 @@ public class TroubleTicketClientImpl extends ResourceClientBase<TroubleTicket, T
 
     public String create(TroubleTicketCreateRequest request) {
         EquinixRequest<Object> equinixRequest = buildRequest("CreateTroubleTicket", RequestType.SINGLE, Object.class);
-        Utils.serializeJson(equinixRequest, request);
-        return Utils.extractFromHeader(invoke(equinixRequest), "Location", OrderLocation.LAST_SEGMENT_PATTERN);
+        SerializationHelper.serializeJson(equinixRequest, request);
+        return ResponseHandler.extractFromHeader(invoke(equinixRequest), "Location", OrderLocation.LAST_SEGMENT_PATTERN);
     }
 
     public TroubleTicketJson getByUuid(String id) {

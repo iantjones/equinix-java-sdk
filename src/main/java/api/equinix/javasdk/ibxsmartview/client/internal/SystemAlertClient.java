@@ -24,7 +24,7 @@ import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
 
 public interface SystemAlertClient<T> extends Pageable<T> {
 
-    Page<SystemAlert, SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit);
+    Page<SystemAlertJson> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit);
 
-    Page<SystemAlert, SystemAlertJson> searchPost(SearchRequest filterBody);
+    Page<SystemAlertJson> searchPost(SearchRequest filterBody);
 }

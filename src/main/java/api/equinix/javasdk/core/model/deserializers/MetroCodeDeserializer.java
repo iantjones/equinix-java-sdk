@@ -19,12 +19,14 @@ package api.equinix.javasdk.core.model.deserializers;
 import api.equinix.javasdk.core.enums.MetroCode;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import java.io.IOException;
 
 /**
+ * Case-insensitive {@link MetroCode} deserializer. Delegates to {@link MetroCode#fromCode(String)},
+ * so a metro the API has brought online that the enum does not yet list maps to the
+ * forward-compatible {@link MetroCode#UNKNOWN} sentinel rather than failing the whole response.
  *
  * @author ianjones
  */
@@ -41,20 +43,10 @@ public class MetroCodeDeserializer extends StdDeserializer<MetroCode> {
     @Override
     public MetroCode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {
-
-        JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-        String metroCode = node.toString();
-
-        if(metroCode != null) {
-            metroCode = metroCode.replace("\"","").toUpperCase();
+        String metroCode = jsonParser.getText();
+        if (metroCode == null || metroCode.isBlank()) {
+            return null;
         }
-
-        try {
-            return MetroCode.valueOf(metroCode);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            // A metro the API has brought online that this enum does not yet list: map to the
-            // forward-compatible UNKNOWN sentinel rather than failing the whole response.
-            return MetroCode.UNKNOWN;
-        }
+        return MetroCode.fromCode(metroCode.trim());
     }
 }

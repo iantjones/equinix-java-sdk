@@ -16,8 +16,10 @@
 
 package api.equinix.javasdk.core.client;
 
+import api.equinix.javasdk.core.auth.Oauth2TokenRequest;
 import api.equinix.javasdk.core.client.interfaces.CoreClient;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.model.OAuthToken;
@@ -35,8 +37,11 @@ public class CoreClientImpl extends ClientBase implements CoreClient {
 
     public OAuthToken authenticate() {
         EquinixRequest<OAuthToken> equinixRequest = this.buildRequest("Authenticate", RequestType.SINGLE, OAuthToken.class);
-        Utils.serializeJson(equinixRequest, getConfigClient().getEquinixClient().getEquinixCredentialsProvider().getCredentials());
+        // Serialize a dedicated wire DTO, never the EquinixCredentials instance itself, so
+        // custom EquinixCredentials implementations need no Jackson annotations to authenticate.
+        SerializationHelper.serializeJson(equinixRequest, new Oauth2TokenRequest(
+                getConfigClient().getEquinixClient().getEquinixCredentialsProvider().getCredentials()));
         EquinixResponse<OAuthToken> equinixResponse = this.invoke(equinixRequest);
-        return Utils.handleSingletonResponse(equinixResponse, equinixRequest);
+        return ResponseHandler.handleSingletonResponse(equinixResponse, equinixRequest);
     }
 }

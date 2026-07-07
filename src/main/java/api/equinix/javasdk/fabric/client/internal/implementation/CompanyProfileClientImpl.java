@@ -51,7 +51,7 @@ public class CompanyProfileClientImpl extends ResourceClientBase<CompanyProfile,
         return new CompanyProfileWrapper(json, this);
     }
 
-    public Page<CompanyProfile, CompanyProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
+    public Page<CompanyProfileJson> search(FilterPropertyList filter, SortPropertyList sort) {
         // The CompanyProfileSearchRequest spec declares "sort" as a single {property, direction}
         // object (schema Sort), not an array; send the first sort directive in that shape.
         SortProperty sortProperty = (sort != null && sort.getSortProperties() != null && !sort.getSortProperties().isEmpty())

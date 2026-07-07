@@ -18,7 +18,7 @@ package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.internal.AgreementClient;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
@@ -38,12 +38,12 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
     }
 
     public AgreementStatus getAgreementStatus(String accountNumber) {
-        return getAs("GetAgreementStatus", null, Utils.singleParamMap("accountNumber", accountNumber), AgreementStatus.class);
+        return getAs("GetAgreementStatus", null, ParameterMapper.singleParamMap("accountNumber", accountNumber), AgreementStatus.class);
     }
 
     public AgreementStatus createAgreement(String accountNumber, String termsVersionId) {
-        Map<String, String> requestBody = Utils.concatStringMaps(Utils.singlePropertyBody("accountNumber", accountNumber),
-                                                                 Utils.singlePropertyBody("apttusId", termsVersionId));
+        Map<String, String> requestBody = ParameterMapper.concatStringMaps(ParameterMapper.singlePropertyBody("accountNumber", accountNumber),
+                                                                 ParameterMapper.singlePropertyBody("apttusId", termsVersionId));
         postAs("CreateAgreement", requestBody, AgreementStatus.class);
         return getAgreementStatus(accountNumber);
     }
@@ -51,8 +51,8 @@ public class AgreementClientImpl extends ClientBase implements AgreementClient {
     public String getVendorsTerms(String vendorPackage, LicenseType licenseType) {
         // The licenseType query parameter expects Subscription / BYOL (see LicenseType.getQueryValue),
         // not the SUB / BYOL body form.
-        Map<String, List<String>> qParams = Map.of("vendorPackage", Utils.singleParamList(vendorPackage),
-                "licenseType", Utils.singleParamList(licenseType != null ? licenseType.getQueryValue() : null));
+        Map<String, List<String>> qParams = Map.of("vendorPackage", ParameterMapper.singleParamList(vendorPackage),
+                "licenseType", ParameterMapper.singleParamList(licenseType != null ? licenseType.getQueryValue() : null));
         return mapOp("GetVendorTerms", RequestType.SINGLE, null, qParams, null).get("terms");
     }
 

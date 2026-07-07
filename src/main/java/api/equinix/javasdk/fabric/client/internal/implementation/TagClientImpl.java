@@ -41,7 +41,7 @@ public class TagClientImpl extends ResourceClientBase<Tag, TagJson> implements T
         return json;
     }
 
-    public Page<Tag, TagJson> list() {
+    public Page<TagJson> list() {
         return listPage("GetTags");
     }
 

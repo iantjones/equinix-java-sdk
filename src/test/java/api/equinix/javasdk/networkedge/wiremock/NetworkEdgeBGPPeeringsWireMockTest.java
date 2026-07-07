@@ -4,6 +4,7 @@ import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.networkedge.client.RequestBuilder;
 import api.equinix.javasdk.networkedge.enums.BGPStatus;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
@@ -107,6 +108,39 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
             // Verify the follow-up GET for the uuid parsed from the 202 response body.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + NEW_UUID)));
         }
+
+        @Test
+        @DisplayName("withLocalIpAddress/withRemoteIpAddress(IPAddress) POST a byte-identical body to the String setters")
+        void typedIpOverloadsMatchStringPath() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/bgp/?"))
+                    .willReturn(aResponse()
+                            .withStatus(202)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("{\"uuid\":\"" + NEW_UUID + "\"}")));
+            stubSingleton(wireMock, "/ne/v1/bgp/" + NEW_UUID, "/json/networkedge/bgppeering_response.json");
+
+            // Same create issued twice: once via the String setters, once via the typed
+            // IPAddress overloads (which format via IPAddress.toCidr()).
+            networkEdge.bgpPeerings().define()
+                    .forConnection("conn-aaaa-bbbb-cccc-ddddeeeeffff")
+                    .withLocalIpAddress("169.254.0.1/30")
+                    .withRemoteIpAddress("169.254.0.2")
+                    .save();
+            networkEdge.bgpPeerings().define()
+                    .forConnection("conn-aaaa-bbbb-cccc-ddddeeeeffff")
+                    .withLocalIpAddress(IPAddress.parse("169.254.0.1/30"))
+                    .withRemoteIpAddress(IPAddress.parse("169.254.0.2"))
+                    .save();
+
+            var posts = wireMock.findAll(postRequestedFor(urlPathMatching("/ne/v1/bgp/?")));
+            assertEquals(2, posts.size());
+            // The typed overloads serialize byte-for-byte identically to the String path.
+            assertEquals(posts.get(0).getBodyAsString(), posts.get(1).getBodyAsString());
+            // And both carry the expected wire values (the CIDR subnet on localIpAddress survives).
+            wireMock.verify(2, postRequestedFor(urlPathMatching("/ne/v1/bgp/?"))
+                    .withRequestBody(matchingJsonPath("$.localIpAddress", equalTo("169.254.0.1/30")))
+                    .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("169.254.0.2"))));
+        }
     }
 
     @Nested
@@ -144,6 +178,35 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.localAsn", equalTo("65000"))));
             // A follow-up GET re-fetches the updated peering.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID)));
+        }
+
+        @Test
+        @DisplayName("updater withLocalIpAddress/withRemoteIpAddress(IPAddress) PUT a byte-identical body to the String setters")
+        void typedIpOverloadsMatchStringPathOnUpdate() {
+            stubSingleton(wireMock, "/ne/v1/bgp/" + UUID,
+                    "/json/networkedge/bgppeering_response.json");
+            wireMock.stubFor(put(urlPathEqualTo("/ne/v1/bgp/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            BGPPeering peering = networkEdge.bgpPeerings().getByUuid(UUID);
+
+            // Same update issued twice: once via the String setters, once via the typed
+            // IPAddress overloads (which format via IPAddress.toCidr()).
+            peering.update()
+                    .withLocalIpAddress("169.254.10.1/30")
+                    .withRemoteIpAddress("169.254.10.2")
+                    .save();
+            peering.update()
+                    .withLocalIpAddress(IPAddress.parse("169.254.10.1/30"))
+                    .withRemoteIpAddress(IPAddress.parse("169.254.10.2"))
+                    .save();
+
+            var puts = wireMock.findAll(putRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID)));
+            assertEquals(2, puts.size());
+            assertEquals(puts.get(0).getBodyAsString(), puts.get(1).getBodyAsString());
+            wireMock.verify(2, putRequestedFor(urlPathEqualTo("/ne/v1/bgp/" + UUID))
+                    .withRequestBody(matchingJsonPath("$.localIpAddress", equalTo("169.254.10.1/30")))
+                    .withRequestBody(matchingJsonPath("$.remoteIpAddress", equalTo("169.254.10.2"))));
         }
     }
 

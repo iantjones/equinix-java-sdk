@@ -29,5 +29,5 @@ import api.equinix.javasdk.internetaccess.model.json.PortConfigurationJson;
  */
 public interface PortConfigurationClient extends Pageable<PortConfiguration> {
 
-    Page<PortConfiguration, PortConfigurationJson> list(String ibx, UseCase useCase);
+    Page<PortConfigurationJson> list(String ibx, UseCase useCase);
 }

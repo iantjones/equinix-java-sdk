@@ -17,7 +17,7 @@
 package api.equinix.javasdk.networkedge.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.RequestType;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
@@ -46,33 +46,33 @@ public class ACLTemplateClientImpl extends ResourceClientBase<ACLTemplate, ACLTe
         return new ACLTemplateWrapper(json, this);
     }
 
-    public Page<ACLTemplate, ACLTemplateJson> list(String accountUcmId) {
-        Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
+    public Page<ACLTemplateJson> list(String accountUcmId) {
+        Map<String, List<String>> qParams = ParameterMapper.singleParamMap("accountUcmId" , accountUcmId);
         return listPage("ListACLTemplates", qParams);
     }
 
     public ACLTemplateJson getByUuid(String uuid, String accountUcmId) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
+        Map<String, List<String>> qParams = ParameterMapper.singleParamMap("accountUcmId" , accountUcmId);
         return getAs("GetACLTemplate", pParams, qParams, ACLTemplateJson.class);
     }
 
     public ACLTemplateJson create(ACLTemplateCreatorJson aclTemplateCreatorJson) {
         String uuid = createReturningLocationUuid("CreateACLTemplate", null,
-                Utils.singleParamMap("accountUcmId", aclTemplateCreatorJson.getAccountUcmId()), aclTemplateCreatorJson);
+                ParameterMapper.singleParamMap("accountUcmId", aclTemplateCreatorJson.getAccountUcmId()), aclTemplateCreatorJson);
         return getByUuid(uuid, aclTemplateCreatorJson.getAccountUcmId());
     }
 
     public ACLTemplateJson update(String uuid, ACLTemplateUpdaterJson aclTemplateUpdaterJson) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , aclTemplateUpdaterJson.getAccountUcmId());
+        Map<String, List<String>> qParams = ParameterMapper.singleParamMap("accountUcmId" , aclTemplateUpdaterJson.getAccountUcmId());
         voidOp("UpdateACLTemplate", RequestType.SINGLE, pParams, qParams, aclTemplateUpdaterJson);
         return getByUuid(uuid, aclTemplateUpdaterJson.getAccountUcmId());
     }
 
     public Boolean delete(String uuid, String accountUcmId) {
         Map<String, String> pParams = Map.of("uuid", uuid);
-        Map<String, List<String>> qParams = Utils.singleParamMap("accountUcmId" , accountUcmId);
+        Map<String, List<String>> qParams = ParameterMapper.singleParamMap("accountUcmId" , accountUcmId);
         return booleanOp("DeleteACLTemplate", RequestType.SINGLE, pParams, qParams, null);
     }
 

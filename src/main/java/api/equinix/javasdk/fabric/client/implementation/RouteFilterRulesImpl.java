@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -43,8 +43,8 @@ public class RouteFilterRulesImpl implements RouteFilterRules {
     }
 
     public PaginatedList<RouteFilterRule> list(String routeFilterId) {
-        Page<RouteFilterRule, RouteFilterRuleJson> responsePage = this.serviceClient.list(routeFilterId);
-        PaginatedList<RouteFilterRule> routeFilterRuleList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, RouteFilterRuleWrapper::new);
+        Page<RouteFilterRuleJson> responsePage = this.serviceClient.list(routeFilterId);
+        PaginatedList<RouteFilterRule> routeFilterRuleList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, RouteFilterRuleWrapper::new);
         return new PaginatedList<>(routeFilterRuleList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -69,8 +69,8 @@ public class RouteFilterRulesImpl implements RouteFilterRules {
     }
 
     public PaginatedFilteredList<RouteFilterRule> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort) {
-        Page<RouteFilterRule, RouteFilterRuleJson> responsePage = this.serviceClient.search(routeFilterId, filter, sort);
-        PaginatedFilteredList<RouteFilterRule> routeFilterRuleList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteFilterRuleWrapper::new);
+        Page<RouteFilterRuleJson> responsePage = this.serviceClient.search(routeFilterId, filter, sort);
+        PaginatedFilteredList<RouteFilterRule> routeFilterRuleList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, RouteFilterRuleWrapper::new);
         return new PaginatedFilteredList<>(routeFilterRuleList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

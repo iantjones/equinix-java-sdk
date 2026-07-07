@@ -24,5 +24,5 @@ import api.equinix.javasdk.fabric.model.json.PricingJson;
 
 public interface PricingClient<T> extends PageablePost<T> {
 
-    Page<Pricing, PricingJson> list(FilterPropertyList filter);
+    Page<PricingJson> list(FilterPropertyList filter);
 }

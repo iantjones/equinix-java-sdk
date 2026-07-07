@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Core redesign (breaking)
+The core module was reviewed file-by-file (121 files, 123 findings, adversarially verified) and
+every deferred redesign was executed:
+- **Request model unified** — the `content`/`httpEntity`/`objectToSerialize` triple is one
+  `RequestBody` abstraction; Apache `HttpEntity` no longer appears in any public core type; the
+  dead `Request<T>` interface and `originalRequest` field are gone; `EquinixResponse` hides Apache
+  internals (no `getHttpResponse`/`getEntity`), returns an unmodifiable case-insensitive header map.
+- **`Page<T,S>` collapsed to `Page<J>`** (~200 sites); `ClientBase`'s legacy
+  `buildRequest`/`buildRequestWithPathParams` String+TypeReference overloads removed (fluent
+  builder + Class-typed forms remain); dead paged `TypeReference` fields deleted.
+- **`Utils` split** into `RequestAssembler`/`ResponseHandler`/`ParameterMapper`/
+  `SerializationHelper`; `Constants.objectMapper`/`JSON_CONVERTOR` are private (use
+  `Constants.mapper()`/`converter()`); unresolved `{$token}` URI placeholders now fail fast naming
+  the token and endpoint; `ResourceClientBase` can derive endpoint names by convention.
+- **Fixed (highlights of 43 verified findings)** — multi-page `fabric.prices()` searches no longer
+  throw `ClassCastException` (POST-search bodies share a `PaginatedPostBody` contract);
+  `EquinixServiceException.getMessage()` no longer discards the constructor message and omits
+  null fields; error-path HTTP responses are always closed; the `Host` header carries non-default
+  ports; UTC is stamped correctly (no literal `Z` on local time) and date parsing is
+  locale-fixed; `Page.items`/empty-response NPEs guarded; pagination state advances only after a
+  successful fetch; `BandwidthDeserializer`/`OperationalStatusDeserializer` are forward-compatible
+  instead of failing whole responses; `IPAddress.parse` validates literals strictly (no DNS
+  lookups); `OAuthToken` uses a UTC clock and lost its public setters; the dead
+  `OAuthRefreshClient`/refresh-grant machinery and orphaned `@SerializeOperation` filter machinery
+  are removed; `RetryPolicy` no longer treats PATCH as idempotent by default.
+- **New capabilities** — always-on per-request `X-Correlation-Id` (one id per logical request
+  across retries, carried on `EquinixServiceException.getCorrelationId()` and in logs); opt-in
+  `CircuitBreaker` via `EquinixConfig.circuitBreaker(...)` (consecutive-failure open, half-open
+  probe, `CircuitOpenException`); typed `withX(IPAddress)` overloads on the NetworkEdge
+  BGP/VPN/Device and Fabric route-aggregation builders.
+- **Quality gates** — JaCoCo bundle floor raised 0.48 → **0.75** line+instruction (combined
+  coverage is 81%), a global 0.30 per-package floor added (plus the existing 0.70 IAM/STS client
+  floors), and an opt-in `pit` profile adds PIT mutation testing over core.
+
 ### Added
 - **Shipments v1 typed orders + locations** — `POST /v1/orders/shipment/{inbound,outbound,pendingStorage}`
   with per-variant fluent builders, plus shipment and work-visit `locations` lookups (`shipmentsv1`/

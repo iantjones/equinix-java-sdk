@@ -16,6 +16,8 @@
 
 package api.equinix.javasdk.core.model;
 
+import api.equinix.javasdk.core.http.request.Pagination;
+import api.equinix.javasdk.core.internal.Constants;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,15 +25,19 @@ import lombok.Setter;
  * Generic request body for paginated, filtered POST search endpoints (filter only, no sort).
  *
  * <p>Parameterized over the filter type ({@code F}) so core carries no dependency on any
- * domain's concrete filter model.</p>
+ * domain's concrete filter model. Carries the same client-side pagination state as its sibling
+ * {@link FilteredSortedPaginatedPost} — without it, fetching page&nbsp;2 of a search was
+ * impossible (the paging pipeline had no offset to advance).</p>
  *
  * @param <F> the domain filter payload type
  */
 @Getter
 @Setter
-public class FilteredPaginatedPost<F> {
+public class FilteredPaginatedPost<F> implements PaginatedPostBody {
 
     private F filter;
+
+    private Pagination pagination = new Pagination(Constants.PAGE_OFFSET, Constants.PAGE_LIMIT);
 
     public FilteredPaginatedPost(F filter) {
         this.filter = filter;

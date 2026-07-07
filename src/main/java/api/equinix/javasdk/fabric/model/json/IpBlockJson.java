@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.IpBlockOwnership;
 import api.equinix.javasdk.fabric.enums.IpBlockProductType;
 import api.equinix.javasdk.fabric.enums.IpBlockState;
@@ -43,7 +42,6 @@ public class IpBlockJson {
 
     @Getter static TypeReference<List<IpBlockJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<IpBlock, IpBlockJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("uuid")
     private String uuid;

@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.internal.ConnectionServiceClient;
@@ -46,9 +46,9 @@ public class ConnectionServiceClientImpl extends ResourceClientBase<ConnectionSe
         return json;
     }
 
-    public Page<ConnectionService, ConnectionServiceJson> list(String ibx) {
+    public Page<ConnectionServiceJson> list(String ibx) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "mediaTypes.connectorTypes.locations.ibx", ibx);
+        ParameterMapper.addAdditionalValue(queryParams, "mediaTypes.connectorTypes.locations.ibx", ibx);
         return listPage("ListConnectionServices", queryParams);
     }
 }

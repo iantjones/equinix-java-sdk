@@ -31,8 +31,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Locks the redesigned contract for {@link PaginatedList}/{@link PaginatedFilteredList}: they are an
@@ -99,19 +101,22 @@ class PaginatedListIterableTest {
     }
 
     @Test
-    void equalsAndHashCodeByItems() {
+    void identitySemantics_noValueEquality() {
+        // A live, page-growing view must not define value equality over its mutable loaded items:
+        // two lists from different queries with coincidentally equal pages are NOT the same result,
+        // and a hash key whose hashCode changes on next() breaks silently.
         PaginatedList<String> a = new PaginatedList<>(List.of("a", "b"), null, null, null, null);
         PaginatedList<String> b = new PaginatedList<>(List.of("a", "b"), null, null, null, null);
 
-        assertEquals(a, b);
-        assertEquals(a.hashCode(), b.hashCode());
+        assertNotEquals(a, b, "distinct instances must not compare equal");
+        assertEquals(a, a);
     }
 
     // --- auto-paging (next()/loadAll()) — previously untested ---
 
     private static PaginatedList<String> twoPageList() throws Exception {
-        Pagination notLast = Constants.objectMapper.readValue("{\"offset\":0,\"limit\":1,\"total\":2}", Pagination.class);
-        Pagination last = Constants.objectMapper.readValue("{\"offset\":1,\"limit\":1,\"total\":2}", Pagination.class);
+        Pagination notLast = Constants.mapper().readValue("{\"offset\":0,\"limit\":1,\"total\":2}", Pagination.class);
+        Pagination last = Constants.mapper().readValue("{\"offset\":1,\"limit\":1,\"total\":2}", Pagination.class);
         Pageable<String> client = req -> new PaginatedList<>(List.of("b"), null, req, null, last);
         return new PaginatedList<>(List.of("a"), client, new PaginatedRequest<>(), null, notLast);
     }
@@ -138,7 +143,7 @@ class PaginatedListIterableTest {
 
         PaginatedList<String> same = page.loadAll();
 
-        assertEquals(page, same, "loadAll returns this");
+        assertSame(page, same, "loadAll returns this");
         assertEquals(2, page.size());
         assertEquals(List.of("a", "b"), page.toList());
         assertFalse(page.hasNextPage());

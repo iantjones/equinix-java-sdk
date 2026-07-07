@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.Streams;
@@ -35,8 +35,8 @@ public class StreamsImpl implements Streams {
     }
 
     public PaginatedList<Stream> list() {
-        Page<Stream, StreamJson> responsePage = this.serviceClient.list();
-        PaginatedList<Stream> streamList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, StreamWrapper::new);
+        Page<StreamJson> responsePage = this.serviceClient.list();
+        PaginatedList<Stream> streamList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, StreamWrapper::new);
         return new PaginatedList<>(streamList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

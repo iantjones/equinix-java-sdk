@@ -31,7 +31,7 @@ import java.util.List;
 
 public interface CompanyProfileClient<T> extends PageablePost<T> {
 
-    Page<CompanyProfile, CompanyProfileJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<CompanyProfileJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     CompanyProfileJson getByUuid(String uuid);
 

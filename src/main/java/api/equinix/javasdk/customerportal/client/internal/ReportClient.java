@@ -29,7 +29,7 @@ import java.util.List;
 
 public interface ReportClient<T> extends Pageable<T> {
 
-    Page<Report, ReportJson> getReports();
+    Page<ReportJson> getReports();
 
     ReportJson getReportById(String reportId);
 

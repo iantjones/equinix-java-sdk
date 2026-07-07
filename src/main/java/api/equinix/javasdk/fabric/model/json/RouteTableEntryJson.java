@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.RouteTableEntryProtocolType;
 import api.equinix.javasdk.fabric.enums.RouteTableEntryType;
 import api.equinix.javasdk.fabric.model.RouteTableEntry;
@@ -35,7 +34,6 @@ public final class RouteTableEntryJson implements RouteTableEntry {
 
     @Getter static TypeReference<List<RouteTableEntryJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<RouteTableEntry, RouteTableEntryJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("type")
     private RouteTableEntryType type;

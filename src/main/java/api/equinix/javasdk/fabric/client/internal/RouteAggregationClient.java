@@ -31,7 +31,7 @@ import java.util.List;
 
 public interface RouteAggregationClient<T> extends PageablePost<T> {
 
-    Page<RouteAggregation, RouteAggregationJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<RouteAggregationJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     RouteAggregationJson getByUuid(String uuid);
 

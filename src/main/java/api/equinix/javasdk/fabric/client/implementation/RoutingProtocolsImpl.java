@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.client.RoutingProtocols;
@@ -42,8 +42,8 @@ public class RoutingProtocolsImpl implements RoutingProtocols {
     }
 
     public PaginatedList<RoutingProtocol> list(String connectionId) {
-        Page<RoutingProtocol, RoutingProtocolJson> responsePage = this.serviceClient.list(connectionId);
-        PaginatedList<RoutingProtocol> routingProtocolList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, RoutingProtocolWrapper::new);
+        Page<RoutingProtocolJson> responsePage = this.serviceClient.list(connectionId);
+        PaginatedList<RoutingProtocol> routingProtocolList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, RoutingProtocolWrapper::new);
         return new PaginatedList<>(routingProtocolList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

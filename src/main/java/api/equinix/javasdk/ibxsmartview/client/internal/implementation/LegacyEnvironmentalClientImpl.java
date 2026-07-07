@@ -17,7 +17,7 @@
 package api.equinix.javasdk.ibxsmartview.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
 import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.LegacyEnvironmentalClient;
 import api.equinix.javasdk.ibxsmartview.model.json.EnvironmentDataForArrayJson;
@@ -38,18 +38,18 @@ public class LegacyEnvironmentalClientImpl extends ClientBase implements LegacyE
 
     public EnvironmentDataJson getCurrent(String accountNo, String ibx, String levelType, String levelValue) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
-        Utils.addAdditionalValue(qParams, "levelType", levelType);
-        Utils.addAdditionalValue(qParams, "levelValue", levelValue);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "levelType", levelType);
+        ParameterMapper.addAdditionalValue(qParams, "levelValue", levelValue);
         return getAs("GetCurrentEnvironment", null, qParams, EnvironmentDataJson.class);
     }
 
     public List<EnvironmentDataForArrayJson> listCurrent(String accountNo, String ibx, String levelType) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
-        Utils.addAdditionalValue(qParams, "levelType", levelType);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "levelType", levelType);
         EnvironmentDataResponseJson response = getAs("ListCurrentEnvironment", null, qParams, EnvironmentDataResponseJson.class);
         if (response == null || response.getPayLoad() == null || response.getPayLoad().getData() == null) {
             return Collections.emptyList();
@@ -61,14 +61,14 @@ public class LegacyEnvironmentalClientImpl extends ClientBase implements LegacyE
                                                    String levelType, String levelValue, String interval,
                                                    String fromDate, String toDate) {
         Map<String, List<String>> qParams = new HashMap<>();
-        Utils.addAdditionalValue(qParams, "accountNo", accountNo);
-        Utils.addAdditionalValue(qParams, "ibx", ibx);
-        Utils.addAdditionalValue(qParams, "dataPoint", dataPoint);
-        Utils.addAdditionalValue(qParams, "levelType", levelType);
-        Utils.addAdditionalValue(qParams, "levelValue", levelValue);
-        Utils.addAdditionalValue(qParams, "interval", interval);
-        Utils.addAdditionalValue(qParams, "fromDate", fromDate);
-        Utils.addAdditionalValue(qParams, "toDate", toDate);
+        ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
+        ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
+        ParameterMapper.addAdditionalValue(qParams, "dataPoint", dataPoint);
+        ParameterMapper.addAdditionalValue(qParams, "levelType", levelType);
+        ParameterMapper.addAdditionalValue(qParams, "levelValue", levelValue);
+        ParameterMapper.addAdditionalValue(qParams, "interval", interval);
+        ParameterMapper.addAdditionalValue(qParams, "fromDate", fromDate);
+        ParameterMapper.addAdditionalValue(qParams, "toDate", toDate);
         return getAs("GetTrendingEnvironment", null, qParams, TrendingEnvironmentDataJson.class);
     }
 }

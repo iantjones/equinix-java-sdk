@@ -29,7 +29,7 @@ import java.util.List;
 
 public interface EiaServiceClient<T> extends PageablePost<T> {
 
-    Page<EiaService, EiaServiceJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<EiaServiceJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     EiaServiceJson getByUuid(String uuid);
 

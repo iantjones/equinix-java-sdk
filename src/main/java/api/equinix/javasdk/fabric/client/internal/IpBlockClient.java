@@ -29,7 +29,7 @@ import java.util.List;
 
 public interface IpBlockClient<T> extends PageablePost<T> {
 
-    Page<IpBlock, IpBlockJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<IpBlockJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     IpBlockJson getByUuid(String uuid);
 

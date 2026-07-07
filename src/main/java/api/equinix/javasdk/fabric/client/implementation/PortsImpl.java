@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -57,8 +57,8 @@ public class PortsImpl implements Ports {
     }
 
     public PaginatedList<Port> list() {
-        Page<Port, PortJson> responsePage = serviceClient.list();
-        PaginatedList<Port> portList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
+        Page<PortJson> responsePage = serviceClient.list();
+        PaginatedList<Port> portList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
         return new PaginatedList<>(portList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
@@ -75,8 +75,8 @@ public class PortsImpl implements Ports {
     }
 
     public PaginatedFilteredList<Port> search(FilterPropertyList filter, SortPropertyList sort) {
-        Page<Port, PortJson> responsePage = serviceClient.search(filter, sort);
-        PaginatedFilteredList<Port> portList = Utils.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
+        Page<PortJson> responsePage = serviceClient.search(filter, sort);
+        PaginatedFilteredList<Port> portList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
         return new PaginatedFilteredList<>(portList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

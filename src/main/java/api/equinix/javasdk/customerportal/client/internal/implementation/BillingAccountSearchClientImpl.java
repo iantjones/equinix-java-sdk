@@ -38,7 +38,7 @@ public class BillingAccountSearchClientImpl extends ResourceClientBase<BillingAc
         return json;
     }
 
-    public Page<BillingAccountV2, BillingAccountV2Json> search(BillingAccountSearchRequest request) {
+    public Page<BillingAccountV2Json> search(BillingAccountSearchRequest request) {
         return searchPage("SearchBillingAccounts", request);
     }
 

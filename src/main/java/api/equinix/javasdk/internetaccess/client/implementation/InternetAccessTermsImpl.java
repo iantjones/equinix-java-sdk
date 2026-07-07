@@ -17,7 +17,7 @@
 package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.InternetAccess;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.client.InternetAccessTerms;
@@ -43,7 +43,7 @@ public class InternetAccessTermsImpl implements InternetAccessTerms {
     }
 
     public PaginatedList<TermsAndConditions> list(String accountNumber, String ibx, TermsProduct product, TermsType type, String language) {
-        Page<TermsAndConditions, TermsAndConditionsJson> responsePage = this.serviceClient.list(accountNumber, ibx, product, type, language);
-        return Utils.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
+        Page<TermsAndConditionsJson> responsePage = this.serviceClient.list(accountNumber, ibx, product, type, language);
+        return ResponseHandler.toPaginatedList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

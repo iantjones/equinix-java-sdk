@@ -30,5 +30,5 @@ import api.equinix.javasdk.internetaccess.model.json.RoutingProtocolConfiguratio
  */
 public interface RoutingConfigurationClient extends Pageable<RoutingProtocolConfiguration> {
 
-    Page<RoutingProtocolConfiguration, RoutingProtocolConfigurationJson> list(UseCase useCase, Redundancy type);
+    Page<RoutingProtocolConfigurationJson> list(UseCase useCase, Redundancy type);
 }

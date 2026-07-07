@@ -28,5 +28,5 @@ import api.equinix.javasdk.internetaccess.model.json.VirtualConnectionDefaultCon
  */
 public interface VirtualConnectionDefaultConfigurationClient extends Pageable<VirtualConnectionDefaultConfiguration> {
 
-    Page<VirtualConnectionDefaultConfiguration, VirtualConnectionDefaultConfigurationJson> list(String ibx, String metroCode);
+    Page<VirtualConnectionDefaultConfigurationJson> list(String ibx, String metroCode);
 }

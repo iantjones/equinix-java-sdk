@@ -16,7 +16,7 @@
 
 package api.equinix.javasdk.fabric.client.implementation;
 
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.enums.MetroCode;
@@ -45,8 +45,8 @@ public class MetrosImpl implements Metros {
     }
 
     public PaginatedList<Metro> list(MetroPresence metroPresence) {
-        Page<Metro, MetroJson> responsePage = this.serviceClient.list(metroPresence);
-        PaginatedList<Metro> metroList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, MetroWrapper::new);
+        Page<MetroJson> responsePage = this.serviceClient.list(metroPresence);
+        PaginatedList<Metro> metroList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, MetroWrapper::new);
         return new PaginatedList<>(metroList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

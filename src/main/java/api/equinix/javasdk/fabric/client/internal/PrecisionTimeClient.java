@@ -32,7 +32,7 @@ import java.util.List;
 
 public interface PrecisionTimeClient<T> extends Pageable<T> {
 
-    Page<PrecisionTime, PrecisionTimeJson> list();
+    Page<PrecisionTimeJson> list();
 
     PrecisionTimeJson getByUuid(String uuid);
 

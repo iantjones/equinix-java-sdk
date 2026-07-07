@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.TimeServicePackageType;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
@@ -34,7 +33,6 @@ public final class TimeServicePackageJson implements TimeServicePackage {
 
     @Getter static TypeReference<List<TimeServicePackageJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<TimeServicePackage, TimeServicePackageJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

@@ -24,5 +24,5 @@ import api.equinix.javasdk.customerportal.model.json.InvoiceSummaryJson;
 
 public interface InvoiceSummaryClient<T> extends Pageable<T> {
 
-    Page<InvoiceSummary, InvoiceSummaryJson> list(RequestBuilder.Invoice requestBuilder);
+    Page<InvoiceSummaryJson> list(RequestBuilder.Invoice requestBuilder);
 }

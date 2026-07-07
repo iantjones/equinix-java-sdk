@@ -53,45 +53,45 @@ class PaginationTest {
     }
 
     @Test
-    void getIsFirstPage_offsetZero_returnsTrue() throws Exception {
+    void isFirstPage_offsetZero_returnsTrue() throws Exception {
         Pagination pagination = createPagination(0, 20, 100);
-        assertTrue(pagination.getIsFirstPage());
+        assertTrue(pagination.isFirstPage());
     }
 
     @Test
-    void getIsFirstPage_offsetNonZero_returnsFalse() throws Exception {
+    void isFirstPage_offsetNonZero_returnsFalse() throws Exception {
         Pagination pagination = createPagination(20, 20, 100);
-        assertFalse(pagination.getIsFirstPage());
+        assertFalse(pagination.isFirstPage());
     }
 
     @Test
-    void getIsLastPage_singlePage_returnsTrue() throws Exception {
+    void isLastPage_singlePage_returnsTrue() throws Exception {
         Pagination pagination = createPagination(0, 20, 5);
-        assertTrue(pagination.getIsLastPage());
+        assertTrue(pagination.isLastPage());
     }
 
     @Test
-    void getIsLastPage_exactlyFull_returnsTrue() throws Exception {
+    void isLastPage_exactlyFull_returnsTrue() throws Exception {
         Pagination pagination = createPagination(0, 20, 20);
-        assertTrue(pagination.getIsLastPage());
+        assertTrue(pagination.isLastPage());
     }
 
     @Test
-    void getIsLastPage_notLastPage_returnsFalse() throws Exception {
+    void isLastPage_notLastPage_returnsFalse() throws Exception {
         Pagination pagination = createPagination(0, 20, 100);
-        assertFalse(pagination.getIsLastPage());
+        assertFalse(pagination.isLastPage());
     }
 
     @Test
-    void getIsLastPage_lastPage_returnsTrue() throws Exception {
+    void isLastPage_lastPage_returnsTrue() throws Exception {
         Pagination pagination = createPagination(80, 20, 100);
-        assertTrue(pagination.getIsLastPage());
+        assertTrue(pagination.isLastPage());
     }
 
     @Test
-    void getIsLastPage_middlePage_returnsFalse() throws Exception {
+    void isLastPage_middlePage_returnsFalse() throws Exception {
         Pagination pagination = createPagination(40, 20, 100);
-        assertFalse(pagination.getIsLastPage());
+        assertFalse(pagination.isLastPage());
     }
 
     @Test

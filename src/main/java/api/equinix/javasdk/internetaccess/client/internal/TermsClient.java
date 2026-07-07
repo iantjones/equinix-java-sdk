@@ -29,5 +29,5 @@ import api.equinix.javasdk.internetaccess.model.json.TermsAndConditionsJson;
  */
 public interface TermsClient extends Pageable<TermsAndConditions> {
 
-    Page<TermsAndConditions, TermsAndConditionsJson> list(String accountNumber, String ibx, TermsProduct product, TermsType type, String language);
+    Page<TermsAndConditionsJson> list(String accountNumber, String ibx, TermsProduct product, TermsType type, String language);
 }

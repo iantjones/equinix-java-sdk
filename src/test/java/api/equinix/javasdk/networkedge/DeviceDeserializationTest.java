@@ -25,7 +25,7 @@ class DeviceDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream is = DeviceDeserializationTest.class.getResourceAsStream("/json/networkedge/device_response.json");
         assertNotNull(is, "device_response.json fixture not found on classpath");

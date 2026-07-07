@@ -18,8 +18,6 @@ package api.equinix.javasdk.core.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 import java.util.Locale;
 import java.util.Optional;

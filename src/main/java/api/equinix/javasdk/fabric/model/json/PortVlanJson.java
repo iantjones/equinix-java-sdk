@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.fabric.model.json;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.fabric.enums.LinkProtocolState;
 import api.equinix.javasdk.fabric.enums.LinkProtocolType;
 import api.equinix.javasdk.fabric.model.PortVlan;
@@ -37,7 +36,6 @@ public final class PortVlanJson implements PortVlan {
 
     @Getter static TypeReference<List<PortVlanJson>> listTypeRef = new TypeReference<>() {};
 
-    @Getter static TypeReference<Page<PortVlan, PortVlanJson>> pagedTypeRef = new TypeReference<>() {};
 
     @JsonProperty("href")
     private String href;

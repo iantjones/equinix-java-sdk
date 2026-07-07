@@ -27,5 +27,5 @@ import api.equinix.javasdk.internetaccess.model.json.OperationalUnitJson;
  */
 public interface OperationalUnitClient extends Pageable<OperationalUnit> {
 
-    Page<OperationalUnit, OperationalUnitJson> list(String ibx);
+    Page<OperationalUnitJson> list(String ibx);
 }

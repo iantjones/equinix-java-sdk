@@ -17,8 +17,10 @@
 package api.equinix.javasdk.core.waiter;
 
 /**
- * Base type for failures raised by {@link ResourceWaiter}. Catch this to handle either a timeout
- * ({@link WaiterTimeoutException}) or a terminal failure state ({@link WaiterFailedException}).
+ * Base type for failures raised by {@link ResourceWaiter}. Catch this to handle a timeout
+ * ({@link WaiterTimeoutException}), a terminal failure state ({@link WaiterFailedException}), or
+ * an interruption of the polling thread, which is thrown as a plain {@code WaiterException} with
+ * the {@link InterruptedException} as its cause (the interrupt flag is restored first).
  *
  * @author ianjones
  */

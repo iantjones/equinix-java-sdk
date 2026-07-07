@@ -18,7 +18,8 @@ package api.equinix.javasdk.internetaccess.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ParameterMapper;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
@@ -52,11 +53,11 @@ public class AccountClientImpl extends ResourceClientBase<AccountDetails, Accoun
         return json;
     }
 
-    public Page<AccountDetails, AccountDetailsJson> list(String operationalUnitsIbx, String projectId) {
+    public Page<AccountDetailsJson> list(String operationalUnitsIbx, String projectId) {
         Map<String, List<String>> queryParams = new HashMap<>();
-        Utils.addAdditionalValue(queryParams, "operationalUnits.ibxs.ibx", operationalUnitsIbx);
+        ParameterMapper.addAdditionalValue(queryParams, "operationalUnits.ibxs.ibx", operationalUnitsIbx);
         if (projectId != null) {
-            Utils.addAdditionalValue(queryParams, "project.projectId", projectId);
+            ParameterMapper.addAdditionalValue(queryParams, "project.projectId", projectId);
         }
         return listPage("ListAccounts", queryParams);
     }
@@ -65,10 +66,10 @@ public class AccountClientImpl extends ResourceClientBase<AccountDetails, Accoun
         return getOne("GetAccount", Map.of("accountNumber", accountNumber));
     }
 
-    public Page<AccountAgreement, AccountAgreementJson> agreements(String accountNumber, String ibx) {
+    public Page<AccountAgreementJson> agreements(String accountNumber, String ibx) {
         EquinixRequest<AccountAgreement> request = buildRequestWithPathParams("ListAccountAgreements",
                 RequestType.PAGINATED, Map.of("accountNumber", accountNumber), AccountAgreementJson.class);
         request.addSingleQueryParameter("ibx", ibx);
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 }

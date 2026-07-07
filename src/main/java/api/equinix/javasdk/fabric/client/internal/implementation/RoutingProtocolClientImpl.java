@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Page;
@@ -51,7 +52,7 @@ public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtoco
         return new RoutingProtocolWrapper(json, this);
     }
 
-    public Page<RoutingProtocol, RoutingProtocolJson> list(String connectionId) {
+    public Page<RoutingProtocolJson> list(String connectionId) {
         return listPagePath("GetRoutingProtocols", Map.of("connectionId", connectionId));
     }
 
@@ -73,9 +74,9 @@ public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtoco
         // POST /connections/{connectionId}/routingProtocols/bulk wraps the configs in a {"data":[...]} body
         // and returns a paginated {"data":[...]} collection of the created routing protocols.
         EquinixRequest<RoutingProtocol> request = buildRequestWithPathParams("PostRoutingProtocolsBulk", RequestType.PAGINATED_POST,
-                Map.of("connectionId", connectionId), RoutingProtocolJson.getPagedTypeRef());
-        Utils.serializeJson(request, new RoutingProtocolBulkRequest(routingProtocolCreatorJsonList));
-        Page<RoutingProtocol, RoutingProtocolJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+                Map.of("connectionId", connectionId), RoutingProtocolJson.class);
+        SerializationHelper.serializeJson(request, new RoutingProtocolBulkRequest(routingProtocolCreatorJsonList));
+        Page<RoutingProtocolJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         if (page == null || page.getItems() == null) {
             return Collections.emptyList();
         }
@@ -98,8 +99,8 @@ public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtoco
 
     public List<BGPAction> getBgpActions(String connectionId, String routingProtocolId) {
         EquinixRequest<BGPAction> request = buildRequestWithPathParams("GetBGPActions", RequestType.PAGINATED,
-                Map.of("connectionId", connectionId, "uuid", routingProtocolId), BGPActionJson.getPagedTypeRef());
-        Page<BGPAction, BGPActionJson> page = Utils.handlePaginatedListResponse(invoke(request), request);
+                Map.of("connectionId", connectionId, "uuid", routingProtocolId), BGPActionJson.class);
+        Page<BGPActionJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 
@@ -116,8 +117,8 @@ public class RoutingProtocolClientImpl extends ResourceClientBase<RoutingProtoco
 
     public List<Change> getChanges(String connectionId, String routingProtocolId) {
         EquinixRequest<Change> request = buildRequestWithPathParams("GetRoutingProtocolChanges", RequestType.PAGINATED,
-                Map.of("connectionId", connectionId, "uuid", routingProtocolId), Change.getPagedTypeRef());
-        Page<Change, Change> page = Utils.handlePaginatedListResponse(invoke(request), request);
+                Map.of("connectionId", connectionId, "uuid", routingProtocolId), Change.class);
+        Page<Change> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
     }
 

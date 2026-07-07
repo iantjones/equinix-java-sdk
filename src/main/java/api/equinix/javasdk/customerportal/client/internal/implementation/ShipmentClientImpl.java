@@ -18,7 +18,8 @@ package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.ShipmentClient;
@@ -84,8 +85,8 @@ public class ShipmentClientImpl extends ClientBase implements ShipmentClient {
 
     private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {
         EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, null, Object.class);
-        Utils.serializeJson(request, body);
-        String orderId = Utils.extractFromHeader(invoke(request), "Location", OrderLocation.ORDER_ID_PATTERN);
+        SerializationHelper.serializeJson(request, body);
+        String orderId = ResponseHandler.extractFromHeader(invoke(request), "Location", OrderLocation.ORDER_ID_PATTERN);
         return new OrderResponseJson(orderId);
     }
 }

@@ -17,13 +17,11 @@
 package api.equinix.javasdk.core.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
-import lombok.Getter;
 
 /**
  *
  * @author ianjones
  */
-@Getter
 public enum BandwidthUnit implements APIParam {
     MBPS,
     GBPS,

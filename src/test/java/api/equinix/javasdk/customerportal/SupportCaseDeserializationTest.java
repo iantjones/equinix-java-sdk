@@ -23,7 +23,7 @@ class SupportCaseDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
         InputStream is = SupportCaseDeserializationTest.class.getResourceAsStream("/json/customerportal/support_case_response.json");
         assertNotNull(is, "support_case_response.json fixture not found on classpath");
         supportCase = objectMapper.readValue(is, SupportCaseJson.class);

@@ -23,8 +23,14 @@ package api.equinix.javasdk.core.auth;
  * (Client ID and Client Secret) required for API authentication. The SDK uses
  * these credentials to obtain and manage OAuth2 access tokens automatically.</p>
  *
+ * <p>Implementations need only supply the two getters below. The instance itself is never
+ * serialized onto the wire — the SDK builds a dedicated {@link Oauth2TokenRequest} from
+ * {@code getAccessKey()}/{@code getSecretKey()} when authenticating — so custom implementations
+ * (records, vault-backed classes, etc.) require no Jackson annotations.</p>
+ *
  * @author ianjones
  * @see BasicEquinixCredentials
+ * @see Oauth2TokenRequest
  */
 public interface EquinixCredentials {
     /**

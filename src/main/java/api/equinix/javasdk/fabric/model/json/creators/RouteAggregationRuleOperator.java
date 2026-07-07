@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.core.http.request.PatchOperation;
 import api.equinix.javasdk.core.http.response.Pageable;
+import api.equinix.javasdk.core.model.IPAddress;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.RouteAggregationRuleClientImpl;
 import api.equinix.javasdk.fabric.model.RouteAggregationRule;
@@ -73,6 +74,16 @@ public class RouteAggregationRuleOperator extends ResourceImpl<RouteAggregationR
             return this;
         }
 
+        /**
+         * Typed variant of {@code withPrefix(String)}. The prefix is a network in CIDR form, so
+         * the {@link IPAddress} should carry its subnet length (e.g. {@code IPAddress.parse("10.0.0.0/8")});
+         * it is serialized via {@link IPAddress#toCidr()}, producing the identical wire value to the
+         * String setter.
+         */
+        public RouteAggregationRuleOperator.RouteAggregationRuleBuilder withPrefix(IPAddress prefix) {
+            return withPrefix(prefix == null ? null : prefix.toCidr());
+        }
+
         public RouteAggregationRuleOperator.RouteAggregationRuleBuilder withDescription(String description) {
             this.description = description;
             return this;
@@ -121,6 +132,19 @@ public class RouteAggregationRuleOperator extends ResourceImpl<RouteAggregationR
         public RouteAggregationRuleUpdater prefix(String prefix) {
             operations.add(PatchOperation.replace("/prefix", prefix));
             return this;
+        }
+
+        /**
+         * Typed variant of {@code prefix(String)}. The prefix is a network in CIDR form, so the
+         * {@link IPAddress} should carry its subnet length (e.g. {@code IPAddress.parse("10.0.0.0/8")});
+         * it is serialized via {@link IPAddress#toCidr()}, producing the identical wire value to the
+         * String setter.
+         *
+         * @param prefix the new prefix
+         * @return this updater
+         */
+        public RouteAggregationRuleUpdater prefix(IPAddress prefix) {
+            return prefix(prefix == null ? null : prefix.toCidr());
         }
 
         /**

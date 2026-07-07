@@ -55,33 +55,35 @@ public final class ResponseErrorMapper {
     /**
      * Builds the typed exception for an error response.
      *
-     * @param statusCode  the HTTP status code.
-     * @param path        the request URI that produced the error.
-     * @param httpHeaders relevant response headers (e.g. {@code Retry-After}); may be {@code null}.
-     * @param errorBody   the raw response body, or {@code null}/blank when none was returned.
+     * @param statusCode    the HTTP status code.
+     * @param path          the request URI that produced the error.
+     * @param httpHeaders   relevant response headers (e.g. {@code Retry-After}); may be {@code null}.
+     * @param errorBody     the raw response body, or {@code null}/blank when none was returned.
+     * @param correlationId the SDK-generated {@code X-Correlation-Id} sent with the failed request; may be {@code null}.
      * @return the typed {@link EquinixServiceException} for the status code.
      */
     public static EquinixServiceException toException(int statusCode, String path,
-                                                      Map<String, String> httpHeaders, String errorBody) {
+                                                      Map<String, String> httpHeaders, String errorBody,
+                                                      String correlationId) {
         List<ExceptionDetail> details = parseDetails(errorBody);
         String message = summaryMessage(statusCode);
 
         switch (statusCode) {
             case 401:
-                return new EquinixAuthenticationException(message, statusCode, path, httpHeaders, details);
+                return new EquinixAuthenticationException(message, statusCode, path, httpHeaders, details, correlationId);
             case 403:
-                return new EquinixAuthorizationException(message, statusCode, path, httpHeaders, details);
+                return new EquinixAuthorizationException(message, statusCode, path, httpHeaders, details, correlationId);
             case 404:
-                return new EquinixNotFoundException(message, statusCode, path, httpHeaders, details);
+                return new EquinixNotFoundException(message, statusCode, path, httpHeaders, details, correlationId);
             case 409:
-                return new EquinixConflictException(message, statusCode, path, httpHeaders, details);
+                return new EquinixConflictException(message, statusCode, path, httpHeaders, details, correlationId);
             case 429:
-                return new EquinixRateLimitException(message, statusCode, path, httpHeaders, details);
+                return new EquinixRateLimitException(message, statusCode, path, httpHeaders, details, correlationId);
             default:
                 if (statusCode >= 500) {
-                    return new EquinixServerException(message, statusCode, path, httpHeaders, details);
+                    return new EquinixServerException(message, statusCode, path, httpHeaders, details, correlationId);
                 }
-                return new EquinixServiceException(message, statusCode, path, httpHeaders, details);
+                return new EquinixServiceException(message, statusCode, path, httpHeaders, details, correlationId);
         }
     }
 
@@ -110,21 +112,21 @@ public final class ResponseErrorMapper {
         }
 
         try {
-            return Constants.objectMapper.readValue(errorBody, new TypeReference<ArrayList<ExceptionDetail>>() {});
+            return Constants.mapper().readValue(errorBody, new TypeReference<ArrayList<ExceptionDetail>>() {});
         }
         catch (Exception arrayEx) {
             try {
-                ExceptionDetail singleDetail = Constants.objectMapper.readValue(
+                ExceptionDetail singleDetail = Constants.mapper().readValue(
                         errorBody, new TypeReference<ExceptionDetail>() {});
                 List<ExceptionDetail> details = new ArrayList<>();
                 details.add(singleDetail);
                 return details;
             }
             catch (Exception singleEx) {
+                // Unparseable (e.g. an HTML gateway page): keep the exception's details empty
+                // rather than padding it with a blank placeholder entry.
                 logger.warn("Could not parse error response body: {}", errorBody);
-                List<ExceptionDetail> details = new ArrayList<>();
-                details.add(new ExceptionDetail());
-                return details;
+                return new ArrayList<>();
             }
         }
     }

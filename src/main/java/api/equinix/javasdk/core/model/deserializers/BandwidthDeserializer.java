@@ -19,12 +19,16 @@ package api.equinix.javasdk.core.model.deserializers;
 import api.equinix.javasdk.core.enums.BandwidthUnit;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import java.io.IOException;
 
 /**
+ * Deserializes {@link BandwidthUnit} from the varied unit spellings the APIs emit:
+ * canonical values ({@code "MBPS"}, {@code "Gbps"}) and short forms ({@code "MB"}, {@code "gb"})
+ * in any case. Case-folding happens <em>before</em> the short-form mapping, so already-canonical
+ * values are never corrupted. An unrecognized unit maps to {@code null} (matching the shared
+ * mapper's forward-compatible enum handling) rather than failing the whole response.
  *
  * @author ianjones
  */
@@ -41,19 +45,26 @@ public class BandwidthDeserializer extends StdDeserializer<BandwidthUnit> {
     @Override
     public BandwidthUnit deserialize(JsonParser jsonParser, DeserializationContext context)
             throws IOException {
-        JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-        String unitString = node.toString();
-
-        if(unitString != null) {
-            unitString = unitString
-                    .replace("\"","")
-                    .replace("MB", "Mbps")
-                    .replace("GB", "Gbps")
-                    .replace("TB", "Tbps")
-                    .replace("PB", "Pbps")
-                    .toUpperCase();
+        String unitString = jsonParser.getText();
+        if (unitString == null || unitString.isBlank()) {
+            return null;
         }
 
-        return BandwidthUnit.valueOf(unitString);
+        // Uppercase first, then normalize short forms: MB -> MBPS, GB -> GBPS, TB -> TBPS, PB -> PBPS.
+        String normalized = unitString.trim().toUpperCase();
+        switch (normalized) {
+            case "MB" -> normalized = "MBPS";
+            case "GB" -> normalized = "GBPS";
+            case "TB" -> normalized = "TBPS";
+            case "PB" -> normalized = "PBPS";
+            default -> { /* already canonical or unknown */ }
+        }
+
+        try {
+            return BandwidthUnit.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            // A unit this enum does not list: forward-compatible null instead of crashing the read.
+            return null;
+        }
     }
 }

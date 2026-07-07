@@ -18,7 +18,8 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
+import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
@@ -49,15 +50,15 @@ public class CloudRouterCommandClientImpl extends ResourceClientBase<CloudRouter
         return json;
     }
 
-    public Page<CloudRouterCommand, CloudRouterCommandJson> list(String routerId) {
+    public Page<CloudRouterCommandJson> list(String routerId) {
         return listPagePath("GetCloudRouterCommands", Map.of("routerId", routerId));
     }
 
-    public Page<CloudRouterCommand, CloudRouterCommandJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+    public Page<CloudRouterCommandJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort) {
         EquinixRequest<CloudRouterCommand> request = buildRequestWithPathParams("SearchCloudRouterCommands", RequestType.PAGINATED_POST,
                 Map.of("routerId", routerId), CloudRouterCommandJson.class);
-        Utils.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
-        return Utils.handlePaginatedListResponse(invoke(request), request);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
     public CloudRouterCommandJson getByUuid(String routerId, String uuid) {

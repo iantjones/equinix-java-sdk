@@ -30,7 +30,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.VPNUpdaterJson;
  */
 public interface VPNClient<T> extends Pageable<T> {
 
-    Page<VPN, VPNJson> list(RequestBuilder.VPN requestBuilder);
+    Page<VPNJson> list(RequestBuilder.VPN requestBuilder);
 
     VPNJson getByUuid(String uuid);
 

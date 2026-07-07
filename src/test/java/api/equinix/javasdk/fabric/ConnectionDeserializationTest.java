@@ -30,7 +30,7 @@ class ConnectionDeserializationTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        objectMapper = Constants.objectMapper;
+        objectMapper = Constants.mapper();
 
         InputStream is = ConnectionDeserializationTest.class.getResourceAsStream("/json/fabric/connection_response.json");
         assertNotNull(is, "connection_response.json fixture not found on classpath");

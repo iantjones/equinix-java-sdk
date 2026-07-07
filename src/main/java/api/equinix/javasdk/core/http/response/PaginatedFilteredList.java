@@ -16,9 +16,10 @@
 
 package api.equinix.javasdk.core.http.response;
 
+import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
-import api.equinix.javasdk.core.model.FilteredSortedPaginatedPost;
+import api.equinix.javasdk.core.model.PaginatedPostBody;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -44,29 +45,29 @@ import java.util.stream.Stream;
  * @see PaginatedList
  * @see Pagination
  */
-@Getter
 public class PaginatedFilteredList<T> implements Iterable<T> {
 
-    @Getter(AccessLevel.NONE)
     private final List<T> items = new ArrayList<>();
 
+    // Internal paging machinery — deliberately not exposed on the public list type. The
+    // request/response element types are unbounded: the carried request may be typed over
+    // the public model or the resource's JSON model (see Page), and paging never needs it.
+    @Getter(AccessLevel.PACKAGE)
     private PageablePost<T> pageableClient;
-    private EquinixRequest<T> equinixRequest;
-    private EquinixResponse<T> equinixResponse;
-    private Pagination pagination;
+    @Getter(AccessLevel.PACKAGE)
+    private EquinixRequest<?> equinixRequest;
+    @Getter(AccessLevel.PACKAGE)
+    private EquinixResponse<?> equinixResponse;
 
-    /**
-     * No-arg constructor; pagination metadata and items are attached afterwards.
-     */
-    public PaginatedFilteredList() {
-    }
+    @Getter
+    private Pagination pagination;
 
     /**
      *
      * @param initialItems the items for the current page (any iterable; copied in).
      */
     public PaginatedFilteredList(Iterable<? extends T> initialItems, PageablePost<T> pageableClient,
-                                 EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse, Pagination pagination) {
+                                 EquinixRequest<?> equinixRequest, EquinixResponse<?> equinixResponse, Pagination pagination) {
 
         initialItems.forEach(this.items::add);
         this.pageableClient = pageableClient;
@@ -124,9 +125,33 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
         return Collections.unmodifiableList(new ArrayList<>(items));
     }
 
+    @SuppressWarnings("unchecked") // the request's element type is erased and never used by paging
     private PaginatedFilteredList<T> fetchNextPage() {
-        ((FilteredSortedPaginatedPost<?, ?>)((PaginatedPostRequest<T>)equinixRequest).getObjectToSerialize()).getPagination().nextPage();
-        return (PaginatedFilteredList<T>) this.pageableClient.nextPage((PaginatedPostRequest<T>)equinixRequest);
+        PaginatedPostRequest<T> postRequest = (PaginatedPostRequest<T>) equinixRequest;
+        Object body = postRequest.getSearchBody();
+
+        // Dispatch on the PaginatedPostBody contract instead of hard-casting to a concrete body
+        // type: any search body that carries pagination state can page, and a body that cannot
+        // page fails fast with a clear message instead of a bare ClassCastException/NPE.
+        if (!(body instanceof PaginatedPostBody paginatedBody) || paginatedBody.getPagination() == null) {
+            throw new EquinixClientException("Cannot fetch the next page for search endpoint '"
+                    + postRequest.getServiceEndpoint() + "': the request body"
+                    + (body != null ? " of type " + body.getClass().getName() : "")
+                    + " does not carry pagination state. Search bodies must implement "
+                    + PaginatedPostBody.class.getName() + " with a non-null pagination to be pageable.");
+        }
+
+        api.equinix.javasdk.core.http.request.Pagination bodyPagination = paginatedBody.getPagination();
+        bodyPagination.nextPage();
+        try {
+            return (PaginatedFilteredList<T>) this.pageableClient.nextPage(postRequest);
+        }
+        catch (RuntimeException e) {
+            // Roll the shared body's offset back so a caller that catches the failure and
+            // retries next() re-fetches the SAME page instead of silently skipping one.
+            bodyPagination.previousPage();
+            throw e;
+        }
     }
 
     private void loadNextPage() {
@@ -143,7 +168,7 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
      * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
-        return this.pagination != null && !this.pagination.getIsLastPage();
+        return this.pagination != null && !this.pagination.isLastPage();
     }
 
     /**
@@ -169,21 +194,8 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
         return this;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof PaginatedFilteredList)) {
-            return false;
-        }
-        return items.equals(((PaginatedFilteredList<?>) o).items);
-    }
-
-    @Override
-    public int hashCode() {
-        return items.hashCode();
-    }
+    // No equals()/hashCode(): a live, page-growing view has identity semantics (its loaded-item
+    // set mutates on next()/loadAll(), which would silently break hash-keyed usage).
 
     @Override
     public String toString() {

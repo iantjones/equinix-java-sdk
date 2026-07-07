@@ -27,7 +27,7 @@ import java.util.List;
 
 public interface CloudEventClient<T> extends PageablePost<T> {
 
-    Page<CloudEvent, CloudEventJson> search(FilterPropertyList filter, SortPropertyList sort);
+    Page<CloudEventJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     CloudEventJson getByUuid(String uuid);
 

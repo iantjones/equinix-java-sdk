@@ -17,7 +17,7 @@
 package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.CustomerPortal;
-import api.equinix.javasdk.core.http.Utils;
+import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.client.BillingAccounts;
@@ -37,14 +37,14 @@ public class BillingAccountsImpl implements BillingAccounts {
     }
 
     public PaginatedList<BillingAccount> summaries() {
-        Page<BillingAccount, BillingAccountJson> responsePage = this.serviceClient.summaries();
-        PaginatedList<BillingAccount> accountList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<BillingAccountJson> responsePage = this.serviceClient.summaries();
+        PaginatedList<BillingAccount> accountList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(accountList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PaginatedList<BillingAccount> summaries(String sorts) {
-        Page<BillingAccount, BillingAccountJson> responsePage = this.serviceClient.summaries(sorts);
-        PaginatedList<BillingAccount> accountList = Utils.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
+        Page<BillingAccountJson> responsePage = this.serviceClient.summaries(sorts);
+        PaginatedList<BillingAccount> accountList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
         return new PaginatedList<>(accountList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 

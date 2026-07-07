@@ -17,9 +17,19 @@
 package api.equinix.javasdk.core.model;
 
 /**
+ * Marker for types whose {@code toString()} is their wire form when used as a query/path
+ * parameter (see {@code ModelUtils.process}/query-param building). Implementations must
+ * return exactly the string the API expects — e.g. {@code Sortable} renders
+ * {@code "-propertyName"} for descending sorts and enums render their wire code.
  *
  * @author ianjones
  */
 public interface APIParam {
+
+    /**
+     * The value exactly as it must appear on the wire in a query or path parameter.
+     *
+     * @return the wire representation of this parameter value
+     */
     String toString();
 }
