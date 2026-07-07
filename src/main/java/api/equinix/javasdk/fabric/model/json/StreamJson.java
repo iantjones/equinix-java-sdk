@@ -59,9 +59,6 @@ public class StreamJson {
     @JsonProperty("changeLog")
     private ChangeLog changeLog;
 
-    @JsonProperty("enabled")
-    private Boolean enabled;
-
     @JsonProperty("assetsCount")
     private Integer assetsCount;
 

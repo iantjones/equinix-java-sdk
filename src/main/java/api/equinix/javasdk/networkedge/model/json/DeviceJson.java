@@ -36,6 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Virtual device details as returned by the Network Edge API
+ * ({@code VirtualDeviceDetailsResponse} in the network-edge v1 catalog spec). Field set matches
+ * the spec schema exactly; response-side fields not declared there were removed in 2.0.
  *
  * @author ianjones
  */
@@ -49,17 +52,8 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("uuid")
     private String uuid;
 
-    @JsonProperty("serviceId")
-    private String serviceId;
-
     @JsonProperty("name")
     private String name;
-
-    @JsonProperty("podName")
-    private String podName;
-
-    @JsonProperty("ipType")
-    private IPAssignment ipType;
 
     @JsonProperty("deviceTypeCode")
     private String deviceTypeCode;
@@ -79,41 +73,17 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("licenseStatus")
     private LicenseStatus licenseStatus;
 
-    @JsonProperty("clusterSupported")
-    private Boolean clusterSupported;
-
-    @JsonProperty("siblingCustOrgFlag")
-    private Boolean siblingCustOrgFlag;
-
-    @JsonProperty("isSubCustomerDevice")
-    private Boolean isSubCustomerDevice;
-
-    @JsonProperty("supportServicesEnabled")
-    private Boolean supportServicesEnabled;
-
-    @JsonProperty("supportServicesNotification")
-    private List<String> supportServicesNotification;
-
     @JsonProperty("metroCode")
     private MetroCode metroCode;
 
     @JsonProperty("metroName")
     private String metroName;
 
-    @JsonProperty("ibx")
-    private String ibx;
-
-    @JsonProperty("aclTemplateUuid")
-    private String aclTemplateUuid;
-
     @JsonProperty("licenseFileId")
     private String licenseFileId;
 
     @JsonProperty("region")
     private Region region;
-
-    @JsonProperty("clusterDetails")
-    private ClusterDetail clusterDetails;
 
     @JsonProperty("throughput")
     private Double throughput;
@@ -135,9 +105,6 @@ public class DeviceJson extends Lifecycle {
 
     @JsonProperty("licenseType")
     private LicenseType licenseType;
-
-    @JsonProperty("deviceOrderNumber")
-    private String deviceOrderNumber;
 
     @JsonProperty("licenseName")
     private String licenseName;
@@ -178,20 +145,8 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("accountName")
     private String accountName;
 
-    @JsonProperty("sdwanHostname")
-    private String sdwanHostname;
-
-    @JsonProperty("sdwanAccountName")
-    private String sdwanAccountName;
-
     @JsonProperty("siteId")
     private String siteId;
-
-    @JsonProperty("applianceTag")
-    private String applianceTag;
-
-    @JsonProperty("orderingContact")
-    private Contact orderingContact;
 
     @JsonProperty("userPublicKey")
     private UserPublicKey userPublicKey;
@@ -208,27 +163,11 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("redundantUuid")
     private String redundantUuid;
 
-    @JsonProperty("accountReferenceId")
-    private String accountReferenceId;
-
     @JsonProperty("purchaseOrderNumber")
     private String purchaseOrderNumber;
 
-    @JsonProperty("orderReference")
-    private String orderReference;
-
-    @JsonProperty("dealId")
-    private String dealId;
-
     @JsonProperty("termLength")
     private Integer termLength;
-
-    @JsonProperty("billingCommencementDate")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime billingCommencementDate;
-
-    @JsonProperty("billingEnabled")
-    private Boolean billingEnabled;
 
     @JsonProperty("additionalBandwidth")
     private Integer additionalBandwidth;
@@ -242,40 +181,18 @@ public class DeviceJson extends Lifecycle {
     @JsonProperty("deviceManagementType")
     private DeviceManagementType deviceManagementType;
 
-    @JsonProperty("networkScope")
-    private NetworkScope networkScope;
-
     @JsonProperty("interfaces")
     private ArrayList<NetworkInterface> interfaces;
 
-    // Spec type is number; 4-byte ASNs exceed Integer.MAX_VALUE, so Long (matches LinkDevice.asn).
+    // Spec type is number; 4-byte ASNs exceed Integer.MAX_VALUE, so Long.
     @JsonProperty("asn")
     private Long asn;
-
-    @JsonProperty("supportDetails")
-    private SupportDetail supportDetails;
 
     @JsonProperty("diverseFromDeviceUuid")
     private String diverseFromDeviceUuid;
 
     @JsonProperty("diverseFromDeviceName")
     private String diverseFromDeviceName;
-
-    @JsonProperty("sshInterfaceId")
-    private String sshInterfaceId;
-
-    @JsonProperty("versionChangeStatus")
-    private VersionChangeStatus versionChangeStatus;
-
-    @JsonProperty("etf")
-    private Etf etf;
-
-    @JsonProperty("versionLastUpgradedBy")
-    private String versionLastUpgradedBy;
-
-    @JsonProperty("versionLastUpgradedDate")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime versionLastUpgradedDate;
 
     @JsonProperty("expiry")
     private String expiry;

@@ -15,34 +15,6 @@
           }
         }
       },
-      "Resellers": {
-        "rootUri": "resellers",
-        "serviceEndpoints": {
-          "ListResellers": {
-            "httpMethod": "GET"
-          },
-          "ListResellerCustomers": {
-            "httpMethod": "GET",
-            "requestUri": "{$accountNumber}/customers"
-          },
-          "GetResellerCustomer": {
-            "httpMethod": "GET",
-            "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}"
-          },
-          "CreateResellerCustomer": {
-            "httpMethod": "POST",
-            "requestUri": "{$accountNumber}/customers"
-          },
-          "UpdateResellerCustomer": {
-            "httpMethod": "PATCH",
-            "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}"
-          },
-          "RemoveResellerCustomer": {
-            "httpMethod": "POST",
-            "requestUri": "{$accountNumber}/customers/{$customerAccountNumber}/remove"
-          }
-        }
-      },
       "CrossConnects": {
         "rootUri": "colocations/v2/orders/crossConnects",
         "overrideUriFormat": "{$rootUri}/{$requestUri}",
@@ -96,6 +68,26 @@
           "UpdateShipment": {
             "httpMethod": "PATCH",
             "requestUri": "{$orderId}"
+          },
+          "OrderInboundShipment": {
+            "httpMethod": "POST",
+            "overrideRootUri": true,
+            "requestUri": "v1/orders/shipment/inbound"
+          },
+          "OrderOutboundShipment": {
+            "httpMethod": "POST",
+            "overrideRootUri": true,
+            "requestUri": "v1/orders/shipment/outbound"
+          },
+          "OrderPendingStorageShipment": {
+            "httpMethod": "POST",
+            "overrideRootUri": true,
+            "requestUri": "v1/orders/shipment/pendingStorage"
+          },
+          "ListShipmentLocations": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "v1/orders/shipment/locations"
           }
         }
       },
@@ -171,6 +163,11 @@
           "UpdateWorkVisit": {
             "httpMethod": "PATCH",
             "requestUri": "{$orderId}"
+          },
+          "ListWorkVisitLocations": {
+            "httpMethod": "GET",
+            "overrideRootUri": true,
+            "requestUri": "v1/orders/workvisit/locations"
           }
         }
       },

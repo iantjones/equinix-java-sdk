@@ -21,9 +21,7 @@ import api.equinix.javasdk.core.model.Lifecycle;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
 import api.equinix.javasdk.networkedge.enums.DeviceLinkStatus;
 import api.equinix.javasdk.networkedge.enums.RedundancyType;
-import api.equinix.javasdk.networkedge.enums.Source;
 import api.equinix.javasdk.networkedge.model.DeviceLink;
-import api.equinix.javasdk.networkedge.model.implementation.DeviceLinkSupportDetail;
 import api.equinix.javasdk.networkedge.model.implementation.Link;
 import api.equinix.javasdk.networkedge.model.implementation.LinkDevice;
 import api.equinix.javasdk.networkedge.model.implementation.UUIDResult;
@@ -51,9 +49,6 @@ public class DeviceLinkJson extends Lifecycle {
     @JsonProperty("uuid")
     private String uuid;
 
-    @JsonProperty("source")
-    private Source source;
-
     @JsonProperty("groupName")
     private String groupName;
 
@@ -72,9 +67,6 @@ public class DeviceLinkJson extends Lifecycle {
 
     @JsonProperty("linkDevices")
     private List<LinkDevice> linkDevices;
-
-    @JsonProperty("supportDetails")
-    private List<DeviceLinkSupportDetail> supportDetails;
 
     // Network Edge responses use *DateTime audit fields rather than the shared Lifecycle *Date names.
     @JsonProperty("createdDateTime")

@@ -3,7 +3,6 @@
   "name": "test-backup",
   "type": "CONFIG",
   "status": "COMPLETED",
-  "requestType": "MANUAL",
   "downloadUrl": "https://example.com/backups/test-backup",
   "version": "1.0",
   "deleteAllowed": true,

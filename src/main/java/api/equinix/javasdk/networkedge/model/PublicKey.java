@@ -16,7 +16,10 @@
 
 package api.equinix.javasdk.networkedge.model;
 
+import api.equinix.javasdk.networkedge.enums.KeyType;
+
 /**
+ * An SSH public key ({@code PublicKeyResponse} in the network-edge v1 catalog spec).
  *
  * @author ianjones
  */
@@ -28,5 +31,8 @@ public interface PublicKey {
 
     String getKeyValue();
 
-    String getCustOrgId();
+    /**
+     * Key type, whether RSA or DSA ({@code PublicKeyResponse.keyType}).
+     */
+    KeyType getKeyType();
 }

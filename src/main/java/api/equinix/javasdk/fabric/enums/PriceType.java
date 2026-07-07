@@ -30,11 +30,6 @@ public enum PriceType {
     CLOUD_ROUTER_PRODUCT,
     PRECISION_TIME_PRODUCT,
     METRO_CONNECT_PRODUCT,
-    /**
-     * Not part of the current spec {@code ProductType} enum; retained for backward compatibility
-     * with pre-Cloud-Router price rows. Prefer {@link #CLOUD_ROUTER_PRODUCT}.
-     */
-    FABRIC_GATEWAY_PRODUCT,
     UNKNOWN;
 
     @JsonCreator

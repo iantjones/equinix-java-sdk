@@ -20,12 +20,9 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.model.Sortable;
 import api.equinix.javasdk.fabric.client.Ports;
-import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
 import api.equinix.javasdk.fabric.client.internal.PortClient;
-import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
@@ -100,20 +97,6 @@ public class PortsImpl implements Ports {
 
     public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
         return statisticServiceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
-    }
-
-    public PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable) {
-        return getTopStatistics(duration, sortable, null);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     */
-    public PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder) {
-        Page<PortStatistic, PortStatisticJson> responsePage = statisticServiceClient.getTopStatistics(duration, sortable, requestBuilder);
-        PaginatedList<PortStatistic> portStatisticsList = Utils.mapPaginatedList(responsePage.getItems(), this.statisticServiceClient, PortStatisticWrapper::new);
-        return new PaginatedList<>(portStatisticsList, this.statisticServiceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PortOperator.PortBuilder define() {

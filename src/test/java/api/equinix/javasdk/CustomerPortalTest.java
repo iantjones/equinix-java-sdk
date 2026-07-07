@@ -43,17 +43,6 @@ class CustomerPortalTest {
     }
 
     @Test
-    void resellers() {
-        try {
-            PaginatedList<Reseller> resellers = customerPortal.resellers().list();
-            assertNotNull(resellers);
-            assertTrue(resellers.size() >= 0);
-        } catch (Exception e) {
-            Assumptions.assumeTrue(false, "Resellers test skipped: " + e.getMessage());
-        }
-    }
-
-    @Test
     void crossConnects() {
         // Cross-connects are ordered (POST/PATCH/deinstall), not listed; nothing read-only to call.
         assertNotNull(customerPortal.crossConnects());
@@ -87,8 +76,13 @@ class CustomerPortalTest {
 
     @Test
     void workVisits() {
-        // Work visits are scheduled (POST/PATCH), not listed; nothing read-only to call.
-        assertNotNull(customerPortal.workVisits());
+        try {
+            // Work visits are scheduled (POST/PATCH), not listed; the readable op is locations.
+            List<? extends WorkVisitLocation> locations = customerPortal.workVisits().listLocations();
+            assertNotNull(locations);
+        } catch (Exception e) {
+            Assumptions.assumeTrue(false, "Work visits test skipped: " + e.getMessage());
+        }
     }
 
     @Test
@@ -106,8 +100,13 @@ class CustomerPortalTest {
 
     @Test
     void shipments() {
-        // Shipments are scheduled (POST/PATCH), not listed; nothing read-only to call.
-        assertNotNull(customerPortal.shipments());
+        try {
+            // Shipments are scheduled (POST/PATCH), not listed; the readable op is locations.
+            List<? extends ShipmentLocation> locations = customerPortal.shipments().listLocations();
+            assertNotNull(locations);
+        } catch (Exception e) {
+            Assumptions.assumeTrue(false, "Shipments test skipped: " + e.getMessage());
+        }
     }
 
     @Test

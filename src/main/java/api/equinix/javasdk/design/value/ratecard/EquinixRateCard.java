@@ -27,8 +27,8 @@ import java.util.Optional;
  *
  * <p>The fetch is narrowed <em>server-side</em> by price {@code /type} to the
  * two product families this card prices — virtual connections
- * ({@link PriceType#VIRTUAL_CONNECTION_PRODUCT}) and Fabric gateways
- * ({@link PriceType#FABRIC_GATEWAY_PRODUCT}) — rather than pulling the whole
+ * ({@link PriceType#VIRTUAL_CONNECTION_PRODUCT}) and Cloud Routers
+ * ({@link PriceType#CLOUD_ROUTER_PRODUCT}) — rather than pulling the whole
  * catalogue (ports, IP blocks, …) and discarding most of it. A price row still
  * carries its connection <em>type</em> and metro only in its {@code code}/{@code name}
  * (the structured descriptor holds just the bandwidth), so the card matches
@@ -96,7 +96,7 @@ public final class EquinixRateCard implements RateCard {
     @Override
     public Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term) {
         for (Pricing p : catalog()) {
-            if (p.getType() != PriceType.FABRIC_GATEWAY_PRODUCT) {
+            if (p.getType() != PriceType.CLOUD_ROUTER_PRODUCT) {
                 continue;
             }
             if (packageCode != null && !mentions(p, packageCode)) {
@@ -136,7 +136,7 @@ public final class EquinixRateCard implements RateCard {
         // card then defers to its fallback) rather than failing the lookup.
         List<Pricing> combined = new ArrayList<>();
         combined.addAll(fetchByType(PriceType.VIRTUAL_CONNECTION_PRODUCT));
-        combined.addAll(fetchByType(PriceType.FABRIC_GATEWAY_PRODUCT));
+        combined.addAll(fetchByType(PriceType.CLOUD_ROUTER_PRODUCT));
         return combined;
     }
 

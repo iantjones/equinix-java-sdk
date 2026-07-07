@@ -28,19 +28,23 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PaginatedRequest<T> extends EquinixRequest<T> {
-    protected Integer pageNumber = 0;
+    protected Integer offset = 0;
     protected Integer pageSize = Constants.PAGE_LIMIT;
 
     public void nextPage() {
-        this.pageNumber++;
+        this.offset += this.pageSize;
     }
 
     /**
-     * Seeds {@link #pageNumber}/{@link #pageSize} from any caller-supplied {@code offset}/{@code limit}
+     * Seeds {@link #offset}/{@link #pageSize} from any caller-supplied {@code offset}/{@code limit}
      * query parameters, so {@link #setPagination()} (invoked at dispatch) preserves the requested window
      * and {@link #nextPage()} advances by the requested page size. Without this, {@code setPagination()}
      * would overwrite caller-supplied {@code offset}/{@code limit} with the defaults (offset 0,
      * limit {@code PAGE_LIMIT}).
+     *
+     * <p>The caller's offset is carried verbatim: paging is modelled as a raw offset, not a page
+     * number, so offsets that are not a multiple of the limit (e.g. {@code offset=5, limit=100})
+     * are preserved exactly rather than being quantized to the nearest page boundary.</p>
      */
     public void seedPagingFromQueryParams() {
         java.util.List<String> limitVals = getQueryParameters().get("limit");
@@ -55,20 +59,20 @@ public class PaginatedRequest<T> extends EquinixRequest<T> {
             }
         }
         java.util.List<String> offsetVals = getQueryParameters().get("offset");
-        if (offsetVals != null && !offsetVals.isEmpty() && this.pageSize > 0) {
+        if (offsetVals != null && !offsetVals.isEmpty()) {
             try {
                 int o = Integer.parseInt(offsetVals.get(0));
                 if (o >= 0) {
-                    this.pageNumber = o / this.pageSize;
+                    this.offset = o;
                 }
             } catch (NumberFormatException ignored) {
-                // keep default page number
+                // keep default offset
             }
         }
     }
 
     public void setPagination() {
-        replaceQueryParameter("offset", ModelUtils.process(Integer.toString(this.pageNumber * this.pageSize)));
+        replaceQueryParameter("offset", ModelUtils.process(this.offset.toString()));
         replaceQueryParameter("limit", ModelUtils.process(this.pageSize.toString()));
     }
 

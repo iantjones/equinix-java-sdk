@@ -77,8 +77,10 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
         void getsWithAllQueryParams() {
             stubPaginatedGet(wireMock, SEARCH_PATH, FIXTURE);
 
+            // offset=5 with limit=100 is deliberately NOT page-aligned: regression guard for the
+            // core paging seed quantizing caller offsets to page boundaries (5/100 -> page 0 -> offset=0).
             PaginatedList<SystemAlert> alerts =
-                    smartView.systemAlerts().search("ACTIVE", "Mechanical", "2026-06-30", 0, 100);
+                    smartView.systemAlerts().search("ACTIVE", "Mechanical", "2026-06-30", 5, 100);
 
             assertNotNull(alerts);
             assertEquals(2, alerts.size());
@@ -95,7 +97,7 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
                     .withQueryParam("status", equalTo("ACTIVE"))
                     .withQueryParam("assetClassification", equalTo("Mechanical"))
                     .withQueryParam("edgeCollectedOn", equalTo("2026-06-30"))
-                    .withQueryParam("offset", equalTo("0"))
+                    .withQueryParam("offset", equalTo("5"))
                     .withQueryParam("limit", equalTo("100")));
         }
 
@@ -133,11 +135,13 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
         void postsTypedBody() {
             stubPaginatedPost(wireMock, SEARCH_PATH, FIXTURE);
 
+            // Non-page-aligned offset (5 with limit 100) mirrors the GET-variant regression guard:
+            // the caller's pagination body must reach the wire verbatim, not quantized.
             SearchRequest request = new SearchRequest(
                     new SearchFilter(
                             List.of(new SearchCondition("status", "EQUALS", List.of("ACTIVE"))),
                             null),
-                    new SearchPagination(0L, 100),
+                    new SearchPagination(5L, 100),
                     List.of(new SearchSort("DESC", "id")));
 
             PaginatedList<SystemAlert> alerts = smartView.systemAlerts().searchPost(request);
@@ -151,7 +155,7 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("status")))
                     .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("EQUALS")))
                     .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ACTIVE")))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("5")))
                     .withRequestBody(matchingJsonPath("$.pagination.limit", equalTo("100")))
                     .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC")))
                     .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("id"))));

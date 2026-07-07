@@ -56,7 +56,7 @@ import java.util.Map;
 
 /**
  * Internal client for Fabric Connections. Standard CRUD + paging come from {@link ResourceClientBase};
- * the Connection-specific operations (dry-run, actions, bulk, statistics) remain bespoke below.
+ * the Connection-specific operations (dry-run, actions, statistics) remain bespoke below.
  *
  * @author ianjones
  */
@@ -117,10 +117,6 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
 
     public ConnectionJson update(String uuid, List<PatchOperation> operations) {
         return patchOne("UpdateConnection", uuid, operations);
-    }
-
-    public List<ConnectionJson> batch(List<ConnectionCreatorJson> connectionCreatorJsonList) {
-        return postForType("PostBulkConnections", connectionCreatorJsonList, ConnectionJson.getListTypeRef());
     }
 
     public ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {

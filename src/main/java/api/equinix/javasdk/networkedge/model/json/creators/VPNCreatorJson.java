@@ -59,9 +59,6 @@ public class VPNCreatorJson {
     @JsonProperty("secondary")
     private VPNCreatorJson secondary;
 
-    @JsonProperty("useNetworkServiceConnection")
-    private Boolean useNetworkServiceConnection;
-
     VPNCreatorJson(VPNOperator.VPNBuilder vpnBuilder) {
             this.siteName = vpnBuilder.getSiteName();
             this.virtualDeviceUuid = vpnBuilder.getVirtualDeviceUuid();

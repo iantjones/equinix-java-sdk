@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Shipments v1 typed orders + locations** — `POST /v1/orders/shipment/{inbound,outbound,pendingStorage}`
+  with per-variant fluent builders, plus shipment and work-visit `locations` lookups (`shipmentsv1`/
+  `workvisitv1`). Work-order resources now combine v1 and v2 APIs to complete functionality; the
+  API version is visible only in the request URL.
+- **Prices `metroConnect` payload** — `METRO_CONNECT_PRODUCT` price entries now deserialize their
+  metroConnect detail (built from the fabricv4 prices/search examples).
+- `PublicKey.getKeyType()` (network-edgev1 `PublicKeyResponse.keyType`).
+
+### Fixed
+- **Every paginated list honored `offset` only when it was a multiple of `limit`** — the core
+  pagination seeding quantized caller offsets to page boundaries (e.g. `offset=5, limit=100` → 0),
+  silently shifting the requested window on every PAGINATED endpoint in every domain (found via the
+  IBX SystemAlerts search). Offsets now pass through exactly; regression-locked on the wire.
+
 ### Changed
+- **Request-side builders are fully enum-typed** (fabric): port `connectivitySourceType`, service-token
+  virtual-device `type`, Cloud Router `PackageRef`/`withPackage`/`changePackage`
+  (`GatewayPackageCode`), marketplace-subscription + notification refs, stream alert-rule `type`,
+  stream-subscription sink `credential.type` (String overload removed) and new
+  `StreamSubscriptionSinkFormat` for `sink.format`; `Redundancy` now carries the spec's `enabled`
+  member (constructor signature changed).
 - **Client method naming aligned to the SDK-wide convention** (breaking renames):
   `STSOidcProviders.page(...)` → `list(...)`, `patch(...)` → `update(...)`;
   `IAMResourceTypes.pageResourceTypeActions(...)` → `listResourceTypeActions(...)`;
@@ -16,6 +37,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `define`-or-`create` / `update` / `delete`; javadoc keeps citing the specs' operationIds.
 
 ### Removed
+- **CustomerPortal Resellers** — no specification exists anywhere in the API catalog (all 37 slugs
+  checked); the resource was unverifiable fiction.
+- **Fabric bulk connection create (`createBatch`) and the top-N port-statistics listing** — neither
+  operation exists in fabricv4 (`POST /connections/bulk` has no path; only
+  `GET /ports/{portId}/stats` is defined).
+- **CrossConnect/Shipment/WorkVisit read models** — the v2 order APIs return a Location header only
+  and no spec version defines resource reads (order status flows through Orders/OrderHistory).
+- Fictional fields absent from the fabricv4/network-edgev1 schemas *and* examples: Fabric
+  `Stream.enabled` (response side), `MarketplaceSubscription.type`, port-create `name`,
+  `GatewayPackageCode.LIMITED`, and ~11 NetworkEdge response fields (each re-verified individually;
+  spec-attested fields like `cvpId` and the NE request-side options were kept with citations).
 - **`PasswordEquinixCredentials` and the `PASSWORD` grant type** — the OAuth2 resource-owner
   password grant reached end-of-life in January 2025 per the Equinix API release notes; the token
   endpoint only supports client credentials. Use `BasicEquinixCredentials` (or a custom

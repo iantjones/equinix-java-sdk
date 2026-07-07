@@ -19,6 +19,7 @@ package api.equinix.javasdk.fabric.model.json.creators;
 import api.equinix.javasdk.core.http.response.Pageable;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.StreamAlertRuleClientImpl;
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleType;
 import api.equinix.javasdk.fabric.model.StreamAlertRule;
 import api.equinix.javasdk.fabric.model.json.StreamAlertRuleJson;
 import api.equinix.javasdk.fabric.model.wrappers.StreamAlertRuleWrapper;
@@ -54,7 +55,7 @@ public class StreamAlertRuleOperator extends ResourceImpl<StreamAlertRule> {
     public class StreamAlertRuleBuilder {
 
         private final String streamId;
-        private String type = "METRIC_ALERT";
+        private StreamAlertRuleType type = StreamAlertRuleType.METRIC_ALERT;
         private String name;
         private String description;
         private Boolean enabled;
@@ -66,7 +67,14 @@ public class StreamAlertRuleOperator extends ResourceImpl<StreamAlertRule> {
             this.streamId = streamId;
         }
 
-        public StreamAlertRuleBuilder type(String type) {
+        /**
+         * Sets the alert rule type (spec {@code AlertRulePostRequest.type}: {@code METRIC_ALERT},
+         * which is also the default).
+         *
+         * @param type the alert rule type
+         * @return this builder
+         */
+        public StreamAlertRuleBuilder type(StreamAlertRuleType type) {
             this.type = type;
             return this;
         }
@@ -113,7 +121,7 @@ public class StreamAlertRuleOperator extends ResourceImpl<StreamAlertRule> {
 
         private final String streamId;
         private final String uuid;
-        private String type = "METRIC_ALERT";
+        private StreamAlertRuleType type = StreamAlertRuleType.METRIC_ALERT;
         private String name;
         private String description;
         private Boolean enabled;
@@ -126,7 +134,14 @@ public class StreamAlertRuleOperator extends ResourceImpl<StreamAlertRule> {
             this.uuid = uuid;
         }
 
-        public StreamAlertRuleUpdater type(String type) {
+        /**
+         * Sets the alert rule type (spec {@code AlertRulePutRequest.type}: {@code METRIC_ALERT},
+         * which is also the default).
+         *
+         * @param type the alert rule type
+         * @return this updater
+         */
+        public StreamAlertRuleUpdater type(StreamAlertRuleType type) {
             this.type = type;
             return this;
         }

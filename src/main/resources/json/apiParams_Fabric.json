@@ -124,10 +124,6 @@
           "PostConnection": {
             "httpMethod": "POST"
           },
-          "PostBulkConnections": {
-            "httpMethod": "POST",
-            "requestUri": "bulk"
-          },
           "DeleteConnection": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"

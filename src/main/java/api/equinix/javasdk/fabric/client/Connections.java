@@ -104,13 +104,6 @@ public interface Connections {
     ConnectionOperator.ConnectionBuilder define(ConnectionType connectionType);
 
     /**
-     * Begins a batch builder for creating multiple connections in a single request.
-     *
-     * @return a batch builder for configuring multiple connections
-     */
-    ConnectionOperator.BatchConnectionBuilder startBatch();
-
-    /**
      * Retrieves bandwidth statistics for a connection over the specified time range, viewed from a specific side.
      *
      * @param uuid the unique identifier of the connection

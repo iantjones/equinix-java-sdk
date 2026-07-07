@@ -168,43 +168,6 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("startBatch().createBatch()")
-    class Batch {
-
-        @Test
-        @DisplayName("POSTs an array of connections to /connections/bulk")
-        void createBatchPostsToBulk() {
-            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections/bulk"))
-                    .willReturn(okJson(loadFixture("/json/fabric/connections_bulk_response.json"))));
-
-            var operator = fabric.connections();
-            var batch = operator.startBatch();
-            batch.addConnection(operator.define(ConnectionType.EVPL_VC)
-                    .name("Batch-Connection-1")
-                    .bandwidth(100)
-                    .aSideAccessPointPort("port-a-1", LinkProtocol.dot1q().vlanTag(101).create())
-                    .zSideAccessPointServiceProfile("sp-1", LinkProtocol.dot1q().vlanTag(102).create()));
-            batch.addConnection(operator.define(ConnectionType.EVPL_VC)
-                    .name("Batch-Connection-2")
-                    .bandwidth(200)
-                    .aSideAccessPointPort("port-a-2", LinkProtocol.dot1q().vlanTag(201).create())
-                    .zSideAccessPointServiceProfile("sp-2", LinkProtocol.dot1q().vlanTag(202).create()));
-
-            List<Connection> created = batch.createBatch();
-
-            assertNotNull(created);
-            assertEquals(2, created.size());
-            assertEquals("Batch-Connection-1", created.get(0).getName());
-            assertEquals("Batch-Connection-2", created.get(1).getName());
-            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections/bulk"))
-                    .withRequestBody(matchingJsonPath("$[0].name", equalTo("Batch-Connection-1")))
-                    .withRequestBody(matchingJsonPath("$[0].bandwidth", equalTo("100")))
-                    .withRequestBody(matchingJsonPath("$[1].name", equalTo("Batch-Connection-2")))
-                    .withRequestBody(matchingJsonPath("$[1].bandwidth", equalTo("200"))));
-        }
-    }
-
-    @Nested
     @DisplayName("Route Aggregation attach / detach")
     class RouteAggregationActions {
 

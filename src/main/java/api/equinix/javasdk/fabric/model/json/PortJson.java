@@ -64,6 +64,12 @@ public final class PortJson {
     @JsonProperty("state")
     private PortState state;
 
+    /**
+     * Customer virtual port id. Not declared on the spec's {@code Port} schema, but the spec's own
+     * response examples for {@code GET /fabric/v4/ports} ({@code ports}) and
+     * {@code GET /fabric/v4/ports/{portId}} ({@code portByUUID}) both carry it (e.g.
+     * {@code "cvpId": "2000833"}), so it is retained here.
+     */
     @JsonProperty("cvpId")
     private String cvpId;
 

@@ -20,8 +20,16 @@ import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.customerportal.client.Shipments;
 import api.equinix.javasdk.customerportal.client.internal.ShipmentClient;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.PendingStorageOrderResponse;
+import api.equinix.javasdk.customerportal.model.ShipmentLocation;
+import api.equinix.javasdk.customerportal.model.ShipmentOrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.InboundShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.OutboundShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PendingStorageOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
+
+import java.util.List;
 
 public class ShipmentsImpl implements Shipments {
 
@@ -40,5 +48,25 @@ public class ShipmentsImpl implements Shipments {
 
     public OrderResponse update(String orderId, ShipmentUpdateRequest request) {
         return this.serviceClient.update(orderId, request);
+    }
+
+    public ShipmentOrderResponse orderInbound(InboundShipmentOrderRequest request) {
+        return this.serviceClient.orderInbound(request);
+    }
+
+    public ShipmentOrderResponse orderOutbound(OutboundShipmentOrderRequest request) {
+        return this.serviceClient.orderOutbound(request);
+    }
+
+    public List<? extends PendingStorageOrderResponse> orderPendingStorage(PendingStorageOrderRequest request) {
+        return this.serviceClient.orderPendingStorage(request);
+    }
+
+    public List<? extends ShipmentLocation> listLocations() {
+        return this.serviceClient.listLocations(null, null, null);
+    }
+
+    public List<? extends ShipmentLocation> listLocations(Boolean detail, String ibxs, String cages) {
+        return this.serviceClient.listLocations(detail, ibxs, cages);
     }
 }

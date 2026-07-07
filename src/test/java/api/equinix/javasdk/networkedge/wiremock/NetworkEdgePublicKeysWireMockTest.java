@@ -3,6 +3,7 @@ package api.equinix.javasdk.networkedge.wiremock;
 import api.equinix.javasdk.NetworkEdge;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.networkedge.enums.KeyType;
 import api.equinix.javasdk.networkedge.model.PublicKey;
 import org.junit.jupiter.api.*;
 
@@ -50,12 +51,13 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
                             + "\"data\":[{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
                             + "\"keyName\":\"test-public-key\","
                             + "\"keyValue\":\"ssh-rsa AAAA test@example.com\","
-                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}]}")));
+                            + "\"keyType\":\"RSA\"}]}")));
 
             List<PublicKey> publicKeys = networkEdge.publicKeys().list();
             assertNotNull(publicKeys);
             assertEquals(1, publicKeys.size());
             assertEquals("test-public-key", publicKeys.get(0).getKeyName());
+            assertEquals(KeyType.RSA, publicKeys.get(0).getKeyType());
         }
 
         @Test
@@ -66,7 +68,7 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
                             + "\"data\":[{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
                             + "\"keyName\":\"acct-scoped-key\","
                             + "\"keyValue\":\"ssh-rsa AAAA acct@example.com\","
-                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}]}")));
+                            + "\"keyType\":\"RSA\"}]}")));
 
             List<PublicKey> publicKeys = networkEdge.publicKeys().list("ucm-67890");
 
@@ -104,7 +106,7 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
                     .willReturn(okJson("{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
                             + "\"keyName\":\"test-public-key\","
                             + "\"keyValue\":\"" + keyValue + "\","
-                            + "\"custOrgId\":\"org-12345\",\"accountUcmId\":\"ucm-67890\"}")));
+                            + "\"keyType\":\"RSA\"}")));
 
             PublicKey publicKey = networkEdge.publicKeys()
                     .define("test-public-key", keyValue)

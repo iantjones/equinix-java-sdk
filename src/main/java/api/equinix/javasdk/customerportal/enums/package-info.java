@@ -19,9 +19,9 @@
  * for order statuses ({@link api.equinix.javasdk.customerportal.enums.OrderStatus}),
  * quote statuses ({@link api.equinix.javasdk.customerportal.enums.QuoteStatus}),
  * ticket statuses ({@link api.equinix.javasdk.customerportal.enums.TicketStatus}),
- * shipment statuses ({@link api.equinix.javasdk.customerportal.enums.ShipmentStatus}),
- * cross-connect types, smart hands types, work visit statuses, case priorities,
- * asset types, and other Customer Portal domain values.
+ * shipment carriers ({@link api.equinix.javasdk.customerportal.enums.ShipmentCarrier}),
+ * smart hands types, case priorities, asset types, and other Customer Portal
+ * domain values.
  *
  * @see api.equinix.javasdk.customerportal.enums.OrderStatus
  * @see api.equinix.javasdk.customerportal.enums.TicketStatus

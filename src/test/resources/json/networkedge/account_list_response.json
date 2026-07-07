@@ -6,11 +6,11 @@
       "accountNumber": 123456,
       "accountUcmId": "ucm-abc-001",
       "accountStatus": "Active",
-      "portalOrgId": "org-9988",
-      "portalOrgName": "Acme Holdings",
       "referenceId": "ref-7766",
-      "metros": ["SV", "DC"],
-      "siblingCustOrgFlag": false,
+      "metros": [
+        "SV",
+        "DC"
+      ],
       "creditHold": false
     },
     {
@@ -18,11 +18,10 @@
       "accountNumber": 654321,
       "accountUcmId": "ucm-xyz-002",
       "accountStatus": "Active",
-      "portalOrgId": "org-1122",
-      "portalOrgName": "Globex Holdings",
       "referenceId": "ref-3344",
-      "metros": ["SV"],
-      "siblingCustOrgFlag": true,
+      "metros": [
+        "SV"
+      ],
       "creditHold": false
     }
   ]

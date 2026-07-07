@@ -31,8 +31,6 @@ public interface BGPPeering {
 
     String getConnectionUuid();
 
-    String getConnectionName();
-
     String getVirtualDeviceUuid();
 
     String getLocalIpAddress();

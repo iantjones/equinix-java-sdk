@@ -17,17 +17,21 @@
 package api.equinix.javasdk.customerportal.client;
 
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.WorkVisitLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
+
+import java.util.List;
 
 /**
  * Client interface for scheduling work visits in the Equinix Customer Portal.
  *
- * <p>Backed by the Work Visits v2 order API at {@code /colocations/v2/orders/workVisits}. Work
- * visits are scheduled and updated as orders; the resulting order is tracked through {@link Orders}
- * and {@link OrderHistory}, and a work visit is cancelled via
- * {@link Orders#cancel(String, String)}. Each operation returns the generated order id (parsed
- * from the {@code Location} header).</p>
+ * <p>Combines the work visit order APIs at {@code /colocations/v2/orders/workVisits} and
+ * {@code /v1/orders/workvisit}. Work visits are scheduled and updated as orders; the resulting
+ * order is tracked through {@link Orders} and {@link OrderHistory}, and a work visit is cancelled
+ * via {@link Orders#cancel(String, String)}. Each order operation returns the generated order id
+ * (parsed from the {@code Location} header). The IBX locations where the current user may place
+ * work visit orders are available via {@code listLocations()}.</p>
  */
 public interface WorkVisits {
 
@@ -52,4 +56,25 @@ public interface WorkVisits {
      * @return the order submission result carrying the order id
      */
     OrderResponse update(String orderId, WorkVisitUpdateRequest request);
+
+    /**
+     * Lists the IBX locations, cages and cabinets where the current user may place work visit
+     * orders.
+     *
+     * @return the list of permitted locations
+     */
+    List<? extends WorkVisitLocation> listLocations();
+
+    /**
+     * Lists the IBX locations, cages and cabinets where the current user may place work visit
+     * orders, optionally filtered.
+     *
+     * <p>Maps to {@code GET /v1/orders/workvisit/locations} ({@code getLocation}).</p>
+     *
+     * @param detail when {@code true}, returns detailed permission with cages and cabinets, or {@code null} for the default
+     * @param ibxs   a comma-separated list of IBX codes to filter by (e.g. {@code AM1,AM2}), or {@code null}
+     * @param cages  a comma-separated list of cage ids to filter by (e.g. {@code AM1:02:002MC1}), or {@code null}
+     * @return the list of permitted locations
+     */
+    List<? extends WorkVisitLocation> listLocations(Boolean detail, String ibxs, String cages);
 }

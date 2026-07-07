@@ -18,8 +18,6 @@ package api.equinix.javasdk.fabric.client;
 
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.model.Sortable;
-import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.Port;
 import api.equinix.javasdk.fabric.model.PortStatistic;
@@ -121,25 +119,6 @@ public interface Ports {
      * @return the list of metrics for the port over the specified time range
      */
     List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
-
-    /**
-     * Retrieves top port statistics ranked by bandwidth usage for the specified duration.
-     *
-     * @param duration the time duration to aggregate statistics over
-     * @param sortable the sort configuration for ranking results
-     * @return a paginated list of top port statistics
-     */
-    PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable);
-
-    /**
-     * Retrieves top port statistics ranked by bandwidth usage with additional request options.
-     *
-     * @param duration the time duration to aggregate statistics over
-     * @param sortable the sort configuration for ranking results
-     * @param requestBuilder additional request parameters for filtering top statistics
-     * @return a paginated list of top port statistics
-     */
-    PaginatedList<PortStatistic> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder);
 
     /**
      * Begins the fluent builder for creating a new port ({@code POST /fabric/v4/ports}).

@@ -23,10 +23,14 @@ import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.WorkVisitClient;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.WorkVisitLocation;
 import api.equinix.javasdk.customerportal.model.json.OrderResponseJson;
+import api.equinix.javasdk.customerportal.model.json.WorkVisitLocationsResponseJson;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class WorkVisitClientImpl extends ClientBase implements WorkVisitClient {
@@ -41,6 +45,22 @@ public class WorkVisitClientImpl extends ClientBase implements WorkVisitClient {
 
     public OrderResponse update(String orderId, WorkVisitUpdateRequest request) {
         return submitOrder("UpdateWorkVisit", Map.of("orderId", orderId), request);
+    }
+
+    public List<? extends WorkVisitLocation> listLocations(Boolean detail, String ibxs, String cages) {
+        Map<String, List<String>> queryParams = new HashMap<>();
+        if (detail != null) {
+            queryParams.put("detail", List.of(String.valueOf(detail)));
+        }
+        if (ibxs != null) {
+            queryParams.put("ibxs", List.of(ibxs));
+        }
+        if (cages != null) {
+            queryParams.put("cages", List.of(cages));
+        }
+        WorkVisitLocationsResponseJson response = getAs("ListWorkVisitLocations", null,
+                queryParams.isEmpty() ? null : queryParams, WorkVisitLocationsResponseJson.class);
+        return response.getLocations();
     }
 
     private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {

@@ -111,7 +111,7 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
             CloudRouter router = fabric.cloudRouters().define()
                     .name("My-Cloud-Router-Primary")
                     .inMetro("SV")
-                    .withPackage("PREMIUM")
+                    .withPackage(GatewayPackageCode.PREMIUM)
                     .order("PO-9876", 24, "CR-REF-001")
                     .create();
 
@@ -162,7 +162,7 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                     .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
 
             CloudRouter router = fabric.cloudRouters().getByUuid("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
-            CloudRouter updated = router.update().changePackage("PREMIUM").termLength(12).save();
+            CloudRouter updated = router.update().changePackage(GatewayPackageCode.PREMIUM).termLength(12).save();
 
             assertNotNull(updated);
             wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890"))

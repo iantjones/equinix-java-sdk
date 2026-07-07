@@ -44,9 +44,6 @@ public class PortStat {
     @JsonProperty("viewPoint")
     private Side viewPoint;
 
-    @JsonProperty("capacity")
-    private Long capacity;
-
     @JsonProperty("bandwidthUtilization")
     BandwidthUtilization bandwidthUtilization;
 }

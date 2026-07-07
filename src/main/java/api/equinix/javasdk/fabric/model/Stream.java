@@ -39,8 +39,6 @@ public interface Stream {
 
     ChangeLog getChangeLog();
 
-    Boolean getEnabled();
-
     Integer getAssetsCount();
 
     Integer getStreamSubscriptionsCount();

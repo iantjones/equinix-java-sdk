@@ -48,7 +48,6 @@ class NetworkEdgeRestoreFeasibilityWireMockTest extends WireMockTestBase {
                 networkEdge.backups().checkRestoreFeasibility(BACKUP_UUID, DEVICE_UUID);
 
         assertNotNull(feasibility);
-        assertEquals(Boolean.TRUE, feasibility.getRestoreAllowed());
         assertEquals(Boolean.TRUE, feasibility.getRestoreAllowedAfterDeleteOrEdit());
         assertNotNull(feasibility.getDeviceBackup());
         assertEquals(BACKUP_UUID, feasibility.getDeviceBackup().getUuid());

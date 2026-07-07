@@ -1,7 +1,6 @@
 {
   "uuid": "bgp-1111-2222-3333-444455556666",
   "connectionUuid": "conn-aaaa-bbbb-cccc-ddddeeeeffff",
-  "connectionName": "test-connection",
   "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
   "localIpAddress": "169.254.0.1/30",
   "remoteIpAddress": "169.254.0.2",

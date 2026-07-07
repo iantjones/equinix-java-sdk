@@ -22,11 +22,8 @@ import api.equinix.javasdk.core.http.Utils;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
 import api.equinix.javasdk.core.http.response.Page;
-import api.equinix.javasdk.core.model.Sortable;
-import api.equinix.javasdk.fabric.client.RequestBuilder;
 import api.equinix.javasdk.fabric.client.implementation.FabricConfigImpl;
 import api.equinix.javasdk.fabric.client.internal.PortStatisticClient;
-import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.json.MetricJson;
@@ -62,13 +59,6 @@ public class PortStatisticClientImpl extends ResourceClientBase<PortStatistic, P
                 "endDateTime", Utils.singleParamList(Utils.dateTimeForQuery(endDateTime))
         );
         return getAs("GetStatistics", Map.of("uuid", uuid), qParams, PortStatisticJson.class);
-    }
-
-    public Page<PortStatistic, PortStatisticJson> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder) {
-        Map<String, List<String>> qParams = Utils.newMap(requestBuilder);
-        Utils.addAdditionalValue(qParams, "sort", sortable);
-        Utils.addAdditionalValue(qParams, "duration", duration);
-        return listPage("GetStatistics", qParams);
     }
 
     public PortStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {

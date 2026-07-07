@@ -2,23 +2,19 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
-import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.enums.SortOrder;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
-import api.equinix.javasdk.core.model.Sortable;
-import api.equinix.javasdk.fabric.client.RequestBuilder;
-import api.equinix.javasdk.fabric.enums.Direction;
+import api.equinix.javasdk.fabric.enums.ConnectivitySourceType;
 import api.equinix.javasdk.fabric.enums.LinkProtocolState;
 import api.equinix.javasdk.fabric.enums.PhysicalPortType;
 import api.equinix.javasdk.fabric.enums.PortState;
 import api.equinix.javasdk.fabric.enums.PortType;
-import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Port;
-import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.PortVlan;
+import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import api.equinix.javasdk.fabric.model.implementation.PhysicalPort;
+import api.equinix.javasdk.fabric.model.implementation.Redundancy;
 import api.equinix.javasdk.fabric.model.implementation.filter.Filter;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.sort.Sort;
@@ -219,11 +215,11 @@ class FabricPortsWireMockTest extends WireMockTestBase {
 
             Port created = fabric.ports().define()
                     .ofType(PortType.XF_PORT)
-                    .name("My-New-Port")
                     .physicalPortsSpeed(10000)
                     .physicalPortsType(PhysicalPortType._10GBASE_LR)
                     .physicalPortsCount(1)
-                    .connectivitySourceType("COLO")
+                    .connectivitySourceType(ConnectivitySourceType.COLO)
+                    .withRedundancy(new Redundancy(true, null, RedundancyPriority.PRIMARY))
                     .lagEnabled(false)
                     .projectId("proj-abc-123")
                     .accountNumber(123456L)
@@ -235,10 +231,14 @@ class FabricPortsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/ports"))
                     .withRequestBody(matchingJsonPath("$.type", equalTo("XF_PORT")))
-                    .withRequestBody(matchingJsonPath("$.name", equalTo("My-New-Port")))
+                    // Spec PortRequest has no 'name' member; the create body must not carry one.
+                    .withRequestBody(notMatching(".*\"name\".*"))
                     .withRequestBody(matchingJsonPath("$.physicalPortsSpeed", equalTo("10000")))
                     .withRequestBody(matchingJsonPath("$.physicalPortsType", equalTo("10GBASE_LR")))
                     .withRequestBody(matchingJsonPath("$.connectivitySourceType", equalTo("COLO")))
+                    // PortRedundancy.enabled (spec) rides on the wire; group is omitted when null.
+                    .withRequestBody(matchingJsonPath("$.redundancy.enabled", equalTo("true")))
+                    .withRequestBody(matchingJsonPath("$.redundancy.priority", equalTo("PRIMARY")))
                     .withRequestBody(matchingJsonPath("$.project.projectId", equalTo("proj-abc-123")))
                     .withRequestBody(matchingJsonPath("$.account.accountNumber", equalTo("123456")))
                     .withRequestBody(matchingJsonPath("$.location.metroCode", equalTo("SV"))));
@@ -316,66 +316,6 @@ class FabricPortsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee/physicalPorts/bulk"))
                     .withRequestBody(matchingJsonPath("$.data")));
-        }
-    }
-
-    @Nested
-    @DisplayName("getTopStatistics()")
-    class GetTopStatistics {
-
-        // getTopStatistics is a "list" op: the internal client calls listPage("GetStatistics", ...)
-        // with NO path params, so the "{$uuid}/stats" template resolves {$uuid} to empty and the
-        // request lands on /fabric/v4/ports/stats (the "//" is collapsed to "/").
-
-        @Test
-        @DisplayName("GETs /ports/stats with sort + duration query params (no requestBuilder)")
-        void topStatisticsWithoutRequestBuilder() {
-            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports/stats"))
-                    .willReturn(okJson(loadFixture("/json/fabric/paginated_port_statistics.json"))));
-
-            PaginatedList<PortStatistic> stats = fabric.ports().getTopStatistics(
-                    StatisticDuration.P7D,
-                    Sortable.build("bandwidthUtilization", SortOrder.DESC));
-
-            assertNotNull(stats);
-            assertEquals(2, stats.size());
-            assertEquals("p1234567-89ab-cdef-0123-456789abcdef", stats.get(0).getUuid());
-            assertEquals("top-port-one", stats.get(0).getName());
-
-            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/stats"))
-                    .withQueryParam("duration", equalTo("P7D"))
-                    // Sortable.toString() prefixes "-" for DESC
-                    .withQueryParam("sort", equalTo("-bandwidthUtilization")));
-        }
-
-        @Test
-        @DisplayName("GETs /ports/stats and forwards metros/direction/top from the requestBuilder")
-        void topStatisticsWithRequestBuilder() {
-            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports/stats"))
-                    .willReturn(okJson(loadFixture("/json/fabric/paginated_port_statistics.json"))));
-
-            RequestBuilder.TopPortStatistics requestBuilder = RequestBuilder.TopPortStatistics.builder()
-                    .addMetro(MetroCode.SV)
-                    .addMetro(MetroCode.DC)
-                    .direction(Direction.INBOUND)
-                    .withTop(5)
-                    .build();
-
-            PaginatedList<PortStatistic> stats = fabric.ports().getTopStatistics(
-                    StatisticDuration.P1M,
-                    Sortable.build("bandwidthUtilization", SortOrder.ASC),
-                    requestBuilder);
-
-            assertNotNull(stats);
-            assertEquals(2, stats.size());
-
-            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/stats"))
-                    .withQueryParam("duration", equalTo("P1M"))
-                    .withQueryParam("sort", equalTo("bandwidthUtilization"))
-                    .withQueryParam("metros", equalTo("SV"))
-                    .withQueryParam("metros", equalTo("DC"))
-                    .withQueryParam("direction", equalTo("inbound"))
-                    .withQueryParam("top", equalTo("5")));
         }
     }
 

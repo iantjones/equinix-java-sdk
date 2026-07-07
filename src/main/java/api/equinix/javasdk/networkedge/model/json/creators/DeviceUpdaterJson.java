@@ -18,7 +18,6 @@ package api.equinix.javasdk.networkedge.model.json.creators;
 
 import api.equinix.javasdk.networkedge.enums.DeviceStatus;
 import api.equinix.javasdk.networkedge.enums.LicenseStatus;
-import api.equinix.javasdk.networkedge.model.implementation.ClusterDetail;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -86,11 +85,6 @@ public class DeviceUpdaterJson {
         VendorConfigPatch(Boolean disablePassword) {
             this.disablePassword = disablePassword;
         }
-    }
-
-    @JsonProperty("clusterDetails")
-    void setClusterDetail(ClusterDetail clusterDetail) {
-        clusterName = clusterDetail != null ? clusterDetail.getClusterName() : null;
     }
 
     @JsonProperty("notifications")

@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum GatewayPackageCode implements APIParam {
     LAB,
-    /** Not present in the current Fabric spec (code enum = LAB/BASIC/STANDARD/ADVANCED/PREMIUM); retained for compatibility. */
-    LIMITED,
     BASIC,
     STANDARD,
     ADVANCED,

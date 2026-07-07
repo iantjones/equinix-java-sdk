@@ -53,4 +53,6 @@ public interface Pricing {
      PricingIPBlock getIpBlock();
 
      TimeServicePrice getTimeService();
+
+     MetroConnectPrice getMetroConnect();
 }

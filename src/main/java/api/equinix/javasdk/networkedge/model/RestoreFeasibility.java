@@ -34,6 +34,4 @@ public interface RestoreFeasibility {
     Map<ServiceType, List<BackupService>> getServices();
 
     Boolean getRestoreAllowedAfterDeleteOrEdit();
-
-    Boolean getRestoreAllowed();
 }

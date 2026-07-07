@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkCredentialType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.fabric.model.implementation.StreamSinkSetting;
@@ -89,7 +90,7 @@ public class StreamSubscriptionCreatorJson {
     public static class Credential {
 
         @JsonProperty("type")
-        private String type;
+        private StreamSubscriptionSinkCredentialType type;
 
         @JsonProperty("accessToken")
         private String accessToken;

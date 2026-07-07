@@ -5,6 +5,7 @@ import api.equinix.javasdk.core.waiter.ResourceWaiter;
 import api.equinix.javasdk.fabric.enums.CloudRouterState;
 import api.equinix.javasdk.fabric.enums.ConnectionState;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.Connection;
@@ -313,7 +314,7 @@ public class DeploymentPlan {
                     CloudRouter cr = fabric.cloudRouters().define()
                             .name(planned.getName())
                             .inMetro(planned.getMetroId().code())
-                            .withPackage(planned.getPackageCode())
+                            .withPackage(GatewayPackageCode.valueOf(planned.getPackageCode()))
                             .accountNumber(planned.getAccountNumber())
                             .projectId(planned.getProjectId())
                             .create();

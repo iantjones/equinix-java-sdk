@@ -1,6 +1,5 @@
 {
   "uuid": "d1e2f3a4-b5c6-7890-abcd-1234567890ab",
-  "source": "API",
   "groupName": "test-device-link",
   "subnet": "10.0.0.0/24",
   "status": "PROVISIONED",
@@ -17,7 +16,6 @@
   "linkDevices": [
     {
       "deviceUuid": "aaaa1111-bbbb-2222-cccc-3333dddd4444",
-      "asn": 65000,
       "interfaceId": 6
     }
   ]

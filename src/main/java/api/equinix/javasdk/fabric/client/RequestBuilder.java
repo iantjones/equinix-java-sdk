@@ -16,11 +16,8 @@
 
 package api.equinix.javasdk.fabric.client;
 
-import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.core.model.APIParam;
 import api.equinix.javasdk.core.util.ModelUtils;
 import api.equinix.javasdk.core.model.RequestBuilderBase;
-import api.equinix.javasdk.fabric.enums.Direction;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -65,64 +62,6 @@ public class RequestBuilder {
             if(customSpeeds.size() > 0) {
                 this.queryParameters.put("customSpeeds", ModelUtils.stringListFromIntegerList(this.customSpeeds));
             }
-            this.wasBuilt = true;
-            return this;
-        }
-    }
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class TopPortStatistics extends RequestBuilderBase<TopPortStatistics> {
-
-        private List<APIParam> metros;
-        private Direction direction;
-        private Integer top;
-
-        public static TopPortStatistics builder() {
-            return new TopPortStatistics();
-        }
-
-        public TopPortStatistics addMetro(MetroCode metro) {
-            if(this.metros == null) {
-                this.metros = new ArrayList<>();
-            }
-            this.metros.add(metro);
-            return this;
-        }
-
-        public TopPortStatistics addMetros(List<MetroCode> metros) {
-            if(this.metros == null) {
-                this.metros = new ArrayList<>();
-            }
-            this.metros.addAll(metros);
-            return this;
-        }
-
-        public TopPortStatistics direction(Direction direction) {
-            this.direction = direction;
-            return this;
-        }
-
-        public TopPortStatistics withTop(Integer top) {
-            this.top = top;
-            return this;
-        }
-
-
-        public TopPortStatistics build() {
-            this.queryParameters = new HashMap<>();
-
-            if(this.metros.size() > 0) {
-                this.queryParameters.put("metros", ModelUtils.stringListFromEnumList(this.metros));
-            }
-
-            if(this.direction != null) {
-                this.queryParameters.put("direction", ModelUtils.singleValueList(this.direction.toString().toLowerCase()));
-            }
-
-            if(this.top != null) {
-                this.queryParameters.put("top", ModelUtils.singleValueList(this.top));
-            }
-
             this.wasBuilt = true;
             return this;
         }

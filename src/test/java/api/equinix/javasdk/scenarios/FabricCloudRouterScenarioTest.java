@@ -125,7 +125,7 @@ class FabricCloudRouterScenarioTest extends IntegrationTestBase {
                 () -> fabric.cloudRouters().define()
                         .name(name)
                         .inMetro(MetroCode.SV)
-                        .withPackage("STANDARD")
+                        .withPackage(GatewayPackageCode.STANDARD)
                         .create());
 
         assertNotNull(router, "CloudRouter should be created");

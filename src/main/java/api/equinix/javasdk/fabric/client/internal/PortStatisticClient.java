@@ -16,13 +16,8 @@
 
 package api.equinix.javasdk.fabric.client.internal;
 
-import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.http.response.Pageable;
-import api.equinix.javasdk.core.model.Sortable;
-import api.equinix.javasdk.fabric.client.RequestBuilder;
-import api.equinix.javasdk.fabric.enums.StatisticDuration;
 import api.equinix.javasdk.fabric.model.Metric;
-import api.equinix.javasdk.fabric.model.PortStatistic;
 import api.equinix.javasdk.fabric.model.json.PortStatisticJson;
 
 import java.time.LocalDateTime;
@@ -35,8 +30,6 @@ import java.util.List;
 public interface PortStatisticClient<T> extends Pageable<T> {
 
     PortStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
-
-    Page<PortStatistic, PortStatisticJson> getTopStatistics(StatisticDuration duration, Sortable sortable, RequestBuilder.TopPortStatistics requestBuilder);
 
     PortStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
 

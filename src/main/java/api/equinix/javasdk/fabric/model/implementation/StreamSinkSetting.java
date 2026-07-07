@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.implementation;
 
+import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -50,6 +51,7 @@ public class StreamSinkSetting {
     @JsonProperty("metricUri")
     private String metricUri;
 
+    /** Webhook message format (spec {@code StreamSubscriptionSinkSetting.format}: {@code CLOUDEVENT} or {@code OPENTELEMETRY}). */
     @JsonProperty("format")
-    private String format;
+    private StreamSubscriptionSinkFormat format;
 }

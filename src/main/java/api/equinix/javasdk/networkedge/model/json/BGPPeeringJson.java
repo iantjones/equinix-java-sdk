@@ -47,9 +47,6 @@ public class BGPPeeringJson extends Lifecycle {
     @JsonProperty("connectionUuid")
     private String connectionUuid;
 
-    @JsonProperty("connectionName")
-    private String connectionName;
-
     @JsonProperty("virtualDeviceUuid")
     private String virtualDeviceUuid;
 

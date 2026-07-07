@@ -23,7 +23,6 @@ import api.equinix.javasdk.customerportal.client.CrossConnects;
 import api.equinix.javasdk.customerportal.client.CustomerPortalConfig;
 import api.equinix.javasdk.customerportal.client.Invoices;
 import api.equinix.javasdk.customerportal.client.Orders;
-import api.equinix.javasdk.customerportal.client.Resellers;
 import api.equinix.javasdk.customerportal.client.Shipments;
 import api.equinix.javasdk.customerportal.client.SmartHandsRequests;
 import api.equinix.javasdk.customerportal.client.TroubleTickets;
@@ -47,7 +46,6 @@ import api.equinix.javasdk.customerportal.client.implementation.CrossConnectsImp
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.implementation.InvoicesImpl;
 import api.equinix.javasdk.customerportal.client.implementation.OrdersImpl;
-import api.equinix.javasdk.customerportal.client.implementation.ResellersImpl;
 import api.equinix.javasdk.customerportal.client.implementation.ShipmentsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.SmartHandsRequestsImpl;
 import api.equinix.javasdk.customerportal.client.implementation.TroubleTicketsImpl;
@@ -103,8 +101,6 @@ import api.equinix.javasdk.customerportal.client.implementation.BillingAccountsS
 public final class CustomerPortal extends EquinixClient {
 
     private Invoices invoices;
-
-    private Resellers resellers;
 
     private CrossConnects crossConnects;
 
@@ -246,21 +242,6 @@ public final class CustomerPortal extends EquinixClient {
                     this.customerPortalConfig.getInvoiceDetailClient(), this);
         }
         return invoices;
-    }
-
-    /**
-     * Returns the client for managing reseller relationships and customer accounts.
-     * Resellers can view and manage their downstream customer accounts and associated
-     * billing information.
-     *
-     * @return the {@link Resellers} client for reseller operations
-     */
-    public Resellers resellers() {
-        if (this.resellers == null) {
-            this.resellers = new ResellersImpl(this.customerPortalConfig.getResellerClient(),
-                    this.customerPortalConfig.getResellerCustomerClient(), this);
-        }
-        return resellers;
     }
 
     /**

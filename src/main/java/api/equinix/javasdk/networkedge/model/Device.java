@@ -24,20 +24,15 @@ import api.equinix.javasdk.networkedge.enums.DeviceCategory;
 import api.equinix.javasdk.networkedge.enums.DeviceManagementType;
 import api.equinix.javasdk.networkedge.enums.DevicePlane;
 import api.equinix.javasdk.networkedge.enums.DeviceStatus;
-import api.equinix.javasdk.networkedge.enums.IPAssignment;
 import api.equinix.javasdk.networkedge.enums.LicenseStatus;
 import api.equinix.javasdk.networkedge.enums.LicenseType;
-import api.equinix.javasdk.networkedge.enums.NetworkScope;
 import api.equinix.javasdk.networkedge.enums.RedundancyType;
 import api.equinix.javasdk.networkedge.enums.SshIpFqdnStatus;
 import api.equinix.javasdk.networkedge.enums.Vendor;
-import api.equinix.javasdk.networkedge.model.implementation.ClusterDetail;
-import api.equinix.javasdk.networkedge.model.implementation.Contact;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceCore;
 import api.equinix.javasdk.networkedge.model.implementation.DevicePricingDetail;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceVendorConfig;
 import api.equinix.javasdk.networkedge.model.implementation.NetworkInterface;
-import api.equinix.javasdk.networkedge.model.implementation.SupportDetail;
 import api.equinix.javasdk.networkedge.model.implementation.UserPublicKey;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator;
@@ -45,9 +40,10 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceUpdaterJson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
+ * A Network Edge virtual device. Read-side accessors mirror the catalog spec's
+ * {@code VirtualDeviceDetailsResponse} schema.
  *
  * @author ianjones
  */
@@ -55,13 +51,7 @@ public interface Device {
     
     String getUuid();
 
-    String getServiceId();
-
-    String getPodName();
-
     String getName();
-
-    IPAssignment getIpType();
 
     String getDeviceTypeCode();
 
@@ -75,29 +65,13 @@ public interface Device {
 
     LicenseStatus getLicenseStatus();
 
-    Boolean getClusterSupported();
-
-    Boolean getSiblingCustOrgFlag();
-
-    Boolean getIsSubCustomerDevice();
-
-    Boolean getSupportServicesEnabled();
-
-    List<String> getSupportServicesNotification();
-
     MetroCode getMetroCode();
 
     String getMetroName();
 
-    String getIbx();
-
-    String getAclTemplateUuid();
-
     String getLicenseFileId();
 
     Region getRegion();
-
-    ClusterDetail getClusterDetails();
 
     Double getThroughput();
 
@@ -112,8 +86,6 @@ public interface Device {
     String getVersion();
 
     LicenseType getLicenseType();
-
-    String getDeviceOrderNumber();
 
     String getLicenseName();
 
@@ -141,15 +113,7 @@ public interface Device {
 
     String getAccountName();
 
-    String getSdwanHostname();
-
-    String getSdwanAccountName();
-
     String getSiteId();
-
-    String getApplianceTag();
-
-    Contact getOrderingContact();
 
     UserPublicKey getUserPublicKey();
 
@@ -161,19 +125,9 @@ public interface Device {
 
     String getRedundantUuid();
 
-    String getAccountReferenceId();
-
     String getPurchaseOrderNumber();
 
-    String getOrderReference();
-
-    String getDealId();
-
     Integer getTermLength();
-
-    LocalDateTime getBillingCommencementDate();
-
-    Boolean getBillingEnabled();
 
     Integer getAdditionalBandwidth();
 
@@ -183,13 +137,9 @@ public interface Device {
 
     DeviceManagementType getDeviceManagementType();
 
-    NetworkScope getNetworkScope();
-
     ArrayList<NetworkInterface> getInterfaces();
 
     Long getAsn();
-
-    SupportDetail getSupportDetails();
 
     String getCreatedBy();
 
