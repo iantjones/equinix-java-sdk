@@ -57,10 +57,4 @@ public class PublicKeyJson {
 
     @JsonProperty("keyType")
     private KeyType keyType;
-
-    @JsonProperty("custOrgId")
-    private String custOrgId;
-
-    @JsonProperty("accountUcmId")
-    private String accountUcmId;
 }

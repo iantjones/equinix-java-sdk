@@ -37,9 +37,6 @@ public class StreamCreatorJson {
     @JsonProperty("project")
     private Project project;
 
-    @JsonProperty("enabled")
-    private Boolean enabled;
-
     public StreamCreatorJson(StreamOperator.StreamBuilder streamBuilder) {
         this(streamBuilder, false);
     }
@@ -59,7 +56,6 @@ public class StreamCreatorJson {
         if (!forUpdate) {
             this.type = streamBuilder.getType();
             this.project = streamBuilder.getProject();
-            this.enabled = streamBuilder.getEnabled();
         }
     }
 }

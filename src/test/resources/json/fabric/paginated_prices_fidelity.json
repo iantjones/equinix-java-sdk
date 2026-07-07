@@ -2,7 +2,7 @@
   "pagination": {
     "offset": 0,
     "limit": 20,
-    "total": 3
+    "total": 4
   },
   "data": [
     {
@@ -70,6 +70,36 @@
                 "ibx": "CH3"
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "type": "METRO_CONNECT_PRODUCT",
+      "code": "MC00007.PROD",
+      "name": "Metro Connect Port Product",
+      "description": "Metro Connect Port",
+      "account": {
+        "accountNumber": 200551
+      },
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 500 },
+        { "type": "NON_RECURRING", "price": 0 }
+      ],
+      "currency": "USD",
+      "metroConnect": {
+        "type": "OPTICAL_MC",
+        "bandwidth": 1000,
+        "pathType": "PROTECTED",
+        "connectionDestinationType": "COLO",
+        "aSide": {
+          "location": {
+            "ibxCode": "CH1"
+          }
+        },
+        "zSide": {
+          "location": {
+            "ibxCode": "CH3"
           }
         }
       }

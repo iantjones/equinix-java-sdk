@@ -20,8 +20,6 @@ import api.equinix.javasdk.customerportal.client.internal.CrossConnectClient;
 import api.equinix.javasdk.customerportal.client.internal.InvoiceDetailClient;
 import api.equinix.javasdk.customerportal.client.internal.InvoiceSummaryClient;
 import api.equinix.javasdk.customerportal.client.internal.OrderClient;
-import api.equinix.javasdk.customerportal.client.internal.ResellerClient;
-import api.equinix.javasdk.customerportal.client.internal.ResellerCustomerClient;
 import api.equinix.javasdk.customerportal.client.internal.ShipmentClient;
 import api.equinix.javasdk.customerportal.client.internal.SmartHandsClient;
 import api.equinix.javasdk.customerportal.client.internal.TroubleTicketClient;
@@ -50,8 +48,6 @@ import api.equinix.javasdk.customerportal.model.InvoiceSummary;
 import api.equinix.javasdk.customerportal.model.Order;
 import api.equinix.javasdk.customerportal.model.Quote;
 import api.equinix.javasdk.customerportal.model.Report;
-import api.equinix.javasdk.customerportal.model.Reseller;
-import api.equinix.javasdk.customerportal.model.ResellerCustomer;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 
@@ -60,10 +56,6 @@ public interface CustomerPortalConfig {
     InvoiceSummaryClient<InvoiceSummary> getInvoiceSummaryClient();
 
     InvoiceDetailClient<InvoiceDetail> getInvoiceDetailClient();
-
-    ResellerClient<Reseller> getResellerClient();
-
-    ResellerCustomerClient<ResellerCustomer> getResellerCustomerClient();
 
     CrossConnectClient getCrossConnectClient();
 

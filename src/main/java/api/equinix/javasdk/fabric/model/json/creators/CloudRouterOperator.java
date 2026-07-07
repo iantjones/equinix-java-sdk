@@ -22,6 +22,9 @@ import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.CloudRouterClientImpl;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.fabric.enums.CloudRouterType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
+import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.json.CloudRouterJson;
 import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
@@ -78,7 +81,14 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
             return inMetro(metroCode.toString());
         }
 
-        public CloudRouterBuilder withPackage(String packageCode) {
+        /**
+         * Sets the cloud router package tier (spec {@code CloudRouterPostRequestPackage.code}:
+         * {@code LAB}, {@code BASIC}, {@code STANDARD}, {@code ADVANCED} or {@code PREMIUM}).
+         *
+         * @param packageCode the package code
+         * @return this builder
+         */
+        public CloudRouterBuilder withPackage(GatewayPackageCode packageCode) {
             this.routerPackage = new CloudRouterCreatorJson.PackageRef(packageCode);
             return this;
         }
@@ -108,7 +118,7 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
          * @param uuid the subscription identifier
          * @return this builder
          */
-        public CloudRouterBuilder marketplaceSubscription(String type, String uuid) {
+        public CloudRouterBuilder marketplaceSubscription(MarketplaceSubscriptionType type, String uuid) {
             this.marketplaceSubscription = new CloudRouterCreatorJson.MarketplaceSubscriptionRef(type, uuid);
             return this;
         }
@@ -123,7 +133,14 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
             return this;
         }
 
-        public CloudRouterBuilder notification(String type, List<String> emails) {
+        /**
+         * Adds a notification preference (spec {@code SimplifiedNotification}).
+         *
+         * @param type the notification type
+         * @param emails the contact emails
+         * @return this builder
+         */
+        public CloudRouterBuilder notification(NotificationType type, List<String> emails) {
             this.notifications.add(new CloudRouterCreatorJson.NotificationRef(type, emails));
             return this;
         }
@@ -168,7 +185,7 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
          * @param packageCode the new package code
          * @return this updater
          */
-        public CloudRouterUpdater changePackage(String packageCode) {
+        public CloudRouterUpdater changePackage(GatewayPackageCode packageCode) {
             operations.add(PatchOperation.replace("/package/code", packageCode));
             return this;
         }

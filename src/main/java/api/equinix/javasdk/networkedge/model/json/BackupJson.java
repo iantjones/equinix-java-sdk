@@ -19,7 +19,6 @@ package api.equinix.javasdk.networkedge.model.json;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.model.Lifecycle;
 import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
-import api.equinix.javasdk.networkedge.enums.BackupRequestType;
 import api.equinix.javasdk.networkedge.enums.BackupStatus;
 import api.equinix.javasdk.networkedge.enums.BackupType;
 import api.equinix.javasdk.networkedge.model.Backup;
@@ -55,9 +54,6 @@ public class BackupJson extends Lifecycle {
 
     @JsonProperty("status")
     private BackupStatus status;
-
-    @JsonProperty("requestType")
-    private BackupRequestType requestType;
 
     @JsonProperty("downloadUrl")
     private String downloadUrl;

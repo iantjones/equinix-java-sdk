@@ -97,10 +97,6 @@ public class ConnectionsImpl implements Connections {
         return new ConnectionOperator(this.serviceClient).create(connectionType);
     }
 
-    public ConnectionOperator.BatchConnectionBuilder startBatch() {
-        return new ConnectionOperator(this.serviceClient).batch();
-    }
-
     @Deprecated
     @Override
     public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {

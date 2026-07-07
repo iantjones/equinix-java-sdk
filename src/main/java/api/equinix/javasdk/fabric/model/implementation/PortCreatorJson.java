@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.enums.BmmrType;
+import api.equinix.javasdk.fabric.enums.ConnectivitySourceType;
 import api.equinix.javasdk.fabric.enums.PhysicalPortType;
 import api.equinix.javasdk.fabric.enums.PortServiceCode;
 import api.equinix.javasdk.fabric.enums.PortServiceType;
@@ -56,9 +57,6 @@ public class PortCreatorJson {
     @JsonProperty("type")
     private PortType type;
 
-    @JsonProperty("name")
-    private String name;
-
     @JsonProperty("physicalPortsSpeed")
     private Integer physicalPortsSpeed;
 
@@ -69,7 +67,7 @@ public class PortCreatorJson {
     private Integer physicalPortsCount;
 
     @JsonProperty("connectivitySourceType")
-    private String connectivitySourceType;
+    private ConnectivitySourceType connectivitySourceType;
 
     @JsonProperty("bmmrType")
     private BmmrType bmmrType;
@@ -135,7 +133,6 @@ public class PortCreatorJson {
      */
     public PortCreatorJson(PortOperator.PortBuilder builder) {
         this.type = builder.getType();
-        this.name = builder.getName();
         this.physicalPortsSpeed = builder.getPhysicalPortsSpeed();
         this.physicalPortsType = builder.getPhysicalPortsType();
         this.physicalPortsCount = builder.getPhysicalPortsCount();

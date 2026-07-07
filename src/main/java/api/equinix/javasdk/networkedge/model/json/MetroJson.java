@@ -20,16 +20,16 @@ import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.networkedge.model.Metro;
-import api.equinix.javasdk.networkedge.model.implementation.Zone;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Metro details as returned by the Network Edge API ({@code MetroResponse} in the
+ * network-edge v1 catalog spec).
  *
  * @author ianjones
  */
@@ -44,9 +44,6 @@ public class MetroJson {
 
     @JsonProperty("region")
     private Region region;
-
-    @JsonProperty("availableZones")
-    private ArrayList<Zone> availableZones;
 
     @JsonProperty("clusterSupported")
     private Boolean clusterSupported;

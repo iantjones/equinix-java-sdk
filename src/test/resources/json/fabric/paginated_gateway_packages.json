@@ -6,10 +6,10 @@
   },
   "data": [
     {
-      "code": "LIMITED",
-      "href": "https://api.equinix.com/fabric/v4/gatewayPackages/LIMITED",
+      "code": "BASIC",
+      "href": "https://api.equinix.com/fabric/v4/gatewayPackages/BASIC",
       "type": "GATEWAY_PACKAGE",
-      "description": "Limited gateway package for basic routing needs",
+      "description": "Basic gateway package for basic routing needs",
       "totalIPv4RoutesMax": 1000,
       "totalIPv6RoutesMax": 100,
       "staticIPv4RoutesMax": 10,

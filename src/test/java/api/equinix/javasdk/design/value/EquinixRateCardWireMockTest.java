@@ -93,7 +93,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
                 .withRequestBody(containing("VIRTUAL_CONNECTION_PRODUCT")));
         wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
                 .withRequestBody(containing("/type"))
-                .withRequestBody(containing("FABRIC_GATEWAY_PRODUCT")));
+                .withRequestBody(containing("CLOUD_ROUTER_PRODUCT")));
     }
 
     @Test
@@ -121,7 +121,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("matches FABRIC_GATEWAY_PRODUCT for cloudRouter; empty when no package token matches")
+    @DisplayName("matches CLOUD_ROUTER_PRODUCT for cloudRouter; empty when no package token matches")
     void cloudRouterMatchesGatewayProduct() {
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
         EquinixRateCard card = EquinixRateCard.of(fabric);

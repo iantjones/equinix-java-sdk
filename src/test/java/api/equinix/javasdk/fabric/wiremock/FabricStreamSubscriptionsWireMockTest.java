@@ -3,6 +3,7 @@ package api.equinix.javasdk.fabric.wiremock;
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkCredentialType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionSinkType;
 import api.equinix.javasdk.fabric.enums.StreamSubscriptionType;
 import api.equinix.javasdk.core.http.response.PaginatedList;
@@ -115,7 +116,7 @@ class FabricStreamSubscriptionsWireMockTest extends WireMockTestBase {
                     .withEnabled(true)
                     .withSinkType(StreamSubscriptionSinkType.SPLUNK_HEC)
                     .withSinkUri("https://splunk.example.com:8088/services/collector")
-                    .withCredentialType("ACCESS_TOKEN")
+                    .withCredentialType(StreamSubscriptionSinkCredentialType.ACCESS_TOKEN)
                     .withAccessToken("test-access-token")
                     .withIntegrationKey("test-integration-key")
                     .create();

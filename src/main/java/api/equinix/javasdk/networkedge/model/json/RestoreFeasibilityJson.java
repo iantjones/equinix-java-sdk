@@ -52,9 +52,6 @@ public class RestoreFeasibilityJson {
     @JsonProperty("restoreAllowedAfterDeleteOrEdit")
     private Boolean restoreAllowedAfterDeleteOrEdit;
 
-    @JsonProperty("restoreAllowed")
-    private Boolean restoreAllowed;
-
     public static class Connection implements GenericDataObject<Connection> {
         @JsonProperty("id")
         private String id;

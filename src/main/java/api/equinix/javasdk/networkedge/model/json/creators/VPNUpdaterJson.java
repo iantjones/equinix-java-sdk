@@ -59,9 +59,6 @@ public class VPNUpdaterJson {
     @JsonProperty("tunnelIp")
     private String tunnelIp;
 
-    @JsonProperty("useNetworkServiceConnection")
-    private Boolean useNetworkServiceConnection;
-
     // Required so update() can seed this updater from an existing VPNJson via
     // Constants.JSON_CONVERTOR.convertValue(...); the declared builder constructor below otherwise
     // suppresses the implicit no-arg constructor (unlike the other *UpdaterJson types).
@@ -79,6 +76,5 @@ public class VPNUpdaterJson {
             this.password = vpnBuilder.getPassword();
             this.localAsn = vpnBuilder.getLocalAsn();
             this.tunnelIp = vpnBuilder.getTunnelIp();
-            this.useNetworkServiceConnection = vpnBuilder.getUseNetworkServiceConnection();
     }
 }

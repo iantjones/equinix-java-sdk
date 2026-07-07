@@ -14,8 +14,7 @@
       "description": "Primary telemetry stream for production network monitoring and alerting",
       "project": {
         "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
-      },
-      "enabled": true
+      }
     }
   ]
 }

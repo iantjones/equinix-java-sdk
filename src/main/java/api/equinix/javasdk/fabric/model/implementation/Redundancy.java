@@ -20,20 +20,26 @@ import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
+ * Redundancy configuration shared by the spec's {@code PortRedundancy} ({@code enabled},
+ * {@code group}, {@code priority}) and {@code ConnectionRedundancy} ({@code group},
+ * {@code priority}) schemas. {@code enabled} only applies to ports; leave it {@code null}
+ * for connections and it is omitted from the JSON.
  *
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Redundancy {
 
     @JsonProperty("enabled")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean enabled;
 
     @JsonProperty("group")
@@ -41,9 +47,4 @@ public class Redundancy {
 
     @JsonProperty("priority")
     private RedundancyPriority priority;
-
-    public Redundancy(String group, RedundancyPriority priority) {
-        this.group = group;
-        this.priority = priority;
-    }
 }

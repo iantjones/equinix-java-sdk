@@ -77,18 +77,19 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("honours an explicit type override in the request body")
+        @DisplayName("honours an explicitly-set type in the request body")
         void createsWithExplicitType() {
             stubCreate(wireMock, "/fabric/v4/streams/" + STREAM_ID + "/alertRules",
                     "/json/fabric/stream_alert_rule_response.json");
 
+            // METRIC_ALERT is the only AlertRulePostRequest.type the spec declares.
             fabric.streamAlertRules().define(STREAM_ID)
-                    .type("HEALTH_ALERT")
+                    .type(StreamAlertRuleType.METRIC_ALERT)
                     .name("Stream-Health-Alert")
                     .create();
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/streams/" + STREAM_ID + "/alertRules"))
-                    .withRequestBody(matchingJsonPath("$.type", equalTo("HEALTH_ALERT")))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("METRIC_ALERT")))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("Stream-Health-Alert"))));
         }
     }

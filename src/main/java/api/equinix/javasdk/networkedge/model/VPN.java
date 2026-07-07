@@ -26,8 +26,6 @@ import api.equinix.javasdk.networkedge.model.json.creators.VPNUpdaterJson;
  */
 public interface VPN {
 
-    VPN getSecondary();
-
     String getUuid();
 
     String getSiteName();
@@ -47,8 +45,6 @@ public interface VPN {
     String getPassword();
 
     Long getLocalAsn();
-
-    String getProjectId();
 
     String getTunnelIp();
 

@@ -21,6 +21,7 @@ import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.model.ResourceImpl;
 import api.equinix.javasdk.fabric.client.internal.implementation.PortClientImpl;
 import api.equinix.javasdk.fabric.enums.BmmrType;
+import api.equinix.javasdk.fabric.enums.ConnectivitySourceType;
 import api.equinix.javasdk.fabric.enums.PhysicalPortType;
 import api.equinix.javasdk.fabric.enums.PortServiceCode;
 import api.equinix.javasdk.fabric.enums.PortServiceType;
@@ -86,11 +87,10 @@ public class PortOperator extends ResourceImpl<Port> {
     public class PortBuilder {
 
         private PortType type;
-        private String name;
         private Integer physicalPortsSpeed;
         private PhysicalPortType physicalPortsType;
         private Integer physicalPortsCount;
-        private String connectivitySourceType;
+        private ConnectivitySourceType connectivitySourceType;
         private BmmrType bmmrType;
         private Boolean lagEnabled;
         private Project project;
@@ -119,11 +119,6 @@ public class PortOperator extends ResourceImpl<Port> {
             return this;
         }
 
-        public PortBuilder name(String name) {
-            this.name = name;
-            return this;
-        }
-
         public PortBuilder physicalPortsSpeed(Integer physicalPortsSpeed) {
             this.physicalPortsSpeed = physicalPortsSpeed;
             return this;
@@ -139,7 +134,14 @@ public class PortOperator extends ResourceImpl<Port> {
             return this;
         }
 
-        public PortBuilder connectivitySourceType(String connectivitySourceType) {
+        /**
+         * Sets the port connectivity type (spec {@code PortRequest.connectivitySourceType}:
+         * {@code COLO}, {@code BMMR} or {@code REMOTE}).
+         *
+         * @param connectivitySourceType the connectivity source type
+         * @return this builder
+         */
+        public PortBuilder connectivitySourceType(ConnectivitySourceType connectivitySourceType) {
             this.connectivitySourceType = connectivitySourceType;
             return this;
         }

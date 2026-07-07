@@ -23,8 +23,6 @@ import api.equinix.javasdk.customerportal.client.internal.implementation.CrossCo
 import api.equinix.javasdk.customerportal.client.internal.implementation.InvoiceDetailClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.InvoiceSummaryClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.OrderClientImpl;
-import api.equinix.javasdk.customerportal.client.internal.implementation.ResellerClientImpl;
-import api.equinix.javasdk.customerportal.client.internal.implementation.ResellerCustomerClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.ShipmentClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.SmartHandsClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.TroubleTicketClientImpl;
@@ -52,10 +50,6 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
     private final InvoiceSummaryClientImpl invoiceSummaryClient;
 
     private final InvoiceDetailClientImpl invoiceDetailClient;
-
-    private final ResellerClientImpl resellerClient;
-
-    private final ResellerCustomerClientImpl resellerCustomerClient;
 
     private final CrossConnectClientImpl crossConnectClient;
 
@@ -106,8 +100,6 @@ public class CustomerPortalConfigImpl extends Config implements CustomerPortalCo
         super(equinixClient);
         this.invoiceSummaryClient = new InvoiceSummaryClientImpl(this);
         this.invoiceDetailClient = new InvoiceDetailClientImpl(this);
-        this.resellerClient = new ResellerClientImpl(this);
-        this.resellerCustomerClient = new ResellerCustomerClientImpl(this);
         this.crossConnectClient = new CrossConnectClientImpl(this);
         this.orderClient = new OrderClientImpl(this);
         this.troubleTicketClient = new TroubleTicketClientImpl(this);

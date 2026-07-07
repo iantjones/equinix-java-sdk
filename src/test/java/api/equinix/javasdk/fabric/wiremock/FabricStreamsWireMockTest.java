@@ -90,7 +90,6 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
                     .withType(StreamType.TELEMETRY_STREAM)
                     .withName("Production-Telemetry-Stream")
                     .withDescription("Primary telemetry stream")
-                    .withEnabled(true)
                     .create();
 
             assertNotNull(stream);
@@ -102,7 +101,7 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.type", equalTo("TELEMETRY_STREAM")))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("Production-Telemetry-Stream")))
                     .withRequestBody(matchingJsonPath("$.description", equalTo("Primary telemetry stream")))
-                    .withRequestBody(matchingJsonPath("$.enabled", equalTo("true"))));
+                    .withRequestBody(notMatching(".*\"enabled\".*")));
         }
     }
 
@@ -122,7 +121,7 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
             Stream updated = stream.update().withName("Renamed-Stream").save();
 
             assertNotNull(updated);
-            // Spec StreamPutRequest carries only name/description; type/project/enabled are not sent.
+            // Spec StreamPutRequest carries only name/description; type/project are not sent.
             wireMock.verify(putRequestedFor(urlPathMatching("/fabric/v4/streams/d4e5f6a7-b8c9-0123-defa-345678901bcd"))
                     .withHeader("Content-Type", containing("application/json"))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("Renamed-Stream")))

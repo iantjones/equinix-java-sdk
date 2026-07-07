@@ -18,9 +18,6 @@ package api.equinix.javasdk.networkedge.model;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.enums.Region;
-import api.equinix.javasdk.networkedge.model.implementation.Zone;
-
-import java.util.ArrayList;
 
 /**
  *
@@ -31,8 +28,6 @@ public interface Metro {
     MetroCode getMetroCode();
 
     Region getRegion();
-
-    ArrayList<Zone> getAvailableZones();
 
     Boolean getClusterSupported();
 

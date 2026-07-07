@@ -84,7 +84,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
             builder.sinkSettings = sink.getSettings();
             StreamSinkCredential credential = sink.getCredential();
             if (credential != null) {
-                builder.credentialType = credential.getType() != null ? credential.getType().name() : null;
+                builder.credentialType = credential.getType();
                 builder.accessToken = credential.getAccessToken();
                 builder.integrationKey = credential.getIntegrationKey();
                 builder.apiKey = credential.getApiKey();
@@ -111,7 +111,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         private Integer batchSizeMax;
         private Integer batchWaitTimeMax;
         private StreamSinkSetting sinkSettings;
-        private String credentialType;
+        private StreamSubscriptionSinkCredentialType credentialType;
         private String accessToken;
         private String integrationKey;
         private String apiKey;
@@ -155,11 +155,6 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
             return this;
         }
 
-        public StreamSubscriptionOperator.StreamSubscriptionBuilder withCredentialType(String credentialType) {
-            this.credentialType = credentialType;
-            return this;
-        }
-
         /**
          * Sets the sink credential type from the typed spec enum
          * ({@code StreamSubscriptionSinkCredential.type}).
@@ -168,7 +163,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
          * @return this builder
          */
         public StreamSubscriptionOperator.StreamSubscriptionBuilder withCredentialType(StreamSubscriptionSinkCredentialType credentialType) {
-            this.credentialType = credentialType != null ? credentialType.name() : null;
+            this.credentialType = credentialType;
             return this;
         }
 

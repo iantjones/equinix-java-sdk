@@ -8,16 +8,12 @@
     {
       "metroCode": "SV",
       "region": "AMER",
-      "defaultIbx": "SV1",
-      "availableZones": [],
       "clusterSupported": true,
       "metroDescription": "Silicon Valley"
     },
     {
       "metroCode": "DC",
       "region": "AMER",
-      "defaultIbx": "DC1",
-      "availableZones": [],
       "clusterSupported": false,
       "metroDescription": "Ashburn"
     }

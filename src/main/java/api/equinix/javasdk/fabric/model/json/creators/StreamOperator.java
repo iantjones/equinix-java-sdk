@@ -59,7 +59,6 @@ public class StreamOperator extends ResourceImpl<Stream> {
         builder.name = existing.getName();
         builder.description = existing.getDescription();
         builder.project = existing.getProject();
-        builder.enabled = existing.getEnabled();
         return builder;
     }
 
@@ -71,7 +70,6 @@ public class StreamOperator extends ResourceImpl<Stream> {
         private String name;
         private String description;
         private Project project;
-        private Boolean enabled;
 
         protected StreamBuilder() {
         }
@@ -93,11 +91,6 @@ public class StreamOperator extends ResourceImpl<Stream> {
 
         public StreamOperator.StreamBuilder withProject(Project project) {
             this.project = project;
-            return this;
-        }
-
-        public StreamOperator.StreamBuilder withEnabled(Boolean enabled) {
-            this.enabled = enabled;
             return this;
         }
 

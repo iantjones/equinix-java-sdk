@@ -52,10 +52,6 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         return new ConnectionBuilder(type);
     }
 
-    public BatchConnectionBuilder batch() {
-        return new BatchConnectionBuilder();
-    }
-
     public ConnectionUpdater update(String uuid) {
         return new ConnectionUpdater(uuid);
     }
@@ -105,7 +101,8 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         }
 
          public ConnectionBuilder redundancy(String group, RedundancyPriority priority) {
-            this.redundancy = new Redundancy(group, priority);
+            // ConnectionRedundancy has no 'enabled' member; it is port-only and omitted when null.
+            this.redundancy = new Redundancy(null, group, priority);
             return this;
         }
 
@@ -414,30 +411,6 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
                     ? clientImpl.dryRunCreate(connectionCreatorJson)
                     : clientImpl.create(connectionCreatorJson);
             return new ConnectionWrapper(connectionJson, ConnectionOperator.this.getServiceClient());
-        }
-    }
-
-    @Getter(AccessLevel.PACKAGE)
-    public class BatchConnectionBuilder {
-
-        private final List<ConnectionCreatorJson> connections = new ArrayList<>();
-
-        public BatchConnectionBuilder addConnection(ConnectionBuilder connectionBuilder) {
-            connections.add(new ConnectionCreatorJson(connectionBuilder));
-            return this;
-        }
-
-        public List<Connection> createBatch() {
-            // batch() returns the raw ConnectionJson list; wrap each so callers get real Connection
-            // instances (ConnectionJson does not implement Connection — returning it directly caused a
-            // ClassCastException on use).
-            List<ConnectionJson> created =
-                    ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).batch(this.connections);
-            List<Connection> result = new ArrayList<>();
-            for (ConnectionJson json : created) {
-                result.add(new ConnectionWrapper(json, ConnectionOperator.this.getServiceClient()));
-            }
-            return result;
         }
     }
 

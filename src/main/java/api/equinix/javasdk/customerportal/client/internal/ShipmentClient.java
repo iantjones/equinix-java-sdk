@@ -17,12 +17,28 @@
 package api.equinix.javasdk.customerportal.client.internal;
 
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.PendingStorageOrderResponse;
+import api.equinix.javasdk.customerportal.model.ShipmentLocation;
+import api.equinix.javasdk.customerportal.model.ShipmentOrderResponse;
+import api.equinix.javasdk.customerportal.model.json.creators.InboundShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.OutboundShipmentOrderRequest;
+import api.equinix.javasdk.customerportal.model.json.creators.PendingStorageOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
+
+import java.util.List;
 
 public interface ShipmentClient {
 
     OrderResponse order(ShipmentOrderRequest request);
 
     OrderResponse update(String orderId, ShipmentUpdateRequest request);
+
+    ShipmentOrderResponse orderInbound(InboundShipmentOrderRequest request);
+
+    ShipmentOrderResponse orderOutbound(OutboundShipmentOrderRequest request);
+
+    List<? extends PendingStorageOrderResponse> orderPendingStorage(PendingStorageOrderRequest request);
+
+    List<? extends ShipmentLocation> listLocations(Boolean detail, String ibxs, String cages);
 }

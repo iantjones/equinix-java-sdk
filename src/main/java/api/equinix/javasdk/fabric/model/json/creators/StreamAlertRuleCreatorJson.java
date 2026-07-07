@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.fabric.model.json.creators;
 
+import api.equinix.javasdk.fabric.enums.StreamAlertRuleType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -28,7 +29,7 @@ import java.util.Map;
 public class StreamAlertRuleCreatorJson {
 
     @JsonProperty("type")
-    private String type;
+    private StreamAlertRuleType type;
 
     @JsonProperty("name")
     private String name;

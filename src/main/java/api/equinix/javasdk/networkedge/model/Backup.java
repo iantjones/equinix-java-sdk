@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.networkedge.model;
 
-import api.equinix.javasdk.networkedge.enums.BackupRequestType;
 import api.equinix.javasdk.networkedge.enums.BackupStatus;
 import api.equinix.javasdk.networkedge.enums.BackupType;
 import api.equinix.javasdk.networkedge.model.implementation.DeviceRestore;
@@ -39,8 +38,6 @@ public interface Backup {
     BackupType getType();
 
     BackupStatus getStatus();
-
-    BackupRequestType getRequestType();
 
     String getDownloadUrl();
 

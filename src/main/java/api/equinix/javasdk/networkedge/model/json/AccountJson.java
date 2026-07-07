@@ -60,23 +60,12 @@ public class AccountJson {
     @JsonProperty("accountStatus")
     private AccountStatus accountStatus;
 
-    @JsonProperty("portalOrgId")
-    private String portalOrgId;
-
-    @JsonProperty("portalOrgName")
-    private String portalOrgName;
-
     @JsonProperty("referenceId")
     private String referenceId;
 
     @JsonProperty("metros")
     private ArrayList<MetroCode> metros;
 
-    @JsonProperty("siblingCustOrgFlag")
-    private Boolean siblingCustOrgFlag;
-
     @JsonProperty("creditHold")
     private Boolean creditHold;
-
-
 }

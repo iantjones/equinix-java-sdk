@@ -6,11 +6,15 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.enums.MetroConnectDestinationType;
+import api.equinix.javasdk.fabric.enums.MetroConnectPathType;
+import api.equinix.javasdk.fabric.enums.MetroConnectType;
 import api.equinix.javasdk.fabric.enums.PriceCategory;
 import api.equinix.javasdk.fabric.enums.PriceType;
 import api.equinix.javasdk.fabric.enums.PrecisionTimePackageCode;
 import api.equinix.javasdk.fabric.enums.PrecisionTimeType;
 import api.equinix.javasdk.fabric.model.Pricing;
+import api.equinix.javasdk.fabric.model.implementation.MetroConnectPrice;
 import api.equinix.javasdk.fabric.model.implementation.TimeServicePrice;
 import org.junit.jupiter.api.*;
 
@@ -64,7 +68,7 @@ class FabricPricesWireMockTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("deserializes termLength, catgory, router and timeService price shapes")
+        @DisplayName("deserializes termLength, catgory, router, timeService and metroConnect price shapes")
         void deserializesFidelityFields() {
             stubPaginatedPost(wireMock, "/fabric/v4/prices/search",
                     "/json/fabric/paginated_prices_fidelity.json");
@@ -72,7 +76,7 @@ class FabricPricesWireMockTest extends WireMockTestBase {
             PaginatedFilteredList<Pricing> prices = fabric.prices().list(null);
 
             assertNotNull(prices);
-            assertEquals(3, prices.size());
+            assertEquals(4, prices.size());
 
             // termLength + the spec's own "catgory" wire spelling
             Pricing vc = prices.get(0);
@@ -99,6 +103,19 @@ class FabricPricesWireMockTest extends WireMockTestBase {
                     .getAccessPoint().getLocation().getMetroCode());
             assertEquals("CH3", timeService.getConnection().getASide()
                     .getAccessPoint().getLocation().getIbx());
+
+            // "metroConnect" (METRO_CONNECT_PRODUCT reads as itself, not UNKNOWN)
+            Pricing metroConnectRow = prices.get(3);
+            assertEquals(PriceType.METRO_CONNECT_PRODUCT, metroConnectRow.getType());
+            assertEquals("MC00007.PROD", metroConnectRow.getCode());
+            MetroConnectPrice metroConnect = metroConnectRow.getMetroConnect();
+            assertNotNull(metroConnect);
+            assertEquals(MetroConnectType.OPTICAL_MC, metroConnect.getType());
+            assertEquals(Integer.valueOf(1000), metroConnect.getBandwidth());
+            assertEquals(MetroConnectPathType.PROTECTED, metroConnect.getPathType());
+            assertEquals(MetroConnectDestinationType.COLO, metroConnect.getConnectionDestinationType());
+            assertEquals("CH1", metroConnect.getASide().getLocation().getIbxCode());
+            assertEquals("CH3", metroConnect.getZSide().getLocation().getIbxCode());
         }
     }
 

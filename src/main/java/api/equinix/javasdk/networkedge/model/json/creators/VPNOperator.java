@@ -64,7 +64,6 @@ public class VPNOperator extends ResourceImpl<VPN> {
         private String password;
         private Long localAsn;
         private String tunnelIp;
-        private Boolean useNetworkServiceConnection;
 
         protected VPNBuilder(String configName) {
             this.configName = configName;
@@ -116,11 +115,6 @@ public class VPNOperator extends ResourceImpl<VPN> {
 
          public VPNBuilder withTunnelIp(String tunnelIp) {
             this.tunnelIp = tunnelIp;
-            return this;
-        }
-
-        public VPNBuilder useNetworkServiceConnection(Boolean useNetworkServiceConnection) {
-            this.useNetworkServiceConnection = useNetworkServiceConnection;
             return this;
         }
 
@@ -178,11 +172,6 @@ public class VPNOperator extends ResourceImpl<VPN> {
 
         public VPNUpdater withTunnelIp(String tunnelIp) {
             this.updaterJson.setTunnelIp(tunnelIp);
-            return this;
-        }
-
-        public VPNUpdater useNetworkServiceConnection(Boolean useNetworkServiceConnection) {
-            this.updaterJson.setUseNetworkServiceConnection(useNetworkServiceConnection);
             return this;
         }
 

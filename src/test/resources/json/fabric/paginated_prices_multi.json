@@ -28,14 +28,18 @@
       "connection": { "bandwidth": 1000 }
     },
     {
-      "type": "FABRIC_GATEWAY_PRODUCT",
+      "type": "CLOUD_ROUTER_PRODUCT",
       "currency": "USD",
       "code": "FCR_STANDARD_DC",
       "name": "Fabric Cloud Router STANDARD",
       "charges": [
         { "type": "MONTHLY_RECURRING", "price": 1200.00 },
         { "type": "NON_RECURRING", "price": 0.00 }
-      ]
+      ],
+      "router": {
+        "package": { "code": "STANDARD" },
+        "location": { "metroCode": "DC" }
+      }
     },
     {
       "type": "VIRTUAL_CONNECTION_PRODUCT",

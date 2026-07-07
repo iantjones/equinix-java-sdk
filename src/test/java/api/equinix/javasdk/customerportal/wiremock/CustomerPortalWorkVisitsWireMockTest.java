@@ -4,6 +4,7 @@ import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.WorkVisitLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitCage;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitDetails;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
@@ -24,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Exercises {@code order(...)} (POST {@code /colocations/v2/orders/workVisits}) and
  * {@code update(...)} (PATCH {@code .../{orderId}}); both return the {@code Location}-header order
- * id. Cancellation is via {@code orders().cancel(orderId, reason)}.</p>
+ * id. Cancellation is via {@code orders().cancel(orderId, reason)}. Also exercises the v1
+ * permitted-locations GET ({@code /v1/orders/workvisit/locations}).</p>
  */
 class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
 
@@ -100,6 +102,56 @@ class CustomerPortalWorkVisitsWireMockTest extends WireMockTestBase {
             assertEquals("1-44556677", response.getOrderId());
 
             wireMock.verify(patchRequestedFor(urlPathEqualTo("/colocations/v2/orders/workVisits/1-44556677")));
+        }
+    }
+
+    @Nested
+    @DisplayName("listLocations()")
+    class ListLocations {
+
+        @Test
+        @DisplayName("GETs /v1/orders/workvisit/locations and returns the permitted locations")
+        void listsLocations() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/workvisit/locations"))
+                    .willReturn(okJson("{\"locations\":[{\"ibx\":\"AM1\",\"cages\":[{\"cage\":\"AM1:02:002MC1\","
+                            + "\"cageTypes\":[\"Shared\"],\"accounts\":[{\"number\":\"1111\","
+                            + "\"name\":\"ABC Network Services\",\"isCreditHold\":false,\"isPOBearing\":true,"
+                            + "\"cabinets\":[{\"cabinet\":\"AM1:02:002MC1:0601\",\"cabinetType\":\"Shared\"}]}]}]}]}")));
+
+            List<? extends WorkVisitLocation> locations = customerPortal.workVisits().listLocations();
+
+            assertNotNull(locations);
+            assertEquals(1, locations.size());
+            assertEquals("AM1", locations.get(0).getIbx());
+            assertEquals("AM1:02:002MC1", locations.get(0).getCages().get(0).getCage());
+            assertEquals(List.of("Shared"), locations.get(0).getCages().get(0).getCageTypes());
+            assertEquals("1111", locations.get(0).getCages().get(0).getAccounts().get(0).getNumber());
+            assertEquals("ABC Network Services", locations.get(0).getCages().get(0).getAccounts().get(0).getName());
+            assertEquals(false, locations.get(0).getCages().get(0).getAccounts().get(0).getIsCreditHold());
+            assertEquals("AM1:02:002MC1:0601",
+                    locations.get(0).getCages().get(0).getAccounts().get(0).getCabinets().get(0).getCabinet());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/workvisit/locations"))
+                    .withQueryParam("detail", absent())
+                    .withQueryParam("ibxs", absent())
+                    .withQueryParam("cages", absent()));
+        }
+
+        @Test
+        @DisplayName("forwards detail/ibxs/cages query params")
+        void forwardsQueryParams() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/workvisit/locations"))
+                    .willReturn(okJson("{\"locations\":[{\"ibx\":\"AM1\"}]}")));
+
+            List<? extends WorkVisitLocation> locations = customerPortal.workVisits()
+                    .listLocations(true, "AM1,AM2", "AM1:02:002MC1");
+
+            assertNotNull(locations);
+            assertEquals("AM1", locations.get(0).getIbx());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/orders/workvisit/locations"))
+                    .withQueryParam("detail", equalTo("true"))
+                    .withQueryParam("ibxs", equalTo("AM1,AM2"))
+                    .withQueryParam("cages", equalTo("AM1:02:002MC1")));
         }
     }
 

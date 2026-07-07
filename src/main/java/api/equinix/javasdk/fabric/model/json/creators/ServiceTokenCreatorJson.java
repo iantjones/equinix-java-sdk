@@ -128,13 +128,13 @@ public class ServiceTokenCreatorJson {
         private String uuid;
     }
 
-    /** Spec schema {@code SimplifiedVirtualDevice} (writable members). */
+    /** Spec schema {@code SimplifiedVirtualDevice} (writable members; {@code type} enum: {@code EDGE}). */
     @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class VirtualDeviceSummary {
 
         @JsonProperty("type")
-        private String type;
+        private VirtualDeviceType type;
 
         @JsonProperty("uuid")
         private String uuid;
@@ -206,7 +206,7 @@ public class ServiceTokenCreatorJson {
         }
 
         if (serviceTokenBuilder.getVirtualDeviceUuid() != null) {
-            accessPointSelector.virtualDevice = new VirtualDeviceSummary("EDGE", serviceTokenBuilder.getVirtualDeviceUuid());
+            accessPointSelector.virtualDevice = new VirtualDeviceSummary(VirtualDeviceType.EDGE, serviceTokenBuilder.getVirtualDeviceUuid());
         }
 
         if (serviceTokenBuilder.getInterfaceId() != null) {

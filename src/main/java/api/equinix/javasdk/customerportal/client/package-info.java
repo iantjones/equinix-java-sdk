@@ -17,7 +17,7 @@
 /**
  * Customer Portal client interfaces for the Equinix Java SDK. Provides typed
  * access to portal resource management including CrossConnects, TroubleTickets,
- * WorkVisits, SmartHandsRequests, Shipments, Orders, Quotes, Invoices, Resellers,
+ * WorkVisits, SmartHandsRequests, Shipments, Orders, Quotes, Invoices,
  * Attachments, Reports, Assets, Notifications, UnifiedNotifications, SupportCases,
  * SupportPlans, SecureCabinets, BillingCredits, DigitalLOAs, OrderHistory, and
  * Lookups. Each interface defines list, get, create, update, and cancel operations

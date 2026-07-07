@@ -53,7 +53,6 @@ class FabricStreamingScenarioTest extends IntegrationTestBase {
                         .withType(StreamType.TELEMETRY_STREAM)
                         .withName(streamName)
                         .withDescription("SDK test stream")
-                        .withEnabled(true)
                         .create());
 
         assertNotNull(stream, "Stream should be created");
@@ -64,7 +63,7 @@ class FabricStreamingScenarioTest extends IntegrationTestBase {
 
     @Test
     @Order(2)
-    @DisplayName("Verify stream name, type, and enabled state")
+    @DisplayName("Verify stream name and type")
     void verifyStream() {
         Assumptions.assumeTrue(isFullCrudEnabled(), "Full CRUD mode not enabled");
         Assumptions.assumeTrue(streamUuid != null, "Stream was not created");
@@ -76,7 +75,6 @@ class FabricStreamingScenarioTest extends IntegrationTestBase {
         assertEquals(streamUuid, stream.getUuid());
         assertEquals(streamName, stream.getName());
         assertEquals(StreamType.TELEMETRY_STREAM, stream.getType());
-        assertEquals(Boolean.TRUE, stream.getEnabled());
     }
 
     @Test

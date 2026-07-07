@@ -74,11 +74,6 @@ class DeviceDeserializationTest {
     }
 
     @Test
-    void ibx_isDeserialized() {
-        assertEquals("SV5", device.getIbx());
-    }
-
-    @Test
     void region_isDeserialized() {
         assertEquals(Region.AMER, device.getRegion());
     }
@@ -148,12 +143,6 @@ class DeviceDeserializationTest {
     @Test
     void asn_isDeserialized() {
         assertEquals(65000L, device.getAsn());
-    }
-
-    @Test
-    void clusterSupported_isDeserialized() {
-        assertNotNull(device.getClusterSupported());
-        assertFalse(device.getClusterSupported());
     }
 
     @Test

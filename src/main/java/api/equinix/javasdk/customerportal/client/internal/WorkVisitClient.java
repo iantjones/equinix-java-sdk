@@ -17,12 +17,17 @@
 package api.equinix.javasdk.customerportal.client.internal;
 
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.WorkVisitLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
+
+import java.util.List;
 
 public interface WorkVisitClient {
 
     OrderResponse order(WorkVisitOrderRequest request);
 
     OrderResponse update(String orderId, WorkVisitUpdateRequest request);
+
+    List<? extends WorkVisitLocation> listLocations(Boolean detail, String ibxs, String cages);
 }

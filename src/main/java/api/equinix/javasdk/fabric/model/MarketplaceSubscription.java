@@ -15,7 +15,6 @@
  */
 
 package api.equinix.javasdk.fabric.model;
-import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
 import api.equinix.javasdk.fabric.enums.Marketplace;
 import api.equinix.javasdk.fabric.enums.MarketplaceOfferType;
 
@@ -31,8 +30,6 @@ public interface MarketplaceSubscription {
     String getUuid();
 
     String getHref();
-
-    MarketplaceSubscriptionType getType();
 
     MarketplaceSubscriptionState getState();
 

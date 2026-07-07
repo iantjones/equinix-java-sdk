@@ -11,9 +11,10 @@ import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchFilter;
 import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
-import api.equinix.javasdk.customerportal.model.Reseller;
+import api.equinix.javasdk.customerportal.model.ShipmentLocation;
 import api.equinix.javasdk.customerportal.model.SmartHandType;
 import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
+import api.equinix.javasdk.customerportal.model.WorkVisitLocation;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -46,19 +47,6 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
                 assertTrue(items.size() >= 0);
             } catch (Exception e) {
                 Assumptions.assumeTrue(false, "Invoice summaries test skipped: " + e.getMessage());
-            }
-        }
-
-        @Test
-        @DisplayName("List resellers returns valid response")
-        void listResellers() {
-            try {
-                PaginatedList<Reseller> items = timedCall("CustomerPortal", "list", "Reseller", "GET",
-                        () -> client.resellers().list());
-                assertNotNull(items);
-                assertTrue(items.size() >= 0);
-            } catch (Exception e) {
-                Assumptions.assumeTrue(false, "Resellers test skipped: " + e.getMessage());
             }
         }
 
@@ -100,10 +88,15 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("Work visit order client is reachable")
-        void workVisitsClientReachable() {
-            // Work visits are scheduled (POST/PATCH), not listed; nothing read-only to call.
-            assertNotNull(client.workVisits());
+        @DisplayName("List work visit locations returns valid response")
+        void listWorkVisitLocations() {
+            try {
+                List<? extends WorkVisitLocation> locations = timedCall("CustomerPortal", "listLocations",
+                        "WorkVisitLocation", "GET", () -> client.workVisits().listLocations());
+                assertNotNull(locations);
+            } catch (Exception e) {
+                Assumptions.assumeTrue(false, "Work visit locations test skipped: " + e.getMessage());
+            }
         }
 
         @Test
@@ -123,10 +116,15 @@ class CustomerPortalIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("Shipment order client is reachable")
-        void shipmentsClientReachable() {
-            // Shipments are scheduled (POST/PATCH), not listed; nothing read-only to call.
-            assertNotNull(client.shipments());
+        @DisplayName("List shipment locations returns valid response")
+        void listShipmentLocations() {
+            try {
+                List<? extends ShipmentLocation> locations = timedCall("CustomerPortal", "listLocations",
+                        "ShipmentLocation", "GET", () -> client.shipments().listLocations());
+                assertNotNull(locations);
+            } catch (Exception e) {
+                Assumptions.assumeTrue(false, "Shipment locations test skipped: " + e.getMessage());
+            }
         }
 
         @Test

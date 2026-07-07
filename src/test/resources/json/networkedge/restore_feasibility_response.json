@@ -6,6 +6,5 @@
     "deleteAllowed": true
   },
   "services": {},
-  "restoreAllowedAfterDeleteOrEdit": true,
-  "restoreAllowed": true
+  "restoreAllowedAfterDeleteOrEdit": true
 }

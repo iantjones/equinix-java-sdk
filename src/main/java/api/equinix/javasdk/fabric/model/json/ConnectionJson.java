@@ -27,7 +27,6 @@ import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
 
 import java.util.List;
@@ -40,8 +39,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class ConnectionJson {
 
-    @Getter static TypeReference<List<ConnectionJson>> listTypeRef = new TypeReference<>() {};
-    
     @JsonProperty("uuid")
     private String uuid;
 

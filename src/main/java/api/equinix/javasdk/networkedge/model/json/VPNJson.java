@@ -23,7 +23,6 @@ import api.equinix.javasdk.core.enums.OperationalStatus;
 import api.equinix.javasdk.networkedge.enums.BGPState;
 import api.equinix.javasdk.networkedge.enums.UserStatus;
 import api.equinix.javasdk.networkedge.enums.VPNStatus;
-import api.equinix.javasdk.networkedge.model.VPN;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -39,10 +38,6 @@ import java.time.LocalDateTime;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VPNJson extends Lifecycle {
-
-
-    @JsonProperty("secondary")
-    private VPN secondary;
 
     @JsonProperty("uuid")
     private String uuid;
@@ -61,9 +56,6 @@ public class VPNJson extends Lifecycle {
 
     @JsonProperty("virtualDeviceUuid")
     private String virtualDeviceUuid;
-
-    @JsonProperty("useNetworkServiceConnection")
-    private Boolean useNetworkServiceConnection;
 
     @JsonProperty("configName")
     private String configName;
@@ -85,9 +77,6 @@ public class VPNJson extends Lifecycle {
 
     @JsonProperty("localAsn")
     private Long localAsn;
-
-    @JsonProperty("projectId")
-    private String projectId;
 
     @JsonProperty("tunnelIp")
     private String tunnelIp;
@@ -115,10 +104,6 @@ public class VPNJson extends Lifecycle {
     @JsonProperty("lastUpdatedDateTime")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime lastUpdatedDateTime;
-
-    @JsonProperty("deletedDateTime")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime deletedDateTime;
 
     // VpnResponse expanded audit block (created-by / updated-by user metadata).
     @JsonProperty("createdByFirstName")
@@ -189,10 +174,5 @@ public class VPNJson extends Lifecycle {
     @Override
     public LocalDateTime getLastUpdatedDate() {
         return lastUpdatedDateTime != null ? lastUpdatedDateTime : super.getLastUpdatedDate();
-    }
-
-    @Override
-    public LocalDateTime getDeletedDate() {
-        return deletedDateTime != null ? deletedDateTime : super.getDeletedDate();
     }
 }

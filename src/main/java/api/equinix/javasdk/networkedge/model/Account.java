@@ -35,15 +35,9 @@ public interface Account {
 
     AccountStatus getAccountStatus();
 
-    String getPortalOrgId();
-
-    String getPortalOrgName();
-
     String getReferenceId();
 
     ArrayList<MetroCode> getMetros();
-
-    Boolean getSiblingCustOrgFlag();
 
     Boolean getCreditHold();
 }

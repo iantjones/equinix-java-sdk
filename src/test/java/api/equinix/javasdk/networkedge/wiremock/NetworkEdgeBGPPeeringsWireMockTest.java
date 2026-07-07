@@ -50,7 +50,7 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
             BGPPeering peering = networkEdge.bgpPeerings().getByUuid("bgp-1111-2222-3333-444455556666");
             assertNotNull(peering);
             assertEquals("bgp-1111-2222-3333-444455556666", peering.getUuid());
-            assertEquals("test-connection", peering.getConnectionName());
+            assertEquals("conn-aaaa-bbbb-cccc-ddddeeeeffff", peering.getConnectionUuid());
         }
 
         @Test
@@ -93,9 +93,9 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
                     .save();
 
             assertNotNull(peering);
-            // getUuid()/getConnectionName() reflect the fixture body returned by the follow-up GET.
+            // getUuid()/getConnectionUuid() reflect the fixture body returned by the follow-up GET.
             assertEquals("bgp-1111-2222-3333-444455556666", peering.getUuid());
-            assertEquals("test-connection", peering.getConnectionName());
+            assertEquals("conn-aaaa-bbbb-cccc-ddddeeeeffff", peering.getConnectionUuid());
 
             // Verify the outgoing create request body.
             wireMock.verify(postRequestedFor(urlPathMatching("/ne/v1/bgp/?"))
@@ -187,9 +187,9 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
             assertNotNull(peerings);
             assertEquals(2, peerings.size());
             assertEquals("bgp-1111-2222-3333-444455556666", peerings.get(0).getUuid());
-            assertEquals("test-connection", peerings.get(0).getConnectionName());
+            assertEquals("conn-aaaa-bbbb-cccc-ddddeeeeffff", peerings.get(0).getConnectionUuid());
             assertEquals("bgp-7777-8888-9999-aaaabbbbcccc", peerings.get(1).getUuid());
-            assertEquals("second-connection", peerings.get(1).getConnectionName());
+            assertEquals("conn-1111-2222-3333-444455556666", peerings.get(1).getConnectionUuid());
 
             // Verb + path, and that the unfiltered call carries none of the filter params.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/bgp"))

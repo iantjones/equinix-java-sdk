@@ -20,8 +20,11 @@ import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.customerportal.client.WorkVisits;
 import api.equinix.javasdk.customerportal.client.internal.WorkVisitClient;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
+import api.equinix.javasdk.customerportal.model.WorkVisitLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
+
+import java.util.List;
 
 public class WorkVisitsImpl implements WorkVisits {
 
@@ -40,5 +43,13 @@ public class WorkVisitsImpl implements WorkVisits {
 
     public OrderResponse update(String orderId, WorkVisitUpdateRequest request) {
         return this.serviceClient.update(orderId, request);
+    }
+
+    public List<? extends WorkVisitLocation> listLocations() {
+        return this.serviceClient.listLocations(null, null, null);
+    }
+
+    public List<? extends WorkVisitLocation> listLocations(Boolean detail, String ibxs, String cages) {
+        return this.serviceClient.listLocations(detail, ibxs, cages);
     }
 }

@@ -19,8 +19,10 @@ package api.equinix.javasdk.customerportal.enums;
 import api.equinix.javasdk.core.model.APIParam;
 
 /**
- * The carrier service delivering a shipment ({@code carrier} in the shipments v2 spec).
- * {@code CUSTOMER_CARRIER} is only valid when creating a shipment, not when updating one.
+ * The carrier service delivering a shipment ({@code carrier} in the shipments v2 spec and
+ * {@code carrierName} in the shipments v1 spec). {@code CUSTOMER_CARRIER} is a v2-only value,
+ * valid when creating a shipment but not when updating one; the v1 {@code carrierName} enum is
+ * limited to {@code FEDEX}/{@code DHL}/{@code UPS}/{@code OTHER}.
  */
 public enum ShipmentCarrier implements APIParam {
     DHL,

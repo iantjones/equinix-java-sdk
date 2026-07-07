@@ -17,6 +17,9 @@
 package api.equinix.javasdk.fabric.model.json.creators;
 
 import api.equinix.javasdk.fabric.enums.CloudRouterType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.enums.MarketplaceSubscriptionType;
+import api.equinix.javasdk.fabric.enums.NotificationType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -53,10 +56,11 @@ public class CloudRouterCreatorJson {
         public LocationRef(String metroCode) { this.metroCode = metroCode; }
     }
 
+    /** Spec schema {@code CloudRouterPostRequestPackage} ({@code code} enum: LAB/BASIC/STANDARD/ADVANCED/PREMIUM). */
     @Getter
     public static class PackageRef {
-        @JsonProperty("code") private String code;
-        public PackageRef(String code) { this.code = code; }
+        @JsonProperty("code") private GatewayPackageCode code;
+        public PackageRef(GatewayPackageCode code) { this.code = code; }
     }
 
     @Getter
@@ -78,11 +82,10 @@ public class CloudRouterCreatorJson {
     /** Spec schema {@code marketplaceSubscription} (writable members: type, uuid). */
     @Getter
     public static class MarketplaceSubscriptionRef {
-        /** e.g. {@code AWS_MARKETPLACE_SUBSCRIPTION}, {@code GCP_MARKETPLACE_SUBSCRIPTION}. */
-        @JsonProperty("type") private String type;
+        @JsonProperty("type") private MarketplaceSubscriptionType type;
         @JsonProperty("uuid") private String uuid;
 
-        public MarketplaceSubscriptionRef(String type, String uuid) {
+        public MarketplaceSubscriptionRef(MarketplaceSubscriptionType type, String uuid) {
             this.type = type;
             this.uuid = uuid;
         }
@@ -100,10 +103,11 @@ public class CloudRouterCreatorJson {
         public AccountRef(Long accountNumber) { this.accountNumber = accountNumber; }
     }
 
+    /** Spec schema {@code SimplifiedNotification} (writable members: type, emails). */
     @Getter
     public static class NotificationRef {
-        @JsonProperty("type") private String type;
+        @JsonProperty("type") private NotificationType type;
         @JsonProperty("emails") private List<String> emails;
-        public NotificationRef(String type, List<String> emails) { this.type = type; this.emails = emails; }
+        public NotificationRef(NotificationType type, List<String> emails) { this.type = type; this.emails = emails; }
     }
 }

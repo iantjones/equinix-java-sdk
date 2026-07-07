@@ -80,4 +80,7 @@ public class PricingJson {
 
     @JsonProperty("timeService")
     private TimeServicePrice timeService;
+
+    @JsonProperty("metroConnect")
+    private MetroConnectPrice metroConnect;
 }
