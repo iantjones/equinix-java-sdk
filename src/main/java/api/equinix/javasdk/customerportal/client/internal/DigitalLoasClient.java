@@ -36,7 +36,7 @@ public interface DigitalLoasClient {
 
     List<? extends DigitalLoa> search(DigitalLoaSearchRequest request, Integer offset, Integer limit, List<String> sort);
 
-    DigitalLoa patch(String uuid, List<Map<String, Object>> operations);
+    DigitalLoa update(String uuid, List<Map<String, Object>> operations);
 
     Boolean cancel(String uuid);
 
@@ -48,7 +48,7 @@ public interface DigitalLoasClient {
 
     DigitalLoaChange findChangeByUuid(String uuid, String changeUuid);
 
-    List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes);
+    List<? extends LoaCustomerOrganization> listOrganizations(String ibx, List<String> productTypes);
 
     PrivateBetaPermission isPrivateBetaAllowed();
 

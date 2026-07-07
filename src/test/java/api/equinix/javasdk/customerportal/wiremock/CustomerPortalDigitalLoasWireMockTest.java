@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * WireMock-based API tests for the CustomerPortal Digital LOA (diLOA v1) client, focused on the
  * query-parameter forwarding that the public API exposes: the spec-required {@code location.ibx}
- * (and optional {@code product.type}) on {@code findOrganizations}, and the optional
+ * (and optional {@code product.type}) on {@code listOrganizations}, and the optional
  * {@code offset}/{@code limit}/{@code sort} paging params on {@code search}.
  */
 class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
@@ -50,13 +50,13 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("findOrganizations(ibx) forwards the required location.ibx query param")
-    void findOrganizations_forwardsLocationIbx() {
+    @DisplayName("listOrganizations(ibx) forwards the required location.ibx query param")
+    void listOrganizations_forwardsLocationIbx() {
         wireMock.stubFor(get(urlPathEqualTo("/diloa/v1/organizations"))
                 .willReturn(okJson("[{\"orgIds\":[\"123\"],\"name\":\"Acme Corp\"}]")));
 
         List<? extends LoaCustomerOrganization> organizations =
-                customerPortal.digitalLoas().findOrganizations("AM11");
+                customerPortal.digitalLoas().listOrganizations("AM11");
 
         assertNotNull(organizations);
         assertEquals(1, organizations.size());
@@ -67,12 +67,12 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("findOrganizations(ibx, productTypes) forwards location.ibx and product.type")
-    void findOrganizations_forwardsLocationIbxAndProductType() {
+    @DisplayName("listOrganizations(ibx, productTypes) forwards location.ibx and product.type")
+    void listOrganizations_forwardsLocationIbxAndProductType() {
         wireMock.stubFor(get(urlPathEqualTo("/diloa/v1/organizations"))
                 .willReturn(okJson("[{\"orgIds\":[\"123\"],\"name\":\"Acme Corp\"}]")));
 
-        customerPortal.digitalLoas().findOrganizations("AM11", List.of("CROSS_CONNECT"));
+        customerPortal.digitalLoas().listOrganizations("AM11", List.of("CROSS_CONNECT"));
 
         wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/organizations"))
                 .withQueryParam("location.ibx", equalTo("AM11"))
@@ -155,7 +155,7 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
             List<Map<String, Object>> operations = List.of(
                     Map.of("op", "replace", "path", "/notes", "value", "Updated notes"));
 
-            DigitalLoa patched = customerPortal.digitalLoas().patch("loa-abc-123", operations);
+            DigitalLoa patched = customerPortal.digitalLoas().update("loa-abc-123", operations);
 
             assertNotNull(patched);
             assertEquals("loa-abc-123", patched.getUuid());

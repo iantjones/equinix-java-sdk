@@ -63,15 +63,15 @@ public class IAMResourceTypesImpl implements IAMResourceTypes {
         return this.resourceTypeClient.listActionSets(projectId, serviceId, pageToken, pageSize, projectErn);
     }
 
-    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType) {
-        return this.resourceTypeClient.pageResourceTypeActions(projectId, serviceId, resourceType, null, null, null,
+    public ResourceTypeActionPage listResourceTypeActions(String projectId, String serviceId, String resourceType) {
+        return this.resourceTypeClient.listResourceTypeActions(projectId, serviceId, resourceType, null, null, null,
                 null);
     }
 
-    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+    public ResourceTypeActionPage listResourceTypeActions(String projectId, String serviceId, String resourceType,
                                                           String resourceTypeServiceId, String lastAction,
                                                           Integer pageSize, String projectErn) {
-        return this.resourceTypeClient.pageResourceTypeActions(projectId, serviceId, resourceType,
+        return this.resourceTypeClient.listResourceTypeActions(projectId, serviceId, resourceType,
                 resourceTypeServiceId, lastAction, pageSize, projectErn);
     }
 

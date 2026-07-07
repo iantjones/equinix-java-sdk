@@ -58,8 +58,8 @@ public class DigitalLoasImpl implements DigitalLoas {
         return this.serviceClient.search(request, offset, limit, sort);
     }
 
-    public DigitalLoa patch(String uuid, List<Map<String, Object>> operations) {
-        return this.serviceClient.patch(uuid, operations);
+    public DigitalLoa update(String uuid, List<Map<String, Object>> operations) {
+        return this.serviceClient.update(uuid, operations);
     }
 
     public Boolean cancel(String uuid) {
@@ -82,12 +82,12 @@ public class DigitalLoasImpl implements DigitalLoas {
         return this.serviceClient.findChangeByUuid(uuid, changeUuid);
     }
 
-    public List<? extends LoaCustomerOrganization> findOrganizations(String ibx) {
-        return this.serviceClient.findOrganizations(ibx, null);
+    public List<? extends LoaCustomerOrganization> listOrganizations(String ibx) {
+        return this.serviceClient.listOrganizations(ibx, null);
     }
 
-    public List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes) {
-        return this.serviceClient.findOrganizations(ibx, productTypes);
+    public List<? extends LoaCustomerOrganization> listOrganizations(String ibx, List<String> productTypes) {
+        return this.serviceClient.listOrganizations(ibx, productTypes);
     }
 
     public PrivateBetaPermission isPrivateBetaAllowed() {

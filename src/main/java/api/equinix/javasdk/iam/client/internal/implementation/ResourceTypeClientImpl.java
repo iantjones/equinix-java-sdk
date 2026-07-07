@@ -79,7 +79,7 @@ public class ResourceTypeClientImpl extends ClientBase implements ResourceTypeCl
     }
 
     @Override
-    public ResourceTypeActionPage pageResourceTypeActions(String projectId, String serviceId, String resourceType,
+    public ResourceTypeActionPage listResourceTypeActions(String projectId, String serviceId, String resourceType,
                                                           String resourceTypeServiceId, String lastAction,
                                                           Integer pageSize, String projectErn) {
         Map<String, List<String>> queryParams = QueryParamBuilder.builder()

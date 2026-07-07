@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Client method naming aligned to the SDK-wide convention** (breaking renames):
+  `STSOidcProviders.page(...)` → `list(...)`, `patch(...)` → `update(...)`;
+  `IAMResourceTypes.pageResourceTypeActions(...)` → `listResourceTypeActions(...)`;
+  `DigitalLoas.patch(...)` → `update(...)`, `findOrganizations(...)` → `listOrganizations(...)`.
+  The convention across all domains is `list` / `search` / `getByUuid` (or `getBy<Key>`) /
+  `define`-or-`create` / `update` / `delete`; javadoc keeps citing the specs' operationIds.
+
 ### Removed
 - **`PasswordEquinixCredentials` and the `PASSWORD` grant type** — the OAuth2 resource-owner
   password grant reached end-of-life in January 2025 per the Equinix API release notes; the token

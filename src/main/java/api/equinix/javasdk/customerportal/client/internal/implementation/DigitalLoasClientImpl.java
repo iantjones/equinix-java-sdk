@@ -73,7 +73,7 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
         return response.getData();
     }
 
-    public DigitalLoa patch(String uuid, List<Map<String, Object>> operations) {
+    public DigitalLoa update(String uuid, List<Map<String, Object>> operations) {
         EquinixRequest<DigitalLoaJson> request =
                 buildRequestWithPathParams("PatchDigitalLoa", RequestType.SINGLE, Map.of("uuid", uuid), DigitalLoaJson.class);
         Utils.serializeJson(request, operations);
@@ -103,7 +103,7 @@ public class DigitalLoasClientImpl extends ClientBase implements DigitalLoasClie
         return getAs("GetDigitalLoaChange", Map.of("uuid", uuid, "changeUuid", changeUuid), null, DigitalLoaChangeJson.class);
     }
 
-    public List<? extends LoaCustomerOrganization> findOrganizations(String ibx, List<String> productTypes) {
+    public List<? extends LoaCustomerOrganization> listOrganizations(String ibx, List<String> productTypes) {
         Map<String, List<String>> queryParams = new HashMap<>();
         queryParams.put("location.ibx", List.of(ibx));
         if (productTypes != null && !productTypes.isEmpty()) {

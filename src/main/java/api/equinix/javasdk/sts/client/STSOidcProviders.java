@@ -38,7 +38,7 @@ public interface STSOidcProviders {
      * @param projectId the project identifier
      * @return the first page of OIDC providers
      */
-    OidcProviderPage page(String projectId);
+    OidcProviderPage list(String projectId);
 
     /**
      * Pages through the OIDC providers of a project, controlling inclusion of suspended providers
@@ -50,7 +50,7 @@ public interface STSOidcProviders {
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
      * @return the requested page of OIDC providers
      */
-    OidcProviderPage page(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize);
+    OidcProviderPage list(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize);
 
     /**
      * Registers a new OIDC provider in a project.
@@ -69,7 +69,7 @@ public interface STSOidcProviders {
      * @param request the patch request (its {@code lastRev} guards against concurrent updates)
      * @return the updated OIDC provider
      */
-    OidcProvider patch(String projectId, String idpId, PatchOidcProviderRequest request);
+    OidcProvider update(String projectId, String idpId, PatchOidcProviderRequest request);
 
     /**
      * Permanently removes the trust relationship for an OIDC provider. This cannot be reversed.

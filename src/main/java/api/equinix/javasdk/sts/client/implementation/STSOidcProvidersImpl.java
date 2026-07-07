@@ -35,20 +35,20 @@ public class STSOidcProvidersImpl implements STSOidcProviders {
         this.oidcProviderClient = oidcProviderClient;
     }
 
-    public OidcProviderPage page(String projectId) {
-        return this.oidcProviderClient.page(projectId, null, null, null);
+    public OidcProviderPage list(String projectId) {
+        return this.oidcProviderClient.list(projectId, null, null, null);
     }
 
-    public OidcProviderPage page(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize) {
-        return this.oidcProviderClient.page(projectId, includeSuspended, pageToken, pageSize);
+    public OidcProviderPage list(String projectId, Boolean includeSuspended, String pageToken, Integer pageSize) {
+        return this.oidcProviderClient.list(projectId, includeSuspended, pageToken, pageSize);
     }
 
     public OidcProvider create(String projectId, CreateOidcProviderRequest request) {
         return this.oidcProviderClient.create(projectId, request);
     }
 
-    public OidcProvider patch(String projectId, String idpId, PatchOidcProviderRequest request) {
-        return this.oidcProviderClient.patch(projectId, idpId, request);
+    public OidcProvider update(String projectId, String idpId, PatchOidcProviderRequest request) {
+        return this.oidcProviderClient.update(projectId, idpId, request);
     }
 
     public Boolean delete(String projectId, String idpId) {
