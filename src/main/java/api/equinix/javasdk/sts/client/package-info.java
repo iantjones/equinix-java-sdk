@@ -20,7 +20,7 @@
  * listing, management of trusted OIDC providers within a root project, and the unauthenticated
  * discovery endpoints (JWKS and the OpenID Connect discovery document).
  *
- * @see api.equinix.javasdk.sts.client.STSConfig
+ * @see api.equinix.javasdk.sts.client.STSConfigImpl
  * @see api.equinix.javasdk.STS
  */
 package api.equinix.javasdk.sts.client;

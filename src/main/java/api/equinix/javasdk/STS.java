@@ -19,7 +19,7 @@ package api.equinix.javasdk;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
-import api.equinix.javasdk.sts.client.STSConfig;
+import api.equinix.javasdk.sts.client.implementation.STSConfigImpl;
 import api.equinix.javasdk.sts.client.STSDiscovery;
 import api.equinix.javasdk.sts.client.STSOidcProviders;
 import api.equinix.javasdk.sts.client.STSTokens;
@@ -83,7 +83,7 @@ public final class STS extends EquinixClient {
 
     private STSDiscovery discovery;
 
-    final private STSConfig stsConfig;
+    final private STSConfigImpl stsConfig;
 
     /**
      * Creates a new STS client using the provided credentials.

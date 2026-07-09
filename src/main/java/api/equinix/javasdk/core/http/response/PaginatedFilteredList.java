@@ -126,11 +126,7 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
 
     @SuppressWarnings("unchecked") // the request's element type is erased and never used by paging
     private PaginatedFilteredList<T> fetchNextPage() {
-        // One shared advance path with PaginatedList: seek the request's pagination — whether it
-        // lives in the POST body (PaginatedPostBody) or in offset/limit query parameters
-        // (PaginatedRequest, used by POST searches whose spec paginates via query params) — from
-        // the SERVER-reported pagination of the page we hold (clamp-safe), or fail fast with a
-        // clear unsupported-pagination error instead of a bare ClassCastException/NPE.
+
         PagingDispatcher.advance(equinixRequest, pagination);
         try {
             if (equinixRequest instanceof PaginatedPostRequest) {

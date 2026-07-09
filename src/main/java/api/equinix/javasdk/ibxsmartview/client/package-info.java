@@ -22,7 +22,7 @@
  * resources for system alerts, asset management, hierarchy browsing, and streaming
  * subscriptions. Enables real-time and historical monitoring of IBX facility conditions.
  *
- * @see api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfig
+ * @see api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfigImpl
  * @see api.equinix.javasdk.IBXSmartView
  */
 package api.equinix.javasdk.ibxsmartview.client;

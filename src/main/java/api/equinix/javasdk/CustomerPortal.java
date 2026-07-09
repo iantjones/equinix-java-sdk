@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.customerportal.client.CrossConnects;
-import api.equinix.javasdk.customerportal.client.CustomerPortalConfig;
+import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.Invoices;
 import api.equinix.javasdk.customerportal.client.Orders;
 import api.equinix.javasdk.customerportal.client.Shipments;
@@ -147,7 +147,7 @@ public final class CustomerPortal extends EquinixClient {
     private BillingAccountsSearch billingAccountsSearch;
 
 
-    final private CustomerPortalConfig customerPortalConfig;
+    final private CustomerPortalConfigImpl customerPortalConfig;
 
     /**
      * Creates a new Customer Portal client using the provided credentials.

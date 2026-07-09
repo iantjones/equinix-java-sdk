@@ -21,7 +21,7 @@ import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.ibxsmartview.client.Environmentals;
 import api.equinix.javasdk.ibxsmartview.client.Hierarchy;
-import api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfig;
+import api.equinix.javasdk.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
 import api.equinix.javasdk.ibxsmartview.client.LegacyEnvironmentals;
 import api.equinix.javasdk.ibxsmartview.client.LegacyPower;
 import api.equinix.javasdk.ibxsmartview.client.PowerEvents;
@@ -91,7 +91,7 @@ public final class IBXSmartView extends EquinixClient {
     private LegacyEnvironmentals legacyEnvironmentals;
     private LegacyPower legacyPower;
 
-    final private IBXSmartViewConfig ibxSmartViewConfig;
+    final private IBXSmartViewConfigImpl ibxSmartViewConfig;
 
     /**
      * Creates a new IBX SmartView client using the provided credentials.

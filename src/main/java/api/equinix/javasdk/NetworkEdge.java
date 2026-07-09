@@ -33,7 +33,7 @@ import api.equinix.javasdk.networkedge.client.implementation.DeviceLinksImpl;
 import api.equinix.javasdk.networkedge.client.implementation.DevicesImpl;
 import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.Devices;
-import api.equinix.javasdk.networkedge.client.NetworkEdgeConfig;
+import api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl;
 import api.equinix.javasdk.networkedge.client.implementation.PublicKeysImpl;
 import api.equinix.javasdk.networkedge.client.implementation.SetupImpl;
 import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
@@ -86,7 +86,7 @@ public final class NetworkEdge extends EquinixClient {
     private BGPPeerings bgpPeerings;
     private Backups backups;
 
-    final private NetworkEdgeConfig networkEdgeConfig;
+    final private NetworkEdgeConfigImpl networkEdgeConfig;
 
     /**
      * Creates a new Network Edge client using the provided credentials.

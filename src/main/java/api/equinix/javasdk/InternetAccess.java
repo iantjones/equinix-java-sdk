@@ -22,7 +22,7 @@ import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.internetaccess.client.InternetAccessAccounts;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCabinets;
 import api.equinix.javasdk.internetaccess.client.InternetAccessCages;
-import api.equinix.javasdk.internetaccess.client.InternetAccessConfig;
+import api.equinix.javasdk.internetaccess.client.implementation.InternetAccessConfigImpl;
 import api.equinix.javasdk.internetaccess.client.InternetAccessConnectionServices;
 import api.equinix.javasdk.internetaccess.client.InternetAccessIbxs;
 import api.equinix.javasdk.internetaccess.client.InternetAccessOperationalUnits;
@@ -141,7 +141,7 @@ public final class InternetAccess extends EquinixClient {
 
     private InternetAccessConnectionServices connectionServices;
 
-    final private InternetAccessConfig internetAccessConfig;
+    final private InternetAccessConfigImpl internetAccessConfig;
 
     /**
      * Creates a new Internet Access client using the provided credentials.

@@ -23,7 +23,7 @@
  * and Health. Each interface defines list, get, create, update, and delete
  * operations as appropriate for the resource type.
  *
- * @see api.equinix.javasdk.fabric.client.FabricConfig
+ * @see api.equinix.javasdk.fabric.client.FabricConfigImpl
  * @see api.equinix.javasdk.Fabric
  */
 package api.equinix.javasdk.fabric.client;

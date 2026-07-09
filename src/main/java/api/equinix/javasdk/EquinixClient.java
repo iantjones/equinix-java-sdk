@@ -22,7 +22,6 @@ import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.core.client.CoreConfigImpl;
 import api.equinix.javasdk.core.client.CoreImpl;
 import api.equinix.javasdk.core.client.interfaces.Core;
-import api.equinix.javasdk.core.client.interfaces.CoreConfig;
 import api.equinix.javasdk.core.exception.EquinixClientException;
 import lombok.Getter;
 
@@ -69,7 +68,7 @@ public class EquinixClient implements Closeable {
 
     private Core core;
 
-    final private CoreConfig coreConfig;
+    final private CoreConfigImpl coreConfig;
 
     @Getter
     final protected api.equinix.javasdk.core.client.EquinixClient equinixClient;

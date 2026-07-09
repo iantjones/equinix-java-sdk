@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.projects.client.ProjectList;
-import api.equinix.javasdk.projects.client.ProjectsConfig;
+import api.equinix.javasdk.projects.client.implementation.ProjectsConfigImpl;
 import api.equinix.javasdk.projects.client.implementation.ProjectListImpl;
 import api.equinix.javasdk.projects.client.implementation.ProjectsConfigImpl;
 
@@ -49,7 +49,7 @@ public final class Projects extends EquinixClient {
 
     private ProjectList projects;
 
-    final private ProjectsConfig projectsConfig;
+    final private ProjectsConfigImpl projectsConfig;
 
     /**
      * Creates a new Projects client using the provided credentials.

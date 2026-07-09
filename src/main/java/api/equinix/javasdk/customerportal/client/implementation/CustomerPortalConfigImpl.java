@@ -18,7 +18,6 @@ package api.equinix.javasdk.customerportal.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.customerportal.client.CustomerPortalConfig;
 import api.equinix.javasdk.customerportal.client.internal.implementation.CrossConnectClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.InvoiceDetailClientImpl;
 import api.equinix.javasdk.customerportal.client.internal.implementation.InvoiceSummaryClientImpl;
@@ -45,7 +44,7 @@ import api.equinix.javasdk.customerportal.client.internal.implementation.Billing
 import lombok.Getter;
 
 @Getter
-public class CustomerPortalConfigImpl extends Config implements CustomerPortalConfig {
+public class CustomerPortalConfigImpl extends Config {
 
     private final InvoiceSummaryClientImpl invoiceSummaryClient;
 
