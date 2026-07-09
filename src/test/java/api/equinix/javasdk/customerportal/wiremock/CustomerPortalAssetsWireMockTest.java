@@ -154,6 +154,60 @@ class CustomerPortalAssetsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        // assetsv1 paginates the search via offset/limit QUERY PARAMETERS (the body carries only
+        // the filter), so page 2 must be requested by advancing the query offset from the
+        // SERVER-reported pagination while re-sending the same filter body.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "assetNumber": "PAGE1_ASSET", "ibx": "SV5" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "assetNumber": "PAGE2_ASSET", "ibx": "SV5" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset query param (regression: ClassCastException on page 2)")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            AssetSearchRequest request = new AssetSearchRequest(
+                    new AssetSearchFilter().ibxs(List.of("SV5")));
+
+            PaginatedList<Asset> assets = customerPortal.assets().search(request);
+            assertEquals(1, assets.size());
+            assertTrue(assets.hasNextPage());
+
+            assets.loadAll();
+
+            assertEquals(2, assets.size());
+            assertEquals("PAGE1_ASSET", assets.get(0).getAssetNumber());
+            assertEquals("PAGE2_ASSET", assets.get(1).getAssetNumber());
+            assertFalse(assets.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried,
+            // and the SAME filter body re-sent.
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withRequestBody(matchingJsonPath("$.filter.ibxs[0]", equalTo("SV5"))));
+        }
+    }
+
+    @Nested
     @DisplayName("getByUuid()")
     class GetByUuid {
 

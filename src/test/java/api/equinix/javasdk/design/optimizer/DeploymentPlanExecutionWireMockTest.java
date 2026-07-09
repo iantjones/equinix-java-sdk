@@ -33,12 +33,14 @@ import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentOutcome;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
+import api.equinix.javasdk.design.optimizer.wizard.model.PlannedCloudRouter;
 import api.equinix.javasdk.design.optimizer.wizard.model.ProvisionedResource;
 import api.equinix.javasdk.design.optimizer.wizard.model.ProvisioningError;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
@@ -178,6 +180,53 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .anyMatch(e -> e.getResourceType().equals("RoutingProtocol")
                         && e.getReason().contains("was not provisioned")
                         && !e.isRecoverable()));
+    }
+
+    @Test
+    @DisplayName("execute() cannot throw IllegalArgumentException for package codes: a lenient 'standard' plan provisions cleanly, sending STANDARD")
+    void executeLenientlyResolvedPackageCode() {
+        // Regression: execute() used to do GatewayPackageCode.valueOf(planned.getPackageCode()) at
+        // deploy time, so a plan built with routerPackage("standard") passed plan() and pricing but
+        // blew up with IllegalArgumentException mid-deployment. The code is now resolved and
+        // validated once at plan time; execute() consumes the enum.
+        stubCreatedResources();
+
+        DeploymentOutcome outcome = twoMetroPlan("standard").execute();
+
+        assertTrue(outcome.isFullySuccessful(),
+                () -> "a leniently-set package code must not fail at execute time, got: " + outcome.getErrors());
+        wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
+                .withRequestBody(matchingJsonPath("$.package.code", equalTo("STANDARD"))));
+    }
+
+    @Test
+    @DisplayName("execute() never sends UNKNOWN: a hand-built plan with an UNKNOWN package records an error and issues no router POST")
+    void executeRejectsUnknownPackageWithoutApiCall() {
+        stubCreatedResources();
+
+        DeploymentPlan plan = DeploymentPlan.builder()
+                .cloudRouters(List.of(PlannedCloudRouter.builder()
+                        .metroId(DC).name("FCR-DC")
+                        .packageCode(GatewayPackageCode.UNKNOWN)
+                        .build()))
+                .providerConnections(List.of())
+                .backboneLinks(List.of())
+                .routingProtocols(List.of())
+                .valid(true)
+                .validationErrors(List.of())
+                .fabric(fabric)
+                .build();
+
+        DeploymentOutcome outcome = plan.execute();
+
+        assertFalse(outcome.isFullySuccessful());
+        assertEquals(1, outcome.getErrors().size());
+        ProvisioningError error = outcome.getErrors().get(0);
+        assertEquals("CloudRouter", error.getResourceType());
+        assertFalse(error.isRecoverable());
+        assertTrue(error.getReason().contains("package code"), error.getReason());
+        assertTrue(outcome.getResources().isEmpty(), "nothing must be provisioned");
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
     }
 
     // ── dryRun() ──
@@ -329,6 +378,10 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
      * heuristic rate card so no pricing HTTP is issued.
      */
     private DeploymentPlan twoMetroPlan() {
+        return twoMetroPlan("STANDARD");
+    }
+
+    private DeploymentPlan twoMetroPlan(String routerPackage) {
         MetroScore score = new MetroScore(90.0, java.util.Collections.emptyList());
 
         WorkloadSpec ml = WorkloadSpec.builder()
@@ -355,7 +408,7 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .build();
 
         return fabric.deploymentWizard(result)
-                .routerPackage("STANDARD")
+                .routerPackage(routerPackage)
                 .routerNamePrefix("FCR")
                 .providerConnectionType(ConnectionType.EVPL_VC)
                 .backboneConnectionType(ConnectionType.EVPL_VC)

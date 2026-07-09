@@ -177,6 +177,30 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
         return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 
+    /**
+     * POST search whose pagination travels as {@code offset}/{@code limit} <em>query
+     * parameters</em> (per the endpoint's spec) rather than inside the body — e.g. assets v1 and
+     * the EIA services/prices searches. Builds a {@code PaginatedRequest} (so the shared paging
+     * pipeline advances the query-parameter offset between pages, re-sending the same filter body)
+     * instead of a {@code PaginatedPostRequest} (whose paging advances state inside the body).
+     */
+    protected Page<J> searchPageQueryPaginated(String serviceEndpoint, Object filterBody) {
+        return searchPageQueryPaginated(serviceEndpoint, null, filterBody);
+    }
+
+    /**
+     * Variant of {@link #searchPageQueryPaginated(String, Object)} carrying additional query
+     * parameters (e.g. {@code q}/{@code exactMatch}/{@code sorts} on the assets search).
+     */
+    protected Page<J> searchPageQueryPaginated(String serviceEndpoint,
+                                               Map<String, java.util.List<String>> queryParams, Object filterBody) {
+        EquinixRequest<J> request = buildRequestWithQueryParams(serviceEndpoint, RequestType.PAGINATED, queryParams, jsonClass);
+        if (filterBody != null) {
+            SerializationHelper.serializeJson(request, filterBody);
+        }
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
+    }
+
     protected J getOne(String serviceEndpoint, String uuid) {
         EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
         return ResponseHandler.handleSingletonResponse(invoke(request), request);

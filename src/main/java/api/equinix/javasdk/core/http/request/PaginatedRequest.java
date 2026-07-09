@@ -35,24 +35,32 @@ public final class PaginatedRequest<T> extends EquinixRequest<T> {
     private int offset = 0;
     private int pageSize = Constants.PAGE_LIMIT;
 
-    public void nextPage() {
-        this.offset += this.pageSize;
-    }
-
     /**
-     * Rolls the offset back one page (floored at zero). Used by the paging pipeline to restore
-     * the pre-advance state when a page fetch fails, so a retried {@code next()} re-requests the
-     * same page instead of silently skipping one.
+     * Points the request's paging window at the page starting at {@code offset}, sized
+     * {@code limit}. The paging pipeline calls this with the <em>server-reported</em> pagination
+     * (next page: {@code serverOffset + serverLimit}; rollback after a failed fetch:
+     * {@code serverOffset}). Advancing from the server-reported window — rather than by the
+     * caller-requested page size — is what keeps paging correct when the server clamps the
+     * requested limit (e.g. Fabric caps {@code limit} at 100): a caller-side
+     * {@code offset += requestedPageSize} advance would skip every record between the clamped
+     * and the requested page size.
+     *
+     * @param offset the zero-based index of the first record of the requested page (floored at 0)
+     * @param limit the page size; non-positive values are ignored and the current page size kept
      */
-    public void previousPage() {
-        this.offset = Math.max(0, this.offset - this.pageSize);
+    public void seekPage(long offset, long limit) {
+        this.offset = Math.toIntExact(Math.max(0, offset));
+        if (limit > 0) {
+            this.pageSize = Math.toIntExact(limit);
+        }
     }
 
     /**
      * Seeds {@link #offset}/{@link #pageSize} from any caller-supplied {@code offset}/{@code limit}
-     * query parameters, so {@link #setPagination()} (invoked at dispatch) preserves the requested window
-     * and {@link #nextPage()} advances by the requested page size. Without this, {@code setPagination()}
-     * would overwrite caller-supplied {@code offset}/{@code limit} with the defaults (offset 0,
+     * query parameters, so {@link #setPagination()} (invoked at dispatch) preserves the requested
+     * window on the first page (subsequent pages are seeked from the server-reported pagination via
+     * {@link #seekPage(long, long)}). Without this, {@code setPagination()} would overwrite
+     * caller-supplied {@code offset}/{@code limit} with the defaults (offset 0,
      * limit {@code PAGE_LIMIT}).
      *
      * <p>The caller's offset is carried verbatim: paging is modelled as a raw offset, not a page

@@ -46,4 +46,15 @@ public class FilteredSortedPaginatedPost<F, S> implements PaginatedPostBody {
         this.filter = filter;
         this.sort = sort;
     }
+
+    @Override
+    public void seekPage(long offset, long limit) {
+        if (this.pagination == null) {
+            this.pagination = new Pagination(Constants.PAGE_OFFSET, Constants.PAGE_LIMIT);
+        }
+        this.pagination.setOffset(Math.toIntExact(offset));
+        if (limit > 0) {
+            this.pagination.setLimit(Math.toIntExact(limit));
+        }
+    }
 }

@@ -9,6 +9,7 @@ import api.equinix.javasdk.fabric.model.ConnectionStatistic;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDateTime;
+import java.util.TimeZone;
 
 import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -73,6 +74,30 @@ class FabricConnectionStatisticsWireMockTest extends WireMockTestBase {
                 .withQueryParam("viewPoint", equalTo("zSide"))
                 .withQueryParam("startDateTime", matching(".+"))
                 .withQueryParam("endDateTime", matching(".+")));
+    }
+
+    @Test
+    @DisplayName("getStatistics() sends LocalDateTime inputs verbatim as UTC (no JVM-zone shift)")
+    void sendsDateTimesVerbatimRegardlessOfJvmZone() {
+        // SDK-wide UTC policy regression: LocalDateTime inputs are UTC wall clock — the same
+        // convention as every timestamp the SDK deserializes — so the query must carry the
+        // input digits verbatim with a literal 'Z'. A briefly-shipped variant converted
+        // systemDefault -> UTC, shifting every time window by the host's UTC offset.
+        stubSingleton(wireMock, "/fabric/v4/connections/.*/stats",
+                "/json/fabric/connection_statistic_response.json");
+
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Etc/GMT-5")); // fixed non-UTC zone, no DST
+            fabric.connections().getStatistics(UUID, START, END, Side.Z_Side);
+        }
+        finally {
+            TimeZone.setDefault(original);
+        }
+
+        wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/connections/.*/stats"))
+                .withQueryParam("startDateTime", equalTo("2026-06-01T00:00:00Z"))
+                .withQueryParam("endDateTime", equalTo("2026-06-02T00:00:00Z")));
     }
 
     @Test

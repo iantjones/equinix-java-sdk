@@ -128,6 +128,64 @@ class CircuitBreakerTest {
     }
 
     @Test
+    @DisplayName("a straggler success completing while OPEN is ignored (no cooldown/probe bypass)")
+    void stragglerSuccessWhileOpenIsIgnored() {
+        CircuitBreaker breaker = new CircuitBreaker(2, LONG_COOLDOWN_MS);
+
+        breaker.acquire();
+        breaker.acquire(); // straggler admitted while still closed
+        breaker.recordFailure();
+        breaker.recordFailure();
+        assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
+
+        // The straggler's late 200/429 must not snap the circuit shut.
+        breaker.recordSuccess();
+
+        assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
+        assertThrows(CircuitOpenException.class, breaker::acquire);
+    }
+
+    @Test
+    @DisplayName("a straggler failure completing while OPEN does not extend the cooldown")
+    void stragglerFailureWhileOpenDoesNotExtendCooldown() throws InterruptedException {
+        long cooldown = 200;
+        CircuitBreaker breaker = new CircuitBreaker(1, cooldown);
+
+        breaker.acquire();
+        breaker.acquire(); // straggler admitted while still closed
+        breaker.recordFailure();
+        assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
+
+        Thread.sleep(150);
+        breaker.recordFailure(); // straggler reports late, mid-cooldown
+        Thread.sleep(100);
+
+        // 250ms since opening: the original cooldown elapsed, so a probe is admitted —
+        // the straggler failure must not have restarted the clock.
+        assertDoesNotThrow(breaker::acquire);
+        assertEquals(CircuitBreaker.State.HALF_OPEN, breaker.getState());
+    }
+
+    @Test
+    @DisplayName("after a straggler success is ignored, recovery still goes through the half-open probe")
+    void recoveryAfterIgnoredStragglerGoesThroughProbe() throws InterruptedException {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS);
+
+        breaker.acquire();
+        breaker.acquire(); // straggler
+        breaker.recordFailure();
+        breaker.recordSuccess(); // straggler outcome, ignored
+        assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
+
+        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+
+        assertDoesNotThrow(breaker::acquire); // the probe
+        assertEquals(CircuitBreaker.State.HALF_OPEN, breaker.getState());
+        breaker.recordSuccess(); // the probe's success closes the circuit
+        assertEquals(CircuitBreaker.State.CLOSED, breaker.getState());
+    }
+
+    @Test
     @DisplayName("constructor validates its arguments")
     void constructorValidation() {
         assertThrows(IllegalArgumentException.class, () -> new CircuitBreaker(0, 1000));

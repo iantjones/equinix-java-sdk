@@ -105,7 +105,7 @@ public class TerraformExporter {
             hcl.append(attr(1, "type", "XF_ROUTER"));
 
             hcl.append(INDENT).append("package {\n");
-            hcl.append(attr(2, "code", cr.getPackageCode()));
+            hcl.append(attr(2, "code", cr.getPackageCode() != null ? cr.getPackageCode().name() : null));
             hcl.append(INDENT).append("}\n");
 
             hcl.append(INDENT).append("location {\n");

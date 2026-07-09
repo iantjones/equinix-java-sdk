@@ -61,7 +61,8 @@ public class WorkVisitClientImpl extends ClientBase implements WorkVisitClient {
         }
         WorkVisitLocationsResponseJson response = getAs("ListWorkVisitLocations", null,
                 queryParams.isEmpty() ? null : queryParams, WorkVisitLocationsResponseJson.class);
-        return response.getLocations();
+        // An empty 2xx body (204, "{}") deserializes to null / a null "locations" member.
+        return response == null || response.getLocations() == null ? List.of() : response.getLocations();
     }
 
     private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {

@@ -21,8 +21,6 @@ import api.equinix.javasdk.core.model.APIParam;
 import api.equinix.javasdk.core.model.OptionalRequestBuilder;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +47,7 @@ public final class ParameterMapper {
     }
 
     public static void addAdditionalValue(Map<String, List<String>> queryParameters, String parameterName, APIParam parameterValue) {
-        addAdditionalValue(queryParameters, parameterName, parameterValue != null ? parameterValue.toString() : null);
+        addAdditionalValue(queryParameters, parameterName, parameterValue != null ? parameterValue.paramValue() : null);
     }
 
     /**
@@ -108,7 +106,7 @@ public final class ParameterMapper {
     }
 
     public static List<String> singleParamList(APIParam parameterValue) {
-        return singleParamList(parameterValue != null ? parameterValue.toString() : null);
+        return singleParamList(parameterValue != null ? parameterValue.paramValue() : null);
     }
 
     public static Map<String, List<String>> singleParamMap(String parameterName, String parameterValue) {
@@ -116,7 +114,7 @@ public final class ParameterMapper {
     }
 
     public static Map<String, List<String>> singleParamMap(String parameterName, APIParam parameterValue) {
-        return singleParamMap(parameterName, (parameterValue != null) ? parameterValue.toString() : null);
+        return singleParamMap(parameterName, (parameterValue != null) ? parameterValue.paramValue() : null);
     }
 
     public static Map<String, List<String>> singleParamMap(String parameterName, Boolean parameterValue) {
@@ -144,19 +142,18 @@ public final class ParameterMapper {
      * Formats a date-time for a query parameter in the API's UTC wire format
      * ({@code yyyy-MM-dd'T'HH:mm:ss'Z'}).
      *
-     * <p>The input is interpreted as wall-clock time in the JVM's default time zone and converted
-     * to UTC before formatting — so {@code LocalDateTime.now()} always denotes "now" regardless of
-     * where the JVM runs. (Previously the local wall-clock digits were stamped with a literal
-     * {@code 'Z'} without conversion, silently shifting every time-window query by the caller's
-     * UTC offset.)</p>
+     * <p><strong>UTC contract: {@code LocalDateTime} inputs are UTC wall clock.</strong> This
+     * matches every timestamp the SDK returns — the core deserializer parses
+     * {@code "...T12:00:00Z"} into a bare {@code LocalDateTime} of 12:00, so any API-sourced
+     * value (e.g. {@code changeLog.getCreatedDateTime()}) can be passed straight back here and
+     * round-trips unchanged. The digits are formatted <em>verbatim</em> with a literal
+     * {@code 'Z'}; no zone conversion is performed. For "now", use
+     * {@code LocalDateTime.now(ZoneOffset.UTC)} — never zone-local {@code LocalDateTime.now()}.</p>
      *
-     * @param localDateTime the date-time, interpreted in the system default zone
-     * @return the UTC-normalized wire representation
+     * @param localDateTime the date-time, as UTC wall clock
+     * @return the wire representation, the input digits with a literal {@code 'Z'} appended
      */
     public static String dateTimeForQuery(LocalDateTime localDateTime) {
-        LocalDateTime utc = localDateTime.atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(ZoneOffset.UTC)
-                .toLocalDateTime();
-        return Constants.queryParamFormatter.format(utc);
+        return Constants.queryParamFormatter.format(localDateTime);
     }
 }

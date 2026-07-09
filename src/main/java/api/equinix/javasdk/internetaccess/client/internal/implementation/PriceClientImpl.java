@@ -42,6 +42,9 @@ public class PriceClientImpl extends ResourceClientBase<Price, PriceJson> implem
     }
 
     public Page<PriceJson> search(PriceSearchRequest searchRequest) {
-        return searchPage("SearchPrices", searchRequest);
+        // internetaccessv1 paginates the prices search via offset/limit QUERY PARAMETERS (the
+        // FilterBody carries only the filter), so this builds a query-paginated request: the
+        // shared paging pipeline advances the query offset between pages, re-sending the same body.
+        return searchPageQueryPaginated("SearchPrices", searchRequest);
     }
 }

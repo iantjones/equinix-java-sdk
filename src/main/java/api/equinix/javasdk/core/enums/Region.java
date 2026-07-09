@@ -18,6 +18,7 @@ package api.equinix.javasdk.core.enums;
 
 import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
 
 /**
  * The three Equinix geographic regions. Serializes on the wire as the region code
@@ -34,7 +35,7 @@ public enum Region implements APIParam  {
     APAC("APAC", "Asia Pacific");
 
     private final String regionCode;
-    private final String regionDesc;
+    @Getter private final String regionDesc;
 
     Region(String regionCode, String regionDesc) {
         this.regionCode = regionCode;
@@ -44,9 +45,5 @@ public enum Region implements APIParam  {
     @JsonValue
     public String getRegionCode() {
         return regionCode;
-    }
-
-    public String getRegionDesc() {
-        return regionDesc;
     }
 }

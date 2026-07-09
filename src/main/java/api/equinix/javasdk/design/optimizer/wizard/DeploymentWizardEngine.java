@@ -515,7 +515,8 @@ final class DeploymentWizardEngine {
      */
     private static PriceQuote priceRouter(RateCard rateCard, PlannedCloudRouter router, Term term) {
         if (rateCard != null) {
-            Optional<PriceQuote> quote = rateCard.cloudRouter(router.getPackageCode(), toMetroCode(router.getMetroId()), term);
+            String packageCode = router.getPackageCode() != null ? router.getPackageCode().name() : null;
+            Optional<PriceQuote> quote = rateCard.cloudRouter(packageCode, toMetroCode(router.getMetroId()), term);
             if (quote.isPresent()) {
                 return quote.get();
             }

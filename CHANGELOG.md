@@ -51,6 +51,34 @@ every deferred redesign was executed:
 - `PublicKey.getKeyType()` (network-edgev1 `PublicKeyResponse.keyType`).
 
 ### Fixed
+- **`APIParam` has a real contract now** — the interface's old `String toString();` declaration
+  enforced nothing (every object has one); it now declares `paramValue()` (defaulting to
+  `toString()`), the parameter-building helpers call it, and a new architecture test
+  (`ApiParamContractTest`) scans every `APIParam` enum on the classpath asserting the query form
+  equals the `@JsonValue` body form. Its first run caught a live wire bug: NetworkEdge
+  `DeviceManagementType` sent `EQUINIX_CONFIGURED` (underscore) in query parameters but
+  `EQUINIX-CONFIGURED` (the spec's hyphenated form) in bodies — fixed to one wire form.
+- **POST-search pagination unified (one advance path, five call sites fixed)** —
+  `PaginatedList` and `PaginatedFilteredList` now share a single paging-advance dispatch:
+  a `PaginatedPostRequest` whose body implements the (now behavioral) `PaginatedPostBody`
+  contract (`seekPage(offset, limit)`) pages by re-pointing the body's own pagination shape;
+  a `PaginatedRequest` pages via `offset`/`limit` query parameters; anything else fails fast
+  with a clear unsupported-pagination error instead of a `ClassCastException` on page 2.
+  Concretely: CustomerPortal `assets().search(...)` and IBX SmartView
+  `systemAlerts().searchPost(...)` no longer explode on page 2; the basv2
+  `BillingAccountSearchRequest` (top-level body `offset`/`limit`) and SmartView `SearchRequest`
+  (body `pagination` member) now implement the contract per their specs; the EIA
+  `services().search(...)` and `prices().search(...)` searches — whose specs paginate via
+  query parameters, not the body — now page by advancing the query offset while re-sending
+  the same filter body (multi-page was previously impossible by design). All five call sites
+  are regression-locked with two-page wire tests.
+- **Server-clamped page limits no longer skip records** — the paging pipeline used to advance
+  the offset by the caller-requested page size; a server that clamps the limit (e.g. Fabric
+  caps `limit` at 100, so `limit=500` returns 100 rows) silently skipped every record in
+  between. Page 2 is now requested from the SERVER-reported pagination
+  (`next offset = server offset + server limit`, with the server-honored limit), on both the
+  query-parameter and POST-body paths; regression-locked on the wire (requested `limit=500`
+  clamped to 100 → page 2 asks for `offset=100`, not 500).
 - **Every paginated list honored `offset` only when it was a multiple of `limit`** — the core
   pagination seeding quantized caller offsets to page boundaries (e.g. `offset=5, limit=100` → 0),
   silently shifting the requested window on every PAGINATED endpoint in every domain (found via the

@@ -119,4 +119,39 @@ class CoreAuthWireMockTest extends WireMockTestBase {
                     .withHeader("authorization", equalTo("Bearer test-token-abc123")));
         }
     }
+
+    @Test
+    @DisplayName("re-authentication after expiry never signs the token request with the stale Bearer")
+    void reauthentication_tokenRequestCarriesNoAuthorizationHeader() throws Exception {
+        try (Fabric fresh = new Fabric(testCredentials())) {
+            redirectToWireMock(fresh);
+            // Isolate this test's request journal from the class-level shared-client tests.
+            wireMock.resetRequests();
+            wireMock.stubFor(get(urlPathMatching("/fabric/v4/metros"))
+                    .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
+
+            // First (lazy) authentication mints token #1, then the published token is forced
+            // to an already-expired one so the next call must RE-authenticate.
+            fresh.authenticate();
+            OAuthToken expired = new OAuthToken(
+                    "stale-token", "bearer", "1", Instant.now().minusSeconds(3600));
+            fresh.getEquinixClient().setOAuthToken(expired);
+            assertFalse(expired.validSession(), "the injected token is already expired");
+
+            try {
+                fresh.metros().list();
+            } catch (Exception ignored) {
+                // we only care how the re-auth token request was signed
+            }
+
+            // The re-auth actually happened: two token mints in total.
+            wireMock.verify(2, postRequestedFor(urlPathEqualTo("/oauth2/v1/token")));
+            // And NO token-mint request — in particular the second, issued while the expired
+            // "stale-token" was still published — carried an authorization header.
+            wireMock.verify(0, postRequestedFor(urlPathEqualTo("/oauth2/v1/token"))
+                    .withHeader("authorization", matching(".*")));
+            wireMock.verify(2, postRequestedFor(urlPathEqualTo("/oauth2/v1/token"))
+                    .withoutHeader("authorization"));
+        }
+    }
 }

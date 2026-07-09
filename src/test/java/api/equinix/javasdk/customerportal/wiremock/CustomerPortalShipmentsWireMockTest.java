@@ -296,6 +296,32 @@ class CustomerPortalShipmentsWireMockTest extends WireMockTestBase {
                     .withQueryParam("ibxs", equalTo("AM1,AM2"))
                     .withQueryParam("cages", equalTo("AM1:02:002MC1")));
         }
+
+        @Test
+        @DisplayName("200 with an empty JSON object returns an empty list")
+        void emptyJsonObjectReturnsEmptyList() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/shipment/locations"))
+                    .willReturn(okJson("{}")));
+
+            List<? extends ShipmentLocation> locations =
+                    assertDoesNotThrow(() -> customerPortal.shipments().listLocations());
+
+            assertNotNull(locations);
+            assertTrue(locations.isEmpty());
+        }
+
+        @Test
+        @DisplayName("204 with no body returns an empty list")
+        void noContentReturnsEmptyList() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/orders/shipment/locations"))
+                    .willReturn(aResponse().withStatus(204)));
+
+            List<? extends ShipmentLocation> locations =
+                    assertDoesNotThrow(() -> customerPortal.shipments().listLocations());
+
+            assertNotNull(locations);
+            assertTrue(locations.isEmpty());
+        }
     }
 
     @Nested

@@ -313,6 +313,52 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
+        @DisplayName("retries a PATCH on 429 despite the idempotency gate (server did not process it), honoring Retry-After")
+        void retriesPatch429ThenSucceeds() {
+            // Default-method gating (retryNonIdempotentMethods=false): PATCH is blocked for
+            // 5xx/IO retries, but a 429 means the server explicitly did NOT process the
+            // request, so the re-send is safe and must happen.
+            enableFastRetry(3);
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*")).inScenario("patch429")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(aResponse().withStatus(429)
+                            .withHeader("Content-Type", "application/json")
+                            .withHeader("Retry-After", "0")
+                            .withBody("[{\"errorCode\":\"ERR-429\",\"errorMessage\":\"Too Many Requests\"}]"))
+                    .willSetStateTo("throttleCleared"));
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*")).inScenario("patch429")
+                    .whenScenarioStateIs("throttleCleared")
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+            var connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+            var updated = connection.update().name("Renamed-Connection").save();
+
+            assertNotNull(updated);
+            // 1 throttled (429) + 1 successful re-send = 2 PATCHes.
+            wireMock.verify(2, patchRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
+        }
+
+        @Test
+        @DisplayName("still does not retry a PATCH on 503 by default (idempotency gate kept for 5xx)")
+        void doesNotRetryPatch503ByDefault() {
+            enableFastRetry(3);
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(aResponse().withStatus(503).withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]")));
+
+            var connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+
+            assertThrows(EquinixServerException.class,
+                    () -> connection.update().name("Renamed-Connection").save());
+            // Exactly one PATCH: a 503 may have been processed server-side, so it is not re-sent.
+            wireMock.verify(1, patchRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
+        }
+
+        @Test
         @DisplayName("retries a POST when retryNonIdempotentMethods is explicitly enabled")
         void retriesPostWhenNonIdempotentRetryEnabled() {
             // Opt-in: the 7-arg policy enables retrying non-idempotent methods.

@@ -17,10 +17,20 @@
 package api.equinix.javasdk.core.model;
 
 /**
- * Marker for types whose {@code toString()} is their wire form when used as a query/path
- * parameter (see {@code ModelUtils.process}/query-param building). Implementations must
- * return exactly the string the API expects — e.g. {@code Sortable} renders
- * {@code "-propertyName"} for descending sorts and enums render their wire code.
+ * Contract for types usable as a query/path parameter value — the type constraint on the SDK's
+ * parameter-building helpers ({@code ParameterMapper}/{@code ModelUtils}), so arbitrary objects
+ * cannot end up on a request URI.
+ *
+ * <p>{@link #paramValue()} is the single wire form for parameters. It defaults to
+ * {@code toString()} — for a plain enum that is {@code name()}, which is the wire code for most
+ * SDK enums; enums whose wire code differs from the constant name override {@code toString()}
+ * (or this method directly), and value types like {@code Sortable} render their own form
+ * (e.g. {@code "-propertyName"} for a descending sort).</p>
+ *
+ * <p><b>Invariant (enforced by {@code ApiParamContractTest}):</b> when an implementing enum also
+ * declares a Jackson {@code @JsonValue} accessor for request/response bodies,
+ * {@code paramValue()} must return the same string — one wire form per value, whether it travels
+ * in a body or a query parameter.</p>
  *
  * @author ianjones
  */
@@ -31,5 +41,7 @@ public interface APIParam {
      *
      * @return the wire representation of this parameter value
      */
-    String toString();
+    default String paramValue() {
+        return toString();
+    }
 }

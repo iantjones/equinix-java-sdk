@@ -72,11 +72,14 @@ public interface Metrics {
     /**
      * Retrieves metrics for a specific asset ({@code GET /fabric/v4/{asset}/{assetId}/metrics}).
      *
+     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
+     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
+     *
      * @param asset the asset type, one of {@code ports}, {@code connections}, or {@code metros}
      * @param assetId the asset uuid
      * @param name the metric name to retrieve (for example {@code equinix.fabric.port.bandwidth_rx.usage})
-     * @param fromDateTime the start of the metrics time range, or {@code null}
-     * @param toDateTime the end of the metrics time range, or {@code null}
+     * @param fromDateTime the start of the metrics time range as UTC wall clock, or {@code null}
+     * @param toDateTime the end of the metrics time range as UTC wall clock, or {@code null}
      * @return the list of matching metrics for the asset
      */
     List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);

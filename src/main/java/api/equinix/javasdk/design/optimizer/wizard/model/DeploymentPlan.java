@@ -256,8 +256,8 @@ public class DeploymentPlan {
                 if (cr.getMetroId() == null) {
                     errors.add("Cloud Router '" + cr.getName() + "': missing metro");
                 }
-                if (cr.getPackageCode() == null || cr.getPackageCode().isBlank()) {
-                    errors.add("Cloud Router '" + cr.getName() + "': missing package code");
+                if (cr.getPackageCode() == null || cr.getPackageCode() == GatewayPackageCode.UNKNOWN) {
+                    errors.add("Cloud Router '" + cr.getName() + "': missing or unknown package code");
                 }
             }
         }
@@ -310,11 +310,26 @@ public class DeploymentPlan {
         // Phase 1: Create Cloud Routers
         if (cloudRouters != null) {
             for (PlannedCloudRouter planned : cloudRouters) {
+                // The package code was resolved and validated at plan time by
+                // DeploymentWizard.Builder#routerPackage. Plans built by hand can still carry a
+                // null/UNKNOWN placeholder, which must never be sent to the API — record the error
+                // without issuing the create rather than failing mid-deployment.
+                GatewayPackageCode packageCode = planned.getPackageCode();
+                if (packageCode == null || packageCode == GatewayPackageCode.UNKNOWN) {
+                    errors.add(ProvisioningError.builder()
+                            .resourceType("CloudRouter")
+                            .resourceName(planned.getName())
+                            .reason("missing or unknown package code (" + packageCode
+                                    + ") — nothing was sent to the API")
+                            .recoverable(false)
+                            .build());
+                    continue;
+                }
                 try {
                     CloudRouter cr = fabric.cloudRouters().define()
                             .name(planned.getName())
                             .inMetro(planned.getMetroId().code())
-                            .withPackage(GatewayPackageCode.valueOf(planned.getPackageCode()))
+                            .withPackage(packageCode)
                             .accountNumber(planned.getAccountNumber())
                             .projectId(planned.getProjectId())
                             .create();

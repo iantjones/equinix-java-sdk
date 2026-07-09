@@ -106,9 +106,12 @@ public interface Connections {
     /**
      * Retrieves bandwidth statistics for a connection over the specified time range, viewed from a specific side.
      *
+     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
+     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
+     *
      * @param uuid the unique identifier of the connection
-     * @param startDateTime the start of the statistics time range
-     * @param endDateTime the end of the statistics time range
+     * @param startDateTime the start of the statistics time range, as UTC wall clock
+     * @param endDateTime the end of the statistics time range, as UTC wall clock
      * @param viewPoint the side (A-side or Z-side) from which to view the statistics
      * @return the connection statistics for the specified time range and viewpoint
      * @deprecated the {@code /stats} endpoint is deprecated by Equinix; use
@@ -121,9 +124,12 @@ public interface Connections {
     /**
      * Retrieves bandwidth statistics for a connection over the specified time range.
      *
+     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
+     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
+     *
      * @param uuid the unique identifier of the connection
-     * @param startDateTime the start of the statistics time range
-     * @param endDateTime the end of the statistics time range
+     * @param startDateTime the start of the statistics time range, as UTC wall clock
+     * @param endDateTime the end of the statistics time range, as UTC wall clock
      * @return the connection statistics for the specified time range
      * @deprecated the {@code /stats} endpoint is deprecated by Equinix; use
      *             {@link #getMetrics(String, String, LocalDateTime, LocalDateTime)} or
@@ -136,10 +142,13 @@ public interface Connections {
      * Retrieves metrics for a single connection over the specified time range. This is the
      * non-deprecated replacement for {@link #getStatistics(String, LocalDateTime, LocalDateTime)}.
      *
+     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
+     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
+     *
      * @param uuid the unique identifier of the connection
      * @param name the metric name to retrieve (for example {@code equinix.fabric.connection.bandwidth_tx.usage}), or {@code null} for all metrics
-     * @param fromDateTime the start of the metrics time range
-     * @param toDateTime the end of the metrics time range
+     * @param fromDateTime the start of the metrics time range, as UTC wall clock
+     * @param toDateTime the end of the metrics time range, as UTC wall clock
      * @return the list of metrics for the connection over the specified time range
      */
     List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);

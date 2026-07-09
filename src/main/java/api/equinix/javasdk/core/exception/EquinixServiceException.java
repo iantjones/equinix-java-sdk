@@ -21,6 +21,8 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Thrown when the Equinix API returns an error HTTP response.
@@ -102,7 +104,10 @@ public class EquinixServiceException extends BaseException {
     /**
      * Full constructor used by {@link api.equinix.javasdk.core.http.ResponseErrorMapper ResponseErrorMapper} when mapping an HTTP error response
      * into a typed exception. All API-error metadata is supplied at construction time and stored
-     * as immutable copies, so the exception's state cannot change after construction.
+     * as immutable copies, so the exception's state cannot change after construction. Null entries
+     * are dropped while copying: a gateway can return a details array containing JSON {@code null}
+     * elements (e.g. a {@code [null]} body) and header maps can carry {@code null} values — neither
+     * may abort exception construction with a {@code NullPointerException}.
      *
      * @param errorMessage     a human-readable summary message.
      * @param statusCode       the HTTP status code returned by the API.
@@ -117,9 +122,33 @@ public class EquinixServiceException extends BaseException {
         super(errorMessage);
         this.statusCode = statusCode;
         this.path = path;
-        this.httpHeaders = (httpHeaders != null) ? Map.copyOf(httpHeaders) : null;
-        this.exceptionDetails = (exceptionDetails != null) ? List.copyOf(exceptionDetails) : List.of();
+        this.httpHeaders = copyOfHeaders(httpHeaders);
+        this.exceptionDetails = copyOfDetails(exceptionDetails);
         this.correlationId = correlationId;
+    }
+
+    /**
+     * Immutable copy of the headers with null keys/values dropped ({@code Map.copyOf} would throw
+     * a {@code NullPointerException} on them).
+     */
+    private static Map<String, String> copyOfHeaders(Map<String, String> httpHeaders) {
+        if (httpHeaders == null) {
+            return null;
+        }
+        return httpHeaders.entrySet().stream()
+                .filter(entry -> entry.getKey() != null && entry.getValue() != null)
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    /**
+     * Immutable copy of the details with null elements dropped ({@code List.copyOf} would throw a
+     * {@code NullPointerException} on a parsed {@code [null]} body).
+     */
+    private static List<ExceptionDetail> copyOfDetails(List<ExceptionDetail> exceptionDetails) {
+        if (exceptionDetails == null) {
+            return List.of();
+        }
+        return exceptionDetails.stream().filter(Objects::nonNull).toList();
     }
 
     @Override

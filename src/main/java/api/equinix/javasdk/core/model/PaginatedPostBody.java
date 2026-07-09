@@ -16,23 +16,36 @@
 
 package api.equinix.javasdk.core.model;
 
-import api.equinix.javasdk.core.http.request.Pagination;
-
 /**
  * A POST-search request body that carries client-side pagination state, so the shared paging
- * pipeline ({@code PaginatedFilteredList.next()}/{@code loadAll()}) can advance the body's
- * {@code offset} between page fetches without knowing the body's concrete type.
+ * pipeline ({@code PaginatedList}/{@code PaginatedFilteredList} {@code next()}/{@code loadAll()})
+ * can re-point the body at the next page between fetches without knowing the body's concrete type
+ * or how it represents pagination.
  *
- * <p>Implemented by the core body shapes ({@link FilteredSortedPaginatedPost},
- * {@link FilteredPaginatedPost}); domain-specific search bodies must implement it too if their
- * results are exposed through a pageable {@code PaginatedFilteredList}.</p>
+ * <p>The contract is deliberately <em>behavioral</em> rather than representational: bodies with
+ * heterogeneous pagination models — the core {@code Pagination {offset, limit}} object
+ * ({@link FilteredSortedPaginatedPost}, {@link FilteredPaginatedPost}), IBX SmartView's
+ * {@code SearchPagination {offset, limit}}, or flat top-level {@code offset}/{@code limit} members
+ * (billing accounts search) — all implement it by mapping the requested window onto their own
+ * serialized shape.</p>
+ *
+ * <p>The paging pipeline always seeks from the <em>server-reported</em> pagination of the page it
+ * holds: the next page starts at {@code serverOffset + serverLimit} with the server's (possibly
+ * clamped) limit, and a failed fetch seeks back to {@code serverOffset} so a retried {@code next()}
+ * re-requests the same page. Domain search bodies must implement this interface if their results
+ * are exposed through a pageable list; a body that does not implement it fails paging fast with a
+ * clear {@code EquinixClientException} instead of a {@code ClassCastException}.</p>
  */
 public interface PaginatedPostBody {
 
     /**
-     * The mutable pagination state serialized into the search body and advanced between pages.
+     * Points this body's serialized pagination state at the page window starting at
+     * {@code offset}, sized {@code limit}. Called by the paging pipeline both to advance to the
+     * next page and to roll back to the current page after a failed fetch.
      *
-     * @return the body's pagination state; never {@code null} for a pageable body
+     * @param offset the zero-based index of the first record of the requested page
+     * @param limit the page size; implementations should ignore non-positive values
+     *              (keeping their current/default limit) rather than sending an invalid one
      */
-    Pagination getPagination();
+    void seekPage(long offset, long limit);
 }

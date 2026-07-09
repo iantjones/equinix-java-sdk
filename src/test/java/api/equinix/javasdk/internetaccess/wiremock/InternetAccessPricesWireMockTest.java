@@ -14,11 +14,16 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static api.equinix.javasdk.core.ResponseStubs.stubPaginatedPost;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed coverage for the Equinix Internet Access (EIA) v1 price <em>search</em> surface:
@@ -122,6 +127,63 @@ class InternetAccessPricesWireMockTest extends WireMockTestBase {
                     .withRequestBody(equalToJson(
                             "{ \"filter\": { \"and\": ["
                                     + "{ \"property\": \"/service/bandwidth\", \"operator\": \"=\", \"values\": [\"100\", \"1000\"] }"
+                                    + "] } }")));
+        }
+    }
+
+    @Nested
+    class Paging {
+
+        // internetaccessv1 paginates the prices search via offset/limit QUERY PARAMETERS (the
+        // FilterBody carries only the filter), so page 2 must be requested by advancing the query
+        // offset from the SERVER-reported pagination while re-sending the same filter body.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "code": "PAGE1_PRICE", "currency": "USD" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "code": "PAGE2_PRICE", "currency": "USD" } ]
+                }
+                """;
+
+        @Test
+        void loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            // Regression: the prices search body carries no pagination (per spec), so multi-page
+            // was previously impossible by design — page 2 threw from the paging pipeline.
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PriceSearchRequest request = new PriceSearchRequest()
+                    .equals("/account/accountNumber", "2-57689234");
+
+            PaginatedFilteredList<Price> prices = internetAccess.prices().search(request);
+            assertEquals(1, prices.size());
+            assertTrue(prices.hasNextPage());
+
+            prices.loadAll();
+
+            assertEquals(2, prices.size());
+            assertEquals("PAGE1_PRICE", prices.get(0).getCode());
+            assertEquals("PAGE2_PRICE", prices.get(1).getCode());
+            assertFalse(prices.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried,
+            // and the SAME filter body re-sent.
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withRequestBody(equalToJson(
+                            "{ \"filter\": { \"and\": ["
+                                    + "{ \"property\": \"/account/accountNumber\", \"operator\": \"=\", \"values\": [\"2-57689234\"] }"
                                     + "] } }")));
         }
     }
