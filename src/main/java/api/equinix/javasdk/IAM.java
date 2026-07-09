@@ -20,7 +20,7 @@ import api.equinix.javasdk.core.auth.EquinixCredentials;
 import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
 import api.equinix.javasdk.core.auth.EquinixStaticCredentialsProvider;
 import api.equinix.javasdk.iam.client.IAMAccessPolicies;
-import api.equinix.javasdk.iam.client.IAMConfig;
+import api.equinix.javasdk.iam.client.implementation.IAMConfigImpl;
 import api.equinix.javasdk.iam.client.IAMEffectivePermissions;
 import api.equinix.javasdk.iam.client.IAMPermissionSets;
 import api.equinix.javasdk.iam.client.IAMPolicyMasks;
@@ -103,7 +103,7 @@ public final class IAM extends EquinixClient {
 
     private IAMResourceTypes resourceTypes;
 
-    final private IAMConfig iamConfig;
+    final private IAMConfigImpl iamConfig;
 
     /**
      * Creates a new IAM client using the provided credentials.

@@ -18,7 +18,6 @@ package api.equinix.javasdk.internetaccess.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.internetaccess.client.InternetAccessConfig;
 import api.equinix.javasdk.internetaccess.client.internal.implementation.AccountClientImpl;
 import api.equinix.javasdk.internetaccess.client.internal.implementation.CabinetClientImpl;
 import api.equinix.javasdk.internetaccess.client.internal.implementation.CageClientImpl;
@@ -43,7 +42,7 @@ import api.equinix.javasdk.internetaccess.client.internal.implementation.Virtual
 import lombok.Getter;
 
 @Getter
-public class InternetAccessConfigImpl extends Config implements InternetAccessConfig {
+public class InternetAccessConfigImpl extends Config {
 
     private final InternetAccessServiceClientImpl internetAccessServiceClient;
 

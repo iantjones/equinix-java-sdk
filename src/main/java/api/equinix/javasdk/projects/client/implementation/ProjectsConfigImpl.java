@@ -18,12 +18,11 @@ package api.equinix.javasdk.projects.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.projects.client.ProjectsConfig;
 import api.equinix.javasdk.projects.client.internal.implementation.ProjectClientImpl;
 import lombok.Getter;
 
 @Getter
-public class ProjectsConfigImpl extends Config implements ProjectsConfig {
+public class ProjectsConfigImpl extends Config {
 
     private final ProjectClientImpl projectClient;
 

@@ -18,7 +18,6 @@ package api.equinix.javasdk.networkedge.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.networkedge.client.NetworkEdgeConfig;
 import api.equinix.javasdk.networkedge.client.internal.ACLTemplateClient;
 import api.equinix.javasdk.networkedge.client.internal.BGPPeeringClient;
 import api.equinix.javasdk.networkedge.client.internal.VPNClient;
@@ -33,7 +32,7 @@ import lombok.Getter;
  * @author ianjones
  */
 @Getter
-public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
+public class NetworkEdgeConfigImpl extends Config {
 
     private final MetroClientImpl metrosClient;
 
@@ -81,17 +80,14 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
         this.notificationClient = new NotificationClientImpl(this);
     }
 
-    @Override
     public ACLTemplateClient<ACLTemplate> getACLTemplateClient() {
         return aclTemplateClient;
     }
 
-    @Override
     public VPNClient<VPN> getVPNClient() {
         return vpnClient;
     }
 
-    @Override
     public BGPPeeringClient<BGPPeering> getBGPClient() {
         return bgpClient;
     }

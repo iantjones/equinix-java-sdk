@@ -18,14 +18,13 @@ package api.equinix.javasdk.sts.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.sts.client.STSConfig;
 import api.equinix.javasdk.sts.client.internal.implementation.DiscoveryClientImpl;
 import api.equinix.javasdk.sts.client.internal.implementation.OidcProviderClientImpl;
 import api.equinix.javasdk.sts.client.internal.implementation.TokenClientImpl;
 import lombok.Getter;
 
 @Getter
-public class STSConfigImpl extends Config implements STSConfig {
+public class STSConfigImpl extends Config {
 
     private final TokenClientImpl tokenClient;
 

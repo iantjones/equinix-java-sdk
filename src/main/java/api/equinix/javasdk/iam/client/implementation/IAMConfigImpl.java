@@ -18,7 +18,6 @@ package api.equinix.javasdk.iam.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.iam.client.IAMConfig;
 import api.equinix.javasdk.iam.client.internal.implementation.AccessPolicyClientImpl;
 import api.equinix.javasdk.iam.client.internal.implementation.EffectivePermissionClientImpl;
 import api.equinix.javasdk.iam.client.internal.implementation.PermissionSetClientImpl;
@@ -30,7 +29,7 @@ import api.equinix.javasdk.iam.client.internal.implementation.RoleClientImpl;
 import lombok.Getter;
 
 @Getter
-public class IAMConfigImpl extends Config implements IAMConfig {
+public class IAMConfigImpl extends Config {
 
     private final RoleClientImpl roleClient;
 

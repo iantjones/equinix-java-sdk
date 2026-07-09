@@ -21,7 +21,7 @@
  * configuration (direct, static or BGP) are all supplied as a single nested request body
  * assembled through the service builder.
  *
- * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfig
+ * @see api.equinix.javasdk.internetaccess.client.InternetAccessConfigImpl
  * @see api.equinix.javasdk.InternetAccess
  */
 package api.equinix.javasdk.internetaccess.client;

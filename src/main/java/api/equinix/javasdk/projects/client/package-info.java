@@ -21,7 +21,7 @@
  * containers that group related Equinix infrastructure resources across domains for
  * unified management and billing.
  *
- * @see api.equinix.javasdk.projects.client.ProjectsConfig
+ * @see api.equinix.javasdk.projects.client.ProjectsConfigImpl
  * @see api.equinix.javasdk.Projects
  */
 package api.equinix.javasdk.projects.client;

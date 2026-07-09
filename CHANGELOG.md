@@ -109,6 +109,11 @@ every deferred redesign was executed:
   `define`-or-`create` / `update` / `delete`; javadoc keeps citing the specs' operationIds.
 
 ### Removed
+- **The nine single-implementation `*Config` interfaces** (`CoreConfig`, `FabricConfig`,
+  `NetworkEdgeConfig`, …) — each had exactly one implementation and one consumer (its own facade),
+  no test doubles, no polymorphism; the facades now reference the `*ConfigImpl` wiring classes
+  directly. The `Config` superclass stays: it is the polymorphic seam through which every internal
+  client (`ClientBase`) reaches the shared transport.
 - **CustomerPortal Resellers** — no specification exists anywhere in the API catalog (all 37 slugs
   checked); the resource was unverifiable fiction.
 - **Fabric bulk connection create (`createBatch`) and the top-N port-statistics listing** — neither

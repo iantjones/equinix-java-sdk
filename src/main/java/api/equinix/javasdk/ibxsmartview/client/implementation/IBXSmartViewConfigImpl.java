@@ -18,7 +18,6 @@ package api.equinix.javasdk.ibxsmartview.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.ibxsmartview.client.IBXSmartViewConfig;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.EnvironmentalClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.HierarchyClientImpl;
 import api.equinix.javasdk.ibxsmartview.client.internal.implementation.LegacyEnvironmentalClientImpl;
@@ -30,7 +29,7 @@ import api.equinix.javasdk.ibxsmartview.client.internal.implementation.SystemAle
 import lombok.Getter;
 
 @Getter
-public class IBXSmartViewConfigImpl extends Config implements IBXSmartViewConfig {
+public class IBXSmartViewConfigImpl extends Config {
 
     private final EnvironmentalClientImpl environmentalClient;
     private final PowerEventClientImpl powerEventClient;

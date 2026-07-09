@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.core.client;
 
-import api.equinix.javasdk.core.client.interfaces.CoreConfig;
 import lombok.Getter;
 
 /**
@@ -24,7 +23,7 @@ import lombok.Getter;
  * @author ianjones
  */
 @Getter
-public class CoreConfigImpl extends Config implements CoreConfig {
+public class CoreConfigImpl extends Config {
 
     private final CoreClientImpl coreClient;
 

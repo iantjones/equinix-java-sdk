@@ -18,7 +18,6 @@ package api.equinix.javasdk.fabric.client.implementation;
 
 import api.equinix.javasdk.core.client.Config;
 import api.equinix.javasdk.core.client.EquinixClient;
-import api.equinix.javasdk.fabric.client.FabricConfig;
 import api.equinix.javasdk.fabric.client.internal.implementation.*;
 import lombok.Getter;
 
@@ -27,7 +26,7 @@ import lombok.Getter;
  * @author ianjones
  */
 @Getter
-public class FabricConfigImpl extends Config implements FabricConfig {
+public class FabricConfigImpl extends Config {
 
     private final MetroClientImpl metrosClient;
 

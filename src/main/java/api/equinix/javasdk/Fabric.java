@@ -156,7 +156,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
 
     private McpBridge mcpBridge;
 
-    final private FabricConfig fabricConfig;
+    final private FabricConfigImpl fabricConfig;
 
     /**
      * Creates a new Fabric client using the provided credentials.
