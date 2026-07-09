@@ -28,14 +28,12 @@ import api.equinix.javasdk.fabric.model.json.creators.AgentOperator;
 import api.equinix.javasdk.fabric.model.wrappers.AgentWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class AgentsImpl implements Agents {
 
     private final AgentClient<Agent> serviceClient;
-
-    public AgentsImpl(AgentClient<Agent> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<Agent> list() {
         Page<AgentJson> responsePage = this.serviceClient.list();

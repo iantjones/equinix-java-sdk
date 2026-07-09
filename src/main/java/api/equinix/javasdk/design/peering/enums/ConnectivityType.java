@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.design.peering.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -31,7 +30,6 @@ import lombok.Getter;
  * @see api.equinix.javasdk.design.peering.model.UnifiedConnectivityView
  */
 @Getter
-@AllArgsConstructor
 public enum ConnectivityType {
 
     IX_PEERING("IX Peering", "Reachable via Equinix Internet Exchange peering"),
@@ -46,6 +44,19 @@ public enum ConnectivityType {
 
     private final String displayName;
     private final String description;
+
+    /**
+     * Constructs a connectivity type. Argument order is pinned here — the two
+     * parameters are both {@code String}, so never regenerate this constructor
+     * from field order.
+     *
+     * @param displayName the human-readable name
+     * @param description the explanation of what this connectivity type means
+     */
+    ConnectivityType(String displayName, String description) {
+        this.displayName = displayName;
+        this.description = description;
+    }
 
     /**
      * Combines IX peering and Fabric availability into a unified connectivity type.

@@ -33,14 +33,12 @@ import api.equinix.javasdk.fabric.model.json.creators.CompanyProfileOperator;
 import api.equinix.javasdk.fabric.model.wrappers.CompanyProfileWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class CompanyProfilesImpl implements CompanyProfiles {
 
     private final CompanyProfileClient<CompanyProfile> serviceClient;
-
-    public CompanyProfilesImpl(CompanyProfileClient<CompanyProfile> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<CompanyProfile> search() {
         return search(Filter.filter().empty());

@@ -18,6 +18,7 @@ package api.equinix.javasdk.internetaccess.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,8 +39,10 @@ import java.util.List;
  * }</pre>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class ServiceSearchRequest {
 
+    /** The filter. */
     @JsonProperty("filter")
     private final Filter filter = new Filter();
 
@@ -67,68 +70,34 @@ public class ServiceSearchRequest {
         return this;
     }
 
-    /**
-     *
-     * @return the filter
-     */
-    public Filter getFilter() {
-        return filter;
-    }
-
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter
     public static class Filter {
 
+        /** The list of AND expressions. */
         @JsonProperty("and")
         private final List<Expression> and = new ArrayList<>();
-
-        /**
-         *
-         * @return the list of AND expressions
-         */
-        public List<Expression> getAnd() {
-            return and;
-        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter
     public static class Expression {
 
+        /** The property pointer. */
         @JsonProperty("property")
         private final String property;
 
+        /** The operator (always {@code =}). */
         @JsonProperty("operator")
         private final String operator = "=";
 
+        /** The values to match. */
         @JsonProperty("values")
         private final List<String> values;
 
         Expression(String property, List<String> values) {
             this.property = property;
             this.values = values;
-        }
-
-        /**
-         *
-         * @return the property pointer
-         */
-        public String getProperty() {
-            return property;
-        }
-
-        /**
-         *
-         * @return the operator (always {@code =})
-         */
-        public String getOperator() {
-            return operator;
-        }
-
-        /**
-         *
-         * @return the values to match
-         */
-        public List<String> getValues() {
-            return values;
         }
     }
 }

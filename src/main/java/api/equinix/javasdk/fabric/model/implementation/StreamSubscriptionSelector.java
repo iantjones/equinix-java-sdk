@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,10 +25,13 @@ import java.util.List;
 /**
  * Event or metric selector for a stream subscription, expressed as include/except
  * expression lists (e.g. {@code equinix.fabric.connection.*}).
+ *
+ * <p>Prefer the {@code include(...)}/{@code except(...)} static factories — the two
+ * constructor parameters are identically-typed {@code List<String>}s with opposite
+ * semantics, so a positional swap silently inverts the subscription filter.</p>
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class StreamSubscriptionSelector {
 
     @JsonProperty("include")
@@ -37,4 +39,37 @@ public class StreamSubscriptionSelector {
 
     @JsonProperty("except")
     private List<String> except;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (two identically-typed {@code List<String>}
+     * parameters with opposite semantics) rather than by field declaration order.
+     *
+     * @param include the expressions to include, or {@code null}
+     * @param except  the expressions to exclude, or {@code null}
+     */
+    public StreamSubscriptionSelector(List<String> include, List<String> except) {
+        this.include = include;
+        this.except = except;
+    }
+
+    /**
+     * Creates a selector that includes only the given expressions.
+     *
+     * @param expressions the expressions to include
+     * @return the selector
+     */
+    public static StreamSubscriptionSelector include(List<String> expressions) {
+        return new StreamSubscriptionSelector(expressions, null);
+    }
+
+    /**
+     * Creates a selector that includes everything except the given expressions.
+     *
+     * @param expressions the expressions to exclude
+     * @return the selector
+     */
+    public static StreamSubscriptionSelector except(List<String> expressions) {
+        return new StreamSubscriptionSelector(null, expressions);
+    }
 }

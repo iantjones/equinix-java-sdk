@@ -3,6 +3,9 @@ package api.equinix.javasdk.mcp.bridge;
 import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolResult;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +19,10 @@ import java.util.Map;
  *
  * @author ianjones
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class McpMetroBridge {
 
     private final Mcp client;
-
-    McpMetroBridge(Mcp client) {
-        this.client = client;
-    }
 
     /**
      * Retrieves details for a specific metro by its code.
@@ -77,6 +77,7 @@ public class McpMetroBridge {
     /**
      * Typed representation of an Equinix metro from the MCP server.
      */
+    @Getter
     public static class McpMetro {
         private final String code;
         private final String name;
@@ -89,6 +90,18 @@ public class McpMetroBridge {
             this(null, null, null, null, 0, null);
         }
 
+        /**
+         * Constructs a metro snapshot. Argument order is pinned here — four
+         * consecutive {@code String} parameters make positional calls
+         * swap-prone; do not regenerate this constructor from field order.
+         *
+         * @param code                the metro code (e.g. {@code "SV"})
+         * @param name                the metro display name
+         * @param region              the region
+         * @param country             the country
+         * @param connectedMetroCount the number of connected metros
+         * @param rawJson             the raw MCP JSON payload
+         */
         McpMetro(String code, String name, String region, String country,
                  int connectedMetroCount, JsonNode rawJson) {
             this.code = code;
@@ -98,13 +111,6 @@ public class McpMetroBridge {
             this.connectedMetroCount = connectedMetroCount;
             this.rawJson = rawJson;
         }
-
-        public String getCode() { return code; }
-        public String getName() { return name; }
-        public String getRegion() { return region; }
-        public String getCountry() { return country; }
-        public int getConnectedMetroCount() { return connectedMetroCount; }
-        public JsonNode getRawJson() { return rawJson; }
 
         @Override
         public String toString() {

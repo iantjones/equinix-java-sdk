@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import java.util.regex.Pattern;
 
 /**
@@ -23,6 +26,7 @@ import java.util.regex.Pattern;
  * {@code Location} response header (e.g. {@code /orders/1-23232322}). The order id format
  * ({@code 1-23232322}) is not a UUID, so {@code Constants.UUID_PATTERN} cannot be used.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class OrderLocation {
 
     static final Pattern ORDER_ID_PATTERN = Pattern.compile(".*/orders/([^/\\s?]+)");
@@ -32,6 +36,4 @@ final class OrderLocation {
      * for resources whose create/action responses return {@code Location: .../{id}}.
      */
     static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile(".*/([^/\\s?]+)");
-
-    private OrderLocation() {}
 }

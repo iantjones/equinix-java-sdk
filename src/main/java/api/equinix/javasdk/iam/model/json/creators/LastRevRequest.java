@@ -18,6 +18,7 @@ package api.equinix.javasdk.iam.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
  * Request body carrying only a revision marker (spec schema {@code LastRevBody}), used by the IAM
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * <p>The {@code lastRev} field supports optimistic concurrency control.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class LastRevRequest {
 
     @JsonProperty("lastRev")
@@ -55,9 +57,5 @@ public class LastRevRequest {
     public LastRevRequest lastRev(String lastRev) {
         this.lastRev = lastRev;
         return this;
-    }
-
-    public String getLastRev() {
-        return lastRev;
     }
 }

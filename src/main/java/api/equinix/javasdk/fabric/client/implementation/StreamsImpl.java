@@ -25,14 +25,12 @@ import api.equinix.javasdk.fabric.model.Stream;
 import api.equinix.javasdk.fabric.model.json.StreamJson;
 import api.equinix.javasdk.fabric.model.json.creators.StreamOperator;
 import api.equinix.javasdk.fabric.model.wrappers.StreamWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class StreamsImpl implements Streams {
 
     private final StreamClient<Stream> serviceClient;
-
-    public StreamsImpl(StreamClient<Stream> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<Stream> list() {
         Page<StreamJson> responsePage = this.serviceClient.list();

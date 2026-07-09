@@ -25,6 +25,8 @@ import api.equinix.javasdk.core.http.response.PageablePost;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.core.internal.Constants;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -46,12 +48,10 @@ import java.util.stream.Collectors;
  *
  * @author ianjones
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ResponseHandler {
 
     private static final String RESPONSE_BODY_READ_EXCEPTION = "Error reading response body content.";
-
-    private ResponseHandler() {
-    }
 
     /**
      * Deserializes a response body using the request's derived {@link com.fasterxml.jackson.databind.JavaType}

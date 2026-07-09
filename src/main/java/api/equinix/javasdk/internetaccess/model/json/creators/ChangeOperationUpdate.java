@@ -18,6 +18,7 @@ package api.equinix.javasdk.internetaccess.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
  * A single change operation in the {@code ChangeRequest} body of an Equinix Internet Access
@@ -34,17 +35,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * for the {@code /bandwidth} path.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public final class ChangeOperationUpdate {
 
+    /** The operation name. */
     @JsonProperty("op")
     private final String op;
 
+    /** The path to the updated parameter. */
     @JsonProperty("path")
     private final String path;
 
+    /** The new value, or {@code null} for {@code remove}. */
     @JsonProperty("value")
     private final String value;
 
+    /** The associated service order, or {@code null}. */
     @JsonProperty("order")
     private final ServiceOrderRequest order;
 
@@ -94,35 +100,4 @@ public final class ChangeOperationUpdate {
         return new ChangeOperationUpdate("remove", path, null, null);
     }
 
-    /**
-     *
-     * @return the operation name
-     */
-    public String getOp() {
-        return op;
-    }
-
-    /**
-     *
-     * @return the path to the updated parameter
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     *
-     * @return the new value, or {@code null} for {@code remove}
-     */
-    public String getValue() {
-        return value;
-    }
-
-    /**
-     *
-     * @return the associated service order, or {@code null}
-     */
-    public ServiceOrderRequest getOrder() {
-        return order;
-    }
 }

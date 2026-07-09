@@ -27,23 +27,18 @@ import api.equinix.javasdk.networkedge.model.VPN;
 import api.equinix.javasdk.networkedge.model.json.VPNJson;
 import api.equinix.javasdk.networkedge.model.json.creators.VPNOperator;
 import api.equinix.javasdk.networkedge.model.wrappers.VPNWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class VPNsImpl implements VPNs {
-
-    private final NetworkEdge serviceManager;
 
     private final VPNClient<VPN> serviceClient;
 
-    public VPNsImpl(VPNClient<VPN> serviceClient, NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public PaginatedList<VPN> list() {
         return list(null);

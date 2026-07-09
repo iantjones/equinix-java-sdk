@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Represents an MCP tool definition returned by the {@code tools/list} method.
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
  * @author ianjones
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class McpToolDefinition {
 

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Request body for updating an IAM permission set via {@code PUT
@@ -35,6 +36,7 @@ import java.util.Map;
  * supports optimistic concurrency control.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class UpdatePermissionSetRequest {
 
     @JsonProperty("tags")
@@ -133,33 +135,5 @@ public class UpdatePermissionSetRequest {
     public UpdatePermissionSetRequest lastRev(String lastRev) {
         this.lastRev = lastRev;
         return this;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public List<PolicyExpression> getPermissions() {
-        return permissions;
-    }
-
-    public List<PolicyExpression> getIntersect() {
-        return intersect;
-    }
-
-    public List<PolicyExpression> getSubtract() {
-        return subtract;
-    }
-
-    public String getAllowBadRefs() {
-        return allowBadRefs;
-    }
-
-    public String getLastRev() {
-        return lastRev;
     }
 }

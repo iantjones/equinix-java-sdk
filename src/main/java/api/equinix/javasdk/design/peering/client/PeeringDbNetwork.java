@@ -18,7 +18,8 @@ package api.equinix.javasdk.design.peering.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Represents a network (autonomous system) from the PeeringDB API.
@@ -31,7 +32,8 @@ import lombok.Data;
  * @author ianjones
  * @see <a href="https://docs.peeringdb.com/api_specs/">PeeringDB API Specs</a>
  */
-@Data
+@Getter
+@ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PeeringDbNetwork {
 

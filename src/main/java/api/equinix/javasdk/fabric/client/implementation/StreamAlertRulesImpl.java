@@ -25,14 +25,12 @@ import api.equinix.javasdk.fabric.model.StreamAlertRule;
 import api.equinix.javasdk.fabric.model.json.StreamAlertRuleJson;
 import api.equinix.javasdk.fabric.model.json.creators.StreamAlertRuleOperator;
 import api.equinix.javasdk.fabric.model.wrappers.StreamAlertRuleWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class StreamAlertRulesImpl implements StreamAlertRules {
 
     private final StreamAlertRuleClient<StreamAlertRule> serviceClient;
-
-    public StreamAlertRulesImpl(StreamAlertRuleClient<StreamAlertRule> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<StreamAlertRule> list(String streamId) {
         Page<StreamAlertRuleJson> responsePage = this.serviceClient.list(streamId);

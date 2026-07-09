@@ -19,14 +19,12 @@ package api.equinix.javasdk.fabric.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Route-count summary returned on the {@code connection} / {@code router} reference of a
  * Fabric Cloud Router action.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RouterActionsOperation {
 

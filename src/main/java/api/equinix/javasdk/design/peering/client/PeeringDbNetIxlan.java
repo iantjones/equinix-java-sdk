@@ -18,7 +18,8 @@ package api.equinix.javasdk.design.peering.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Represents a network's presence at an internet exchange LAN from the PeeringDB API.
@@ -31,7 +32,8 @@ import lombok.Data;
  * @see PeeringDbIx
  * @see PeeringDbNetwork
  */
-@Data
+@Getter
+@ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PeeringDbNetIxlan {
 

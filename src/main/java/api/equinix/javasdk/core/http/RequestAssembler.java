@@ -28,6 +28,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import api.equinix.javasdk.core.internal.Constants;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -53,6 +55,7 @@ import java.util.stream.Collectors;
  *
  * @author ianjones
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RequestAssembler {
 
     private static final String uriParamFormat = "(\\{\\$(\\w+)})";
@@ -62,9 +65,6 @@ public final class RequestAssembler {
     // getBeanInfo + descriptor streaming ran on every API call that has a {$param} URI (only ~3 request classes).
     private static final java.util.concurrent.ConcurrentMap<Class<?>, Map<String, Method>> GETTER_CACHE =
             new java.util.concurrent.ConcurrentHashMap<>();
-
-    private RequestAssembler() {
-    }
 
     public static <T> EquinixRequest<T> buildRequest(String functionalArea, String requestParent,
                                                      String serviceEndpoint, RequestType requestType,

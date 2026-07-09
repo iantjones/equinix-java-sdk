@@ -32,14 +32,12 @@ import api.equinix.javasdk.fabric.model.json.creators.RouteAggregationOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class RouteAggregationsImpl implements RouteAggregations {
 
     private final RouteAggregationClient<RouteAggregation> serviceClient;
-
-    public RouteAggregationsImpl(RouteAggregationClient<RouteAggregation> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<RouteAggregation> search() {
         return search(Filter.filter().empty());

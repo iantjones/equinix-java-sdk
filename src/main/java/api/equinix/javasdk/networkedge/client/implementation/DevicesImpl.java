@@ -44,7 +44,7 @@ import api.equinix.javasdk.networkedge.model.json.creators.DeviceOperator;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceRMARequest;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceTypeWrapper;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -52,22 +52,14 @@ import java.util.List;
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class DevicesImpl implements Devices {
-
-    private final NetworkEdge serviceManager;
 
     private final DeviceClient<Device> serviceClient;
 
     private final DeviceTypeClient<DeviceType> deviceTypesServiceClient;
 
-    public DevicesImpl(DeviceClient<Device> serviceClient,
-                       DeviceTypeClient<DeviceType> deviceTypesServiceClient,
-                       NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.deviceTypesServiceClient = deviceTypesServiceClient;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public PaginatedList<Device> list() {
         return list(null);

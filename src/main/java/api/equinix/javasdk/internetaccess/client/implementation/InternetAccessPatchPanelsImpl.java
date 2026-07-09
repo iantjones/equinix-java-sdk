@@ -24,17 +24,14 @@ import api.equinix.javasdk.internetaccess.client.InternetAccessPatchPanels;
 import api.equinix.javasdk.internetaccess.client.internal.PatchPanelClient;
 import api.equinix.javasdk.internetaccess.model.PatchPanel;
 import api.equinix.javasdk.internetaccess.model.json.PatchPanelJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessPatchPanelsImpl implements InternetAccessPatchPanels {
-
-    private final InternetAccess serviceManager;
 
     private final PatchPanelClient serviceClient;
 
-    public InternetAccessPatchPanelsImpl(PatchPanelClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<PatchPanel> list(String ibx, String accountNumber, String cageSpaceId, String cabinetSpaceId) {
         return list(ibx, accountNumber, cageSpaceId, cabinetSpaceId, null);

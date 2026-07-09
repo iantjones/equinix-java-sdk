@@ -3,6 +3,10 @@ package api.equinix.javasdk.mcp.bridge;
 import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolResult;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +20,10 @@ import java.util.Map;
  *
  * @author ianjones
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class McpCloudRouterBridge {
 
     private final Mcp client;
-
-    McpCloudRouterBridge(Mcp client) {
-        this.client = client;
-    }
 
     /**
      * Searches for Cloud Routers using advanced filtering.
@@ -73,16 +74,16 @@ public class McpCloudRouterBridge {
     }
 
     private McpCloudRouter parseRouter(JsonNode json) {
-        return new McpCloudRouter(
-                getTextOrNull(json, "uuid"),
-                getTextOrNull(json, "name"),
-                getTextOrNull(json, "state"),
-                getTextOrNull(json, "package"),
-                json.has("location") && json.get("location").has("metroCode")
-                        ? json.get("location").get("metroCode").asText() : null,
-                json.has("connectionsCount") ? json.get("connectionsCount").asInt() : 0,
-                json
-        );
+        return McpCloudRouter.builder()
+                .uuid(getTextOrNull(json, "uuid"))
+                .name(getTextOrNull(json, "name"))
+                .state(getTextOrNull(json, "state"))
+                .packageType(getTextOrNull(json, "package"))
+                .metroCode(json.has("location") && json.get("location").has("metroCode")
+                        ? json.get("location").get("metroCode").asText() : null)
+                .connectionsCount(json.has("connectionsCount") ? json.get("connectionsCount").asInt() : 0)
+                .rawJson(json)
+                .build();
     }
 
     private String getTextOrNull(JsonNode node, String field) {
@@ -92,6 +93,7 @@ public class McpCloudRouterBridge {
     /**
      * Typed representation of a Fabric Cloud Router from the MCP server.
      */
+    @Getter
     public static class McpCloudRouter {
         private final String uuid;
         private final String name;
@@ -101,6 +103,20 @@ public class McpCloudRouterBridge {
         private final int connectionsCount;
         private final JsonNode rawJson;
 
+        /**
+         * Constructs a router snapshot. Argument order is pinned here — five
+         * consecutive {@code String} parameters make positional calls
+         * swap-prone, so build instances via the package-private builder.
+         *
+         * @param uuid             the router UUID
+         * @param name             the router name
+         * @param state            the lifecycle state
+         * @param packageType      the package code (e.g. {@code "STANDARD"})
+         * @param metroCode        the metro code, or {@code null}
+         * @param connectionsCount the number of attached connections
+         * @param rawJson          the raw MCP JSON payload
+         */
+        @Builder(access = AccessLevel.PACKAGE)
         McpCloudRouter(String uuid, String name, String state, String packageType,
                        String metroCode, int connectionsCount, JsonNode rawJson) {
             this.uuid = uuid;
@@ -111,14 +127,6 @@ public class McpCloudRouterBridge {
             this.connectionsCount = connectionsCount;
             this.rawJson = rawJson;
         }
-
-        public String getUuid() { return uuid; }
-        public String getName() { return name; }
-        public String getState() { return state; }
-        public String getPackageType() { return packageType; }
-        public String getMetroCode() { return metroCode; }
-        public int getConnectionsCount() { return connectionsCount; }
-        public JsonNode getRawJson() { return rawJson; }
 
         @Override
         public String toString() {

@@ -20,14 +20,12 @@ import api.equinix.javasdk.iam.model.ResourceTypeAction;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for the IAM {@code ResourceTypeAction} response. Implements
  * {@link ResourceTypeAction} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceTypeActionJson implements ResourceTypeAction {
 

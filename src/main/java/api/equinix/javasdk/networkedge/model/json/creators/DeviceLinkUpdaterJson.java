@@ -50,7 +50,6 @@ public class DeviceLinkUpdaterJson {
     @JsonProperty("linkDevices")
     private List<LinkDevice> linkDevices;
 
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @Getter(AccessLevel.PACKAGE)
     static class Link {
@@ -65,6 +64,23 @@ public class DeviceLinkUpdaterJson {
 
         @JsonProperty("metroCode")
         private MetroCode metroCode;
+
+        /**
+         * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+         * three adjacent same-typed {@code String} parameters are pinned here in code rather
+         * than by field declaration order.
+         *
+         * @param accountNumber  the billing account number
+         * @param throughput     the link throughput value
+         * @param throughputUnit the link throughput unit
+         * @param metroCode      the metro of the link
+         */
+        Link(String accountNumber, String throughput, String throughputUnit, MetroCode metroCode) {
+            this.accountNumber = accountNumber;
+            this.throughput = throughput;
+            this.throughputUnit = throughputUnit;
+            this.metroCode = metroCode;
+        }
     }
 
     @AllArgsConstructor(access = AccessLevel.PACKAGE)

@@ -20,14 +20,12 @@ import api.equinix.javasdk.iam.model.RoleAssignment;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for the IAM {@code RoleAssignment} response. Implements
  * {@link RoleAssignment} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RoleAssignmentJson implements RoleAssignment {
 
@@ -55,7 +53,6 @@ public class RoleAssignmentJson implements RoleAssignment {
     }
 
     @Getter
-    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AssignmentScopeJson implements RoleAssignment.AssignmentScope {
 
@@ -78,7 +75,6 @@ public class RoleAssignmentJson implements RoleAssignment {
     }
 
     @Getter
-    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ParentJson implements RoleAssignment.Parent {
 

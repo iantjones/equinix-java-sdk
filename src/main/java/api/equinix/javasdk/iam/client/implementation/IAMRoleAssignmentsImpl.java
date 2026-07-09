@@ -22,17 +22,14 @@ import api.equinix.javasdk.iam.client.internal.RoleAssignmentClient;
 import api.equinix.javasdk.iam.model.RoleAssignment;
 import api.equinix.javasdk.iam.model.json.RoleAssignmentList;
 import api.equinix.javasdk.iam.model.json.creators.CreateRoleAssignmentRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMRoleAssignmentsImpl implements IAMRoleAssignments {
-
-    private final IAM serviceManager;
 
     private final RoleAssignmentClient roleAssignmentClient;
 
-    public IAMRoleAssignmentsImpl(RoleAssignmentClient roleAssignmentClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.roleAssignmentClient = roleAssignmentClient;
-    }
+    private final IAM serviceManager;
 
     public RoleAssignmentList list(String assignmentScopeId, String assignmentScopeType) {
         return this.roleAssignmentClient.list(assignmentScopeId, assignmentScopeType, null, null);

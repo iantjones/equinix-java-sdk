@@ -20,7 +20,6 @@ import api.equinix.javasdk.iam.model.Role;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
@@ -28,7 +27,6 @@ import java.util.List;
  * Read-only JSON model for the IAM {@code RoleDetails} response. Implements {@link Role} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RoleJson implements Role {
 
@@ -53,7 +51,6 @@ public class RoleJson implements Role {
     }
 
     @Getter
-    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PermissionJson implements Role.Permission {
 

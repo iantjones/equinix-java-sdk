@@ -37,7 +37,7 @@ import api.equinix.javasdk.networkedge.model.json.MetroJson;
 import api.equinix.javasdk.networkedge.model.json.Pricing;
 import api.equinix.javasdk.networkedge.model.wrappers.AccountWrapper;
 import api.equinix.javasdk.networkedge.model.wrappers.MetroWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,30 +52,22 @@ import java.util.stream.Stream;
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class SetupImpl implements Setup {
 
-    private final NetworkEdge serviceManager;
-
     private final AccountClient<Account> serviceClientAccounts;
+
     private final MetroClient<Metro> serviceClientMetros;
+
     private final AgreementClient serviceClientAgreements;
+
     private final PricingClient serviceClientPricing;
+
     private final FilesClient serviceClientFiles;
+
     private final NotificationClient serviceClientNotifications;
 
-    public SetupImpl(AccountClient<Account> serviceClientAccounts, MetroClient<Metro> serviceClientMetros,
-                     AgreementClient serviceClientAgreements, PricingClient serviceClientPricing,
-                     FilesClient serviceClientFiles, NotificationClient serviceClientNotifications,
-                     NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClientAccounts = serviceClientAccounts;
-        this.serviceClientMetros = serviceClientMetros;
-        this.serviceClientAgreements = serviceClientAgreements;
-        this.serviceClientPricing = serviceClientPricing;
-        this.serviceClientFiles = serviceClientFiles;
-        this.serviceClientNotifications = serviceClientNotifications;
-    }
+    private final NetworkEdge serviceManager;
 
     public List<Account> listAccounts(MetroCode metroCode) {
         List<AccountJson> publicKeyList = serviceClientAccounts.list(metroCode);

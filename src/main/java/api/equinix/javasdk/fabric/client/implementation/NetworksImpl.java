@@ -37,17 +37,14 @@ import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.NetworkWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class NetworksImpl implements Networks {
 
     private final NetworkClient<Network> serviceClient;
 
     private final ConnectionClient<Connection> connectionClient;
-
-    public NetworksImpl(NetworkClient<Network> serviceClient, ConnectionClient<Connection> connectionClient) {
-        this.serviceClient = serviceClient;
-        this.connectionClient = connectionClient;
-    }
 
     public PaginatedFilteredList<Network> search() {
         return search(Filter.filter().empty());

@@ -3,6 +3,9 @@ package api.equinix.javasdk.mcp.bridge;
 import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolResult;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +19,10 @@ import java.util.Map;
  *
  * @author ianjones
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class McpObservabilityBridge {
 
     private final Mcp client;
-
-    McpObservabilityBridge(Mcp client) {
-        this.client = client;
-    }
 
     /**
      * Retrieves metrics for a specific asset (port, connection, etc.).
@@ -136,6 +136,7 @@ public class McpObservabilityBridge {
     /**
      * Typed representation of metrics data from the MCP server.
      */
+    @Getter
     public static class McpMetrics {
         private final String assetId;
         private final String metricType;
@@ -144,6 +145,18 @@ public class McpObservabilityBridge {
         private final double avg;
         private final JsonNode rawJson;
 
+        /**
+         * Constructs a metrics snapshot. Argument order is pinned here — three
+         * consecutive {@code double} parameters make positional calls
+         * swap-prone; do not regenerate this constructor from field order.
+         *
+         * @param assetId    the asset UUID
+         * @param metricType the metric type (e.g. {@code "bandwidth"})
+         * @param min        the minimum observed value
+         * @param max        the maximum observed value
+         * @param avg        the average observed value
+         * @param rawJson    the raw MCP JSON payload
+         */
         McpMetrics(String assetId, String metricType, double min, double max,
                    double avg, JsonNode rawJson) {
             this.assetId = assetId;
@@ -153,18 +166,12 @@ public class McpObservabilityBridge {
             this.avg = avg;
             this.rawJson = rawJson;
         }
-
-        public String getAssetId() { return assetId; }
-        public String getMetricType() { return metricType; }
-        public double getMin() { return min; }
-        public double getMax() { return max; }
-        public double getAvg() { return avg; }
-        public JsonNode getRawJson() { return rawJson; }
     }
 
     /**
      * Typed representation of an observability stream from the MCP server.
      */
+    @Getter
     public static class McpStream {
         private final String uuid;
         private final String name;
@@ -172,6 +179,17 @@ public class McpObservabilityBridge {
         private final String state;
         private final JsonNode rawJson;
 
+        /**
+         * Constructs a stream snapshot. Argument order is pinned here — four
+         * consecutive {@code String} parameters make positional calls
+         * swap-prone; do not regenerate this constructor from field order.
+         *
+         * @param uuid    the stream UUID
+         * @param name    the stream name
+         * @param type    the stream type
+         * @param state   the lifecycle state
+         * @param rawJson the raw MCP JSON payload
+         */
         McpStream(String uuid, String name, String type, String state, JsonNode rawJson) {
             this.uuid = uuid;
             this.name = name;
@@ -179,11 +197,5 @@ public class McpObservabilityBridge {
             this.state = state;
             this.rawJson = rawJson;
         }
-
-        public String getUuid() { return uuid; }
-        public String getName() { return name; }
-        public String getType() { return type; }
-        public String getState() { return state; }
-        public JsonNode getRawJson() { return rawJson; }
     }
 }

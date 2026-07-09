@@ -23,17 +23,14 @@ import api.equinix.javasdk.iam.model.PermissionSet;
 import api.equinix.javasdk.iam.model.json.PermissionSetList;
 import api.equinix.javasdk.iam.model.json.creators.CreatePermissionSetRequest;
 import api.equinix.javasdk.iam.model.json.creators.UpdatePermissionSetRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMPermissionSetsImpl implements IAMPermissionSets {
-
-    private final IAM serviceManager;
 
     private final PermissionSetClient permissionSetClient;
 
-    public IAMPermissionSetsImpl(PermissionSetClient permissionSetClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.permissionSetClient = permissionSetClient;
-    }
+    private final IAM serviceManager;
 
     public PermissionSetList list(String projectId) {
         return this.permissionSetClient.list(projectId, null, null);

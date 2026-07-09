@@ -30,17 +30,14 @@ import api.equinix.javasdk.customerportal.model.json.creators.PrivateBetaAccessR
 
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class DigitalLoasImpl implements DigitalLoas {
-
-    private final CustomerPortal serviceManager;
 
     private final DigitalLoasClient serviceClient;
 
-    public DigitalLoasImpl(DigitalLoasClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public DigitalLoa create(DigitalLoaCreateRequest request) {
         return this.serviceClient.create(request);

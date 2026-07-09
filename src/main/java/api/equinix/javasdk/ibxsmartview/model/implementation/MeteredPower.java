@@ -19,14 +19,12 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * A streaming metered power reading for an IBX cage, including the account it is billed
  * to, the originating tag and the measured value with its unit.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MeteredPower {
 

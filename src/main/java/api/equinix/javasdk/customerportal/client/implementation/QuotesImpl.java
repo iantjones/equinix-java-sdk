@@ -24,17 +24,14 @@ import api.equinix.javasdk.customerportal.model.json.QuoteJson;
 import api.equinix.javasdk.customerportal.model.wrappers.QuoteWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class QuotesImpl implements Quotes {
-
-    private final CustomerPortal serviceManager;
 
     private final QuoteClient<Quote> serviceClient;
 
-    public QuotesImpl(QuoteClient<Quote> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public Quote getByUuid(String quoteId) {
         QuoteJson quoteJson = this.serviceClient.getByUuid(quoteId);

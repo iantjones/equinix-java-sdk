@@ -23,14 +23,12 @@ import api.equinix.javasdk.fabric.client.AgentTemplates;
 import api.equinix.javasdk.fabric.client.internal.AgentTemplateClient;
 import api.equinix.javasdk.fabric.model.AgentTemplate;
 import api.equinix.javasdk.fabric.model.json.AgentTemplateJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class AgentTemplatesImpl implements AgentTemplates {
 
     private final AgentTemplateClient<AgentTemplate> serviceClient;
-
-    public AgentTemplatesImpl(AgentTemplateClient<AgentTemplate> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<AgentTemplate> list() {
         Page<AgentTemplateJson> responsePage = this.serviceClient.list();

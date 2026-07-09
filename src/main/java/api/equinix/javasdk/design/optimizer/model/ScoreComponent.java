@@ -1,12 +1,14 @@
 package api.equinix.javasdk.design.optimizer.model;
 
 import api.equinix.javasdk.design.optimizer.enums.ScoreCategory;
+import lombok.Builder;
 import lombok.Value;
 
 /**
  * A single dimension of a metro's composite score.
  */
 @Value
+@Builder
 public class ScoreComponent {
 
     ScoreCategory category;

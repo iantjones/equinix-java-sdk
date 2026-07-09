@@ -30,17 +30,14 @@ import api.equinix.javasdk.customerportal.model.json.creators.ShipmentOrderReque
 import api.equinix.javasdk.customerportal.model.json.creators.ShipmentUpdateRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class ShipmentsImpl implements Shipments {
-
-    private final CustomerPortal serviceManager;
 
     private final ShipmentClient serviceClient;
 
-    public ShipmentsImpl(ShipmentClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public OrderResponse order(ShipmentOrderRequest request) {
         return this.serviceClient.order(request);

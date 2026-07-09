@@ -11,8 +11,7 @@ import api.equinix.javasdk.fabric.model.implementation.Charge;
 import api.equinix.javasdk.fabric.model.implementation.PricingConnection;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -44,9 +43,9 @@ import java.util.Optional;
  * the card's lifetime; a lookup miss simply defers to the fallback, never a
  * wrong number.</p>
  */
+@Slf4j
 public final class EquinixRateCard implements RateCard {
 
-    private static final Logger log = LoggerFactory.getLogger(EquinixRateCard.class);
     private static final Currency DEFAULT_CURRENCY = Currency.getInstance("USD");
 
     private final FabricGateway fabric;

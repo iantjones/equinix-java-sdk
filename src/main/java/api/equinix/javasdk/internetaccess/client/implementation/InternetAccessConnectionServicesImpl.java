@@ -24,17 +24,14 @@ import api.equinix.javasdk.internetaccess.client.InternetAccessConnectionService
 import api.equinix.javasdk.internetaccess.client.internal.ConnectionServiceClient;
 import api.equinix.javasdk.internetaccess.model.ConnectionService;
 import api.equinix.javasdk.internetaccess.model.json.ConnectionServiceJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessConnectionServicesImpl implements InternetAccessConnectionServices {
-
-    private final InternetAccess serviceManager;
 
     private final ConnectionServiceClient serviceClient;
 
-    public InternetAccessConnectionServicesImpl(ConnectionServiceClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<ConnectionService> list(String ibx) {
         Page<ConnectionServiceJson> responsePage = this.serviceClient.list(ibx);

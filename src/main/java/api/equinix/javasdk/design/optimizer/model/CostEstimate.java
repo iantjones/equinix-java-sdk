@@ -1,6 +1,7 @@
 package api.equinix.javasdk.design.optimizer.model;
 
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
+import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.List;
  * Aggregated cost estimate across all recommended metros.
  */
 @Value
+@Builder
 public class CostEstimate {
 
     BigDecimal monthlyTotal;

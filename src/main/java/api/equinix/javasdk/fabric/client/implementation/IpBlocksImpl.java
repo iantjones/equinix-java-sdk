@@ -28,14 +28,12 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.IpBlockJson;
 import api.equinix.javasdk.fabric.model.json.creators.IpBlockOperator;
 import api.equinix.javasdk.fabric.model.wrappers.IpBlockWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IpBlocksImpl implements IpBlocks {
 
     private final IpBlockClient<IpBlock> serviceClient;
-
-    public IpBlocksImpl(IpBlockClient<IpBlock> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<IpBlock> search() {
         return search(Filter.filter().empty());

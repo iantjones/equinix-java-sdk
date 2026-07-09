@@ -24,17 +24,14 @@ import api.equinix.javasdk.internetaccess.client.InternetAccessSignaturePolicies
 import api.equinix.javasdk.internetaccess.client.internal.SignaturePolicyClient;
 import api.equinix.javasdk.internetaccess.model.SignaturePolicy;
 import api.equinix.javasdk.internetaccess.model.json.SignaturePolicyJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessSignaturePoliciesImpl implements InternetAccessSignaturePolicies {
-
-    private final InternetAccess serviceManager;
 
     private final SignaturePolicyClient serviceClient;
 
-    public InternetAccessSignaturePoliciesImpl(SignaturePolicyClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<SignaturePolicy> list() {
         return list(null);

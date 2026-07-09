@@ -20,9 +20,9 @@ import api.equinix.javasdk.fabric.enums.BridgePackageCode;
 import api.equinix.javasdk.fabric.enums.AccessPointType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingAccessPoint {
 
@@ -48,14 +48,14 @@ public class PricingAccessPoint {
      * Access point port pricing attributes (spec schema
      * {@code VirtualConnectionPriceASide_accessPoint_port}).
      */
-    @Data
+    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Port {
 
         @JsonProperty("settings")
         private Settings settings;
 
-        @Data
+        @Getter
         @JsonIgnoreProperties(ignoreUnknown = true)
         public static class Settings {
 
@@ -68,14 +68,14 @@ public class PricingAccessPoint {
      * Z-side bridge pricing attributes (spec schema
      * {@code VirtualConnectionPriceZSide_accessPoint_bridge}).
      */
-    @Data
+    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Bridge {
 
         @JsonProperty("package")
         private BridgePackage bridgePackage;
 
-        @Data
+        @Getter
         @JsonIgnoreProperties(ignoreUnknown = true)
         public static class BridgePackage {
 

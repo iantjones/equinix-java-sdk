@@ -20,7 +20,6 @@ import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -31,7 +30,6 @@ import java.util.List;
  * and any child nodes.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PowerHierarchyNode {
 

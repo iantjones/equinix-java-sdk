@@ -42,18 +42,16 @@ import api.equinix.javasdk.fabric.model.wrappers.PricingWrapper;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceProfileWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class ServiceProfilesImpl implements ServiceProfiles {
 
     private final ServiceProfileClient<ServiceProfile> serviceClient;
-
-    public ServiceProfilesImpl(ServiceProfileClient<ServiceProfile> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<ServiceProfile> list() {
         return ResponseHandler.toPaginatedList(this.serviceClient.list(), this.serviceClient, ServiceProfileWrapper::new);

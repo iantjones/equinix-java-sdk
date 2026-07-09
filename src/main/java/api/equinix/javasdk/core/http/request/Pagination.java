@@ -16,8 +16,6 @@
 
 package api.equinix.javasdk.core.http.request;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,12 +26,25 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@AllArgsConstructor
 public class Pagination {
 
     private int offset;
 
     private int limit;
+
+    /**
+     * Creates pagination state for a POST-search body. The parameter order is pinned by this
+     * explicit constructor — {@code offset} first, then {@code limit} — deliberately not
+     * Lombok-generated, so a field reorder can never silently transpose the two {@code int}
+     * arguments at call sites.
+     *
+     * @param offset the zero-based index of the first record of the requested page
+     * @param limit the page size
+     */
+    public Pagination(int offset, int limit) {
+        this.offset = offset;
+        this.limit = limit;
+    }
 
     public void nextPage() {
         this.offset = this.offset + this.limit;

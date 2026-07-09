@@ -260,10 +260,23 @@ class DeploymentWizardPlanTest {
                                 .rank(1).metroId(DC).metroName("Ashburn").score(score)
                                 .reasons(List.of("Primary"))
                                 .availableProviders(List.of(
-                                        new ProviderAvailability("AWS", true, List.of("us-east-1"), "sp-aws")))
-                                .assignedWorkloads(List.of(new WorkloadPlacement("ML Training", DC, "primary")))
+                                        ProviderAvailability.builder()
+                                                .providerLabel("AWS")
+                                                .available(true)
+                                                .sellerRegions(List.of("us-east-1"))
+                                                .serviceProfileUuid("sp-aws")
+                                                .build()))
+                                .assignedWorkloads(List.of(WorkloadPlacement.builder()
+                                        .workloadLabel("ML Training")
+                                        .assignedMetro(DC)
+                                        .reasoning("primary")
+                                        .build()))
                                 .build()))
-                .topology(new DeploymentTopology(List.of(new WorkloadPlacement("ML Training", DC, "primary"))))
+                .topology(new DeploymentTopology(List.of(WorkloadPlacement.builder()
+                        .workloadLabel("ML Training")
+                        .assignedMetro(DC)
+                        .reasoning("primary")
+                        .build())))
                 .computedAt(Instant.now())
                 .computeTimeMs(10)
                 .build();
@@ -368,25 +381,52 @@ class DeploymentWizardPlanTest {
                 .build();
 
         DeploymentTopology topology = new DeploymentTopology(List.of(
-                new WorkloadPlacement("ML Training", DC, "AWS at DC"),
-                new WorkloadPlacement("DR Backup", DC, "AWS at DC"),
-                new WorkloadPlacement("Analytics", DA, "AZURE at DA")));
+                WorkloadPlacement.builder()
+                        .workloadLabel("ML Training")
+                        .assignedMetro(DC)
+                        .reasoning("AWS at DC")
+                        .build(),
+                WorkloadPlacement.builder()
+                        .workloadLabel("DR Backup")
+                        .assignedMetro(DC)
+                        .reasoning("AWS at DC")
+                        .build(),
+                WorkloadPlacement.builder()
+                        .workloadLabel("Analytics")
+                        .assignedMetro(DA)
+                        .reasoning("AZURE at DA")
+                        .build()));
 
         MetroRecommendation dc = MetroRecommendation.builder()
                 .rank(1).metroId(DC).metroName("Ashburn").score(score).reasons(List.of("Primary"))
                 .availableProviders(List.of(
-                        new ProviderAvailability("AWS", true, List.of("us-east-1"), "sp-aws")))
+                        ProviderAvailability.builder()
+                                .providerLabel("AWS")
+                                .available(true)
+                                .sellerRegions(List.of("us-east-1"))
+                                .serviceProfileUuid("sp-aws")
+                                .build()))
                 .build();
         MetroRecommendation da = MetroRecommendation.builder()
                 .rank(2).metroId(DA).metroName("Dallas").score(score).reasons(List.of("Secondary"))
                 .availableProviders(List.of(
-                        new ProviderAvailability("AZURE", true, List.of("eastus"), "sp-azure")))
+                        ProviderAvailability.builder()
+                                .providerLabel("AZURE")
+                                .available(true)
+                                .sellerRegions(List.of("eastus"))
+                                .serviceProfileUuid("sp-azure")
+                                .build()))
                 .build();
         MetroRecommendation sv = MetroRecommendation.builder()
                 .rank(3).metroId(SV).metroName("Silicon Valley").score(score).reasons(List.of("Tertiary"))
                 .availableProviders(List.of(
                         // Present but not available -> filtered out, so SV gets no provider connection.
-                        new ProviderAvailability("GCP", false, List.of("us-west1"), "sp-gcp")))
+                        ProviderAvailability.builder()
+                                .providerLabel("GCP")
+                                .available(false)
+                                .sellerRegions(List.of("us-west1"))
+                                .serviceProfileUuid("sp-gcp")
+                                .build()))
                 .build();
 
         return OptimizationResult.builder()

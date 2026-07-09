@@ -19,14 +19,12 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * A streaming alarm message describing a triggered condition for an IBX asset,
  * including its severity, threshold, current value and lifecycle status.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Alarm {
 

@@ -19,13 +19,11 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Information about the user who created a power alert configuration.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PowerAlertCreator {
 

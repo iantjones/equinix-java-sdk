@@ -26,17 +26,14 @@ import api.equinix.javasdk.customerportal.model.json.creators.TicketNoteRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.TicketUpdateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.TroubleTicketCreateRequest;
 import api.equinix.javasdk.customerportal.model.wrappers.TroubleTicketWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class TroubleTicketsImpl implements TroubleTickets {
-
-    private final CustomerPortal serviceManager;
 
     private final TroubleTicketClient<TroubleTicket> serviceClient;
 
-    public TroubleTicketsImpl(TroubleTicketClient<TroubleTicket> serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public String create(TroubleTicketCreateRequest request) {
         return this.serviceClient.create(request);

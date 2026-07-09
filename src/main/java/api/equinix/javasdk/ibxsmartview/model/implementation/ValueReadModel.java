@@ -19,13 +19,11 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * The tag-reading values associated with a system alert ({@code ValueReadModel} in the spec).
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ValueReadModel {
 

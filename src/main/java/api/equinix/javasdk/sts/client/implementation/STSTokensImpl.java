@@ -23,17 +23,14 @@ import api.equinix.javasdk.sts.model.StsToken;
 import api.equinix.javasdk.sts.model.json.GrantedAccessPolicyPage;
 import api.equinix.javasdk.sts.model.json.creators.ListPoliciesGrantedRequest;
 import api.equinix.javasdk.sts.model.json.creators.TokenRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class STSTokensImpl implements STSTokens {
-
-    private final STS serviceManager;
 
     private final TokenClient tokenClient;
 
-    public STSTokensImpl(TokenClient tokenClient, STS serviceManager) {
-        this.serviceManager = serviceManager;
-        this.tokenClient = tokenClient;
-    }
+    private final STS serviceManager;
 
     public StsToken generate(TokenRequest request) {
         return this.tokenClient.generateStsToken(request);

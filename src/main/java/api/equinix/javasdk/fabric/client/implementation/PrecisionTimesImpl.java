@@ -31,14 +31,12 @@ import api.equinix.javasdk.fabric.model.json.creators.PrecisionTimeOperator;
 import api.equinix.javasdk.fabric.model.wrappers.PrecisionTimeWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class PrecisionTimesImpl implements PrecisionTimes {
 
     private final PrecisionTimeClient<PrecisionTime> serviceClient;
-
-    public PrecisionTimesImpl(PrecisionTimeClient<PrecisionTime> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<PrecisionTime> list() {
         Page<PrecisionTimeJson> responsePage = this.serviceClient.list();

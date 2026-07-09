@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Request body for creating an IAM policy mask via {@code POST
@@ -36,6 +37,7 @@ import java.util.Map;
  * object.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class CreatePolicyMaskRequest {
 
     @JsonProperty("policyMaskId")
@@ -121,29 +123,5 @@ public class CreatePolicyMaskRequest {
     public CreatePolicyMaskRequest subtract(PolicyExpression subtract) {
         this.subtract = subtract;
         return this;
-    }
-
-    public String getPolicyMaskId() {
-        return policyMaskId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public PolicyExpression getManagedPolicies() {
-        return managedPolicies;
-    }
-
-    public PolicyExpression getManagedPermissionSets() {
-        return managedPermissionSets;
-    }
-
-    public PolicyExpression getSubtract() {
-        return subtract;
     }
 }

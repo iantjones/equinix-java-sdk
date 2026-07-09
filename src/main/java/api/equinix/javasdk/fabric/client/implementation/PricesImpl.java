@@ -25,14 +25,12 @@ import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.json.PricingJson;
 import api.equinix.javasdk.fabric.model.wrappers.PricingWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class PricesImpl implements Prices {
 
     private final PricingClient<Pricing> serviceClient;
-
-    public PricesImpl(PricingClient<Pricing> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<Pricing> list(FilterPropertyList filter) {
         Page<PricingJson> responsePage = serviceClient.list(filter);

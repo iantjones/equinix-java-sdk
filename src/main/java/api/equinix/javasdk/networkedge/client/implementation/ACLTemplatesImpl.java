@@ -26,23 +26,18 @@ import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.json.ACLTemplateJson;
 import api.equinix.javasdk.networkedge.model.json.creators.ACLTemplateOperator;
 import api.equinix.javasdk.networkedge.model.wrappers.ACLTemplateWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class ACLTemplatesImpl implements ACLTemplates {
-
-    private final NetworkEdge serviceManager;
 
     private final ACLTemplateClient<ACLTemplate> serviceClient;
 
-    public ACLTemplatesImpl(ACLTemplateClient<ACLTemplate> serviceClient, NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public PaginatedList<ACLTemplate> list() {
         return list(null);

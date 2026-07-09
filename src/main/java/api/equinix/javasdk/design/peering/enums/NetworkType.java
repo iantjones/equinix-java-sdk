@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.design.peering.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -38,7 +37,6 @@ import lombok.Getter;
  * @see api.equinix.javasdk.design.peering.model.NetworkPresence
  */
 @Getter
-@AllArgsConstructor
 public enum NetworkType {
 
     NSP("NSP", "Network Service Provider"),
@@ -53,6 +51,19 @@ public enum NetworkType {
 
     private final String displayName;
     private final String description;
+
+    /**
+     * Constructs a network type. Argument order is pinned here — the two
+     * parameters are both {@code String}, so never regenerate this constructor
+     * from field order.
+     *
+     * @param displayName the PeeringDB-facing display name
+     * @param description the human-readable classification
+     */
+    NetworkType(String displayName, String description) {
+        this.displayName = displayName;
+        this.description = description;
+    }
 
     /**
      * Parses the PeeringDB {@code info_type} string to an enum value.

@@ -23,17 +23,14 @@ import api.equinix.javasdk.iam.model.PolicyMask;
 import api.equinix.javasdk.iam.model.json.PolicyMaskList;
 import api.equinix.javasdk.iam.model.json.creators.CreatePolicyMaskRequest;
 import api.equinix.javasdk.iam.model.json.creators.UpdatePolicyMaskRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMPolicyMasksImpl implements IAMPolicyMasks {
-
-    private final IAM serviceManager;
 
     private final PolicyMaskClient policyMaskClient;
 
-    public IAMPolicyMasksImpl(PolicyMaskClient policyMaskClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.policyMaskClient = policyMaskClient;
-    }
+    private final IAM serviceManager;
 
     public PolicyMaskList list(String projectId) {
         return this.policyMaskClient.list(projectId, null, null);

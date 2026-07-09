@@ -27,23 +27,18 @@ import api.equinix.javasdk.networkedge.model.BGPPeering;
 import api.equinix.javasdk.networkedge.model.json.BGPPeeringJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BGPPeeringOperator;
 import api.equinix.javasdk.networkedge.model.wrappers.BGPPeeringWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class BGPPeeringsImpl implements BGPPeerings {
-
-    private final NetworkEdge serviceManager;
 
     private final BGPPeeringClient<BGPPeering> serviceClient;
 
-    public BGPPeeringsImpl(BGPPeeringClient<BGPPeering> serviceClient, NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public PaginatedList<BGPPeering> list() {
         return list(null);

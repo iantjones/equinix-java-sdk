@@ -22,22 +22,17 @@ import api.equinix.javasdk.ibxsmartview.client.internal.LegacyEnvironmentalClien
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentData;
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentDataForArray;
 import api.equinix.javasdk.ibxsmartview.model.TrendingEnvironmentData;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
+@RequiredArgsConstructor
 public class LegacyEnvironmentalsImpl implements LegacyEnvironmentals {
-
-    private final IBXSmartView serviceManager;
 
     private final LegacyEnvironmentalClient serviceClient;
 
-    public LegacyEnvironmentalsImpl(LegacyEnvironmentalClient serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public EnvironmentData getCurrent(String accountNo, String ibx, String levelType, String levelValue) {
         return serviceClient.getCurrent(accountNo, ibx, levelType, levelValue);

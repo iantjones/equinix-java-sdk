@@ -25,19 +25,14 @@ import api.equinix.javasdk.ibxsmartview.client.internal.SystemAlertClient;
 import api.equinix.javasdk.ibxsmartview.model.SystemAlert;
 import api.equinix.javasdk.ibxsmartview.model.json.SystemAlertJson;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.SearchRequest;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Getter
+@RequiredArgsConstructor
 public class SystemAlertsImpl implements SystemAlerts {
-
-    private final IBXSmartView serviceManager;
 
     private final SystemAlertClient<SystemAlert> serviceClient;
 
-    public SystemAlertsImpl(SystemAlertClient<SystemAlert> serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public PaginatedList<SystemAlert> search(String status, String assetClassification, String edgeCollectedOn, int offset, int limit) {
         Page<SystemAlertJson> responsePage = serviceClient.search(status, assetClassification, edgeCollectedOn, offset, limit);

@@ -28,14 +28,12 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.EiaServiceJson;
 import api.equinix.javasdk.fabric.model.json.creators.EiaServiceOperator;
 import api.equinix.javasdk.fabric.model.wrappers.EiaServiceWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class EiaServicesImpl implements EiaServices {
 
     private final EiaServiceClient<EiaService> serviceClient;
-
-    public EiaServicesImpl(EiaServiceClient<EiaService> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<EiaService> search() {
         return search(Filter.filter().empty());

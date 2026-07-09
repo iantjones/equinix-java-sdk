@@ -19,13 +19,11 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * A measured value paired with its unit, as reported by a {@link MeteredPower} reading.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MeteredPowerValueWithUnit {
 

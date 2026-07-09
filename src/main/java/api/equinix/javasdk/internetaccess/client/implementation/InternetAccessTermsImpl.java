@@ -26,17 +26,14 @@ import api.equinix.javasdk.internetaccess.enums.TermsProduct;
 import api.equinix.javasdk.internetaccess.enums.TermsType;
 import api.equinix.javasdk.internetaccess.model.TermsAndConditions;
 import api.equinix.javasdk.internetaccess.model.json.TermsAndConditionsJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessTermsImpl implements InternetAccessTerms {
-
-    private final InternetAccess serviceManager;
 
     private final TermsClient serviceClient;
 
-    public InternetAccessTermsImpl(TermsClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<TermsAndConditions> list(String accountNumber, String ibx, TermsProduct product) {
         return list(accountNumber, ibx, product, null, null);

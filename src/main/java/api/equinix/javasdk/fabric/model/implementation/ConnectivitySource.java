@@ -20,14 +20,14 @@ import api.equinix.javasdk.fabric.enums.ConnectivitySourceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * Physical or virtual port that houses a connection (the Fabric v4
  * {@code ConnectivitySource} schema).
  */
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

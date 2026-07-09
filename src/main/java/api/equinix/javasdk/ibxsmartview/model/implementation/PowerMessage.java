@@ -19,7 +19,6 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * A streaming power message for an IBX cabinet, carrying a comprehensive set of power
@@ -27,7 +26,6 @@ import lombok.NoArgsConstructor;
  * each paired with its unit.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PowerMessage {
 

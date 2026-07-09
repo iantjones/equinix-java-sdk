@@ -25,7 +25,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.VirtualConnection
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for a {@link VirtualConnectionDefaultConfiguration} returned by the Equinix
@@ -34,7 +33,6 @@ import lombok.Setter;
  * {@link VirtualConnectionDefaultConfiguration} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VirtualConnectionDefaultConfigurationJson implements VirtualConnectionDefaultConfiguration {
 

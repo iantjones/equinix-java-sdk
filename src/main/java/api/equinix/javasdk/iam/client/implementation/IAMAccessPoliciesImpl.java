@@ -26,17 +26,14 @@ import api.equinix.javasdk.iam.model.json.AccessPolicyList;
 import api.equinix.javasdk.iam.model.json.creators.AddGrantRequest;
 import api.equinix.javasdk.iam.model.json.creators.CreateAccessPolicyRequest;
 import api.equinix.javasdk.iam.model.json.creators.UpdateAccessPolicyRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMAccessPoliciesImpl implements IAMAccessPolicies {
-
-    private final IAM serviceManager;
 
     private final AccessPolicyClient accessPolicyClient;
 
-    public IAMAccessPoliciesImpl(AccessPolicyClient accessPolicyClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.accessPolicyClient = accessPolicyClient;
-    }
+    private final IAM serviceManager;
 
     public AccessPolicyList list(String projectId) {
         return this.accessPolicyClient.list(projectId, null, null);

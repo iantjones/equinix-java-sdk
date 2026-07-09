@@ -21,17 +21,14 @@ import api.equinix.javasdk.sts.client.STSDiscovery;
 import api.equinix.javasdk.sts.client.internal.DiscoveryClient;
 import api.equinix.javasdk.sts.model.Jwks;
 import api.equinix.javasdk.sts.model.OpenIdConfiguration;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class STSDiscoveryImpl implements STSDiscovery {
-
-    private final STS serviceManager;
 
     private final DiscoveryClient discoveryClient;
 
-    public STSDiscoveryImpl(DiscoveryClient discoveryClient, STS serviceManager) {
-        this.serviceManager = serviceManager;
-        this.discoveryClient = discoveryClient;
-    }
+    private final STS serviceManager;
 
     public Jwks getJwks() {
         return this.discoveryClient.getJwks();

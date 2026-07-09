@@ -20,14 +20,12 @@ import api.equinix.javasdk.fabric.enums.AccessPointType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * A virtual-device access point on a service profile (the Fabric v4
  * {@code ServiceProfileAccessPointVD} schema): {@code type} is always {@code VD}.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceProfileAccessPointVD {
 

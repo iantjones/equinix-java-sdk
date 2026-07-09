@@ -125,15 +125,37 @@ final class MetroOptimizerEngine {
             // weight — the only inputs to ranking — are computed eagerly, so selection is
             // unaffected.
             List<ScoreComponent> components = Arrays.asList(
-                    new ScoreComponent(ScoreCategory.LATENCY, latencyScore, wLatency, null),
-                    new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, providerScore, wProvider, null),
-                    new ScoreComponent(ScoreCategory.COST, costScore, wCost,
-                            "Cost score based on estimated connection pricing"),
-                    new ScoreComponent(ScoreCategory.REDUNDANCY, redundancyScore, wRedundancy,
-                            "Baseline redundancy score; refined after topology assembly"),
-                    new ScoreComponent(ScoreCategory.COMPLIANCE, complianceScore, wCompliance,
-                            complianceScore >= 100 ? "Meets all compliance requirements"
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.LATENCY)
+                            .score(latencyScore)
+                            .weight(wLatency)
+                            .explanation(null)
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.PROVIDER_COVERAGE)
+                            .score(providerScore)
+                            .weight(wProvider)
+                            .explanation(null)
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.COST)
+                            .score(costScore)
+                            .weight(wCost)
+                            .explanation("Cost score based on estimated connection pricing")
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.REDUNDANCY)
+                            .score(redundancyScore)
+                            .weight(wRedundancy)
+                            .explanation("Baseline redundancy score; refined after topology assembly")
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.COMPLIANCE)
+                            .score(complianceScore)
+                            .weight(wCompliance)
+                            .explanation(complianceScore >= 100 ? "Meets all compliance requirements"
                                     : "Some compliance zones not fully satisfied")
+                            .build()
             );
 
             double composite = components.stream()
@@ -274,7 +296,12 @@ final class MetroOptimizerEngine {
                                     ? new ArrayList<>(spm.getSellerRegions().keySet())
                                     : Collections.emptyList();
                             metroAvail.put(spm.metroId(),
-                                    new ProviderAvailability(key, true, regions, profile.getUuid()));
+                                    ProviderAvailability.builder()
+                                            .providerLabel(key)
+                                            .available(true)
+                                            .sellerRegions(regions)
+                                            .serviceProfileUuid(profile.getUuid())
+                                            .build());
                         }
                     }
                     break; // matched this requirement
@@ -599,8 +626,12 @@ final class MetroOptimizerEngine {
             List<ScoreComponent> newComponents = new ArrayList<>();
             for (ScoreComponent comp : sm.score.getComponents()) {
                 if (comp.getCategory() == ScoreCategory.REDUNDANCY) {
-                    newComponents.add(new ScoreComponent(ScoreCategory.REDUNDANCY, redundancyScore,
-                            wRedundancy, describeRedundancy(selected, regions)));
+                    newComponents.add(ScoreComponent.builder()
+                            .category(ScoreCategory.REDUNDANCY)
+                            .score(redundancyScore)
+                            .weight(wRedundancy)
+                            .explanation(describeRedundancy(selected, regions))
+                            .build());
                 } else {
                     newComponents.add(comp);
                 }
@@ -638,13 +669,19 @@ final class MetroOptimizerEngine {
             List<ScoreComponent> newComponents = new ArrayList<>(sm.score.getComponents().size());
             for (ScoreComponent comp : sm.score.getComponents()) {
                 if (comp.getCategory() == ScoreCategory.LATENCY) {
-                    newComponents.add(new ScoreComponent(ScoreCategory.LATENCY, comp.getScore(),
-                            comp.getWeight(),
-                            describeLatencyScore(sm.metro, request, metroMap, latencyMap, totalHeadcount)));
+                    newComponents.add(ScoreComponent.builder()
+                            .category(ScoreCategory.LATENCY)
+                            .score(comp.getScore())
+                            .weight(comp.getWeight())
+                            .explanation(describeLatencyScore(sm.metro, request, metroMap, latencyMap, totalHeadcount))
+                            .build());
                 } else if (comp.getCategory() == ScoreCategory.PROVIDER_COVERAGE) {
-                    newComponents.add(new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, comp.getScore(),
-                            comp.getWeight(),
-                            describeProviderScore(sm.metro, request, providerMetroMap)));
+                    newComponents.add(ScoreComponent.builder()
+                            .category(ScoreCategory.PROVIDER_COVERAGE)
+                            .score(comp.getScore())
+                            .weight(comp.getWeight())
+                            .explanation(describeProviderScore(sm.metro, request, providerMetroMap))
+                            .build());
                 } else {
                     newComponents.add(comp);
                 }
@@ -712,7 +749,12 @@ final class MetroOptimizerEngine {
                 if (avail != null && avail.containsKey(code)) {
                     provList.add(avail.get(code));
                 } else {
-                    provList.add(new ProviderAvailability(key, false, Collections.emptyList(), null));
+                    provList.add(ProviderAvailability.builder()
+                            .providerLabel(key)
+                            .available(false)
+                            .sellerRegions(Collections.emptyList())
+                            .serviceProfileUuid(null)
+                            .build());
                 }
             }
             map.put(code, provList);
@@ -746,8 +788,11 @@ final class MetroOptimizerEngine {
                         .filter(sm -> sm.metro.getRegion() != primaryRegion)
                         .findFirst()
                         .orElse(selected.size() > 1 ? selected.get(selected.size() - 1) : selected.get(0));
-                placements.add(new WorkloadPlacement(workload.getLabel(), drMetro.metro.metroId(),
-                        "Placed in " + drMetro.metro.getRegion() + " for geographic diversity from primary"));
+                placements.add(WorkloadPlacement.builder()
+                        .workloadLabel(workload.getLabel())
+                        .assignedMetro(drMetro.metro.metroId())
+                        .reasoning("Placed in " + drMetro.metro.getRegion() + " for geographic diversity from primary")
+                        .build());
                 continue;
             }
 
@@ -769,8 +814,11 @@ final class MetroOptimizerEngine {
                         bestLatency = sm;
                     }
                 }
-                placements.add(new WorkloadPlacement(workload.getLabel(), bestLatency.metro.metroId(),
-                        "Lowest weighted latency to user sites (" + String.format("%.1fms avg", bestAvg) + ")"));
+                placements.add(WorkloadPlacement.builder()
+                        .workloadLabel(workload.getLabel())
+                        .assignedMetro(bestLatency.metro.metroId())
+                        .reasoning("Lowest weighted latency to user sites (" + String.format("%.1fms avg", bestAvg) + ")")
+                        .build());
                 continue;
             }
 
@@ -789,15 +837,21 @@ final class MetroOptimizerEngine {
                     }
                 }
                 if (bestProvider != null) {
-                    placements.add(new WorkloadPlacement(workload.getLabel(), bestProvider.metro.metroId(),
-                            "All required providers available"));
+                    placements.add(WorkloadPlacement.builder()
+                            .workloadLabel(workload.getLabel())
+                            .assignedMetro(bestProvider.metro.metroId())
+                            .reasoning("All required providers available")
+                            .build());
                     continue;
                 }
             }
 
             // Default: place in highest-scored metro
-            placements.add(new WorkloadPlacement(workload.getLabel(), primaryMetro,
-                    "Placed in highest-scored metro"));
+            placements.add(WorkloadPlacement.builder()
+                    .workloadLabel(workload.getLabel())
+                    .assignedMetro(primaryMetro)
+                    .reasoning("Placed in highest-scored metro")
+                    .build());
         }
 
         return new DeploymentTopology(placements);
@@ -817,10 +871,13 @@ final class MetroOptimizerEngine {
 
         // Single point of failure
         if (selected.size() == 1) {
-            findings.add(new RiskFinding(RiskSeverity.HIGH, "SINGLE_POINT_OF_FAILURE",
-                    "All workloads are assigned to a single metro (" + selected.get(0).metro.metroId() + ")",
-                    "Add at least one additional metro for redundancy",
-                    selected.get(0).metro.metroId()));
+            findings.add(RiskFinding.builder()
+                    .severity(RiskSeverity.HIGH)
+                    .category("SINGLE_POINT_OF_FAILURE")
+                    .description("All workloads are assigned to a single metro (" + selected.get(0).metro.metroId() + ")")
+                    .recommendation("Add at least one additional metro for redundancy")
+                    .affectedMetro(selected.get(0).metro.metroId())
+                    .build());
             resiliencyScore -= 30;
             worstSeverity = RiskSeverity.HIGH;
         }
@@ -832,18 +889,24 @@ final class MetroOptimizerEngine {
         if (selected.size() > 1 && regions.size() == 1) {
             RedundancyTier requested = request.getConstraints().getMinimumRedundancy();
             if (requested != null && requested.ordinal() >= RedundancyTier.MULTI_REGION.ordinal()) {
-                findings.add(new RiskFinding(RiskSeverity.HIGH, "SINGLE_REGION",
-                        "All " + selected.size() + " metros are in " + regions.iterator().next()
-                                + " but MULTI_REGION redundancy was requested",
-                        "Consider expanding to metros in other regions",
-                        null));
+                findings.add(RiskFinding.builder()
+                        .severity(RiskSeverity.HIGH)
+                        .category("SINGLE_REGION")
+                        .description("All " + selected.size() + " metros are in " + regions.iterator().next()
+                                + " but MULTI_REGION redundancy was requested")
+                        .recommendation("Consider expanding to metros in other regions")
+                        .affectedMetro(null)
+                        .build());
                 resiliencyScore -= 25;
                 worstSeverity = mostSevere(worstSeverity, RiskSeverity.HIGH);
             } else {
-                findings.add(new RiskFinding(RiskSeverity.MEDIUM, "SINGLE_REGION",
-                        "All metros are in the " + regions.iterator().next() + " region",
-                        "Consider adding a metro in another region for disaster resilience",
-                        null));
+                findings.add(RiskFinding.builder()
+                        .severity(RiskSeverity.MEDIUM)
+                        .category("SINGLE_REGION")
+                        .description("All metros are in the " + regions.iterator().next() + " region")
+                        .recommendation("Consider adding a metro in another region for disaster resilience")
+                        .affectedMetro(null)
+                        .build());
                 resiliencyScore -= 10;
                 worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
             }
@@ -855,11 +918,14 @@ final class MetroOptimizerEngine {
             for (MetroId metro : latencyMatrix.getMetros()) {
                 double worst = latencyMatrix.worstCase(metro);
                 if (worst > maxLatency) {
-                    findings.add(new RiskFinding(RiskSeverity.MEDIUM, "LATENCY_THRESHOLD",
-                            metro + " has worst-case latency of " + String.format("%.1fms", worst)
-                                    + " which exceeds the " + String.format("%.0fms", maxLatency) + " threshold",
-                            "Consider adding a metro closer to the affected site",
-                            metro));
+                    findings.add(RiskFinding.builder()
+                            .severity(RiskSeverity.MEDIUM)
+                            .category("LATENCY_THRESHOLD")
+                            .description(metro + " has worst-case latency of " + String.format("%.1fms", worst)
+                                    + " which exceeds the " + String.format("%.0fms", maxLatency) + " threshold")
+                            .recommendation("Consider adding a metro closer to the affected site")
+                            .affectedMetro(metro)
+                            .build());
                     resiliencyScore -= 5;
                     worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
                 }
@@ -875,10 +941,13 @@ final class MetroOptimizerEngine {
                         .filter(sm -> avail != null && avail.containsKey(sm.metro.metroId()))
                         .count();
                 if (availableCount == 1) {
-                    findings.add(new RiskFinding(RiskSeverity.MEDIUM, "PROVIDER_CONCENTRATION",
-                            key + " is only available in 1 of " + selected.size() + " recommended metros",
-                            "Consider selecting metros where " + key + " has broader presence",
-                            null));
+                    findings.add(RiskFinding.builder()
+                            .severity(RiskSeverity.MEDIUM)
+                            .category("PROVIDER_CONCENTRATION")
+                            .description(key + " is only available in 1 of " + selected.size() + " recommended metros")
+                            .recommendation("Consider selecting metros where " + key + " has broader presence")
+                            .affectedMetro(null)
+                            .build());
                     resiliencyScore -= 5;
                     worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
                 }
@@ -888,19 +957,26 @@ final class MetroOptimizerEngine {
         // Redundancy gap
         RedundancyTier requested = request.getConstraints().getMinimumRedundancy();
         if (requested != null && selected.size() < requested.getMinimumMetros()) {
-            findings.add(new RiskFinding(RiskSeverity.CRITICAL, "REDUNDANCY_GAP",
-                    "Requested " + requested + " redundancy requires at least " + requested.getMinimumMetros()
-                            + " metros but only " + selected.size() + " were selected",
-                    "Relax constraints to allow more eligible metros",
-                    null));
+            findings.add(RiskFinding.builder()
+                    .severity(RiskSeverity.CRITICAL)
+                    .category("REDUNDANCY_GAP")
+                    .description("Requested " + requested + " redundancy requires at least " + requested.getMinimumMetros()
+                            + " metros but only " + selected.size() + " were selected")
+                    .recommendation("Relax constraints to allow more eligible metros")
+                    .affectedMetro(null)
+                    .build());
             resiliencyScore -= 30;
             worstSeverity = RiskSeverity.CRITICAL;
         }
 
         if (findings.isEmpty()) {
-            findings.add(new RiskFinding(RiskSeverity.INFO, "HEALTHY",
-                    "No significant risks identified in the recommended topology",
-                    null, null));
+            findings.add(RiskFinding.builder()
+                    .severity(RiskSeverity.INFO)
+                    .category("HEALTHY")
+                    .description("No significant risks identified in the recommended topology")
+                    .recommendation(null)
+                    .affectedMetro(null)
+                    .build());
         }
 
         return new RiskAssessment(findings, worstSeverity, Math.max(0, resiliencyScore));
@@ -1003,7 +1079,15 @@ final class MetroOptimizerEngine {
         PriceSource source = mixedSources ? PriceSource.COMPOSITE
                 : (aggregateSource != null ? aggregateSource : PriceSource.ESTIMATE);
 
-        return new CostEstimate(totalMonthly, totalSetup, currency, perMetro, withinBudget, disclaimer, source);
+        return CostEstimate.builder()
+                .monthlyTotal(totalMonthly)
+                .setupTotal(totalSetup)
+                .currency(currency)
+                .perMetro(perMetro)
+                .withinBudget(withinBudget)
+                .costDisclaimer(disclaimer)
+                .source(source)
+                .build();
     }
 
     // ══════════════════════════════════════════════
@@ -1032,11 +1116,14 @@ final class MetroOptimizerEngine {
                 "Workload placement uses greedy assignment, not global optimization"
         );
 
-        return new OptimizationExplanation(methodology, assumptions,
-                "Data fetched at optimization time from live Fabric APIs",
-                "Analyzed " + totalMetros + " metros, " + candidateMetros + " met constraints, "
+        return OptimizationExplanation.builder()
+                .methodology(methodology)
+                .assumptions(assumptions)
+                .dataFreshness("Data fetched at optimization time from live Fabric APIs")
+                .humanReadable("Analyzed " + totalMetros + " metros, " + candidateMetros + " met constraints, "
                         + "selected top " + request.getConstraints().getMaxMetroCount()
-                        + " by " + request.getStrategy() + " strategy");
+                        + " by " + request.getStrategy() + " strategy")
+                .build();
     }
 
     // ══════════════════════════════════════════════

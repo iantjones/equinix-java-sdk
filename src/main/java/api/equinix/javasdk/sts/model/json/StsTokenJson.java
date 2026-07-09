@@ -21,14 +21,12 @@ import api.equinix.javasdk.sts.model.StsToken;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for the STS {@code TokenResponse}. Implements
  * {@link StsToken} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StsTokenJson implements StsToken {
 

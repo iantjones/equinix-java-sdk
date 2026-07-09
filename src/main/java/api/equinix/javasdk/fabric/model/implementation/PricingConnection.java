@@ -19,9 +19,9 @@ package api.equinix.javasdk.fabric.model.implementation;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PricingConnection {
 
@@ -34,8 +34,13 @@ public class PricingConnection {
     @JsonProperty("bandwidth")
     private Integer bandwidth;
 
+    // @JsonProperty is required: Jackson does not auto-detect these non-public fields, and the
+    // getter-derived name for getASide() is "aside", which never matched the wire key. Without
+    // the explicit names these sides silently deserialized to null.
+    @JsonProperty("aSide")
     PricingAccessPoint aSide;
 
+    @JsonProperty("zSide")
     PricingAccessPoint zSide;
 
     @JsonIgnoreProperties(ignoreUnknown = true)

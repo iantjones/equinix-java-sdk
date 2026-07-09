@@ -1,5 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
+import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
  * and if so, which seller regions are supported.
  */
 @Value
+@Builder
 public class ProviderAvailability {
 
     String providerLabel;

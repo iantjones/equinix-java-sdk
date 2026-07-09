@@ -17,6 +17,8 @@
 package api.equinix.javasdk.core.util;
 
 import api.equinix.javasdk.core.model.APIParam;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,8 @@ import java.util.stream.Collectors;
  *
  * @author ianjones
  */
-public class ModelUtils {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class ModelUtils {
 
     public static List<String> process(Object queryParameter) {
         return singleValueList(detectNull(queryParameter));

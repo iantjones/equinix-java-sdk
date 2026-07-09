@@ -25,22 +25,17 @@ import api.equinix.javasdk.ibxsmartview.model.SubscriptionData;
 import api.equinix.javasdk.ibxsmartview.model.json.StreamingSubscriptionJson;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.StreamingSubscriptionOperator;
 import api.equinix.javasdk.ibxsmartview.model.wrappers.StreamingSubscriptionWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
+@RequiredArgsConstructor
 public class StreamingSubscriptionsImpl implements StreamingSubscriptions {
-
-    private final IBXSmartView serviceManager;
 
     private final StreamingSubscriptionClient<StreamingSubscription> serviceClient;
 
-    public StreamingSubscriptionsImpl(StreamingSubscriptionClient<StreamingSubscription> serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public List<StreamingSubscription> list() {
         List<StreamingSubscriptionJson> jsonList = this.serviceClient.list();

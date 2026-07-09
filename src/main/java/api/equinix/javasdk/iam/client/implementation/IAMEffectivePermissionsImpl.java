@@ -20,17 +20,14 @@ import api.equinix.javasdk.IAM;
 import api.equinix.javasdk.iam.client.IAMEffectivePermissions;
 import api.equinix.javasdk.iam.client.internal.EffectivePermissionClient;
 import api.equinix.javasdk.iam.model.EffectivePermissions;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMEffectivePermissionsImpl implements IAMEffectivePermissions {
-
-    private final IAM serviceManager;
 
     private final EffectivePermissionClient effectivePermissionClient;
 
-    public IAMEffectivePermissionsImpl(EffectivePermissionClient effectivePermissionClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.effectivePermissionClient = effectivePermissionClient;
-    }
+    private final IAM serviceManager;
 
     public EffectivePermissions get(String projectId, String serviceId) {
         return this.effectivePermissionClient.getEffectivePermissions(projectId, serviceId, null);

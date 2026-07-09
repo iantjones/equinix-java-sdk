@@ -20,11 +20,13 @@ import api.equinix.javasdk.EquinixClient;
 import api.equinix.javasdk.core.client.interfaces.Core;
 import api.equinix.javasdk.core.client.interfaces.CoreClient;
 import api.equinix.javasdk.core.model.OAuthToken;
+import lombok.Getter;
 
 /**
  *
  * @author ianjones
  */
+@Getter
 public class CoreImpl implements Core {
 
     private final EquinixClient serviceManager;
@@ -39,13 +41,5 @@ public class CoreImpl implements Core {
     public void authenticate() {
         OAuthToken oAuthToken = getServiceClient().authenticate();
         this.serviceManager.getEquinixClient().setOAuthToken(oAuthToken);
-    }
-
-    public EquinixClient getServiceManager() {
-        return serviceManager;
-    }
-
-    public CoreClient getServiceClient() {
-        return serviceClient;
     }
 }

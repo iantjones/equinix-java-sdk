@@ -40,21 +40,18 @@ import api.equinix.javasdk.fabric.model.wrappers.PortWrapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class PortsImpl implements Ports {
 
     private final PortClient<Port> serviceClient;
 
     private final PortStatisticClient<PortStatistic> statisticServiceClient;
-
-    public PortsImpl(PortClient<Port> serviceClient, PortStatisticClient<PortStatistic> statisticServiceClient) {
-        this.serviceClient = serviceClient;
-        this.statisticServiceClient = statisticServiceClient;
-    }
 
     public PaginatedList<Port> list() {
         Page<PortJson> responsePage = serviceClient.list();

@@ -28,21 +28,16 @@ import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerAlertConfigurationJson;
 import api.equinix.javasdk.ibxsmartview.model.json.PowerEventJson;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerAlertConfigurationOperator;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@Getter
+@RequiredArgsConstructor
 public class PowerEventsImpl implements PowerEvents {
-
-    private final IBXSmartView serviceManager;
 
     private final PowerEventClient<PowerEvent> serviceClient;
 
-    public PowerEventsImpl(PowerEventClient<PowerEvent> serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public PaginatedList<PowerEvent> search(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit) {
         Page<PowerEventJson> responsePage = serviceClient.getPowerEvents(ibx, status, edgeCollectedOn, offset, limit);

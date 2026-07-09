@@ -24,17 +24,14 @@ import api.equinix.javasdk.internetaccess.client.InternetAccessCabinets;
 import api.equinix.javasdk.internetaccess.client.internal.CabinetClient;
 import api.equinix.javasdk.internetaccess.model.Cabinet;
 import api.equinix.javasdk.internetaccess.model.json.CabinetJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessCabinetsImpl implements InternetAccessCabinets {
-
-    private final InternetAccess serviceManager;
 
     private final CabinetClient serviceClient;
 
-    public InternetAccessCabinetsImpl(CabinetClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<Cabinet> list() {
         return list(null, null, null);

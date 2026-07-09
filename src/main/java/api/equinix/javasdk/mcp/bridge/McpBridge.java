@@ -2,6 +2,7 @@ package api.equinix.javasdk.mcp.bridge;
 
 import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolDefinition;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
 
@@ -35,6 +36,7 @@ import java.util.Map;
  * @see McpCloudRouterBridge
  * @see McpObservabilityBridge
  */
+@RequiredArgsConstructor
 public class McpBridge {
 
     private final Mcp client;
@@ -42,10 +44,6 @@ public class McpBridge {
     private McpConnectionBridge connectionBridge;
     private McpCloudRouterBridge cloudRouterBridge;
     private McpObservabilityBridge observabilityBridge;
-
-    public McpBridge(Mcp client) {
-        this.client = client;
-    }
 
     /**
      * Returns the metro bridge for querying Equinix metro data via MCP.

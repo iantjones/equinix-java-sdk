@@ -18,6 +18,8 @@ package api.equinix.javasdk.core.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,11 +29,8 @@ import java.io.InputStream;
  *
  * @author ianjones
  */
-public class ResourceFileUtils {
-
-    private ResourceFileUtils() {
-        // static holder — not instantiable
-    }
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class ResourceFileUtils {
 
     private static final ObjectMapper jsonMapper = new ObjectMapper();
 

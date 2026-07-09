@@ -22,7 +22,6 @@ import api.equinix.javasdk.internetaccess.model.VirtualBandwidthConfiguration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for a {@link VirtualBandwidthConfiguration} returned by the Equinix Internet
@@ -30,7 +29,6 @@ import lombok.Setter;
  * {@link VirtualBandwidthConfiguration} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VirtualBandwidthConfigurationJson implements VirtualBandwidthConfiguration {
 

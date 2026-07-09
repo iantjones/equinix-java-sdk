@@ -20,17 +20,14 @@ import api.equinix.javasdk.IAM;
 import api.equinix.javasdk.iam.client.IAMRoles;
 import api.equinix.javasdk.iam.client.internal.RoleClient;
 import api.equinix.javasdk.iam.model.json.RoleList;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMRolesImpl implements IAMRoles {
-
-    private final IAM serviceManager;
 
     private final RoleClient roleClient;
 
-    public IAMRolesImpl(RoleClient roleClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.roleClient = roleClient;
-    }
+    private final IAM serviceManager;
 
     public RoleList list() {
         return this.roleClient.listRoles(null, null, null, null);

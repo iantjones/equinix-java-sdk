@@ -17,7 +17,6 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,7 +25,6 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class ConnectionSideAdditionalInfo {
 
     @JsonProperty("key")
@@ -34,4 +32,17 @@ public class ConnectionSideAdditionalInfo {
 
     @JsonProperty("value")
     private String value;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * conventional {@code (key, value)} order is pinned here in code rather than by field
+     * declaration order.
+     *
+     * @param key   the entry key
+     * @param value the entry value
+     */
+    public ConnectionSideAdditionalInfo(String key, String value) {
+        this.key = key;
+        this.value = value;
+    }
 }

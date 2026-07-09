@@ -18,18 +18,20 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * Order details for a Precision Time service (the Fabric v4 {@code precisionTimeOrder} schema).
  *
+ * <p>Prefer {@code builder()} over the positional constructor — all three parameters are
+ * interchangeable order-number {@code String}s.</p>
+ *
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PrecisionTimeOrder {
 
@@ -41,4 +43,20 @@ public class PrecisionTimeOrder {
 
     @JsonProperty("orderNumber")
     private String orderNumber;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (three same-typed {@code String} parameters)
+     * rather than by field declaration order.
+     *
+     * @param purchaseOrderNumber     the purchase order number
+     * @param customerReferenceNumber the customer reference number
+     * @param orderNumber             the Equinix order number
+     */
+    @Builder
+    public PrecisionTimeOrder(String purchaseOrderNumber, String customerReferenceNumber, String orderNumber) {
+        this.purchaseOrderNumber = purchaseOrderNumber;
+        this.customerReferenceNumber = customerReferenceNumber;
+        this.orderNumber = orderNumber;
+    }
 }

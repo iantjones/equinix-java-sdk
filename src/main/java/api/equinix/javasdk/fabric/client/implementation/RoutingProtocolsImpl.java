@@ -32,14 +32,12 @@ import api.equinix.javasdk.fabric.model.wrappers.RoutingProtocolWrapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class RoutingProtocolsImpl implements RoutingProtocols {
 
     private final RoutingProtocolClient<RoutingProtocol> serviceClient;
-
-    public RoutingProtocolsImpl(RoutingProtocolClient<RoutingProtocol> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<RoutingProtocol> list(String connectionId) {
         Page<RoutingProtocolJson> responsePage = this.serviceClient.list(connectionId);

@@ -24,17 +24,14 @@ import api.equinix.javasdk.customerportal.client.BillingAccounts;
 import api.equinix.javasdk.customerportal.client.internal.BillingAccountClient;
 import api.equinix.javasdk.customerportal.model.BillingAccount;
 import api.equinix.javasdk.customerportal.model.json.BillingAccountJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class BillingAccountsImpl implements BillingAccounts {
-
-    private final CustomerPortal serviceManager;
 
     private final BillingAccountClient<BillingAccount> serviceClient;
 
-    public BillingAccountsImpl(BillingAccountClient<BillingAccount> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<BillingAccount> summaries() {
         Page<BillingAccountJson> responsePage = this.serviceClient.summaries();

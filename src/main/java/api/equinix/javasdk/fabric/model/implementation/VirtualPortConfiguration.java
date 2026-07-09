@@ -19,14 +19,14 @@ package api.equinix.javasdk.fabric.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * Port configuration (the Fabric v4 {@code VirtualPortConfiguration} schema): buyout
  * ({@code true}) or standard ({@code false}) configuration of the port.
  */
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

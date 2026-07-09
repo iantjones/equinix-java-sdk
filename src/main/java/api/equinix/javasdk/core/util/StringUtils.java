@@ -16,13 +16,17 @@
 
 package api.equinix.javasdk.core.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import java.util.Locale;
 
 /**
  *
  * @author ianjones
  */
-public class StringUtils {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class StringUtils {
 
     private static final Locale LOCALE_ENGLISH = Locale.ENGLISH;
 

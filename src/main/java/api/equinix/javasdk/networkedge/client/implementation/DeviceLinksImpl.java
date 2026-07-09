@@ -27,23 +27,18 @@ import api.equinix.javasdk.networkedge.model.DeviceLink;
 import api.equinix.javasdk.networkedge.model.json.creators.DeviceLinkOperator;
 import api.equinix.javasdk.networkedge.model.json.DeviceLinkJson;
 import api.equinix.javasdk.networkedge.model.wrappers.DeviceLinkWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class DeviceLinksImpl implements DeviceLinks {
-
-    private final NetworkEdge serviceManager;
 
     private final DeviceLinkClient<DeviceLink> serviceClient;
 
-    public DeviceLinksImpl(DeviceLinkClient<DeviceLink> serviceClient, NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public PaginatedList<DeviceLink> list() {
         return list(null);

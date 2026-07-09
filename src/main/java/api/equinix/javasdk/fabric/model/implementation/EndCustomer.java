@@ -17,16 +17,18 @@
 package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * End customer details for a connection.
+ *
+ * <p>Prefer {@code builder()} over the positional constructor — {@code name} and
+ * {@code mdmId} are adjacent same-typed {@code String} parameters.</p>
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class EndCustomer {
 
     @JsonProperty("isDisclosed")
@@ -37,4 +39,20 @@ public class EndCustomer {
 
     @JsonProperty("mdmId")
     private String mdmId;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code ({@code name} and {@code mdmId} are same-typed
+     * {@code String} parameters) rather than by field declaration order.
+     *
+     * @param isDisclosed whether the end customer's identity is disclosed
+     * @param name        the end customer's name
+     * @param mdmId       the end customer's MDM id
+     */
+    @Builder
+    public EndCustomer(Boolean isDisclosed, String name, String mdmId) {
+        this.isDisclosed = isDisclosed;
+        this.name = name;
+        this.mdmId = mdmId;
+    }
 }

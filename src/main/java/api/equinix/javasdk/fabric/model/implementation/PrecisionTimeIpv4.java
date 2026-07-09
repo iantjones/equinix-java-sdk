@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,11 +26,13 @@ import lombok.NoArgsConstructor;
  * EPT (Precision Time) service network information (the Fabric v4 {@code ipv4} schema):
  * the primary and secondary timing-server addresses, network mask and default gateway.
  *
+ * <p>Prefer {@code builder()} over the positional constructor — all four parameters are
+ * {@code String}s, so builder construction is self-documenting and transposition-proof.</p>
+ *
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PrecisionTimeIpv4 {
 
@@ -45,4 +47,22 @@ public class PrecisionTimeIpv4 {
 
     @JsonProperty("defaultGateway")
     private String defaultGateway;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (four same-typed {@code String} parameters)
+     * rather than by field declaration order.
+     *
+     * @param primary        the primary timing-server address
+     * @param secondary      the secondary timing-server address
+     * @param networkMask    the network mask
+     * @param defaultGateway the default gateway
+     */
+    @Builder
+    public PrecisionTimeIpv4(String primary, String secondary, String networkMask, String defaultGateway) {
+        this.primary = primary;
+        this.secondary = secondary;
+        this.networkMask = networkMask;
+        this.defaultGateway = defaultGateway;
+    }
 }

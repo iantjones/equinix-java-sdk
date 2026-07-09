@@ -24,6 +24,7 @@ import api.equinix.javasdk.core.util.ModelUtils;
 import api.equinix.javasdk.networkedge.enums.*;
 import api.equinix.javasdk.networkedge.model.implementation.SoftwarePackage;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -76,6 +77,7 @@ public class RequestBuilder {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class AllowedInterfaces extends RequestBuilderBase<AllowedInterfaces> {
 
+        @Getter
         private String deviceType;
         private DeviceManagementType deviceManagementType;
         private LicenseType mode;
@@ -96,10 +98,6 @@ public class RequestBuilder {
 
         protected AllowedInterfaces builder() {
             return new AllowedInterfaces();
-        }
-
-        public String getDeviceType() {
-            return deviceType;
         }
 
         public AllowedInterfaces withMode(LicenseType mode) {

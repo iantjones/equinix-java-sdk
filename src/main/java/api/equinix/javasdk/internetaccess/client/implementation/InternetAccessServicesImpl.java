@@ -29,17 +29,14 @@ import api.equinix.javasdk.internetaccess.model.json.creators.InternetAccessServ
 import api.equinix.javasdk.internetaccess.model.json.creators.ServiceSearchRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessServicesImpl implements InternetAccessServices {
-
-    private final InternetAccess serviceManager;
 
     private final InternetAccessServiceClient serviceClient;
 
-    public InternetAccessServicesImpl(InternetAccessServiceClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public InternetAccessServiceOperator.InternetAccessServiceBuilder define() {
         return new InternetAccessServiceOperator(this.serviceClient).create();

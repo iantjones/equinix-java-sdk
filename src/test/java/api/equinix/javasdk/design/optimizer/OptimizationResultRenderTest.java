@@ -63,11 +63,36 @@ class OptimizationResultRenderTest {
     void buildFullResult() {
         // ── Primary metro: Ashburn (DC), full score breakdown ──
         MetroScore dcScore = new MetroScore(92.5, Arrays.asList(
-                new ScoreComponent(ScoreCategory.LATENCY, 95.0, 0.30, "HQ: 0.5ms, Branch: 12.0ms"),
-                new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, 100.0, 0.25, "2/2 providers available"),
-                new ScoreComponent(ScoreCategory.COST, 80.0, 0.20, "Competitive AMER pricing"),
-                new ScoreComponent(ScoreCategory.REDUNDANCY, 90.0, 0.15, "2 metros across 1 region(s)"),
-                new ScoreComponent(ScoreCategory.COMPLIANCE, 100.0, 0.10, "Meets all compliance requirements")));
+                ScoreComponent.builder()
+                        .category(ScoreCategory.LATENCY)
+                        .score(95.0)
+                        .weight(0.30)
+                        .explanation("HQ: 0.5ms, Branch: 12.0ms")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.PROVIDER_COVERAGE)
+                        .score(100.0)
+                        .weight(0.25)
+                        .explanation("2/2 providers available")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.COST)
+                        .score(80.0)
+                        .weight(0.20)
+                        .explanation("Competitive AMER pricing")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.REDUNDANCY)
+                        .score(90.0)
+                        .weight(0.15)
+                        .explanation("2 metros across 1 region(s)")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.COMPLIANCE)
+                        .score(100.0)
+                        .weight(0.10)
+                        .explanation("Meets all compliance requirements")
+                        .build()));
 
         MetroRecommendation primary = MetroRecommendation.builder()
                 .rank(1)
@@ -78,20 +103,59 @@ class OptimizationResultRenderTest {
                 .reasons(Arrays.asList("Excellent average latency of 6.2ms to user sites",
                         "All 2 required/preferred providers available"))
                 .availableProviders(Arrays.asList(
-                        new ProviderAvailability("AWS Direct Connect", true, List.of("us-east-1"), "sp-aws-1"),
-                        new ProviderAvailability("Azure ExpressRoute", true, List.of("eastus"), "sp-azure-1")))
+                        ProviderAvailability.builder()
+                                .providerLabel("AWS Direct Connect")
+                                .available(true)
+                                .sellerRegions(List.of("us-east-1"))
+                                .serviceProfileUuid("sp-aws-1")
+                                .build(),
+                        ProviderAvailability.builder()
+                                .providerLabel("Azure ExpressRoute")
+                                .available(true)
+                                .sellerRegions(List.of("eastus"))
+                                .serviceProfileUuid("sp-azure-1")
+                                .build()))
                 .siteLatencies(orderedLatencies("HQ", 0.5, "Branch", 12.0))
                 .assignedWorkloads(List.of(
-                        new WorkloadPlacement("Web Tier", DC, "Placed in highest-scored metro")))
+                        WorkloadPlacement.builder()
+                                .workloadLabel("Web Tier")
+                                .assignedMetro(DC)
+                                .reasoning("Placed in highest-scored metro")
+                                .build()))
                 .build();
 
         // ── Secondary metro: Dallas (DA) ──
         MetroScore daScore = new MetroScore(78.0, Arrays.asList(
-                new ScoreComponent(ScoreCategory.LATENCY, 70.0, 0.30, "HQ: 30.0ms, Branch: 8.0ms"),
-                new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, 100.0, 0.25, "2/2 providers available"),
-                new ScoreComponent(ScoreCategory.COST, 80.0, 0.20, "Competitive AMER pricing"),
-                new ScoreComponent(ScoreCategory.REDUNDANCY, 90.0, 0.15, "2 metros across 1 region(s)"),
-                new ScoreComponent(ScoreCategory.COMPLIANCE, 100.0, 0.10, "Meets all compliance requirements")));
+                ScoreComponent.builder()
+                        .category(ScoreCategory.LATENCY)
+                        .score(70.0)
+                        .weight(0.30)
+                        .explanation("HQ: 30.0ms, Branch: 8.0ms")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.PROVIDER_COVERAGE)
+                        .score(100.0)
+                        .weight(0.25)
+                        .explanation("2/2 providers available")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.COST)
+                        .score(80.0)
+                        .weight(0.20)
+                        .explanation("Competitive AMER pricing")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.REDUNDANCY)
+                        .score(90.0)
+                        .weight(0.15)
+                        .explanation("2 metros across 1 region(s)")
+                        .build(),
+                ScoreComponent.builder()
+                        .category(ScoreCategory.COMPLIANCE)
+                        .score(100.0)
+                        .weight(0.10)
+                        .explanation("Meets all compliance requirements")
+                        .build()));
 
         MetroRecommendation secondary = MetroRecommendation.builder()
                 .rank(2)
@@ -102,10 +166,19 @@ class OptimizationResultRenderTest {
                 .reasons(Arrays.asList("Good average latency of 19.0ms to user sites",
                         "Located in AMER region"))
                 .availableProviders(List.of(
-                        new ProviderAvailability("AWS Direct Connect", true, List.of("us-east-1"), "sp-aws-1")))
+                        ProviderAvailability.builder()
+                                .providerLabel("AWS Direct Connect")
+                                .available(true)
+                                .sellerRegions(List.of("us-east-1"))
+                                .serviceProfileUuid("sp-aws-1")
+                                .build()))
                 .siteLatencies(orderedLatencies("HQ", 30.0, "Branch", 8.0))
                 .assignedWorkloads(List.of(
-                        new WorkloadPlacement("DR", DA, "Placed in AMER for geographic diversity from primary")))
+                        WorkloadPlacement.builder()
+                                .workloadLabel("DR")
+                                .assignedMetro(DA)
+                                .reasoning("Placed in AMER for geographic diversity from primary")
+                                .build()))
                 .build();
 
         // ── Latency matrix ──
@@ -120,18 +193,34 @@ class OptimizationResultRenderTest {
 
         // ── Topology ──
         DeploymentTopology topology = new DeploymentTopology(Arrays.asList(
-                new WorkloadPlacement("Web Tier", DC, "Placed in highest-scored metro"),
-                new WorkloadPlacement("DR", DA, "Placed in AMER for geographic diversity from primary")));
+                WorkloadPlacement.builder()
+                        .workloadLabel("Web Tier")
+                        .assignedMetro(DC)
+                        .reasoning("Placed in highest-scored metro")
+                        .build(),
+                WorkloadPlacement.builder()
+                        .workloadLabel("DR")
+                        .assignedMetro(DA)
+                        .reasoning("Placed in AMER for geographic diversity from primary")
+                        .build()));
 
         // ── Risk assessment (includes one CRITICAL so toSummary emits its WARNING line) ──
         RiskAssessment risk = new RiskAssessment(
                 Arrays.asList(
-                        new RiskFinding(RiskSeverity.CRITICAL, "REDUNDANCY_GAP",
-                                "Requested MULTI_REGION redundancy requires at least 2 metros but the set is single-region",
-                                "Relax constraints to allow more eligible metros", null),
-                        new RiskFinding(RiskSeverity.MEDIUM, "SINGLE_REGION",
-                                "All metros are in the AMER region",
-                                "Consider adding a metro in another region for disaster resilience", null)),
+                        RiskFinding.builder()
+                                .severity(RiskSeverity.CRITICAL)
+                                .category("REDUNDANCY_GAP")
+                                .description("Requested MULTI_REGION redundancy requires at least 2 metros but the set is single-region")
+                                .recommendation("Relax constraints to allow more eligible metros")
+                                .affectedMetro(null)
+                                .build(),
+                        RiskFinding.builder()
+                                .severity(RiskSeverity.MEDIUM)
+                                .category("SINGLE_REGION")
+                                .description("All metros are in the AMER region")
+                                .recommendation("Consider adding a metro in another region for disaster resilience")
+                                .affectedMetro(null)
+                                .build()),
                 RiskSeverity.CRITICAL,
                 45.0);
 
@@ -140,18 +229,23 @@ class OptimizationResultRenderTest {
                 new BigDecimal("1000.00"), lineItems(), PriceSource.EQUINIX_LIVE);
         MetroCostBreakdown daCost = new MetroCostBreakdown(DA, new BigDecimal("1100.00"),
                 new BigDecimal("1000.00"), lineItems(), PriceSource.ESTIMATE);
-        CostEstimate cost = new CostEstimate(
-                new BigDecimal("2300.00"), new BigDecimal("2000.00"), "USD",
-                Arrays.asList(dcCost, daCost), false,
-                "Per-metro costs use live Equinix Fabric pricing where available.",
-                PriceSource.COMPOSITE);
+        CostEstimate cost = CostEstimate.builder()
+                .monthlyTotal(new BigDecimal("2300.00"))
+                .setupTotal(new BigDecimal("2000.00"))
+                .currency("USD")
+                .perMetro(Arrays.asList(dcCost, daCost))
+                .withinBudget(false)
+                .costDisclaimer("Per-metro costs use live Equinix Fabric pricing where available.")
+                .source(PriceSource.COMPOSITE)
+                .build();
 
         // ── Explanation ──
-        OptimizationExplanation explanation = new OptimizationExplanation(
-                "The optimizer evaluates all metros, filtering to candidates, then scores across 5 dimensions.",
-                Arrays.asList("Latency via Fabric avgLatency data", "Cost estimates use a simplified model"),
-                "Data fetched at optimization time from live Fabric APIs",
-                "Analyzed metros, selected top 2 by BALANCED strategy");
+        OptimizationExplanation explanation = OptimizationExplanation.builder()
+                .methodology("The optimizer evaluates all metros, filtering to candidates, then scores across 5 dimensions.")
+                .assumptions(Arrays.asList("Latency via Fabric avgLatency data", "Cost estimates use a simplified model"))
+                .dataFreshness("Data fetched at optimization time from live Fabric APIs")
+                .humanReadable("Analyzed metros, selected top 2 by BALANCED strategy")
+                .build();
 
         result = OptimizationResult.builder()
                 .recommendations(Arrays.asList(primary, secondary))

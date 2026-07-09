@@ -27,17 +27,14 @@ import api.equinix.javasdk.internetaccess.model.AccountAgreement;
 import api.equinix.javasdk.internetaccess.model.AccountDetails;
 import api.equinix.javasdk.internetaccess.model.json.AccountAgreementJson;
 import api.equinix.javasdk.internetaccess.model.json.AccountDetailsJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessAccountsImpl implements InternetAccessAccounts {
-
-    private final InternetAccess serviceManager;
 
     private final AccountClient serviceClient;
 
-    public InternetAccessAccountsImpl(AccountClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<AccountDetails> list(String operationalUnitsIbx) {
         return list(operationalUnitsIbx, null);

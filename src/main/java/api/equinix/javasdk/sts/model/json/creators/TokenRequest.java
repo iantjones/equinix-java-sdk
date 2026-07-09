@@ -18,6 +18,7 @@ package api.equinix.javasdk.sts.model.json.creators;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * An OAuth 2.0 token-exchange request body (RFC&nbsp;8693) for {@code POST /v1/token} (operationId
@@ -28,6 +29,7 @@ import java.util.Map;
  * via {@link #toFormFields()} (using the spec's property names {@code grantType}, {@code scope},
  * {@code subjectToken}, {@code subjectTokenType}) rather than being JSON-serialized.</p>
  */
+@Getter
 public class TokenRequest {
 
     private String grantType;
@@ -81,22 +83,6 @@ public class TokenRequest {
     public TokenRequest subjectTokenType(String subjectTokenType) {
         this.subjectTokenType = subjectTokenType;
         return this;
-    }
-
-    public String getGrantType() {
-        return grantType;
-    }
-
-    public String getScope() {
-        return scope;
-    }
-
-    public String getSubjectToken() {
-        return subjectToken;
-    }
-
-    public String getSubjectTokenType() {
-        return subjectTokenType;
     }
 
     /**

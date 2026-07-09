@@ -23,14 +23,12 @@ import api.equinix.javasdk.fabric.client.Tags;
 import api.equinix.javasdk.fabric.client.internal.TagClient;
 import api.equinix.javasdk.fabric.model.Tag;
 import api.equinix.javasdk.fabric.model.json.TagJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class TagsImpl implements Tags {
 
     private final TagClient<Tag> serviceClient;
-
-    public TagsImpl(TagClient<Tag> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<Tag> list() {
         Page<TagJson> responsePage = this.serviceClient.list();
