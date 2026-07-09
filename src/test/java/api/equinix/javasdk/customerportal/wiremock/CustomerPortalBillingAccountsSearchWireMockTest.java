@@ -116,6 +116,63 @@ class CustomerPortalBillingAccountsSearchWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        // basv2's SearchRequest carries its pagination as TOP-LEVEL body members (offset/limit),
+        // so page 2 must be requested by re-sending the body with the offset advanced from the
+        // SERVER-reported pagination.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "accountId": "PAGE1_ACCT", "accountNumber": "111" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "accountId": "PAGE2_ACCT", "accountNumber": "222" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the body's offset member (regression: ClassCastException on page 2)")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withRequestBody(matchingJsonPath("$.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withRequestBody(matchingJsonPath("$.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            BillingAccountSearchRequest request = BillingAccountSearchRequest.builder()
+                    .ibxCode("SV5")
+                    .limit(100)
+                    .offset(0)
+                    .build();
+
+            PaginatedList<BillingAccountV2> accounts = customerPortal.billingAccountsSearch().search(request);
+            assertEquals(1, accounts.size());
+            assertTrue(accounts.hasNextPage());
+
+            accounts.loadAll();
+
+            assertEquals(2, accounts.size());
+            assertEquals("PAGE1_ACCT", accounts.get(0).getAccountId());
+            assertEquals("PAGE2_ACCT", accounts.get(1).getAccountId());
+            assertFalse(accounts.hasNextPage());
+
+            // Page 2 body: offset advanced from the server-reported pagination, limit carried,
+            // and the same filter criteria re-sent.
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withRequestBody(matchingJsonPath("$.offset", equalTo("100")))
+                    .withRequestBody(matchingJsonPath("$.limit", equalTo("100")))
+                    .withRequestBody(matchingJsonPath("$.ibxCode", equalTo("SV5"))));
+        }
+    }
+
+    @Nested
     @DisplayName("getByAccountNumber()")
     class GetByAccountNumber {
 

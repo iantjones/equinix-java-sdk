@@ -80,7 +80,8 @@ public class ShipmentClientImpl extends ClientBase implements ShipmentClient {
         }
         ShipmentLocationsResponseJson response = getAs("ListShipmentLocations", null,
                 queryParams.isEmpty() ? null : queryParams, ShipmentLocationsResponseJson.class);
-        return response.getLocations();
+        // An empty 2xx body (204, "{}") deserializes to null / a null "locations" member.
+        return response == null || response.getLocations() == null ? List.of() : response.getLocations();
     }
 
     private OrderResponse submitOrder(String serviceEndpoint, Map<String, String> pathParams, Object body) {

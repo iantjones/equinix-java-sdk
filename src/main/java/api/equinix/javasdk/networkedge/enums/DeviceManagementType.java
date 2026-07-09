@@ -20,6 +20,10 @@ import api.equinix.javasdk.core.model.APIParam;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
+ * Device management type (network-edgev1 wire values {@code EQUINIX-CONFIGURED} /
+ * {@code SELF-CONFIGURED} — hyphenated, unlike the constant names). {@code toString()} returns
+ * the hyphenated wire form so body ({@code @JsonValue}) and query-parameter ({@code paramValue()})
+ * serialization agree — enforced by {@code ApiParamContractTest}.
  *
  * @author ianjones
  */
@@ -35,6 +39,11 @@ public enum DeviceManagementType implements APIParam {
 
     @JsonValue
     public String getJsonValue() {
+        return formatted;
+    }
+
+    @Override
+    public String toString() {
         return formatted;
     }
 }

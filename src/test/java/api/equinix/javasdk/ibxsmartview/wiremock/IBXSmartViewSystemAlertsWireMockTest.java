@@ -175,4 +175,88 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
                     () -> smartView.systemAlerts().searchPost(request));
         }
     }
+
+    @Nested
+    @DisplayName("Multi-page paging")
+    class Paging {
+
+        // Spec-conformant PaginatedResponseAlertReadModel envelope: {data, pagination{offset,limit,total}}.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "id": 1, "alertUid": "PAGE1_ALERT" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "id": 2, "alertUid": "PAGE2_ALERT" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("searchPost: loadAll() fetches page 2 by advancing the body's pagination member (regression: ClassCastException on page 2)")
+        void searchPostLoadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            SearchRequest request = new SearchRequest(
+                    new SearchFilter(List.of(new SearchCondition("status", "EQUALS", List.of("ACTIVE"))), null),
+                    new SearchPagination(0L, 100),
+                    null);
+
+            PaginatedList<SystemAlert> alerts = smartView.systemAlerts().searchPost(request);
+            assertEquals(1, alerts.size());
+            assertTrue(alerts.hasNextPage());
+
+            alerts.loadAll();
+
+            assertEquals(2, alerts.size());
+            assertEquals("PAGE1_ALERT", alerts.get(0).getAlertUid());
+            assertEquals("PAGE2_ALERT", alerts.get(1).getAlertUid());
+            assertFalse(alerts.hasNextPage());
+
+            // Page 2 body: pagination advanced from the server-reported page, same filter re-sent.
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .withRequestBody(matchingJsonPath("$.pagination.limit", equalTo("100")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("ACTIVE"))));
+        }
+
+        @Test
+        @DisplayName("search (GET): a server-clamped limit advances page 2 from the SERVER page, not the requested one (regression: skipped records)")
+        void getSearchAdvancesFromServerClampedPagination() {
+            // Caller requests limit=500; the server clamps to 100 and says so in the response
+            // pagination. Page 2 must be requested at offset=100 (server offset + server limit),
+            // NOT offset=500 — the old caller-side advance skipped records 100..499.
+            wireMock.stubFor(get(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<SystemAlert> alerts = smartView.systemAlerts().search("ACTIVE", null, null, 0, 500);
+            assertEquals(1, alerts.size());
+            assertTrue(alerts.hasNextPage());
+
+            alerts.loadAll();
+
+            assertEquals(2, alerts.size());
+            assertFalse(alerts.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withQueryParam("status", equalTo("ACTIVE")));
+            // And it never asked for the caller-side offset=500 page.
+            wireMock.verify(0, getRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("offset", equalTo("500")));
+        }
+    }
 }

@@ -52,14 +52,14 @@ public class ModelUtils {
     }
 
     public static List<String> singleValueList(APIParam value) {
-        return value != null ? singleValueList(value.toString()) : null;
+        return value != null ? singleValueList(value.paramValue()) : null;
     }
 
     public static List<String> stringListFromEnumList(List<APIParam> enumList) {
         if(enumList == null) {
             return null;
         }
-        return enumList.stream().map(APIParam::toString).collect(Collectors.toList());
+        return enumList.stream().map(APIParam::paramValue).collect(Collectors.toList());
     }
 
     public static List<String> stringListFromIntegerList(List<Integer> integerList) {

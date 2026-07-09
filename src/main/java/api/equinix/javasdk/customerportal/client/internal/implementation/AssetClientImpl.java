@@ -17,10 +17,6 @@
 package api.equinix.javasdk.customerportal.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
-import api.equinix.javasdk.core.enums.RequestType;
-import api.equinix.javasdk.core.http.ResponseHandler;
-import api.equinix.javasdk.core.http.SerializationHelper;
-import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.response.Page;
 import api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl;
 import api.equinix.javasdk.customerportal.client.internal.AssetClient;
@@ -44,14 +40,11 @@ public class AssetClientImpl extends ResourceClientBase<Asset, AssetJson> implem
     }
 
     public Page<AssetJson> search(AssetSearchRequest request) {
+        // assetsv1 paginates the search via offset/limit QUERY PARAMETERS (the body carries only
+        // the filter), so this builds a query-paginated request: the shared paging pipeline
+        // advances the query offset between pages while re-sending the same filter body.
         Map<String, List<String>> queryParams = buildQueryParams(request);
-        if (queryParams.isEmpty()) {
-            return searchPage("SearchAssets", request);
-        }
-        EquinixRequest<Asset> equinixRequest = buildRequestWithQueryParams("SearchAssets",
-                RequestType.PAGINATED_POST, queryParams, AssetJson.class);
-        SerializationHelper.serializeJson(equinixRequest, request);
-        return ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
+        return searchPageQueryPaginated("SearchAssets", queryParams.isEmpty() ? null : queryParams, request);
     }
 
     public AssetJson getByUuid(String assetId) {

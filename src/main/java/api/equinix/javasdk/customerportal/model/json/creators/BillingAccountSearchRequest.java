@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.customerportal.model.json.creators;
 
+import api.equinix.javasdk.core.model.PaginatedPostBody;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -29,10 +30,14 @@ import java.util.List;
  * <p>All criteria are optional: {@code ibxCode} and {@code metroCode} narrow by where the account
  * may place orders, {@code accountStatus} filters by one or more statuses, {@code projectId} scopes
  * to an associated project, and {@code limit}/{@code offset} control paging.</p>
+ *
+ * <p>Implements {@link PaginatedPostBody} so the shared paging pipeline can fetch subsequent
+ * pages by re-pointing the body's top-level {@code offset}/{@code limit} members (that is where
+ * the basv2 spec's {@code SearchRequest} carries its pagination) at the next window.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class BillingAccountSearchRequest {
+public class BillingAccountSearchRequest implements PaginatedPostBody {
 
     @JsonProperty("ibxCode")
     private final String ibxCode;
@@ -47,10 +52,10 @@ public class BillingAccountSearchRequest {
     private final String projectId;
 
     @JsonProperty("limit")
-    private final Integer limit;
+    private Integer limit;
 
     @JsonProperty("offset")
-    private final Integer offset;
+    private Integer offset;
 
     private BillingAccountSearchRequest(Builder builder) {
         this.ibxCode = builder.ibxCode;
@@ -68,6 +73,14 @@ public class BillingAccountSearchRequest {
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public void seekPage(long pageOffset, long pageLimit) {
+        this.offset = Math.toIntExact(pageOffset);
+        if (pageLimit > 0) {
+            this.limit = Math.toIntExact(pageLimit);
+        }
     }
 
     public static class Builder {

@@ -16,6 +16,7 @@
 
 package api.equinix.javasdk.ibxsmartview.model.json.creators;
 
+import api.equinix.javasdk.core.model.PaginatedPostBody;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -25,16 +26,20 @@ import java.util.List;
 /**
  * Typed request body for the system-alerts search POST endpoint ({@code SearchRequest} in the
  * spec). Carries the filter, request-side pagination and sort options.
+ *
+ * <p>Implements {@link PaginatedPostBody} so the shared paging pipeline can fetch subsequent
+ * pages by re-pointing the body's {@code pagination} member at the next window (spec:
+ * {@code SearchPagination {offset, limit}} inside the body).</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SearchRequest {
+public class SearchRequest implements PaginatedPostBody {
 
     @JsonProperty("filter")
     private final SearchFilter filter;
 
     @JsonProperty("pagination")
-    private final SearchPagination pagination;
+    private SearchPagination pagination;
 
     @JsonProperty("sort")
     private final List<SearchSort> sort;
@@ -43,5 +48,14 @@ public class SearchRequest {
         this.filter = filter;
         this.pagination = pagination;
         this.sort = sort;
+    }
+
+    @Override
+    public void seekPage(long offset, long limit) {
+        // SearchPagination is immutable; paging replaces it with the requested window. When the
+        // server did not echo a usable limit, keep the caller's current one (or the spec default).
+        Integer effectiveLimit = limit > 0 ? Math.toIntExact(limit)
+                : (this.pagination != null ? this.pagination.getLimit() : null);
+        this.pagination = new SearchPagination(offset, effectiveLimit);
     }
 }

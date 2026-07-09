@@ -38,6 +38,7 @@ import api.equinix.javasdk.design.optimizer.wizard.model.PlannedConnection;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlannedRoutingProtocol;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -110,7 +111,7 @@ class DeploymentWizardPlanTest {
 
         assertEquals(List.of("FCR-DC", "FCR-DA", "FCR-SV"),
                 routers.stream().map(PlannedCloudRouter::getName).toList());
-        assertTrue(routers.stream().allMatch(r -> r.getPackageCode().equals("STANDARD")));
+        assertTrue(routers.stream().allMatch(r -> r.getPackageCode() == GatewayPackageCode.STANDARD));
         assertEquals(DC, routers.get(0).getMetroId());
     }
 
@@ -272,6 +273,69 @@ class DeploymentWizardPlanTest {
         assertEquals(1, plan.getCloudRouters().size());
         assertEquals(1, plan.getProviderConnections().size());
         assertTrue(plan.getBackboneLinks().isEmpty(), "no inter-metro links with a single metro");
+    }
+
+    // ── routerPackage validation (plan-time, never execute-time) ──
+
+    @Test
+    @DisplayName("routerPackage(String) is lenient: lowercase and padded codes resolve to the enum at plan time")
+    void routerPackageLenientResolution() {
+        FabricGateway fabric = mock(FabricGateway.class);
+
+        DeploymentPlan lowercase = DeploymentWizard.builder(fabric, threeMetroResult())
+                .routerPackage("standard")
+                .rateCard(emptyRateCard())
+                .plan();
+        assertTrue(lowercase.getCloudRouters().stream()
+                        .allMatch(r -> r.getPackageCode() == GatewayPackageCode.STANDARD),
+                "lowercase 'standard' must resolve to GatewayPackageCode.STANDARD at plan time");
+
+        DeploymentPlan padded = DeploymentWizard.builder(fabric, threeMetroResult())
+                .routerPackage("  Premium ")
+                .rateCard(emptyRateCard())
+                .plan();
+        assertTrue(padded.getCloudRouters().stream()
+                .allMatch(r -> r.getPackageCode() == GatewayPackageCode.PREMIUM));
+    }
+
+    @Test
+    @DisplayName("a garbage package code fails fast at plan time with a message naming the valid codes")
+    void routerPackageGarbageFailsFast() {
+        FabricGateway fabric = mock(FabricGateway.class);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> DeploymentWizard.builder(fabric, threeMetroResult()).routerPackage("TURBO"));
+        assertTrue(ex.getMessage().contains("TURBO"), "the message names the offending code");
+        assertTrue(ex.getMessage().contains("LAB, BASIC, STANDARD, ADVANCED, PREMIUM"),
+                "the message lists every valid code (and never offers UNKNOWN): " + ex.getMessage());
+
+        // UNKNOWN is a deserialization placeholder, never a deployable tier.
+        assertThrows(IllegalArgumentException.class,
+                () -> DeploymentWizard.builder(fabric, threeMetroResult()).routerPackage("UNKNOWN"));
+        assertThrows(IllegalArgumentException.class,
+                () -> DeploymentWizard.builder(fabric, threeMetroResult()).routerPackage("unknown"));
+        assertThrows(IllegalArgumentException.class,
+                () -> DeploymentWizard.builder(fabric, threeMetroResult()).routerPackage((String) null));
+    }
+
+    @Test
+    @DisplayName("the typed routerPackage(GatewayPackageCode) overload accepts real tiers and rejects null/UNKNOWN")
+    void routerPackageTypedOverload() {
+        FabricGateway fabric = mock(FabricGateway.class);
+
+        DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
+                .routerPackage(GatewayPackageCode.ADVANCED)
+                .rateCard(emptyRateCard())
+                .plan();
+        assertTrue(plan.getCloudRouters().stream()
+                .allMatch(r -> r.getPackageCode() == GatewayPackageCode.ADVANCED));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DeploymentWizard.builder(fabric, threeMetroResult())
+                        .routerPackage(GatewayPackageCode.UNKNOWN));
+        assertThrows(IllegalArgumentException.class,
+                () -> DeploymentWizard.builder(fabric, threeMetroResult())
+                        .routerPackage((GatewayPackageCode) null));
     }
 
     // ── Helpers ──

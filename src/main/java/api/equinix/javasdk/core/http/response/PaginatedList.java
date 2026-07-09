@@ -16,7 +16,9 @@
 
 package api.equinix.javasdk.core.http.response;
 
+import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
+import api.equinix.javasdk.core.http.request.PaginatedPostRequest;
 import api.equinix.javasdk.core.http.request.PaginatedRequest;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -142,15 +144,31 @@ public class PaginatedList<T> implements Iterable<T> {
 
     @SuppressWarnings("unchecked") // the request's element type is erased and never used by paging
     private PaginatedList<T> fetchNextPage() {
-        PaginatedRequest<T> paginatedRequest = (PaginatedRequest<T>) equinixRequest;
-        paginatedRequest.nextPage();
+        // One shared advance path with PaginatedFilteredList: seek the request's pagination —
+        // whether it lives in the POST body or in offset/limit query parameters — from the
+        // SERVER-reported pagination of the page we hold (clamp-safe), or fail fast with a clear
+        // unsupported-pagination error (previously a hard cast here threw ClassCastException on
+        // page 2 of POST searches wrapped in a PaginatedList).
+        PagingDispatcher.advance(equinixRequest, pagination);
         try {
-            return (PaginatedList<T>) this.pageableClient.nextPage(paginatedRequest);
+            if (equinixRequest instanceof PaginatedPostRequest) {
+                if (!(pageableClient instanceof PageablePost)) {
+                    throw new EquinixClientException("Cannot fetch the next page for search endpoint '"
+                            + equinixRequest.getServiceEndpoint() + "': the paging client "
+                            + (pageableClient != null ? pageableClient.getClass().getName() : "<none>")
+                            + " cannot re-invoke POST searches (it does not implement PageablePost).");
+                }
+                PaginatedFilteredList<T> nextPage =
+                        ((PageablePost<T>) pageableClient).nextPage((PaginatedPostRequest<T>) equinixRequest);
+                return new PaginatedList<>(nextPage, this.pageableClient, nextPage.getEquinixRequest(),
+                        nextPage.getEquinixResponse(), nextPage.getPagination());
+            }
+            return (PaginatedList<T>) this.pageableClient.nextPage((PaginatedRequest<T>) equinixRequest);
         }
         catch (RuntimeException e) {
-            // Roll the shared request's offset back so a caller that catches the failure and
+            // Seek the shared request's pagination back so a caller that catches the failure and
             // retries next() re-fetches the SAME page instead of silently skipping one.
-            paginatedRequest.previousPage();
+            PagingDispatcher.rollback(equinixRequest, pagination);
             throw e;
         }
     }

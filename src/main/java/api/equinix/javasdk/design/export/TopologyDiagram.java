@@ -67,7 +67,7 @@ public class TopologyDiagram {
                 mmd.append("    ").append(nodeId)
                         .append("([\"").append(escape(cr.getName()));
                 if (cr.getPackageCode() != null) {
-                    mmd.append("<br/>").append(escape(cr.getPackageCode()));
+                    mmd.append("<br/>").append(escape(cr.getPackageCode().name()));
                 }
                 mmd.append("\"])").append(NL);
             }

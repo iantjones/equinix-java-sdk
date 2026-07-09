@@ -144,12 +144,15 @@ public final class Constants {
     /**
      * Formats a date-time query/body parameter in the API's {@code yyyy-MM-dd'T'HH:mm:ss'Z'} shape.
      *
-     * <p><strong>The input must already represent UTC.</strong> The trailing {@code 'Z'} is a
-     * literal, not an offset: this formatter performs no zone conversion, so formatting a
-     * zone-local {@link java.time.LocalDateTime} directly would stamp local wall-clock digits with
-     * a UTC designator. Callers must convert first, e.g.
-     * {@code localDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime()}
-     * or format an {@link java.time.Instant} via {@code LocalDateTime.ofInstant(instant, ZoneOffset.UTC)}.</p>
+     * <p><strong>The input must be UTC wall clock</strong> — which is the SDK-wide convention:
+     * the core {@code LocalDateTimeDeserializer} parses {@code "...T12:00:00Z"} into a bare
+     * {@link java.time.LocalDateTime} of 12:00, so every timestamp the SDK returns is already
+     * UTC wall clock and can be formatted here verbatim. The trailing {@code 'Z'} is a literal,
+     * not an offset: this formatter performs no zone conversion, so formatting a zone-local
+     * {@link java.time.LocalDateTime} (e.g. {@code LocalDateTime.now()}) would stamp local
+     * wall-clock digits with a UTC designator. For the current time use
+     * {@code LocalDateTime.now(ZoneOffset.UTC)}, or format an {@link java.time.Instant} via
+     * {@code LocalDateTime.ofInstant(instant, ZoneOffset.UTC)}.</p>
      */
     public static final DateTimeFormatter queryParamFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 

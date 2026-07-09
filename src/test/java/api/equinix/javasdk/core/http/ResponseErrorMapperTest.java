@@ -25,8 +25,10 @@ import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.core.exception.EquinixServiceException;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -112,6 +114,46 @@ class ResponseErrorMapperTest {
     void blankOrNullBodyYieldsEmptyDetails() {
         assertTrue(ResponseErrorMapper.toException(404, PATH, null, null, null).getExceptionDetails().isEmpty());
         assertTrue(ResponseErrorMapper.toException(404, PATH, null, "   ", null).getExceptionDetails().isEmpty());
+    }
+
+    @Test
+    void nullElementsInDetailsArrayAreFiltered() {
+        // Some gateways return a details array containing JSON nulls; List.copyOf would NPE on
+        // them and abort exception construction. They must be dropped instead.
+        EquinixServiceException ex = ResponseErrorMapper.toException(502, PATH, null, "[null]", null);
+
+        assertInstanceOf(EquinixServerException.class, ex);
+        assertEquals(502, ex.getStatusCode());
+        assertEquals(PATH, ex.getPath());
+        assertTrue(ex.getExceptionDetails().isEmpty());
+        assertDoesNotThrow(ex::getMessage);
+    }
+
+    @Test
+    void nullElementsAlongsideRealDetailsAreFiltered() {
+        String body = "[null,{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Server error\"},null]";
+        EquinixServiceException ex = ResponseErrorMapper.toException(500, PATH, null, body, null);
+
+        assertEquals(1, ex.getExceptionDetails().size());
+        assertEquals("ERR-500", ex.getExceptionDetails().get(0).getErrorCode());
+        assertDoesNotThrow(ex::getMessage);
+    }
+
+    @Test
+    void nullHeaderEntriesAreFiltered() {
+        // Map.copyOf would NPE on a null header value; the null entry must be dropped while the
+        // real ones are kept.
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Retry-After", "30");
+        headers.put("X-Broken", null);
+        headers.put(null, "orphan-value");
+
+        EquinixServiceException ex = ResponseErrorMapper.toException(429, PATH, headers, null, null);
+
+        assertEquals(429, ex.getStatusCode());
+        assertEquals("30", ex.getHttpHeaders().get("Retry-After"));
+        assertFalse(ex.getHttpHeaders().containsKey("X-Broken"));
+        assertEquals(1, ex.getHttpHeaders().size());
     }
 
     @Test

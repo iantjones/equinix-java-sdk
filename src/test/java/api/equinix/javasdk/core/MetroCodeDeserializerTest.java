@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Verifies {@code MetroCodeDeserializer}'s forward-compatibility behaviour: a metro code the
@@ -44,5 +45,24 @@ class MetroCodeDeserializerTest {
         assertEquals(MetroCode.UNKNOWN,
                 Constants.mapper().readValue("\"NEW_METRO_2027\"", MetroCode.class));
         assertDoesNotThrow(() -> Constants.mapper().readValue("\"QQ\"", MetroCode.class));
+    }
+
+    @Test
+    @DisplayName("an empty-string metro code maps to the UNKNOWN sentinel, not null")
+    void emptyCodeMapsToUnknown() throws Exception {
+        assertEquals(MetroCode.UNKNOWN, Constants.mapper().readValue("\"\"", MetroCode.class));
+    }
+
+    @Test
+    @DisplayName("a whitespace-only metro code maps to the UNKNOWN sentinel, not null")
+    void whitespaceCodeMapsToUnknown() throws Exception {
+        assertEquals(MetroCode.UNKNOWN, Constants.mapper().readValue("\"   \"", MetroCode.class));
+        assertEquals(MetroCode.UNKNOWN, Constants.mapper().readValue("\"\\t\"", MetroCode.class));
+    }
+
+    @Test
+    @DisplayName("an explicit JSON null stays null (absence, not an unknown metro)")
+    void jsonNullStaysNull() throws Exception {
+        assertNull(Constants.mapper().readValue("null", MetroCode.class));
     }
 }

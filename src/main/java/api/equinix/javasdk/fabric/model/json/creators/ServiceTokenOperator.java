@@ -163,7 +163,12 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
         /**
          * Sets the expiration date and time of the service token.
          *
-         * @param expirationDateTime the expiration instant, sent as {@code expirationDateTime}
+         * <p>UTC contract: the {@code LocalDateTime} input is UTC wall clock (matching every
+         * timestamp the SDK returns, including {@code ServiceToken.getExpirationDateTime()});
+         * it is sent verbatim with a {@code 'Z'} designator. Use
+         * {@code LocalDateTime.now(ZoneOffset.UTC)} as the base for relative expirations.</p>
+         *
+         * @param expirationDateTime the expiration as UTC wall clock, sent as {@code expirationDateTime}
          * @return this builder
          */
         public ServiceTokenOperator.ServiceTokenBuilder withExpirationDateTime(LocalDateTime expirationDateTime) {

@@ -3,6 +3,7 @@ package api.equinix.javasdk.design.export;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.design.optimizer.model.DeploymentTopology;
 import api.equinix.javasdk.design.optimizer.model.MetroRecommendation;
@@ -49,12 +50,12 @@ class ExportTest {
     void buildPlan() {
         List<PlannedCloudRouter> routers = Arrays.asList(
                 PlannedCloudRouter.builder()
-                        .metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD")
+                        .metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD)
                         .accountNumber(272010L).projectId("proj-uuid-123")
                         .notificationEmail("noc@example.com")
                         .build(),
                 PlannedCloudRouter.builder()
-                        .metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode("STANDARD")
+                        .metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode(GatewayPackageCode.STANDARD)
                         .build()
         );
 
@@ -214,7 +215,7 @@ class ExportTest {
                     .sourceOptimization(buildOptResult())
                     .cloudRouters(Collections.singletonList(
                             PlannedCloudRouter.builder()
-                                    .metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build()))
+                                    .metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD).build()))
                     .providerConnections(Collections.emptyList())
                     .backboneLinks(Collections.emptyList())
                     .routingProtocols(Collections.emptyList())

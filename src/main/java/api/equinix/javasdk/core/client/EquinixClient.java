@@ -357,21 +357,29 @@ public class EquinixClient implements Closeable {
      *
      * <p>{@link #ensureAuthenticated()} runs first: it authenticates lazily on the first call and
      * re-authenticates an expired token, single-flight under {@link #tokenLock}. The authorization
-     * header is then derived from the published token — omitted only for the token request itself,
-     * which carries its credentials in the body rather than a bearer header.</p>
+     * header is then derived from the published token — omitted always for the token-mint request
+     * itself (see {@link #isTokenMintRequest}), which carries its credentials in the body rather
+     * than a bearer header. Signing the token request with the currently published token would be
+     * wrong exactly when it matters most: during re-authentication the published token is the
+     * expired one.</p>
      *
      * @param equinixRequest the request to decorate.
      */
     private <T> void setStandardHeaders(EquinixRequest<T> equinixRequest){
-        ensureAuthenticated();
+        boolean tokenMintRequest = isTokenMintRequest(equinixRequest);
+        if (!tokenMintRequest) {
+            ensureAuthenticated();
+        }
 
         // Case-insensitive keys: HTTP header names are case-insensitive, so a caller-supplied
         // "Authorization"/"Content-Type" must be recognized as the same header as the lowercase
         // standard ones below (a case-sensitive merge would emit both, which some gateways reject).
         Map<String, String> standardHeaders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        OAuthToken currentToken = oAuthToken;
-        if (currentToken != null && currentToken.getSessionToken() != null) {
-            standardHeaders.put("authorization", "Bearer " + currentToken.getSessionToken());
+        if (!tokenMintRequest) {
+            OAuthToken currentToken = oAuthToken;
+            if (currentToken != null && currentToken.getSessionToken() != null) {
+                standardHeaders.put("authorization", "Bearer " + currentToken.getSessionToken());
+            }
         }
         String contentType = equinixRequest.getContentType();
         standardHeaders.put("content-type", contentType != null ? contentType : "application/json");
@@ -381,7 +389,25 @@ public class EquinixClient implements Closeable {
         if (existingHeaders != null) {
             existingHeaders.forEach(standardHeaders::putIfAbsent);
         }
+        if (tokenMintRequest) {
+            // The token endpoint authenticates via the client_id/client_secret in the body; a
+            // Bearer header must never accompany it (during re-auth it would be the expired
+            // token). The map's case-insensitive comparator removes any casing variant.
+            standardHeaders.remove("authorization");
+        }
         equinixRequest.setHeaders(standardHeaders);
+    }
+
+    /**
+     * Identifies the OAuth2 token-mint request itself, as built by
+     * {@code CoreClientImpl#authenticate()} from the {@code Authentication/OAuth} entry of
+     * {@code apiParams_Core.json}. That request authenticates with credentials in its body and
+     * must never carry an {@code authorization} bearer header — in particular not the expired
+     * token that is still published while re-authentication is in flight.
+     */
+    private static boolean isTokenMintRequest(EquinixRequest<?> equinixRequest) {
+        return "Authentication".equals(equinixRequest.getFunctionalArea())
+                && "OAuth".equals(equinixRequest.getRequestParent());
     }
 
     @Override

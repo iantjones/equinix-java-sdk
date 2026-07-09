@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.optimizer.wizard;
 
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
@@ -13,7 +14,10 @@ import api.equinix.javasdk.design.value.ratecard.Term;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Entry point for the Deployment Wizard. Takes an {@link OptimizationResult} and produces
@@ -70,8 +74,14 @@ public final class DeploymentWizard {
         private final FabricGateway fabric;
         private final OptimizationResult optimizationResult;
 
+        /** The deployable package tiers — every {@link GatewayPackageCode} except {@code UNKNOWN}. */
+        private static final String VALID_PACKAGE_CODES = Stream.of(GatewayPackageCode.values())
+                .filter(code -> code != GatewayPackageCode.UNKNOWN)
+                .map(Enum::name)
+                .collect(Collectors.joining(", "));
+
         // Cloud Router settings
-        private String routerPackage = "STANDARD";
+        private GatewayPackageCode routerPackage = GatewayPackageCode.STANDARD;
         private String routerNamePrefix = "FCR";
 
         // Connection settings
@@ -111,14 +121,56 @@ public final class DeploymentWizard {
         // ── Cloud Router Settings ──
 
         /**
-         * Sets the Cloud Router package code. Defaults to "STANDARD".
+         * Sets the Cloud Router package code from its string form, leniently: the value is
+         * trimmed and upper-cased before being resolved (so {@code "standard"} and
+         * {@code " Premium "} both work). Defaults to {@link GatewayPackageCode#STANDARD}.
          *
-         * @param packageCode the router package code
+         * <p>The code is validated here — once, at plan time — so a bad value fails fast
+         * instead of surfacing as an {@code IllegalArgumentException} mid-deployment in
+         * {@link DeploymentPlan#execute()} after some routers have already been provisioned.</p>
+         *
+         * @param packageCode the router package code (case-insensitive)
          * @return this builder for method chaining
+         * @throws IllegalArgumentException if the code does not name a deployable package tier
          */
         public Builder routerPackage(String packageCode) {
+            return routerPackage(resolvePackageCode(packageCode));
+        }
+
+        /**
+         * Sets the Cloud Router package code. Defaults to {@link GatewayPackageCode#STANDARD}.
+         *
+         * @param packageCode the router package tier
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if the code is {@code null} or
+         *         {@link GatewayPackageCode#UNKNOWN} (a placeholder that must never be sent to the API)
+         */
+        public Builder routerPackage(GatewayPackageCode packageCode) {
+            if (packageCode == null || packageCode == GatewayPackageCode.UNKNOWN) {
+                throw new IllegalArgumentException("Invalid Cloud Router package code: " + packageCode
+                        + ". Valid codes: " + VALID_PACKAGE_CODES + ".");
+            }
             this.routerPackage = packageCode;
             return this;
+        }
+
+        /**
+         * Resolves a free-form package-code string to its {@link GatewayPackageCode} constant,
+         * tolerating whitespace and any casing. {@code UNKNOWN} (a deserialization placeholder,
+         * never a deployable tier) and unrecognized values are rejected with a message naming
+         * the valid codes.
+         */
+        private static GatewayPackageCode resolvePackageCode(String packageCode) {
+            if (packageCode != null) {
+                String normalized = packageCode.trim().toUpperCase(Locale.ROOT);
+                for (GatewayPackageCode candidate : GatewayPackageCode.values()) {
+                    if (candidate != GatewayPackageCode.UNKNOWN && candidate.name().equals(normalized)) {
+                        return candidate;
+                    }
+                }
+            }
+            throw new IllegalArgumentException("Unknown Cloud Router package code '" + packageCode
+                    + "'. Valid codes: " + VALID_PACKAGE_CODES + ".");
         }
 
         /**
@@ -339,7 +391,7 @@ public final class DeploymentWizard {
 
         FabricGateway getFabric() { return fabric; }
         OptimizationResult getOptimizationResult() { return optimizationResult; }
-        String getRouterPackage() { return routerPackage; }
+        GatewayPackageCode getRouterPackage() { return routerPackage; }
         String getRouterNamePrefix() { return routerNamePrefix; }
         ConnectionType getProviderConnectionType() { return providerConnectionType; }
         ConnectionType getBackboneConnectionType() { return backboneConnectionType; }

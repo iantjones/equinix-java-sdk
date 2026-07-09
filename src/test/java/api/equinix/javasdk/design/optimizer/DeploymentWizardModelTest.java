@@ -19,6 +19,7 @@ package api.equinix.javasdk.design.optimizer;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.design.optimizer.model.MetroRecommendation;
 import api.equinix.javasdk.design.optimizer.model.MetroScore;
@@ -52,7 +53,7 @@ class DeploymentWizardModelTest {
             PlannedCloudRouter cr = PlannedCloudRouter.builder()
                     .metroId(MetroId.of(MetroCode.DC))
                     .name("FCR-DC")
-                    .packageCode("STANDARD")
+                    .packageCode(GatewayPackageCode.STANDARD)
                     .accountNumber(272010L)
                     .projectId("proj-uuid-123")
                     .notificationEmail("noc@example.com")
@@ -60,7 +61,7 @@ class DeploymentWizardModelTest {
 
             assertEquals(MetroId.of(MetroCode.DC), cr.getMetroId());
             assertEquals("FCR-DC", cr.getName());
-            assertEquals("STANDARD", cr.getPackageCode());
+            assertEquals(GatewayPackageCode.STANDARD, cr.getPackageCode());
             assertEquals(272010L, cr.getAccountNumber());
             assertEquals("proj-uuid-123", cr.getProjectId());
         }
@@ -71,7 +72,7 @@ class DeploymentWizardModelTest {
             PlannedCloudRouter cr = PlannedCloudRouter.builder()
                     .metroId(MetroId.of(MetroCode.DA))
                     .name("FCR-DA")
-                    .packageCode("STANDARD")
+                    .packageCode(GatewayPackageCode.STANDARD)
                     .build();
 
             assertNull(cr.getAccountNumber());
@@ -231,8 +232,8 @@ class DeploymentWizardModelTest {
             OptimizationResult optResult = buildMinimalOptResult();
 
             List<PlannedCloudRouter> routers = Arrays.asList(
-                    PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build(),
-                    PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode("STANDARD").build()
+                    PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD).build(),
+                    PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode(GatewayPackageCode.STANDARD).build()
             );
 
             List<PlannedConnection> connections = Arrays.asList(
@@ -359,7 +360,7 @@ class DeploymentWizardModelTest {
             DeploymentPlan plan = DeploymentPlan.builder()
                     .sourceOptimization(buildMinimalOptResult())
                     .cloudRouters(Collections.singletonList(
-                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build()))
+                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD).build()))
                     .providerConnections(Collections.emptyList())
                     .backboneLinks(Collections.emptyList())
                     .routingProtocols(Collections.emptyList())
@@ -397,8 +398,8 @@ class DeploymentWizardModelTest {
             DeploymentPlan plan = DeploymentPlan.builder()
                     .sourceOptimization(buildMinimalOptResult())
                     .cloudRouters(Arrays.asList(
-                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode("STANDARD").build(),
-                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode("STANDARD").build()))
+                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DC)).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD).build(),
+                            PlannedCloudRouter.builder().metroId(MetroId.of(MetroCode.DA)).name("FCR-DA").packageCode(GatewayPackageCode.STANDARD).build()))
                     .providerConnections(Collections.emptyList())
                     .backboneLinks(Collections.emptyList())
                     .routingProtocols(Collections.emptyList())

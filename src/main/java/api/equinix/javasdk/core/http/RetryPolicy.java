@@ -26,13 +26,18 @@ import java.util.concurrent.ThreadLocalRandom;
  * the common transient server errors (500, 502, 503, 504) as well as transient {@code IOException}s,
  * using exponential backoff with full jitter and honoring a {@code Retry-After} header when present.
  *
- * <p>To avoid duplicate side effects, retries are by default applied <em>only to idempotent
- * methods</em> — everything except {@code POST} and {@code PATCH} (RFC&nbsp;5789: PATCH is not
- * idempotent in general, and the SDK sends RFC&nbsp;6902 documents whose {@code add} operations
- * would apply twice). A transient failure that occurs after the server has already processed a
- * {@code POST} create or a {@code PATCH} would otherwise re-send it and duplicate the side effect.
- * Set {@code retryNonIdempotentMethods} if your endpoints are safe to retry (e.g. they dedupe via
- * an idempotency key, or the POST is a side-effect-free search).</p>
+ * <p>To avoid duplicate side effects, retries of 5xx responses and {@code IOException}s are by
+ * default applied <em>only to idempotent methods</em> — everything except {@code POST} and
+ * {@code PATCH} (RFC&nbsp;5789: PATCH is not idempotent in general, and the SDK sends RFC&nbsp;6902
+ * documents whose {@code add} operations would apply twice). A transient failure that occurs after
+ * the server has already processed a {@code POST} create or a {@code PATCH} would otherwise re-send
+ * it and duplicate the side effect. Set {@code retryNonIdempotentMethods} if your endpoints are
+ * safe to retry (e.g. they dedupe via an idempotency key, or the POST is a side-effect-free
+ * search).</p>
+ *
+ * <p>A 429 response is exempt from the idempotency gate: it means the server explicitly did
+ * <em>not</em> process the request, so re-sending is always safe — 429s are retried for every
+ * method (honoring {@code Retry-After}) as long as 429 is in the retryable status set.</p>
  *
  * <p>Retries are bounded by {@link #getMaxRetries()} attempts beyond the initial request. Pass
  * {@link #none()} to disable retries entirely, or build a custom policy via the constructor.</p>
@@ -40,6 +45,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author ianjones
  */
 public final class RetryPolicy {
+
+    /** RFC 6585 429 Too Many Requests: the server did not process the request. */
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
 
     private final int maxRetries;
     private final long baseDelayMillis;
@@ -89,15 +97,34 @@ public final class RetryPolicy {
     }
 
     /**
-     * Whether a request with the given HTTP method is eligible for retry. POST and PATCH are treated
-     * as non-idempotent (per RFC 5789 a PATCH — such as the SDK's RFC 6902 {@code add} operations —
-     * may not be safely re-applied) and are not retried unless {@code retryNonIdempotentMethods} is set.
+     * Whether a request with the given HTTP method is eligible for retry of a failure that may have
+     * had server-side effects (a 5xx response or a transport {@code IOException}). POST and PATCH
+     * are treated as non-idempotent (per RFC 5789 a PATCH — such as the SDK's RFC 6902 {@code add}
+     * operations — may not be safely re-applied) and are not retried unless
+     * {@code retryNonIdempotentMethods} is set. This gate does <em>not</em> apply to 429 responses —
+     * see {@link #isRetryable(int, HttpMethod)}.
      *
      * @param method the request method (may be {@code null}, treated as retryable)
      * @return {@code true} if retries are permitted for this method
      */
     public boolean isRetryableMethod(HttpMethod method) {
         return retryNonIdempotentMethods || (method != HttpMethod.POST && method != HttpMethod.PATCH);
+    }
+
+    /**
+     * Whether a response with the given status code should be retried for a request with the given
+     * method. A 429 (Too Many Requests) means the server explicitly did <em>not</em> process the
+     * request, so re-sending it can never duplicate a side effect — 429 is retryable for every
+     * method (including POST and PATCH), provided 429 is in the retryable status set. All other
+     * retryable statuses (the 5xx family) remain gated on {@link #isRetryableMethod(HttpMethod)}.
+     *
+     * @param statusCode the HTTP status code of the failed attempt
+     * @param method     the request method (may be {@code null}, treated as retryable)
+     * @return {@code true} if a retry is permitted
+     */
+    public boolean isRetryable(int statusCode, HttpMethod method) {
+        return isRetryableStatus(statusCode)
+                && (statusCode == HTTP_TOO_MANY_REQUESTS || isRetryableMethod(method));
     }
 
     /**

@@ -16,6 +16,9 @@
 
 package api.equinix.javasdk.core.http;
 
+import api.equinix.javasdk.core.internal.Constants;
+import api.equinix.javasdk.core.model.deserializers.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -66,18 +69,51 @@ class ParameterMapperTest {
     }
 
     @Test
-    void dateTimeForQuery_convertsLocalWallClockToUtc() {
-        // The wire format stamps a 'Z' (UTC designator); the input LocalDateTime is interpreted
-        // in the system default zone and must be CONVERTED to UTC, not just labeled as UTC.
+    void dateTimeForQuery_formatsVerbatimRegardlessOfJvmZone() {
+        // SDK-wide UTC policy: LocalDateTime inputs are UTC wall clock (matching the
+        // deserialization convention), so the digits are stamped with a literal 'Z' with NO zone
+        // conversion. A briefly-shipped variant converted systemDefault -> UTC, which
+        // double-shifted every API-sourced timestamp by the host's UTC offset.
         TimeZone original = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("Etc/GMT-5")); // UTC+5, no DST
-            String wire = ParameterMapper.dateTimeForQuery(LocalDateTime.of(2026, 7, 7, 12, 0, 0));
-            assertEquals("2026-07-07T07:00:00Z", wire);
+            assertEquals("2026-07-07T12:00:00Z",
+                    ParameterMapper.dateTimeForQuery(LocalDateTime.of(2026, 7, 7, 12, 0, 0)));
+
+            TimeZone.setDefault(TimeZone.getTimeZone("Etc/GMT+8")); // UTC-8, no DST
+            assertEquals("2026-07-07T12:00:00Z",
+                    ParameterMapper.dateTimeForQuery(LocalDateTime.of(2026, 7, 7, 12, 0, 0)));
 
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            String utcWire = ParameterMapper.dateTimeForQuery(LocalDateTime.of(2026, 7, 7, 12, 0, 0));
-            assertEquals("2026-07-07T12:00:00Z", utcWire);
+            assertEquals("2026-07-07T12:00:00Z",
+                    ParameterMapper.dateTimeForQuery(LocalDateTime.of(2026, 7, 7, 12, 0, 0)));
+        }
+        finally {
+            TimeZone.setDefault(original);
+        }
+    }
+
+    /** Test holder mirroring how every SDK model wires the core timestamp deserializer. */
+    static class TimestampHolder {
+        @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+        public LocalDateTime createdDateTime;
+    }
+
+    @Test
+    void dateTimeForQuery_roundTripsDeserializedTimestampsUnchanged() throws Exception {
+        // Regression: an API-sourced timestamp (e.g. changeLog.getCreatedDateTime()) passed back
+        // into a query (e.g. getStatistics) must hit the wire with the SAME instant. The core
+        // deserializer parses "...T12:00:00Z" into bare LocalDateTime 12:00 (UTC wall clock), so
+        // re-serialization must be verbatim — independent of the JVM's default zone.
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Etc/GMT-5")); // fixed non-UTC zone, no DST
+
+            TimestampHolder holder = Constants.mapper()
+                    .readValue("{\"createdDateTime\":\"2026-07-07T12:00:00Z\"}", TimestampHolder.class);
+            assertEquals(LocalDateTime.of(2026, 7, 7, 12, 0, 0), holder.createdDateTime);
+
+            assertEquals("2026-07-07T12:00:00Z", ParameterMapper.dateTimeForQuery(holder.createdDateTime));
         }
         finally {
             TimeZone.setDefault(original);

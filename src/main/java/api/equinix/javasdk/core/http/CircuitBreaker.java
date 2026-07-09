@@ -32,11 +32,16 @@ import api.equinix.javasdk.core.exception.CircuitOpenException;
  *       any completed HTTP exchange with a status below 500 resets it. Once the counter reaches
  *       {@code failureThreshold}, the breaker opens.</li>
  *   <li><b>OPEN</b>: every request is rejected immediately with a {@link CircuitOpenException}
- *       (no HTTP exchange happens) until {@code openCooldownMillis} elapses.</li>
+ *       (no HTTP exchange happens) until {@code openCooldownMillis} elapses. Outcomes reported by
+ *       <em>straggler</em> requests — attempts admitted before the circuit opened that complete
+ *       afterwards — are ignored: a straggler success must not snap the circuit shut (that would
+ *       bypass the cooldown and the half-open probe) and a straggler failure must not extend the
+ *       cooldown.</li>
  *   <li><b>HALF_OPEN</b>: after the cooldown, a single probe request is admitted (further requests
  *       are rejected while the probe is pending — a probe slot expires after another cooldown, so
- *       a probe that dies without reporting cannot wedge the breaker). A successful probe closes
- *       the breaker; a failed probe re-opens it for another cooldown.</li>
+ *       a probe that dies without reporting cannot wedge the breaker). Only the probe's completion
+ *       moves the breaker on: a successful probe closes it; a failed probe re-opens it for another
+ *       cooldown.</li>
  * </ul>
  *
  * <p>Client-side errors (4xx) are deliberately <em>not</em> counted as failures — they indicate the
@@ -120,24 +125,52 @@ public final class CircuitBreaker {
     }
 
     /**
-     * Records a healthy outcome (any completed HTTP exchange with status &lt; 500): resets the
-     * consecutive-failure count and closes the circuit.
+     * Records a healthy outcome (any completed HTTP exchange with status &lt; 500). In CLOSED this
+     * resets the consecutive-failure count; in HALF_OPEN it is the probe's success and closes the
+     * circuit. In OPEN it is ignored — it can only come from a straggler request admitted before
+     * the circuit opened, and closing on it would bypass the cooldown and the half-open probe.
      */
     public synchronized void recordSuccess() {
-        consecutiveFailures = 0;
-        state = State.CLOSED;
+        switch (state) {
+            case CLOSED:
+                consecutiveFailures = 0;
+                return;
+            case OPEN:
+                // A straggler's late success says nothing about current service health; only the
+                // half-open probe may close the circuit.
+                return;
+            case HALF_OPEN:
+            default:
+                // The probe succeeded: the service has recovered.
+                consecutiveFailures = 0;
+                state = State.CLOSED;
+        }
     }
 
     /**
-     * Records a service failure (5xx response or transport {@code IOException}). In HALF_OPEN this
-     * re-opens the circuit immediately; in CLOSED it opens the circuit once the consecutive-failure
-     * count reaches the threshold.
+     * Records a service failure (5xx response or transport {@code IOException}). In CLOSED this
+     * opens the circuit once the consecutive-failure count reaches the threshold; in HALF_OPEN it
+     * is the probe's failure and re-opens the circuit for a fresh cooldown. In OPEN it is ignored —
+     * a straggler's late failure must not keep extending the cooldown.
      */
     public synchronized void recordFailure() {
-        consecutiveFailures++;
-        if (state == State.HALF_OPEN || consecutiveFailures >= failureThreshold) {
-            state = State.OPEN;
-            openedAtNanos = System.nanoTime();
+        switch (state) {
+            case CLOSED:
+                consecutiveFailures++;
+                if (consecutiveFailures >= failureThreshold) {
+                    state = State.OPEN;
+                    openedAtNanos = System.nanoTime();
+                }
+                return;
+            case OPEN:
+                // Straggler outcome while already open: ignore, so the cooldown is not extended.
+                return;
+            case HALF_OPEN:
+            default:
+                // The probe failed: re-open for another full cooldown.
+                consecutiveFailures++;
+                state = State.OPEN;
+                openedAtNanos = System.nanoTime();
         }
     }
 

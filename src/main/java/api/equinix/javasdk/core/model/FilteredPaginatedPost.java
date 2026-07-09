@@ -42,4 +42,15 @@ public class FilteredPaginatedPost<F> implements PaginatedPostBody {
     public FilteredPaginatedPost(F filter) {
         this.filter = filter;
     }
+
+    @Override
+    public void seekPage(long offset, long limit) {
+        if (this.pagination == null) {
+            this.pagination = new Pagination(Constants.PAGE_OFFSET, Constants.PAGE_LIMIT);
+        }
+        this.pagination.setOffset(Math.toIntExact(offset));
+        if (limit > 0) {
+            this.pagination.setLimit(Math.toIntExact(limit));
+        }
+    }
 }

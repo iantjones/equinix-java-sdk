@@ -79,6 +79,9 @@ public class InternetAccessServiceClientImpl
     }
 
     public Page<InternetAccessServiceJson> search(ServiceSearchRequest searchRequest) {
-        return searchPage("SearchServices", searchRequest);
+        // internetaccessv2 paginates the services search via offset/limit QUERY PARAMETERS (the
+        // body carries only the filter), so this builds a query-paginated request: the shared
+        // paging pipeline advances the query offset between pages, re-sending the same body.
+        return searchPageQueryPaginated("SearchServices", searchRequest);
     }
 }

@@ -22,6 +22,7 @@ import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.RequestFactory;
 import api.equinix.javasdk.core.http.response.EquinixResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -297,9 +298,13 @@ public class EquinixHttpClient implements Closeable {
     /**
      * Executes a request with automatic retry of transient failures per the configured
      * {@link RetryPolicy}. Retries are bounded by the policy's max attempts, gated on retryable status
-     * codes / {@code IOException}s <em>and</em> on HTTP-method idempotency (POST and PATCH are not
-     * retried by default, to avoid duplicate side effects), and spaced by exponential backoff with
-     * full jitter (honoring {@code Retry-After}). Each retry is logged at WARN.
+     * codes / {@code IOException}s <em>and</em> — for 5xx/IO failures — on HTTP-method idempotency
+     * (POST and PATCH are not retried by default, to avoid duplicate side effects; a 429 is exempt
+     * from that gate because the server explicitly did not process the request), and spaced by
+     * exponential backoff with full jitter (honoring {@code Retry-After}). Each retry is logged at
+     * WARN. A request-body serialization failure ({@code JsonProcessingException}) is a
+     * deterministic client-side bug: it is thrown immediately, never retried, and never recorded on
+     * the circuit breaker.
      *
      * <p>A single correlation id (UUID) is generated per logical request and shared by all of its
      * retry attempts, sent as {@code X-Correlation-Id}. When a {@link CircuitBreaker} is configured,
@@ -343,7 +348,7 @@ public class EquinixHttpClient implements Closeable {
                     }
                 }
                 if (attempt >= policy.getMaxRetries() || status == null
-                        || !policy.isRetryableStatus(status) || !policy.isRetryableMethod(method)) {
+                        || !policy.isRetryable(status, method)) {
                     throw ese;
                 }
                 long backoff = policy.computeBackoffMillis(attempt, retryAfterMillis(ese));
@@ -352,6 +357,13 @@ public class EquinixHttpClient implements Closeable {
                 backoffSleep(backoff);
                 attempt++;
             } catch (EquinixClientException ece) {
+                if (ece.getCause() instanceof JsonProcessingException) {
+                    // Request-body serialization failed. JsonProcessingException extends
+                    // IOException, but this is a deterministic client-side bug, not a transport
+                    // failure: the service was never contacted and a re-attempt can never succeed.
+                    // Throw immediately — no retry, and nothing recorded on the breaker.
+                    throw ece;
+                }
                 boolean transportFailure = ece.getCause() instanceof IOException;
                 if (breaker != null && transportFailure) {
                     breaker.recordFailure();
