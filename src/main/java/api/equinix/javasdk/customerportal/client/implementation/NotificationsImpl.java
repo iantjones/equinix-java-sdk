@@ -23,17 +23,14 @@ import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class NotificationsImpl implements Notifications {
-
-    private final CustomerPortal serviceManager;
 
     private final NotificationClient serviceClient;
 
-    public NotificationsImpl(NotificationClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public List<? extends Notification> searchIbx(NotificationSearchRequest request) {
         return this.serviceClient.searchIbx(request, null, null);

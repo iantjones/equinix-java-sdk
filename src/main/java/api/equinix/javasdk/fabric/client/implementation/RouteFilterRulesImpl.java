@@ -33,14 +33,12 @@ import api.equinix.javasdk.fabric.model.wrappers.RouteFilterRuleWrapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class RouteFilterRulesImpl implements RouteFilterRules {
 
     private final RouteFilterRuleClient<RouteFilterRule> serviceClient;
-
-    public RouteFilterRulesImpl(RouteFilterRuleClient<RouteFilterRule> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<RouteFilterRule> list(String routeFilterId) {
         Page<RouteFilterRuleJson> responsePage = this.serviceClient.list(routeFilterId);

@@ -19,7 +19,6 @@ package api.equinix.javasdk.core.model;
 import api.equinix.javasdk.core.http.request.Pagination;
 import api.equinix.javasdk.core.internal.Constants;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Generic request body for paginated, filtered, sorted POST search endpoints.
@@ -33,7 +32,6 @@ import lombok.Setter;
  * @param <S> the domain sort payload type
  */
 @Getter
-@Setter
 public class FilteredSortedPaginatedPost<F, S> implements PaginatedPostBody {
 
     private F filter;

@@ -29,18 +29,16 @@ import api.equinix.javasdk.fabric.model.json.MetricJson;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class MetricsImpl implements Metrics {
 
     private final MetricClient<Metric> serviceClient;
-
-    public MetricsImpl(MetricClient<Metric> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<Metric> search() {
         return search(Filter.filter().empty());

@@ -20,17 +20,14 @@ import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.internetaccess.client.InternetAccessOrders;
 import api.equinix.javasdk.internetaccess.client.internal.OrderClient;
 import api.equinix.javasdk.internetaccess.model.OrderDetails;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessOrdersImpl implements InternetAccessOrders {
-
-    private final InternetAccess serviceManager;
 
     private final OrderClient serviceClient;
 
-    public InternetAccessOrdersImpl(OrderClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public OrderDetails get(String orderUUID) {
         return this.serviceClient.get(orderUUID);

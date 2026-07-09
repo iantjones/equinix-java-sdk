@@ -24,7 +24,6 @@ import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionFilter;
 import api.equinix.javasdk.fabric.model.implementation.StreamSubscriptionSelector;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -56,7 +55,6 @@ public class StreamSubscriptionCreatorJson {
     private Sink sink;
 
     @Setter(AccessLevel.PRIVATE)
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class Sink {
 
@@ -83,9 +81,36 @@ public class StreamSubscriptionCreatorJson {
 
         @JsonProperty("credential")
         private Credential credential;
+
+        /**
+         * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}:
+         * {@code uri}/{@code host} and {@code batchSizeMax}/{@code batchWaitTimeMax} are
+         * same-typed adjacent parameters, so the argument order is pinned here in code
+         * rather than by field declaration order.
+         *
+         * @param type             the sink type
+         * @param uri              the sink endpoint URI
+         * @param host             the sink host
+         * @param batchEnabled     whether batching is enabled
+         * @param batchSizeMax     the maximum batch size
+         * @param batchWaitTimeMax the maximum batch wait time
+         * @param settings         the sink settings
+         * @param credential       the sink credential
+         */
+        Sink(StreamSubscriptionSinkType type, String uri, String host, Boolean batchEnabled,
+             Integer batchSizeMax, Integer batchWaitTimeMax, StreamSinkSetting settings,
+             Credential credential) {
+            this.type = type;
+            this.uri = uri;
+            this.host = host;
+            this.batchEnabled = batchEnabled;
+            this.batchSizeMax = batchSizeMax;
+            this.batchWaitTimeMax = batchWaitTimeMax;
+            this.settings = settings;
+            this.credential = credential;
+        }
     }
 
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class Credential {
 
@@ -106,6 +131,29 @@ public class StreamSubscriptionCreatorJson {
 
         @JsonProperty("password")
         private String password;
+
+        /**
+         * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}:
+         * five consecutive {@code String} credential parameters mean a silent transposition
+         * would post credentials into the wrong JSON fields, so the argument order is pinned
+         * here in code rather than by field declaration order.
+         *
+         * @param type           the credential type
+         * @param accessToken    the access token
+         * @param integrationKey the integration key
+         * @param apiKey         the API key
+         * @param username       the username
+         * @param password       the password
+         */
+        Credential(StreamSubscriptionSinkCredentialType type, String accessToken,
+                   String integrationKey, String apiKey, String username, String password) {
+            this.type = type;
+            this.accessToken = accessToken;
+            this.integrationKey = integrationKey;
+            this.apiKey = apiKey;
+            this.username = username;
+            this.password = password;
+        }
     }
 
     public StreamSubscriptionCreatorJson(StreamSubscriptionOperator.StreamSubscriptionBuilder streamSubscriptionBuilder) {

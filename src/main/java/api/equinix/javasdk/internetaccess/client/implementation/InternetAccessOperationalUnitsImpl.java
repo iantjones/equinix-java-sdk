@@ -24,17 +24,14 @@ import api.equinix.javasdk.internetaccess.client.InternetAccessOperationalUnits;
 import api.equinix.javasdk.internetaccess.client.internal.OperationalUnitClient;
 import api.equinix.javasdk.internetaccess.model.OperationalUnit;
 import api.equinix.javasdk.internetaccess.model.json.OperationalUnitJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessOperationalUnitsImpl implements InternetAccessOperationalUnits {
-
-    private final InternetAccess serviceManager;
 
     private final OperationalUnitClient serviceClient;
 
-    public InternetAccessOperationalUnitsImpl(OperationalUnitClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<OperationalUnit> list(String ibx) {
         Page<OperationalUnitJson> responsePage = this.serviceClient.list(ibx);

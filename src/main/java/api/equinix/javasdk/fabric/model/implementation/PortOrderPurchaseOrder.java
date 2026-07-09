@@ -19,7 +19,7 @@ package api.equinix.javasdk.fabric.model.implementation;
 import api.equinix.javasdk.fabric.enums.PortPurchaseOrderType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,11 +29,14 @@ import lombok.NoArgsConstructor;
  * {@code selectionType} take the values {@code EXEMPTION}, {@code EXISTING},
  * {@code NEW} or {@code BLANKET}.
  *
+ * <p>Prefer {@code builder()} over the positional constructor — five {@code String}
+ * parameters plus two identically-typed enum parameters make positional construction
+ * transposition-prone.</p>
+ *
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortOrderPurchaseOrder {
 
@@ -61,4 +64,31 @@ public class PortOrderPurchaseOrder {
 
     @JsonProperty("type")
     private PortPurchaseOrderType type;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (five same-typed {@code String} parameters and
+     * two identically-typed {@link PortPurchaseOrderType} parameters) rather than by field
+     * declaration order.
+     *
+     * @param number        the purchase order number
+     * @param amount        the purchase order amount
+     * @param startDate     the purchase order start date
+     * @param endDate       the purchase order end date
+     * @param attachmentId  the purchase order attachment id
+     * @param selectionType the deprecated selection type (prefer {@code type})
+     * @param type          the purchase order type
+     */
+    @Builder
+    public PortOrderPurchaseOrder(String number, String amount, String startDate, String endDate,
+                                  String attachmentId, PortPurchaseOrderType selectionType,
+                                  PortPurchaseOrderType type) {
+        this.number = number;
+        this.amount = amount;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.attachmentId = attachmentId;
+        this.selectionType = selectionType;
+        this.type = type;
+    }
 }

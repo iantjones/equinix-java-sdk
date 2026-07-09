@@ -85,6 +85,16 @@ every deferred redesign was executed:
   IBX SystemAlerts search). Offsets now pass through exactly; regression-locked on the wire.
 
 ### Changed
+- **Lombok adoption + over-use sweep** (149-item inventory, applied SDK-wide): 92 client facade
+  impls now use `@RequiredArgsConstructor` (generated signatures verified byte-identical; the 122
+  `super(...)`-calling impls correctly keep explicit constructors); `@Slf4j` replaces all manual
+  loggers; utility classes are `final` with private constructors; `@Data` removed from all 15
+  Jackson wire models (now `@Getter`, with explicit `@JsonProperty` where binding relied on
+  setters); class-level `@Setter` removed from 52 read-only JSON models (IAM/IA/STS); every
+  `@AllArgsConstructor` with adjacent same-typed parameters replaced by an explicit order-pinned
+  constructor or `@Builder` (66 positional call sites migrated to named builder form —
+  eliminating the silent argument-transposition bug class); `RetryPolicy` gains a fluent
+  `@Builder`.
 - **Request-side builders are fully enum-typed** (fabric): port `connectivitySourceType`, service-token
   virtual-device `type`, Cloud Router `PackageRef`/`withPackage`/`changePackage`
   (`GatewayPackageCode`), marketplace-subscription + notification refs, stream alert-rule `type`,

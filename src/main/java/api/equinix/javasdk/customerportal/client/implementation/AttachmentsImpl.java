@@ -28,17 +28,14 @@ import api.equinix.javasdk.customerportal.model.json.AttachmentJson;
 import api.equinix.javasdk.customerportal.model.wrappers.AttachmentWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class AttachmentsImpl implements Attachments {
-
-    private final CustomerPortal serviceManager;
 
     private final AttachmentClient<Attachment> serviceClient;
 
-    public AttachmentsImpl(AttachmentClient<Attachment> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<Attachment> list() {
         return list(null);

@@ -25,19 +25,14 @@ import api.equinix.javasdk.ibxsmartview.client.internal.EnvironmentalClient;
 import api.equinix.javasdk.ibxsmartview.model.SensorReading;
 import api.equinix.javasdk.ibxsmartview.model.json.SensorReadingJson;
 import api.equinix.javasdk.ibxsmartview.model.wrappers.SensorReadingWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Getter
+@RequiredArgsConstructor
 public class EnvironmentalsImpl implements Environmentals {
-
-    private final IBXSmartView serviceManager;
 
     private final EnvironmentalClient<SensorReading> serviceClient;
 
-    public EnvironmentalsImpl(EnvironmentalClient<SensorReading> serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public PaginatedList<SensorReading> list(String ibx) {
         return list(ibx, null, null, null, null);

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Request body for modifying an existing OIDC provider via {@code PATCH
@@ -33,6 +34,7 @@ import java.util.Map;
  * (see {@link #unsetGroupMembershipClaim()}).</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class PatchOidcProviderRequest {
 
     @JsonProperty("name")
@@ -99,21 +101,5 @@ public class PatchOidcProviderRequest {
     public PatchOidcProviderRequest lastRev(String lastRev) {
         this.lastRev = lastRev;
         return this;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<String> getTrustedClientIds() {
-        return trustedClientIds;
-    }
-
-    public Object getGroupMembershipClaim() {
-        return groupMembershipClaim;
-    }
-
-    public String getLastRev() {
-        return lastRev;
     }
 }

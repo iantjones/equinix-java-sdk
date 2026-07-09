@@ -20,7 +20,7 @@ import api.equinix.javasdk.fabric.enums.PtpTimeScale;
 import api.equinix.javasdk.fabric.enums.PtpTransportMode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,11 +29,13 @@ import lombok.NoArgsConstructor;
  * {@code ptpAdvanceConfiguration} schema). {@code timeScale} is {@code ARB} or {@code PTP};
  * {@code transportMode} is {@code MULTICAST}, {@code UNICAST} or {@code HYBRID}.
  *
+ * <p>Prefer {@code builder()} over the positional constructor — seven of the nine parameters
+ * are {@code Integer}s, so builder construction is self-documenting and transposition-proof.</p>
+ *
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PtpAdvanceConfiguration {
 
@@ -63,4 +65,35 @@ public class PtpAdvanceConfiguration {
 
     @JsonProperty("grantTime")
     private Integer grantTime;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (seven same-typed {@code Integer} parameters)
+     * rather than by field declaration order.
+     *
+     * @param timeScale           the PTP time scale ({@code ARB} or {@code PTP})
+     * @param domain              the PTP domain
+     * @param priority1           the PTP priority1 value
+     * @param priority2           the PTP priority2 value
+     * @param logAnnounceInterval the log announce interval
+     * @param logSyncInterval     the log sync interval
+     * @param logDelayReqInterval the log delay-request interval
+     * @param transportMode       the transport mode ({@code MULTICAST}, {@code UNICAST} or {@code HYBRID})
+     * @param grantTime           the unicast grant time
+     */
+    @Builder
+    public PtpAdvanceConfiguration(PtpTimeScale timeScale, Integer domain, Integer priority1,
+                                   Integer priority2, Integer logAnnounceInterval, Integer logSyncInterval,
+                                   Integer logDelayReqInterval, PtpTransportMode transportMode,
+                                   Integer grantTime) {
+        this.timeScale = timeScale;
+        this.domain = domain;
+        this.priority1 = priority1;
+        this.priority2 = priority2;
+        this.logAnnounceInterval = logAnnounceInterval;
+        this.logSyncInterval = logSyncInterval;
+        this.logDelayReqInterval = logDelayReqInterval;
+        this.transportMode = transportMode;
+        this.grantTime = grantTime;
+    }
 }

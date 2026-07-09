@@ -25,17 +25,14 @@ import api.equinix.javasdk.customerportal.client.internal.BillingAccountSearchCl
 import api.equinix.javasdk.customerportal.model.BillingAccountV2;
 import api.equinix.javasdk.customerportal.model.json.BillingAccountV2Json;
 import api.equinix.javasdk.customerportal.model.json.creators.BillingAccountSearchRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class BillingAccountsSearchImpl implements BillingAccountsSearch {
-
-    private final CustomerPortal serviceManager;
 
     private final BillingAccountSearchClient<BillingAccountV2> serviceClient;
 
-    public BillingAccountsSearchImpl(BillingAccountSearchClient<BillingAccountV2> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<BillingAccountV2> search(BillingAccountSearchRequest request) {
         Page<BillingAccountV2Json> responsePage = this.serviceClient.search(request);

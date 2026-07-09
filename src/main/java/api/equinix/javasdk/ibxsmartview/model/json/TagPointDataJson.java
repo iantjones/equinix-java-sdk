@@ -22,7 +22,6 @@ import api.equinix.javasdk.ibxsmartview.model.implementation.TagPointDataArrayCu
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -31,7 +30,6 @@ import java.util.List;
  * tag point readings ({@code payLoad}) and the shared status envelope.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TagPointDataJson implements TagPointData {
 

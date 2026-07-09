@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for an {@link Ibx} returned by the Equinix Internet Access (EIA)
@@ -35,7 +34,6 @@ import lombok.Setter;
  * {@code ibxCode}); both bind to {@link #ibxCode} via {@link JsonAlias}.</p>
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IbxJson implements Ibx {
 

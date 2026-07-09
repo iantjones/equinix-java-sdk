@@ -18,6 +18,7 @@ package api.equinix.javasdk.iam.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
  * Request body for creating an IAM role assignment via {@code POST /v1/roleAssignments}
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * inner class.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class CreateRoleAssignmentRequest {
 
     @JsonProperty("principal")
@@ -71,24 +73,13 @@ public class CreateRoleAssignmentRequest {
         return this;
     }
 
-    public String getPrincipal() {
-        return principal;
-    }
-
-    public String getRoleId() {
-        return roleId;
-    }
-
-    public AssignmentScope getAssignmentScope() {
-        return assignmentScope;
-    }
-
     /**
      * Nested object describing the scope of a role assignment — the resource (by {@code id} and
      * {@code type}) within which the assigned role applies, optionally with a {@code parent}
      * reference.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Getter
     public static class AssignmentScope {
 
         @JsonProperty("id")
@@ -134,18 +125,6 @@ public class CreateRoleAssignmentRequest {
             return this;
         }
 
-        public String getId() {
-            return id;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public Parent getParent() {
-            return parent;
-        }
-
         /**
          * Nested object identifying the parent of an assignment scope — when the scope {@code type}
          * is {@code PORT}, the owning project (spec: {@code CreateRoleAssignmentInput} →
@@ -153,6 +132,7 @@ public class CreateRoleAssignmentRequest {
          * {@code type} only admits {@code PROJECT}).
          */
         @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Getter
         public static class Parent {
 
             @JsonProperty("id")
@@ -181,14 +161,6 @@ public class CreateRoleAssignmentRequest {
             public Parent type(String type) {
                 this.type = type;
                 return this;
-            }
-
-            public String getId() {
-                return id;
-            }
-
-            public String getType() {
-                return type;
             }
         }
     }

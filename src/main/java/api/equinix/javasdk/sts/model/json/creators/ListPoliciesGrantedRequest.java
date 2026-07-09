@@ -18,6 +18,7 @@ package api.equinix.javasdk.sts.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
  * Request body for {@code POST /v1/accessPoliciesGranted} (operationId
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * access policies granted to the subject identified by a token within a project.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class ListPoliciesGrantedRequest {
 
     @JsonProperty("projectId")
@@ -96,25 +98,5 @@ public class ListPoliciesGrantedRequest {
     public ListPoliciesGrantedRequest pageToken(String pageToken) {
         this.pageToken = pageToken;
         return this;
-    }
-
-    public String getProjectId() {
-        return projectId;
-    }
-
-    public String getSubjectToken() {
-        return subjectToken;
-    }
-
-    public String getSubjectTokenType() {
-        return subjectTokenType;
-    }
-
-    public Integer getPageSize() {
-        return pageSize;
-    }
-
-    public String getPageToken() {
-        return pageToken;
     }
 }

@@ -21,7 +21,6 @@ import api.equinix.javasdk.internetaccess.model.AccountAgreement;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for an {@link AccountAgreement} returned by the Equinix Internet Access (EIA)
@@ -29,7 +28,6 @@ import lombok.Setter;
  * Implements {@link AccountAgreement} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccountAgreementJson implements AccountAgreement {
 

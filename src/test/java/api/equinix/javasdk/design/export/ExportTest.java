@@ -323,8 +323,16 @@ class ExportTest {
         MetroScore score2 = new MetroScore(82.0, Collections.emptyList());
 
         DeploymentTopology topology = new DeploymentTopology(Arrays.asList(
-                new WorkloadPlacement("ML Training", MetroId.of(MetroCode.DC), "GPU availability"),
-                new WorkloadPlacement("DR Backup", MetroId.of(MetroCode.DA), "geographic diversity")
+                WorkloadPlacement.builder()
+                        .workloadLabel("ML Training")
+                        .assignedMetro(MetroId.of(MetroCode.DC))
+                        .reasoning("GPU availability")
+                        .build(),
+                WorkloadPlacement.builder()
+                        .workloadLabel("DR Backup")
+                        .assignedMetro(MetroId.of(MetroCode.DA))
+                        .reasoning("geographic diversity")
+                        .build()
         ));
 
         return OptimizationResult.builder()

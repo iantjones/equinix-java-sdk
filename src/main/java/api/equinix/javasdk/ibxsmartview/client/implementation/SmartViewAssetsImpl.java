@@ -27,21 +27,16 @@ import api.equinix.javasdk.ibxsmartview.model.HierarchyNodeForAssetAPI;
 import api.equinix.javasdk.ibxsmartview.model.TagPointData;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.AssetDetailsRequest;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.CurrentTagPointRequest;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@Getter
+@RequiredArgsConstructor
 public class SmartViewAssetsImpl implements SmartViewAssets {
-
-    private final IBXSmartView serviceManager;
 
     private final SmartViewAssetClient serviceClient;
 
-    public SmartViewAssetsImpl(SmartViewAssetClient serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public AssetsList list(String accountNo, String ibx, String classification, List<String> cages) {
         return serviceClient.list(accountNo, ibx, classification, cages);

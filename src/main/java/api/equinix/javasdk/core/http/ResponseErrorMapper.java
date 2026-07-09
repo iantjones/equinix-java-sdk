@@ -26,8 +26,7 @@ import api.equinix.javasdk.core.exception.EquinixServiceException;
 import api.equinix.javasdk.core.exception.ExceptionDetail;
 import api.equinix.javasdk.core.internal.Constants;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +44,8 @@ import java.util.Map;
  *
  * @author ianjones
  */
+@Slf4j
 public final class ResponseErrorMapper {
-
-    private static final Logger logger = LoggerFactory.getLogger(ResponseErrorMapper.class);
 
     private ResponseErrorMapper() {
     }
@@ -125,7 +123,7 @@ public final class ResponseErrorMapper {
             catch (Exception singleEx) {
                 // Unparseable (e.g. an HTML gateway page): keep the exception's details empty
                 // rather than padding it with a blank placeholder entry.
-                logger.warn("Could not parse error response body: {}", errorBody);
+                log.warn("Could not parse error response body: {}", errorBody);
                 return new ArrayList<>();
             }
         }

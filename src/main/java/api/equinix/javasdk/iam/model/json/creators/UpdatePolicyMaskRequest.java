@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Request body for updating an IAM policy mask via {@code PUT
@@ -33,6 +34,7 @@ import java.util.Map;
  * {@code lastRev} field supports optimistic concurrency control.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class UpdatePolicyMaskRequest {
 
     @JsonProperty("tags")
@@ -118,29 +120,5 @@ public class UpdatePolicyMaskRequest {
     public UpdatePolicyMaskRequest lastRev(String lastRev) {
         this.lastRev = lastRev;
         return this;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public PolicyExpression getManagedPolicies() {
-        return managedPolicies;
-    }
-
-    public PolicyExpression getManagedPermissionSets() {
-        return managedPermissionSets;
-    }
-
-    public PolicyExpression getSubtract() {
-        return subtract;
-    }
-
-    public String getLastRev() {
-        return lastRev;
     }
 }

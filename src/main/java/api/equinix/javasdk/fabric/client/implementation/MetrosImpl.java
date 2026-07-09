@@ -27,18 +27,16 @@ import api.equinix.javasdk.fabric.enums.MetroPresence;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.json.MetroJson;
 import api.equinix.javasdk.fabric.model.wrappers.MetroWrapper;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class MetrosImpl implements Metros {
 
     private final MetroClient<Metro> serviceClient;
-
-    public MetrosImpl(MetroClient<Metro> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<Metro> list() {
         return this.list(null);

@@ -21,21 +21,16 @@ import api.equinix.javasdk.ibxsmartview.client.Hierarchy;
 import api.equinix.javasdk.ibxsmartview.client.internal.HierarchyClient;
 import api.equinix.javasdk.ibxsmartview.model.implementation.HierarchyNode;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerHierarchyNode;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@Getter
+@RequiredArgsConstructor
 public class HierarchyImpl implements Hierarchy {
-
-    private final IBXSmartView serviceManager;
 
     private final HierarchyClient serviceClient;
 
-    public HierarchyImpl(HierarchyClient serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx) {
         return serviceClient.getLocationHierarchy(accountNo, ibx);

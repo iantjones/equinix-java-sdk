@@ -1,5 +1,6 @@
 package api.equinix.javasdk.design.optimizer.model;
 
+import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
  * and data freshness for inclusion in reports.
  */
 @Value
+@Builder
 public class OptimizationExplanation {
 
     String methodology;

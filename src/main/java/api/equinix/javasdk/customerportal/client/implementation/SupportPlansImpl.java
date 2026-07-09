@@ -28,17 +28,14 @@ import api.equinix.javasdk.customerportal.model.json.SupportPlanJson;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class SupportPlansImpl implements SupportPlans {
-
-    private final CustomerPortal serviceManager;
 
     private final SupportPlanClient<SupportPlan> serviceClient;
 
-    public SupportPlansImpl(SupportPlanClient<SupportPlan> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<SupportPlan> list() {
         return list(null, null, null, null);

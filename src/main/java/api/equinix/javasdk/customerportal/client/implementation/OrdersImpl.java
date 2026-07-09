@@ -30,17 +30,14 @@ import api.equinix.javasdk.customerportal.model.json.creators.NoteRequestJson;
 import api.equinix.javasdk.customerportal.model.wrappers.OrderWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class OrdersImpl implements Orders {
-
-    private final CustomerPortal serviceManager;
 
     private final OrderClient<Order> serviceClient;
 
-    public OrdersImpl(OrderClient<Order> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public Order getByUuid(String orderId) {
         OrderJson orderJson = this.serviceClient.getByUuid(orderId);

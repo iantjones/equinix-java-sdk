@@ -30,23 +30,18 @@ import api.equinix.javasdk.networkedge.model.json.RestoreFeasibilityJson;
 import api.equinix.javasdk.networkedge.model.json.creators.BackupOperator;
 import api.equinix.javasdk.networkedge.model.wrappers.BackupWrapper;
 import api.equinix.javasdk.networkedge.model.wrappers.RestoreFeasibilityWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class BackupsImpl implements Backups {
-
-    private final NetworkEdge serviceManager;
 
     private final BackupClient<Backup> serviceClient;
 
-    public BackupsImpl(BackupClient<Backup> serviceClient, NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public PaginatedList<Backup> list(String deviceUuid) {
         return list(deviceUuid, null);

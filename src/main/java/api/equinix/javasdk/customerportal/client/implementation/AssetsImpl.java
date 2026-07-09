@@ -25,17 +25,14 @@ import api.equinix.javasdk.customerportal.client.internal.AssetClient;
 import api.equinix.javasdk.customerportal.model.Asset;
 import api.equinix.javasdk.customerportal.model.json.AssetJson;
 import api.equinix.javasdk.customerportal.model.json.creators.AssetSearchRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class AssetsImpl implements Assets {
-
-    private final CustomerPortal serviceManager;
 
     private final AssetClient<Asset> serviceClient;
 
-    public AssetsImpl(AssetClient<Asset> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<Asset> search(AssetSearchRequest request) {
         Page<AssetJson> responsePage = this.serviceClient.search(request);

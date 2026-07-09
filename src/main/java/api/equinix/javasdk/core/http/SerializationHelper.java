@@ -18,6 +18,8 @@ package api.equinix.javasdk.core.http;
 
 import api.equinix.javasdk.core.http.request.EquinixRequest;
 import api.equinix.javasdk.core.http.request.RequestBody;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * Attaches JSON request bodies: the payload is carried on the request as a
@@ -33,10 +35,8 @@ import api.equinix.javasdk.core.http.request.RequestBody;
  *
  * @author ianjones
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SerializationHelper {
-
-    private SerializationHelper() {
-    }
 
     /**
      * Attaches {@code objectToSerialize} as the request's JSON body.

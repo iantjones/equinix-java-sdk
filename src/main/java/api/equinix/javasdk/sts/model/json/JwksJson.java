@@ -20,7 +20,6 @@ import api.equinix.javasdk.sts.model.Jwks;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
@@ -29,7 +28,6 @@ import java.util.List;
  * {@link Jwks} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JwksJson implements Jwks {
 

@@ -25,17 +25,14 @@ import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitOrderRequ
 import api.equinix.javasdk.customerportal.model.json.creators.WorkVisitUpdateRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class WorkVisitsImpl implements WorkVisits {
-
-    private final CustomerPortal serviceManager;
 
     private final WorkVisitClient serviceClient;
 
-    public WorkVisitsImpl(WorkVisitClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public OrderResponse order(WorkVisitOrderRequest request) {
         return this.serviceClient.order(request);

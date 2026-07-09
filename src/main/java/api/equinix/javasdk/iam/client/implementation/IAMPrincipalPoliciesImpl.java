@@ -22,17 +22,14 @@ import api.equinix.javasdk.iam.client.internal.PrincipalPolicyClient;
 import api.equinix.javasdk.iam.model.PrincipalPolicy;
 import api.equinix.javasdk.iam.model.json.PrincipalPolicyList;
 import api.equinix.javasdk.iam.model.json.creators.UpdatePrincipalPolicyRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMPrincipalPoliciesImpl implements IAMPrincipalPolicies {
-
-    private final IAM serviceManager;
 
     private final PrincipalPolicyClient principalPolicyClient;
 
-    public IAMPrincipalPoliciesImpl(PrincipalPolicyClient principalPolicyClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.principalPolicyClient = principalPolicyClient;
-    }
+    private final IAM serviceManager;
 
     public PrincipalPolicyList list(String projectId) {
         return this.principalPolicyClient.list(projectId, null, null);

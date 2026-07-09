@@ -29,17 +29,14 @@ import api.equinix.javasdk.customerportal.model.json.ReportJson;
 import api.equinix.javasdk.customerportal.model.json.creators.ScheduleReportRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class ReportsImpl implements Reports {
-
-    private final CustomerPortal serviceManager;
 
     private final ReportClient<Report> serviceClient;
 
-    public ReportsImpl(ReportClient<Report> serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<Report> getReports() {
         Page<ReportJson> responsePage = this.serviceClient.getReports();

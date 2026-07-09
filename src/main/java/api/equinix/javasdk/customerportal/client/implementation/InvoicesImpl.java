@@ -30,21 +30,16 @@ import api.equinix.javasdk.customerportal.model.json.InvoiceDetailJson;
 import api.equinix.javasdk.customerportal.model.json.InvoiceSummaryJson;
 import api.equinix.javasdk.customerportal.model.wrappers.InvoiceDetailWrapper;
 import api.equinix.javasdk.customerportal.model.wrappers.InvoiceSummaryWrapper;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InvoicesImpl implements Invoices {
-
-    private final CustomerPortal serviceManager;
 
     private final InvoiceSummaryClient<InvoiceSummary> serviceClientSummary;
 
     private final InvoiceDetailClient<InvoiceDetail> serviceClientDetail;
 
-    public InvoicesImpl(InvoiceSummaryClient<InvoiceSummary> serviceClientSummary, InvoiceDetailClient<InvoiceDetail> serviceClientDetail,
-                        CustomerPortal serviceManager) {
-        this.serviceClientSummary = serviceClientSummary;
-        this.serviceClientDetail = serviceClientDetail;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public PaginatedList<InvoiceSummary> summaries() {
         return summaries(null);

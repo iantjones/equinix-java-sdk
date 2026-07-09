@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Request body for creating an IAM permission set via {@code POST
@@ -34,6 +35,7 @@ import java.util.Map;
  * ERN string or a structured inline-permission / reference object.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class CreatePermissionSetRequest {
 
     @JsonProperty("permissionSetId")
@@ -132,33 +134,5 @@ public class CreatePermissionSetRequest {
     public CreatePermissionSetRequest allowBadRefs(String allowBadRefs) {
         this.allowBadRefs = allowBadRefs;
         return this;
-    }
-
-    public String getPermissionSetId() {
-        return permissionSetId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public List<PolicyExpression> getPermissions() {
-        return permissions;
-    }
-
-    public List<PolicyExpression> getIntersect() {
-        return intersect;
-    }
-
-    public List<PolicyExpression> getSubtract() {
-        return subtract;
-    }
-
-    public String getAllowBadRefs() {
-        return allowBadRefs;
     }
 }

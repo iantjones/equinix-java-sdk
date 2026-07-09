@@ -24,17 +24,14 @@ import api.equinix.javasdk.internetaccess.client.InternetAccessCages;
 import api.equinix.javasdk.internetaccess.client.internal.CageClient;
 import api.equinix.javasdk.internetaccess.model.Cage;
 import api.equinix.javasdk.internetaccess.model.json.CageJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessCagesImpl implements InternetAccessCages {
-
-    private final InternetAccess serviceManager;
 
     private final CageClient serviceClient;
 
-    public InternetAccessCagesImpl(CageClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<Cage> list(String ibx, String accountNumber) {
         Page<CageJson> responsePage = this.serviceClient.list(ibx, accountNumber);

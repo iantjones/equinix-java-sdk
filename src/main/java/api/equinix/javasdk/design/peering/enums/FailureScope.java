@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.design.peering.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -31,7 +30,6 @@ import lombok.Getter;
  * @see api.equinix.javasdk.design.peering.model.CorrelatedFailure
  */
 @Getter
-@AllArgsConstructor
 public enum FailureScope {
 
     METRO("Metro", "All facilities and IXes in a metro are unavailable"),
@@ -46,4 +44,17 @@ public enum FailureScope {
 
     private final String displayName;
     private final String description;
+
+    /**
+     * Constructs a failure scope. Argument order is pinned here — the two
+     * parameters are both {@code String}, so never regenerate this constructor
+     * from field order.
+     *
+     * @param displayName the human-readable name
+     * @param description the explanation of the failure domain
+     */
+    FailureScope(String displayName, String description) {
+        this.displayName = displayName;
+        this.description = description;
+    }
 }

@@ -49,21 +49,18 @@ import api.equinix.javasdk.fabric.model.wrappers.ConnectionWrapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class ConnectionsImpl implements Connections {
 
     private final ConnectionClient<Connection> serviceClient;
 
     private final RouteTableEntryClient<RouteTableEntry> routesClient;
-
-    public ConnectionsImpl(ConnectionClient<Connection> serviceClient, RouteTableEntryClient<RouteTableEntry> routesClient) {
-        this.serviceClient = serviceClient;
-        this.routesClient = routesClient;
-    }
 
     public PaginatedFilteredList<Connection> search() {
         return search(Filter.filter().empty());

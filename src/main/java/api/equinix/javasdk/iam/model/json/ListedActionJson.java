@@ -22,7 +22,6 @@ import api.equinix.javasdk.iam.model.ListedAction;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import java.util.Map;
  * {@link ListedAction} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ListedActionJson implements ListedAction {
 
@@ -77,7 +75,6 @@ public class ListedActionJson implements ListedAction {
     }
 
     @Getter
-    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RbacPermissionJson implements ListedAction.RbacPermission {
 
@@ -89,7 +86,6 @@ public class ListedActionJson implements ListedAction {
     }
 
     @Getter
-    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PermissionCodeJson implements ListedAction.PermissionCode {
 

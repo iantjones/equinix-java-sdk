@@ -20,7 +20,6 @@ import api.equinix.javasdk.networkedge.enums.Protocol;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -48,7 +47,6 @@ public class ACLTemplateUpdaterJson {
     @Getter(AccessLevel.PUBLIC) private String accountUcmId;
 
     @Getter(AccessLevel.PACKAGE)
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     static class InboundRule {
 
@@ -69,5 +67,28 @@ public class ACLTemplateUpdaterJson {
 
         @JsonProperty("description")
         private String description;
+
+        /**
+         * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+         * adjacent same-typed {@code String} parameters ({@code srcPort}/{@code dstPort} in
+         * particular — a swap writes a wrong firewall rule) are pinned here in code rather
+         * than by field declaration order.
+         *
+         * @param protocol    the rule protocol
+         * @param srcPort     the source port or range
+         * @param dstPort     the destination port or range
+         * @param subnet      the source subnet CIDR
+         * @param seqNo       the rule sequence number
+         * @param description the rule description
+         */
+        InboundRule(Protocol protocol, String srcPort, String dstPort, String subnet,
+                    Integer seqNo, String description) {
+            this.protocol = protocol;
+            this.srcPort = srcPort;
+            this.dstPort = dstPort;
+            this.subnet = subnet;
+            this.seqNo = seqNo;
+            this.description = description;
+        }
     }
 }

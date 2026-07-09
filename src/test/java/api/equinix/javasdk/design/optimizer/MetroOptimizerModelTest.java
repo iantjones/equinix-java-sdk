@@ -49,11 +49,36 @@ class MetroOptimizerModelTest {
         @DisplayName("Score components should be accessible")
         void components() {
             List<ScoreComponent> comps = Arrays.asList(
-                    new ScoreComponent(ScoreCategory.LATENCY, 90.0, 0.3, "Low latency to all sites"),
-                    new ScoreComponent(ScoreCategory.PROVIDER_COVERAGE, 85.0, 0.25, "All providers available"),
-                    new ScoreComponent(ScoreCategory.COST, 80.0, 0.2, "Competitive pricing"),
-                    new ScoreComponent(ScoreCategory.REDUNDANCY, 95.0, 0.15, "Multi-metro redundancy"),
-                    new ScoreComponent(ScoreCategory.COMPLIANCE, 100.0, 0.1, "No restrictions")
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.LATENCY)
+                            .score(90.0)
+                            .weight(0.3)
+                            .explanation("Low latency to all sites")
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.PROVIDER_COVERAGE)
+                            .score(85.0)
+                            .weight(0.25)
+                            .explanation("All providers available")
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.COST)
+                            .score(80.0)
+                            .weight(0.2)
+                            .explanation("Competitive pricing")
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.REDUNDANCY)
+                            .score(95.0)
+                            .weight(0.15)
+                            .explanation("Multi-metro redundancy")
+                            .build(),
+                    ScoreComponent.builder()
+                            .category(ScoreCategory.COMPLIANCE)
+                            .score(100.0)
+                            .weight(0.1)
+                            .explanation("No restrictions")
+                            .build()
             );
             MetroScore score = new MetroScore(89.25, comps);
 

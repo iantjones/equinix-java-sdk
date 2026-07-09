@@ -46,7 +46,9 @@ import api.equinix.javasdk.fabric.model.json.creators.CloudRouterOperator;
 import api.equinix.javasdk.fabric.model.wrappers.CloudRouterWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class CloudRoutersImpl implements CloudRouters {
 
     private final CloudRouterClient<CloudRouter> serviceClient;
@@ -56,16 +58,6 @@ public class CloudRoutersImpl implements CloudRouters {
     private final RouteTableEntryClient<RouteTableEntry> routesClient;
 
     private final CloudRouterCommandClient<CloudRouterCommand> commandsClient;
-
-    public CloudRoutersImpl(CloudRouterClient<CloudRouter> serviceClient,
-                            CloudRouterPackageClient<CloudRouterPackage> cloudRouterPackageServiceClient,
-                            RouteTableEntryClient<RouteTableEntry> routesClient,
-                            CloudRouterCommandClient<CloudRouterCommand> commandsClient) {
-        this.cloudRouterPackageServiceClient = cloudRouterPackageServiceClient;
-        this.serviceClient = serviceClient;
-        this.routesClient = routesClient;
-        this.commandsClient = commandsClient;
-    }
 
     public PaginatedFilteredList<CloudRouter> search() {
         return search(Filter.filter().empty());

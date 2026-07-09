@@ -32,14 +32,12 @@ import api.equinix.javasdk.fabric.model.json.creators.RouteFilterOperator;
 import api.equinix.javasdk.fabric.model.wrappers.RouteFilterWrapper;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class RouteFiltersImpl implements RouteFilters {
 
     private final RouteFilterClient<RouteFilter> serviceClient;
-
-    public RouteFiltersImpl(RouteFilterClient<RouteFilter> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<RouteFilter> search() {
         return search(Filter.filter().empty());

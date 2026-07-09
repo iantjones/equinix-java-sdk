@@ -26,7 +26,6 @@ import api.equinix.javasdk.networkedge.client.internal.implementation.*;
 import api.equinix.javasdk.networkedge.model.ACLTemplate;
 import api.equinix.javasdk.networkedge.model.BGPPeering;
 import api.equinix.javasdk.networkedge.model.VPN;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
@@ -83,19 +82,16 @@ public class NetworkEdgeConfigImpl extends Config implements NetworkEdgeConfig {
     }
 
     @Override
-    @JsonProperty("aCLTemplateClient")
     public ACLTemplateClient<ACLTemplate> getACLTemplateClient() {
         return aclTemplateClient;
     }
 
     @Override
-    @JsonProperty("vPNClient")
     public VPNClient<VPN> getVPNClient() {
         return vpnClient;
     }
 
     @Override
-    @JsonProperty("bGPPeeringClient")
     public BGPPeeringClient<BGPPeering> getBGPClient() {
         return bgpClient;
     }

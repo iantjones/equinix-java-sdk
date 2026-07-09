@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,7 +35,6 @@ import java.util.List;
  * {@link EffectivePermissions} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EffectivePermissionsJson implements EffectivePermissions {
 
@@ -64,7 +62,6 @@ public class EffectivePermissionsJson implements EffectivePermissions {
     }
 
     @Getter
-    @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PermissionJson implements EffectivePermissions.Permission {
 
@@ -113,7 +110,6 @@ public class EffectivePermissionsJson implements EffectivePermissions {
      * normalizes both wire shapes into {@link #getInclude()} / {@link #getExcept()}.
      */
     @Getter
-    @Setter
     @JsonDeserialize(using = ResourceSelectorJson.Deserializer.class)
     public static class ResourceSelectorJson implements EffectivePermissions.ResourceSelector {
 
@@ -129,9 +125,9 @@ public class EffectivePermissionsJson implements EffectivePermissions {
                 JsonNode node = parser.getCodec().readTree(parser);
                 ResourceSelectorJson selector = new ResourceSelectorJson();
                 if (node.isArray()) {
-                    selector.setInclude(readStrings(node));
+                    selector.include = readStrings(node);
                 } else if (node.isObject() && node.has("except")) {
-                    selector.setExcept(readStrings(node.get("except")));
+                    selector.except = readStrings(node.get("except"));
                 }
                 return selector;
             }

@@ -23,17 +23,14 @@ import api.equinix.javasdk.customerportal.model.OrderResponse;
 import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectDeinstallRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectOrderRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.CrossConnectUpdateRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class CrossConnectsImpl implements CrossConnects {
-
-    private final CustomerPortal serviceManager;
 
     private final CrossConnectClient serviceClient;
 
-    public CrossConnectsImpl(CrossConnectClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public OrderResponse order(CrossConnectOrderRequest request) {
         return this.serviceClient.order(request);

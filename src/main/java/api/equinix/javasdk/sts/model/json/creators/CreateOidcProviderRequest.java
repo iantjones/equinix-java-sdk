@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import lombok.Getter;
 
 /**
  * Request body for registering a new OIDC provider via {@code POST
@@ -27,6 +28,7 @@ import java.util.List;
  * {@code CreateOidcProviderBody}).
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class CreateOidcProviderRequest {
 
     @JsonProperty("name")
@@ -97,25 +99,5 @@ public class CreateOidcProviderRequest {
     public CreateOidcProviderRequest groupMembershipClaim(String groupMembershipClaim) {
         this.groupMembershipClaim = groupMembershipClaim;
         return this;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getIdpPrefix() {
-        return idpPrefix;
-    }
-
-    public String getIssuerLocation() {
-        return issuerLocation;
-    }
-
-    public List<String> getTrustedClientIds() {
-        return trustedClientIds;
-    }
-
-    public String getGroupMembershipClaim() {
-        return groupMembershipClaim;
     }
 }

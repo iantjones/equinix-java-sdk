@@ -20,13 +20,11 @@ import api.equinix.javasdk.ibxsmartview.enums.SensorUnit;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * A single sensor reading (value + unit) for an environmental sensor.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Reading {
 

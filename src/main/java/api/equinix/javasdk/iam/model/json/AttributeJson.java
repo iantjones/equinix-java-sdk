@@ -20,14 +20,12 @@ import api.equinix.javasdk.iam.model.Attribute;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for an item of the IAM {@code AttributeSet} spec schema. Implements
  * {@link Attribute} directly.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AttributeJson implements Attribute {
 

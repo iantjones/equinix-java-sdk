@@ -19,14 +19,12 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.fabric.client.StreamAssets;
 import api.equinix.javasdk.fabric.client.internal.StreamAssetClient;
 import api.equinix.javasdk.fabric.model.StreamAsset;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class StreamAssetsImpl implements StreamAssets {
 
     private final StreamAssetClient<StreamAsset> serviceClient;
-
-    public StreamAssetsImpl(StreamAssetClient<StreamAsset> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public StreamAsset get(String streamId, String asset, String assetId) {
         return this.serviceClient.get(streamId, asset, assetId);

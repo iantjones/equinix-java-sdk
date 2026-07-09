@@ -25,17 +25,14 @@ import api.equinix.javasdk.internetaccess.client.internal.PurchaseOrderClient;
 import api.equinix.javasdk.internetaccess.enums.PurchaseOrderCategory;
 import api.equinix.javasdk.internetaccess.model.PurchaseOrder;
 import api.equinix.javasdk.internetaccess.model.json.PurchaseOrderJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessPurchaseOrdersImpl implements InternetAccessPurchaseOrders {
-
-    private final InternetAccess serviceManager;
 
     private final PurchaseOrderClient serviceClient;
 
-    public InternetAccessPurchaseOrdersImpl(PurchaseOrderClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<PurchaseOrder> list(String accountNumber) {
         return list(accountNumber, null, null);

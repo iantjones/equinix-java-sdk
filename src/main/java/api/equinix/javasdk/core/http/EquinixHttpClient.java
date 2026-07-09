@@ -52,8 +52,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The SDK's pooled, timeout-bounded HTTP client. Executes a single {@link EquinixRequest} against
@@ -73,9 +72,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author ianjones
  */
+@Slf4j
 public class EquinixHttpClient implements Closeable {
-
-    private static final Logger logger = LoggerFactory.getLogger(EquinixHttpClient.class);
 
     private static final String RETRY_AFTER_HEADER = "Retry-After";
     private static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
@@ -170,7 +168,7 @@ public class EquinixHttpClient implements Closeable {
         singleRequestParams.newApacheRequest(requestFactory, equinixRequest);
         singleRequestParams.apacheRequest.setHeader(CORRELATION_ID_HEADER, correlationId);
 
-        logger.debug("{} {} [cid={}]", equinixRequest.getHttpMethod(), singleRequestParams.apacheRequest.getURI(), correlationId);
+        log.debug("{} {} [cid={}]", equinixRequest.getHttpMethod(), singleRequestParams.apacheRequest.getURI(), correlationId);
 
         try {
             logRequestBody(singleRequestParams.apacheRequest);
@@ -179,7 +177,7 @@ public class EquinixHttpClient implements Closeable {
 
             EquinixResponse<T> equinixResponse = captureResponse(singleRequestParams.apacheResponse);
 
-            logger.debug("Status: {} {} [cid={}]", equinixResponse.getStatusCode(), equinixResponse.getStatusText(), correlationId);
+            log.debug("Status: {} {} [cid={}]", equinixResponse.getStatusCode(), equinixResponse.getStatusText(), correlationId);
 
             if(!isRequestSuccessful(singleRequestParams.apacheResponse)) {
                 try {
@@ -223,7 +221,7 @@ public class EquinixHttpClient implements Closeable {
             response.close();
         }
         catch (IOException closeEx) {
-            logger.debug("Could not close HTTP response cleanly: {}", closeEx.getMessage());
+            log.debug("Could not close HTTP response cleanly: {}", closeEx.getMessage());
         }
     }
 
@@ -253,17 +251,17 @@ public class EquinixHttpClient implements Closeable {
      * the bytes that are actually sent. A logging failure is swallowed.
      */
     private void logRequestBody(HttpRequestBase apacheRequest) {
-        if (!this.outputRequestJson || !logger.isDebugEnabled()
+        if (!this.outputRequestJson || !log.isDebugEnabled()
                 || !(apacheRequest instanceof HttpEntityEnclosingRequestBase enclosingRequest)
                 || enclosingRequest.getEntity() == null
                 || !enclosingRequest.getEntity().isRepeatable()) {
             return;
         }
         try {
-            logger.debug("Request body: {}", EntityUtils.toString(enclosingRequest.getEntity()));
+            log.debug("Request body: {}", EntityUtils.toString(enclosingRequest.getEntity()));
         }
         catch (IOException bodyLogEx) {
-            logger.debug("Could not read request body for logging: {}", bodyLogEx.getMessage());
+            log.debug("Could not read request body for logging: {}", bodyLogEx.getMessage());
         }
     }
 
@@ -281,7 +279,7 @@ public class EquinixHttpClient implements Closeable {
             return reader.lines().collect(Collectors.joining("\n"));
         }
         catch (Exception bodyEx) {
-            logger.warn("Could not read error response body: {}", bodyEx.getMessage());
+            log.warn("Could not read error response body: {}", bodyEx.getMessage());
             return null;
         }
     }
@@ -352,7 +350,7 @@ public class EquinixHttpClient implements Closeable {
                     throw ese;
                 }
                 long backoff = policy.computeBackoffMillis(attempt, retryAfterMillis(ese));
-                logger.warn("Retrying {} after HTTP {} (attempt {} of {}), waiting {}ms [cid={}]",
+                log.warn("Retrying {} after HTTP {} (attempt {} of {}), waiting {}ms [cid={}]",
                         method, status, attempt + 1, policy.getMaxRetries(), backoff, correlationId);
                 backoffSleep(backoff);
                 attempt++;
@@ -373,7 +371,7 @@ public class EquinixHttpClient implements Closeable {
                     throw ece;
                 }
                 long backoff = policy.computeBackoffMillis(attempt, null);
-                logger.warn("Retrying {} after {} (attempt {} of {}), waiting {}ms [cid={}]",
+                log.warn("Retrying {} after {} (attempt {} of {}), waiting {}ms [cid={}]",
                         method, ece.getCause().getClass().getSimpleName(), attempt + 1, policy.getMaxRetries(), backoff, correlationId);
                 backoffSleep(backoff);
                 attempt++;

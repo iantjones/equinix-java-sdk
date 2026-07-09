@@ -22,7 +22,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.OperationalUnitLo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for an {@link OperationalUnit} returned by the Equinix Internet Access (EIA)
@@ -30,7 +29,6 @@ import lombok.Setter;
  * {@link OperationalUnit} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OperationalUnitJson implements OperationalUnit {
 

@@ -28,14 +28,12 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.CloudEventJson;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class CloudEventsImpl implements CloudEvents {
 
     private final CloudEventClient<CloudEvent> serviceClient;
-
-    public CloudEventsImpl(CloudEventClient<CloudEvent> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedFilteredList<CloudEvent> search() {
         return search(Filter.filter().empty());

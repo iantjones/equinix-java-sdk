@@ -24,17 +24,14 @@ import api.equinix.javasdk.iam.model.json.ActionList;
 import api.equinix.javasdk.iam.model.json.ResourceTypeActionPage;
 import api.equinix.javasdk.iam.model.json.ResourceTypeList;
 import api.equinix.javasdk.iam.model.json.ServiceActionSetList;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class IAMResourceTypesImpl implements IAMResourceTypes {
-
-    private final IAM serviceManager;
 
     private final ResourceTypeClient resourceTypeClient;
 
-    public IAMResourceTypesImpl(ResourceTypeClient resourceTypeClient, IAM serviceManager) {
-        this.serviceManager = serviceManager;
-        this.resourceTypeClient = resourceTypeClient;
-    }
+    private final IAM serviceManager;
 
     public ResourceTypeList listResourceTypes(String projectId, String serviceId) {
         return this.resourceTypeClient.listResourceTypes(projectId, serviceId, null, null, null);

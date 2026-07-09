@@ -25,7 +25,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.TermsConnectivity
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for {@link TermsAndConditions} returned by the Equinix Internet Access (EIA)
@@ -33,7 +32,6 @@ import lombok.Setter;
  * directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TermsAndConditionsJson implements TermsAndConditions {
 

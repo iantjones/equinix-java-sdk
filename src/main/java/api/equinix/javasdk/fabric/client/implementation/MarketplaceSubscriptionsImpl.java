@@ -19,14 +19,12 @@ package api.equinix.javasdk.fabric.client.implementation;
 import api.equinix.javasdk.fabric.client.MarketplaceSubscriptions;
 import api.equinix.javasdk.fabric.client.internal.MarketplaceSubscriptionClient;
 import api.equinix.javasdk.fabric.model.MarketplaceSubscription;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class MarketplaceSubscriptionsImpl implements MarketplaceSubscriptions {
 
     private final MarketplaceSubscriptionClient<MarketplaceSubscription> serviceClient;
-
-    public MarketplaceSubscriptionsImpl(MarketplaceSubscriptionClient<MarketplaceSubscription> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public MarketplaceSubscription getByUuid(String uuid) {
         return this.serviceClient.getByUuid(uuid);

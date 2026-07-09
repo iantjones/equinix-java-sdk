@@ -25,11 +25,12 @@ import lombok.NoArgsConstructor;
 
 /**
  * Stream subscription sink settings (e.g. Splunk index, ServiceNow source, webhook format).
+ *
+ * <p>Prefer {@code builder()} over the positional constructor — six of the seven parameters
+ * are {@code String}s, so builder construction is self-documenting and transposition-proof.</p>
  */
 @Getter
-@Builder
 @NoArgsConstructor
-@lombok.AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamSinkSetting {
 
@@ -54,4 +55,29 @@ public class StreamSinkSetting {
     /** Webhook message format (spec {@code StreamSubscriptionSinkSetting.format}: {@code CLOUDEVENT} or {@code OPENTELEMETRY}). */
     @JsonProperty("format")
     private StreamSubscriptionSinkFormat format;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (six same-typed {@code String} parameters)
+     * rather than by field declaration order.
+     *
+     * @param eventIndex     the Splunk event index
+     * @param metricIndex    the Splunk metric index
+     * @param source         the ServiceNow source
+     * @param applicationKey the application key
+     * @param eventUri       the event URI
+     * @param metricUri      the metric URI
+     * @param format         the webhook message format ({@code CLOUDEVENT} or {@code OPENTELEMETRY})
+     */
+    @Builder
+    public StreamSinkSetting(String eventIndex, String metricIndex, String source, String applicationKey,
+                             String eventUri, String metricUri, StreamSubscriptionSinkFormat format) {
+        this.eventIndex = eventIndex;
+        this.metricIndex = metricIndex;
+        this.source = source;
+        this.applicationKey = applicationKey;
+        this.eventUri = eventUri;
+        this.metricUri = metricUri;
+        this.format = format;
+    }
 }

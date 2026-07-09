@@ -20,14 +20,12 @@ import api.equinix.javasdk.ibxsmartview.model.MessageData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * The streaming envelope wrapping an {@link Environment} payload, carrying the message
  * type and its data.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EnvironmentMessageData implements MessageData<Environment> {
 

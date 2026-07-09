@@ -22,7 +22,6 @@ import api.equinix.javasdk.networkedge.enums.NetworkInterfaceType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import lombok.Data;
 import lombok.Getter;
 
 import java.util.List;
@@ -32,9 +31,11 @@ import java.util.List;
  * @author ianjones
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Data
+@Getter
 public class NetworkInterface {
 
+    // Class-level @Getter covers instance fields only, so the static TypeReference
+    // holders keep their own field-level @Getter.
     @Getter static TypeReference<List<NetworkInterface>> listTypeRef = new TypeReference<>() {};
     @Getter static TypeReference<NetworkInterface> singleTypeRef = new TypeReference<>() {};
 

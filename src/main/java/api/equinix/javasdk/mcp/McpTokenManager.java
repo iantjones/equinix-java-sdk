@@ -3,6 +3,7 @@ package api.equinix.javasdk.mcp;
 import api.equinix.javasdk.core.auth.EquinixCredentials;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -24,6 +25,7 @@ import java.time.Instant;
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class McpTokenManager {
 
     private static final Duration REFRESH_BUFFER = Duration.ofMinutes(5);
@@ -35,14 +37,6 @@ public class McpTokenManager {
 
     private String accessToken;
     private Instant expiresAt;
-
-    public McpTokenManager(EquinixCredentials credentials, String tokenEndpoint,
-                    CloseableHttpClient httpClient, ObjectMapper objectMapper) {
-        this.credentials = credentials;
-        this.tokenEndpoint = tokenEndpoint;
-        this.httpClient = httpClient;
-        this.objectMapper = objectMapper;
-    }
 
     /**
      * Returns a valid access token, refreshing if necessary.

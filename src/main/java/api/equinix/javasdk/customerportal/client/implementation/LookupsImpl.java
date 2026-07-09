@@ -25,17 +25,14 @@ import api.equinix.javasdk.customerportal.model.PatchPanel;
 import api.equinix.javasdk.customerportal.model.Provider;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class LookupsImpl implements Lookups {
-
-    private final CustomerPortal serviceManager;
 
     private final LookupClient serviceClient;
 
-    public LookupsImpl(LookupClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public List<? extends LookupLocation> listLocations(String permissionCode) {
         return this.serviceClient.listLocations(permissionCode, null, null, null, null, null);

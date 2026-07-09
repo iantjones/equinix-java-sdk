@@ -56,8 +56,10 @@ public class ServiceTokenCreatorJson {
     @JsonProperty("notifications")
     private List<Notification> notifications;
 
+    // No @AllArgsConstructor here (the outer constructor assembles Connection via its private
+    // setters): 8 params including two Booleans and two ConnectionConfigs would make a silent
+    // aSide/zSide or Boolean transposition compile cleanly.
     @Setter(AccessLevel.PRIVATE)
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class Connection {
 
@@ -161,7 +163,6 @@ public class ServiceTokenCreatorJson {
         private String uuid;
     }
 
-    @AllArgsConstructor(access = AccessLevel.PACKAGE)
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class LinkProtocol {
 
@@ -176,6 +177,23 @@ public class ServiceTokenCreatorJson {
 
         @JsonProperty("vlanSTag")
         private Integer vlanSTag;
+
+        /**
+         * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+         * three same-typed {@code Integer} VLAN-tag parameters are pinned here in code rather
+         * than by field declaration order.
+         *
+         * @param type     the link protocol type
+         * @param vlanTag  the VLAN tag (DOT1Q)
+         * @param vlanCTag the customer VLAN tag (QINQ)
+         * @param vlanSTag the service VLAN tag (QINQ)
+         */
+        LinkProtocol(LinkProtocolType type, Integer vlanTag, Integer vlanCTag, Integer vlanSTag) {
+            this.type = type;
+            this.vlanTag = vlanTag;
+            this.vlanCTag = vlanCTag;
+            this.vlanSTag = vlanSTag;
+        }
     }
 
     public ServiceTokenCreatorJson(ServiceTokenOperator.ServiceTokenBuilder serviceTokenBuilder) {

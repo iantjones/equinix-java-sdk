@@ -46,10 +46,10 @@ import api.equinix.javasdk.internetaccess.model.json.PortConfigurationJson;
 import api.equinix.javasdk.internetaccess.model.json.RoutingProtocolConfigurationJson;
 import api.equinix.javasdk.internetaccess.model.json.VirtualBandwidthConfigurationJson;
 import api.equinix.javasdk.internetaccess.model.json.VirtualConnectionDefaultConfigurationJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessProductConfigurationsImpl implements InternetAccessProductConfigurations {
-
-    private final InternetAccess serviceManager;
 
     private final RoutingConfigurationClient routingConfigurationClient;
 
@@ -65,23 +65,7 @@ public class InternetAccessProductConfigurationsImpl implements InternetAccessPr
 
     private final PortConfigurationClient portConfigurationClient;
 
-    public InternetAccessProductConfigurationsImpl(RoutingConfigurationClient routingConfigurationClient,
-                                                   DedicatedBandwidthConfigurationClient dedicatedBandwidthConfigurationClient,
-                                                   VirtualBandwidthConfigurationClient virtualBandwidthConfigurationClient,
-                                                   VirtualConnectionDefaultConfigurationClient virtualConnectionDefaultConfigurationClient,
-                                                   CustomerRouteConfigurationClient customerRouteConfigurationClient,
-                                                   DedicatedPortDefaultConfigurationClient dedicatedPortDefaultConfigurationClient,
-                                                   PortConfigurationClient portConfigurationClient,
-                                                   InternetAccess serviceManager) {
-        this.routingConfigurationClient = routingConfigurationClient;
-        this.dedicatedBandwidthConfigurationClient = dedicatedBandwidthConfigurationClient;
-        this.virtualBandwidthConfigurationClient = virtualBandwidthConfigurationClient;
-        this.virtualConnectionDefaultConfigurationClient = virtualConnectionDefaultConfigurationClient;
-        this.customerRouteConfigurationClient = customerRouteConfigurationClient;
-        this.dedicatedPortDefaultConfigurationClient = dedicatedPortDefaultConfigurationClient;
-        this.portConfigurationClient = portConfigurationClient;
-        this.serviceManager = serviceManager;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<RoutingProtocolConfiguration> routingConfigurations(UseCase useCase) {
         return routingConfigurations(useCase, null);

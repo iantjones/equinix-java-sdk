@@ -25,17 +25,14 @@ import api.equinix.javasdk.internetaccess.client.internal.PriceClient;
 import api.equinix.javasdk.internetaccess.model.Price;
 import api.equinix.javasdk.internetaccess.model.json.PriceJson;
 import api.equinix.javasdk.internetaccess.model.json.creators.PriceSearchRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessPricesImpl implements InternetAccessPrices {
-
-    private final InternetAccess serviceManager;
 
     private final PriceClient serviceClient;
 
-    public InternetAccessPricesImpl(PriceClient serviceClient, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedFilteredList<Price> search(PriceSearchRequest searchRequest) {
         Page<PriceJson> responsePage = this.serviceClient.search(searchRequest);

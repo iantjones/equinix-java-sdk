@@ -21,14 +21,12 @@ import api.equinix.javasdk.fabric.client.internal.PortPackageClient;
 import api.equinix.javasdk.fabric.model.PortPackage;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class PortPackagesImpl implements PortPackages {
 
     private final PortPackageClient<PortPackage> serviceClient;
-
-    public PortPackagesImpl(PortPackageClient<PortPackage> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public List<PortPackage> list() {
         return this.serviceClient.list();

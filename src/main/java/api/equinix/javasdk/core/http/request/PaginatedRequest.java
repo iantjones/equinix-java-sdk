@@ -19,7 +19,6 @@ package api.equinix.javasdk.core.http.request;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.util.ModelUtils;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Request carrier for offset/limit-paginated GET list operations. Holds the raw paging state
@@ -30,7 +29,6 @@ import lombok.NoArgsConstructor;
  * @author ianjones
  */
 @Getter
-@NoArgsConstructor
 public final class PaginatedRequest<T> extends EquinixRequest<T> {
     private int offset = 0;
     private int pageSize = Constants.PAGE_LIMIT;

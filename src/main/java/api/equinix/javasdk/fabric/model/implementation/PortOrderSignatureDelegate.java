@@ -18,7 +18,7 @@ package api.equinix.javasdk.fabric.model.implementation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,11 +26,13 @@ import lombok.NoArgsConstructor;
  * Order delegate details for a port order signature (the Fabric v4
  * {@code PortOrderSignatureDelegate} schema).
  *
+ * <p>Prefer {@code builder()} over the positional constructor — all three parameters are
+ * {@code String}s.</p>
+ *
  * @author ianjones
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortOrderSignatureDelegate {
 
@@ -42,4 +44,20 @@ public class PortOrderSignatureDelegate {
 
     @JsonProperty("email")
     private String email;
+
+    /**
+     * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
+     * argument order is pinned here in code (three same-typed {@code String} parameters)
+     * rather than by field declaration order.
+     *
+     * @param firstName the delegate's first name
+     * @param lastName  the delegate's last name
+     * @param email     the delegate's email address
+     */
+    @Builder
+    public PortOrderSignatureDelegate(String firstName, String lastName, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+    }
 }

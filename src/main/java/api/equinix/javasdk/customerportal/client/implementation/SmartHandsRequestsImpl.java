@@ -25,17 +25,14 @@ import api.equinix.javasdk.customerportal.model.SmartHandsLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.SmartHandsRequestJson;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class SmartHandsRequestsImpl implements SmartHandsRequests {
-
-    private final CustomerPortal serviceManager;
 
     private final SmartHandsClient serviceClient;
 
-    public SmartHandsRequestsImpl(SmartHandsClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public SmartHandResponse createEquipmentInstall(SmartHandsRequestJson request) {
         return this.serviceClient.create("CreateEquipmentInstall", request);

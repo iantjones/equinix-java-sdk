@@ -18,6 +18,7 @@ package api.equinix.javasdk.iam.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 /**
  * Request body for adding a grant to an IAM access policy via {@code POST
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * <p>The {@code lastRev} field supports optimistic concurrency control.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class AddGrantRequest {
 
     @JsonProperty("grantee")
@@ -55,13 +57,5 @@ public class AddGrantRequest {
     public AddGrantRequest lastRev(String lastRev) {
         this.lastRev = lastRev;
         return this;
-    }
-
-    public String getGrantee() {
-        return grantee;
-    }
-
-    public String getLastRev() {
-        return lastRev;
     }
 }

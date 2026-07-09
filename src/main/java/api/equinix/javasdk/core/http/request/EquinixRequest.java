@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.net.URI;
@@ -51,7 +50,6 @@ import java.util.Map;
  */
 @Getter
 @Setter
-@NoArgsConstructor
 public class EquinixRequest<T> {
 
     private EquinixCredentialsProvider equinixCredentialsProvider;

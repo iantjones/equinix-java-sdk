@@ -17,6 +17,7 @@
 package api.equinix.javasdk.core.http;
 
 import api.equinix.javasdk.core.enums.HttpMethod;
+import lombok.Builder;
 
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -73,7 +74,12 @@ public final class RetryPolicy {
     }
 
     /**
-     * Full constructor.
+     * Full constructor. Also reachable fluently via {@link #builder()} — preferable when
+     * configuring by hand, since the positional form lines up two {@code long} delays and three
+     * {@code boolean} flags that are easy to transpose silently:
+     * {@code RetryPolicy.builder().maxRetries(5).baseDelayMillis(200).retryableStatusCodes(Set.of(429)).build()}.
+     * Note the builder applies no defaults beyond Java's zero-values; an unset
+     * {@code retryableStatusCodes} is treated as an empty set (no status-triggered retries).
      *
      * @param maxRetries maximum retry attempts beyond the initial request (0 disables retries)
      * @param baseDelayMillis base backoff delay; the n-th retry waits up to {@code base * 2^n}
@@ -84,13 +90,16 @@ public final class RetryPolicy {
      * @param retryNonIdempotentMethods whether non-idempotent methods (POST, PATCH) are also retried —
      *                                  leave {@code false} unless your endpoints dedupe retried requests
      */
+    @Builder
     public RetryPolicy(int maxRetries, long baseDelayMillis, long maxDelayMillis,
                        Set<Integer> retryableStatusCodes, boolean retryOnIoException, boolean honorRetryAfter,
                        boolean retryNonIdempotentMethods) {
         this.maxRetries = Math.max(0, maxRetries);
         this.baseDelayMillis = Math.max(0, baseDelayMillis);
         this.maxDelayMillis = Math.max(0, maxDelayMillis);
-        this.retryableStatusCodes = Set.copyOf(retryableStatusCodes);
+        // Null-tolerant (treated as "retry no statuses") so a builder build() that never set the
+        // status codes yields a valid policy instead of an NPE.
+        this.retryableStatusCodes = (retryableStatusCodes == null) ? Set.of() : Set.copyOf(retryableStatusCodes);
         this.retryOnIoException = retryOnIoException;
         this.honorRetryAfter = honorRetryAfter;
         this.retryNonIdempotentMethods = retryNonIdempotentMethods;

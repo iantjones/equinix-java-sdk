@@ -23,7 +23,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.DedicatedBandwidt
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for a {@link DedicatedBandwidthConfiguration} returned by the Equinix
@@ -31,7 +30,6 @@ import lombok.Setter;
  * Implements {@link DedicatedBandwidthConfiguration} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DedicatedBandwidthConfigurationJson implements DedicatedBandwidthConfiguration {
 

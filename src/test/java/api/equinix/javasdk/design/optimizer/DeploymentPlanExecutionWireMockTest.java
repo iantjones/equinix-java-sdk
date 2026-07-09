@@ -395,14 +395,23 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                         MetroRecommendation.builder()
                                 .rank(1).metroId(DC).metroName("Ashburn").score(score).reasons(List.of("Primary"))
                                 .availableProviders(List.of(
-                                        new ProviderAvailability("AWS", true, List.of("us-east-1"), "sp-aws")))
+                                        ProviderAvailability.builder()
+                                                .providerLabel("AWS")
+                                                .available(true)
+                                                .sellerRegions(List.of("us-east-1"))
+                                                .serviceProfileUuid("sp-aws")
+                                                .build()))
                                 .build(),
                         MetroRecommendation.builder()
                                 .rank(2).metroId(DA).metroName("Dallas").score(score).reasons(List.of("Secondary"))
                                 .availableProviders(java.util.Collections.emptyList())
                                 .build()))
                 .topology(new DeploymentTopology(List.of(
-                        new WorkloadPlacement("ML Training", DC, "AWS at DC"))))
+                        WorkloadPlacement.builder()
+                                .workloadLabel("ML Training")
+                                .assignedMetro(DC)
+                                .reasoning("AWS at DC")
+                                .build())))
                 .computedAt(Instant.now())
                 .computeTimeMs(10)
                 .build();

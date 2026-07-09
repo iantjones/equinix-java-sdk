@@ -24,17 +24,14 @@ import api.equinix.javasdk.projects.client.ProjectList;
 import api.equinix.javasdk.projects.client.internal.ProjectClient;
 import api.equinix.javasdk.projects.model.Project;
 import api.equinix.javasdk.projects.model.json.ProjectJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class ProjectListImpl implements ProjectList {
-
-    private final Projects serviceManager;
 
     private final ProjectClient<Project> serviceClient;
 
-    public ProjectListImpl(ProjectClient<Project> serviceClient, Projects serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final Projects serviceManager;
 
     public PaginatedList<Project> list() {
         return this.list(null, null);

@@ -23,17 +23,14 @@ import api.equinix.javasdk.customerportal.model.UnifiedNotification;
 import api.equinix.javasdk.customerportal.model.json.creators.UnifiedNotificationSearchRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class UnifiedNotificationsImpl implements UnifiedNotifications {
-
-    private final CustomerPortal serviceManager;
 
     private final UnifiedNotificationsClient serviceClient;
 
-    public UnifiedNotificationsImpl(UnifiedNotificationsClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public List<? extends UnifiedNotification> getNotifications(UnifiedNotificationSearchRequest request) {
         return this.serviceClient.getNotifications(request);

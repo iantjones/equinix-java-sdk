@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * Request body for creating an IAM access policy via {@code POST
@@ -35,6 +36,7 @@ import java.util.Map;
  * object ({@link PolicyExpression#of(com.fasterxml.jackson.databind.JsonNode)}).</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class CreateAccessPolicyRequest {
 
     @JsonProperty("accessPolicyId")
@@ -133,33 +135,5 @@ public class CreateAccessPolicyRequest {
     public CreateAccessPolicyRequest allowBadRefs(String allowBadRefs) {
         this.allowBadRefs = allowBadRefs;
         return this;
-    }
-
-    public String getAccessPolicyId() {
-        return accessPolicyId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public List<PolicyExpression> getPermissions() {
-        return permissions;
-    }
-
-    public List<PolicyExpression> getIntersect() {
-        return intersect;
-    }
-
-    public List<PolicyExpression> getSubtract() {
-        return subtract;
-    }
-
-    public String getAllowBadRefs() {
-        return allowBadRefs;
     }
 }

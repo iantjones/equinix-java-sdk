@@ -31,18 +31,16 @@ import api.equinix.javasdk.fabric.model.implementation.sort.SortPropertyList;
 import api.equinix.javasdk.fabric.model.json.ServiceTokenJson;
 import api.equinix.javasdk.fabric.model.json.creators.ServiceTokenOperator;
 import api.equinix.javasdk.fabric.model.wrappers.ServiceTokenWrapper;
+import lombok.RequiredArgsConstructor;
 
 /**
  *
  * @author ianjones
  */
+@RequiredArgsConstructor
 public class ServiceTokensImpl implements ServiceTokens {
 
     private final ServiceTokenClient<ServiceToken> serviceClient;
-
-    public ServiceTokensImpl(ServiceTokenClient<ServiceToken> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<ServiceToken> list() {
         Page<ServiceTokenJson> responsePage = this.serviceClient.list();

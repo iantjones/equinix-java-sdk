@@ -26,8 +26,7 @@ import api.equinix.javasdk.fabric.model.HealthStatus;
 import api.equinix.javasdk.fabric.model.MetroRegistry;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
 import api.equinix.javasdk.internetaccess.model.Ibx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import api.equinix.javasdk.mcp.McpClientConfig;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.MetroOptimizer;
@@ -86,9 +85,8 @@ import api.equinix.javasdk.design.value.tco.TcoCalculator;
  * @see api.equinix.javasdk.fabric.client.Connections
  * @see api.equinix.javasdk.fabric.client.Ports
  */
+@Slf4j
 public final class Fabric extends EquinixClient implements FabricGateway {
-
-    private static final Logger log = LoggerFactory.getLogger(Fabric.class);
 
     private Metros metros;
 

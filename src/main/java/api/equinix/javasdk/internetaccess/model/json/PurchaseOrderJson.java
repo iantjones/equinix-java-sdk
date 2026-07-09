@@ -26,7 +26,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.PurchaseOrderLoca
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,7 +37,6 @@ import java.util.List;
  * Implements {@link PurchaseOrder} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PurchaseOrderJson implements PurchaseOrder {
 

@@ -19,7 +19,6 @@ package api.equinix.javasdk.ibxsmartview.model.implementation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * The {@code status} envelope returned alongside the {@code payLoad} of most legacy
@@ -27,7 +26,6 @@ import lombok.NoArgsConstructor;
  * a human readable message.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Status {
 

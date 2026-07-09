@@ -33,14 +33,12 @@ import api.equinix.javasdk.fabric.model.wrappers.RouteAggregationRuleWrapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class RouteAggregationRulesImpl implements RouteAggregationRules {
 
     private final RouteAggregationRuleClient<RouteAggregationRule> serviceClient;
-
-    public RouteAggregationRulesImpl(RouteAggregationRuleClient<RouteAggregationRule> serviceClient) {
-        this.serviceClient = serviceClient;
-    }
 
     public PaginatedList<RouteAggregationRule> list(String routeAggregationId) {
         Page<RouteAggregationRuleJson> responsePage = this.serviceClient.list(routeAggregationId);

@@ -16,7 +16,6 @@
 
 package api.equinix.javasdk.design.peering.enums;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -39,7 +38,6 @@ import lombok.Getter;
  * @see api.equinix.javasdk.design.peering.model.NetworkPresence
  */
 @Getter
-@AllArgsConstructor
 public enum PeeringPolicy {
 
     OPEN("Open", 1.0, "Will peer with any network upon request"),
@@ -53,6 +51,21 @@ public enum PeeringPolicy {
     private final double feasibilityScore;
 
     private final String description;
+
+    /**
+     * Constructs a peering policy. Argument order is pinned here — the two
+     * {@code String} parameters straddle the score, so never regenerate this
+     * constructor from field order.
+     *
+     * @param displayName      the PeeringDB-facing display name
+     * @param feasibilityScore how likely peering can be established (0.0–1.0)
+     * @param description      the human-readable explanation
+     */
+    PeeringPolicy(String displayName, double feasibilityScore, String description) {
+        this.displayName = displayName;
+        this.feasibilityScore = feasibilityScore;
+        this.description = description;
+    }
 
     /**
      * Parses the PeeringDB {@code policy_general} string to an enum value.

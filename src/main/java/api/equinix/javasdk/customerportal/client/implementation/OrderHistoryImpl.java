@@ -24,17 +24,14 @@ import api.equinix.javasdk.customerportal.model.PermissibleLocation;
 import api.equinix.javasdk.customerportal.model.json.creators.OrderHistorySearchRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class OrderHistoryImpl implements OrderHistory {
-
-    private final CustomerPortal serviceManager;
 
     private final OrderHistoryClient serviceClient;
 
-    public OrderHistoryImpl(OrderHistoryClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public List<? extends OrderHistoryItem> search(OrderHistorySearchRequest request) {
         return this.serviceClient.search(request);

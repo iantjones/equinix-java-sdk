@@ -46,6 +46,10 @@ public class TagClientImpl extends ResourceClientBase<Tag, TagJson> implements T
     }
 
     public TagJson create(String type, String name, String displayName) {
-        return postOne("PostTag", new TagCreatorJson(type, name, displayName));
+        return postOne("PostTag", TagCreatorJson.builder()
+                .type(type)
+                .name(name)
+                .displayName(displayName)
+                .build());
     }
 }

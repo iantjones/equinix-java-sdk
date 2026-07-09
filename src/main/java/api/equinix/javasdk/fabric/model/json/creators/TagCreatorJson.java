@@ -18,10 +18,14 @@ package api.equinix.javasdk.fabric.model.json.creators;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
 
 /**
  * Request body for creating a Fabric resource tag ({@code POST /tags}).
+ *
+ * <p>Prefer {@code builder()} over the positional constructor — all three parameters are
+ * {@code String}s, so builder construction is self-documenting and transposition-proof.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -36,6 +40,18 @@ public class TagCreatorJson {
     @JsonProperty("displayName")
     private final String displayName;
 
+    /**
+     * Positional constructor; the argument order is pinned by this signature.
+     *
+     * @param type        the tag type
+     * @param name        the tag name
+     * @param displayName the tag display name
+     * @deprecated use {@link #builder()} — three same-typed {@code String} parameters make
+     *             positional construction transposition-prone; scheduled for removal at the
+     *             next major version
+     */
+    @Deprecated
+    @Builder
     public TagCreatorJson(String type, String name, String displayName) {
         this.type = type;
         this.name = name;

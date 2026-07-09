@@ -23,9 +23,8 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Optional;
@@ -42,9 +41,8 @@ import java.util.Optional;
  * adapter built on it degrades gracefully (its rate card simply produces no
  * price and a layered card falls back to another source).</p>
  */
+@Slf4j
 final class ProviderPricingHttpClient {
-
-    private static final Logger log = LoggerFactory.getLogger(ProviderPricingHttpClient.class);
 
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper;

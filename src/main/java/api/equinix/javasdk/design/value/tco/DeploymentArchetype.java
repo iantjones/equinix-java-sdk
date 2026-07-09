@@ -1,9 +1,12 @@
 package api.equinix.javasdk.design.value.tco;
 
+import lombok.Getter;
+
 /**
  * The three deployment approaches the TCO model compares. The value-realization
  * story is the delta between them — chiefly how each treats cloud data egress.
  */
+@Getter
 public enum DeploymentArchetype {
 
     PUBLIC_CLOUD_INTERNET("Public cloud over internet"),
@@ -16,9 +19,5 @@ public enum DeploymentArchetype {
 
     DeploymentArchetype(String displayName) {
         this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
     }
 }

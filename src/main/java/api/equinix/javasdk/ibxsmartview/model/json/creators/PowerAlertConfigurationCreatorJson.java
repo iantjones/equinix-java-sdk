@@ -21,6 +21,7 @@ import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertConfigura
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerAlertRecipient;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,7 +33,7 @@ import java.util.Map;
  * {@code CreateAlertConfigurationCommand} schema of the IBX SmartView power-events API.
  */
 @Getter
-@Setter
+@Setter(AccessLevel.PACKAGE) // mutated only by PowerAlertConfigurationOperator (same package)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PowerAlertConfigurationCreatorJson {
 

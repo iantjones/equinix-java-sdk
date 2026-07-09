@@ -25,7 +25,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.DedicatedPortRout
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for a {@link DedicatedPortDefaultConfiguration} returned by the Equinix
@@ -33,7 +32,6 @@ import lombok.Setter;
  * Implements {@link DedicatedPortDefaultConfiguration} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DedicatedPortDefaultConfigurationJson implements DedicatedPortDefaultConfiguration {
 

@@ -26,20 +26,16 @@ import api.equinix.javasdk.internetaccess.client.internal.IbxV1Client;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import api.equinix.javasdk.internetaccess.model.json.IbxJson;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class InternetAccessIbxsImpl implements InternetAccessIbxs {
-
-    private final InternetAccess serviceManager;
 
     private final IbxClient serviceClient;
 
     private final IbxV1Client ibxV1Client;
 
-    public InternetAccessIbxsImpl(IbxClient serviceClient, IbxV1Client ibxV1Client, InternetAccess serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-        this.ibxV1Client = ibxV1Client;
-    }
+    private final InternetAccess serviceManager;
 
     public PaginatedList<Ibx> availability(ConnectionType connectionType) {
         return availability(connectionType, null, null);

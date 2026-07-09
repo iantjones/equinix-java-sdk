@@ -23,22 +23,17 @@ import api.equinix.javasdk.ibxsmartview.model.PowerData;
 import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
 import api.equinix.javasdk.ibxsmartview.model.TrendingPowerData;
 import api.equinix.javasdk.ibxsmartview.model.json.creators.PowerCurrentPostRequest;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
+@RequiredArgsConstructor
 public class LegacyPowerImpl implements LegacyPower {
-
-    private final IBXSmartView serviceManager;
 
     private final LegacyPowerClient serviceClient;
 
-    public LegacyPowerImpl(LegacyPowerClient serviceClient, IBXSmartView serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final IBXSmartView serviceManager;
 
     public PowerData getCurrent(String accountNo, String ibx, String levelType, String levelValue) {
         return serviceClient.getCurrent(accountNo, ibx, levelType, levelValue);

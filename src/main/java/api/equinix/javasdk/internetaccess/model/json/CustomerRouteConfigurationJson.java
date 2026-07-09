@@ -23,7 +23,6 @@ import api.equinix.javasdk.internetaccess.model.implementation.CustomerRouteRout
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Read-only JSON model for a {@link CustomerRouteConfiguration} returned by the Equinix Internet
@@ -31,7 +30,6 @@ import lombok.Setter;
  * {@link CustomerRouteConfiguration} directly, so no wrapper is required.
  */
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomerRouteConfigurationJson implements CustomerRouteConfiguration {
 

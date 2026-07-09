@@ -24,17 +24,14 @@ import api.equinix.javasdk.customerportal.model.ProductAvailability;
 import api.equinix.javasdk.customerportal.model.json.creators.SecureCabinetOrderRequest;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class SecureCabinetsImpl implements SecureCabinets {
-
-    private final CustomerPortal serviceManager;
 
     private final SecureCabinetClient serviceClient;
 
-    public SecureCabinetsImpl(SecureCabinetClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final CustomerPortal serviceManager;
 
     public OrderResponse createOrder(SecureCabinetOrderRequest request) {
         return this.serviceClient.createOrder(request);

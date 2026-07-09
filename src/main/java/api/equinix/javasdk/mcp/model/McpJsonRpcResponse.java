@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * JSON-RPC 2.0 response envelope for MCP protocol communication.
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
  * @author ianjones
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class McpJsonRpcResponse {
 
@@ -42,7 +40,6 @@ public class McpJsonRpcResponse {
      * JSON-RPC 2.0 error object containing a code, message, and optional data.
      */
     @Getter
-    @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class McpJsonRpcError {
 

@@ -20,13 +20,11 @@ import api.equinix.javasdk.fabric.enums.ConnectionType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * The connection a Fabric Cloud Router action was issued against.
  */
 @Getter
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RouterActionsConnection {
 

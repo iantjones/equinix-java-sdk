@@ -24,7 +24,7 @@ import api.equinix.javasdk.networkedge.model.PublicKey;
 import api.equinix.javasdk.networkedge.model.json.creators.PublicKeyOperator;
 import api.equinix.javasdk.networkedge.model.json.PublicKeyJson;
 import api.equinix.javasdk.networkedge.model.wrappers.PublicKeyWrapper;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -32,18 +32,12 @@ import java.util.List;
  *
  * @author ianjones
  */
-@Getter
+@RequiredArgsConstructor
 public class PublicKeysImpl implements PublicKeys {
-
-    private final NetworkEdge serviceManager;
 
     private final PublicKeyClient<PublicKey> serviceClient;
 
-    public PublicKeysImpl(PublicKeyClient<PublicKey> serviceClient,
-                          NetworkEdge serviceManager) {
-        this.serviceManager = serviceManager;
-        this.serviceClient = serviceClient;
-    }
+    private final NetworkEdge serviceManager;
 
     public List<PublicKey> list() {
         return list(null);

@@ -24,17 +24,14 @@ import api.equinix.javasdk.customerportal.model.SupportCase;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCancelRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseCreateRequest;
 import api.equinix.javasdk.customerportal.model.json.creators.SupportCaseNoteRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class SupportCasesImpl implements SupportCases {
-
-    private final CustomerPortal serviceManager;
 
     private final SupportCasesClient serviceClient;
 
-    public SupportCasesImpl(SupportCasesClient serviceClient, CustomerPortal serviceManager) {
-        this.serviceClient = serviceClient;
-        this.serviceManager = serviceManager;
-    }
+    private final CustomerPortal serviceManager;
 
     public String create(SupportCaseCreateRequest request) {
         return this.serviceClient.create(request);

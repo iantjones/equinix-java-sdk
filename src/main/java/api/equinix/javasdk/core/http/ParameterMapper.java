@@ -19,6 +19,8 @@ package api.equinix.javasdk.core.http;
 import api.equinix.javasdk.core.internal.Constants;
 import api.equinix.javasdk.core.model.APIParam;
 import api.equinix.javasdk.core.model.OptionalRequestBuilder;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,10 +39,8 @@ import java.util.Map;
  *
  * @author ianjones
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ParameterMapper {
-
-    private ParameterMapper() {
-    }
 
     public static <R> Map<String, List<String>> newMap(OptionalRequestBuilder<R> requestBuilder) {
         return requestBuilder != null ? processRequestBuilder(requestBuilder) : new HashMap<>();

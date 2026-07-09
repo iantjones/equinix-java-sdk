@@ -16,11 +16,15 @@
 
 package api.equinix.javasdk.core.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  *
  * @author ianjones
  */
-public class ValidationUtils {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class ValidationUtils {
 
     /**
      *

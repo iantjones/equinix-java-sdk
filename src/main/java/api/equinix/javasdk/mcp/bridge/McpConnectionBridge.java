@@ -3,6 +3,9 @@ package api.equinix.javasdk.mcp.bridge;
 import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.mcp.model.McpToolResult;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +19,10 @@ import java.util.Map;
  *
  * @author ianjones
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class McpConnectionBridge {
 
     private final Mcp client;
-
-    McpConnectionBridge(Mcp client) {
-        this.client = client;
-    }
 
     /**
      * Validates a connection configuration before creation.
@@ -92,6 +92,7 @@ public class McpConnectionBridge {
     /**
      * Validation result from the MCP {@code validate_connection} tool.
      */
+    @Getter
     public static class McpConnectionValidation {
         private final boolean valid;
         private final String message;
@@ -102,15 +103,12 @@ public class McpConnectionBridge {
             this.message = message;
             this.rawJson = rawJson;
         }
-
-        public boolean isValid() { return valid; }
-        public String getMessage() { return message; }
-        public JsonNode getRawJson() { return rawJson; }
     }
 
     /**
      * Typed representation of a Fabric connection from the MCP server.
      */
+    @Getter
     public static class McpConnection {
         private final String uuid;
         private final String name;
@@ -119,6 +117,18 @@ public class McpConnectionBridge {
         private final int bandwidth;
         private final JsonNode rawJson;
 
+        /**
+         * Constructs a connection snapshot. Argument order is pinned here —
+         * four consecutive {@code String} parameters make positional calls
+         * swap-prone; do not regenerate this constructor from field order.
+         *
+         * @param uuid      the connection UUID
+         * @param name      the connection name
+         * @param type      the connection type
+         * @param state     the lifecycle state
+         * @param bandwidth the bandwidth in Mbps
+         * @param rawJson   the raw MCP JSON payload
+         */
         McpConnection(String uuid, String name, String type, String state,
                       int bandwidth, JsonNode rawJson) {
             this.uuid = uuid;
@@ -128,13 +138,6 @@ public class McpConnectionBridge {
             this.bandwidth = bandwidth;
             this.rawJson = rawJson;
         }
-
-        public String getUuid() { return uuid; }
-        public String getName() { return name; }
-        public String getType() { return type; }
-        public String getState() { return state; }
-        public int getBandwidth() { return bandwidth; }
-        public JsonNode getRawJson() { return rawJson; }
 
         @Override
         public String toString() {

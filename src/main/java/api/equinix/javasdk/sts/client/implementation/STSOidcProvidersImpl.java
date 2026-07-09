@@ -23,17 +23,14 @@ import api.equinix.javasdk.sts.model.OidcProvider;
 import api.equinix.javasdk.sts.model.json.OidcProviderPage;
 import api.equinix.javasdk.sts.model.json.creators.CreateOidcProviderRequest;
 import api.equinix.javasdk.sts.model.json.creators.PatchOidcProviderRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class STSOidcProvidersImpl implements STSOidcProviders {
-
-    private final STS serviceManager;
 
     private final OidcProviderClient oidcProviderClient;
 
-    public STSOidcProvidersImpl(OidcProviderClient oidcProviderClient, STS serviceManager) {
-        this.serviceManager = serviceManager;
-        this.oidcProviderClient = oidcProviderClient;
-    }
+    private final STS serviceManager;
 
     public OidcProviderPage list(String projectId) {
         return this.oidcProviderClient.list(projectId, null, null, null);
