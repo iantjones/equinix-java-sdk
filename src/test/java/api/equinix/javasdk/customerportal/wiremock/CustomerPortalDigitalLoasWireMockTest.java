@@ -3,6 +3,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.enums.Region;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.model.BetaTermsAgreement;
 import api.equinix.javasdk.customerportal.model.DigitalLoa;
 import api.equinix.javasdk.customerportal.model.DigitalLoaChange;
@@ -375,6 +376,82 @@ class CustomerPortalDigitalLoasWireMockTest extends WireMockTestBase {
             assertNotNull(agreement);
             assertTrue(agreement.getAgreementAccepted());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/diloa/v1/betaTermsAgreement")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 on findByUuid() (GET) throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/diloa/v1/digitalLoas/[^/]+",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"LOA not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.digitalLoas().findByUuid("missing-loa"));
+        }
+
+        @Test
+        @DisplayName("401 on listOrganizations() (GET) throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/diloa/v1/organizations",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.digitalLoas().listOrganizations("AM11"));
+        }
+
+        @Test
+        @DisplayName("403 on cancel() (DELETE) throws EquinixAuthorizationException")
+        void forbiddenCancel() {
+            stubErrorInline(wireMock, "/diloa/v1/digitalLoas/loa-abc-123",
+                    403, "[{\"errorCode\":\"ERR-403\",\"errorMessage\":\"Forbidden\"}]");
+
+            assertThrows(EquinixAuthorizationException.class,
+                    () -> customerPortal.digitalLoas().cancel("loa-abc-123"));
+        }
+
+        @Test
+        @DisplayName("409 on update() (PATCH) throws EquinixConflictException")
+        void conflictOnPatch() {
+            stubErrorInline(wireMock, "/diloa/v1/digitalLoas/loa-abc-123",
+                    409, "[{\"errorCode\":\"ERR-409\",\"errorMessage\":\"LOA state conflict\"}]");
+
+            List<Map<String, Object>> operations = List.of(
+                    Map.of("op", "replace", "path", "/notes", "value", "Updated notes"));
+
+            assertThrows(EquinixConflictException.class,
+                    () -> customerPortal.digitalLoas().update("loa-abc-123", operations));
+        }
+
+        @Test
+        @DisplayName("429 on create() (POST) throws EquinixRateLimitException")
+        void rateLimitedCreate() {
+            stubErrorInline(wireMock, "/diloa/v1/digitalLoas",
+                    429, "[{\"errorCode\":\"ERR-429\",\"errorMessage\":\"Too many requests\"}]");
+
+            DigitalLoaCreateRequest request = DigitalLoaCreateRequest
+                    .builder(
+                            List.of(Map.of("type", "CROSS_CONNECT", "ibx", "AM11")),
+                            Map.of("name", "Acme Corp", "accountNumber", "1234567"),
+                            Map.of("name", "Globex LLC", "accountNumber", "7654321"))
+                    .build();
+
+            assertThrows(EquinixRateLimitException.class,
+                    () -> customerPortal.digitalLoas().create(request));
+        }
+
+        @Test
+        @DisplayName("500 on search() (POST) throws EquinixServerException")
+        void serverErrorOnSearch() {
+            stubErrorInline(wireMock, "/diloa/v1/digitalLoas/search",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.digitalLoas()
+                            .search(new DigitalLoaSearchRequest(Map.of("state", "ACTIVE"))));
         }
     }
 }

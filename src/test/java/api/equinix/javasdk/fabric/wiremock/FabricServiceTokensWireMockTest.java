@@ -366,4 +366,104 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
                     () -> fabric.serviceTokens().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String TOKEN_ID = "ab7f685-41b0-1b07-6de0-3a7c54b08b8f";
+        private static final String URL = "/fabric/v4/serviceTokens/" + TOKEN_ID;
+
+        @Test
+        @DisplayName("re-GETs /serviceTokens/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("token-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("token-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json")
+                            .replace("Az-Token-Primary", "Az-Token-Renamed"))));
+
+            ServiceToken token = fabric.serviceTokens().getByUuid(TOKEN_ID);
+            assertEquals("Az-Token-Primary", token.getName());
+
+            token.refresh();
+
+            assertEquals("Az-Token-Renamed", token.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String TOKEN_ID = "ab7f685-41b0-1b07-6de0-3a7c54b08b8f";
+        private static final String URL = "/fabric/v4/serviceTokens/" + TOKEN_ID;
+
+        @Test
+        @DisplayName("DELETEs /serviceTokens/{uuid} and returns true")
+        void deletesServiceToken() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json"))));
+
+            ServiceToken token = fabric.serviceTokens().getByUuid(TOKEN_ID);
+            Boolean deleted = token.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_TOKEN" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_TOKEN" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-GETs /serviceTokens with the offset query param advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            // Page 1: catch-all, registered first (WireMock: the later, more specific stub wins).
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/serviceTokens"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/serviceTokens"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<ServiceToken> tokens = fabric.serviceTokens().list();
+            assertEquals(1, tokens.size());
+            assertTrue(tokens.hasNextPage());
+
+            tokens.loadAll();
+
+            assertEquals(2, tokens.size());
+            assertEquals("PAGE1_TOKEN", tokens.get(0).getUuid());
+            assertEquals("PAGE2_TOKEN", tokens.get(1).getUuid());
+            assertFalse(tokens.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/serviceTokens"))
+                    .withQueryParam("offset", equalTo("100")));
+        }
+    }
 }

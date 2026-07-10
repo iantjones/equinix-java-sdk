@@ -252,4 +252,139 @@ class FabricEiaServicesWireMockTest extends WireMockTestBase {
                     () -> fabric.eiaServices().getByUuid("invalid-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        private static final String SERVICE_ID = "f1e2d3c4-b5a6-7890-abcd-ef0123456789";
+        private static final String URL = "/fabric/v4/internetAccessServices/" + SERVICE_ID;
+
+        @Test
+        @DisplayName("PATCHes an op/path/value array as application/json")
+        void savePatchesBandwidth() {
+            stubSingleton(wireMock, URL, "/json/fabric/eia_service_response.json");
+            wireMock.stubFor(patch(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/eia_service_response.json"))));
+
+            EiaService service = fabric.eiaServices().getByUuid(SERVICE_ID);
+            EiaService updated = service.update().bandwidth(2000).bandwidthCommit(1000).save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathEqualTo(URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/bandwidth\",\"value\":2000},"
+                            + "{\"op\":\"replace\",\"path\":\"/bandwidthCommit\",\"value\":1000}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            stubSingleton(wireMock, URL, "/json/fabric/eia_service_response.json");
+
+            EiaService service = fabric.eiaServices().getByUuid(SERVICE_ID);
+            assertThrows(IllegalStateException.class, () -> service.update().save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/internetAccessServices/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String SERVICE_ID = "f1e2d3c4-b5a6-7890-abcd-ef0123456789";
+        private static final String URL = "/fabric/v4/internetAccessServices/" + SERVICE_ID;
+
+        @Test
+        @DisplayName("re-GETs /internetAccessServices/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("eia-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/eia_service_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("eia-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/eia_service_response.json")
+                            .replace("My-EIA-Service", "My-EIA-Service-Renamed"))));
+
+            EiaService service = fabric.eiaServices().getByUuid(SERVICE_ID);
+            assertEquals("My-EIA-Service", service.getName());
+
+            service.refresh();
+
+            assertEquals("My-EIA-Service-Renamed", service.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String SERVICE_ID = "f1e2d3c4-b5a6-7890-abcd-ef0123456789";
+        private static final String URL = "/fabric/v4/internetAccessServices/" + SERVICE_ID;
+
+        @Test
+        @DisplayName("DELETEs /internetAccessServices/{uuid} and returns true")
+        void deletesEiaService() {
+            stubSingleton(wireMock, URL, "/json/fabric/eia_service_response.json");
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/eia_service_response.json"))));
+
+            EiaService service = fabric.eiaServices().getByUuid(SERVICE_ID);
+            Boolean deleted = service.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_EIA" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_EIA" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/internetAccessServices/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/internetAccessServices/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<EiaService> services = fabric.eiaServices().search();
+            assertEquals(1, services.size());
+            assertTrue(services.hasNextPage());
+
+            services.loadAll();
+
+            assertEquals(2, services.size());
+            assertEquals("PAGE1_EIA", services.get(0).getUuid());
+            assertEquals("PAGE2_EIA", services.get(1).getUuid());
+            assertFalse(services.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/internetAccessServices/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

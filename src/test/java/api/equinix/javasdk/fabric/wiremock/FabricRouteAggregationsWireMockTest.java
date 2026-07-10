@@ -280,4 +280,104 @@ class FabricRouteAggregationsWireMockTest extends WireMockTestBase {
                     () -> fabric.routeAggregations().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String RA_ID = "b1c2d3e4-f5a6-7890-bcde-f01234567890";
+        private static final String URL = "/fabric/v4/routeAggregations/" + RA_ID;
+
+        @Test
+        @DisplayName("re-GETs /routeAggregations/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("ra-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("ra-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_response.json")
+                            .replace("Production-Aggregation", "Renamed-Aggregation"))));
+
+            RouteAggregation aggregation = fabric.routeAggregations().getByUuid(RA_ID);
+            assertEquals("Production-Aggregation", aggregation.getName());
+
+            aggregation.refresh();
+
+            assertEquals("Renamed-Aggregation", aggregation.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String RA_ID = "b1c2d3e4-f5a6-7890-bcde-f01234567890";
+        private static final String URL = "/fabric/v4/routeAggregations/" + RA_ID;
+
+        @Test
+        @DisplayName("DELETEs /routeAggregations/{uuid} and returns true")
+        void deletesRouteAggregation() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_response.json"))));
+
+            RouteAggregation aggregation = fabric.routeAggregations().getByUuid(RA_ID);
+            Boolean deleted = aggregation.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_AGGREGATION" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_AGGREGATION" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routeAggregations/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routeAggregations/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<RouteAggregation> aggregations = fabric.routeAggregations().search();
+            assertEquals(1, aggregations.size());
+            assertTrue(aggregations.hasNextPage());
+
+            aggregations.loadAll();
+
+            assertEquals(2, aggregations.size());
+            assertEquals("PAGE1_AGGREGATION", aggregations.get(0).getUuid());
+            assertEquals("PAGE2_AGGREGATION", aggregations.get(1).getUuid());
+            assertFalse(aggregations.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/routeAggregations/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

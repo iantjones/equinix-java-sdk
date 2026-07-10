@@ -370,4 +370,28 @@ class FabricRouteAggregationRulesWireMockTest extends WireMockTestBase {
                     () -> fabric.routeAggregationRules().getByUuid(PARENT, RULE));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper delete(routeAggregationId)")
+    class WrapperDelete {
+
+        private static final String URL =
+                "/fabric/v4/routeAggregations/" + PARENT + "/routeAggregationRules/" + RULE;
+
+        @Test
+        @DisplayName("DELETEs /routeAggregations/{raId}/routeAggregationRules/{uuid} and returns true")
+        void deletesRule() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_rule_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_aggregation_rule_response.json"))));
+
+            RouteAggregationRule rule = fabric.routeAggregationRules().getByUuid(PARENT, RULE);
+            Boolean deleted = rule.delete(PARENT);
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
 }

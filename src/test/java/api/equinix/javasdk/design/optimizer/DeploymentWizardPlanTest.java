@@ -288,6 +288,52 @@ class DeploymentWizardPlanTest {
         assertTrue(plan.getBackboneLinks().isEmpty(), "no inter-metro links with a single metro");
     }
 
+    // ── customBandwidthMap / CUSTOM bandwidth strategy ──
+
+    @Test
+    @DisplayName("customBandwidthMap() overrides per-connection bandwidth by '{metro}-{provider}' key and forces CUSTOM strategy")
+    void customBandwidthMapOverridesConnectionBandwidth() {
+        FabricGateway fabric = mock(FabricGateway.class);
+
+        // Keys are "{metroId}-{providerLabel}". DC-AWS is mapped; DA-AZURE is deliberately NOT,
+        // to exercise the documented 1000 Mbps default for unmapped connections.
+        DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
+                .routerPackage("STANDARD")
+                .routerNamePrefix("FCR")
+                .customBandwidthMap(Map.of("DC-AWS", 7000))
+                .rateCard(emptyRateCard())
+                .plan();
+
+        PlannedConnection aws = named(plan.getProviderConnections(), "FCR-DC-to-aws");
+        assertEquals(7000, aws.getBandwidthMbps(),
+                "the mapped DC-AWS override must replace the 10000 Mbps workload-derived size");
+        assertNotNull(aws.getBandwidthAllocation());
+        assertEquals(7000, aws.getBandwidthAllocation().getTotalMbps());
+        assertEquals(Map.of("custom", 7000), aws.getBandwidthAllocation().getPerWorkload());
+        assertTrue(aws.getBandwidthAllocation().getReasoning().contains("Custom bandwidth map"),
+                aws.getBandwidthAllocation().getReasoning());
+
+        PlannedConnection azure = named(plan.getProviderConnections(), "FCR-DA-to-azure");
+        assertEquals(1000, azure.getBandwidthMbps(),
+                "an unmapped connection under CUSTOM falls back to the 1000 Mbps default");
+    }
+
+    @Test
+    @DisplayName("customBandwidthMap() implicitly switches the bandwidth strategy to CUSTOM")
+    void customBandwidthMapForcesCustomStrategy() {
+        FabricGateway fabric = mock(FabricGateway.class);
+
+        // bandwidthStrategy(PER_WORKLOAD) is set BEFORE customBandwidthMap; the map must win.
+        DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
+                .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
+                .customBandwidthMap(Map.of("DC-AWS", 2500))
+                .rateCard(emptyRateCard())
+                .plan();
+
+        assertEquals(2500, named(plan.getProviderConnections(), "FCR-DC-to-aws").getBandwidthMbps(),
+                "the custom map applies even when PER_WORKLOAD was previously selected");
+    }
+
     // ── routerPackage validation (plan-time, never execute-time) ──
 
     @Test

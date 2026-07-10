@@ -1,0 +1,62 @@
+{
+  "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "href": "https://api.equinix.com/fabric/v4/routers/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "My-Cloud-Router-Primary",
+  "type": "CLOUD_ROUTER",
+  "state": "PROVISIONING",
+  "location": {
+    "metroCode": "SV"
+  },
+  "package": {
+    "code": "PREMIUM"
+  },
+  "order": {
+    "purchaseOrderNumber": "PO-2024-198234",
+    "billingTier": "Up to 1 Gbps"
+  },
+  "project": {
+    "projectId": "d7b0a4b8-1c2d-4e5f-a6b7-c8d9e0f12345"
+  },
+  "account": {
+    "orgId": 91831,
+    "accountNumber": 270129
+  },
+  "notifications": [
+    {
+      "type": "ALL",
+      "emails": [
+        "network-ops@example.com",
+        "cloud-team@example.com"
+      ]
+    }
+  ],
+  "equinixAsn": 30000,
+  "connectionsCount": 5,
+  "marketplaceSubscription": {
+    "href": "https://api.equinix.com/fabric/v4/marketplaceSubscriptions/2823b8ae-b24c-4a86-9dca-4a4e797d94e7",
+    "type": "AWS_MARKETPLACE_SUBSCRIPTION",
+    "uuid": "2823b8ae-b24c-4a86-9dca-4a4e797d94e7"
+  },
+  "change": {
+    "uuid": "5c1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8",
+    "type": "ROUTER_UPDATE",
+    "status": "COMPLETED",
+    "createdDateTime": "2024-09-20T14:40:00.000Z",
+    "updatedDateTime": "2024-09-20T14:45:00.000Z",
+    "information": "Router package updated"
+  },
+  "changeLog": {
+    "createdBy": "user1234",
+    "createdByFullName": "Jane Doe",
+    "createdByEmail": "jane.doe@example.com",
+    "createdDateTime": "2024-06-15T09:30:00.000Z",
+    "updatedBy": "user5678",
+    "updatedByFullName": "John Smith",
+    "updatedByEmail": "john.smith@example.com",
+    "updatedDateTime": "2024-09-20T14:45:00.000Z",
+    "deletedBy": null,
+    "deletedByFullName": null,
+    "deletedByEmail": null,
+    "deletedDateTime": null
+  }
+}

@@ -272,5 +272,153 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
                     "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
                     .withRequestBody(equalToJson("{\"name\":\"test-backup\"}", true, true)));
         }
+
+        @Test
+        @DisplayName("restoreToDevice(deviceUuid) is a pure alias of restore(): same PATCH keyed by the backup UUID")
+        void restoreToDeviceByUuidAliasesRestore() {
+            stubSingleton(wireMock, "/ne/v1/deviceBackups/.*",
+                    "/json/networkedge/backup_response.json");
+            wireMock.stubFor(patch(urlPathEqualTo(
+                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
+                    .willReturn(okJson("{}")));
+
+            Backup backup = networkEdge.backups().getByUuid("bkp-1111-2222-3333-444455556666");
+            // The supplied deviceUuid is documented as ignored: the endpoint is keyed by the
+            // backup uuid, so the wire request is identical to restore().
+            @SuppressWarnings("deprecation")
+            Boolean result = backup.restoreToDevice("some-other-device-uuid");
+
+            assertTrue(result);
+            wireMock.verify(patchRequestedFor(urlPathEqualTo(
+                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
+                    .withRequestBody(equalToJson("{\"name\":\"test-backup\"}", true, true)));
+        }
+
+        @Test
+        @DisplayName("restoreToDevice(Device) is a pure alias of restore(): same PATCH keyed by the backup UUID")
+        void restoreToDeviceByObjectAliasesRestore() {
+            stubSingleton(wireMock, "/ne/v1/deviceBackups/.*",
+                    "/json/networkedge/backup_response.json");
+            // The Device argument is only used as a handle; fetch one to pass in.
+            stubSingleton(wireMock, "/ne/v1/devices/ed7891f4-7a67-11e9-9bea-1681be663d3e",
+                    "/json/networkedge/device_response.json");
+            wireMock.stubFor(patch(urlPathEqualTo(
+                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
+                    .willReturn(okJson("{}")));
+
+            Backup backup = networkEdge.backups().getByUuid("bkp-1111-2222-3333-444455556666");
+            api.equinix.javasdk.networkedge.model.Device device =
+                    networkEdge.devices().getByUuid("ed7891f4-7a67-11e9-9bea-1681be663d3e");
+
+            @SuppressWarnings("deprecation")
+            Boolean result = backup.restoreToDevice(device);
+
+            assertTrue(result);
+            // The restore PATCH is keyed by the BACKUP uuid — not the supplied device's uuid.
+            wireMock.verify(patchRequestedFor(urlPathEqualTo(
+                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
+                    .withRequestBody(equalToJson("{\"name\":\"test-backup\"}", true, true)));
+        }
+    }
+
+    @Nested
+    @DisplayName("refresh()")
+    class Refresh {
+
+        private static final String UUID = "bkp-1111-2222-3333-444455556666";
+        private static final String PATH = "/ne/v1/deviceBackups/" + UUID;
+
+        @Test
+        @DisplayName("re-GETs the backup and updates the wrapper's state in place")
+        void refreshesInPlace() {
+            // First GET returns the original state; the second GET — triggered by
+            // wrapper.refresh() — returns a DIFFERENT payload (renamed, status changed).
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("backup-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/networkedge/backup_response.json")))
+                    .willSetStateTo("state-changed"));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("backup-refresh")
+                    .whenScenarioStateIs("state-changed")
+                    .willReturn(okJson(loadFixture("/json/networkedge/backup_response_refreshed.json"))));
+
+            Backup backup = networkEdge.backups().getByUuid(UUID);
+            assertEquals("test-backup", backup.getName());
+            assertEquals(BackupStatus.COMPLETED, backup.getStatus());
+
+            assertTrue(backup.refresh());
+
+            // The same wrapper instance now reflects the re-fetched server state.
+            assertEquals("renamed-backup", backup.getName());
+            assertEquals(BackupStatus.IN_PROGRESS, backup.getStatus());
+            assertEquals(UUID, backup.getUuid());
+
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String DEVICE_UUID = "dev-9999-8888-7777-666655554444";
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "bkp-1111-2222-3333-444455556666",
+                    "name": "page1-backup",
+                    "type": "CONFIG",
+                    "status": "COMPLETED",
+                    "deviceUuid": "dev-9999-8888-7777-666655554444",
+                    "restores": []
+                  } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "bkp-7777-8888-9999-aaaabbbbcccc",
+                    "name": "page2-backup",
+                    "type": "CONFIG",
+                    "status": "IN_PROGRESS",
+                    "deviceUuid": "dev-9999-8888-7777-666655554444",
+                    "restores": []
+                  } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing offset/limit and re-sends virtualDeviceUuid")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/deviceBackups"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/deviceBackups"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<Backup> backups = networkEdge.backups().list(DEVICE_UUID);
+            assertEquals(1, backups.size());
+            assertTrue(backups.hasNextPage());
+
+            backups.loadAll();
+
+            assertEquals(2, backups.size());
+            assertEquals("page1-backup", backups.get(0).getName());
+            assertEquals("page2-backup", backups.get(1).getName());
+            assertFalse(backups.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried,
+            // and the SAME virtualDeviceUuid query param re-sent.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/deviceBackups"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1"))
+                    .withQueryParam("virtualDeviceUuid", equalTo(DEVICE_UUID)));
+        }
     }
 }

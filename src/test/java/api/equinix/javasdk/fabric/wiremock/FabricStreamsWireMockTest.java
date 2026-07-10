@@ -153,4 +153,104 @@ class FabricStreamsWireMockTest extends WireMockTestBase {
                     () -> fabric.streams().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String STREAM_ID = "d4e5f6a7-b8c9-0123-defa-345678901bcd";
+        private static final String URL = "/fabric/v4/streams/" + STREAM_ID;
+
+        @Test
+        @DisplayName("re-GETs /streams/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("stream-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("stream-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_response.json")
+                            .replace("Production-Telemetry-Stream", "Renamed-Telemetry-Stream"))));
+
+            Stream stream = fabric.streams().getByUuid(STREAM_ID);
+            assertEquals("Production-Telemetry-Stream", stream.getName());
+
+            stream.refresh();
+
+            assertEquals("Renamed-Telemetry-Stream", stream.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String STREAM_ID = "d4e5f6a7-b8c9-0123-defa-345678901bcd";
+        private static final String URL = "/fabric/v4/streams/" + STREAM_ID;
+
+        @Test
+        @DisplayName("DELETEs /streams/{uuid} and returns true")
+        void deletesStream() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_response.json"))));
+
+            Stream stream = fabric.streams().getByUuid(STREAM_ID);
+            Boolean deleted = stream.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_STREAM" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_STREAM" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-GETs /streams with the offset query param advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            // Page 1: catch-all, registered first (WireMock: the later, more specific stub wins).
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/streams"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/streams"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            var streams = fabric.streams().list();
+            assertEquals(1, streams.size());
+            assertTrue(streams.hasNextPage());
+
+            streams.loadAll();
+
+            assertEquals(2, streams.size());
+            assertEquals("PAGE1_STREAM", streams.get(0).getUuid());
+            assertEquals("PAGE2_STREAM", streams.get(1).getUuid());
+            assertFalse(streams.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/streams"))
+                    .withQueryParam("offset", equalTo("100")));
+        }
+    }
 }

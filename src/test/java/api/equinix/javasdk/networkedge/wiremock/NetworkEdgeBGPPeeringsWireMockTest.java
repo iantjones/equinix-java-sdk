@@ -312,6 +312,109 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("refresh()")
+    class Refresh {
+
+        private static final String UUID = "bgp-1111-2222-3333-444455556666";
+        private static final String PATH = "/ne/v1/bgp/" + UUID;
+
+        @Test
+        @DisplayName("re-GETs the peering and updates the wrapper's state in place")
+        void refreshesInPlace() {
+            // First GET returns the original state; the second GET — triggered by
+            // wrapper.refresh() — returns a DIFFERENT payload (remoteAsn bumped, key rotated).
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("bgp-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/networkedge/bgppeering_response.json")))
+                    .willSetStateTo("state-changed"));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("bgp-refresh")
+                    .whenScenarioStateIs("state-changed")
+                    .willReturn(okJson(loadFixture("/json/networkedge/bgppeering_response_refreshed.json"))));
+
+            BGPPeering peering = networkEdge.bgpPeerings().getByUuid(UUID);
+            assertEquals(65001L, peering.getRemoteAsn());
+            assertEquals("secret-key", peering.getAuthenticationKey());
+
+            assertTrue(peering.refresh());
+
+            // The same wrapper instance now reflects the re-fetched server state.
+            assertEquals(65002L, peering.getRemoteAsn());
+            assertEquals("rotated-key", peering.getAuthenticationKey());
+            assertEquals(UUID, peering.getUuid());
+
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "bgp-1111-2222-3333-444455556666",
+                    "connectionUuid": "conn-aaaa-bbbb-cccc-ddddeeeeffff",
+                    "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+                    "localIpAddress": "169.254.0.1/30",
+                    "remoteIpAddress": "169.254.0.2",
+                    "localAsn": 65000,
+                    "remoteAsn": 65001,
+                    "provisioningStatus": "PROVISIONED",
+                    "state": "ESTABLISHED"
+                  } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "bgp-7777-8888-9999-aaaabbbbcccc",
+                    "connectionUuid": "conn-1111-2222-3333-444455556666",
+                    "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+                    "localIpAddress": "169.254.0.5/30",
+                    "remoteIpAddress": "169.254.0.6",
+                    "localAsn": 65000,
+                    "remoteAsn": 65002,
+                    "provisioningStatus": "PROVISIONING",
+                    "state": "IDLE"
+                  } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset/limit query params")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/bgp"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/bgp"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<BGPPeering> peerings = networkEdge.bgpPeerings().list();
+            assertEquals(1, peerings.size());
+            assertTrue(peerings.hasNextPage());
+
+            peerings.loadAll();
+
+            assertEquals(2, peerings.size());
+            assertEquals("bgp-1111-2222-3333-444455556666", peerings.get(0).getUuid());
+            assertEquals("bgp-7777-8888-9999-aaaabbbbcccc", peerings.get(1).getUuid());
+            assertFalse(peerings.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/bgp"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

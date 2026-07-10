@@ -2,6 +2,7 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.Agent;
 import api.equinix.javasdk.fabric.model.AgentActivity;
@@ -173,6 +174,133 @@ class FabricAgentsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(
                     urlPathEqualTo("/fabric/v4/agents/" + agentId + "/activities")));
+        }
+    }
+
+    @Nested
+    @DisplayName("update() / save()")
+    class Update {
+
+        private static final String AGENT_ID = "d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10";
+
+        @Test
+        @DisplayName("PATCHes a JSON Patch array as application/json-patch+json")
+        void savePatchesNameAndEnabled() {
+            stubSingleton(wireMock, "/fabric/v4/agents/" + AGENT_ID,
+                    "/json/fabric/agent_response.json");
+            wireMock.stubFor(patch(urlPathEqualTo("/fabric/v4/agents/" + AGENT_ID))
+                    .willReturn(okJson(loadFixture("/json/fabric/agent_response.json"))));
+
+            Agent agent = fabric.agents().getByUuid(AGENT_ID);
+            Agent updated = agent.update().name("Renamed-Agent").enabled(false).save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/agents/" + AGENT_ID))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Agent\"},"
+                            + "{\"op\":\"replace\",\"path\":\"/enabled\",\"value\":false}]")));
+        }
+
+        @Test
+        @DisplayName("save() with no changes throws and makes no request")
+        void emptyUpdateThrows() {
+            stubSingleton(wireMock, "/fabric/v4/agents/" + AGENT_ID,
+                    "/json/fabric/agent_response.json");
+
+            Agent agent = fabric.agents().getByUuid(AGENT_ID);
+            assertThrows(IllegalStateException.class, () -> agent.update().save());
+            wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/agents/.*")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String AGENT_ID = "d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10";
+        private static final String URL = "/fabric/v4/agents/" + AGENT_ID;
+
+        @Test
+        @DisplayName("re-GETs /agents/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("agent-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/agent_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("agent-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/agent_response.json")
+                            .replace("My-Fabric-Agent", "My-Fabric-Agent-Renamed"))));
+
+            Agent agent = fabric.agents().getByUuid(AGENT_ID);
+            assertEquals("My-Fabric-Agent", agent.getName());
+
+            agent.refresh();
+
+            assertEquals("My-Fabric-Agent-Renamed", agent.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String AGENT_ID = "d1f8c2a4-9b3e-4c7a-8f21-6e5d4c3b2a10";
+
+        @Test
+        @DisplayName("DELETEs /agents/{uuid} and returns true")
+        void deletesAgent() {
+            stubSingleton(wireMock, "/fabric/v4/agents/" + AGENT_ID,
+                    "/json/fabric/agent_response.json");
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo("/fabric/v4/agents/" + AGENT_ID))
+                    .willReturn(okJson(loadFixture("/json/fabric/agent_response.json"))));
+
+            Agent agent = fabric.agents().getByUuid(AGENT_ID);
+            Boolean deleted = agent.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/fabric/v4/agents/" + AGENT_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/fabric/v4/agents/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Agent not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.agents().getByUuid("invalid-uuid"));
+        }
+
+        @Test
+        @DisplayName("401 throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/fabric/v4/agents/.*",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> fabric.agents().getByUuid("test-uuid"));
+        }
+
+        @Test
+        @DisplayName("500 throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/fabric/v4/agents/.*",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.agents().getByUuid("test-uuid"));
         }
     }
 }

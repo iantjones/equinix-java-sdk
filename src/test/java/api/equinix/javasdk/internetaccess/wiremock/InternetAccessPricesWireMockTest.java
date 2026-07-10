@@ -2,6 +2,8 @@ package api.equinix.javasdk.internetaccess.wiremock;
 
 import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixAuthorizationException;
+import api.equinix.javasdk.core.exception.EquinixRateLimitException;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.internetaccess.enums.PriceCategory;
 import api.equinix.javasdk.internetaccess.enums.ProductType;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static api.equinix.javasdk.core.ResponseStubs.stubPaginatedPost;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -23,6 +26,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -185,6 +189,31 @@ class InternetAccessPricesWireMockTest extends WireMockTestBase {
                             "{ \"filter\": { \"and\": ["
                                     + "{ \"property\": \"/account/accountNumber\", \"operator\": \"=\", \"values\": [\"2-57689234\"] }"
                                     + "] } }")));
+        }
+    }
+
+    @Nested
+    class Errors {
+
+        private void search() {
+            internetAccess.prices().search(new PriceSearchRequest()
+                    .equals("/account/accountNumber", "2-57689234"));
+        }
+
+        @Test
+        void forbidden403_throwsEquinixAuthorizationException() {
+            stubErrorInline(wireMock, SEARCH_PATH,
+                    403, "[{\"errorCode\":\"EQ-3000403\",\"errorMessage\":\"Access denied\"}]");
+
+            assertThrows(EquinixAuthorizationException.class, this::search);
+        }
+
+        @Test
+        void rateLimited429_throwsEquinixRateLimitException() {
+            stubErrorInline(wireMock, SEARCH_PATH,
+                    429, "[{\"errorCode\":\"EQ-3000429\",\"errorMessage\":\"Too many requests\"}]");
+
+            assertThrows(EquinixRateLimitException.class, this::search);
         }
     }
 }

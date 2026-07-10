@@ -4,6 +4,7 @@ import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.enums.TicketCode;
+import api.equinix.javasdk.customerportal.enums.TicketStatus;
 import api.equinix.javasdk.customerportal.model.TroubleTicket;
 import api.equinix.javasdk.customerportal.model.json.creators.ContactUpdate;
 import api.equinix.javasdk.customerportal.model.json.creators.TicketCancelRequest;
@@ -166,6 +167,34 @@ class CustomerPortalTroubleTicketsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(postRequestedFor(urlPathEqualTo("/v2/tickets/1-34891/cancel"))
                     .withRequestBody(matchingJsonPath("$.reason")));
+        }
+    }
+
+    @Nested
+    @DisplayName("TroubleTicketWrapper.refresh()")
+    class Refresh {
+
+        @Test
+        @DisplayName("re-GETs /v2/tickets/{id} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            stubSingleton(wireMock, "/v2/tickets/.*",
+                    "/json/customerportal/trouble_ticket_response.json");
+
+            TroubleTicket ticket = customerPortal.troubleTickets().getByUuid("1-9808089098");
+            assertEquals(TicketStatus.IN_PROGRESS, ticket.getStatus());
+
+            // The ticket is closed server-side: the most-recently-registered stub wins, so the
+            // refresh GET sees the CLOSED state.
+            wireMock.stubFor(get(urlPathEqualTo("/v2/tickets/1-9808089098"))
+                    .willReturn(okJson("{\"id\":\"1-9808089098\",\"status\":\"CLOSED\"}")));
+
+            ticket.refresh();
+
+            assertEquals(TicketStatus.CLOSED, ticket.getStatus());
+            assertEquals("1-9808089098", ticket.getId());
+
+            // Exactly two GETs: the original read plus the refresh re-read of the same path.
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo("/v2/tickets/1-9808089098")));
         }
     }
 

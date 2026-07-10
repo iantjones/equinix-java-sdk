@@ -20,12 +20,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import api.equinix.javasdk.core.exception.EquinixRateLimitException;
+import api.equinix.javasdk.core.exception.EquinixServiceException;
+
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed coverage for the Equinix Internet Access (EIA) v1 product / attribute
@@ -292,6 +301,124 @@ class InternetAccessProductConfigurationsWireMockTest extends WireMockTestBase {
             wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/portConfigurations"))
                     .withQueryParam("connection.aside.accessPoint.port.location.ibx", equalTo("SG1"))
                     .withQueryParam("useCase", equalTo("MAIN")));
+        }
+    }
+
+    // --- paging (page-2 crossing for every configuration list family) -------------------------
+
+    /**
+     * Multi-page crossing for each of the seven configuration list endpoints. Every method on
+     * this client returns a {@code PaginatedList}, and the single-page helper above hardcodes
+     * {@code total: 1}; these stubs serve a two-page window (total 150, limit 100) instead, so
+     * {@code loadAll()} must advance the {@code offset} query parameter from the SERVER-reported
+     * pagination (first request always carries {@code offset=0&limit=100}, the PAGE_LIMIT default).
+     */
+    @Nested
+    class Paging {
+
+        private void stubTwoPages(String path) {
+            wireMock.stubFor(get(urlPathEqualTo(path))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 0, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { } ] }")));
+            wireMock.stubFor(get(urlPathEqualTo(path))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 100, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { } ] }")));
+        }
+
+        private void assertCrossedToPageTwo(PaginatedList<?> list, String path) {
+            assertEquals(1, list.size());
+            assertTrue(list.hasNextPage());
+
+            list.loadAll();
+
+            assertEquals(2, list.size());
+            assertFalse(list.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo(path))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        void routingConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/routingProtocolConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().routingConfigurations(UseCase.MAIN), path);
+        }
+
+        @Test
+        void dedicatedBandwidthConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/dedicatedBandwidthConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().dedicatedBandwidthConfigurations(UseCase.MAIN), path);
+        }
+
+        @Test
+        void virtualBandwidthConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/virtualBandwidthConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().virtualBandwidthConfigurations(UseCase.MAIN), path);
+        }
+
+        @Test
+        void virtualConnectionDefaultConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/virtualConnectionDefaultConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().virtualConnectionDefaultConfigurations("WA1"), path);
+        }
+
+        @Test
+        void customerRouteConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/customerRouteConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().customerRouteConfigurations(UseCase.MAIN), path);
+        }
+
+        @Test
+        void dedicatedPortDefaultConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/dedicatedPortDefaultConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().dedicatedPortDefaultConfigurations("SG1"), path);
+        }
+
+        @Test
+        void portConfigurations_loadAllCrossesToPageTwo() {
+            String path = "/internetAccess/v1/portConfigurations";
+            stubTwoPages(path);
+            assertCrossedToPageTwo(
+                    internetAccess.productConfigurations().portConfigurations("SG1", UseCase.MAIN), path);
+        }
+    }
+
+    // --- error mapping -------------------------------------------------------------------------
+
+    @Nested
+    class Errors {
+
+        @Test
+        void routingConfigurations_badRequest400_throwsEquinixServiceException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/routingProtocolConfigurations",
+                    400, "[{\"errorCode\":\"EQ-3000400\",\"errorMessage\":\"Invalid useCase\"}]");
+
+            assertThrows(EquinixServiceException.class,
+                    () -> internetAccess.productConfigurations().routingConfigurations(UseCase.MAIN));
+        }
+
+        @Test
+        void routingConfigurations_rateLimited429_throwsEquinixRateLimitException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/routingProtocolConfigurations",
+                    429, "[{\"errorCode\":\"EQ-3000429\",\"errorMessage\":\"Too many requests\"}]");
+
+            assertThrows(EquinixRateLimitException.class,
+                    () -> internetAccess.productConfigurations().routingConfigurations(UseCase.MAIN));
         }
     }
 }

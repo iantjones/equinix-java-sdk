@@ -3,6 +3,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
+import api.equinix.javasdk.customerportal.enums.QuoteStatus;
 import api.equinix.javasdk.customerportal.model.Quote;
 import org.junit.jupiter.api.*;
 
@@ -118,6 +119,34 @@ class CustomerPortalQuotesWireMockTest extends WireMockTestBase {
             assertNotNull(quote);
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v2/quotes/1-1234567891011"))
                     .withQueryParam("ibxs", absent()));
+        }
+    }
+
+    @Nested
+    @DisplayName("QuoteWrapper.refresh()")
+    class Refresh {
+
+        @Test
+        @DisplayName("re-GETs /v2/quotes/{quoteId} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            stubSingleton(wireMock, "/v2/quotes/.*",
+                    "/json/customerportal/quote_response.json");
+
+            Quote quote = customerPortal.quotes().getByUuid("1-1234567891011");
+            assertEquals(QuoteStatus.SUBMITTED, quote.getStatus());
+
+            // The quote is approved server-side: the most-recently-registered stub wins, so the
+            // refresh GET sees the APPROVED state.
+            wireMock.stubFor(get(urlPathEqualTo("/v2/quotes/1-1234567891011"))
+                    .willReturn(okJson("{\"quoteId\":\"1-1234567891011\",\"status\":\"APPROVED\"}")));
+
+            quote.refresh();
+
+            assertEquals(QuoteStatus.APPROVED, quote.getStatus());
+            assertEquals("1-1234567891011", quote.getQuoteId());
+
+            // Exactly two GETs: the original read plus the refresh re-read of the same path.
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo("/v2/quotes/1-1234567891011")));
         }
     }
 

@@ -102,6 +102,56 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("follows nextPageToken across catalogue pages, echoing the token on the page-2 request")
+    void followsNextPageTokenPagination() {
+        // Page 1 carries only the INTERNET SKU plus nextPageToken; the Interconnect (PRIVATE)
+        // SKU lives on page 2, so resolving a PRIVATE rate proves page 2 was actually fetched.
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", absent())
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus_page1.json"))));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", equalTo("gcp-page-2-token"))
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus_page2.json"))));
+
+        GcpBillingCatalogRateCard card = card();
+        EgressRate privateRate = card
+                .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+
+        assertEquals(0, new BigDecimal("0.02").compareTo(privateRate.getPricePerGb()),
+                "the page-2 Interconnect SKU must be reachable through pagination");
+
+        // A page-1 SKU still resolves from the same (cached, both-pages) catalogue.
+        EgressRate internetRate = card
+                .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.12").compareTo(internetRate.getPricePerGb()));
+
+        // The wire: exactly two GETs — page 1 without a token, page 2 echoing the server's
+        // nextPageToken (plus the key and page-size params on both).
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH))
+                .withQueryParam("key", equalTo("test-key"))
+                .withQueryParam("currencyCode", equalTo("USD"))
+                .withQueryParam("pageSize", equalTo("5000"))
+                .withQueryParam("pageToken", absent()));
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", equalTo("gcp-page-2-token")));
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+    }
+
+    @Test
+    @DisplayName("an empty nextPageToken ends pagination after a single page")
+    void emptyNextPageTokenStopsPagination() {
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus.json"))));
+
+        card().egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH)));
+    }
+
+    @Test
     @DisplayName("connection and cloud-router lookups are not priced by the GCP egress adapter")
     void doesNotPriceInterconnect() {
         GcpBillingCatalogRateCard card = card();

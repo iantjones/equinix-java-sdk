@@ -188,6 +188,29 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("includeAll() enables every analysis flag, including the default-off resiliency assessment")
+    void includeAllEnablesEveryAnalysis() {
+        // includeResiliency defaults to false, so a resiliency assessment appearing here is the
+        // observable proof that includeAll() flipped the flags on (capacity/policies default true;
+        // resiliency is the discriminating one).
+        PeeringIntelligenceResult result = PeeringIntelligence.builder(stubFabric(), null)
+                .peeringDbBaseUrl(baseUrl())
+                .addAsn(AWS, "AWS")
+                .customerMetros(MetroId.of("DC"), MetroId.of("SV"), MetroId.of("DA"))
+                .includeAll()
+                .analyze();
+
+        ResiliencyAssessment resiliency = result.getResiliency();
+        assertNotNull(resiliency, "includeAll() must turn the resiliency analysis on");
+        assertNotNull(resiliency.getOverallRating());
+        assertEquals(3, resiliency.getDiversityScores().size());
+
+        // The capacity analysis (also covered by includeAll) still populates the presence matrix.
+        NetworkPresence aws = result.networkPresence(AWS);
+        assertEquals(140000, aws.getTotalIxCapacityMbps(), "capacity figures remain populated");
+    }
+
+    @Test
     @DisplayName("analyze() with no target ASNs throws before any HTTP call")
     void analyzeRejectsNoAsns() {
         assertThrows(IllegalStateException.class, () ->

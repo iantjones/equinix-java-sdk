@@ -231,6 +231,123 @@ class NetworkEdgeDeviceLinksWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("refresh()")
+    class Refresh {
+
+        private static final String UUID = "d1e2f3a4-b5c6-7890-abcd-1234567890ab";
+        private static final String PATH = "/ne/v1/links/" + UUID;
+
+        @Test
+        @DisplayName("re-GETs the device link and updates the wrapper's state in place")
+        void refreshesInPlace() {
+            // First GET returns the original state; the second GET — triggered by
+            // wrapper.refresh() — returns a DIFFERENT payload (renamed group, new subnet).
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("devicelink-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/networkedge/devicelink_response.json")))
+                    .willSetStateTo("state-changed"));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("devicelink-refresh")
+                    .whenScenarioStateIs("state-changed")
+                    .willReturn(okJson(loadFixture("/json/networkedge/devicelink_response_refreshed.json"))));
+
+            DeviceLink deviceLink = networkEdge.deviceLinks().getByUuid(UUID);
+            assertEquals("test-device-link", deviceLink.getGroupName());
+            assertEquals("10.0.0.0/24", deviceLink.getSubnet());
+
+            assertTrue(deviceLink.refresh());
+
+            // The same wrapper instance now reflects the re-fetched server state.
+            assertEquals("renamed-device-link", deviceLink.getGroupName());
+            assertEquals("10.1.0.0/24", deviceLink.getSubnet());
+            assertEquals(UUID, deviceLink.getUuid());
+
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "d1e2f3a4-b5c6-7890-abcd-1234567890ab",
+                    "groupName": "page1-device-link",
+                    "subnet": "10.0.0.0/24",
+                    "status": "PROVISIONED",
+                    "redundancyType": "PRIMARY",
+                    "metroLinks": [ {
+                      "accountName": "Acme Corp",
+                      "metroCode": "SV",
+                      "metroName": "Silicon Valley",
+                      "throughput": "50",
+                      "throughputUnit": "MB"
+                    } ],
+                    "linkDevices": [ {
+                      "deviceUuid": "aaaa1111-bbbb-2222-cccc-3333dddd4444",
+                      "interfaceId": 6
+                    } ]
+                  } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "e2f3a4b5-c6d7-8901-bcde-2345678901bc",
+                    "groupName": "page2-device-link",
+                    "subnet": "10.1.0.0/24",
+                    "status": "PROVISIONED",
+                    "redundancyType": "PRIMARY",
+                    "metroLinks": [ {
+                      "accountName": "Globex LLC",
+                      "metroCode": "DC",
+                      "metroName": "Washington DC",
+                      "throughput": "100",
+                      "throughputUnit": "MB"
+                    } ],
+                    "linkDevices": [ {
+                      "deviceUuid": "bbbb2222-cccc-3333-dddd-4444eeee5555",
+                      "interfaceId": 7
+                    } ]
+                  } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset/limit query params")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/links"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/links"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<DeviceLink> deviceLinks = networkEdge.deviceLinks().list();
+            assertEquals(1, deviceLinks.size());
+            assertTrue(deviceLinks.hasNextPage());
+
+            deviceLinks.loadAll();
+
+            assertEquals(2, deviceLinks.size());
+            assertEquals("page1-device-link", deviceLinks.get(0).getGroupName());
+            assertEquals("page2-device-link", deviceLinks.get(1).getGroupName());
+            assertFalse(deviceLinks.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/links"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

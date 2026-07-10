@@ -2,6 +2,7 @@ package api.equinix.javasdk.internetaccess.wiremock;
 
 import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.model.SignaturePolicy;
 import org.junit.jupiter.api.AfterAll;
@@ -10,13 +11,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed tests for the Equinix Internet Access (EIA) v1 signature-policies lookup
@@ -86,6 +92,48 @@ class InternetAccessSignaturePoliciesWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/signaturePolicies"))
                     .withQueryParam("location.countryCode", equalTo("PL")));
+        }
+    }
+
+    @Nested
+    class PagingAndErrors {
+
+        @Test
+        void list_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            // First request always carries offset=0&limit=100 (PAGE_LIMIT default); page 2 must
+            // advance the offset from the SERVER-reported pagination.
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/signaturePolicies"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 0, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"location\": { \"countryCode\": \"US\" } } ] }")));
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/signaturePolicies"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 100, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"location\": { \"countryCode\": \"PL\" } } ] }")));
+
+            PaginatedList<SignaturePolicy> policies = internetAccess.signaturePolicies().list();
+            assertEquals(1, policies.size());
+            assertTrue(policies.hasNextPage());
+
+            policies.loadAll();
+
+            assertEquals(2, policies.size());
+            assertEquals("US", policies.get(0).getLocation().getCountryCode());
+            assertEquals("PL", policies.get(1).getLocation().getCountryCode());
+            assertFalse(policies.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/internetAccess/v1/signaturePolicies"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        void list_serverError500_throwsEquinixServerException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/signaturePolicies",
+                    500, "[{\"errorCode\":\"EQ-3000500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> internetAccess.signaturePolicies().list());
         }
     }
 }

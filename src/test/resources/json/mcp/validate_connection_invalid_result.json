@@ -1,0 +1,13 @@
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"valid\":false,\"message\":\"Bandwidth 8000 Mbps is not available at the Z-side service profile\"}"
+      }
+    ],
+    "isError": false
+  }
+}

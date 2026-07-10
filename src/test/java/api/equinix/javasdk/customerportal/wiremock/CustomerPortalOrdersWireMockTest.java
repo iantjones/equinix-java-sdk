@@ -325,6 +325,34 @@ class CustomerPortalOrdersWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("OrderWrapper.refresh()")
+    class Refresh {
+
+        @Test
+        @DisplayName("re-GETs /colocations/v2/orders/{orderId} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            stubSingleton(wireMock, "/colocations/v2/orders/.*",
+                    "/json/customerportal/order_response.json");
+
+            Order order = customerPortal.orders().getByUuid(ORDER_ID);
+            assertEquals(api.equinix.javasdk.customerportal.enums.OrderStatus.IN_PROGRESS, order.getStatus());
+
+            // The order progresses server-side: the most-recently-registered stub wins, so the
+            // refresh GET sees the CLOSED state.
+            wireMock.stubFor(get(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID))
+                    .willReturn(okJson("{\"orderId\":\"" + ORDER_ID + "\",\"status\":\"CLOSED\"}")));
+
+            order.refresh();
+
+            assertEquals(api.equinix.javasdk.customerportal.enums.OrderStatus.CLOSED, order.getStatus());
+            assertEquals(ORDER_ID, order.getOrderId());
+
+            // Exactly two GETs: the original read plus the refresh re-read of the same path.
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo("/colocations/v2/orders/" + ORDER_ID)));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

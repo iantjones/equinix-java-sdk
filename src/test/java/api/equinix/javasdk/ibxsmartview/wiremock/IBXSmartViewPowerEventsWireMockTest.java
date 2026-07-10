@@ -2,6 +2,9 @@ package api.equinix.javasdk.ibxsmartview.wiremock;
 
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixConflictException;
+import api.equinix.javasdk.core.exception.EquinixNotFoundException;
+import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.ibxsmartview.model.PowerAlertConfiguration;
 import api.equinix.javasdk.ibxsmartview.model.PowerEvent;
@@ -14,6 +17,7 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static api.equinix.javasdk.core.TestFixtures.load;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,6 +95,83 @@ class IBXSmartViewPowerEventsWireMockTest extends WireMockTestBase {
         assertEquals(2, configs.size());
         assertEquals("cfg-0001", configs.get(0).getAlertConfigurationUid());
         assertEquals("cfg-0002", configs.get(1).getAlertConfigurationUid());
+    }
+
+    @Nested
+    @DisplayName("filter query params")
+    class FilterParams {
+
+        @Test
+        @DisplayName("search() sends ibx (comma-joined), status (comma-joined), edgeCollectedOn, offset and limit")
+        void searchSendsAllFilters() {
+            wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/search"))
+                    .willReturn(okJson(load("/json/ibxsmartview/power_events_page2.json"))));
+
+            PaginatedList<PowerEvent> events = ibxSmartView.powerEvents().search(
+                    List.of("SV5", "DC6"), List.of("ACTIVE", "CLEARED"),
+                    "2026-06-30T00:00:00Z", 0, 50);
+
+            assertEquals(1, events.size());
+            assertEquals(1043L, events.get(0).getId());
+
+            // Multi-valued ibx/status lists are comma-joined into a single query param each.
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/dcim/v3/powerEvents/search"))
+                    .withQueryParam("ibx", equalTo("SV5,DC6"))
+                    .withQueryParam("status", equalTo("ACTIVE,CLEARED"))
+                    .withQueryParam("edgeCollectedOn", equalTo("2026-06-30T00:00:00Z"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .withQueryParam("limit", equalTo("50")));
+        }
+
+        @Test
+        @DisplayName("search() omits ibx/status/edgeCollectedOn when null or empty")
+        void searchOmitsNullFilters() {
+            wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/search"))
+                    .willReturn(okJson(load("/json/ibxsmartview/power_events_page2.json"))));
+
+            ibxSmartView.powerEvents().search(null, List.of(), null, 0, 100);
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/dcim/v3/powerEvents/search"))
+                    .withoutQueryParam("ibx")
+                    .withoutQueryParam("status")
+                    .withoutQueryParam("edgeCollectedOn")
+                    .withQueryParam("offset", equalTo("0"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        @DisplayName("searchAlertConfigurations() sends ibx and state comma-joined plus offset/limit")
+        void alertConfigurationsSearchSendsFilters() {
+            wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/configurations/search"))
+                    .willReturn(okJson(load("/json/ibxsmartview/alert_configurations_page2.json"))));
+
+            PaginatedList<PowerAlertConfiguration> configs = ibxSmartView.powerEvents()
+                    .searchAlertConfigurations(List.of("SV5", "DC6"), List.of("ACTIVE", "PAUSED"), 0, 50);
+
+            assertEquals(1, configs.size());
+            assertEquals("cfg-0002", configs.get(0).getAlertConfigurationUid());
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/dcim/v3/powerEvents/configurations/search"))
+                    .withQueryParam("ibx", equalTo("SV5,DC6"))
+                    .withQueryParam("state", equalTo("ACTIVE,PAUSED"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .withQueryParam("limit", equalTo("50")));
+        }
+
+        @Test
+        @DisplayName("searchAlertConfigurations() omits ibx/state when null or empty")
+        void alertConfigurationsSearchOmitsNullFilters() {
+            wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/configurations/search"))
+                    .willReturn(okJson(load("/json/ibxsmartview/alert_configurations_page2.json"))));
+
+            ibxSmartView.powerEvents().searchAlertConfigurations(List.of(), null, 0, 100);
+
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/dcim/v3/powerEvents/configurations/search"))
+                    .withoutQueryParam("ibx")
+                    .withoutQueryParam("state")
+                    .withQueryParam("offset", equalTo("0"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
     }
 
     @Nested
@@ -219,6 +300,92 @@ class IBXSmartViewPowerEventsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(deleteRequestedFor(
                     urlPathEqualTo("/dcim/v3/powerEvents/configurations/cfg-9001")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error mapping")
+    class Errors {
+
+        static final String ERROR_500 =
+                "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]";
+        static final String ERROR_404 =
+                "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Alert configuration not found\"}]";
+        static final String ERROR_409 =
+                "[{\"errorCode\":\"ERR-409\",\"errorMessage\":\"Configuration already exists\"}]";
+
+        @Test
+        @DisplayName("500 on search throws EquinixServerException")
+        void searchServerError() {
+            stubErrorInline(wireMock, "/dcim/v3/powerEvents/search", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.powerEvents().search(null, null, null, 0, 100));
+        }
+
+        @Test
+        @DisplayName("500 on searchAlertConfigurations throws EquinixServerException")
+        void alertConfigurationsSearchServerError() {
+            stubErrorInline(wireMock, "/dcim/v3/powerEvents/configurations/search", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.powerEvents().searchAlertConfigurations(null, null, 0, 100));
+        }
+
+        @Test
+        @DisplayName("409 on create throws EquinixConflictException")
+        void createConflict() {
+            stubErrorInline(wireMock, "/dcim/v3/powerEvents/configurations", 409, ERROR_409);
+
+            assertThrows(EquinixConflictException.class,
+                    () -> ibxSmartView.powerEvents().defineAlertConfiguration()
+                            .withAccountNo("123456")
+                            .withIbx("SV5")
+                            .withSection("CAGE")
+                            .withCondition(new PowerAlertCondition(
+                                    "EXCEEDS", "CAGE_DRAW", new PowerAlertThreshold("%", "80")))
+                            .create());
+        }
+
+        @Test
+        @DisplayName("404 on update throws EquinixNotFoundException")
+        void updateNotFound() {
+            stubErrorInline(wireMock, "/dcim/v3/powerEvents/configurations", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.powerEvents().updateAlertConfiguration("cfg-missing")
+                            .withState("ACTIVE")
+                            .update());
+        }
+
+        @Test
+        @DisplayName("404 on pause throws EquinixNotFoundException")
+        void pauseNotFound() {
+            stubErrorInline(wireMock,
+                    "/dcim/v3/powerEvents/configurations/cfg-missing/pause", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.powerEvents().pauseAlertConfiguration("cfg-missing"));
+        }
+
+        @Test
+        @DisplayName("404 on resume throws EquinixNotFoundException")
+        void resumeNotFound() {
+            stubErrorInline(wireMock,
+                    "/dcim/v3/powerEvents/configurations/cfg-missing/resume", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.powerEvents().resumeAlertConfiguration("cfg-missing"));
+        }
+
+        @Test
+        @DisplayName("404 on delete throws EquinixNotFoundException")
+        void deleteNotFound() {
+            stubErrorInline(wireMock,
+                    "/dcim/v3/powerEvents/configurations/cfg-missing", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.powerEvents().deleteAlertConfiguration("cfg-missing"));
         }
     }
 }

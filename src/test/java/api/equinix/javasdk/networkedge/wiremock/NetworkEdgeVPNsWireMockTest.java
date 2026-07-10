@@ -338,6 +338,107 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("refresh()")
+    class Refresh {
+
+        private static final String VPN_UUID = "vpn-1111-2222-3333-444455556666";
+        private static final String PATH = "/ne/v1/vpn/" + VPN_UUID;
+
+        @Test
+        @DisplayName("re-GETs the VPN and updates the wrapper's state in place")
+        void refreshesInPlace() {
+            // First GET returns the original state; the second GET — triggered by
+            // wrapper.refresh() — returns a DIFFERENT payload (renamed config, new peerIp).
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("vpn-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/networkedge/vpn_response.json")))
+                    .willSetStateTo("state-changed"));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("vpn-refresh")
+                    .whenScenarioStateIs("state-changed")
+                    .willReturn(okJson(loadFixture("/json/networkedge/vpn_response_refreshed.json"))));
+
+            VPN vpn = networkEdge.vpns().getByUuid(VPN_UUID);
+            assertEquals("test-vpn-config", vpn.getConfigName());
+            assertEquals("203.0.113.10", vpn.getPeerIp());
+
+            assertTrue(vpn.refresh());
+
+            // The same wrapper instance now reflects the re-fetched server state.
+            assertEquals("renamed-vpn-config", vpn.getConfigName());
+            assertEquals("198.51.100.20", vpn.getPeerIp());
+            assertEquals(VPN_UUID, vpn.getUuid());
+
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "vpn-1111-2222-3333-444455556666",
+                    "siteName": "test-site",
+                    "status": "PROVISIONED",
+                    "virtualDeviceUuid": "dev-1234-5678-90ab-cdef12345678",
+                    "configName": "page1-vpn-config",
+                    "peerIp": "203.0.113.10",
+                    "remoteAsn": 65001,
+                    "localAsn": 65000
+                  } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "vpn-aaaa-bbbb-cccc-ddddeeeeffff",
+                    "siteName": "second-site",
+                    "status": "PROVISIONING",
+                    "virtualDeviceUuid": "dev-9999-8888-7777-666655554444",
+                    "configName": "page2-vpn-config",
+                    "peerIp": "198.51.100.20",
+                    "remoteAsn": 65010,
+                    "localAsn": 65000
+                  } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset/limit query params")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/vpn"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/vpn"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<VPN> vpns = networkEdge.vpns().list();
+            assertEquals(1, vpns.size());
+            assertTrue(vpns.hasNextPage());
+
+            vpns.loadAll();
+
+            assertEquals(2, vpns.size());
+            assertEquals("page1-vpn-config", vpns.get(0).getConfigName());
+            assertEquals("page2-vpn-config", vpns.get(1).getConfigName());
+            assertFalse(vpns.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/vpn"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

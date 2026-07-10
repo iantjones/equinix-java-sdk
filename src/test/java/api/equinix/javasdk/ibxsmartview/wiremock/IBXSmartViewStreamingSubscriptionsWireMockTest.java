@@ -4,12 +4,14 @@ import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.ibxsmartview.enums.ChannelType;
+import api.equinix.javasdk.ibxsmartview.enums.SubscriptionStatus;
 import api.equinix.javasdk.ibxsmartview.model.StreamingSubscription;
 import api.equinix.javasdk.ibxsmartview.model.SubscriptionCertificate;
 import api.equinix.javasdk.ibxsmartview.model.SubscriptionData;
 import api.equinix.javasdk.ibxsmartview.model.implementation.Channel;
 import api.equinix.javasdk.ibxsmartview.model.implementation.MessageType;
 import api.equinix.javasdk.ibxsmartview.model.implementation.PowerMessageType;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -101,6 +103,47 @@ class IBXSmartViewStreamingSubscriptionsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.messageType.power[0].ibx[0]", equalTo("SV5"))));
             wireMock.verify(getRequestedFor(
                     urlPathEqualTo("/smartview/v2/streaming/subscriptions/607460b4e4a78360425bca56")));
+        }
+    }
+
+    @Nested
+    @DisplayName("refresh()")
+    class Refresh {
+
+        static final String PATH = "/smartview/v2/streaming/subscriptions/sub-12345-abcde";
+
+        @Test
+        @DisplayName("re-GETs the subscription and updates the wrapper's state in place")
+        void refreshesInPlace() {
+            // First GET returns the original state (ACTIVE, updatedBy user-b); the second GET —
+            // triggered by wrapper.refresh() — returns a DIFFERENT payload (FAILED, updatedBy user-c).
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("subscription-refresh")
+                    .whenScenarioStateIs(Scenario.STARTED)
+                    .willReturn(okJson(loadFixture(
+                            "/json/ibxsmartview/streaming_subscription_response.json")))
+                    .willSetStateTo("state-changed"));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("subscription-refresh")
+                    .whenScenarioStateIs("state-changed")
+                    .willReturn(okJson(loadFixture(
+                            "/json/ibxsmartview/streaming_subscription_response_refreshed.json"))));
+
+            StreamingSubscription subscription =
+                    ibxSmartView.streamingSubscriptions().getByUuid("sub-12345-abcde");
+            assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+            assertEquals("user-b", subscription.getUpdatedBy());
+            assertEquals("2024-01-15T12:00:00Z", subscription.getUpdatedDateTime());
+
+            subscription.refresh();
+
+            // The same wrapper instance now reflects the re-fetched server state.
+            assertEquals(SubscriptionStatus.FAILED, subscription.getStatus());
+            assertEquals("user-c", subscription.getUpdatedBy());
+            assertEquals("2024-01-20T09:30:00Z", subscription.getUpdatedDateTime());
+            assertEquals("sub-12345-abcde", subscription.getId());
+
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
         }
     }
 

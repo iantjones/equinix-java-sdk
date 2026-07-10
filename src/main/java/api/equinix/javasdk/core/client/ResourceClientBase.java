@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ser.FilterProvider;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * Generic base for internal resource clients, collapsing the request-build → invoke →
@@ -303,6 +304,14 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
     @Override
     public PaginatedList<M> nextPage(PaginatedRequest<M> equinixRequest) {
         Page<J> page = ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
+        UnaryOperator<Object> itemMapper = equinixRequest.getPageItemMapper();
+        if (itemMapper != null) {
+            // Dual-shape sub-resource paging: this request's elements are NOT this client's J
+            // (the producer built the request over a different JSON class), so the class-level
+            // wrap() would ClassCastException on them. Apply the producer-supplied mapper —
+            // which mirrors its page-1 mapping — instead; see EquinixRequest#getPageItemMapper().
+            return ResponseHandler.toPaginatedList(page, this, (j, client) -> castItem(itemMapper.apply(j)));
+        }
         return ResponseHandler.toPaginatedList(page, this, (j, client) -> wrap(j));
     }
 
@@ -311,6 +320,22 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
         // No explicit re-serialization needed: the wire entity is rebuilt from the request's
         // RequestBody at dispatch, so the body's advanced pagination offset is picked up there.
         Page<J> page = ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
+        UnaryOperator<Object> itemMapper = equinixRequest.getPageItemMapper();
+        if (itemMapper != null) {
+            // Dual-shape sub-resource paging — see nextPage(PaginatedRequest) above.
+            return ResponseHandler.toPaginatedFilteredList(page, this, (j, client) -> castItem(itemMapper.apply(j)));
+        }
         return ResponseHandler.toPaginatedFilteredList(page, this, (j, client) -> wrap(j));
+    }
+
+    /**
+     * Generics laundering for dual-shape paging: the mapped item is the sub-resource's element
+     * type, not this client's {@code M}, but the {@code PaginatedList} built by {@code nextPage}
+     * is consumed under the sub-resource's element type (exactly as the producer's page-1 list
+     * was), so the cast never surfaces at a mismatched call site.
+     */
+    @SuppressWarnings("unchecked")
+    private M castItem(Object mappedItem) {
+        return (M) mappedItem;
     }
 }

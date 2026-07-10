@@ -2,6 +2,7 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.Metric;
 import api.equinix.javasdk.fabric.model.ValidateConnectionResult;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -314,6 +316,31 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
                     .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
                     .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on /metrics/search throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/fabric/v4/metrics/search",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> fabric.metrics().search(Filter.filter().empty()));
+        }
+
+        @Test
+        @DisplayName("500 on /metrics/search throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/fabric/v4/metrics/search",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.metrics().search(Filter.filter().empty()));
         }
     }
 }

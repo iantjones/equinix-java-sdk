@@ -2,6 +2,7 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.fabric.model.CompanyProfile;
 import api.equinix.javasdk.fabric.model.CompanyServiceProfile;
@@ -391,6 +392,136 @@ class FabricCompanyProfilesWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/companyProfiles/" + CP_ID + "/privateServices")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        @Test
+        @DisplayName("re-GETs /companyProfiles/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            String url = "/fabric/v4/companyProfiles/" + CP_ID;
+            wireMock.stubFor(get(urlPathEqualTo(url))
+                    .inScenario("cp-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/company_profile_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(url))
+                    .inScenario("cp-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/company_profile_response.json")
+                            .replace("Acme Networks", "Acme Networks Renamed"))));
+
+            CompanyProfile profile = fabric.companyProfiles().getByUuid(CP_ID);
+            assertEquals("Acme Networks", profile.getName());
+
+            profile.refresh();
+
+            assertEquals("Acme Networks Renamed", profile.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(url)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        @Test
+        @DisplayName("DELETEs /companyProfiles/{uuid} (the profile itself, not just its logo) and returns true")
+        void deletesCompanyProfile() {
+            stubSingleton(wireMock, "/fabric/v4/companyProfiles/" + CP_ID,
+                    "/json/fabric/company_profile_response.json");
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo("/fabric/v4/companyProfiles/" + CP_ID))
+                    .willReturn(okJson(loadFixture("/json/fabric/company_profile_response.json"))));
+
+            CompanyProfile profile = fabric.companyProfiles().getByUuid(CP_ID);
+            Boolean deleted = profile.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/fabric/v4/companyProfiles/" + CP_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_PROFILE" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_PROFILE" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/companyProfiles/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/companyProfiles/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<CompanyProfile> profiles = fabric.companyProfiles().search();
+            assertEquals(1, profiles.size());
+            assertTrue(profiles.hasNextPage());
+
+            profiles.loadAll();
+
+            assertEquals(2, profiles.size());
+            assertEquals("PAGE1_PROFILE", profiles.get(0).getUuid());
+            assertEquals("PAGE2_PROFILE", profiles.get(1).getUuid());
+            assertFalse(profiles.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/companyProfiles/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/fabric/v4/companyProfiles/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Company profile not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.companyProfiles().getByUuid("invalid-uuid"));
+        }
+
+        @Test
+        @DisplayName("401 throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/fabric/v4/companyProfiles/.*",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> fabric.companyProfiles().getByUuid("test-uuid"));
+        }
+
+        @Test
+        @DisplayName("500 throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/fabric/v4/companyProfiles/.*",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.companyProfiles().getByUuid("test-uuid"));
         }
     }
 }

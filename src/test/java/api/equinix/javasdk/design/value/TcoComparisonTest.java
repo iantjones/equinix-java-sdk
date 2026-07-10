@@ -167,6 +167,42 @@ class TcoComparisonTest {
     }
 
     @Test
+    void termFlowsThroughToTheEquinixConnectionRate() {
+        // Distinct 12- and 36-month rates on a custom card layered over the reference card
+        // (which supplies egress + the other Equinix line items): term() must pick the rate.
+        CustomRateCard termed = CustomRateCard.builder()
+                .connectionRate(api.equinix.javasdk.fabric.enums.ConnectionType.EVPL_VC, 10_000, MetroCode.DC,
+                        api.equinix.javasdk.design.value.ratecard.Term.MONTH_12, new BigDecimal("2000"))
+                .connectionRate(api.equinix.javasdk.fabric.enums.ConnectionType.EVPL_VC, 10_000, MetroCode.DC,
+                        api.equinix.javasdk.design.value.ratecard.Term.MONTH_36, new BigDecimal("1500"))
+                .build();
+        RateCard layered = RateCard.layered(termed, ReferenceRateCard.standard());
+
+        TcoComparison longTerm = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .term(api.equinix.javasdk.design.value.ratecard.Term.MONTH_36)
+                .rateCard(layered)
+                .compare();
+        assertEquals(0, new BigDecimal("1500").compareTo(
+                        longTerm.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow()
+                                .getLineItems().get("Equinix Fabric connection")),
+                "term(MONTH_36) must resolve the 36-month connection rate");
+
+        TcoComparison defaultTerm = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .rateCard(layered)
+                .compare();
+        assertEquals(0, new BigDecimal("2000").compareTo(
+                        defaultTerm.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow()
+                                .getLineItems().get("Equinix Fabric connection")),
+                "the default term is MONTH_12");
+    }
+
+    @Test
     void recommendedBreakdownReturnsTheRecommendedArchetypesLine() {
         TcoComparison tco = run();
 

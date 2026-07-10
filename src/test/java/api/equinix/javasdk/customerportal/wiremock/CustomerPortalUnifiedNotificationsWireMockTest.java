@@ -2,6 +2,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.enums.NotificationCategory;
 import api.equinix.javasdk.customerportal.enums.NotificationSortBy;
 import api.equinix.javasdk.customerportal.enums.NotificationSortDirection;
@@ -112,6 +113,33 @@ class CustomerPortalUnifiedNotificationsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.filter", absent()))
                     .withRequestBody(matchingJsonPath("$.sort", absent()))
                     .withRequestBody(matchingJsonPath("$.pagination", absent())));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on getNotifications() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, SEARCH_PATH,
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.unifiedNotifications()
+                            .getNotifications(UnifiedNotificationSearchRequest.builder().build()));
+        }
+
+        @Test
+        @DisplayName("500 on getNotifications() throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, SEARCH_PATH,
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.unifiedNotifications()
+                            .getNotifications(UnifiedNotificationSearchRequest.builder().build()));
         }
     }
 }

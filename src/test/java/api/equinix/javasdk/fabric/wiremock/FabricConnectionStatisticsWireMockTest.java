@@ -109,4 +109,37 @@ class FabricConnectionStatisticsWireMockTest extends WireMockTestBase {
         assertThrows(EquinixServerException.class,
                 () -> fabric.connections().getStatistics(UUID, START, END));
     }
+
+    @Test
+    @DisplayName("wrapper refresh() re-GETs the same stats window and updates the wrapper in place")
+    void refreshReloadsInPlace() {
+        String url = "/fabric/v4/connections/" + UUID + "/stats";
+        wireMock.stubFor(get(urlPathEqualTo(url))
+                .inScenario("stats-refresh")
+                .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                .willReturn(okJson(loadFixture("/json/fabric/connection_statistic_response.json")))
+                .willSetStateTo("changed"));
+        wireMock.stubFor(get(urlPathEqualTo(url))
+                .inScenario("stats-refresh")
+                .whenScenarioStateIs("changed")
+                .willReturn(okJson(loadFixture("/json/fabric/connection_statistic_response.json")
+                        .replace("\"max\": 950.5", "\"max\": 1200.0"))));
+
+        ConnectionStatistic stats = fabric.connections().getStatistics(UUID, START, END);
+        assertEquals(950.5f, stats.getStats().getBandwidthUtilization().getInbound().getMax());
+
+        // refresh() lives on the wrapper only — the ConnectionStatistic interface does not
+        // declare it (unlike Connection/CloudRouter/...), so the public path needs a cast.
+        ConnectionStatistic refreshed = stats.refresh();
+
+        assertSame(stats, refreshed, "refresh() returns the same live wrapper");
+        assertEquals(1200.0f, stats.getStats().getBandwidthUtilization().getInbound().getMax(),
+                "refresh() must swap the wrapper's backing state in place");
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo(url)));
+        // The second fetch re-sends the wrapper's own window (viewPoint from the held stats).
+        wireMock.verify(getRequestedFor(urlPathEqualTo(url))
+                .withQueryParam("viewPoint", equalTo("aSide"))
+                .withQueryParam("startDateTime", matching(".+"))
+                .withQueryParam("endDateTime", matching(".+")));
+    }
 }

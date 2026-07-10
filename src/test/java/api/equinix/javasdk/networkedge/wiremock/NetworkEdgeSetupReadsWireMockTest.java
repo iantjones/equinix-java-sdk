@@ -176,6 +176,141 @@ class NetworkEdgeSetupReadsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("Multi-page paging: listMetros() / listMetrosByRegion() / listDeviceTypes()")
+    class Paging {
+
+        private static final String METROS_PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "metroCode": "SV",
+                    "region": "AMER",
+                    "clusterSupported": true,
+                    "metroDescription": "Silicon Valley"
+                  } ]
+                }
+                """;
+
+        private static final String METROS_PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "metroCode": "DC",
+                    "region": "AMER",
+                    "clusterSupported": false,
+                    "metroDescription": "Ashburn"
+                  } ]
+                }
+                """;
+
+        private static final String DEVICE_TYPES_PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "deviceTypeCode": "CSR1000V",
+                    "name": "Cisco CSR 1000V",
+                    "vendor": "Cisco",
+                    "category": "ROUTER",
+                    "maxInterfaceCount": 10
+                  } ]
+                }
+                """;
+
+        private static final String DEVICE_TYPES_PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "deviceTypeCode": "PA-VM",
+                    "name": "Palo Alto VM-Series",
+                    "vendor": "Palo Alto Networks",
+                    "category": "FIREWALL",
+                    "maxInterfaceCount": 12
+                  } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("listMetros().loadAll() fetches page 2 by advancing the offset/limit query params")
+        void listMetrosLoadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/metros"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(METROS_PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/metros"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(METROS_PAGE_2)));
+
+            PaginatedList<Metro> metros = networkEdge.setup().listMetros();
+            assertEquals(1, metros.size());
+            assertTrue(metros.hasNextPage());
+
+            metros.loadAll();
+
+            assertEquals(2, metros.size());
+            assertEquals(MetroCode.SV, metros.get(0).getMetroCode());
+            assertEquals(MetroCode.DC, metros.get(1).getMetroCode());
+            assertFalse(metros.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/metros"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1")));
+        }
+
+        @Test
+        @DisplayName("listMetrosByRegion().loadAll() advances the offset and re-sends the region filter on page 2")
+        void listMetrosByRegionLoadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/metros"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(METROS_PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/metros"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(METROS_PAGE_2)));
+
+            PaginatedList<Metro> metros = networkEdge.setup().listMetrosByRegion(Region.AMER);
+            assertEquals(1, metros.size());
+            assertTrue(metros.hasNextPage());
+
+            metros.loadAll();
+
+            assertEquals(2, metros.size());
+            assertFalse(metros.hasNextPage());
+
+            // Page 2 request: offset advanced AND the SAME region filter query param re-sent.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/metros"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1"))
+                    .withQueryParam("region", equalTo("AMER")));
+        }
+
+        @Test
+        @DisplayName("listDeviceTypes().loadAll() fetches page 2 by advancing the offset/limit query params")
+        void listDeviceTypesLoadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/deviceTypes"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(DEVICE_TYPES_PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/deviceTypes"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(DEVICE_TYPES_PAGE_2)));
+
+            PaginatedList<DeviceType> deviceTypes = networkEdge.devices().listDeviceTypes();
+            assertEquals(1, deviceTypes.size());
+            assertTrue(deviceTypes.hasNextPage());
+
+            deviceTypes.loadAll();
+
+            assertEquals(2, deviceTypes.size());
+            assertEquals("CSR1000V", deviceTypes.get(0).getDeviceTypeCode());
+            assertEquals("PA-VM", deviceTypes.get(1).getDeviceTypeCode());
+            assertFalse(deviceTypes.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/deviceTypes"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1")));
+        }
+    }
+
+    @Nested
     @DisplayName("setup().createAgreement(accountNumber, termsVersionId)")
     class CreateAgreement {
 

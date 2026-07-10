@@ -3,12 +3,14 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.customerportal.enums.NotificationType;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.model.Notification;
 import api.equinix.javasdk.customerportal.model.json.creators.NotificationSearchRequest;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -174,6 +176,42 @@ class CustomerPortalNotificationsWireMockTest extends WireMockTestBase {
             assertEquals(NotificationType.NETWORK_INCIDENT, notification.getType());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/notifications/network/n-42")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 on getIbxById() throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v1/notifications/ibx/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Notification not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.notifications().getIbxById("missing-id"));
+        }
+
+        @Test
+        @DisplayName("401 on getNetworkById() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/v1/notifications/network/.*",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.notifications().getNetworkById("n-42"));
+        }
+
+        @Test
+        @DisplayName("500 on searchIbx() (POST) throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v1/notifications/ibx/search",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.notifications()
+                            .searchIbx(NotificationSearchRequest.builder().build()));
         }
     }
 }

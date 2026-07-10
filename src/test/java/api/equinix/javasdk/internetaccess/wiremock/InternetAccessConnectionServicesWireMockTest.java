@@ -18,6 +18,7 @@ package api.equinix.javasdk.internetaccess.wiremock;
 
 import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixServiceException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.model.ConnectionService;
 import org.junit.jupiter.api.AfterAll;
@@ -26,12 +27,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static api.equinix.javasdk.core.ResponseStubs.stubPaginatedGet;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed tests for the Equinix Internet Access (EIA) v1 ConnectionServices read surface —
@@ -93,6 +100,45 @@ class InternetAccessConnectionServicesWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(PATH))
                     .withQueryParam("mediaTypes.connectorTypes.locations.ibx", equalTo("DC11")));
+        }
+
+        @Test
+        void list_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            // First request always carries offset=0&limit=100 (PAGE_LIMIT default); page 2 must
+            // advance the offset from the SERVER-reported pagination while re-sending the filter.
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 0, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"name\": \"PAGE1_SERVICE\" } ] }")));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 100, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"name\": \"PAGE2_SERVICE\" } ] }")));
+
+            PaginatedList<ConnectionService> services = internetAccess.connectionServices().list("SG1");
+            assertEquals(1, services.size());
+            assertTrue(services.hasNextPage());
+
+            services.loadAll();
+
+            assertEquals(2, services.size());
+            assertEquals("PAGE1_SERVICE", services.get(0).getName());
+            assertEquals("PAGE2_SERVICE", services.get(1).getName());
+            assertFalse(services.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withQueryParam("mediaTypes.connectorTypes.locations.ibx", equalTo("SG1")));
+        }
+
+        @Test
+        void list_badRequest400_throwsEquinixServiceException() {
+            stubErrorInline(wireMock, PATH,
+                    400, "[{\"errorCode\":\"EQ-3000400\",\"errorMessage\":\"Invalid ibx\"}]");
+
+            assertThrows(EquinixServiceException.class,
+                    () -> internetAccess.connectionServices().list("BAD"));
         }
     }
 }
