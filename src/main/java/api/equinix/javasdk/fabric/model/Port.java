@@ -122,4 +122,11 @@ public interface Port extends AccessPointable {
     MarketplaceSubscriptionRef getMarketplaceSubscription();
 
     ChangeLog getChangeLog();
+
+    /**
+     * Re-fetches this port from the API and updates this instance in place.
+     *
+     * @return this port, refreshed
+     */
+    Port refresh();
 }

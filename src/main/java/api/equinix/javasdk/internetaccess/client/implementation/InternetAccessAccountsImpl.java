@@ -53,8 +53,10 @@ public class InternetAccessAccountsImpl implements InternetAccessAccounts {
     public PaginatedList<AccountAgreement> agreements(String accountNumber, String ibx) {
         Page<AccountAgreementJson> responsePage = this.serviceClient.agreements(accountNumber, ibx);
         // The internal client is a Pageable<AccountDetails>; its inherited nextPage(...) deserializes
-        // each subsequent page using the request's own response type (AccountAgreementJson), so reusing
-        // it for agreement paging is correct — only the generic parameter is laundered.
+        // each subsequent page using the request's own response type (AccountAgreementJson) and maps
+        // the items with the request's page-item mapper (set by AccountClientImpl#agreements — the
+        // client's own wrap() is typed for AccountDetailsJson and would ClassCastException), so
+        // reusing it for agreement paging is correct — only the generic parameter is laundered.
         Pageable<AccountAgreement> pageableClient = (Pageable<AccountAgreement>) (Object) this.serviceClient;
         PaginatedList<AccountAgreement> agreementList = ResponseHandler.mapPaginatedList(responsePage.getItems(), pageableClient, (json, client) -> json);
         return new PaginatedList<>(agreementList, pageableClient, responsePage.getAssociatedRequest(),

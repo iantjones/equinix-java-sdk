@@ -709,7 +709,6 @@ public final class MetroOptimizer {
         private RedundancyTier minimumRedundancy;
         private Double maxLatencyMs;
         private Integer maxMetroCount;
-        private Integer minMetroCount;
 
         ConstraintsBuilder(Builder parent) {
             this.parent = parent;
@@ -855,9 +854,22 @@ public final class MetroOptimizer {
 
         /**
          * Sets a hard upper bound on latency from any recommended metro to any user site.
-         * Metros that exceed this threshold to any site are excluded.
+         * During candidate filtering, any metro whose estimated latency to <em>any</em>
+         * user site exceeds this threshold is excluded from candidacy.
          *
-         * @param maxMs the maximum acceptable latency in milliseconds
+         * <p>The threshold is compared against the engine's per-metro-to-site latency
+         * estimate in milliseconds — the same figures used by the latency score dimension
+         * and surfaced in {@code MetroRecommendation.getSiteLatencies()} and the
+         * {@link LatencyMatrix}: Equinix Fabric metro-to-metro {@code avgLatency} where
+         * published, otherwise a Haversine fiber-distance estimate
+         * (great-circle distance × 1.4 fiber-routing multiplier × 4.9 μs/km).</p>
+         *
+         * <p>Metros force-included via {@code requireMetro(...)} bypass this filter; a
+         * required metro that breaches the bound is surfaced as a
+         * {@code LATENCY_THRESHOLD} risk finding instead of being excluded.</p>
+         *
+         * @param maxMs the maximum acceptable latency in milliseconds (values {@code <= 0}
+         *              disable the filter)
          * @return this builder for method chaining
          */
         public ConstraintsBuilder maxLatencyMs(double maxMs) {
@@ -877,17 +889,6 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Sets the minimum number of metros that must be included in the recommendation set.
-         *
-         * @param min the minimum number of metros to recommend
-         * @return this builder for method chaining
-         */
-        public ConstraintsBuilder minMetros(int min) {
-            this.minMetroCount = min;
-            return this;
-        }
-
-        /**
          * Finalizes the constraints definition and returns to the parent {@link Builder}.
          *
          * @return the parent builder for continued configuration
@@ -903,7 +904,6 @@ public final class MetroOptimizer {
                     .minimumRedundancy(minimumRedundancy)
                     .maxLatencyMs(maxLatencyMs)
                     .maxMetroCount(maxMetroCount)
-                    .minMetroCount(minMetroCount)
                     .build());
         }
     }

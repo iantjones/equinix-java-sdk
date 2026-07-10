@@ -3,6 +3,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 import api.equinix.javasdk.customerportal.enums.SmartHandsType;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.enums.PhonePreferenceToCall;
 import api.equinix.javasdk.customerportal.enums.SmartHandsContactType;
 import api.equinix.javasdk.customerportal.enums.SmartHandsScheduleType;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.*;
 import java.util.List;
 import java.util.Map;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -323,5 +325,42 @@ class CustomerPortalSmartHandsWireMockTest extends WireMockTestBase {
                 .withQueryParam("detail", equalTo("true"))
                 .withQueryParam("ibxs", equalTo("AM1,AM2"))
                 .withQueryParam("cages", equalTo("AM1:02:002MC1")));
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on a create POST throws EquinixAuthenticationException")
+        void unauthorizedCreate() {
+            stubErrorInline(wireMock, "/v1/orders/smarthands/equipmentInstall",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.smartHandsRequests()
+                            .createEquipmentInstall(sampleRequest(Map.of("scopeOfWork", "Install the device"))));
+        }
+
+        @Test
+        @DisplayName("429 on a create POST throws EquinixRateLimitException")
+        void rateLimitedCreate() {
+            stubErrorInline(wireMock, "/v1/orders/smarthands/other",
+                    429, "[{\"errorCode\":\"ERR-429\",\"errorMessage\":\"Too many requests\"}]");
+
+            assertThrows(EquinixRateLimitException.class,
+                    () -> customerPortal.smartHandsRequests()
+                            .createOther(sampleRequest(Map.of("scopeOfWork", "Misc work"))));
+        }
+
+        @Test
+        @DisplayName("500 on listTypes() throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v1/orders/smarthands/types",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.smartHandsRequests().listTypes());
+        }
     }
 }

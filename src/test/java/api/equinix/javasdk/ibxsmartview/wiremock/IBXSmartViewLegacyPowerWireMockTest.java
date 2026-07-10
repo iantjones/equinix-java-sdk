@@ -2,6 +2,8 @@ package api.equinix.javasdk.ibxsmartview.wiremock;
 
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixNotFoundException;
+import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.ibxsmartview.enums.PowerLevelType;
 import api.equinix.javasdk.ibxsmartview.model.PowerData;
 import api.equinix.javasdk.ibxsmartview.model.PowerDataIBX;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -161,6 +164,68 @@ class IBXSmartViewLegacyPowerWireMockTest extends WireMockTestBase {
                     .withQueryParam("interval", equalTo("hourly"))
                     .withQueryParam("fromDate", equalTo("2026-06-30T00:00:00Z"))
                     .withQueryParam("toDate", equalTo("2026-06-30T23:59:59Z")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error mapping")
+    class Errors {
+
+        static final String ERROR_404 =
+                "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"No power data found\"}]";
+        static final String ERROR_500 =
+                "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]";
+
+        @Test
+        @DisplayName("404 on getCurrent throws EquinixNotFoundException")
+        void getCurrentNotFound() {
+            stubErrorInline(wireMock, "/power/v1/current", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.legacyPower()
+                            .getCurrent("123456", "SV5", "cage", "SV5:01:001000"));
+        }
+
+        @Test
+        @DisplayName("500 on getCurrent throws EquinixServerException")
+        void getCurrentServerError() {
+            stubErrorInline(wireMock, "/power/v1/current", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.legacyPower()
+                            .getCurrent("123456", "SV5", "cage", "SV5:01:001000"));
+        }
+
+        @Test
+        @DisplayName("500 on postCurrent throws EquinixServerException")
+        void postCurrentServerError() {
+            stubErrorInline(wireMock, "/power/v1/current", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.legacyPower().postCurrent(
+                            new PowerCurrentPostRequest("123456", "SV5", PowerLevelType.CAGE)));
+        }
+
+        @Test
+        @DisplayName("404 on getTrending throws EquinixNotFoundException")
+        void getTrendingNotFound() {
+            stubErrorInline(wireMock, "/power/v1/trending", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.legacyPower()
+                            .getTrending("123456", "SV5", "cage", "SV5:01:001000",
+                                    "hourly", "2026-06-30T00:00:00Z", "2026-06-30T23:59:59Z"));
+        }
+
+        @Test
+        @DisplayName("500 on getTrending throws EquinixServerException")
+        void getTrendingServerError() {
+            stubErrorInline(wireMock, "/power/v1/trending", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.legacyPower()
+                            .getTrending("123456", "SV5", "cage", "SV5:01:001000",
+                                    "hourly", "2026-06-30T00:00:00Z", "2026-06-30T23:59:59Z"));
         }
     }
 }

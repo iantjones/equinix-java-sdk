@@ -198,4 +198,82 @@ class FabricMetrosWireMockTest extends WireMockTestBase {
                     () -> fabric.metros().getByMetroCode(MetroCode.SV));
         }
     }
+
+    @Nested
+    @DisplayName("MetroWrapper refresh()")
+    class WrapperRefresh {
+
+        @Test
+        @DisplayName("re-GETs /metros/{code} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            String url = "/fabric/v4/metros/SV";
+            wireMock.stubFor(get(urlPathEqualTo(url))
+                    .inScenario("metro-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/metro_single_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(url))
+                    .inScenario("metro-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/metro_single_response.json")
+                            .replace("\"name\": \"Silicon Valley\"", "\"name\": \"Silicon Valley Renamed\""))));
+
+            Metro metro = fabric.metros().getByMetroCode(MetroCode.SV);
+            assertEquals("Silicon Valley", metro.getName());
+
+            // The wrapper's own refresh() — distinct from MetroRegistry.refresh(), which reloads
+            // the whole registry rather than a single wrapper in place.
+            Metro refreshed = metro.refresh();
+
+            assertSame(metro, refreshed, "refresh() returns the same live wrapper");
+            assertEquals("Silicon Valley Renamed", metro.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(url)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "code": "SV", "name": "Page-1-Metro" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "code": "DC", "name": "Page-2-Metro" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-GETs /metros with the offset query param advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            // Page 1: catch-all, registered first (WireMock: the later, more specific stub wins).
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/metros"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/metros"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<Metro> metros = fabric.metros().list();
+            assertEquals(1, metros.size());
+            assertTrue(metros.hasNextPage());
+
+            metros.loadAll();
+
+            assertEquals(2, metros.size());
+            assertEquals("Page-1-Metro", metros.get(0).getName());
+            assertEquals("Page-2-Metro", metros.get(1).getName());
+            assertEquals(MetroCode.DC, metros.get(1).getCode());
+            assertFalse(metros.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/metros"))
+                    .withQueryParam("offset", equalTo("100")));
+        }
+    }
 }

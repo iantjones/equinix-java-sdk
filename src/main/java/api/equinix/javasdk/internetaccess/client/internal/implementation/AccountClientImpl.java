@@ -32,6 +32,7 @@ import api.equinix.javasdk.internetaccess.model.json.AccountDetailsJson;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * Internal client implementation for the Equinix Internet Access (EIA) v1 account lookups
@@ -40,7 +41,8 @@ import java.util.Map;
  * read-only, so the deserialized {@link AccountDetailsJson} (which implements {@link AccountDetails}
  * directly) is returned without a wrapper. The agreements collection deserializes to a separate
  * element type ({@link AccountAgreementJson} implementing {@link AccountAgreement}), so its paginated
- * request — which carries both a path parameter and a query parameter — is built manually.
+ * request — which carries both a path parameter and a query parameter — is built manually and carries
+ * its own page-item mapper for pages 2+ (see {@code EquinixRequest#getPageItemMapper()}).
  */
 public class AccountClientImpl extends ResourceClientBase<AccountDetails, AccountDetailsJson> implements AccountClient {
 
@@ -70,6 +72,13 @@ public class AccountClientImpl extends ResourceClientBase<AccountDetails, Accoun
         EquinixRequest<AccountAgreement> request = buildRequestWithPathParams("ListAccountAgreements",
                 RequestType.PAGINATED, Map.of("accountNumber", accountNumber), AccountAgreementJson.class);
         request.addSingleQueryParameter("ibx", ibx);
+        // Dual-shape paging: this request's elements (AccountAgreementJson) are not this client's
+        // JSON model (AccountDetailsJson), so pages 2+ — fetched through the shared inherited
+        // nextPage, which by default re-maps items with wrap(AccountDetailsJson) — must carry
+        // their own item mapper. Identity, because AccountAgreementJson implements
+        // AccountAgreement directly (mirrors the page-1 mapping in
+        // InternetAccessAccountsImpl#agreements).
+        request.setPageItemMapper(UnaryOperator.identity());
         return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
     }
 }

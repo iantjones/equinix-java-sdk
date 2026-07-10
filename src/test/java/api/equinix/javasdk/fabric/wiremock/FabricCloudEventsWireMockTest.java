@@ -176,4 +176,49 @@ class FabricCloudEventsWireMockTest extends WireMockTestBase {
                     () -> fabric.cloudEvents().getByAssetId("connections", "test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        // CloudEvents identify themselves by CNCF "id" on the wire (mapped onto getUuid()).
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "id": "PAGE1_EVENT" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "id": "PAGE2_EVENT" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/cloudevents/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/cloudevents/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<CloudEvent> events = fabric.cloudEvents().search();
+            assertEquals(1, events.size());
+            assertTrue(events.hasNextPage());
+
+            events.loadAll();
+
+            assertEquals(2, events.size());
+            assertEquals("PAGE1_EVENT", events.get(0).getUuid());
+            assertEquals("PAGE2_EVENT", events.get(1).getUuid());
+            assertFalse(events.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

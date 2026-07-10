@@ -45,7 +45,8 @@ final class MetroOptimizerEngine {
      * <ol>
      *   <li><strong>Data Collection</strong> -- Fetches all metros and service profiles via the Fabric client.</li>
      *   <li><strong>Candidate Filtering</strong> -- Eliminates metros that violate hard constraints
-     *       (excluded regions/metros, compliance zones, missing required providers).</li>
+     *       (excluded regions/metros, compliance zones, missing required providers, and — when
+     *       {@code maxLatencyMs} is set — an estimated latency to any user site beyond the bound).</li>
      *   <li><strong>Scoring</strong> -- Scores each candidate across five dimensions: latency, provider
      *       coverage, cost, redundancy, and compliance, using weighted aggregation.</li>
      *   <li><strong>Selection</strong> -- Selects the top N metros by composite score.</li>
@@ -86,7 +87,7 @@ final class MetroOptimizerEngine {
                 buildProviderMetroMap(request.getProviders(), serviceProfiles);
 
         // Phase 2: Candidate Filtering
-        List<Metro> candidates = filterCandidates(allMetros, request, providerMetroMap);
+        List<Metro> candidates = filterCandidates(allMetros, request, providerMetroMap, metroMap, latencyMap);
 
         // Phase 3: Scoring
         int totalHeadcount = request.getSites().stream().mapToInt(UserSite::getHeadcount).sum();
@@ -333,9 +334,14 @@ final class MetroOptimizerEngine {
     // ══════════════════════════════════════════════
 
     private static List<Metro> filterCandidates(List<Metro> allMetros, OptimizationRequest request,
-                                                 Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
+                                                 Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap,
+                                                 Map<MetroId, Metro> metroMap,
+                                                 Map<MetroId, Map<MetroId, Double>> latencyMap) {
         OptimizationConstraints c = request.getConstraints();
         List<Metro> filtered = new ArrayList<>();
+
+        Double maxLatencyMs = c.getMaxLatencyMs();
+        boolean latencyBounded = maxLatencyMs != null && maxLatencyMs > 0;
 
         Set<MetroId> excluded = c.getExcludedMetros() != null
                 ? new HashSet<>(c.getExcludedMetros()) : Collections.emptySet();
@@ -376,10 +382,20 @@ final class MetroOptimizerEngine {
             }
             if (!hasAllRequired) continue;
 
+            // Hard latency bound: exclude metros whose estimated latency to ANY user site
+            // exceeds constraints.maxLatencyMs. Uses the same per-metro-to-site estimate
+            // (estimateLatency: Fabric avgLatency, else Haversine fiber estimate) as the
+            // latency score dimension and the LatencyMatrix, so filter and scoring agree.
+            if (latencyBounded && exceedsLatencyBound(code, request.getSites(), maxLatencyMs, metroMap, latencyMap)) {
+                continue;
+            }
+
             filtered.add(metro);
         }
 
-        // Ensure required metros are included
+        // Ensure required metros are included. Required metros bypass every filter above,
+        // including the latency bound — a required metro beyond maxLatencyMs is surfaced
+        // as a LATENCY_THRESHOLD risk finding rather than excluded.
         if (c.getRequiredMetros() != null) {
             Set<MetroId> filteredCodes = filtered.stream()
                     .map(Metro::metroId).collect(Collectors.toSet());
@@ -394,6 +410,24 @@ final class MetroOptimizerEngine {
         }
 
         return filtered;
+    }
+
+    /**
+     * Returns {@code true} if the metro's estimated latency to <em>any</em> user site exceeds
+     * the {@code maxLatencyMs} bound. Uses {@link #estimateLatency}, the same estimate the
+     * latency score dimension and {@link LatencyMatrix} are built from (Fabric metro-to-metro
+     * {@code avgLatency} where published, otherwise the Haversine fiber-distance estimate),
+     * so the hard filter and the scoring path can never disagree about a metro's latency.
+     */
+    private static boolean exceedsLatencyBound(MetroId metro, List<UserSite> sites, double maxLatencyMs,
+                                               Map<MetroId, Metro> metroMap,
+                                               Map<MetroId, Map<MetroId, Double>> latencyMap) {
+        for (UserSite site : sites) {
+            if (estimateLatency(metro, site, metroMap, latencyMap) > maxLatencyMs) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ══════════════════════════════════════════════
@@ -912,7 +946,9 @@ final class MetroOptimizerEngine {
             }
         }
 
-        // Latency threshold violations
+        // Latency threshold violations. Candidate filtering already excludes metros beyond
+        // the bound, so in practice only metros force-included via requireMetro(...) can
+        // trip this finding.
         Double maxLatency = request.getConstraints().getMaxLatencyMs();
         if (maxLatency != null) {
             for (MetroId metro : latencyMatrix.getMetros()) {
@@ -1098,7 +1134,8 @@ final class MetroOptimizerEngine {
                                                              int totalMetros, int candidateMetros) {
         String methodology = "The optimizer evaluates all " + totalMetros + " Equinix metros, filtering to "
                 + candidateMetros + " candidates based on constraints (excluded metros/regions, compliance zones, "
-                + "required provider availability). Each candidate is scored across 5 dimensions: "
+                + "required provider availability, and the max-latency bound when set). "
+                + "Each candidate is scored across 5 dimensions: "
                 + "latency (weighted by workforce distribution and site importance), provider coverage "
                 + "(availability of required and preferred providers), cost (regional pricing estimates), "
                 + "redundancy (geographic diversity of the selected set), and compliance (data sovereignty). "

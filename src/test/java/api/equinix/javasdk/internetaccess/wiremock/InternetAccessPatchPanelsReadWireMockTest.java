@@ -18,6 +18,7 @@ package api.equinix.javasdk.internetaccess.wiremock;
 
 import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixAuthenticationException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.model.PatchPanel;
 import org.junit.jupiter.api.AfterAll;
@@ -26,14 +27,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed tests for the Equinix Internet Access (EIA) v1 Patch Panels read surface — the
@@ -141,6 +147,47 @@ class InternetAccessPatchPanelsReadWireMockTest extends WireMockTestBase {
                     .withQueryParam("cage.spaceId", equalTo("cage-1"))
                     .withQueryParam("cabinet.spaceId", equalTo("cab-1"))
                     .withQueryParam("mediaTypes.name", absent()));
+        }
+
+        @Test
+        void list_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            // First request always carries offset=0&limit=100 (PAGE_LIMIT default); page 2 must
+            // advance the offset from the SERVER-reported pagination, carrying the filters.
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/patchPanels"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 0, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"number\": \"PAGE1_PANEL\" } ] }")));
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/patchPanels"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 100, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"number\": \"PAGE2_PANEL\" } ] }")));
+
+            PaginatedList<PatchPanel> panels =
+                    internetAccess.patchPanels().list("WA1", "100013200", "cage-1", "cab-1");
+            assertEquals(1, panels.size());
+            assertTrue(panels.hasNextPage());
+
+            panels.loadAll();
+
+            assertEquals(2, panels.size());
+            assertEquals("PAGE1_PANEL", panels.get(0).getNumber());
+            assertEquals("PAGE2_PANEL", panels.get(1).getNumber());
+            assertFalse(panels.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/internetAccess/v1/patchPanels"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withQueryParam("location.ibx", equalTo("WA1"))
+                    .withQueryParam("account.accountNumber", equalTo("100013200")));
+        }
+
+        @Test
+        void list_unauthorized401_throwsEquinixAuthenticationException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/patchPanels",
+                    401, "[{\"errorCode\":\"EQ-3000401\",\"errorMessage\":\"Authentication failed\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> internetAccess.patchPanels().list("WA1", "100013200", "cage-1", "cab-1"));
         }
     }
 }

@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 2,
+    "total": 3
+  },
+  "data": [
+    {
+      "sensorId": "SENSOR-SV5-001",
+      "zoneId": "ZONE-A",
+      "ibx": "SV5",
+      "temperature": {
+        "value": 22.5,
+        "unit": "CELSIUS"
+      },
+      "humidity": {
+        "value": 45.0,
+        "unit": "PERCENT"
+      }
+    },
+    {
+      "sensorId": "SENSOR-SV5-002",
+      "zoneId": "ZONE-B",
+      "ibx": "SV5",
+      "temperature": {
+        "value": 73.6,
+        "unit": "FAHRENHEIT"
+      },
+      "humidity": {
+        "value": 48.2,
+        "unit": "PERCENT"
+      }
+    }
+  ]
+}

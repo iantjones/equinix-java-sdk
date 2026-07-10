@@ -2,10 +2,12 @@ package api.equinix.javasdk.fabric.wiremock;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.Tag;
 import org.junit.jupiter.api.*;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static api.equinix.javasdk.core.ResponseStubs.stubPaginatedGet;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,6 +93,31 @@ class FabricTagsWireMockTest extends WireMockTestBase {
             assertEquals("costCenter", second.getName());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/tags")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on list() throws EquinixAuthenticationException")
+        void unauthorizedList() {
+            stubErrorInline(wireMock, "/fabric/v4/tags",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> fabric.tags().list());
+        }
+
+        @Test
+        @DisplayName("500 on create() throws EquinixServerException")
+        void serverErrorCreate() {
+            stubErrorInline(wireMock, "/fabric/v4/tags",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.tags().create("RESOURCE_TAG", "environment", "Environment"));
         }
     }
 }

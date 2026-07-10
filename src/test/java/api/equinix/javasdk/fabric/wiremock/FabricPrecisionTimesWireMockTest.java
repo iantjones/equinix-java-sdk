@@ -15,6 +15,7 @@ import api.equinix.javasdk.fabric.model.PrecisionTime;
 import api.equinix.javasdk.fabric.model.Project;
 import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeIpv4;
 import api.equinix.javasdk.fabric.model.implementation.PrecisionTimeOrder;
+import api.equinix.javasdk.fabric.model.implementation.TimeServiceFulfillRequest;
 import api.equinix.javasdk.fabric.model.TimeServiceConnection;
 import api.equinix.javasdk.fabric.model.TimeServicePackage;
 import org.junit.jupiter.api.*;
@@ -318,6 +319,98 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
 
             assertThrows(EquinixServerException.class,
                     () -> fabric.precisionTimes().getByUuid("test-uuid"));
+        }
+    }
+
+    @Nested
+    @DisplayName("fulfill(uuid, TimeServiceFulfillRequest)")
+    class FulfillWithRequest {
+
+        @Test
+        @DisplayName("PUTs the full precisionTimeServiceRequest body (type/name/package/ipv4/connections)")
+        void fulfillsWithFullRequestBody() {
+            wireMock.stubFor(put(urlPathEqualTo("/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def"))
+                    .willReturn(okJson(loadFixture("/json/fabric/precision_time_response.json"))));
+
+            TimeServiceFulfillRequest request =
+                    new TimeServiceFulfillRequest(List.of("095be615-a8ad-4c33-8e9c-c7612fbf6c9f"))
+                            .withType(PrecisionTimeType.NTP)
+                            .withName("Production-NTP-Service")
+                            .withPackageCode(PrecisionTimePackageCode.NTP_STANDARD)
+                            .withIpv4(new PrecisionTimeIpv4("10.0.0.1", "10.0.0.2", "255.255.255.240", "10.0.0.3"));
+
+            PrecisionTime ts = fabric.precisionTimes()
+                    .fulfill("f6a7b8c9-d0e1-2345-fabc-567890123def", request);
+
+            assertNotNull(ts);
+            assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", ts.getUuid());
+
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/f6a7b8c9-d0e1-2345-fabc-567890123def"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(equalToJson(
+                            "{\"connections\":[{\"uuid\":\"095be615-a8ad-4c33-8e9c-c7612fbf6c9f\"}],"
+                            + "\"type\":\"NTP\","
+                            + "\"name\":\"Production-NTP-Service\","
+                            + "\"package\":{\"code\":\"NTP_STANDARD\"},"
+                            + "\"ipv4\":{\"primary\":\"10.0.0.1\",\"secondary\":\"10.0.0.2\","
+                            + "\"networkMask\":\"255.255.255.240\",\"defaultGateway\":\"10.0.0.3\"}}",
+                            true, true)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String SERVICE_ID = "f6a7b8c9-d0e1-2345-fabc-567890123def";
+        private static final String URL = "/fabric/v4/timeServices/" + SERVICE_ID;
+
+        @Test
+        @DisplayName("re-GETs /timeServices/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("timeservice-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/precision_time_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("timeservice-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/precision_time_response.json")
+                            .replace("Production-NTP-Service", "Renamed-NTP-Service"))));
+
+            PrecisionTime ts = fabric.precisionTimes().getByUuid(SERVICE_ID);
+            assertEquals("Production-NTP-Service", ts.getName());
+
+            ts.refresh();
+
+            assertEquals("Renamed-NTP-Service", ts.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String SERVICE_ID = "f6a7b8c9-d0e1-2345-fabc-567890123def";
+        private static final String URL = "/fabric/v4/timeServices/" + SERVICE_ID;
+
+        @Test
+        @DisplayName("DELETEs /timeServices/{uuid} and returns true")
+        void deletesTimeService() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/precision_time_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/precision_time_response.json"))));
+
+            PrecisionTime ts = fabric.precisionTimes().getByUuid(SERVICE_ID);
+            Boolean deleted = ts.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
         }
     }
 }

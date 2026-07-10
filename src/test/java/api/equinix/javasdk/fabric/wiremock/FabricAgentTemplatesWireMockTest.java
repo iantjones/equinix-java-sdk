@@ -3,6 +3,7 @@ import api.equinix.javasdk.fabric.enums.AgentState;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.AgentTemplate;
 import org.junit.jupiter.api.*;
@@ -82,6 +83,41 @@ class FabricAgentTemplatesWireMockTest extends WireMockTestBase {
             assertNotNull(template.getChangeLog());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/agentTemplates/tmpl-1234")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/fabric/v4/agentTemplates/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Agent template not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.agentTemplates().getByUuid("invalid-uuid"));
+        }
+
+        @Test
+        @DisplayName("401 throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/fabric/v4/agentTemplates.*",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> fabric.agentTemplates().list());
+        }
+
+        @Test
+        @DisplayName("500 throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/fabric/v4/agentTemplates.*",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.agentTemplates().list());
         }
     }
 }

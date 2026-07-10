@@ -1,0 +1,12 @@
+{
+  "uuid": "bkp-1111-2222-3333-444455556666",
+  "name": "renamed-backup",
+  "type": "CONFIG",
+  "status": "IN_PROGRESS",
+  "downloadUrl": "https://example.com/backups/renamed-backup",
+  "version": "1.1",
+  "deleteAllowed": false,
+  "deviceUuid": "dev-9999-8888-7777-666655554444",
+  "lastUpdatedDateTime": "2018-02-01T08:00:00Z",
+  "restores": []
+}

@@ -641,6 +641,169 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("refresh()")
+    class Refresh {
+
+        private static final String UUID = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
+        private static final String PATH = "/ne/v1/devices/" + UUID;
+
+        @Test
+        @DisplayName("re-GETs the device and updates the wrapper's state in place")
+        void refreshesInPlace() {
+            // First GET returns the original state; the second GET — triggered by
+            // wrapper.refresh() — returns a DIFFERENT payload (renamed, bandwidth bumped).
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("device-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/networkedge/device_response.json")))
+                    .willSetStateTo("state-changed"));
+            wireMock.stubFor(get(urlPathEqualTo(PATH))
+                    .inScenario("device-refresh")
+                    .whenScenarioStateIs("state-changed")
+                    .willReturn(okJson(loadFixture("/json/networkedge/device_response_refreshed.json"))));
+
+            Device device = networkEdge.devices().getByUuid(UUID);
+            assertEquals("My-CSR1000V-Device", device.getName());
+
+            assertTrue(device.refresh());
+
+            // The same wrapper instance now reflects the re-fetched server state.
+            assertEquals("My-CSR1000V-Device-Renamed", device.getName());
+            assertEquals(UUID, device.getUuid());
+
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        // Server-clamped page size of 1 with total 2: page 2 must be requested by advancing the
+        // offset from the SERVER-reported pagination (offset 0 + limit 1 -> offset=1&limit=1).
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "ed7891f4-7a67-11e9-9bea-1681be663d3e",
+                    "name": "Page1-Device",
+                    "deviceTypeCode": "CSR1000V",
+                    "status": "PROVISIONED",
+                    "metroCode": "SV",
+                    "accountNumber": 123456
+                  } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 1, "limit": 1, "total": 2 },
+                  "data": [ {
+                    "uuid": "fe8902g5-8b78-22f0-0cfa-2792cf774e4f",
+                    "name": "Page2-Device",
+                    "deviceTypeCode": "PA-VM",
+                    "status": "PROVISIONED",
+                    "metroCode": "SV",
+                    "accountNumber": 654321
+                  } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing offset/limit and re-sends the filter query params")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .willReturn(okJson(PAGE_2)));
+
+            RequestBuilder.Device filter = RequestBuilder.device()
+                    .havingStatus(DeviceStatus.PROVISIONED);
+            filter.build();
+
+            PaginatedList<Device> devices = networkEdge.devices().list(filter);
+            assertEquals(1, devices.size());
+            assertTrue(devices.hasNextPage());
+
+            devices.loadAll();
+
+            assertEquals(2, devices.size());
+            assertEquals("Page1-Device", devices.get(0).getName());
+            assertEquals("Page2-Device", devices.get(1).getName());
+            assertFalse(devices.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, the
+            // server-clamped limit carried, and the SAME filter query param re-sent.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/ne/v1/devices"))
+                    .withQueryParam("offset", equalTo("1"))
+                    .withQueryParam("limit", equalTo("1"))
+                    .withQueryParam("status", equalTo("PROVISIONED")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Mutation error mapping (POST/PATCH/DELETE)")
+    class MutationErrors {
+
+        private static final String UUID = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
+
+        @Test
+        @DisplayName("400 validation reject on device create throws EquinixServiceException with statusCode 400")
+        void createValidationReject() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/devices/?"))
+                    .willReturn(aResponse()
+                            .withStatus(400)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-400\",\"errorMessage\":\"Validation failed: metroCode is invalid\"}]")));
+
+            EquinixServiceException ex = assertThrows(EquinixServiceException.class,
+                    () -> networkEdge.devices()
+                            .define("Bad-Device")
+                            .withDeviceTypeCode("CSR1000V")
+                            .withMetroCode(MetroCode.SV)
+                            .create());
+
+            assertEquals(400, ex.getStatusCode());
+            wireMock.verify(postRequestedFor(urlPathMatching("/ne/v1/devices/?")));
+        }
+
+        @Test
+        @DisplayName("409 on device update (PATCH) throws EquinixConflictException")
+        void updateConflict() {
+            stubSingleton(wireMock, "/ne/v1/devices/" + UUID, "/json/networkedge/device_response.json");
+            wireMock.stubFor(patch(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .willReturn(aResponse()
+                            .withStatus(409)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-409\",\"errorMessage\":\"Device is being modified by another request\"}]")));
+
+            Device device = networkEdge.devices().getByUuid(UUID);
+
+            assertThrows(EquinixConflictException.class,
+                    () -> device.update().withDeviceName("Renamed-Device").save());
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID)));
+        }
+
+        @Test
+        @DisplayName("409 on device delete throws EquinixConflictException")
+        void deleteConflict() {
+            stubSingleton(wireMock, "/ne/v1/devices/" + UUID, "/json/networkedge/device_response.json");
+            wireMock.stubFor(delete(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .willReturn(aResponse()
+                            .withStatus(409)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-409\",\"errorMessage\":\"Device has active connections\"}]")));
+
+            Device device = networkEdge.devices().getByUuid(UUID);
+
+            assertThrows(EquinixConflictException.class, device::delete);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID)));
+        }
+    }
+
+    @Nested
     @DisplayName("Device ACLs: get / add / update")
     class DeviceAcls {
 

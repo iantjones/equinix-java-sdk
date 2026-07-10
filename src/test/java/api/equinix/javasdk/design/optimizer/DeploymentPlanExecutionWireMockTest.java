@@ -229,6 +229,86 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
     }
 
+    // ── execute() state waiter (awaitState poll loop) ──
+
+    @Test
+    @DisplayName("execute() polls a PROVISIONING router until a later fetch reports PROVISIONED")
+    void executeWaiterPollsThroughStateTransition() {
+        // Create returns a router still PROVISIONING; the FIRST get-by-uuid also reports
+        // PROVISIONING, and only the SECOND reports PROVISIONED — so the waiter must actually
+        // loop (one 5s poll interval) instead of resolving on the first fetch like every other
+        // test in this suite.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(created("/json/fabric/cloud_router_provisioning_response.json")));
+
+        String scenario = "router-provisioning";
+        wireMock.stubFor(get(urlPathMatching("/fabric/v4/routers/[^/]+"))
+                .inScenario(scenario)
+                .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                .willReturn(okJson(loadFixture("/json/fabric/cloud_router_provisioning_response.json")))
+                .willSetStateTo("ready"));
+        wireMock.stubFor(get(urlPathMatching("/fabric/v4/routers/[^/]+"))
+                .inScenario(scenario)
+                .whenScenarioStateIs("ready")
+                .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+
+        DeploymentOutcome outcome = singleRouterPlan().execute();
+
+        assertTrue(outcome.isFullySuccessful(),
+                () -> "the waiter should resolve once the second poll reports PROVISIONED: " + outcome.getErrors());
+        ProvisionedResource router = outcome.getResources().get(0);
+        assertEquals("PROVISIONED", router.getStatus(),
+                "the recorded status is the state the waiter finally observed");
+        // At least two polls: the PROVISIONING fetch and the PROVISIONED one.
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_UUID)));
+    }
+
+    @Test
+    @DisplayName("execute() records a recoverable error when the waiter hits a terminal failure state")
+    void executeWaiterRecordsTerminalFailure() {
+        // The router create succeeds but every poll reports NOT_PROVISIONED — one of the waiter's
+        // terminal failure states — so awaitState() gives up immediately (no 5-minute wait) and
+        // execute() records a recoverable error while keeping the resource with its interim status.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(created("/json/fabric/cloud_router_provisioning_response.json")));
+        stubSingleton(wireMock, "/fabric/v4/routers/[^/]+",
+                "/json/fabric/cloud_router_not_provisioned_response.json");
+
+        DeploymentOutcome outcome = singleRouterPlan().execute();
+
+        assertFalse(outcome.isFullySuccessful());
+        ProvisioningError error = outcome.getErrors().stream()
+                .filter(e -> e.getResourceType().equals("CloudRouter"))
+                .findFirst().orElseThrow();
+        assertTrue(error.isRecoverable(), "a state-waiter failure is retryable");
+        assertTrue(error.getReason().contains("did not reach PROVISIONED"), error.getReason());
+
+        // The resource is still recorded (with the interim status), so rollback can find it.
+        ProvisionedResource router = outcome.getResources().get(0);
+        assertEquals(ROUTER_UUID, router.getUuid());
+        assertEquals("PROVISIONING", router.getStatus(),
+                "a failed wait must not assert a PROVISIONED state that never held");
+
+        // failWhen fires on the very first fetch: exactly one poll, no timeout burn.
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_UUID)));
+    }
+
+    /** A hand-built single-router plan so waiter tests poll exactly one resource. */
+    private DeploymentPlan singleRouterPlan() {
+        return DeploymentPlan.builder()
+                .cloudRouters(List.of(PlannedCloudRouter.builder()
+                        .metroId(DC).name("FCR-DC")
+                        .packageCode(GatewayPackageCode.STANDARD)
+                        .build()))
+                .providerConnections(List.of())
+                .backboneLinks(List.of())
+                .routingProtocols(List.of())
+                .valid(true)
+                .validationErrors(List.of())
+                .fabric(fabric)
+                .build();
+    }
+
     // ── dryRun() ──
 
     @Test

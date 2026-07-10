@@ -1,0 +1,23 @@
+{
+  "uuid": "acl-1111-2222-3333-444455556666",
+  "name": "renamed-acl-template",
+  "description": "Refreshed ACL template description",
+  "inboundRules": [
+    {
+      "subnet": "10.0.0.0/24",
+      "protocol": "TCP",
+      "srcPort": "any",
+      "dstPort": "22",
+      "description": "Allow SSH"
+    }
+  ],
+  "virtualDeviceDetails": [
+    {
+      "name": "Test Device",
+      "uuid": "ce7ef79e-31e7-4769-be5b-e192496f48ab",
+      "interfaceType": "WAN",
+      "aclStatus": "PROVISIONED"
+    }
+  ],
+  "createdDateTime": "2020-10-03T19:41:17Z"
+}

@@ -319,4 +319,104 @@ class FabricServiceProfilesWireMockTest extends WireMockTestBase {
                     () -> fabric.serviceProfiles().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String SP_ID = "f6a7b8c9-d0e1-2345-fabc-567890123def";
+        private static final String URL = "/fabric/v4/serviceProfiles/" + SP_ID;
+
+        @Test
+        @DisplayName("re-GETs /serviceProfiles/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("sp-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("sp-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json")
+                            .replace("AWS Direct Connect - Production", "AWS Direct Connect - Renamed"))));
+
+            ServiceProfile profile = fabric.serviceProfiles().getByUuid(SP_ID);
+            assertEquals("AWS Direct Connect - Production", profile.getName());
+
+            profile.refresh();
+
+            assertEquals("AWS Direct Connect - Renamed", profile.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String SP_ID = "f6a7b8c9-d0e1-2345-fabc-567890123def";
+        private static final String URL = "/fabric/v4/serviceProfiles/" + SP_ID;
+
+        @Test
+        @DisplayName("DELETEs /serviceProfiles/{uuid} and returns true")
+        void deletesServiceProfile() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
+
+            ServiceProfile profile = fabric.serviceProfiles().getByUuid(SP_ID);
+            Boolean deleted = profile.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_PROFILE" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_PROFILE" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/serviceProfiles/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/serviceProfiles/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<ServiceProfile> profiles = fabric.serviceProfiles().search();
+            assertEquals(1, profiles.size());
+            assertTrue(profiles.hasNextPage());
+
+            profiles.loadAll();
+
+            assertEquals(2, profiles.size());
+            assertEquals("PAGE1_PROFILE", profiles.get(0).getUuid());
+            assertEquals("PAGE2_PROFILE", profiles.get(1).getUuid());
+            assertFalse(profiles.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/serviceProfiles/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

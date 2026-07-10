@@ -87,4 +87,44 @@ class FabricPortStatisticsWireMockTest extends WireMockTestBase {
         assertThrows(EquinixServerException.class,
                 () -> fabric.ports().getStatistics(UUID, START, END));
     }
+
+    @Test
+    @DisplayName("wrapper refresh() re-GETs the same stats window and updates the wrapper in place")
+    void refreshReloadsInPlace() {
+        String url = "/fabric/v4/ports/" + UUID + "/stats";
+        // The wrapper's refresh() targets /ports/{this.getUuid()}/stats, so the payload must
+        // carry the (legacy top-level) uuid — the shipped fixture omits it, hence inline bodies.
+        String first = "{"
+                + "\"uuid\":\"" + UUID + "\","
+                + "\"startDateTime\":\"2026-06-01T00:00:00.000Z\","
+                + "\"endDateTime\":\"2026-06-02T00:00:00.000Z\","
+                + "\"viewPoint\":\"aSide\","
+                + "\"bandwidthUtilization\":{\"unit\":\"Mbps\",\"inbound\":{\"max\":8200.0},\"outbound\":{\"max\":7600.25}}"
+                + "}";
+        String second = first.replace("\"max\":8200.0", "\"max\":9100.0");
+
+        wireMock.stubFor(get(urlPathEqualTo(url))
+                .inScenario("port-stats-refresh")
+                .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                .willReturn(okJson(first))
+                .willSetStateTo("changed"));
+        wireMock.stubFor(get(urlPathEqualTo(url))
+                .inScenario("port-stats-refresh")
+                .whenScenarioStateIs("changed")
+                .willReturn(okJson(second)));
+
+        PortStatistic stats = fabric.ports().getStatistics(UUID, START, END);
+        assertEquals(8200.0f, stats.getBandwidthUtilization().getInbound().getMax());
+
+        // refresh() lives on the wrapper only — the PortStatistic interface does not declare it.
+        PortStatistic refreshed = stats.refresh();
+
+        assertSame(stats, refreshed, "refresh() returns the same live wrapper");
+        assertEquals(9100.0f, stats.getBandwidthUtilization().getInbound().getMax(),
+                "refresh() must swap the wrapper's backing state in place");
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo(url)));
+        wireMock.verify(getRequestedFor(urlPathEqualTo(url))
+                .withQueryParam("startDateTime", matching(".+"))
+                .withQueryParam("endDateTime", matching(".+")));
+    }
 }

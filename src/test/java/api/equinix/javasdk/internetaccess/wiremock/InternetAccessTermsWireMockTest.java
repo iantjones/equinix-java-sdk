@@ -2,6 +2,7 @@ package api.equinix.javasdk.internetaccess.wiremock;
 
 import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixServiceException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.enums.TermsProduct;
 import api.equinix.javasdk.internetaccess.enums.TermsType;
@@ -12,13 +13,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed tests for the Equinix Internet Access (EIA) v1 terms-and-conditions lookup
@@ -120,6 +126,52 @@ class InternetAccessTermsWireMockTest extends WireMockTestBase {
                     .withQueryParam("connectivitySource.type", equalTo("COLO"))
                     .withQueryParam("type", absent())
                     .withQueryParam("language", absent()));
+        }
+    }
+
+    @Nested
+    class PagingAndErrors {
+
+        @Test
+        void list_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            // First request always carries offset=0&limit=100 (PAGE_LIMIT default); page 2 must
+            // advance the offset from the SERVER-reported pagination, re-sending the filters.
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/terms"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 0, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"text\": \"PAGE1_TERMS\" } ] }")));
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/terms"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 100, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"text\": \"PAGE2_TERMS\" } ] }")));
+
+            PaginatedList<TermsAndConditions> terms =
+                    internetAccess.termsAndConditions().list("100013200", "WA1", TermsProduct.IA_C);
+            assertEquals(1, terms.size());
+            assertTrue(terms.hasNextPage());
+
+            terms.loadAll();
+
+            assertEquals(2, terms.size());
+            assertEquals("PAGE1_TERMS", terms.get(0).getText());
+            assertEquals("PAGE2_TERMS", terms.get(1).getText());
+            assertFalse(terms.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/internetAccess/v1/terms"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withQueryParam("account.accountNumber", equalTo("100013200"))
+                    .withQueryParam("location.ibx", equalTo("WA1"))
+                    .withQueryParam("product", equalTo("IA_C")));
+        }
+
+        @Test
+        void list_badRequest400_throwsEquinixServiceException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/terms",
+                    400, "[{\"errorCode\":\"EQ-3000400\",\"errorMessage\":\"Invalid product\"}]");
+
+            assertThrows(EquinixServiceException.class,
+                    () -> internetAccess.termsAndConditions().list("100013200", "WA1", TermsProduct.IA_C));
         }
     }
 }

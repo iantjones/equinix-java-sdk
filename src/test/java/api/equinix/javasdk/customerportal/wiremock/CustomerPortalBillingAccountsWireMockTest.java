@@ -105,6 +105,55 @@ class CustomerPortalBillingAccountsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("Multi-page summaries paging")
+    class Paging {
+
+        // summaries() is a plain paginated GET: dispatch stamps offset=0/limit=100 onto the
+        // first request, and page 2 is requested by advancing the offset/limit QUERY PARAMETERS
+        // from the SERVER-reported pagination.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "accountNumber": "PAGE1_ACCT" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "accountNumber": "PAGE2_ACCT" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset query param")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<BillingAccount> accounts = customerPortal.billingAccounts().summaries();
+            assertEquals(1, accounts.size());
+            assertTrue(accounts.hasNextPage());
+
+            accounts.loadAll();
+
+            assertEquals(2, accounts.size());
+            assertEquals("PAGE1_ACCT", accounts.get(0).getAccountNumber());
+            assertEquals("PAGE2_ACCT", accounts.get(1).getAccountNumber());
+            assertFalse(accounts.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+    }
+
+    @Nested
     @DisplayName("getByAccountNumber()")
     class GetByAccountNumber {
 

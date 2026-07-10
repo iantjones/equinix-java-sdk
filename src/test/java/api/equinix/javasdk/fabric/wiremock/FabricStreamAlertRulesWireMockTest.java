@@ -5,6 +5,7 @@ import api.equinix.javasdk.fabric.enums.DetectionMethodOperand;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.fabric.model.StreamAlertRule;
 import org.junit.jupiter.api.*;
@@ -154,6 +155,87 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(
                     "/fabric/v4/streams/" + STREAM_ID + "/alertRules/" + RULE_UUID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("update(streamId) / save()")
+    class Update {
+
+        private static final String RULE_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/streams/" + STREAM_ID + "/alertRules/" + RULE_UUID;
+
+        @Test
+        @DisplayName("PATCHes the full AlertRulePutRequest body as application/json")
+        void savePatchesRule() {
+            stubSingleton(wireMock, URL, "/json/fabric/stream_alert_rule_response.json");
+            wireMock.stubFor(patch(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_alert_rule_response.json"))));
+
+            StreamAlertRule rule = fabric.streamAlertRules().getByUuid(STREAM_ID, RULE_UUID);
+            StreamAlertRule updated = rule.update(STREAM_ID)
+                    .name("Renamed-Alert")
+                    .enabled(false)
+                    .detectionMethod(Map.of("type", "STATIC", "warningThreshold", "9000000000"))
+                    .save();
+
+            assertNotNull(updated);
+            wireMock.verify(patchRequestedFor(urlPathEqualTo(URL))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("METRIC_ALERT")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("Renamed-Alert")))
+                    .withRequestBody(matchingJsonPath("$.enabled", equalTo("false")))
+                    .withRequestBody(matchingJsonPath("$.detectionMethod.type", equalTo("STATIC")))
+                    .withRequestBody(matchingJsonPath("$.detectionMethod.warningThreshold",
+                            equalTo("9000000000"))));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete(streamId)")
+    class WrapperDelete {
+
+        private static final String RULE_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/streams/" + STREAM_ID + "/alertRules/" + RULE_UUID;
+
+        @Test
+        @DisplayName("DELETEs /streams/{streamId}/alertRules/{uuid} and returns true")
+        void deletesAlertRule() {
+            stubSingleton(wireMock, URL, "/json/fabric/stream_alert_rule_response.json");
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_alert_rule_response.json"))));
+
+            StreamAlertRule rule = fabric.streamAlertRules().getByUuid(STREAM_ID, RULE_UUID);
+            Boolean deleted = rule.delete(STREAM_ID);
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/fabric/v4/streams/.*/alertRules/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Alert rule not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> fabric.streamAlertRules().getByUuid(STREAM_ID, "invalid-uuid"));
+        }
+
+        @Test
+        @DisplayName("500 throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/fabric/v4/streams/.*/alertRules/.*",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> fabric.streamAlertRules().getByUuid(STREAM_ID, "test-uuid"));
         }
     }
 }

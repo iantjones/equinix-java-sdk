@@ -46,4 +46,11 @@ public interface PortStatistic {
     Integer getBandwidth();
 
     PortStat getStats();
+
+    /**
+     * Re-fetches these statistics from the API and updates this instance in place.
+     *
+     * @return these statistics, refreshed
+     */
+    PortStatistic refresh();
 }

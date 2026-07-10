@@ -1,0 +1,29 @@
+{
+  "skus": [
+    {
+      "skuId": "SKU-INET-AMER",
+      "description": "Network Internet Egress from Americas to Americas",
+      "category": {
+        "serviceDisplayName": "Compute Engine",
+        "resourceFamily": "Network",
+        "resourceGroup": "InternetEgress",
+        "usageType": "OnDemand"
+      },
+      "serviceRegions": ["us-central1"],
+      "pricingInfo": [
+        {
+          "summary": "",
+          "pricingExpression": {
+            "usageUnit": "GiBy",
+            "usageUnitDescription": "gibibyte",
+            "tieredRates": [
+              { "startUsageAmount": 0, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 0 } },
+              { "startUsageAmount": 1, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 120000000 } }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "nextPageToken": "gcp-page-2-token"
+}

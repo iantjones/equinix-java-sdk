@@ -1,0 +1,28 @@
+{
+  "skus": [
+    {
+      "skuId": "SKU-IC-AMER",
+      "description": "Network Interconnect Egress from Americas",
+      "category": {
+        "serviceDisplayName": "Compute Engine",
+        "resourceFamily": "Network",
+        "resourceGroup": "InterconnectEgress",
+        "usageType": "OnDemand"
+      },
+      "serviceRegions": ["us-central1"],
+      "pricingInfo": [
+        {
+          "summary": "",
+          "pricingExpression": {
+            "usageUnit": "GiBy",
+            "usageUnitDescription": "gibibyte",
+            "tieredRates": [
+              { "startUsageAmount": 0, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 20000000 } }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "nextPageToken": ""
+}

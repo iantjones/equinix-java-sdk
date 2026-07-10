@@ -86,6 +86,22 @@ public class EquinixRequest<T> {
     private JavaType javaType;
     private FilterProvider filters;
 
+    /**
+     * Optional page-item mapper for <em>dual-shape</em> paginated requests: sub-resource list
+     * operations whose element type differs from the owning client's own JSON model (e.g. the
+     * accounts client paging account <em>agreements</em>). The producer maps page 1 itself, but
+     * pages 2+ are fetched through the owning client's shared {@code nextPage(...)}, which by
+     * default re-maps every item with the client's class-level {@code wrap()} — typed for the
+     * client's own JSON model, so a differently-typed element would throw
+     * {@link ClassCastException}. Producers of such requests set this mapper (mirroring their
+     * page-1 mapping — often the identity, when the JSON model implements the public interface
+     * directly) and the shared paging pipeline applies it instead of {@code wrap()}.
+     *
+     * <p>Client-side carrier only: declared {@code transient} to make explicit that it plays no
+     * part in any serialized form of the request — it never travels on the wire.</p>
+     */
+    private transient java.util.function.UnaryOperator<Object> pageItemMapper;
+
     protected Map<String, List<String>> queryParameters = new HashMap<>();
 
     @Setter(AccessLevel.NONE)

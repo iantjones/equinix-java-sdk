@@ -304,4 +304,28 @@ class FabricRouteFilterRulesWireMockTest extends WireMockTestBase {
                     () -> fabric.routeFilterRules().getByUuid(ROUTE_FILTER_ID, RULE_UUID));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper delete(routeFilterId)")
+    class WrapperDelete {
+
+        private static final String URL =
+                "/fabric/v4/routeFilters/" + ROUTE_FILTER_ID + "/routeFilterRules/" + RULE_UUID;
+
+        @Test
+        @DisplayName("DELETEs /routeFilters/{rfId}/routeFilterRules/{uuid} and returns true")
+        void deletesRule() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_filter_rule_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/route_filter_rule_response.json"))));
+
+            RouteFilterRule rule = fabric.routeFilterRules().getByUuid(ROUTE_FILTER_ID, RULE_UUID);
+            Boolean deleted = rule.delete(ROUTE_FILTER_ID);
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
 }

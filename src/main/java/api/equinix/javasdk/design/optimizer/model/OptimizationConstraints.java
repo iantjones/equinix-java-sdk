@@ -25,5 +25,4 @@ public class OptimizationConstraints {
     RedundancyTier minimumRedundancy;
     Double maxLatencyMs;
     Integer maxMetroCount;
-    Integer minMetroCount;
 }

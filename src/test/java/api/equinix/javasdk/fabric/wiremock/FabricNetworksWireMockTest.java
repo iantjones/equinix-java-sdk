@@ -364,4 +364,104 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
                     "/fabric/v4/networks/c3d4e5f6-a7b8-9012-cdef-234567890abc/connections")));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String NETWORK_ID = "c3d4e5f6-a7b8-9012-cdef-234567890abc";
+        private static final String URL = "/fabric/v4/networks/" + NETWORK_ID;
+
+        @Test
+        @DisplayName("re-GETs /networks/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("network-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("network-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json")
+                            .replace("Production-EVPLAN-Network", "Renamed-EVPLAN-Network"))));
+
+            Network network = fabric.networks().getByUuid(NETWORK_ID);
+            assertEquals("Production-EVPLAN-Network", network.getName());
+
+            network.refresh();
+
+            assertEquals("Renamed-EVPLAN-Network", network.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String NETWORK_ID = "c3d4e5f6-a7b8-9012-cdef-234567890abc";
+        private static final String URL = "/fabric/v4/networks/" + NETWORK_ID;
+
+        @Test
+        @DisplayName("DELETEs /networks/{uuid} and returns true")
+        void deletesNetwork() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/network_response.json"))));
+
+            Network network = fabric.networks().getByUuid(NETWORK_ID);
+            Boolean deleted = network.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_NETWORK" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_NETWORK" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/networks/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/networks/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<Network> networks = fabric.networks().search();
+            assertEquals(1, networks.size());
+            assertTrue(networks.hasNextPage());
+
+            networks.loadAll();
+
+            assertEquals(2, networks.size());
+            assertEquals("PAGE1_NETWORK", networks.get(0).getUuid());
+            assertEquals("PAGE2_NETWORK", networks.get(1).getUuid());
+            assertFalse(networks.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/networks/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

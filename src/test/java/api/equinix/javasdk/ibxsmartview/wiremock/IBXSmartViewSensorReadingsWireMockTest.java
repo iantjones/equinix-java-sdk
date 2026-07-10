@@ -78,6 +78,36 @@ class IBXSmartViewSensorReadingsWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("list().loadAll() pages sensor readings across two pages via the server-reported window")
+    void loadAllPagesReadings() {
+        wireMock.stubFor(get(urlPathEqualTo("/smartview/v2/environmental/ibxs/SV5/sensors/readings"))
+                .withQueryParam("offset", equalTo("0"))
+                .willReturn(okJson(loadFixture("/json/ibxsmartview/sensor_readings_page1.json"))));
+        wireMock.stubFor(get(urlPathEqualTo("/smartview/v2/environmental/ibxs/SV5/sensors/readings"))
+                .withQueryParam("offset", equalTo("2"))
+                .willReturn(okJson(loadFixture("/json/ibxsmartview/sensor_readings_page2.json"))));
+
+        PaginatedList<SensorReading> readings = ibxSmartView.environmentals().list(IBX, null, null, 0, 2);
+        assertTrue(readings.hasNextPage());
+        assertEquals(2, readings.size());
+
+        readings.loadAll();
+
+        assertFalse(readings.hasNextPage());
+        assertEquals(3, readings.size());
+        assertEquals("SENSOR-SV5-001", readings.get(0).getSensorId());
+        assertEquals("SENSOR-SV5-002", readings.get(1).getSensorId());
+        assertEquals("SENSOR-SV5-003", readings.get(2).getSensorId());
+
+        // The page-2 request must advance from the SERVER-reported window (offset 0 + limit 2),
+        // not from anything caller-side.
+        wireMock.verify(getRequestedFor(
+                urlPathEqualTo("/smartview/v2/environmental/ibxs/SV5/sensors/readings"))
+                .withQueryParam("offset", equalTo("2"))
+                .withQueryParam("limit", equalTo("2")));
+    }
+
+    @Test
     @DisplayName("500 on list throws EquinixServerException")
     void serverError() {
         stubErrorInline(wireMock, "/smartview/v2/environmental/ibxs/.*/sensors/readings",

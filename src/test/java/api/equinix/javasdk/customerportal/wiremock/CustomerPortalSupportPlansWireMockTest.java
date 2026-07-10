@@ -2,6 +2,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.SupportPlan;
 import org.junit.jupiter.api.*;
@@ -159,6 +160,80 @@ class CustomerPortalSupportPlansWireMockTest extends WireMockTestBase {
                     .withQueryParam("accountNumbers", absent())
                     .withQueryParam("ibxs", absent())
                     .withQueryParam("planIds", absent()));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        // ListSupportPlans is a plain paginated GET: dispatch stamps offset=0/limit=100 onto the
+        // first request, and page 2 is requested by advancing the offset/limit QUERY PARAMETERS
+        // from the SERVER-reported pagination.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "id": "PAGE1_PLAN" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "id": "PAGE2_PLAN" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset query param")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<SupportPlan> plans = customerPortal.supportPlans().list();
+            assertEquals(1, plans.size());
+            assertTrue(plans.hasNextPage());
+
+            plans.loadAll();
+
+            assertEquals(2, plans.size());
+            assertEquals("PAGE1_PLAN", plans.get(0).getId());
+            assertEquals("PAGE2_PLAN", plans.get(1).getId());
+            assertFalse(plans.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on list() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, LIST_PATH,
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.supportPlans().list());
+        }
+
+        @Test
+        @DisplayName("500 on list() throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, LIST_PATH,
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.supportPlans().list());
         }
     }
 }

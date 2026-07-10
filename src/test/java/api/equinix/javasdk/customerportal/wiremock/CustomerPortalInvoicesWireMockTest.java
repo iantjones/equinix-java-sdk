@@ -158,4 +158,128 @@ class CustomerPortalInvoicesWireMockTest extends WireMockTestBase {
                     .withQueryParam("transactionIds", equalTo("INV-2024-00198735")));
         }
     }
+
+    @Nested
+    @DisplayName("Multi-page paging")
+    class Paging {
+
+        // Both invoice reads are plain paginated GETs: dispatch stamps offset=0/limit=100 onto
+        // the first request, and page 2 is requested by advancing the offset/limit QUERY
+        // PARAMETERS from the SERVER-reported pagination.
+        private static final String SUMMARIES_PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "transactionId": "PAGE1_INV" } ]
+                }
+                """;
+
+        private static final String SUMMARIES_PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "transactionId": "PAGE2_INV" } ]
+                }
+                """;
+
+        private static final String DETAILS_PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "transactionId": "PAGE1_DET" } ]
+                }
+                """;
+
+        private static final String DETAILS_PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "transactionId": "PAGE2_DET" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("summaries().loadAll() fetches page 2 by advancing the offset query param")
+        void summariesLoadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/v2/invoices"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(SUMMARIES_PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/v2/invoices"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(SUMMARIES_PAGE_2)));
+
+            PaginatedList<InvoiceSummary> summaries = customerPortal.invoices().summaries();
+            assertEquals(1, summaries.size());
+            assertTrue(summaries.hasNextPage());
+
+            summaries.loadAll();
+
+            assertEquals(2, summaries.size());
+            assertEquals("PAGE1_INV", summaries.get(0).getTransactionId());
+            assertEquals("PAGE2_INV", summaries.get(1).getTransactionId());
+            assertFalse(summaries.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/v2/invoices"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        @DisplayName("details().loadAll() fetches page 2 by advancing the offset query param")
+        void detailsLoadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/v2/invoices/details"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(DETAILS_PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/v2/invoices/details"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(DETAILS_PAGE_2)));
+
+            PaginatedList<InvoiceDetail> details = customerPortal.invoices().details();
+            assertEquals(1, details.size());
+            assertTrue(details.hasNextPage());
+
+            details.loadAll();
+
+            assertEquals(2, details.size());
+            assertEquals("PAGE1_DET", details.get(0).getTransactionId());
+            assertEquals("PAGE2_DET", details.get(1).getTransactionId());
+            assertFalse(details.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/v2/invoices/details"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on summaries() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/v2/invoices",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.invoices().summaries());
+        }
+
+        @Test
+        @DisplayName("404 on summaries() throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v2/invoices",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.invoices().summaries());
+        }
+
+        @Test
+        @DisplayName("500 on details() throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v2/invoices/details",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.invoices().details());
+        }
+    }
 }

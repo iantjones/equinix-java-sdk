@@ -1,0 +1,22 @@
+{
+  "pagination": {
+    "offset": 2,
+    "limit": 2,
+    "total": 3
+  },
+  "data": [
+    {
+      "sensorId": "SENSOR-SV5-003",
+      "zoneId": "ZONE-C",
+      "ibx": "SV5",
+      "temperature": {
+        "value": 21.1,
+        "unit": "CELSIUS"
+      },
+      "humidity": {
+        "value": 51.7,
+        "unit": "PERCENT"
+      }
+    }
+  ]
+}

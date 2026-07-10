@@ -333,4 +333,84 @@ class FabricPortsWireMockTest extends WireMockTestBase {
                     () -> fabric.ports().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String PORT_ID = "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee";
+        private static final String URL = "/fabric/v4/ports/" + PORT_ID;
+
+        @Test
+        @DisplayName("re-GETs /ports/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("port-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("port-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json")
+                            .replace("testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154", "Renamed-Port"))));
+
+            Port port = fabric.ports().getByUuid(PORT_ID);
+            assertEquals("testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154", port.getName());
+
+            // refresh() lives on the wrapper only — the Port interface does not declare it
+            // (unlike Connection/CloudRouter/...), so the public path needs a cast.
+            Port refreshed = port.refresh();
+
+            assertSame(port, refreshed, "refresh() returns the same live wrapper");
+            assertEquals("Renamed-Port", port.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_PORT" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_PORT" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-GETs /ports with the offset query param advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            // Page 1: catch-all, registered first (WireMock: the later, more specific stub wins).
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports"))
+                    .willReturn(okJson(PAGE_1)));
+            // Page 2: matched by the advanced offset query parameter.
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<Port> ports = fabric.ports().list();
+            assertEquals(1, ports.size());
+            assertTrue(ports.hasNextPage());
+
+            ports.loadAll();
+
+            assertEquals(2, ports.size());
+            assertEquals("PAGE1_PORT", ports.get(0).getUuid());
+            assertEquals("PAGE2_PORT", ports.get(1).getUuid());
+            assertFalse(ports.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/ports"))
+                    .withQueryParam("offset", equalTo("100")));
+        }
+    }
 }

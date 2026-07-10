@@ -529,4 +529,103 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
                     () -> fabric.connections().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String CONN_ID = "3a58dd05-f46d-4b1d-a154-2e85c396ea85";
+        private static final String URL = "/fabric/v4/connections/" + CONN_ID;
+
+        @Test
+        @DisplayName("re-GETs /connections/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("connection-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("connection-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json")
+                            .replace("My-EVPL-Connection", "My-EVPL-Connection-Renamed"))));
+
+            Connection connection = fabric.connections().getByUuid(CONN_ID);
+            assertEquals("My-EVPL-Connection", connection.getName());
+
+            connection.refresh();
+
+            assertEquals("My-EVPL-Connection-Renamed", connection.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String CONN_ID = "3a58dd05-f46d-4b1d-a154-2e85c396ea85";
+
+        @Test
+        @DisplayName("DELETEs /connections/{uuid} and returns true")
+        void deletesConnection() {
+            stubSingleton(wireMock, "/fabric/v4/connections/" + CONN_ID,
+                    "/json/fabric/connection_response.json");
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo("/fabric/v4/connections/" + CONN_ID))
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+            Connection connection = fabric.connections().getByUuid(CONN_ID);
+            Boolean deleted = connection.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/fabric/v4/connections/" + CONN_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_CONNECTION" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_CONNECTION" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<Connection> connections = fabric.connections().search();
+            assertEquals(1, connections.size());
+            assertTrue(connections.hasNextPage());
+
+            connections.loadAll();
+
+            assertEquals(2, connections.size());
+            assertEquals("PAGE1_CONNECTION", connections.get(0).getUuid());
+            assertEquals("PAGE2_CONNECTION", connections.get(1).getUuid());
+            assertFalse(connections.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

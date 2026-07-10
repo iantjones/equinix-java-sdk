@@ -201,4 +201,28 @@ class FabricStreamSubscriptionsWireMockTest extends WireMockTestBase {
                     () -> fabric.streamSubscriptions().getByUuid(STREAM_ID, "test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper delete(streamId)")
+    class WrapperDelete {
+
+        private static final String URL =
+                "/fabric/v4/streams/" + STREAM_ID + "/subscriptions/" + SUBSCRIPTION_ID;
+
+        @Test
+        @DisplayName("DELETEs /streams/{streamId}/subscriptions/{uuid} and returns true")
+        void deletesSubscription() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_subscription_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/stream_subscription_response.json"))));
+
+            StreamSubscription subscription = fabric.streamSubscriptions().getByUuid(STREAM_ID, SUBSCRIPTION_ID);
+            Boolean deleted = subscription.delete(STREAM_ID);
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
 }

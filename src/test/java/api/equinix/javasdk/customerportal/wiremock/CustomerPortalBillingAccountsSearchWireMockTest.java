@@ -2,6 +2,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.BillingAccountV2;
 import api.equinix.javasdk.customerportal.model.json.creators.BillingAccountSearchRequest;
@@ -208,6 +209,42 @@ class CustomerPortalBillingAccountsSearchWireMockTest extends WireMockTestBase {
             assertEquals("123456", account.getAccountNumber());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo(BY_ID_PATH)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 on getByAccountId() throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, ROOT + "/[^/]+",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Account not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.billingAccountsSearch().getByAccountId("missing-acct"));
+        }
+
+        @Test
+        @DisplayName("401 on getByAccountNumber() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, ROOT + "/accountNumber/.*",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.billingAccountsSearch().getByAccountNumber(ACCOUNT_NUMBER));
+        }
+
+        @Test
+        @DisplayName("500 on search() (POST) throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, SEARCH_PATH,
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.billingAccountsSearch()
+                            .search(BillingAccountSearchRequest.builder().build()));
         }
     }
 }

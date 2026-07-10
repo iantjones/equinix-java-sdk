@@ -307,6 +307,36 @@ class McpWireMockTest extends WireMockTestBase {
             // close() is the terminal action on the client; it must not throw.
             assertDoesNotThrow(client::close);
         }
+
+        @Test
+        @DisplayName("a tool RESULT carrying isError=true throws McpException with the tool's error text")
+        void toolLevelErrorResultThrowsMcpException() throws Exception {
+            // Distinct from the JSON-RPC error-object path (testJsonRpcError): here the transport
+            // succeeds (HTTP 200, no error object) but the TOOL reports failure via the MCP
+            // result's isError flag, which callTool must map to an McpException.
+            resetStubs();
+            Mcp client = newInitializedClient(0);
+            try {
+                wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                        .willReturn(okJson(loadFixture("/json/mcp/tool_error_result.json"))));
+
+                McpException ex = assertThrows(McpException.class, () ->
+                        client.callTool("validate_connection", Map.of("bandwidth", 99999)));
+
+                assertTrue(ex.getMessage().contains("validate_connection"),
+                        "the exception names the failing tool: " + ex.getMessage());
+                assertTrue(ex.getMessage().contains("returned an error"), ex.getMessage());
+                assertTrue(ex.getMessage().contains("bandwidth 99999 Mbps exceeds the maximum"),
+                        "the tool's text content is surfaced: " + ex.getMessage());
+
+                // Exactly one POST: a tool-level error is terminal, never retried like 429/5xx.
+                wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection"))));
+            } finally {
+                client.close();
+            }
+        }
     }
 
     @Nested

@@ -2,6 +2,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.model.ConnectionService;
 import api.equinix.javasdk.customerportal.model.LookupLocation;
 import api.equinix.javasdk.customerportal.model.PatchPanel;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -156,6 +158,41 @@ class CustomerPortalLookupsWireMockTest extends WireMockTestBase {
                     services.get(0).getName());
             wireMock.verify(getRequestedFor(urlPathEqualTo("/colocations/v2/connectionServices"))
                     .withQueryParam("ibx", equalTo("LD5")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 on getPatchPanelById() throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/colocations/v2/patchPanels/.*",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Patch panel not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.lookups().getPatchPanelById("missing-panel"));
+        }
+
+        @Test
+        @DisplayName("401 on listLocations() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/colocations/v2/locations",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.lookups().listLocations("CROSS_CONNECT"));
+        }
+
+        @Test
+        @DisplayName("500 on listProviders() throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/colocations/v2/providers",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.lookups().listProviders("cage-1", "10000001"));
         }
     }
 }

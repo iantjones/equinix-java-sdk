@@ -162,6 +162,40 @@ class SavingsCalculatorTest {
     }
 
     @Test
+    void termSelectsTheTermScopedConnectionRate() {
+        // A card with distinct 12- and 36-month rates for the same connection: the builder's
+        // term() lever must drive which rate the engine resolves.
+        CustomRateCard termed = CustomRateCard.builder()
+                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
+                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
+                .connectionRate(ConnectionType.EVPL_VC, 10_000, MetroCode.DC,
+                        api.equinix.javasdk.design.value.ratecard.Term.MONTH_12, new BigDecimal("2000"))
+                .connectionRate(ConnectionType.EVPL_VC, 10_000, MetroCode.DC,
+                        api.equinix.javasdk.design.value.ratecard.Term.MONTH_36, new BigDecimal("1500"))
+                .build();
+
+        SavingsEstimate longTerm = SavingsCalculator.builder(null)
+                .egress(50, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .term(api.equinix.javasdk.design.value.ratecard.Term.MONTH_36)
+                .rateCard(termed)
+                .calculate();
+        assertEquals(0, new BigDecimal("1500").compareTo(longTerm.getEquinixMonthlyCost()),
+                "term(MONTH_36) must resolve the 36-month rate");
+        assertEquals(0, new BigDecimal("2000").compareTo(longTerm.getNetMonthlySavings()), "3500 − 1500");
+
+        SavingsEstimate defaultTerm = SavingsCalculator.builder(null)
+                .egress(50, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .rateCard(termed)
+                .calculate();
+        assertEquals(0, new BigDecimal("2000").compareTo(defaultTerm.getEquinixMonthlyCost()),
+                "the default term is MONTH_12, so the 12-month rate applies");
+    }
+
+    @Test
     void rejectsNegativeEgress() {
         assertThrows(IllegalArgumentException.class,
                 () -> SavingsCalculator.builder(null).egress(-5, DataUnit.TERABYTE));

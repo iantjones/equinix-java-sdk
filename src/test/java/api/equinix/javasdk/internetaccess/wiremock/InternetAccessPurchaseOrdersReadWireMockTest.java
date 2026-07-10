@@ -18,6 +18,7 @@ package api.equinix.javasdk.internetaccess.wiremock;
 
 import api.equinix.javasdk.InternetAccess;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixRateLimitException;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.enums.PurchaseOrderCategory;
 import api.equinix.javasdk.internetaccess.enums.PurchaseOrderStatus;
@@ -29,13 +30,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static api.equinix.javasdk.core.ResponseStubs.stubPaginatedGet;
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * WireMock-backed tests for the Equinix Internet Access (EIA) v1 PurchaseOrders read surface — the
@@ -119,6 +126,44 @@ class InternetAccessPurchaseOrdersReadWireMockTest extends WireMockTestBase {
             wireMock.verify(getRequestedFor(urlPathEqualTo(LIST_PATH))
                     .withQueryParam("locations.ibx", absent())
                     .withQueryParam("category", absent()));
+        }
+
+        @Test
+        void list_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            // First request always carries offset=0&limit=100 (PAGE_LIMIT default); page 2 must
+            // advance the offset from the SERVER-reported pagination.
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 0, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"number\": \"PAGE1_PO\" } ] }")));
+            wireMock.stubFor(get(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson("{ \"pagination\": { \"offset\": 100, \"limit\": 100, \"total\": 150 }, "
+                            + "\"data\": [ { \"number\": \"PAGE2_PO\" } ] }")));
+
+            PaginatedList<PurchaseOrder> orders = internetAccess.purchaseOrders().list("100013200");
+            assertEquals(1, orders.size());
+            assertTrue(orders.hasNextPage());
+
+            orders.loadAll();
+
+            assertEquals(2, orders.size());
+            assertEquals("PAGE1_PO", orders.get(0).getNumber());
+            assertEquals("PAGE2_PO", orders.get(1).getNumber());
+            assertFalse(orders.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo(LIST_PATH))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        void list_rateLimited429_throwsEquinixRateLimitException() {
+            stubErrorInline(wireMock, LIST_PATH,
+                    429, "[{\"errorCode\":\"EQ-3000429\",\"errorMessage\":\"Too many requests\"}]");
+
+            assertThrows(EquinixRateLimitException.class,
+                    () -> internetAccess.purchaseOrders().list("100013200"));
         }
     }
 }

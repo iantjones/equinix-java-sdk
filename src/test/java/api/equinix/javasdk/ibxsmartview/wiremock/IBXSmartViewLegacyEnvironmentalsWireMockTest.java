@@ -2,6 +2,8 @@ package api.equinix.javasdk.ibxsmartview.wiremock;
 
 import api.equinix.javasdk.IBXSmartView;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.EquinixNotFoundException;
+import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentData;
 import api.equinix.javasdk.ibxsmartview.model.EnvironmentDataForArray;
 import api.equinix.javasdk.ibxsmartview.model.TrendingEnvironmentData;
@@ -150,6 +152,69 @@ class IBXSmartViewLegacyEnvironmentalsWireMockTest extends WireMockTestBase {
                     .withQueryParam("interval", equalTo("hourly"))
                     .withQueryParam("fromDate", equalTo("2024-01-15T00:00:00Z"))
                     .withQueryParam("toDate", equalTo("2024-01-15T23:59:59Z")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error mapping")
+    class Errors {
+
+        static final String ERROR_404 =
+                "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"No environment data found\"}]";
+        static final String ERROR_500 =
+                "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]";
+
+        @Test
+        @DisplayName("404 on getCurrent throws EquinixNotFoundException")
+        void getCurrentNotFound() {
+            stubErrorInline(wireMock, "/environment/v1/current", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.legacyEnvironmentals()
+                            .getCurrent("123456", "SV5", "cabinet", "SV5:01:001100:0105"));
+        }
+
+        @Test
+        @DisplayName("500 on getCurrent throws EquinixServerException")
+        void getCurrentServerError() {
+            stubErrorInline(wireMock, "/environment/v1/current", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.legacyEnvironmentals()
+                            .getCurrent("123456", "SV5", "cabinet", "SV5:01:001100:0105"));
+        }
+
+        @Test
+        @DisplayName("500 on listCurrent throws EquinixServerException")
+        void listCurrentServerError() {
+            stubErrorInline(wireMock, "/environment/v1/listCurrent", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.legacyEnvironmentals().listCurrent("123456", "SV5", "cage"));
+        }
+
+        @Test
+        @DisplayName("404 on getTrending throws EquinixNotFoundException")
+        void getTrendingNotFound() {
+            stubErrorInline(wireMock, "/environment/v1/trending", 404, ERROR_404);
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> ibxSmartView.legacyEnvironmentals()
+                            .getTrending("123456", "SV5", "temperature", "cabinet",
+                                    "SV5:01:001100:0105", "hourly",
+                                    "2024-01-15T00:00:00Z", "2024-01-15T23:59:59Z"));
+        }
+
+        @Test
+        @DisplayName("500 on getTrending throws EquinixServerException")
+        void getTrendingServerError() {
+            stubErrorInline(wireMock, "/environment/v1/trending", 500, ERROR_500);
+
+            assertThrows(EquinixServerException.class,
+                    () -> ibxSmartView.legacyEnvironmentals()
+                            .getTrending("123456", "SV5", "temperature", "cabinet",
+                                    "SV5:01:001100:0105", "hourly",
+                                    "2024-01-15T00:00:00Z", "2024-01-15T23:59:59Z"));
         }
     }
 }

@@ -5,6 +5,7 @@ import api.equinix.javasdk.customerportal.enums.ReportScheduleType;
 import api.equinix.javasdk.customerportal.enums.ReportStatus;
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.customerportal.model.Report;
 import api.equinix.javasdk.customerportal.model.ScheduledReport;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -244,6 +246,50 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports")));
         }
+
+        // getReports() is a plain paginated GET: dispatch stamps offset=0/limit=100 onto the
+        // first request, and page 2 is requested by advancing the offset/limit QUERY PARAMETERS
+        // from the SERVER-reported pagination.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "reportId": "PAGE1_REPORT" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "reportId": "PAGE2_REPORT" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset query param")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/v1/reportCenter/reports"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<Report> reports = customerPortal.reports().getReports();
+            assertEquals(1, reports.size());
+            assertTrue(reports.hasNextPage());
+
+            reports.loadAll();
+
+            assertEquals(2, reports.size());
+            assertEquals("PAGE1_REPORT", reports.get(0).getReportId());
+            assertEquals("PAGE2_REPORT", reports.get(1).getReportId());
+            assertFalse(reports.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
     }
 
     @Nested
@@ -356,6 +402,51 @@ class CustomerPortalReportsWireMockTest extends WireMockTestBase {
             assertEquals(2, definition.getParameters().size());
 
             wireMock.verify(getRequestedFor(urlPathEqualTo("/v1/reportCenter/reports/definitions/" + reportName)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("404 on getReportById() throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v1/reportCenter/reports/[^/]+",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Report not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.reports().getReportById("missing-report"));
+        }
+
+        @Test
+        @DisplayName("401 on the destructive deleteReports() throws EquinixAuthenticationException")
+        void unauthorizedDelete() {
+            stubErrorInline(wireMock, "/v1/reportCenter/reports",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.reports().deleteReports(List.of("r1")));
+        }
+
+        @Test
+        @DisplayName("403 on the destructive deleteScheduledReports() throws EquinixAuthorizationException")
+        void forbiddenScheduledDelete() {
+            stubErrorInline(wireMock, "/v1/reportCenter/reports/scheduler",
+                    403, "[{\"errorCode\":\"ERR-403\",\"errorMessage\":\"Forbidden\"}]");
+
+            assertThrows(EquinixAuthorizationException.class,
+                    () -> customerPortal.reports().deleteScheduledReports(List.of("s1")));
+        }
+
+        @Test
+        @DisplayName("500 on getReports() throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v1/reportCenter/reports",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.reports().getReports());
         }
     }
 }

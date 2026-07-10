@@ -506,7 +506,7 @@ OptimizationResult result = fabric.optimizeMetros()
         .monthlyBudget(50_000, 150_000)             // USD range
         .redundancy(RedundancyTier.MULTI_REGION)    // metros across 2+ regions
         .compliance(ComplianceZone.EU_GDPR)         // at least one EU metro
-        .maxLatencyMs(100)                          // global latency ceiling
+        .maxLatencyMs(100)                          // hard filter: metros >100ms to any site are excluded
         .excludeMetro(MetroCode.MX)                 // exclude specific metros
         .maxMetros(5)
         .done()

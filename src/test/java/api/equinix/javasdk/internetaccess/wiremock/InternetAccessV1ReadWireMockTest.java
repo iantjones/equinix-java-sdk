@@ -30,15 +30,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import api.equinix.javasdk.core.exception.EquinixAuthenticationException;
+import api.equinix.javasdk.core.exception.EquinixAuthorizationException;
+import api.equinix.javasdk.core.exception.EquinixNotFoundException;
+import api.equinix.javasdk.core.exception.EquinixRateLimitException;
+
+import static api.equinix.javasdk.core.ResponseStubs.stubErrorInline;
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -71,6 +79,16 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
 
     private static String page(String dataJson) {
         return "{ \"pagination\": { \"offset\": 0, \"limit\": 50, \"total\": 1 }, \"data\": [" + dataJson + "] }";
+    }
+
+    /**
+     * One page of a two-page (total 150, limit 100) result set, for paging-crossing tests. The
+     * first request always carries {@code offset=0&limit=100} (the SDK's PAGE_LIMIT default);
+     * page 2 must be requested at {@code offset=100} (server offset + server limit).
+     */
+    private static String twoPagePayload(int offset, String dataJson) {
+        return "{ \"pagination\": { \"offset\": " + offset + ", \"limit\": 100, \"total\": 150 }, "
+                + "\"data\": [" + dataJson + "] }";
     }
 
     @Test
@@ -241,6 +259,61 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    void getCages_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+        wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/cages"))
+                .withQueryParam("offset", equalTo("0"))
+                .willReturn(okJson(twoPagePayload(0, "{ \"spaceId\": \"PAGE1_CAGE\" }"))));
+        wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/cages"))
+                .withQueryParam("offset", equalTo("100"))
+                .willReturn(okJson(twoPagePayload(100, "{ \"spaceId\": \"PAGE2_CAGE\" }"))));
+
+        PaginatedList<Cage> cages = internetAccess.cages().list("WA1", "100013200");
+        assertEquals(1, cages.size());
+        assertTrue(cages.hasNextPage());
+
+        cages.loadAll();
+
+        assertEquals(2, cages.size());
+        assertEquals("PAGE1_CAGE", cages.get(0).getSpaceId());
+        assertEquals("PAGE2_CAGE", cages.get(1).getSpaceId());
+        assertFalse(cages.hasNextPage());
+
+        // Page 2 request: offset advanced, limit carried, original filters re-sent.
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/internetAccess/v1/cages"))
+                .withQueryParam("offset", equalTo("100"))
+                .withQueryParam("limit", equalTo("100"))
+                .withQueryParam("location.ibx", equalTo("WA1"))
+                .withQueryParam("account.accountNumber", equalTo("100013200")));
+    }
+
+    @Test
+    void getCages_forbidden403_throwsEquinixAuthorizationException() {
+        stubErrorInline(wireMock, "/internetAccess/v1/cages",
+                403, "[{\"errorCode\":\"EQ-3000403\",\"errorMessage\":\"Access denied\"}]");
+
+        assertThrows(EquinixAuthorizationException.class,
+                () -> internetAccess.cages().list("WA1", "100013200"));
+    }
+
+    @Test
+    void getOrder_notFound404_throwsEquinixNotFoundException() {
+        stubErrorInline(wireMock, "/internetAccess/v1/orders/missing-uuid",
+                404, "[{\"errorCode\":\"EQ-3000404\",\"errorMessage\":\"Order not found\"}]");
+
+        assertThrows(EquinixNotFoundException.class,
+                () -> internetAccess.orders().get("missing-uuid"));
+    }
+
+    @Test
+    void getPurchaseOrder_notFound404_throwsEquinixNotFoundException() {
+        stubErrorInline(wireMock, "/internetAccess/v1/accounts/100013200/purchaseOrders/PO-MISSING",
+                404, "[{\"errorCode\":\"EQ-3000404\",\"errorMessage\":\"Purchase order not found\"}]");
+
+        assertThrows(EquinixNotFoundException.class,
+                () -> internetAccess.purchaseOrders().get("100013200", "PO-MISSING"));
+    }
+
+    @Test
     void getPatchPanels_deserializesTypedEnumsAndPorts() {
         wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/patchPanels"))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
@@ -315,6 +388,40 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
                     .withQueryParam("cage.spaceId", equalTo("S1"))
                     .withQueryParam("location.ibx", equalTo("WA1"))
                     .withQueryParam("account.accountNumber", equalTo("100013200")));
+        }
+
+        @Test
+        void list_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(twoPagePayload(0, "{ \"spaceId\": \"PAGE1_CAB\" }"))));
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(twoPagePayload(100, "{ \"spaceId\": \"PAGE2_CAB\" }"))));
+
+            PaginatedList<Cabinet> cabinets = internetAccess.cabinets().list();
+            assertEquals(1, cabinets.size());
+            assertTrue(cabinets.hasNextPage());
+
+            cabinets.loadAll();
+
+            assertEquals(2, cabinets.size());
+            assertEquals("PAGE1_CAB", cabinets.get(0).getSpaceId());
+            assertEquals("PAGE2_CAB", cabinets.get(1).getSpaceId());
+            assertFalse(cabinets.hasNextPage());
+
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/internetAccess/v1/cabinets"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+
+        @Test
+        void list_unauthorized401_throwsEquinixAuthenticationException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/cabinets",
+                    401, "[{\"errorCode\":\"EQ-3000401\",\"errorMessage\":\"Authentication failed\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> internetAccess.cabinets().list());
         }
     }
 
@@ -391,6 +498,51 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
             wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v1/ibxs/WA1"))
                     .withQueryParam("service.connection.type", absent())
                     .withQueryParam("connection.aside.accessPoint.type", absent()));
+        }
+
+        @Test
+        void availability_loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(twoPagePayload(0, "{ \"ibxCode\": \"PAGE1_IBX\" }"))));
+            wireMock.stubFor(get(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(twoPagePayload(100, "{ \"ibxCode\": \"PAGE2_IBX\" }"))));
+
+            PaginatedList<Ibx> ibxs = internetAccess.ibxs().availability(ConnectionType.IA_C);
+            assertEquals(1, ibxs.size());
+            assertTrue(ibxs.hasNextPage());
+
+            ibxs.loadAll();
+
+            assertEquals(2, ibxs.size());
+            assertEquals("PAGE1_IBX", ibxs.get(0).getIbxCode());
+            assertEquals("PAGE2_IBX", ibxs.get(1).getIbxCode());
+            assertFalse(ibxs.hasNextPage());
+
+            // Page 2 request: offset advanced, limit carried, connection-type filter re-sent.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/internetAccess/v2/ibxs"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100"))
+                    .withQueryParam("service.connection.type", equalTo("IA_C")));
+        }
+
+        @Test
+        void availability_rateLimited429_throwsEquinixRateLimitException() {
+            stubErrorInline(wireMock, "/internetAccess/v2/ibxs",
+                    429, "[{\"errorCode\":\"EQ-3000429\",\"errorMessage\":\"Too many requests\"}]");
+
+            assertThrows(EquinixRateLimitException.class,
+                    () -> internetAccess.ibxs().availability(ConnectionType.IA_C));
+        }
+
+        @Test
+        void getByCode_notFound404_throwsEquinixNotFoundException() {
+            stubErrorInline(wireMock, "/internetAccess/v1/ibxs/ZZ9",
+                    404, "[{\"errorCode\":\"EQ-3000404\",\"errorMessage\":\"IBX not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> internetAccess.ibxs().getByCode("ZZ9"));
         }
     }
 }

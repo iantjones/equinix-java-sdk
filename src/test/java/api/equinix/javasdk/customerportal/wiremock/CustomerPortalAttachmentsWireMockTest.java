@@ -222,6 +222,127 @@ class CustomerPortalAttachmentsWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("AttachmentWrapper.refresh()")
+    class Refresh {
+
+        @Test
+        @DisplayName("re-GETs /v1/attachments/{attachmentId} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            stubSingleton(wireMock, "/v1/attachments/.*",
+                    "/json/customerportal/attachment_response.json");
+
+            Attachment attachment = customerPortal.attachments()
+                    .getByUuid("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b");
+            assertEquals("rack-diagram.pdf", attachment.getAttachmentName());
+
+            // The attachment is renamed server-side: the most-recently-registered stub wins, so
+            // the refresh GET sees the new name.
+            wireMock.stubFor(get(urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b"))
+                    .willReturn(okJson("{\"attachmentId\":\"f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b\","
+                            + "\"attachmentName\":\"rack-diagram-v2.pdf\"}")));
+
+            attachment.refresh();
+
+            assertEquals("rack-diagram-v2.pdf", attachment.getAttachmentName());
+            assertEquals("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b", attachment.getAttachmentId());
+
+            // Exactly two GETs: the original read plus the refresh re-read of the same path.
+            wireMock.verify(2, getRequestedFor(
+                    urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b")));
+        }
+    }
+
+    @Nested
+    @DisplayName("AttachmentWrapper.delete()")
+    class Delete {
+
+        @Test
+        @DisplayName("DELETEs /v1/attachments/{attachmentId} (the wrapper is the only public deletion path)")
+        void deletesAttachment() {
+            stubSingleton(wireMock, "/v1/attachments/.*",
+                    "/json/customerportal/attachment_response.json");
+            wireMock.stubFor(delete(urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b"))
+                    .willReturn(okJson(loadFixture("/json/customerportal/attachment_response.json"))));
+
+            Attachment attachment = customerPortal.attachments()
+                    .getByUuid("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b");
+
+            Boolean deleted = attachment.delete();
+
+            assertTrue(deleted);
+            wireMock.verify(deleteRequestedFor(
+                    urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b")));
+        }
+
+        @Test
+        @DisplayName("404 on the DELETE throws EquinixNotFoundException")
+        void deleteNotFound() {
+            stubSingleton(wireMock, "/v1/attachments/.*",
+                    "/json/customerportal/attachment_response.json");
+
+            Attachment attachment = customerPortal.attachments()
+                    .getByUuid("f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b");
+
+            wireMock.stubFor(delete(urlPathEqualTo("/v1/attachments/f1e2d3c4-b5a6-4978-9a0b-1c2d3e4f5a6b"))
+                    .willReturn(aResponse()
+                            .withStatus(404)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Attachment not found\"}]")));
+
+            assertThrows(EquinixNotFoundException.class, attachment::delete);
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page list paging")
+    class Paging {
+
+        // ListAttachments is a plain paginated GET: dispatch stamps offset=0/limit=100 onto the
+        // first request, and page 2 is requested by advancing the offset/limit QUERY PARAMETERS
+        // from the SERVER-reported pagination.
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "attachmentId": "PAGE1_ATT", "attachmentName": "page1.pdf" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "attachmentId": "PAGE2_ATT", "attachmentName": "page2.pdf" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() fetches page 2 by advancing the offset query param")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(get(urlPathEqualTo("/v1/attachments"))
+                    .withQueryParam("offset", equalTo("0"))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(get(urlPathEqualTo("/v1/attachments"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedList<Attachment> attachments = customerPortal.attachments().list();
+            assertEquals(1, attachments.size());
+            assertTrue(attachments.hasNextPage());
+
+            attachments.loadAll();
+
+            assertEquals(2, attachments.size());
+            assertEquals("PAGE1_ATT", attachments.get(0).getAttachmentId());
+            assertEquals("PAGE2_ATT", attachments.get(1).getAttachmentId());
+            assertFalse(attachments.hasNextPage());
+
+            // Page 2 request: offset advanced from the server-reported pagination, limit carried.
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/v1/attachments"))
+                    .withQueryParam("offset", equalTo("100"))
+                    .withQueryParam("limit", equalTo("100")));
+        }
+    }
+
+    @Nested
     @DisplayName("Error handling")
     class Errors {
 

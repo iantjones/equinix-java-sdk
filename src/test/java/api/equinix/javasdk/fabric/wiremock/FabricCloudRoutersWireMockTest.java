@@ -671,4 +671,103 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                     () -> fabric.cloudRouters().getByUuid("test-uuid"));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper refresh()")
+    class WrapperRefresh {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        private static final String URL = "/fabric/v4/routers/" + ROUTER_ID;
+
+        @Test
+        @DisplayName("re-GETs /routers/{uuid} and swaps the wrapper's state in place")
+        void refreshReloadsInPlace() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("router-refresh")
+                    .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
+                    .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json")))
+                    .willSetStateTo("renamed"));
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .inScenario("router-refresh")
+                    .whenScenarioStateIs("renamed")
+                    .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json")
+                            .replace("My-Cloud-Router-Primary", "My-Cloud-Router-Renamed"))));
+
+            CloudRouter router = fabric.cloudRouters().getByUuid(ROUTER_ID);
+            assertEquals("My-Cloud-Router-Primary", router.getName());
+
+            router.refresh();
+
+            assertEquals("My-Cloud-Router-Renamed", router.getName(),
+                    "refresh() must swap the wrapper's backing state in place");
+            wireMock.verify(2, getRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Wrapper delete()")
+    class WrapperDelete {
+
+        private static final String ROUTER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
+        @Test
+        @DisplayName("DELETEs /routers/{uuid} (the router itself, not just commands) and returns true")
+        void deletesCloudRouter() {
+            stubSingleton(wireMock, "/fabric/v4/routers/" + ROUTER_ID,
+                    "/json/fabric/cloud_router_response.json");
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_ID))
+                    .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+
+            CloudRouter router = fabric.cloudRouters().getByUuid(ROUTER_ID);
+            Boolean deleted = router.delete();
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_ID)));
+        }
+    }
+
+    @Nested
+    @DisplayName("Multi-page search paging")
+    class Paging {
+
+        private static final String PAGE_1 = """
+                {
+                  "pagination": { "offset": 0, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE1_ROUTER" } ]
+                }
+                """;
+
+        private static final String PAGE_2 = """
+                {
+                  "pagination": { "offset": 100, "limit": 100, "total": 150 },
+                  "data": [ { "uuid": "PAGE2_ROUTER" } ]
+                }
+                """;
+
+        @Test
+        @DisplayName("loadAll() re-POSTs the search with the body's pagination offset advanced to page 2")
+        void loadAllFetchesSecondPage() {
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
+                    .willReturn(okJson(PAGE_1)));
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
+                    .willReturn(okJson(PAGE_2)));
+
+            PaginatedFilteredList<CloudRouter> routers = fabric.cloudRouters().search();
+            assertEquals(1, routers.size());
+            assertTrue(routers.hasNextPage());
+
+            routers.loadAll();
+
+            assertEquals(2, routers.size());
+            assertEquals("PAGE1_ROUTER", routers.get(0).getUuid());
+            assertEquals("PAGE2_ROUTER", routers.get(1).getUuid());
+            assertFalse(routers.hasNextPage());
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/routers/search"))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
+        }
+    }
 }

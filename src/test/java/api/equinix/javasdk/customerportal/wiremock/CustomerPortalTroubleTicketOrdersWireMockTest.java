@@ -2,6 +2,7 @@ package api.equinix.javasdk.customerportal.wiremock;
 
 import api.equinix.javasdk.CustomerPortal;
 import api.equinix.javasdk.core.WireMockTestBase;
+import api.equinix.javasdk.core.exception.*;
 import api.equinix.javasdk.customerportal.enums.PhonePreferenceToCall;
 import api.equinix.javasdk.customerportal.enums.SmartHandsContactType;
 import api.equinix.javasdk.customerportal.model.OrderResponse;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 
+import static api.equinix.javasdk.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -172,6 +174,41 @@ class CustomerPortalTroubleTicketOrdersWireMockTest extends WireMockTestBase {
                     .withQueryParam("detail", equalTo("true"))
                     .withQueryParam("ibxs", equalTo("AM1"))
                     .withQueryParam("cages", equalTo("AM1:01:001MC3")));
+        }
+    }
+
+    @Nested
+    @DisplayName("Error handling")
+    class Errors {
+
+        @Test
+        @DisplayName("401 on getLocations() throws EquinixAuthenticationException")
+        void unauthorized() {
+            stubErrorInline(wireMock, "/v1/orders/troubleticket/locations",
+                    401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
+
+            assertThrows(EquinixAuthenticationException.class,
+                    () -> customerPortal.troubleTicketOrders().getLocations());
+        }
+
+        @Test
+        @DisplayName("404 on getTypes() throws EquinixNotFoundException")
+        void notFound() {
+            stubErrorInline(wireMock, "/v1/orders/troubleticket/types",
+                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Not found\"}]");
+
+            assertThrows(EquinixNotFoundException.class,
+                    () -> customerPortal.troubleTicketOrders().getTypes());
+        }
+
+        @Test
+        @DisplayName("500 on placeOrder() (POST) throws EquinixServerException")
+        void serverError() {
+            stubErrorInline(wireMock, "/v1/orders/troubleticket",
+                    500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+
+            assertThrows(EquinixServerException.class,
+                    () -> customerPortal.troubleTicketOrders().placeOrder(sampleRequest()));
         }
     }
 }

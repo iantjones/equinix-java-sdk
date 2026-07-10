@@ -401,4 +401,28 @@ class FabricRoutingProtocolsWireMockTest extends WireMockTestBase {
                     () -> fabric.routingProtocols().getByUuid(CONNECTION_ID, PROTOCOL_UUID));
         }
     }
+
+    @Nested
+    @DisplayName("Wrapper delete(connectionId)")
+    class WrapperDelete {
+
+        private static final String URL =
+                "/fabric/v4/connections/" + CONNECTION_ID + "/routingProtocols/" + PROTOCOL_UUID;
+
+        @Test
+        @DisplayName("DELETEs /connections/{connectionId}/routingProtocols/{uuid} and returns true")
+        void deletesRoutingProtocol() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/routing_protocol_response.json"))));
+            // deleteOne() reads the deleted resource from the response body, so the stub returns one.
+            wireMock.stubFor(delete(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/routing_protocol_response.json"))));
+
+            RoutingProtocol protocol = fabric.routingProtocols().getByUuid(CONNECTION_ID, PROTOCOL_UUID);
+            Boolean deleted = protocol.delete(CONNECTION_ID);
+
+            assertEquals(Boolean.TRUE, deleted);
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo(URL)));
+        }
+    }
 }
