@@ -188,6 +188,25 @@ public abstract class IntegrationTestBase {
         }
     }
 
+    /**
+     * Runs a live call and asserts it succeeds, tolerating ONLY an entitlement gap:
+     * a 401/403 from the API skips the test (this credential simply doesn't carry
+     * the product), while any other failure — a deserialization error, a 404 on a
+     * collection URL, a 5xx, an unmapped enum value — FAILS the test. This is the
+     * spec-vs-reality contract of the read-only tier: a read must never skip on a
+     * real defect.
+     */
+    protected static <T> T requireEntitled(String domain, String operation, String resourceType,
+                                           String httpMethod, ApiCall<T> call) {
+        try {
+            return timedCall(domain, operation, resourceType, httpMethod, call);
+        } catch (api.equinix.javasdk.core.exception.EquinixAuthenticationException
+                 | api.equinix.javasdk.core.exception.EquinixAuthorizationException e) {
+            Assumptions.abort(resourceType + " skipped: credential not entitled — " + e.getMessage());
+            return null; // unreachable
+        }
+    }
+
     @FunctionalInterface
     protected interface ApiCall<T> {
         T execute();

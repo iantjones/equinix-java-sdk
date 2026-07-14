@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Live integration tier made catalog-complete
+All 33 API-catalog OpenAPI specs were swept operation-by-operation and every one of the 280
+operations verified safe to run against a production account (GET reads, POST searches, and
+spec-documented `dryRun`/validate mechanisms — 198 side-effectful lookalikes such as quote
+requests and report-generation jobs were explicitly rejected) now has a live test:
+- **+219 `integration-readonly` tests** (Fabric 104-op sweep, NetworkEdge 32, InternetAccess 25,
+  IBX SmartView 25, CustomerPortal 54, Projects/IAM/STS 25) with live discovery chains for
+  item-GET ids and optional `-D` overrides where the API offers no discovery path.
+- **+4 `integration-dryrun` tests** — Fabric `POST /connections/validate`, routing-protocol
+  validate, dry-run connection create (two-port EVPL over live-discovered free VLANs), and
+  NetworkEdge backup restore-feasibility.
+- **Fail-loud contract** — new `IntegrationTestBase.requireEntitled(...)` skips a live test only
+  on 401/403 (credential lacks the product); deserialization errors, unmapped enums, and 5xx now
+  FAIL instead of silently skipping (43 existing tests migrated). A green readonly run certifies
+  the models against API reality, not just against the specs.
+- **Legacy live suites consolidated** — the six pre-tier `*Test.java` live files (Fabric,
+  NetworkEdge, CustomerPortal, IBXSmartView, InternetAccess, Projects) were folded into their
+  `*IntegrationTest` successors and deleted; the obsolete `-Pintegration` Maven profile was
+  retired (use `-Pintegration-readonly/-dryrun/-full`). Fixed a latent JUnit bug where static
+  `@Nested` classes in `FabricIntegrationTest` could be discovered standalone and NPE without
+  their outer `@BeforeAll`.
+- New `IAMIntegrationTest`, `STSIntegrationTest`, `InternetAccessIntegrationTest`; EIA BGP
+  service create moved behind the `integration-full` double opt-in with registered cleanup.
+
 ### Core redesign (breaking)
 The core module was reviewed file-by-file (121 files, 123 findings, adversarially verified) and
 every deferred redesign was executed:

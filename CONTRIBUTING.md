@@ -33,9 +33,9 @@ mvn test -Pwiremock
 mvn -Pcoverage verify
 ```
 
-**Integration tests** (requires Equinix API credentials):
+**Integration tests** (requires Equinix API credentials; tiers: `integration-readonly` → `integration-dryrun` → `integration-full`):
 ```bash
-mvn test -Pintegration -Dauth.access=YOUR_CLIENT_ID -Dauth.secret=YOUR_CLIENT_SECRET
+mvn test -Pintegration-readonly -DaccessKey=YOUR_CLIENT_ID -DsecretKey=YOUR_CLIENT_SECRET
 ```
 
 ## How to Contribute

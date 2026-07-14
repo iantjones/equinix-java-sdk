@@ -1646,19 +1646,22 @@ mvn test -Pwiremock
 WireMock tests stand up a local HTTP server that mimics the Equinix APIs, so they exercise the full request/response cycle — URLs, verbs, bodies, pagination, error mapping, OAuth2, JSON-RPC — across every domain without touching a live endpoint or needing credentials.
 
 ### Integration Tests (Credentials Required)
+
+Live tests run against the real Equinix APIs in three escalating tiers — each tier includes the ones before it:
+
 ```bash
-mvn test -Pintegration \
-    -Dauth.access=YOUR_CLIENT_ID \
-    -Dauth.secret=YOUR_CLIENT_SECRET
+# Read-only: every GET / list / search across all domains. Zero mutations; safe for production accounts.
+mvn test -Pintegration-readonly -DaccessKey=YOUR_CLIENT_ID -DsecretKey=YOUR_CLIENT_SECRET
+
+# + Dry-run: adds the spec-documented dryRun / validate operations. Still zero real mutations.
+mvn test -Pintegration-dryrun -DaccessKey=YOUR_CLIENT_ID -DsecretKey=YOUR_CLIENT_SECRET -DtestMode=dryrun
+
+# + Full CRUD: create → update → delete lifecycles with automatic LIFO cleanup. Double opt-in required.
+mvn test -Pintegration-full -DaccessKey=YOUR_CLIENT_ID -DsecretKey=YOUR_CLIENT_SECRET \
+    -DtestMode=full -DconfirmDestructive=true
 ```
 
-By default, integration tests run in read-only mode. To enable create/update/delete operations:
-```bash
-mvn test -Pintegration \
-    -Dauth.access=YOUR_CLIENT_ID \
-    -Dauth.secret=YOUR_CLIENT_SECRET \
-    -DskipCreateUpdateOperations=false
-```
+Read-only tests skip only when the credential lacks the product entitlement (401/403); any other live failure — a deserialization error, an unmapped enum, a 5xx — fails the test, so a green readonly run certifies the SDK's models against API reality. Each run writes a per-call report to `target/integration-report.json`.
 
 ## API Reference
 
