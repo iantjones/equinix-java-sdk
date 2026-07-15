@@ -126,6 +126,52 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
             assertThrows(IllegalStateException.class, () -> connection.update().save());
             wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
         }
+
+        @Test
+        @DisplayName("dryRun().save() PATCHes with dryRun=true and deserializes the simulated post-update connection")
+        void dryRunSendsQueryParamAndDeserializesSimulation() {
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            // Dry-run responds 200 (the real update is 202) with the simulated post-update
+            // connection: href/uuid present and the patched values applied, nothing persisted.
+            wireMock.stubFor(patch(urlPathEqualTo("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json")
+                            .replace("My-EVPL-Connection", "Renamed-Connection"))));
+
+            Connection connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+            Connection simulated = connection.update()
+                    .name("Renamed-Connection")
+                    .dryRun()
+                    .save();
+
+            assertNotNull(simulated);
+            assertEquals("3a58dd05-f46d-4b1d-a154-2e85c396ea85", simulated.getUuid());
+            assertEquals("Renamed-Connection", simulated.getName());
+
+            // Regression lock: the dry run MUST carry dryRun=true on the wire — if a future
+            // change drops the parameter, this "verification" becomes a REAL mutation.
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Connection\"}]")));
+        }
+
+        @Test
+        @DisplayName("save() without dryRun() sends no dryRun query parameter")
+        void defaultSaveOmitsDryRunQueryParam() {
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+            Connection connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+            connection.update().name("Renamed-Connection").save();
+
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
+                    .withQueryParam("dryRun", absent()));
+        }
     }
 
     @Nested

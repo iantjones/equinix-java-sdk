@@ -120,6 +120,11 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
         return patchOne("UpdateConnection", uuid, operations);
     }
 
+    public ConnectionJson dryRunUpdate(String uuid, List<PatchOperation> operations) {
+        // Same wire shape as update() (json-patch+json PATCH) plus dryRun=true; nothing persists.
+        return dryRunPatch("UpdateConnection", uuid, operations);
+    }
+
     public ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
         Map<String, List<String>> qParams = Map.of(
                 "startDateTime", ParameterMapper.singleParamList(ParameterMapper.dateTimeForQuery(startDateTime)),

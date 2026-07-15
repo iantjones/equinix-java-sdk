@@ -68,6 +68,12 @@ public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, Ser
         return updateOne("UpdateServiceToken", uuid, operations);
     }
 
+    public ServiceTokenJson dryRunUpdate(String uuid, List<PatchOperation> operations) {
+        // Same wire shape as update() (op/path/value array as application/json) plus dryRun=true,
+        // so the dry run validates exactly the request the real update would send.
+        return dryRunUpdate("UpdateServiceToken", uuid, operations);
+    }
+
     public ServiceTokenJson createAction(String uuid, ServiceTokenAction type) {
         return postOne("PostServiceTokenAction", Map.of("uuid", uuid), new ServiceTokenActionRequest(type));
     }

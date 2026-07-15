@@ -11,6 +11,7 @@ import api.equinix.javasdk.fabric.enums.ChangeStatus;
 import api.equinix.javasdk.fabric.enums.CloudRouterCommandType;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.CloudRouterAction;
 import api.equinix.javasdk.fabric.model.CloudRouterCommand;
@@ -128,6 +129,62 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.order.purchaseOrderNumber", equalTo("PO-9876")))
                     .withRequestBody(matchingJsonPath("$.order.termLength", equalTo("24")))
                     .withRequestBody(matchingJsonPath("$.order.customerReferenceNumber", equalTo("CR-REF-001"))));
+        }
+
+        @Test
+        @DisplayName("dryRun() sends dryRun=true on POST /routers and deserializes the echoed request")
+        void dryRunCreateSendsDryRunQueryParam() {
+            // Spec (createCloudRouter): dryRun — "option to verify that API calls will succeed".
+            // Dry-run returns 200 with the validated request echoed back (example
+            // CloudRouterResponseExampleDryRun): no uuid/href/state. The stub only matches when
+            // dryRun=true is on the wire, so a dropped parameter fails the call, not just verify().
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .willReturn(okJson("""
+                            {
+                              "type": "XF_ROUTER",
+                              "name": "My-Cloud-Router",
+                              "location": { "metroCode": "SV" },
+                              "package": { "code": "STANDARD" },
+                              "notifications": [ { "type": "ALL", "emails": [ "abc@abc.com" ] } ],
+                              "account": { "accountNumber": 123 }
+                            }
+                            """)));
+
+            CloudRouter router = fabric.cloudRouters().define()
+                    .name("My-Cloud-Router")
+                    .inMetro("SV")
+                    .withPackage(GatewayPackageCode.STANDARD)
+                    .notification(NotificationType.ALL, List.of("abc@abc.com"))
+                    .dryRun()
+                    .create();
+
+            assertNotNull(router);
+            assertEquals("My-Cloud-Router", router.getName());
+            assertNull(router.getUuid(), "dry-run echo carries no uuid");
+            assertNull(router.getState(), "dry-run echo carries no state");
+
+            // Regression lock: dryRun=true MUST reach the wire, or a dry run becomes a real create.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("XF_ROUTER")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("My-Cloud-Router"))));
+        }
+
+        @Test
+        @DisplayName("create() without dryRun() does NOT send the dryRun query parameter")
+        void defaultCreateOmitsDryRunQueryParam() {
+            stubCreate(wireMock, "/fabric/v4/routers", "/json/fabric/cloud_router_response.json");
+
+            CloudRouter router = fabric.cloudRouters().define()
+                    .name("My-Cloud-Router-Primary")
+                    .inMetro("SV")
+                    .withPackage(GatewayPackageCode.STANDARD)
+                    .create();
+
+            assertNotNull(router);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
+                    .withQueryParam("dryRun", absent()));
         }
     }
 

@@ -243,6 +243,65 @@ class FabricPortsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.account.accountNumber", equalTo("123456")))
                     .withRequestBody(matchingJsonPath("$.location.metroCode", equalTo("SV"))));
         }
+
+        @Test
+        @DisplayName("dryRun() sends dryRun=true and deserializes the echoed port order (no uuid/name/state)")
+        void createDryRunSendsQueryParamAndDeserializesEcho() {
+            // Spec: dry-run create responds 200 (real create is 202) with the validated port
+            // order echoed back — no uuid/name/state (example PortCreateDryRunResponse).
+            String dryRunEcho = "{"
+                    + "\"type\":\"XF_PORT\","
+                    + "\"connectivitySourceType\":\"COLO\","
+                    + "\"physicalPortsSpeed\":10000,"
+                    + "\"physicalPortsType\":\"10GBASE_LR\","
+                    + "\"physicalPortsCount\":1,"
+                    + "\"lagEnabled\":false,"
+                    + "\"location\":{\"metroCode\":\"SV\"},"
+                    + "\"account\":{\"accountNumber\":123456}"
+                    + "}";
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/ports"))
+                    .willReturn(okJson(dryRunEcho)));
+
+            Port validated = fabric.ports().define()
+                    .ofType(PortType.XF_PORT)
+                    .physicalPortsSpeed(10000)
+                    .physicalPortsType(PhysicalPortType._10GBASE_LR)
+                    .physicalPortsCount(1)
+                    .connectivitySourceType(ConnectivitySourceType.COLO)
+                    .lagEnabled(false)
+                    .accountNumber(123456L)
+                    .metroCode("SV")
+                    .dryRun()
+                    .create();
+
+            assertNotNull(validated);
+            assertNull(validated.getUuid(), "dry-run echo carries no uuid — nothing was created");
+            assertNull(validated.getState(), "dry-run echo carries no state — nothing was created");
+            assertEquals(PortType.XF_PORT, validated.getType());
+            assertEquals(Integer.valueOf(10000), validated.getPhysicalPortsSpeed());
+
+            // Regression lock: dryRun=true MUST reach the wire as a query parameter on this exact
+            // endpoint — dropping it would turn the validation into a REAL port order.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/ports"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("XF_PORT"))));
+        }
+
+        @Test
+        @DisplayName("default create() does NOT send a dryRun query parameter")
+        void createWithoutDryRunOmitsQueryParameter() {
+            stubCreate(wireMock, "/fabric/v4/ports",
+                    "/json/fabric/port_response.json");
+
+            Port created = fabric.ports().define()
+                    .ofType(PortType.XF_PORT)
+                    .metroCode("SV")
+                    .create();
+
+            assertNotNull(created);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/ports"))
+                    .withQueryParam("dryRun", absent()));
+        }
     }
 
     @Nested
@@ -272,6 +331,52 @@ class FabricPortsWireMockTest extends WireMockTestBase {
                     () -> fabric.ports().update("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee").save());
             wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/ports/.*")));
         }
+
+        @Test
+        @DisplayName("dryRun() sends dryRun=true and unwraps data[0] of the AllPortsResponse envelope")
+        void updateDryRunSendsQueryParamAndUnwrapsEnvelope() {
+            // Spec: the dry-run 200 schema is AllPortsResponse — a paginated envelope
+            // {pagination, data:[Port]} with the simulated updated port in data[0] (example
+            // PortUpdateDryRunResponse) — a different wire shape from the real update's bare Port.
+            String envelope = "{"
+                    + "\"pagination\":{\"offset\":0,\"limit\":1,\"total\":1},"
+                    + "\"data\":[" + loadFixture("/json/fabric/port_response.json")
+                            .replace("testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154", "Renamed-Port") + "]"
+                    + "}";
+            wireMock.stubFor(patch(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
+                    .willReturn(okJson(envelope)));
+
+            Port simulated = fabric.ports().update("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee")
+                    .name("Renamed-Port")
+                    .dryRun()
+                    .save();
+
+            assertNotNull(simulated);
+            assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", simulated.getUuid());
+            assertEquals("Renamed-Port", simulated.getName(),
+                    "save() must unwrap the simulated updated port from the envelope's data[0]");
+
+            // Regression lock: dryRun=true MUST reach the wire as a query parameter on this exact
+            // endpoint — dropping it would turn the validation into a REAL port update.
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Port\"}]")));
+        }
+
+        @Test
+        @DisplayName("default save() does NOT send a dryRun query parameter")
+        void updateWithoutDryRunOmitsQueryParameter() {
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/ports/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
+
+            fabric.ports().update("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee")
+                    .name("Renamed-Port").save();
+
+            wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/ports/.*"))
+                    .withQueryParam("dryRun", absent()));
+        }
     }
 
     @Nested
@@ -289,6 +394,41 @@ class FabricPortsWireMockTest extends WireMockTestBase {
             assertNotNull(deleted);
             assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", deleted.getUuid());
             wireMock.verify(deleteRequestedFor(urlPathMatching("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee")));
+        }
+
+        @Test
+        @DisplayName("delete(uuid, true) sends dryRun=true and returns the port that WOULD be deleted")
+        void deleteDryRunSendsQueryParam() {
+            // Spec: dry-run delete responds 200 (real delete is 202 'Accepted') with the existing
+            // port entity — uuid/name and all — that would be deleted (example portDryRunDelete);
+            // nothing is deleted.
+            wireMock.stubFor(delete(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
+
+            Port wouldDelete = fabric.ports().delete("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", true);
+
+            assertNotNull(wouldDelete);
+            assertEquals("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", wouldDelete.getUuid());
+            assertEquals("testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154", wouldDelete.getName());
+            assertEquals(PortState.ACTIVE, wouldDelete.getState());
+
+            // Regression lock: dryRun=true MUST reach the wire as a query parameter on this exact
+            // endpoint — dropping it would turn the validation into a REAL port delete.
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
+                    .withQueryParam("dryRun", equalTo("true")));
+        }
+
+        @Test
+        @DisplayName("delete(uuid) and delete(uuid, false) do NOT send a dryRun query parameter")
+        void deleteWithoutDryRunOmitsQueryParameter() {
+            wireMock.stubFor(delete(urlPathMatching("/fabric/v4/ports/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
+
+            fabric.ports().delete("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee");
+            fabric.ports().delete("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", false);
+
+            wireMock.verify(2, deleteRequestedFor(urlPathMatching("/fabric/v4/ports/.*"))
+                    .withQueryParam("dryRun", absent()));
         }
     }
 

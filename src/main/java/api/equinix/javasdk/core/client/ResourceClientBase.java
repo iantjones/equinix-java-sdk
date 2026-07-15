@@ -261,6 +261,35 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
         return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
+    /**
+     * Dry-run variant of {@link #patchOne(String, String, List)}: sends the <em>identical</em>
+     * RFC&nbsp;6902 JSON Patch request (same {@code application/json-patch+json} content type)
+     * plus the {@code dryRun=true} query parameter — per the spec, an "option to verify that API
+     * calls will succeed". Nothing is persisted; the returned JSON is the server's simulation of
+     * the patched resource.
+     */
+    protected J dryRunPatch(String serviceEndpoint, String uuid, List<PatchOperation> operations) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
+        request.addSingleQueryParameter("dryRun", "true");
+        request.setContentType(PatchOperation.CONTENT_TYPE);
+        SerializationHelper.serializeJson(request, operations);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
+    }
+
+    /**
+     * Dry-run variant of {@link #updateOne(String, String, Object)}: sends the <em>identical</em>
+     * update request (same default {@code application/json} content type) plus the
+     * {@code dryRun=true} query parameter — per the spec, an "option to verify that API calls
+     * will succeed". Nothing is persisted; the returned JSON is the server's simulation of the
+     * updated resource.
+     */
+    protected J dryRunUpdate(String serviceEndpoint, String uuid, Object body) {
+        EquinixRequest<J> request = buildRequestWithPathParams(serviceEndpoint, RequestType.SINGLE, Map.of("uuid", uuid), jsonClass);
+        request.addSingleQueryParameter("dryRun", "true");
+        SerializationHelper.serializeJson(request, body);
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
+    }
+
     // (postForType / getAs for secondary response types are inherited from ClientBase.)
 
     // ---- path-parameter variants (for sub-resources nested under a parent id, or code-keyed gets) ----

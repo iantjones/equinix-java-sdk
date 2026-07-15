@@ -309,6 +309,52 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
                     () -> fabric.serviceTokens().update("ab7f685-41b0-1b07-6de0-3a7c54b08b8f").save());
             wireMock.verify(0, patchRequestedFor(urlPathMatching("/fabric/v4/serviceTokens/.*")));
         }
+
+        @Test
+        @DisplayName("dryRun().save() PATCHes with dryRun=true and deserializes the simulated token")
+        void dryRunSendsQueryParamAndDeserializesSimulation() {
+            // Dry-run responds 200 with the validated/simulated token entity (spec example
+            // getServiceToken-DryRun: the token with uuid, state INACTIVE); nothing persisted.
+            wireMock.stubFor(patch(urlPathEqualTo("/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json")
+                            .replace("\"state\": \"ACTIVE\"", "\"state\": \"INACTIVE\"")
+                            .replace("Az-Token-Primary", "Renamed-Token"))));
+
+            ServiceToken simulated = fabric.serviceTokens()
+                    .update("ab7f685-41b0-1b07-6de0-3a7c54b08b8f")
+                    .name("Renamed-Token")
+                    .dryRun()
+                    .save();
+
+            assertNotNull(simulated);
+            assertEquals("ab7f685-41b0-1b07-6de0-3a7c54b08b8f", simulated.getUuid());
+            assertEquals("Renamed-Token", simulated.getName());
+
+            // Regression lock: the dry run MUST carry dryRun=true on the wire — if a future
+            // change drops the parameter, this "verification" becomes a REAL mutation.
+            wireMock.verify(patchRequestedFor(
+                    urlPathEqualTo("/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withRequestBody(equalToJson(
+                            "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Token\"}]", true, true)));
+        }
+
+        @Test
+        @DisplayName("save() without dryRun() sends no dryRun query parameter")
+        void defaultSaveOmitsDryRunQueryParam() {
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/serviceTokens/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_token_response.json"))));
+
+            fabric.serviceTokens()
+                    .update("ab7f685-41b0-1b07-6de0-3a7c54b08b8f")
+                    .name("Renamed-Token")
+                    .save();
+
+            wireMock.verify(patchRequestedFor(
+                    urlPathEqualTo("/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f"))
+                    .withQueryParam("dryRun", absent()));
+        }
     }
 
     @Nested

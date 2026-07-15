@@ -418,12 +418,14 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
      * Fluent updater for an existing connection. Typed setters record RFC&nbsp;6902 replace
      * operations (the API accepts a JSON Patch array at {@code PATCH /connections/{uuid}}); use
      * {@link #patch(PatchOperation)} for any path not covered by a typed setter (e.g.
-     * notifications, A-side migration). Call {@link #save()} to apply.
+     * notifications, A-side migration). Call {@link #save()} to apply, optionally after
+     * {@link #dryRun()} to only validate the update.
      */
     public class ConnectionUpdater {
 
         private final String uuid;
         private final List<PatchOperation> operations = new ArrayList<>();
+        private boolean dryRun;
 
         protected ConnectionUpdater(String uuid) {
             this.uuid = uuid;
@@ -456,11 +458,29 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
             return this;
         }
 
+        /**
+         * Marks this update as a dry run: {@link #save()} sends the same JSON Patch to
+         * {@code PATCH /fabric/v4/connections/{uuid}} with the {@code dryRun=true} query
+         * parameter — per the Fabric v4 spec, an "option to verify that API calls will succeed".
+         * Nothing is persisted: the API responds {@code 200} (the real update responds
+         * {@code 202}) with a simulation of the post-update connection, which {@code save()}
+         * returns.
+         *
+         * @return this updater
+         */
+        public ConnectionUpdater dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
         public Connection save() {
             if (operations.isEmpty()) {
                 throw new IllegalStateException("No changes specified; set at least one field before calling save().");
             }
-            ConnectionJson connectionJson = ((ConnectionClientImpl) ConnectionOperator.this.getServiceClient()).update(uuid, operations);
+            ConnectionClientImpl clientImpl = (ConnectionClientImpl) ConnectionOperator.this.getServiceClient();
+            ConnectionJson connectionJson = dryRun
+                    ? clientImpl.dryRunUpdate(uuid, operations)
+                    : clientImpl.update(uuid, operations);
             return new ConnectionWrapper(connectionJson, ConnectionOperator.this.getServiceClient());
         }
     }

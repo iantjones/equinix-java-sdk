@@ -40,6 +40,14 @@ public interface ServiceTokenClient<T> extends PageablePost<T> {
 
     ServiceTokenJson update(String uuid, List<PatchOperation> operations);
 
+    /**
+     * Dry-run variant of {@link #update(String, List)}: sends the same change-operations array to
+     * {@code PATCH /fabric/v4/serviceTokens/{uuid}} with {@code dryRun=true} — per the Fabric v4
+     * spec, an "option to verify that API calls will succeed". Nothing is persisted; the API
+     * responds {@code 200} with the validated/simulated token entity.
+     */
+    ServiceTokenJson dryRunUpdate(String uuid, List<PatchOperation> operations);
+
     ServiceTokenJson createAction(String uuid, ServiceTokenAction type);
 
     ServiceTokenJson getByUuid(String uuid);

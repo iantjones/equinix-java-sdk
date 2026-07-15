@@ -66,6 +66,7 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
         private CloudRouterCreatorJson.AccountRef account;
         private CloudRouterCreatorJson.MarketplaceSubscriptionRef marketplaceSubscription;
         private List<CloudRouterCreatorJson.NotificationRef> notifications = new ArrayList<>();
+        private boolean dryRun;
 
         public CloudRouterBuilder name(String name) {
             this.name = name;
@@ -145,9 +146,26 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
             return this;
         }
 
+        /**
+         * Marks this create as a dry run: the request is sent with the spec's {@code dryRun=true}
+         * query parameter ("option to verify that API calls will succeed"; boolean, default
+         * {@code false}). Nothing is provisioned — {@link #create()} returns the validated request
+         * echoed back by the API with no {@code uuid}/{@code href}/{@code state} (spec example
+         * {@code CloudRouterResponseExampleDryRun}).
+         *
+         * @return this builder
+         */
+        public CloudRouterBuilder dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
         public CloudRouter create() {
             CloudRouterCreatorJson creatorJson = new CloudRouterCreatorJson(this);
-            CloudRouterJson cloudRouterJson = ((CloudRouterClientImpl) CloudRouterOperator.this.getServiceClient()).create(creatorJson);
+            CloudRouterClientImpl clientImpl = (CloudRouterClientImpl) CloudRouterOperator.this.getServiceClient();
+            CloudRouterJson cloudRouterJson = dryRun
+                    ? clientImpl.dryRunCreate(creatorJson)
+                    : clientImpl.create(creatorJson);
             return new CloudRouterWrapper(cloudRouterJson, CloudRouterOperator.this.getServiceClient());
         }
     }

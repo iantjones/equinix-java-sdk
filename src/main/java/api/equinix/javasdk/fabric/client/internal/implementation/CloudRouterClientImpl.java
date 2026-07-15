@@ -78,6 +78,20 @@ public class CloudRouterClientImpl extends ResourceClientBase<CloudRouter, Cloud
         return postOne("PostCloudRouter", cloudRouterCreatorJson);
     }
 
+    /**
+     * Dry-run variant of {@link #create(CloudRouterCreatorJson)}: POSTs the same body to
+     * {@code /fabric/v4/routers} with the spec's {@code dryRun=true} query parameter
+     * ("option to verify that API calls will succeed"). Nothing is provisioned; the spec's
+     * dry-run example ({@code CloudRouterResponseExampleDryRun}) is the validated request
+     * echoed back with no {@code uuid}/{@code href}/{@code state}.
+     *
+     * @param cloudRouterCreatorJson the create request body to validate
+     * @return the validated request echoed back by the API
+     */
+    public CloudRouterJson dryRunCreate(CloudRouterCreatorJson cloudRouterCreatorJson) {
+        return dryRunCreate("PostCloudRouter", cloudRouterCreatorJson);
+    }
+
     public CloudRouterJson update(String uuid, List<PatchOperation> operations) {
         return patchOne("UpdateCloudRouter", uuid, operations);
     }

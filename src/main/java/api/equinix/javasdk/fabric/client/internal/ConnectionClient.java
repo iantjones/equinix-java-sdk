@@ -65,6 +65,15 @@ public interface ConnectionClient<T> extends PageablePost<T> {
 
     ConnectionJson update(String uuid, List<PatchOperation> operations);
 
+    /**
+     * Dry-run variant of {@link #update(String, List)}: sends the same JSON Patch to
+     * {@code PATCH /fabric/v4/connections/{uuid}} with {@code dryRun=true} — per the Fabric v4
+     * spec, an "option to verify that API calls will succeed". Nothing is persisted; the API
+     * responds {@code 200} (the real update responds {@code 202}) with a simulation of the
+     * post-update connection.
+     */
+    ConnectionJson dryRunUpdate(String uuid, List<PatchOperation> operations);
+
     ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint);
 
     /**

@@ -81,6 +81,20 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
         return postOne("PostNetwork", networkCreatorJson);
     }
 
+    /**
+     * Dry-run variant of {@link #create(NetworkCreatorJson)}: POSTs the same body to
+     * {@code /fabric/v4/networks} with the spec's {@code dryRun=true} query parameter
+     * ("option to verify that API calls will succeed"). Nothing is provisioned; the spec's
+     * dry-run example ({@code CreateNetworkDryRunResponse}) is the validated request echoed
+     * back with no {@code uuid}/{@code href}/{@code state}.
+     *
+     * @param networkCreatorJson the create request body to validate
+     * @return the validated request echoed back by the API
+     */
+    public NetworkJson dryRunCreate(NetworkCreatorJson networkCreatorJson) {
+        return dryRunCreate("PostNetwork", networkCreatorJson);
+    }
+
     public NetworkJson update(String uuid, List<PatchOperation> operations) {
         return patchOne("UpdateNetwork", uuid, operations);
     }
