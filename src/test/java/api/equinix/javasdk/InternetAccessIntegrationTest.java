@@ -5,6 +5,7 @@ import api.equinix.javasdk.core.http.response.PaginatedFilteredList;
 import api.equinix.javasdk.core.http.response.PaginatedList;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
 import api.equinix.javasdk.internetaccess.enums.ExportPolicy;
+import api.equinix.javasdk.internetaccess.enums.ServiceState;
 import api.equinix.javasdk.internetaccess.enums.ServiceTypeV2;
 import api.equinix.javasdk.internetaccess.enums.TermsProduct;
 import api.equinix.javasdk.internetaccess.enums.UseCase;
@@ -30,6 +31,7 @@ import api.equinix.javasdk.internetaccess.model.TermsAndConditions;
 import api.equinix.javasdk.internetaccess.model.VirtualBandwidthConfiguration;
 import api.equinix.javasdk.internetaccess.model.VirtualConnectionDefaultConfiguration;
 import api.equinix.javasdk.internetaccess.model.json.creators.BgpRoutingProtocolRequest;
+import api.equinix.javasdk.internetaccess.model.json.creators.ChangeOperationUpdate;
 import api.equinix.javasdk.internetaccess.model.json.creators.PriceSearchRequest;
 import api.equinix.javasdk.internetaccess.model.json.creators.ServiceSearchRequest;
 import org.junit.jupiter.api.Assumptions;
@@ -38,6 +40,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,12 +57,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * units, signature policies, price search, product/attribute configurations, purchase orders,
  * cages/cabinets/patch panels/connection services, and the single order get).</p>
  *
- * <p>Two tiers of tests are provided (the EIA specs document no standalone dry-run/validate
- * operations, so there is no dry-run tier for this domain):
+ * <p>Three tiers of tests are provided:
  * <ul>
  *     <li><b>integration-readonly</b> - Safe read-only operations (list, get, search-POST).
  *         Calls go through {@code requireEntitled}: a 401/403 skips (credential not entitled),
  *         anything else fails.</li>
+ *     <li><b>integration-dryrun</b> - the v2 {@code dryRun=true} validation surface (per the
+ *         spec, "Setting this parameter to true will perform only request validation without
+ *         actually updating/deleting the service"). Still zero real mutations, and the live
+ *         update payload is a no-op by construction; the delete dry-run is deliberately
+ *         WireMock-proofed only.</li>
  *     <li><b>integration-full</b> - Full CRUD lifecycle with automatic cleanup (folded in from
  *         the legacy {@code InternetAccessTest} live suite).</li>
  * </ul>
@@ -66,6 +74,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * <h3>Usage</h3>
  * <pre>
  * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET
+ * mvn test -Pintegration-dryrun   -DaccessKey=ID -DsecretKey=SECRET -DtestMode=dryrun
  * mvn test -Pintegration-full     -DaccessKey=ID -DsecretKey=SECRET -DtestMode=full -DconfirmDestructive=true \
  *          -DinternetAccessConnectionUuid=UUID
  * </pre>
@@ -606,6 +615,72 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
             assertEquals(uuid, order.getUuid());
             assertDoesNotThrow(order::getType);
             assertDoesNotThrow(order::getStatus);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  DRYRUN TESTS - v2 dryRun=true validation calls (zero real mutations)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * Dry-run coverage of the EIA v2 {@code dryRun} query parameter. Per the
+     * {@code updateEquinixInternetAccess} / {@code deleteEquinixInternetAccess} specs it is an
+     * optional boolean with no default: "Setting this parameter to true will perform only
+     * request validation without actually updating/deleting the service" (the SDK omits the
+     * parameter entirely when {@code false}).
+     */
+    @Nested
+    @Tag("integration-dryrun")
+    @DisplayName("EIA v2 Dry-Run Tests")
+    class DryRunTests {
+
+        // PARAM-DROP SAFETY DOCTRINE: a live dry-run must be harmless even if a future
+        // regression silently dropped the dryRun parameter and the call executed FOR REAL.
+        //
+        // DELETE /internetAccess/v2/services/{serviceId}?dryRun=true is therefore deliberately
+        // NOT live-tested: its payload is nothing but the serviceId of a live customer
+        // service, so a dropped parameter would REALLY delete that service — catastrophic and
+        // not reliably recoverable. The InternetAccessServiceLifecycleWireMockTest wire-proof
+        // (asserts dryRun=true actually goes on the wire, and covers the body-less v2 202) is
+        // the lock for that surface; no live delete dry-run is ever made here.
+
+        @Test
+        @DisplayName("services_dryRunUpdate - Validate-only NO-OP bandwidth update (updateEquinixInternetAccess?dryRun=true)")
+        void services_dryRunUpdate() {
+            Assumptions.assumeTrue(isDryRunEnabled(), "Dry-run tests disabled in READONLY mode");
+
+            PaginatedFilteredList<InternetAccessService> services = searchServices();
+            Assumptions.assumeTrue(services != null && !services.isEmpty(),
+                    "No EIA services found; skipping dry-run update");
+
+            InternetAccessService target = null;
+            for (InternetAccessService candidate : services) {
+                if (candidate.getUuid() != null && candidate.getBandwidth() != null
+                        && candidate.getState() == ServiceState.ACTIVE) {
+                    target = candidate;
+                    break;
+                }
+            }
+            Assumptions.assumeTrue(target != null,
+                    "No ACTIVE EIA service with a bandwidth found; skipping dry-run update");
+            final InternetAccessService service = target;
+
+            // PARAM-DROP SAFETY: the single change operation replaces /bandwidth with the
+            // service's CURRENT bandwidth, so even if a regression dropped dryRun=true and
+            // the PATCH executed for real, the service would be "updated" to exactly what it
+            // already is.
+            InternetAccessService dryRunResult = requireEntitled("InternetAccess",
+                    "updateEquinixInternetAccess_dryRun", "InternetAccessService", "PATCH",
+                    () -> client.services().update(service.getUuid(),
+                            List.of(ChangeOperationUpdate.replace("/bandwidth",
+                                    String.valueOf(service.getBandwidth()))),
+                            true));
+
+            assertNotNull(dryRunResult, "Dry-run update should return the validated service");
+            if (dryRunResult.getUuid() != null) {
+                assertEquals(service.getUuid(), dryRunResult.getUuid(),
+                        "Validated service should be the one the no-op update targeted");
+            }
         }
     }
 

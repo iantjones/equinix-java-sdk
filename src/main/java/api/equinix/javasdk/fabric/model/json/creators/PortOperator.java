@@ -110,8 +110,23 @@ public class PortOperator extends ResourceImpl<Port> {
         private PortServiceType serviceType;
         private PortServiceCode serviceCode;
         private Integer bandwidth;
+        private boolean dryRun;
 
         protected PortBuilder() {
+        }
+
+        /**
+         * Marks this create as a validate-only dry run: {@code create()} sends
+         * {@code POST /fabric/v4/ports?dryRun=true} (spec: "option to verify that API calls will
+         * succeed"; boolean, default {@code false}). No port is ordered — the API responds
+         * {@code 200} (rather than the real create's {@code 202}) with the validated port order
+         * echoed back, so the returned {@link Port} carries no uuid/name/state.
+         *
+         * @return this builder
+         */
+        public PortBuilder dryRun() {
+            this.dryRun = true;
+            return this;
         }
 
         public PortBuilder ofType(PortType type) {
@@ -341,7 +356,10 @@ public class PortOperator extends ResourceImpl<Port> {
 
         public Port create() {
             PortCreatorJson portCreatorJson = new PortCreatorJson(this);
-            PortJson portJson = ((PortClientImpl) PortOperator.this.getServiceClient()).create(portCreatorJson);
+            PortClientImpl clientImpl = (PortClientImpl) PortOperator.this.getServiceClient();
+            PortJson portJson = dryRun
+                    ? clientImpl.dryRunCreate(portCreatorJson)
+                    : clientImpl.create(portCreatorJson);
             return new PortWrapper(portJson, PortOperator.this.getServiceClient());
         }
     }
@@ -357,9 +375,29 @@ public class PortOperator extends ResourceImpl<Port> {
 
         private final String uuid;
         private final List<PatchOperation> operations = new ArrayList<>();
+        private boolean dryRun;
 
         protected PortUpdater(String uuid) {
             this.uuid = uuid;
+        }
+
+        /**
+         * Marks this update as a validate-only dry run: {@link #save()} sends
+         * {@code PATCH /fabric/v4/ports/{uuid}?dryRun=true} (spec: "option to verify that API
+         * calls will succeed"; boolean, default {@code false}). Nothing is changed on the port.
+         *
+         * <p>Wire-shape caveat: unlike the real update's bare {@code Port} body, the dry-run
+         * {@code 200} body is an {@code AllPortsResponse} paginated envelope
+         * ({@code {pagination, data:[Port]}}) carrying the simulated updated port in
+         * {@code data[0]} (spec example {@code PortUpdateDryRunResponse}); the SDK deserializes
+         * that envelope and unwraps {@code data[0]} into the {@link Port} returned by
+         * {@link #save()}.</p>
+         *
+         * @return this updater
+         */
+        public PortUpdater dryRun() {
+            this.dryRun = true;
+            return this;
         }
 
         /**
@@ -393,7 +431,10 @@ public class PortOperator extends ResourceImpl<Port> {
             if (operations.isEmpty()) {
                 throw new IllegalStateException("No changes specified; set at least one field before calling save().");
             }
-            PortJson portJson = ((PortClientImpl) PortOperator.this.getServiceClient()).update(uuid, operations);
+            PortClientImpl clientImpl = (PortClientImpl) PortOperator.this.getServiceClient();
+            PortJson portJson = dryRun
+                    ? clientImpl.dryRunUpdate(uuid, operations)
+                    : clientImpl.update(uuid, operations);
             return new PortWrapper(portJson, PortOperator.this.getServiceClient());
         }
     }

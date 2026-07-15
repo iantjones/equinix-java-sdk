@@ -40,6 +40,14 @@ public interface CloudRouterClient<T> extends PageablePost<T> {
 
     CloudRouterJson create(CloudRouterCreatorJson cloudRouterCreatorJson);
 
+    /**
+     * Dry-run variant of {@link #create(CloudRouterCreatorJson)}: POSTs the same body to
+     * {@code /fabric/v4/routers} with {@code dryRun=true} — per the Fabric v4 spec, an
+     * "option to verify that API calls will succeed". Nothing is provisioned; the API responds
+     * {@code 200} with the validated request echoed back (no {@code uuid}/{@code href}/{@code state}).
+     */
+    CloudRouterJson dryRunCreate(CloudRouterCreatorJson cloudRouterCreatorJson);
+
     CloudRouterJson update(String uuid, List<PatchOperation> operations);
 
     CloudRouterJson delete(String uuid);

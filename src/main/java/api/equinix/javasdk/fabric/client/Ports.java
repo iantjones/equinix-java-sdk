@@ -143,6 +143,22 @@ public interface Ports {
     Port delete(String uuid);
 
     /**
+     * Deletes a port by its unique identifier, optionally as a validate-only dry run
+     * ({@code DELETE /fabric/v4/ports/{uuid}?dryRun=true}; spec: "option to verify that API calls
+     * will succeed"; boolean, default {@code false}).
+     *
+     * <p>With {@code dryRun = true} nothing is deleted: the API responds {@code 200} (rather than
+     * the real delete's {@code 202 Accepted}) with the existing port entity — uuid, name and all —
+     * that WOULD be deleted. With {@code dryRun = false} this behaves exactly like
+     * {@link #delete(String)}.</p>
+     *
+     * @param uuid the unique identifier of the port to delete
+     * @param dryRun {@code true} to only verify that the delete would succeed, without deleting
+     * @return the deleted port — or, on a dry run, the port that would be deleted
+     */
+    Port delete(String uuid, boolean dryRun);
+
+    /**
      * Begins a fluent update of an existing port ({@code PATCH /fabric/v4/ports/{uuid}}).
      * Configure the returned updater, then call {@code save()}.
      *

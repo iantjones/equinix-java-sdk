@@ -55,12 +55,34 @@ public interface PortClient<T> extends PageablePost<T> {
     PortJson create(PortCreatorJson body);
 
     /**
+     * Validate-only variant of {@link #create(PortCreatorJson)}
+     * ({@code POST /fabric/v4/ports?dryRun=true}; spec: "option to verify that API calls will
+     * succeed"). No port is ordered — the 200 response is the validated port order echoed back
+     * (no uuid/name/state), versus the real create's 202.
+     *
+     * @param body the typed create request to validate
+     * @return the validated port order echoed back by the server
+     */
+    PortJson dryRunCreate(PortCreatorJson body);
+
+    /**
      * Deletes a port by uuid ({@code DELETE /fabric/v4/ports/{uuid}}).
      *
      * @param uuid the unique identifier of the port
      * @return the deleted port as returned by the server
      */
     PortJson delete(String uuid);
+
+    /**
+     * Validate-only variant of {@link #delete(String)}
+     * ({@code DELETE /fabric/v4/ports/{uuid}?dryRun=true}; spec: "option to verify that API calls
+     * will succeed"). Nothing is deleted — the 200 response is the existing port entity (with
+     * uuid/name) that WOULD be deleted, versus the real delete's 202.
+     *
+     * @param uuid the unique identifier of the port
+     * @return the port that would be deleted
+     */
+    PortJson dryRunDelete(String uuid);
 
     /**
      * Updates a port by uuid with a JSON Patch operations array
@@ -71,6 +93,20 @@ public interface PortClient<T> extends PageablePost<T> {
      * @return the updated port
      */
     PortJson update(String uuid, List<PatchOperation> operations);
+
+    /**
+     * Validate-only variant of {@link #update(String, List)}
+     * ({@code PATCH /fabric/v4/ports/{uuid}?dryRun=true}; spec: "option to verify that API calls
+     * will succeed"). Nothing is changed — and unlike the real update's bare {@code Port}, the
+     * dry-run 200 body is an {@code AllPortsResponse} paginated envelope
+     * ({@code {pagination, data:[Port]}}); implementations deserialize that envelope and return
+     * its {@code data[0]}, the simulated updated port.
+     *
+     * @param uuid the unique identifier of the port
+     * @param operations the op/path/value change operations to validate
+     * @return the simulated updated port unwrapped from the envelope's {@code data[0]}
+     */
+    PortJson dryRunUpdate(String uuid, List<PatchOperation> operations);
 
     /**
      * Adds physical ports to a virtual port's LAG

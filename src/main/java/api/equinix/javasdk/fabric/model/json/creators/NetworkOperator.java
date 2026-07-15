@@ -71,6 +71,7 @@ public class NetworkOperator extends ResourceImpl<Network> {
         private Project project;
         private LocationCode location;
         private List<Notification> notifications;
+        private boolean dryRun;
 
         protected NetworkBuilder(NetworkType type) {
             this.type = type;
@@ -115,9 +116,26 @@ public class NetworkOperator extends ResourceImpl<Network> {
             return this;
         }
 
+        /**
+         * Marks this create as a dry run: the request is sent with the spec's {@code dryRun=true}
+         * query parameter ("option to verify that API calls will succeed"; boolean, default
+         * {@code false}). Nothing is provisioned — {@link #create()} returns the validated request
+         * echoed back by the API with no {@code uuid}/{@code href}/{@code state} (spec example
+         * {@code CreateNetworkDryRunResponse}).
+         *
+         * @return this builder
+         */
+        public NetworkOperator.NetworkBuilder dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
         public Network create() {
             NetworkCreatorJson networkCreatorJson = new NetworkCreatorJson(this);
-            NetworkJson networkJson = ((NetworkClientImpl) NetworkOperator.this.getServiceClient()).create(networkCreatorJson);
+            NetworkClientImpl clientImpl = (NetworkClientImpl) NetworkOperator.this.getServiceClient();
+            NetworkJson networkJson = dryRun
+                    ? clientImpl.dryRunCreate(networkCreatorJson)
+                    : clientImpl.create(networkCreatorJson);
             return new NetworkWrapper(networkJson, NetworkOperator.this.getServiceClient());
         }
     }

@@ -18,6 +18,7 @@ package api.equinix.javasdk.fabric.client.internal.implementation;
 
 import api.equinix.javasdk.core.client.ResourceClientBase;
 import api.equinix.javasdk.core.enums.RequestType;
+import api.equinix.javasdk.core.exception.EquinixClientException;
 import api.equinix.javasdk.core.http.ResponseHandler;
 import api.equinix.javasdk.core.http.SerializationHelper;
 import api.equinix.javasdk.core.http.request.EquinixRequest;
@@ -36,13 +37,14 @@ import api.equinix.javasdk.fabric.model.json.PhysicalPortsResponseJson;
 import api.equinix.javasdk.fabric.model.json.PortJson;
 import api.equinix.javasdk.fabric.model.json.PortVlanJson;
 import api.equinix.javasdk.fabric.model.wrappers.PortWrapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Internal client for Fabric Ports (read-only). Plumbing/paging provided by {@link ResourceClientBase}.
+ * Internal client for Fabric Ports. Plumbing/paging provided by {@link ResourceClientBase}.
  *
  * @author ianjones
  */
@@ -84,14 +86,60 @@ public class PortClientImpl extends ResourceClientBase<Port, PortJson> implement
         return postOne("CreatePort", body);
     }
 
+    /**
+     * {@code POST /fabric/v4/ports?dryRun=true} (spec: "option to verify that API calls will
+     * succeed") via the shared {@code ResourceClientBase.dryRunCreate} helper. The 200 body is
+     * the validated port order echoed back — no uuid/name/state — versus the real create's 202.
+     */
+    public PortJson dryRunCreate(PortCreatorJson body) {
+        return dryRunCreate("CreatePort", body);
+    }
+
     public PortJson delete(String uuid) {
         return deleteOne("DeletePort", uuid);
+    }
+
+    /**
+     * {@code DELETE /fabric/v4/ports/{uuid}?dryRun=true} (spec: "option to verify that API calls
+     * will succeed"). Nothing is deleted; the 200 body is the existing port entity that WOULD be
+     * deleted, deserialized exactly like the real delete's response.
+     */
+    public PortJson dryRunDelete(String uuid) {
+        EquinixRequest<PortJson> request = buildRequestWithPathParams("DeletePort", RequestType.SINGLE,
+                Map.of("uuid", uuid), PortJson.class);
+        request.addSingleQueryParameter("dryRun", "true");
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
     }
 
     public PortJson update(String uuid, List<PatchOperation> operations) {
         // PATCH /ports/{uuid} with an op/path/value array sent as application/json
         // (not json-patch+json), so updateOne (default content-type) is correct here.
         return updateOne("UpdatePort", uuid, operations);
+    }
+
+    /**
+     * {@code PATCH /fabric/v4/ports/{uuid}?dryRun=true} (spec: "option to verify that API calls
+     * will succeed"). Nothing is changed — and the dry-run 200 schema is {@code AllPortsResponse},
+     * a paginated envelope {@code {pagination, data:[Port]}} carrying the simulated updated port
+     * in {@code data[0]} (spec example {@code PortUpdateDryRunResponse}). That is a DIFFERENT wire
+     * shape from the real update's bare {@code Port}, so this method deserializes
+     * {@code Page<PortJson>} and unwraps {@code data[0]} instead of reusing {@code updateOne}.
+     */
+    public PortJson dryRunUpdate(String uuid, List<PatchOperation> operations) {
+        EquinixRequest<Page<PortJson>> request = newRequest("UpdatePort")
+                .withType(RequestType.SINGLE)
+                .withPathParams(Map.of("uuid", uuid))
+                .withTypeRef(new TypeReference<Page<PortJson>>() {})
+                .build();
+        request.addSingleQueryParameter("dryRun", "true");
+        // Same body contract as update(): an op/path/value array sent as application/json.
+        SerializationHelper.serializeJson(request, operations);
+        Page<PortJson> envelope = ResponseHandler.handleSingletonResponse(invoke(request), request);
+        if (envelope == null || envelope.getItems() == null || envelope.getItems().isEmpty()) {
+            throw new EquinixClientException("Dry-run port update returned an empty AllPortsResponse"
+                    + " envelope (expected the simulated updated port in data[0]).");
+        }
+        return envelope.getItems().get(0);
     }
 
     public PhysicalPortsResponseJson addToLag(String portId, List<PhysicalPort> physicalPorts) {

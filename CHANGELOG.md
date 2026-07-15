@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Every spec-documented dry-run is now in the SDK
+fabricv4 documents nine `dryRun=true` query-param operations; the SDK exposed two. The other
+seven are now first-class surfaces (the spec audit also resolved the `$ref`'d shared params and
+confirmed tags/searches carry **no** dry-run despite grep hits):
+- **Fluent `.dryRun()` on updaters** — `connection.update()…dryRun().save()` and
+  `serviceTokens().update(uuid)…dryRun().save()` (PATCH + `dryRun=true`, returns the simulated
+  post-update entity).
+- **Fluent `.dryRun()` on creators** — port create, cloudRouter create, network create
+  (validated request echoed back without uuid/state; port dry-run create validates a real
+  procurement order without placing it).
+- **`ports().delete(uuid, dryRun)`** overload (returns the port that *would* be deleted) and
+  `PortUpdater.dryRun()` — whose dry-run response is a paginated envelope unlike the real
+  update's bare entity (spec quirk, handled + documented).
+- **Regression locks**: every dry-run surface has a WireMock pair — one test proving
+  `dryRun=true` reaches the wire on the exact endpoint, one proving the default path omits it —
+  so a future param-drop can never silently turn a dry-run into a real mutation. +6 live
+  `integration-dryrun` tests use param-drop-safe payloads (no-op renames; cleanup-registered
+  creates); port create/delete and EIA delete are deliberately WireMock-only because an
+  accidental real execution would be unrecoverable.
+- Verified-correct, unchanged: EIA v2 update/delete `dryRun` flags (already wired to spec);
+  EIA v2 create has no dry-run in the spec; v1 delete dry-run intentionally unexposed
+  (superseded by v2). The suspected NetworkEdge downtime-notifications wrong-shape was
+  re-audited against the spec and refuted — no fix needed.
+
 ### Live integration tier made catalog-complete
 All 33 API-catalog OpenAPI specs were swept operation-by-operation and every one of the 280
 operations verified safe to run against a production account (GET reads, POST searches, and

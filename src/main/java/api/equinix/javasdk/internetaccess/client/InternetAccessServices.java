@@ -65,9 +65,15 @@ public interface InternetAccessServices {
      * Updates the mutable properties of an Equinix Internet Access v2 service, optionally in
      * validate-only mode.
      *
+     * <p>Per the {@code updateEquinixInternetAccess} spec, {@code dryRun} is an optional boolean
+     * query parameter with no default: "Setting this parameter to true will perform only request
+     * validation without actually updating the service". When {@code dryRun} is {@code false} the
+     * parameter is omitted from the request entirely.</p>
+     *
      * @param serviceId the unique identifier of the service to update
      * @param operations the change operations to apply
-     * @param dryRun if {@code true}, the request is only validated and the service is not updated
+     * @param dryRun if {@code true}, sends {@code dryRun=true} so the request is only validated
+     *               and the service is not updated; if {@code false}, the parameter is omitted
      * @return the updated (or, in dry-run mode, the validated) service
      */
     InternetAccessService update(String serviceId, List<ChangeOperationUpdate> operations, boolean dryRun);
@@ -83,8 +89,14 @@ public interface InternetAccessServices {
     /**
      * Deletes an Equinix Internet Access v2 service, optionally in validate-only mode.
      *
+     * <p>Per the {@code deleteEquinixInternetAccess} spec, {@code dryRun} is an optional boolean
+     * query parameter with no default: "Setting this parameter to true will perform only request
+     * validation without actually deleting the service". When {@code dryRun} is {@code false} the
+     * parameter is omitted from the request entirely. The 202 response carries no body.</p>
+     *
      * @param serviceId the unique identifier of the service to delete
-     * @param dryRun if {@code true}, the request is only validated and the service is not deleted
+     * @param dryRun if {@code true}, sends {@code dryRun=true} so the request is only validated
+     *               and the service is not deleted; if {@code false}, the parameter is omitted
      * @return {@code true} if the (deletion or validation) request was accepted
      */
     Boolean delete(String serviceId, boolean dryRun);

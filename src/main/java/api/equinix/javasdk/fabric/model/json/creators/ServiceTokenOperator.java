@@ -62,12 +62,13 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
     /**
      * Fluent builder for PATCH-updating an existing service token. Each typed setter records a
      * {@code replace} change operation; {@link #save()} sends them as one {@code PATCH} and returns
-     * the refreshed model.
+     * the refreshed model. Call {@link #dryRun()} first to only validate the update.
      */
     public class ServiceTokenUpdater {
 
         private final String uuid;
         private final List<PatchOperation> operations = new ArrayList<>();
+        private boolean dryRun;
 
         protected ServiceTokenUpdater(String uuid) {
             this.uuid = uuid;
@@ -93,11 +94,28 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
             return this;
         }
 
+        /**
+         * Marks this update as a dry run: {@link #save()} sends the same change-operations
+         * {@code PATCH} to {@code /fabric/v4/serviceTokens/{uuid}} with the {@code dryRun=true}
+         * query parameter — per the Fabric v4 spec, an "option to verify that API calls will
+         * succeed". Nothing is persisted: the API responds {@code 200} with the
+         * validated/simulated token entity, which {@code save()} returns.
+         *
+         * @return this builder
+         */
+        public ServiceTokenUpdater dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
         public ServiceToken save() {
             if (operations.isEmpty()) {
                 throw new IllegalStateException("No changes specified; set at least one field before calling save().");
             }
-            ServiceTokenJson serviceTokenJson = ((ServiceTokenClientImpl) ServiceTokenOperator.this.getServiceClient()).update(uuid, operations);
+            ServiceTokenClientImpl clientImpl = (ServiceTokenClientImpl) ServiceTokenOperator.this.getServiceClient();
+            ServiceTokenJson serviceTokenJson = dryRun
+                    ? clientImpl.dryRunUpdate(uuid, operations)
+                    : clientImpl.update(uuid, operations);
             return new ServiceTokenWrapper(serviceTokenJson, ServiceTokenOperator.this.getServiceClient());
         }
     }

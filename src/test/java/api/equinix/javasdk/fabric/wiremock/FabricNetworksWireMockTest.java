@@ -10,6 +10,7 @@ import api.equinix.javasdk.fabric.enums.NetworkEquinixStatus;
 import api.equinix.javasdk.fabric.enums.NetworkScope;
 import api.equinix.javasdk.fabric.enums.NetworkState;
 import api.equinix.javasdk.fabric.enums.NetworkType;
+import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.Network;
 import api.equinix.javasdk.fabric.model.implementation.Change;
@@ -136,6 +137,61 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.type", equalTo("EVPLAN")))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("Production-EVPLAN-Network")))
                     .withRequestBody(matchingJsonPath("$.scope", equalTo("REGIONAL"))));
+        }
+
+        @Test
+        @DisplayName("dryRun() sends dryRun=true on POST /networks and deserializes the echoed request")
+        void dryRunCreateSendsDryRunQueryParam() {
+            // Spec (createNetwork): dryRun — "option to verify that API calls will succeed".
+            // The dry-run example (CreateNetworkDryRunResponse, filed under the 201 response) is the
+            // validated request echoed back: no uuid/href/state. The stub only matches when
+            // dryRun=true is on the wire, so a dropped parameter fails the call, not just verify().
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/networks"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("""
+                                    {
+                                      "type": "EVPLAN",
+                                      "name": "My-EVPLAN-1",
+                                      "scope": "GLOBAL",
+                                      "notifications": [ { "type": "ALL", "emails": [ "test@equinix.com" ] } ]
+                                    }
+                                    """)));
+
+            Network network = fabric.networks().define(NetworkType.EVPLAN)
+                    .name("My-EVPLAN-1")
+                    .scope(NetworkScope.GLOBAL)
+                    .notification(NotificationType.ALL, "test@equinix.com")
+                    .dryRun()
+                    .create();
+
+            assertNotNull(network);
+            assertEquals("My-EVPLAN-1", network.getName());
+            assertNull(network.getUuid(), "dry-run echo carries no uuid");
+            assertNull(network.getState(), "dry-run echo carries no state");
+
+            // Regression lock: dryRun=true MUST reach the wire, or a dry run becomes a real create.
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/networks"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withRequestBody(matchingJsonPath("$.type", equalTo("EVPLAN")))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("My-EVPLAN-1"))));
+        }
+
+        @Test
+        @DisplayName("create() without dryRun() does NOT send the dryRun query parameter")
+        void defaultCreateOmitsDryRunQueryParam() {
+            stubCreate(wireMock, "/fabric/v4/networks", "/json/fabric/network_response.json");
+
+            Network network = fabric.networks().define(NetworkType.EVPLAN)
+                    .name("Production-EVPLAN-Network")
+                    .scope(NetworkScope.REGIONAL)
+                    .create();
+
+            assertNotNull(network);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/networks"))
+                    .withQueryParam("dryRun", absent()));
         }
     }
 

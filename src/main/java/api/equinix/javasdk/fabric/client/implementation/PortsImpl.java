@@ -105,6 +105,13 @@ public class PortsImpl implements Ports {
         return new PortWrapper(portJson, this.serviceClient);
     }
 
+    public Port delete(String uuid, boolean dryRun) {
+        PortJson portJson = dryRun
+                ? this.serviceClient.dryRunDelete(uuid)
+                : this.serviceClient.delete(uuid);
+        return new PortWrapper(portJson, this.serviceClient);
+    }
+
     public PortOperator.PortUpdater update(String uuid) {
         return new PortOperator(this.serviceClient).update(uuid);
     }
