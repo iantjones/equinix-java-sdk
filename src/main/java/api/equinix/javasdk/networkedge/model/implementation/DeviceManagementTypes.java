@@ -36,13 +36,9 @@ public class DeviceManagementTypes {
     DeviceManagement selfConfigured;
 
     public DeviceManagement byValue(DeviceManagementType deviceManagementType) {
-        DeviceManagement deviceManagement = null;
-
-        switch (deviceManagementType) {
-            case EQUINIX_CONFIGURED: deviceManagement = equinixConfigured;
-            case SELF_CONFIGURED: deviceManagement = selfConfigured;
-        }
-
-        return deviceManagement;
+        return switch (deviceManagementType) {
+            case EQUINIX_CONFIGURED -> equinixConfigured;
+            case SELF_CONFIGURED -> selfConfigured;
+        };
     }
 }
