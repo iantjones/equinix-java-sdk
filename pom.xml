@@ -65,11 +65,20 @@
             <artifactId>slf4j-api</artifactId>
             <version>2.0.13</version>
         </dependency>
+        <!--
+          slf4j-simple serves two roles: the test suites' logging backend (runtime scope keeps
+          it on the test classpath) and the logging backend bundled into the shaded mcp-server
+          jar (the shade plugin bundles compile+runtime artifacts; test scope would leave the
+          runnable server jar without a binding). It is <optional> so library consumers never
+          inherit a logging BINDING from this SDK — only the slf4j-api facade above is a real
+          transitive dependency. Locked by DependencyHygieneTest.
+        -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>2.0.13</version>
-            <scope>test</scope>
+            <scope>runtime</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -98,13 +107,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.11.0</version>
+            <version>5.23.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.11.0</version>
+            <version>5.23.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -160,6 +169,26 @@
             <version>1.18.42</version>
             <scope>provided</scope>
         </dependency>
+        <!--
+          Official MCP Java SDK, used ONLY by the embedded MCP server
+          (api.equinix.javasdk.mcp.server). Both are <optional> so SDK consumers'
+          dependency trees are untouched; the runnable server ships as the shaded
+          "mcp-server" classifier jar, which bundles them. mcp-json-jackson2 keeps
+          the server on this project's Jackson 2 stack (the default mcp aggregate
+          would pull Jackson 3).
+        -->
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp-core</artifactId>
+            <version>2.0.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp-json-jackson2</artifactId>
+            <version>2.0.0</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
@@ -184,7 +213,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.3.1</version>
                 <configuration>
-                    <excludedGroups>wiremock,integration-readonly,integration-dryrun,integration-full,integration-scenario,live-mcp</excludedGroups>
+                    <excludedGroups>wiremock,integration-readonly,integration-dryrun,integration-full,integration-scenario</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
@@ -231,6 +260,61 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+              Runnable embedded MCP server jar (target/${artifactId}-${version}-mcp-server.jar):
+              `java -jar` it from Claude Desktop / Claude Code / Cursor / VS Code. Shade attaches
+              it as the SECONDARY artifact with classifier 'mcp-server' (shadedArtifactAttached),
+              so the primary library jar and its pom are untouched — createDependencyReducedPom
+              is explicitly false because the default (true) would rewrite the pom that
+              install/deploy publish. The uber jar bundles the SDK plus every compile/runtime
+              dependency: the two <optional> io.modelcontextprotocol.sdk artifacts and their
+              transitives (reactor-core, networknt json-schema-validator, ...), Jackson,
+              HttpClient, slf4j-api and the <optional> slf4j-simple binding — a project's OWN
+              optional dependencies are on its runtime classpath (optionality only stops
+              consumers inheriting them), so shade includes them. Lombok is provided scope and
+              is excluded automatically. Jar signature files are stripped (invalid once
+              repackaged) and JPMS module descriptors dropped (a multi-module uber jar cannot
+              carry any single module-info).
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <id>mcp-server-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>mcp-server</shadedClassifierName>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>api.equinix.javasdk.mcp.server.EquinixMcpServerMain</mainClass>
+                                </transformer>
+                                <!-- Merge META-INF/services across Jackson/Reactor/etc. -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/*.EC</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -381,31 +465,6 @@
                                     <value>${confirm.destructive}</value>
                                 </property>
                             </systemProperties>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!--
-            Live probe of the Fabric MCP Server (mcp.equinix.com/fabric): OAuth refresh-token
-            exchange + initialize + tools/list only (read-only - never tools/call), then diffs
-            the live catalog against the pinned src/main/resources/mcp-catalog.json manifest.
-            Credentials come from EQUINIX_MCP_CLIENT_ID / EQUINIX_MCP_REFRESH_TOKEN (env vars,
-            or .env.local via the McpLogin device-code tool); the suite self-skips when absent.
-                mvn test -Plive-mcp
-        -->
-        <profile>
-            <id>live-mcp</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.3.1</version>
-                        <configuration>
-                            <groups>live-mcp</groups>
-                            <excludedGroups combine.self="override"></excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>

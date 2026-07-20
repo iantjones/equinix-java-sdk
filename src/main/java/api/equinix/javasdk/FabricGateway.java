@@ -30,9 +30,9 @@ import api.equinix.javasdk.fabric.client.ServiceProfiles;
  *
  * <p>{@code Fabric} implements this interface, so existing callers (which pass a concrete
  * {@code Fabric}) are unaffected; the engines, however, depend only on this small interface rather
- * than the full concrete client. That is the composition boundary the {@code design} and
- * {@code mcp} module extraction was built around: it keeps the engines decoupled from the entire
- * Fabric surface and makes them straightforward to unit-test against a stub gateway.</p>
+ * than the full concrete client. That is the composition boundary the {@code design} module
+ * extraction was built around: it keeps the engines decoupled from the entire Fabric surface
+ * and makes them straightforward to unit-test against a stub gateway.</p>
  *
  * @author ianjones
  */

@@ -5,7 +5,7 @@
 [![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.eqixiac.equinix/equinix-sdk-java.svg)](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)
 
-> A Java client for the Equinix platform APIs — Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS — plus a `Design` module (metro optimizer, deployment wizard, peering intelligence, cost calculators) and an `Mcp` client.
+> A Java client for the Equinix platform APIs — Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS — plus a `Design` module (metro optimizer, deployment wizard, peering intelligence, cost calculators).
 
 **[View Full API Documentation (Javadoc)](https://iantjones.github.io/equinix-java-sdk/)** · **[Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)**
 
@@ -27,8 +27,14 @@ things it handles so you don't have to:
 On top of the raw API, the **`Design`** module is for planning rather than provisioning: a
 metro-placement optimizer, a deployment wizard that turns a plan into provisioned Fabric resources,
 peering intelligence built on PeeringDB, IBX-to-IBX latency estimates, and Fabric-vs-internet cost
-calculators. The **`Mcp`** module is a JSON-RPC client for the private-beta Equinix Model Context
-Protocol servers (see [Fabric: MCP Bridge](#fabric-mcp-bridge) for the authentication caveats).
+calculators.
+
+And the whole thing doubles as an **MCP server for AI agents**: one build produces a runnable
+`-mcp-server.jar` that Claude Desktop, Claude Code, Cursor, or VS Code launch over stdio, exposing
+the design engines and cross-domain reads as 12 read-only tools — plus an opt-in dry-run-first
+mutation broker — under your own API credentials. See
+[Intelligence MCP Server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server). It's a community
+server, not affiliated with Equinix.
 
 ## Quick Start
 
@@ -80,7 +86,6 @@ try (Equinix eq = new Equinix(credentials)) {     // one token, one pool
     Fabric fabric    = eq.fabric();
     NetworkEdge edge = eq.networkEdge();           // shares the same token + pool
     Design design    = eq.design();                // value-add engines over the shared Fabric
-    Mcp mcp          = eq.mcp();
 }                                                  // closed once for the whole session
 ```
 
@@ -151,7 +156,6 @@ registry.refresh();   // re-pulls both sources at runtime, atomically, in place 
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
-| **MCP** | `new Mcp(creds)` | — | Client for the private-beta Equinix MCP (Model Context Protocol) servers — JSON-RPC 2.0 tool discovery/invocation (supporting types in `api.equinix.javasdk.mcp.*`). `Fabric.mcp()` wraps this same client in typed helpers; both consume the remote server (the SDK does not run an MCP server). Requires OAuth 2.1 sign-in via `McpLogin` — see [Fabric: MCP Bridge](#fabric-mcp-bridge). |
 | **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Savings Calculator, TCO comparison (`api.equinix.javasdk.design.*`) — a facade over an existing Fabric client (reuses its transport) |
 
 ## Usage Examples
@@ -981,129 +985,205 @@ System.out.println(tco.toMarkdown());
 Both are equivalently reachable via the design facade: `Design.over(fabric).savingsCalculator()` /
 `.tcoComparison()` (or `eq.design()…`).
 
-### Fabric: MCP Bridge
+### Intelligence MCP Server: Run the SDK as an MCP Server
 
-The MCP bridge is a *client* for the [Equinix Fabric MCP server](https://docs.equinix.com/equinix-api/mcp-servers/overview/) — JSON-RPC 2.0 over the server's Streamable HTTP endpoint. It consumes the remote server; the SDK does not run an MCP server of its own, and nothing here exposes the SDK's resources as MCP tools. There are typed helpers for the everyday things — metros, connections, cloud routers, observability — plus `availableTools()` to list the server's catalog (~100 documented tools, none of them deletes) and `callTool(name, args)` for anything not yet wrapped. Responses come back as typed Java objects.
+The SDK embeds the **Equinix Intelligence MCP Server** — a [Model Context
+Protocol](https://modelcontextprotocol.io/) server that lets AI agents (Claude Desktop, Claude
+Code, Cursor, VS Code, or any MCP host) use the SDK's design engines and cross-domain reads as
+tools. It runs **locally, over stdio only**, under **your** API application's client credentials —
+no browser sign-in, no hosted endpoint, no data leaving your machine except the SDK's own calls to
+`api.equinix.com`.
 
-> **Private Beta.** The Equinix MCP server is in Private Beta — contact `fabric-intelligence-support@equinix.com` or your Equinix account representative for access.
->
-> **Authentication (live-verified 2026-07-20):** `mcp.equinix.com/fabric` requires OAuth 2.1 bearer tokens issued by `as.equinix.com` (authorization-code + refresh-token grants only, PKCE S256, dynamic client registration). That authorization server offers **no `client_credentials` grant**, so the SDK's regular `api.equinix.com` client-credentials tokens can never be accepted here. Sign in interactively with the device-code flow via `McpLogin` (ships in this release).
->
-> The `peeringInsights` endpoint (`Mcp.callPeeringTool(...)`) is undocumented and experimental — only the Fabric server appears in Equinix's MCP documentation.
+> **Unofficial.** This is a community server built into a community SDK. It is **not affiliated
+> with Equinix** and is unrelated to Equinix's own private-beta *Fabric MCP server* (a hosted
+> service with OAuth 2.1 user consent). See the [comparison below](#how-this-differs-from-equinixs-official-fabric-mcp-server).
 
-#### Direct MCP Access
+The tool catalog is deliberately small — every tool either embeds one of the SDK's design engines
+or reaches across API domains; none of them mirror single REST endpoints (the SDK's typed clients
+already do that, and Equinix's official server owns the Fabric-catalog-mirroring niche).
 
-```java
-Fabric fabric = new Fabric(credentials);
+#### Build and connect
 
-// Access the MCP Bridge (the underlying client initializes itself on the first tool call)
-McpBridge mcp = fabric.mcp();
+One build produces the runnable server jar alongside the library jar:
 
-// List all available MCP tools
-Map<String, McpToolDefinition> tools = mcp.availableTools();
-System.out.println("Available tools: " + tools.size());
+```bash
+mvn -q package -DskipTests
+# → target/equinix-sdk-java-<version>-mcp-server.jar
+```
 
-// Query metro data via MCP
-List<McpMetroBridge.McpMetro> metros = mcp.metros().listMetros();
-for (McpMetroBridge.McpMetro metro : metros) {
-    System.out.println(metro.getCode() + " - " + metro.getName()
-        + " (" + metro.getRegion() + ", " + metro.getConnectedMetroCount() + " connected)");
+Credentials are the same client-credentials keys the SDK uses (an API application from the
+[Equinix Developer Portal](https://developer.equinix.com/)), passed as `EQUINIX_ACCESS_KEY` /
+`EQUINIX_SECRET_KEY` environment variables — or, if you'd rather keep secrets out of host config
+files, as `KEY=VALUE` lines in a `.env.local` file in the server's working directory.
+
+**Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "equinix": {
+      "command": "java",
+      "args": ["-jar", "/path/to/equinix-sdk-java-<version>-mcp-server.jar"],
+      "env": {
+        "EQUINIX_ACCESS_KEY": "your-client-id",
+        "EQUINIX_SECRET_KEY": "your-client-secret"
+      }
+    }
+  }
 }
-
-// Get details for a specific metro
-McpMetroBridge.McpMetro sv = mcp.metros().getMetro("SV");
-System.out.println(sv.getName() + " in " + sv.getCountry());
 ```
 
-#### Connection Validation
+**Claude Code**:
 
-```java
-// Validate a connection configuration before creation
-McpConnectionBridge.McpConnectionValidation result =
-    mcp.connections().validateConnection(Map.of(
-        "type", "EVPL_VC",
-        "name", "My-AWS-Connection",
-        "bandwidth", 1000
-    ));
-
-System.out.println("Valid: " + result.isValid());      // true
-System.out.println("Message: " + result.getMessage());  // "Connection configuration is valid"
-
-// Search existing connections
-List<McpConnectionBridge.McpConnection> connections =
-    mcp.connections().searchConnections(Map.of("state", "ACTIVE"));
+```bash
+claude mcp add equinix \
+  --env EQUINIX_ACCESS_KEY=your-client-id \
+  --env EQUINIX_SECRET_KEY=your-client-secret \
+  -- java -jar /path/to/equinix-sdk-java-<version>-mcp-server.jar
 ```
 
-#### Observability & Metrics
+**Cursor** (`.cursor/mcp.json`):
 
-```java
-// Get live metrics for a connection
-McpObservabilityBridge.McpMetrics metrics = mcp.observability().getMetrics(
-    "connection", connectionUuid, "bandwidth",
-    "2026-03-01T00:00:00Z", "2026-03-25T00:00:00Z");
-
-System.out.println("Avg bandwidth: " + metrics.getAvg() + " Mbps");
-System.out.println("Peak: " + metrics.getMax() + " Mbps");
-
-// List observability streams
-List<McpObservabilityBridge.McpStream> streams = mcp.observability().listStreams();
-
-// Search cloud events
-JsonNode events = mcp.observability().searchCloudEvents(Map.of(
-    "resourceType", "connection",
-    "severity", "WARNING"
-));
+```json
+{
+  "mcpServers": {
+    "equinix": {
+      "command": "java",
+      "args": ["-jar", "/path/to/equinix-sdk-java-<version>-mcp-server.jar"],
+      "env": {
+        "EQUINIX_ACCESS_KEY": "your-client-id",
+        "EQUINIX_SECRET_KEY": "your-client-secret"
+      }
+    }
+  }
+}
 ```
 
-#### MCP-Enriched Optimization
+**VS Code** (`.vscode/mcp.json`):
 
-The Deployment Wizard accepts an optional MCP bridge to validate planned connections against the live MCP server before the plan is returned. When MCP is unavailable, validation is skipped with no code changes.
-
-```java
-// Deployment Wizard with MCP validation
-DeploymentPlan plan = fabric.deploymentWizard(result)
-    .withMcpValidation(fabric.mcp())  // validate connections via MCP
-    .routerPackage("STANDARD")
-    .routerNamePrefix("FCR")
-    .backboneTopology(BackboneTopology.FULL_MESH)
-    .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
-    .customerAsn(65100L)
-    .plan();
-
-// Peering Intelligence (PeeringDB + optional live Fabric data)
-PeeringIntelligenceResult peeringResult = fabric.peeringIntelligence("your-peeringdb-api-key")
-    .addAsn(16509, "AWS")
-    .addAsn(8075, "Microsoft")
-    .customerMetros(MetroCode.DC, MetroCode.DA)
-    .includeResiliency(true)
-    .analyze();
+```json
+{
+  "servers": {
+    "equinix": {
+      "type": "stdio",
+      "command": "java",
+      "args": ["-jar", "/path/to/equinix-sdk-java-<version>-mcp-server.jar"],
+      "env": {
+        "EQUINIX_ACCESS_KEY": "your-client-id",
+        "EQUINIX_SECRET_KEY": "your-client-secret"
+      }
+    }
+  }
+}
 ```
 
-#### Custom MCP Configuration
+Optional environment variables:
 
-```java
-// Use custom endpoints, timeouts, or retry policy
-McpClientConfig config = McpClientConfig.builder()
-    .fabricEndpoint("https://mcp.equinix.com/fabric")
-    .peeringInsightsEndpoint("https://mcp.equinix.com/peeringInsights")
-    .connectTimeoutMs(15_000)
-    .readTimeoutMs(60_000)
-    .maxRetries(3)
-    .build();
+| Variable | Purpose |
+|---|---|
+| `EQUINIX_MCP_TOOLSETS` | Comma-separated toolset filter (`design`, `fabric`, `portal`, `ne`, `ibx`, `mutate`). Default: every **read-only** toolset. Also available as a `--toolsets` launch argument. |
+| `EQUINIX_SANDBOX` | `true` targets the Equinix sandbox environment. |
+| `EQUINIX_MCP_LOG_LEVEL` | slf4j-simple level for the stderr diagnostics (default `info`). stdout carries only the MCP protocol. |
+| `EQUINIX_PEERINGDB_KEY` | Optional PeeringDB API key for `design_analyze_peering`. |
+| `GCP_BILLING_API_KEY` | Optional Google Cloud Billing Catalog key — enables the live GCP adapter in `design_compare_cloud_egress`. |
+| `EQUINIX_MCP_PRICING_TIMEOUT_MS` | Hard per-lookup timeout for live provider pricing (default `12000`). A slow provider degrades gracefully by name; the server never hangs. |
 
-McpBridge mcp = fabric.mcp(config);
-```
+Only the two credential keys are read from `.env.local`; everything else must be a real
+environment variable (the host config's `env` block).
 
-#### Architecture
+Java applications can also embed the server directly — `EquinixMcpServer.builder()` accepts an
+existing `Equinix` session (shared token + pool) and a custom `ToolRegistration` seam for
+extension tools.
 
-```mermaid
-flowchart LR
-    code["Your code<br/>fabric.mcp() · optimizeMetros()<br/>deploymentWizard() · peeringIntelligence()"]
-    bridge["McpBridge<br/>metros() · connections()<br/>cloudRouters() · observability()"]
-    client["Mcp<br/>JSON-RPC 2.0 · token mgmt · retry"]
-    server["Equinix MCP server (Private Beta)<br/>mcp.equinix.com · OAuth 2.1 bearer via as.equinix.com"]
-    code --> bridge --> client --> server
-```
+#### Tool catalog
+
+Fourteen tools across five toolsets. Everything outside `mutate` is strictly read-only — those
+tools never provision, modify, or delete anything.
+
+| Tool | What it does |
+|---|---|
+| **`design` toolset** (also selected by `fabric`) | |
+| `design_optimize_placement` | The MetroOptimizer engine: workloads, sites, cloud requirements, and constraints in; ranked metro recommendations out — per-dimension scores, reasons, risk assessment, and a cost estimate with price provenance. |
+| `design_plan_deployment` | MetroOptimizer + DeploymentWizard in **plan-only** mode — it never executes. Returns the serialized deployment plan (cloud routers, provider connections, backbone links, routing protocols) with pricing + disclaimer, and a `plan_id` held for 30 minutes. |
+| `design_estimate_latency` | Speed-of-light-in-fibre latency between two metros or IBX data centers: distance, estimated ms (round-trip or one-way), and the physics-lower-bound caveats. |
+| `design_estimate_tco` | The TCO calculator over the layered rate card: per-archetype cost breakdowns (public cloud / on-prem / Equinix interconnect) with line items, provenance notes, and a recommended archetype. |
+| `design_compare_cloud_egress` | Live cloud-egress pricing (AWS, Azure, OCI public price APIs; GCP with a key) vs. Fabric, under a hard timeout with graceful per-provider degradation. |
+| `design_analyze_peering` | PeeringIntelligence for a set of ASNs: per-ASN Equinix presence, peering opportunities, resiliency assessment, and data-source provenance. |
+| `design_export_terraform` | Equinix Terraform-provider HCL from a `design_plan_deployment` plan_id. |
+| **`portal` toolset** | |
+| `portal_list_open_tickets` | Open trouble tickets account-wide (via order history — the Tickets v2 API has no list endpoint), optionally filtered by IBX. |
+| `portal_get_billing_summary` | Invoice summaries with per-invoice amounts and totals by currency. |
+| **`ne` toolset** | |
+| `ne_list_devices` | Network Edge virtual-device inventory: uuid, name, type, metro, status. |
+| **`ibx` toolset** | |
+| `ibx_get_environmentals` | IBX SmartView per-sensor temperature + humidity readings for one IBX. |
+| `ibx_list_power_events` | IBX SmartView power events (active by default) for a list of IBXs. |
+| **`mutate` toolset** — *off by default, opt-in only* | |
+| `fabric_propose_change` | Phase 1 of the Safe Mutation Broker: validates a proposed create via the **real** spec-documented `dryRun=true` API call and returns the validation, a price context, and a single-use confirm token. Nothing is provisioned. |
+| `fabric_confirm_change` | Phase 2: executes exactly the previously validated, hash-bound spec — only with a valid, unexpired, unused token. |
+
+#### The Safe Mutation Broker
+
+> **Agents propose, dry-run diffs decide, humans confirm — enforced by the server, not the prompt.**
+
+Mutations are structurally constrained, not politely requested:
+
+- **Off by default.** The `mutate` toolset is excluded from the default launch; the operator must
+  name it explicitly (`EQUINIX_MCP_TOOLSETS=design,mutate`). A default launch cannot change
+  anything.
+- **Creates only.** Three change types exist (`connection_create`, `network_create`,
+  `service_token_create`). There are no update change types at launch and, by policy, **no delete
+  tools ever**.
+- **Dry-run first, for real.** `fabric_propose_change` executes the actual Fabric v4 endpoint with
+  the spec-documented `dryRun=true` parameter — the Equinix API itself validates the exact payload
+  a confirm would send, while provisioning nothing. Invalid specs never earn a confirm token.
+- **Hash-bound, single-use, expiring tokens.** The proposal is canonicalized and SHA-256-bound;
+  `fabric_confirm_change` executes only the stored spec (never a re-supplied one), tokens are
+  consumed on first use (success or not), expire after 10 minutes, and exist only in that server
+  process's memory.
+- **Priced for the human.** Where a rate card can honestly price the change (connection
+  bandwidth), the proposal carries a monthly/non-recurring estimate with provenance — and an
+  explicit `priced: false` everywhere else.
+
+The guarantee holds at the server boundary: no prompt, tool description, or model behavior can
+skip the dry run or forge a token, because the only code path to a real create runs through a
+previously validated proposal.
+
+#### How this differs from Equinix's official Fabric MCP server
+
+Equinix runs its own **Fabric MCP server** (private beta, hosted at `mcp.equinix.com`). The two
+serve different needs and can coexist in the same MCP host:
+
+| | Official Equinix Fabric MCP server | This SDK's Intelligence MCP server |
+|---|---|---|
+| What it is | Hosted remote service by Equinix (private beta) | Community server embedded in this SDK; runs locally |
+| Coverage | Deep Fabric catalog — tools mirroring the Fabric v4 API | Design engines (placement, planning, latency, TCO, egress savings, peering, Terraform export) + cross-domain reach (Customer Portal, Network Edge, IBX SmartView) |
+| Auth | OAuth 2.1 authorization-code with browser-based user consent | Your API application's client credentials via environment variables — headless, no browser |
+| Availability | Private beta | Build from source, any account with API credentials — no allowlist |
+| Transport | Remote (HTTP) | stdio only — no network listener |
+| Mutations | Per Equinix's product | Read-only by default; opt-in two-phase dry-run-first broker; no delete tools |
+
+If you have private-beta access and need exhaustive Fabric API tools, use Equinix's server. If you
+want the planning/costing engines, cross-domain reads, and broker-guarded creates under plain API
+credentials, use this one.
+
+#### Security guidance
+
+Equinix's own MCP documentation recommends running its server as a dedicated, least-privileged
+user. The same principle applies here, translated to client credentials:
+
+- **Create a dedicated API application** in the [Equinix Developer Portal](https://developer.equinix.com/)
+  just for agent use — don't hand an agent the credentials your production automation uses. That
+  gives the agent its own audit trail, its own blast radius, and a key you can revoke without
+  touching anything else.
+- **Grant it the least privilege that covers the toolsets you enable.** The read-only catalog
+  needs only read entitlements; scope the app to the products you actually expose
+  (`EQUINIX_MCP_TOOLSETS=design,ibx` serves nothing else and never even constructs the other
+  domain clients).
+- **Treat `mutate` as a deliberate act**: enable it only where a human reviews every proposal, and
+  consider `EQUINIX_SANDBOX=true` first.
+- **Keep secrets out of shared config**: prefer `.env.local` (gitignored) or per-user host config
+  over anything checked into a repository, and rotate the app's keys as you would any credential.
 
 ### Enterprise Multi-Metro Deployment
 
@@ -1648,7 +1728,7 @@ Unit tests cover JSON deserialization, pagination, exception mapping, and the bu
 ```bash
 mvn test -Pwiremock
 ```
-WireMock tests stand up a local HTTP server that mimics the Equinix APIs, so they exercise the full request/response cycle — URLs, verbs, bodies, pagination, error mapping, OAuth2, JSON-RPC — across every domain without touching a live endpoint or needing credentials.
+WireMock tests stand up a local HTTP server that mimics the Equinix APIs, so they exercise the full request/response cycle — URLs, verbs, bodies, pagination, error mapping, OAuth2 — across every domain without touching a live endpoint or needing credentials.
 
 ### Integration Tests (Credentials Required)
 
@@ -1682,7 +1762,6 @@ Browse Javadocs by domain:
 - [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
 - [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
 - [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/geo/package-summary.html) — IBX-to-IBX fibre latency calculator
-- [MCP Bridge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/mcp/bridge/package-summary.html) — JSON-RPC 2.0 client for Equinix MCP servers
 
 ## Building
 
@@ -1690,7 +1769,7 @@ Browse Javadocs by domain:
 # Compile
 mvn clean compile
 
-# Package (includes source and Javadoc JARs)
+# Package (library JAR + source and Javadoc JARs + the runnable -mcp-server.jar)
 mvn clean package -DskipTests
 
 # Generate Javadoc site
@@ -1703,6 +1782,7 @@ Pre-built JARs are available as [GitHub Releases](https://github.com/iantjones/e
 - `equinix-sdk-java-X.Y.jar` - Compiled SDK
 - `equinix-sdk-java-X.Y-sources.jar` - Source code
 - `equinix-sdk-java-X.Y-javadoc.jar` - Javadoc documentation
+- `equinix-sdk-java-X.Y-mcp-server.jar` - Runnable [Intelligence MCP server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server) (self-contained, `java -jar`)
 
 The SDK is also published to [Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java).
 
@@ -1734,6 +1814,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation.
 - Jackson 2.21.1 (JSON serialization)
 - Apache HttpClient 4.5.14 (HTTP communication)
 - Lombok 1.18.42 (compile-time code generation)
+- MCP Java SDK 2.0.0 (`mcp-core` + `mcp-json-jackson2`) — **optional**; used only by the embedded
+  [Intelligence MCP server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server) and bundled into
+  the `-mcp-server.jar`. Library consumers never inherit it (nor the bundled `slf4j-simple`
+  binding) transitively.
 
 ## License
 

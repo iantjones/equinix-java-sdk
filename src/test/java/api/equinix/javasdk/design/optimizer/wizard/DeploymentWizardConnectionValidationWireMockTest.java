@@ -18,7 +18,6 @@ package api.equinix.javasdk.design.optimizer.wizard;
 
 import api.equinix.javasdk.Fabric;
 import api.equinix.javasdk.FabricGateway;
-import api.equinix.javasdk.Mcp;
 import api.equinix.javasdk.core.WireMockTestBase;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.model.MetroId;
@@ -36,8 +35,6 @@ import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
-import api.equinix.javasdk.mcp.McpClientConfig;
-import api.equinix.javasdk.mcp.bridge.McpBridge;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,24 +54,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 /**
- * Locks the wizard engine's phase-2b connection-validation contract after the rewire away from
- * the MCP bridge as the default validator:
+ * Locks the wizard engine's phase-2b connection-validation contract:
  *
  * <ul>
- *   <li><b>Default — REST dry-run:</b> {@code plan()} validates every planned <em>provider</em>
+ *   <li><b>REST dry-run:</b> {@code plan()} validates every planned <em>provider</em>
  *       connection against the native Fabric dry-run surface
  *       ({@code POST /fabric/v4/connections?dryRun=true} through
- *       {@code connections().define(..).dryRun().create()}) with no MCP bridge configured.
+ *       {@code connections().define(..).dryRun().create()}).
  *       Nothing is provisioned; an API rejection folds into the plan's validation errors as a
  *       warning naming the connection.</li>
- *   <li><b>MCP is opt-in enrichment:</b> {@code withMcpValidation(bridge)} adds an MCP
- *       validation pass on top of — never instead of — the REST dry-run, and no MCP call is
- *       ever made without a bridge. The MCP pass stays best-effort/non-fatal.</li>
  *   <li><b>Best-effort:</b> a gateway with no usable {@code connections()} surface (a bare test
  *       stub) skips the dry run instead of failing the plan.</li>
  * </ul>
  */
-@DisplayName("DeploymentWizard phase 2b — REST dry-run validation by default, MCP as optional enrichment")
+@DisplayName("DeploymentWizard phase 2b — REST dry-run connection validation")
 class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase {
 
     // Shared MetroId instances so the engine's reference-based topology lookup resolves.
@@ -82,33 +75,16 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
     private static final MetroId DA = MetroId.of(MetroCode.DA);
 
     private static Fabric fabric;
-    private static Mcp mcpClient;
-    private static McpBridge mcpBridge;
 
     @BeforeAll
     static void setUpClients() {
         fabric = new Fabric(testCredentials());
         redirectToWireMock(fabric);
         fabric.authenticate();
-
-        McpClientConfig config = McpClientConfig.builder()
-                .fabricEndpoint(wireMockUrl() + "/mcp/fabric")
-                .tokenEndpoint(wireMockUrl() + "/oauth2/v1/token")
-                .connectTimeoutMs(5000)
-                .readTimeoutMs(5000)
-                .maxRetries(0)
-                .build();
-        mcpClient = new Mcp(testCredentials(), config);
-        wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.method", equalTo("initialize")))
-                .willReturn(okJson(loadFixture("/json/mcp/initialize_response.json"))));
-        mcpClient.initialize();
-        mcpBridge = new McpBridge(mcpClient);
     }
 
     @AfterAll
     static void tearDownClients() throws Exception {
-        if (mcpClient != null) mcpClient.close();
         if (fabric != null) fabric.close();
     }
 
@@ -117,10 +93,10 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         resetStubs();
     }
 
-    // ── default REST dry-run path ──
+    // ── REST dry-run path ──
 
     @Test
-    @DisplayName("plan() dry-run validates each provider connection over REST by default — no MCP bridge, no MCP call")
+    @DisplayName("plan() dry-run validates each provider connection over REST")
     void restDryRunRunsByDefault() {
         stubDryRunOk();
 
@@ -138,9 +114,6 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
                 .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC-to-aws")))
                 .withRequestBody(matchingJsonPath("$.bandwidth", equalTo("8000"))));
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
-
-        // Without a bridge, the MCP enrichment pass must never fire.
-        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/mcp/fabric")));
     }
 
     @Test
@@ -182,77 +155,12 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
     }
 
-    // ── optional MCP enrichment ──
-
-    @Test
-    @DisplayName("withMcpValidation() runs MCP on top of the REST dry-run — both validation passes hit the wire")
-    void mcpEnrichmentRunsOnTopOfRestDryRun() {
-        stubDryRunOk();
-        stubMcpToolCall("/json/mcp/validate_connection_result.json");
-
-        DeploymentPlan plan = wizard().withMcpValidation(mcpBridge).plan();
-
-        assertTrue(plan.isValid(), () -> plan.getValidationErrors().toString());
-
-        // The REST dry run still runs — MCP enriches, it does not replace.
-        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
-                .withQueryParam("dryRun", equalTo("true")));
-        // One JSON-RPC tools/call per provider connection, carrying the engine-built spec
-        // (name/type/bandwidth). The tool NAME is the bridge's contract, asserted in the
-        // bridge suites — here we only pin the engine's side of the wire.
-        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                .withRequestBody(matchingJsonPath("$.params.arguments.name", equalTo("FCR-DC-to-aws")))
-                .withRequestBody(matchingJsonPath("$.params.arguments.type", equalTo("EVPL_VC")))
-                .withRequestBody(matchingJsonPath("$.params.arguments.bandwidth", equalTo("8000"))));
-    }
-
-    @Test
-    @DisplayName("an MCP-invalid result adds its warning alongside a clean REST dry-run")
-    void mcpInvalidResultAddsWarning() {
-        stubDryRunOk();
-        stubMcpToolCall("/json/mcp/validate_connection_invalid_result.json");
-
-        DeploymentPlan plan = wizard().withMcpValidation(mcpBridge).plan();
-
-        assertFalse(plan.isValid(), "a failed MCP validation must invalidate the plan");
-        assertTrue(plan.getValidationErrors().stream().anyMatch(e ->
-                        e.contains("MCP validation warning for 'FCR-DC-to-aws'")
-                                && e.contains("Bandwidth 8000 Mbps is not available")),
-                () -> "expected the MCP warning to name the connection and message: " + plan.getValidationErrors());
-        assertTrue(plan.getValidationErrors().stream().noneMatch(e -> e.startsWith("Dry-run validation warning")),
-                "the clean REST dry run must not contribute a warning of its own");
-    }
-
-    @Test
-    @DisplayName("an MCP transport/tool error is swallowed — enrichment stays best-effort and never blocks planning")
-    void mcpTransportErrorNeverBlocksPlanning() {
-        stubDryRunOk();
-        // A JSON-RPC error object makes the tool call throw; the engine must swallow it.
-        stubMcpToolCall("/json/mcp/error_response.json");
-
-        DeploymentPlan plan = assertDoesNotThrow(() -> wizard().withMcpValidation(mcpBridge).plan());
-
-        assertTrue(plan.isValid(),
-                () -> "an MCP failure must not surface as a validation error: " + plan.getValidationErrors());
-        // The default REST dry run still validated the connection.
-        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
-                .withQueryParam("dryRun", equalTo("true")));
-    }
-
     // ── stubbing helpers ──
 
     /** Stubs the connections dry-run POST to accept the spec (the fixture body is a provisioned connection). */
     private static void stubDryRunOk() {
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
                 .willReturn(okJson(loadFixture("/json/fabric/connection_provisioned_response.json"))));
-    }
-
-    /** Stubs every MCP tools/call (tool-name-agnostic, so bridge tool renames cannot break this suite). */
-    private static void stubMcpToolCall(String fixture) {
-        wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                .willReturn(okJson(loadFixture(fixture))));
     }
 
     // ── plan helpers ──

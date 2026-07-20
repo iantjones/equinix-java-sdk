@@ -73,7 +73,6 @@ class EquinixSessionTest {
         try (Equinix eq = new Equinix(creds())) {
             assertSame(eq.fabric(), eq.fabric());
             assertSame(eq.networkEdge(), eq.networkEdge());
-            assertSame(eq.mcp(), eq.mcp());
         }
     }
 
