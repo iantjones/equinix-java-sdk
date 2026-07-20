@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### MCP honesty pass — the layer now says what it is, and what cannot work
+The MCP layer's claims were audited against the live servers (probed 2026-07-20: the
+`WWW-Authenticate` challenge on `mcp.equinix.com/fabric`, its protected-resource metadata, and
+the `as.equinix.com` authorization-server metadata) and against Equinix's MCP documentation.
+Everything the code or docs asserted but could not back up is fixed:
+- **False "server side" claim deleted** — `Mcp`'s javadoc and the README claimed `Fabric.mcp()`
+  "exposes this SDK's resources as MCP tools" (a server). It never did, and the SDK contains no
+  MCP server: both `new Mcp(creds)` and `Fabric.mcp()` are client-side consumers of the remote,
+  private-beta Equinix Fabric MCP server (`Fabric.mcp()` adds typed wrappers over the same
+  client). Docs now say exactly that.
+- **Auth reality documented, evidence-based** — the live server requires OAuth 2.1 bearer
+  tokens issued by `as.equinix.com` (authorization-code + refresh-token grants only, PKCE
+  S256, dynamic client registration); that authorization server offers **no**
+  `client_credentials` grant, so the SDK's regular `api.equinix.com` client-credentials tokens
+  can never be accepted by `mcp.equinix.com`. Javadoc and README state this and point at the
+  new device-code sign-in (`McpLogin`, shipping in this release).
+- **`Mcp.initialize()` now does what its javadoc always claimed** — it validates the
+  `protocolVersion` the server returns against the version the client offered and throws
+  `McpException` naming both versions on mismatch. Previously the handshake response was
+  discarded unread.
+- **Initialize-on-first-use, uniformly** — `Mcp` now lazily runs the initialization handshake
+  on the first `listTools()`/`callTool(...)` instead of throwing "Mcp not initialized";
+  `initialize()` stays public for explicit/eager use. `Fabric.mcp()` no longer fires network
+  I/O at accessor time, so `Equinix.mcp()` and `Fabric.mcp()` behave identically.
+- **Private-beta + experimental flags** — `Mcp` carries a prominent beta warning (the service
+  is Private Beta; the client API may change between releases), and the `peeringInsights`
+  endpoint (`callPeeringTool`) is flagged undocumented/experimental — only the Fabric server
+  appears in Equinix's MCP docs.
+- **Documented tool names corrected** — examples no longer use fictional names: `list_metro` →
+  `list_metros`, `search_connection` → `search_connections`; the typed bridges align with the
+  documented catalog (`check_connection`, `search_routers`, `list_router_packages`, the
+  observability `get_metric`/`search_metrics`/`search_cloud_events` family).
+- Removed a dangling "MCP Enrichment" comment header left in `MetroOptimizer`'s builder after
+  the lever it labelled was removed.
+
 ### Every spec-documented dry-run is now in the SDK
 fabricv4 documents nine `dryRun=true` query-param operations; the SDK exposed two. The other
 seven are now first-class surfaces (the spec audit also resolved the `$ref`'d shared params and

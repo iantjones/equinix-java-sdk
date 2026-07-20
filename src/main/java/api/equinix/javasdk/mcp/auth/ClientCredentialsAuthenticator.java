@@ -1,6 +1,7 @@
-package api.equinix.javasdk.mcp;
+package api.equinix.javasdk.mcp.auth;
 
 import api.equinix.javasdk.core.auth.EquinixCredentials;
+import api.equinix.javasdk.mcp.McpException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,18 +16,29 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Manages OAuth2 access token lifecycle for MCP server authentication.
+ * Legacy {@code client_credentials}-grant authenticator (formerly {@code McpTokenManager}).
  *
- * <p>Tokens are cached and automatically refreshed 5 minutes before their expiry.
- * Uses the same OAuth2 client credentials as the core Equinix SDK.</p>
+ * <p><strong>This authenticator cannot work against the documented Equinix MCP
+ * servers.</strong> Live evidence (probed 2026-07-20): {@code https://mcp.equinix.com/fabric}
+ * points resource-metadata at the authorization server {@code https://as.equinix.com},
+ * whose {@code /.well-known/oauth-authorization-server} metadata advertises
+ * {@code grant_types_supported=["authorization_code","refresh_token"]} — no
+ * {@code client_credentials} grant at all. The SDK's regular {@code api.equinix.com}
+ * access-key/secret tokens are therefore never accepted by {@code mcp.equinix.com};
+ * unauthenticated calls get an Apigee-style 401 naming that AS.</p>
  *
- * <p>Internal helper for {@link api.equinix.javasdk.Mcp}; public only so the root-package
- * client can construct it.</p>
+ * <p>It is retained only as a config-override escape hatch (e.g. a private gateway that
+ * fronts an MCP server with classic client-credentials tokens) and as the byte-compatible
+ * default wiring for {@code new Mcp(credentials)}. For the real servers, log in once with
+ * {@link McpLogin} and use {@link DeviceCodeAuthenticator} (see
+ * {@code McpClientConfig.deviceAuth(clientId, refreshToken)}).</p>
+ *
+ * <p>Tokens are cached and refreshed 5 minutes before expiry.</p>
  *
  * @author ianjones
  */
 @RequiredArgsConstructor
-public class McpTokenManager {
+public class ClientCredentialsAuthenticator implements McpAuthenticator {
 
     private static final Duration REFRESH_BUFFER = Duration.ofMinutes(5);
 
@@ -44,7 +56,8 @@ public class McpTokenManager {
      * @return the OAuth2 bearer token
      * @throws McpException if token acquisition fails
      */
-    public synchronized String getToken() {
+    @Override
+    public synchronized String bearerToken() {
         if (accessToken != null && expiresAt != null && Instant.now().isBefore(expiresAt.minus(REFRESH_BUFFER))) {
             return accessToken;
         }
@@ -94,6 +107,7 @@ public class McpTokenManager {
     /**
      * Clears the cached token, forcing a fresh acquisition on next call.
      */
+    @Override
     public synchronized void invalidate() {
         this.accessToken = null;
         this.expiresAt = null;

@@ -209,8 +209,6 @@ public final class MetroOptimizer {
             return this;
         }
 
-        // ── MCP Enrichment ──
-
         // ── Pricing ──
 
         /**

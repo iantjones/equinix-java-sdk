@@ -32,7 +32,7 @@ public class McpCloudRouterBridge {
      * @return list of matching Cloud Routers
      */
     public List<McpCloudRouter> searchRouters(Map<String, Object> filters) {
-        McpToolResult result = client.callTool("search_router", filters);
+        McpToolResult result = client.callTool("search_routers", filters);
         JsonNode json = result.getJsonContent(client.getObjectMapper());
         List<McpCloudRouter> routers = new ArrayList<>();
 
@@ -47,11 +47,14 @@ public class McpCloudRouterBridge {
     /**
      * Retrieves details for a specific Cloud Router package.
      *
+     * <p>Invokes the documented {@code list_router_packages} MCP tool, narrowing the
+     * listing to the requested package via the {@code routerPackageCode} argument.</p>
+     *
      * @param packageCode the package code (e.g., "STANDARD", "PREMIUM")
      * @return the package details as JSON
      */
     public JsonNode getRouterPackage(String packageCode) {
-        McpToolResult result = client.callTool("get_router_package",
+        McpToolResult result = client.callTool("list_router_packages",
                 Map.of("routerPackageCode", packageCode));
         return result.getJsonContent(client.getObjectMapper());
     }

@@ -44,3 +44,6 @@ credentials.*
 
 # Claude Code
 .claude/
+
+# Local credentials - NEVER committed (REST live tiers + MCP login state)
+.env.local

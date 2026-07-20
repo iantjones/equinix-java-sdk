@@ -5,7 +5,7 @@
     "tools": [
       {
         "name": "get_metro",
-        "description": "Retrieve details about a specific metro by code",
+        "description": "Retrieve detailed information about a specific Fabric Metro by passing its Metro Code",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -15,7 +15,7 @@
         }
       },
       {
-        "name": "list_metro",
+        "name": "list_metros",
         "description": "Fetch all metros available in Fabric",
         "inputSchema": {
           "type": "object",
@@ -23,8 +23,8 @@
         }
       },
       {
-        "name": "search_connection",
-        "description": "Search for Fabric Connections using advanced filtering",
+        "name": "search_connections",
+        "description": "Search for Fabric Connections using advanced filtering, pagination, and sorting",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -33,8 +33,8 @@
         }
       },
       {
-        "name": "validate_connection",
-        "description": "Check configuration validity before creation",
+        "name": "check_connection",
+        "description": "Validate a Fabric Connection configuration before creation",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -45,8 +45,8 @@
         }
       },
       {
-        "name": "search_router",
-        "description": "Query routers with advanced filtering",
+        "name": "search_routers",
+        "description": "Search for Equinix Fabric Cloud Routers using advanced filtering, pagination, and sorting",
         "inputSchema": {
           "type": "object",
           "properties": {

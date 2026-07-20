@@ -49,10 +49,10 @@ import java.io.IOException;
  * <p>The standalone {@code new Fabric(credentials)} (etc.) constructors remain for the common
  * single-domain case; this session is purely additive.</p>
  *
- * <p><strong>MCP note:</strong> {@link #mcp()} talks to the separate Equinix MCP servers over
- * their own endpoints, so it uses its own transport (constructed from the session's credentials)
- * rather than the shared Fabric/REST core — that separation is inherent to MCP being a distinct
- * service.</p>
+ * <p><strong>MCP note:</strong> {@link #mcp()} talks to the separate, private-beta Equinix MCP
+ * servers over their own endpoints, so it uses its own transport rather than the shared
+ * Fabric/REST core — that separation is inherent to MCP being a distinct service with its own
+ * authorization server (see {@link Mcp}).</p>
  */
 public final class Equinix implements Closeable {
 
@@ -229,8 +229,11 @@ public final class Equinix implements Closeable {
     }
 
     /**
-     * @return the MCP client for this session's credentials. Uses its own transport (the MCP
-     *         servers are a separate service); created lazily and closed with the session.
+     * @return the MCP client for this session. Uses its own transport (the MCP servers are a
+     *         separate, private-beta service); created lazily, initializes itself on the first
+     *         tool call, and is closed with the session. Note the {@link Mcp} authentication
+     *         caveats: the MCP servers require OAuth 2.1 tokens from {@code as.equinix.com}
+     *         and do not accept this session's client-credentials token.
      */
     public Mcp mcp() {
         if (mcp == null) {
