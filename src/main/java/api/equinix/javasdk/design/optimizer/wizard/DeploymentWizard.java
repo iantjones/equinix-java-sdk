@@ -330,9 +330,15 @@ public final class DeploymentWizard {
         // ── MCP Validation ──
 
         /**
-         * Enables MCP-based validation for the deployment plan.
-         * When set, the wizard will use the Equinix MCP server to validate
-         * connection configurations before including them in the plan.
+         * Enables optional MCP-based enrichment of the plan's connection validation.
+         *
+         * <p>By default, {@link #plan()} already validates every planned provider connection
+         * against the native Fabric REST dry-run surface
+         * ({@code POST /fabric/v4/connections?dryRun=true}) — no MCP server required. Supplying
+         * a bridge here runs an <em>additional</em> validation pass through the Equinix MCP
+         * server on top of that dry run. The MCP pass is best-effort: explicitly-invalid results
+         * are folded into the plan's validation errors as warnings, while transport or tool
+         * errors are swallowed and never block planning.</p>
          *
          * @param mcpBridge the MCP bridge instance (typically from {@code fabric.mcp()})
          * @return this builder for method chaining

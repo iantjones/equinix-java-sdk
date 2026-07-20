@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Typed bridge for MCP metro-related tools.
  *
- * <p>Wraps the raw {@code get_metro} and {@code list_metro} MCP tools with typed
+ * <p>Wraps the raw {@code get_metro} and {@code list_metros} MCP tools with typed
  * Java return objects for integration with the Metro Optimizer.</p>
  *
  * @author ianjones
@@ -42,7 +42,7 @@ public class McpMetroBridge {
      * @return list of all available metros
      */
     public List<McpMetro> listMetros() {
-        McpToolResult result = client.callTool("list_metro", Map.of());
+        McpToolResult result = client.callTool("list_metros", Map.of());
         JsonNode json = result.getJsonContent(client.getObjectMapper());
         List<McpMetro> metros = new ArrayList<>();
 

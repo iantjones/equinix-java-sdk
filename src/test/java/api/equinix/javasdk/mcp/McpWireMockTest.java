@@ -73,10 +73,11 @@ class McpWireMockTest extends WireMockTestBase {
 
         assertFalse(tools.isEmpty());
         assertTrue(tools.containsKey("get_metro"));
-        assertTrue(tools.containsKey("list_metro"));
-        assertTrue(tools.containsKey("search_connection"));
-        assertTrue(tools.containsKey("validate_connection"));
-        assertEquals("Retrieve details about a specific metro by code",
+        assertTrue(tools.containsKey("list_metros"));
+        assertTrue(tools.containsKey("search_connections"));
+        assertTrue(tools.containsKey("check_connection"));
+        assertTrue(tools.containsKey("search_routers"));
+        assertEquals("Retrieve detailed information about a specific Fabric Metro by passing its Metro Code",
                 tools.get("get_metro").getDescription());
     }
 
@@ -85,7 +86,7 @@ class McpWireMockTest extends WireMockTestBase {
     @DisplayName("McpMetroBridge.listMetros returns typed metro objects")
     void testListMetros() {
         wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("list_metro")))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("list_metros")))
                 .willReturn(okJson(loadFixture("/json/mcp/list_metro_result.json"))));
 
         List<McpMetroBridge.McpMetro> metros = mcpBridge.metros().listMetros();
@@ -105,7 +106,7 @@ class McpWireMockTest extends WireMockTestBase {
     @DisplayName("McpConnectionBridge.validateConnection returns validation result")
     void testValidateConnection() {
         wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection")))
                 .willReturn(okJson(loadFixture("/json/mcp/validate_connection_result.json"))));
 
         McpConnectionBridge.McpConnectionValidation result =
@@ -136,19 +137,29 @@ class McpWireMockTest extends WireMockTestBase {
 
     @Test
     @Order(6)
-    @DisplayName("MCP client requires initialization before tool calls")
-    void testUninitializedClient() {
+    @DisplayName("MCP client lazily initializes on the first tool call")
+    void testLazyInitializationOnFirstToolCall() throws Exception {
         McpClientConfig config = McpClientConfig.builder()
                 .fabricEndpoint(wireMockUrl() + "/mcp/fabric")
                 .tokenEndpoint(wireMockUrl() + "/oauth2/v1/token")
                 .build();
 
-        Mcp freshClient = new Mcp(testCredentials(), config);
+        wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("initialize")))
+                .willReturn(okJson(loadFixture("/json/mcp/initialize_response.json"))));
+        wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("list_metros")))
+                .willReturn(okJson(loadFixture("/json/mcp/list_metro_result.json"))));
 
-        McpException ex = assertThrows(McpException.class, () ->
-                freshClient.callTool("get_metro", Map.of("metroCode", "SV")));
+        try (Mcp freshClient = new Mcp(testCredentials(), config)) {
+            assertFalse(freshClient.isInitialized());
 
-        assertTrue(ex.getMessage().contains("not initialized"));
+            McpToolResult result = freshClient.callTool("list_metros", Map.of());
+
+            assertNotNull(result);
+            assertTrue(freshClient.isInitialized(),
+                    "the first tool call must run the initialization handshake");
+        }
     }
 
     @Test
@@ -158,6 +169,31 @@ class McpWireMockTest extends WireMockTestBase {
         // Tools were loaded in testListTools, so registry should be populated
         Map<String, McpToolDefinition> tools = mcpBridge.availableTools();
         assertFalse(tools.isEmpty());
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("initialize() rejects a mismatched server protocolVersion, naming both versions")
+    void testProtocolVersionMismatch() throws Exception {
+        McpClientConfig config = McpClientConfig.builder()
+                .fabricEndpoint(wireMockUrl() + "/mcp/fabric-mismatch")
+                .tokenEndpoint(wireMockUrl() + "/oauth2/v1/token")
+                .build();
+
+        wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric-mismatch"))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("initialize")))
+                .willReturn(okJson(
+                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"1999-01-01\"}}")));
+
+        try (Mcp freshClient = new Mcp(testCredentials(), config)) {
+            McpException ex = assertThrows(McpException.class, freshClient::initialize);
+
+            assertTrue(ex.getMessage().contains("2024-11-05"),
+                    "mismatch message must name the version the client offered");
+            assertTrue(ex.getMessage().contains("1999-01-01"),
+                    "mismatch message must name the version the server returned");
+            assertFalse(freshClient.isInitialized());
+        }
     }
 
     // ------------------------------------------------------------------
@@ -318,13 +354,13 @@ class McpWireMockTest extends WireMockTestBase {
             Mcp client = newInitializedClient(0);
             try {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection")))
                         .willReturn(okJson(loadFixture("/json/mcp/tool_error_result.json"))));
 
                 McpException ex = assertThrows(McpException.class, () ->
-                        client.callTool("validate_connection", Map.of("bandwidth", 99999)));
+                        client.callTool("check_connection", Map.of("bandwidth", 99999)));
 
-                assertTrue(ex.getMessage().contains("validate_connection"),
+                assertTrue(ex.getMessage().contains("check_connection"),
                         "the exception names the failing tool: " + ex.getMessage());
                 assertTrue(ex.getMessage().contains("returned an error"), ex.getMessage());
                 assertTrue(ex.getMessage().contains("bandwidth 99999 Mbps exceeds the maximum"),
@@ -332,7 +368,7 @@ class McpWireMockTest extends WireMockTestBase {
 
                 // Exactly one POST: a tool-level error is terminal, never retried like 429/5xx.
                 wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection"))));
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection"))));
             } finally {
                 client.close();
             }
@@ -356,22 +392,22 @@ class McpWireMockTest extends WireMockTestBase {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
                         .inScenario(SCENARIO)
                         .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(aResponse().withStatus(401).withBody("{\"error\":\"unauthorized\"}"))
                         .willSetStateTo("authed"));
 
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
                         .inScenario(SCENARIO)
                         .whenScenarioStateIs("authed")
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(okJson(loadFixture("/json/mcp/generic_tool_result.json"))));
 
-                McpToolResult result = client.callTool("search_router", Map.of());
+                McpToolResult result = client.callTool("search_routers", Map.of());
                 assertFalse(result.isError());
 
                 // Exactly two POSTs to the tool endpoint: the 401 and the retried 200.
                 wireMock.verify(2, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router"))));
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers"))));
 
                 // Token was invalidated -> a second OAuth token fetch occurred for the refresh.
                 wireMock.verify(moreThanOrExactly(2),
@@ -390,22 +426,22 @@ class McpWireMockTest extends WireMockTestBase {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
                         .inScenario(SCENARIO)
                         .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(aResponse().withStatus(429).withBody("{\"error\":\"rate limited\"}"))
                         .willSetStateTo("recovered"));
 
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
                         .inScenario(SCENARIO)
                         .whenScenarioStateIs("recovered")
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(okJson(loadFixture("/json/mcp/generic_tool_result.json"))));
 
-                McpToolResult result = client.callTool("search_router", Map.of());
+                McpToolResult result = client.callTool("search_routers", Map.of());
                 assertFalse(result.isError());
 
                 // First attempt (429) + retry (200) == 2 POSTs.
                 wireMock.verify(2, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router"))));
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers"))));
             } finally {
                 client.close();
             }
@@ -420,21 +456,21 @@ class McpWireMockTest extends WireMockTestBase {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
                         .inScenario(SCENARIO)
                         .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(aResponse().withStatus(503).withBody("{\"error\":\"unavailable\"}"))
                         .willSetStateTo("recovered"));
 
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
                         .inScenario(SCENARIO)
                         .whenScenarioStateIs("recovered")
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(okJson(loadFixture("/json/mcp/generic_tool_result.json"))));
 
-                McpToolResult result = client.callTool("search_router", Map.of());
+                McpToolResult result = client.callTool("search_routers", Map.of());
                 assertFalse(result.isError());
 
                 wireMock.verify(2, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router"))));
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers"))));
             } finally {
                 client.close();
             }
@@ -447,15 +483,15 @@ class McpWireMockTest extends WireMockTestBase {
             Mcp client = newInitializedClient(1);
             try {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                         .willReturn(aResponse().withStatus(500).withBody("{\"error\":\"boom\"}")));
 
                 assertThrows(api.equinix.javasdk.core.exception.EquinixServerException.class,
-                        () -> client.callTool("search_router", Map.of()));
+                        () -> client.callTool("search_routers", Map.of()));
 
                 // maxRetries=1 -> initial attempt + one retry == 2 POSTs before giving up.
                 wireMock.verify(2, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router"))));
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers"))));
             } finally {
                 client.close();
             }
@@ -503,13 +539,13 @@ class McpWireMockTest extends WireMockTestBase {
     class ConnectionSearchTools {
 
         @Test
-        @DisplayName("searchConnections posts search_connection tools/call with mapped filters and parses data[]")
+        @DisplayName("searchConnections posts search_connections tools/call with mapped filters and parses data[]")
         void searchConnectionsPostsSearchConnection() throws Exception {
             resetStubs();
             Mcp client = newInitializedClient(0);
             try {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_connection")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_connections")))
                         .willReturn(okJson(loadFixture("/json/mcp/search_connection_result.json"))));
 
                 McpConnectionBridge bridge = new McpBridge(client).connections();
@@ -524,12 +560,12 @@ class McpWireMockTest extends WireMockTestBase {
                 assertEquals("ACTIVE", first.getState());
                 assertEquals(1000, first.getBandwidth());
 
-                // JSON-RPC 2.0 envelope: tools/call to search_connection with the filter map
+                // JSON-RPC 2.0 envelope: tools/call to search_connections with the filter map
                 // mapped straight into params.arguments.*
                 wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
                         .withRequestBody(matchingJsonPath("$.jsonrpc", equalTo("2.0")))
                         .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_connection")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_connections")))
                         .withRequestBody(matchingJsonPath("$.params.arguments.metro", equalTo("SV")))
                         .withRequestBody(matchingJsonPath("$.params.arguments.state", equalTo("ACTIVE"))));
             } finally {
@@ -597,13 +633,13 @@ class McpWireMockTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("getMetrics posts get_metrics with all five arguments")
+        @DisplayName("getMetrics posts get_metric with all five arguments")
         void getMetricsPostsGetMetrics() throws Exception {
             resetStubs();
             Mcp client = newInitializedClient(0);
             try {
                 wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("get_metrics")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("get_metric")))
                         .willReturn(okJson(loadFixture("/json/mcp/observability_metrics_result.json"))));
 
                 McpObservabilityBridge.McpMetrics metrics = observability(client).getMetrics(
@@ -619,7 +655,7 @@ class McpWireMockTest extends WireMockTestBase {
                 wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
                         .withRequestBody(matchingJsonPath("$.jsonrpc", equalTo("2.0")))
                         .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("get_metrics")))
+                        .withRequestBody(matchingJsonPath("$.params.name", equalTo("get_metric")))
                         .withRequestBody(matchingJsonPath("$.params.arguments.assetType", equalTo("connection")))
                         .withRequestBody(matchingJsonPath("$.params.arguments.assetId", equalTo("conn-uuid-1")))
                         .withRequestBody(matchingJsonPath("$.params.arguments.metricType", equalTo("bandwidth")))

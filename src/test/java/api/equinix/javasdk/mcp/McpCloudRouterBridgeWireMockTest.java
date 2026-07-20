@@ -48,13 +48,13 @@ class McpCloudRouterBridgeWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("searchRouters posts search_router with filter args and parses the data array")
-    void searchRoutersPostsSearchRouter() throws Exception {
+    @DisplayName("searchRouters posts search_routers with filter args and parses the data array")
+    void searchRoutersPostsSearchRouters() throws Exception {
         resetStubs();
         Mcp client = newInitializedClient();
         try {
             wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                     .willReturn(okJson(loadFixture("/json/mcp/search_router_result.json"))));
 
             McpCloudRouterBridge bridge = new McpBridge(client).cloudRouters();
@@ -70,12 +70,12 @@ class McpCloudRouterBridgeWireMockTest extends WireMockTestBase {
             assertEquals("SV", first.getMetroCode());
             assertEquals(4, first.getConnectionsCount());
 
-            // JSON-RPC 2.0 envelope: tools/call with tool name search_router and the filters
+            // JSON-RPC 2.0 envelope: tools/call with tool name search_routers and the filters
             // passed straight through as the arguments object.
             wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
                     .withRequestBody(matchingJsonPath("$.jsonrpc", equalTo("2.0")))
                     .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_router")))
+                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("search_routers")))
                     .withRequestBody(matchingJsonPath("$.params.arguments.metroCode", equalTo("SV")))
                     .withRequestBody(matchingJsonPath("$.params.arguments.state", equalTo("PROVISIONED"))));
         } finally {
@@ -84,13 +84,13 @@ class McpCloudRouterBridgeWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("getRouterPackage posts get_router_package with routerPackageCode arg")
-    void getRouterPackagePostsGetRouterPackage() throws Exception {
+    @DisplayName("getRouterPackage posts list_router_packages with routerPackageCode arg")
+    void getRouterPackagePostsListRouterPackages() throws Exception {
         resetStubs();
         Mcp client = newInitializedClient();
         try {
             wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("get_router_package")))
+                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("list_router_packages")))
                     .willReturn(okJson(loadFixture("/json/mcp/router_package_result.json"))));
 
             McpCloudRouterBridge bridge = new McpBridge(client).cloudRouters();
@@ -104,7 +104,7 @@ class McpCloudRouterBridgeWireMockTest extends WireMockTestBase {
             wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
                     .withRequestBody(matchingJsonPath("$.jsonrpc", equalTo("2.0")))
                     .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("get_router_package")))
+                    .withRequestBody(matchingJsonPath("$.params.name", equalTo("list_router_packages")))
                     .withRequestBody(matchingJsonPath("$.params.arguments.routerPackageCode", equalTo("STANDARD"))));
         } finally {
             client.close();

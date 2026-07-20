@@ -57,14 +57,17 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Exercises the design-to-mcp interop seam: {@code DeploymentWizard.Builder.withMcpValidation(McpBridge)}.
- * During {@code plan()}, the wizard engine posts each planned provider connection to the MCP
- * {@code validate_connection} tool (JSON-RPC {@code tools/call} against a WireMock-backed {@link Mcp})
- * and folds failed validations into the plan's validation errors.
+ * When a bridge is supplied, {@code plan()} posts each planned provider connection to the MCP
+ * {@code check_connection} tool (JSON-RPC {@code tools/call} against a WireMock-backed {@link Mcp})
+ * as an <em>optional enrichment</em> pass and folds failed validations into the plan's validation
+ * errors.
  *
- * <p>This was the only untested bridge between the two packages: no other test constructs a wizard
- * with an {@link McpBridge}.</p>
+ * <p>The engine's <b>default</b> validation path is the native Fabric REST dry-run
+ * ({@code POST /fabric/v4/connections?dryRun=true}); it is skipped in this suite because the bare
+ * Mockito {@code FabricGateway} exposes no {@code connections()} surface. The REST-default contract
+ * is locked by {@code design.optimizer.wizard.DeploymentWizardConnectionValidationWireMockTest}.</p>
  */
-@DisplayName("DeploymentWizard.withMcpValidation() — MCP pre-validation of planned connections")
+@DisplayName("DeploymentWizard.withMcpValidation() — optional MCP enrichment of planned connections")
 class DeploymentWizardMcpValidationWireMockTest extends WireMockTestBase {
 
     private static final MetroId DC = MetroId.of(MetroCode.DC);
@@ -101,10 +104,10 @@ class DeploymentWizardMcpValidationWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("plan() posts validate_connection per provider connection with name/type/bandwidth; a valid result leaves the plan valid")
+    @DisplayName("plan() posts check_connection per provider connection with name/type/bandwidth; a valid result leaves the plan valid")
     void planValidatesConnectionsViaMcp() {
         wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection")))
                 .willReturn(okJson(loadFixture("/json/mcp/validate_connection_result.json"))));
 
         DeploymentPlan plan = wizard().plan();
@@ -117,7 +120,7 @@ class DeploymentWizardMcpValidationWireMockTest extends WireMockTestBase {
         wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
                 .withRequestBody(matchingJsonPath("$.jsonrpc", equalTo("2.0")))
                 .withRequestBody(matchingJsonPath("$.method", equalTo("tools/call")))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection")))
                 .withRequestBody(matchingJsonPath("$.params.arguments.name", equalTo("FCR-DC-to-aws")))
                 .withRequestBody(matchingJsonPath("$.params.arguments.type", equalTo("EVPL_VC")))
                 .withRequestBody(matchingJsonPath("$.params.arguments.bandwidth", equalTo("8000"))));
@@ -127,7 +130,7 @@ class DeploymentWizardMcpValidationWireMockTest extends WireMockTestBase {
     @DisplayName("an MCP validation failure invalidates the plan with a warning naming the connection")
     void mcpValidationFailureInvalidatesPlan() {
         wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection")))
                 .willReturn(okJson(loadFixture("/json/mcp/validate_connection_invalid_result.json"))));
 
         DeploymentPlan plan = wizard().plan();
@@ -149,7 +152,7 @@ class DeploymentWizardMcpValidationWireMockTest extends WireMockTestBase {
         // The JSON-RPC error object makes Mcp.callTool throw McpException; the engine's
         // per-connection try/catch must swallow it and leave the plan valid.
         wireMock.stubFor(post(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection")))
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection")))
                 .willReturn(okJson(loadFixture("/json/mcp/error_response.json"))));
 
         DeploymentPlan plan = assertDoesNotThrow(() -> wizard().plan());
@@ -157,13 +160,15 @@ class DeploymentWizardMcpValidationWireMockTest extends WireMockTestBase {
         assertTrue(plan.isValid(),
                 () -> "an MCP failure must not surface as a validation error: " + plan.getValidationErrors());
         wireMock.verify(1, postRequestedFor(urlPathEqualTo("/mcp/fabric"))
-                .withRequestBody(matchingJsonPath("$.params.name", equalTo("validate_connection"))));
+                .withRequestBody(matchingJsonPath("$.params.name", equalTo("check_connection"))));
     }
 
     // ── helpers ──
 
     private DeploymentWizard.Builder wizard() {
-        FabricGateway fabric = mock(FabricGateway.class); // plan() itself makes no Fabric HTTP calls
+        // A bare stub exposes no connections() surface, so the engine's default REST dry-run
+        // validation is skipped and only the MCP enrichment pass under test hits the wire.
+        FabricGateway fabric = mock(FabricGateway.class);
         return DeploymentWizard.builder(fabric, singleMetroResult())
                 .routerPackage("STANDARD")
                 .routerNamePrefix("FCR")

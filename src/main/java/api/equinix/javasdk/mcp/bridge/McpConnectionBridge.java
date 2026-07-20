@@ -31,7 +31,7 @@ public class McpConnectionBridge {
      * @return the validation result
      */
     public McpConnectionValidation validateConnection(Map<String, Object> connectionSpec) {
-        McpToolResult result = client.callTool("validate_connection", connectionSpec);
+        McpToolResult result = client.callTool("check_connection", connectionSpec);
         JsonNode json = result.getJsonContent(client.getObjectMapper());
         return parseValidation(json);
     }
@@ -43,7 +43,7 @@ public class McpConnectionBridge {
      * @return list of matching connections
      */
     public List<McpConnection> searchConnections(Map<String, Object> filters) {
-        McpToolResult result = client.callTool("search_connection", filters);
+        McpToolResult result = client.callTool("search_connections", filters);
         JsonNode json = result.getJsonContent(client.getObjectMapper());
         List<McpConnection> connections = new ArrayList<>();
 
@@ -90,7 +90,7 @@ public class McpConnectionBridge {
     }
 
     /**
-     * Validation result from the MCP {@code validate_connection} tool.
+     * Validation result from the MCP {@code check_connection} tool.
      */
     @Getter
     public static class McpConnectionValidation {

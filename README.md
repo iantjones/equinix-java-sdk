@@ -27,7 +27,8 @@ things it handles so you don't have to:
 On top of the raw API, the **`Design`** module is for planning rather than provisioning: a
 metro-placement optimizer, a deployment wizard that turns a plan into provisioned Fabric resources,
 peering intelligence built on PeeringDB, IBX-to-IBX latency estimates, and Fabric-vs-internet cost
-calculators. The **`Mcp`** module is a JSON-RPC client for the Equinix Model Context Protocol servers.
+calculators. The **`Mcp`** module is a JSON-RPC client for the private-beta Equinix Model Context
+Protocol servers (see [Fabric: MCP Bridge](#fabric-mcp-bridge) for the authentication caveats).
 
 ## Quick Start
 
@@ -150,7 +151,7 @@ registry.refresh();   // re-pulls both sources at runtime, atomically, in place 
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
-| **MCP** | `new Mcp(creds)` | — | Standalone JSON-RPC 2.0 client for the Equinix MCP (Model Context Protocol) servers — discover/invoke tools (supporting types in `api.equinix.javasdk.mcp.*`). To expose *this SDK's* Fabric as MCP tools instead, use `Fabric.mcp()`. |
+| **MCP** | `new Mcp(creds)` | — | Client for the private-beta Equinix MCP (Model Context Protocol) servers — JSON-RPC 2.0 tool discovery/invocation (supporting types in `api.equinix.javasdk.mcp.*`). `Fabric.mcp()` wraps this same client in typed helpers; both consume the remote server (the SDK does not run an MCP server). Requires OAuth 2.1 sign-in via `McpLogin` — see [Fabric: MCP Bridge](#fabric-mcp-bridge). |
 | **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Savings Calculator, TCO comparison (`api.equinix.javasdk.design.*`) — a facade over an existing Fabric client (reuses its transport) |
 
 ## Usage Examples
@@ -982,16 +983,20 @@ Both are equivalently reachable via the design facade: `Design.over(fabric).savi
 
 ### Fabric: MCP Bridge
 
-The MCP bridge talks to the [Equinix MCP servers](https://docs.equinix.com/equinix-api/mcp-servers/overview/) over JSON-RPC 2.0. There are typed helpers for the everyday things — metros, connections, cloud routers, observability — plus `availableTools()` to list the server's full catalog and `callTool(name, args)` for anything not yet wrapped. Responses come back as typed Java objects.
+The MCP bridge is a *client* for the [Equinix Fabric MCP server](https://docs.equinix.com/equinix-api/mcp-servers/overview/) — JSON-RPC 2.0 over the server's Streamable HTTP endpoint. It consumes the remote server; the SDK does not run an MCP server of its own, and nothing here exposes the SDK's resources as MCP tools. There are typed helpers for the everyday things — metros, connections, cloud routers, observability — plus `availableTools()` to list the server's catalog (~100 documented tools, none of them deletes) and `callTool(name, args)` for anything not yet wrapped. Responses come back as typed Java objects.
 
-> **Note:** The Equinix MCP server is currently in Private Beta. Contact `fabric-intelligence-support@equinix.com` or your Equinix account representative for access.
+> **Private Beta.** The Equinix MCP server is in Private Beta — contact `fabric-intelligence-support@equinix.com` or your Equinix account representative for access.
+>
+> **Authentication (live-verified 2026-07-20):** `mcp.equinix.com/fabric` requires OAuth 2.1 bearer tokens issued by `as.equinix.com` (authorization-code + refresh-token grants only, PKCE S256, dynamic client registration). That authorization server offers **no `client_credentials` grant**, so the SDK's regular `api.equinix.com` client-credentials tokens can never be accepted here. Sign in interactively with the device-code flow via `McpLogin` (ships in this release).
+>
+> The `peeringInsights` endpoint (`Mcp.callPeeringTool(...)`) is undocumented and experimental — only the Fabric server appears in Equinix's MCP documentation.
 
 #### Direct MCP Access
 
 ```java
 Fabric fabric = new Fabric(credentials);
 
-// Access the MCP Bridge (auto-initializes on first call)
+// Access the MCP Bridge (the underlying client initializes itself on the first tool call)
 McpBridge mcp = fabric.mcp();
 
 // List all available MCP tools
@@ -1095,8 +1100,8 @@ McpBridge mcp = fabric.mcp(config);
 flowchart LR
     code["Your code<br/>fabric.mcp() · optimizeMetros()<br/>deploymentWizard() · peeringIntelligence()"]
     bridge["McpBridge<br/>metros() · connections()<br/>cloudRouters() · observability()"]
-    client["McpClient<br/>JSON-RPC 2.0 · token mgmt · retry"]
-    server["Equinix MCP server<br/>mcp.equinix.com · OAuth2 bearer"]
+    client["Mcp<br/>JSON-RPC 2.0 · token mgmt · retry"]
+    server["Equinix MCP server (Private Beta)<br/>mcp.equinix.com · OAuth 2.1 bearer via as.equinix.com"]
     code --> bridge --> client --> server
 ```
 

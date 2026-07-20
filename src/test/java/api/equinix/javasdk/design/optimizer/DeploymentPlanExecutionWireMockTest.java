@@ -100,6 +100,9 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
     void executeProvisionsInOrder() {
         stubCreatedResources();
         DeploymentPlan plan = twoMetroPlan();
+        // plan() itself now dry-run validates the provider connection over REST (phase 2b);
+        // clear the journal so the verifies below count execute()'s wire traffic alone.
+        wireMock.resetRequests();
 
         DeploymentOutcome outcome = plan.execute();
 
@@ -318,7 +321,12 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
                 .willReturn(okJson(loadFixture("/json/fabric/connection_provisioned_response.json"))));
 
-        DeploymentPlan validated = twoMetroPlan().dryRun();
+        DeploymentPlan plan = twoMetroPlan();
+        // plan() already issued its own phase-2b dry-run POST; clear the journal so this test
+        // counts only the explicit plan.dryRun() traffic.
+        wireMock.resetRequests();
+
+        DeploymentPlan validated = plan.dryRun();
 
         assertTrue(validated.isValid(),
                 () -> "dry run should pass, errors: " + validated.getValidationErrors());

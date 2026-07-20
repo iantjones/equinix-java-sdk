@@ -3,6 +3,7 @@ package api.equinix.javasdk.design.optimizer.wizard;
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.model.MetroId;
+import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.mcp.bridge.McpBridge;
@@ -63,7 +64,9 @@ final class DeploymentWizardEngine {
         // Phase 2: Plan Provider Connections
         List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result);
 
-        // Phase 2b: MCP Validation (optional)
+        // Phase 2b: Connection validation — the native Fabric REST dry-run is the default
+        // path; MCP is an optional additional enrichment, run only when a bridge was supplied.
+        dryRunValidateConnections(config.getFabric(), providerConnections, validationErrors);
         mcpValidateConnections(config.getMcpBridge(), providerConnections, validationErrors);
 
         // Phase 3: Plan Backbone Links
@@ -582,8 +585,52 @@ final class DeploymentWizardEngine {
     }
 
     /**
-     * Validates planned connections against the MCP server if available.
-     * Any validation failures are added as warnings to the validation errors list.
+     * Default validation for planned provider connections: posts each one to the native Fabric
+     * REST dry-run surface — {@code POST /fabric/v4/connections?dryRun=true} via
+     * {@code connections().define(type).name(..).bandwidth(..).dryRun().create()} — which
+     * verifies the create would succeed without provisioning anything. An API rejection is
+     * folded into the plan's validation errors as a warning naming the connection (same result
+     * shape as the MCP enrichment). The dry run is best-effort: a gateway that cannot offer a
+     * connections surface at all (for example a bare test stub) skips validation rather than
+     * failing the plan.
+     */
+    private static void dryRunValidateConnections(FabricGateway fabric,
+                                                  List<PlannedConnection> connections,
+                                                  List<String> validationErrors) {
+        if (fabric == null || connections == null || connections.isEmpty()) {
+            return;
+        }
+
+        Connections connectionsClient;
+        try {
+            connectionsClient = fabric.connections();
+        } catch (RuntimeException e) {
+            return; // no usable connections surface — validation is best-effort, never fatal
+        }
+        if (connectionsClient == null) {
+            return;
+        }
+
+        for (PlannedConnection conn : connections) {
+            try {
+                connectionsClient.define(conn.getConnectionType())
+                        .name(conn.getName())
+                        .bandwidth(conn.getBandwidthMbps())
+                        .dryRun()
+                        .create();
+            } catch (Exception e) {
+                validationErrors.add("Dry-run validation warning for '" + conn.getName()
+                        + "': " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Optional MCP enrichment on top of the default REST dry-run: validates planned connections
+     * against the Equinix MCP server, only when a bridge was supplied via
+     * {@code withMcpValidation(McpBridge)}. Explicitly-invalid results are added as warnings to
+     * the validation errors list; transport or tool errors are swallowed — the MCP pass is
+     * best-effort and never blocks planning.
      */
     private static void mcpValidateConnections(McpBridge mcpBridge,
                                                 List<PlannedConnection> connections,

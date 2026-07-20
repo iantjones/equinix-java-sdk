@@ -1,0 +1,225 @@
+{
+  "description": "Pinned manifest of the Equinix Fabric MCP Server tool catalog, transcribed verbatim from the official documentation. This is the SDK's contract with the MCP server: McpCatalogTest locks every bridge-referenced tool name against it, and McpLiveProbeTest (-Plive-mcp) diffs the live tools/list against it to detect drift. Update this file ONLY from the official docs page, never to silence a failing test.",
+  "server": "https://mcp.equinix.com/fabric",
+  "docsSource": "https://docs.equinix.com/api-catalog (The Equinix API > MCP Servers > Fabric MCP Server)",
+  "pinnedAt": "2026-07-20",
+  "status": "Private Beta",
+  "transport": "Streamable HTTP",
+  "notes": [
+    "Delete functionality is not currently supported in the Fabric MCP Server (connections, ports, Cloud Routers).",
+    "Each tool corresponds to a specific Fabric API endpoint; apiEndpoint is the docs' link text for that endpoint.",
+    "The apiEndpoint values 'Get Metrics by Asset Id' (list_metrics_by_metros) and duplicated 'Get All Changes' / 'Get Change By ID' labels are transcribed as documented."
+  ],
+  "toolCount": 109,
+  "families": [
+    {
+      "family": "Connections",
+      "tools": [
+        {"name": "create_connection", "description": "Create a new Fabric Connection", "apiEndpoint": "Create Connection"},
+        {"name": "search_connections", "description": "Search for Fabric Connections using advanced filtering, pagination, and sorting", "apiEndpoint": "Search Connection"},
+        {"name": "update_connection", "description": "Update an Equinix Fabric Connection using its UUID", "apiEndpoint": "Update Connection"},
+        {"name": "check_connection", "description": "Validate a Fabric Connection configuration before creation", "apiEndpoint": "Validate Connection"},
+        {"name": "retry_connection", "description": "Perform actions on a Fabric Connection", "apiEndpoint": "Connection Actions"}
+      ]
+    },
+    {
+      "family": "Fabric Metros",
+      "tools": [
+        {"name": "get_metro", "description": "Retrieve detailed information about a specific Fabric Metro by passing its Metro Code", "apiEndpoint": "Get Metro by Code"},
+        {"name": "list_metros", "description": "Fetch all metros available in Fabric", "apiEndpoint": "Get All Metros"}
+      ]
+    },
+    {
+      "family": "Ports",
+      "tools": [
+        {"name": "create_port", "description": "Create a new Equinix Fabric Port", "apiEndpoint": "Create Port"},
+        {"name": "search_ports", "description": "Search for Fabric Ports using advanced filtering, pagination, and sorting", "apiEndpoint": "Search Ports"},
+        {"name": "update_port", "description": "Update a Fabric Port configuration", "apiEndpoint": "Update Port"},
+        {"name": "get_vlan_port", "description": "Get VLAN configurations for a specific port", "apiEndpoint": "Get Port VLANs"},
+        {"name": "attach_physical_ports_to_lag", "description": "Attach Physical Ports to a Link Aggregation Group (LAG)", "apiEndpoint": "Add to Lag"}
+      ]
+    },
+    {
+      "family": "Cloud Routers",
+      "tools": [
+        {"name": "search_routers", "description": "Search for Equinix Fabric Cloud Routers using advanced filtering, pagination, and sorting", "apiEndpoint": "Search Cloud Routers"},
+        {"name": "create_router", "description": "Create a new Fabric Cloud Router", "apiEndpoint": "Create Cloud Router"},
+        {"name": "update_router", "description": "Update an existing Fabric Cloud Router", "apiEndpoint": "Update Cloud Router"},
+        {"name": "list_router_packages", "description": "List all available Cloud Router packages", "apiEndpoint": "List Packages"},
+        {"name": "create_router_commands", "description": "Initiate router commands such as ping or traceroute", "apiEndpoint": "Create Router Commands"},
+        {"name": "search_router_commands", "description": "Search for router command execution results", "apiEndpoint": "Search Router Commands"},
+        {"name": "search_routes", "description": "Search for routes including advertised, received, and active routes", "apiEndpoint": "Search Routes"},
+        {"name": "refresh_routes", "description": "Create route table actions for a Cloud Router", "apiEndpoint": "Create Route Actions"}
+      ]
+    },
+    {
+      "family": "Routing Protocols",
+      "tools": [
+        {"name": "list_routing_protocols", "description": "List all Routing Protocols for a connection", "apiEndpoint": "Get Routing Protocols"},
+        {"name": "create_routing_protocol", "description": "Create a new Routing Protocol", "apiEndpoint": "Create Routing Protocols"},
+        {"name": "update_routing_protocol", "description": "Update an existing Routing Protocol", "apiEndpoint": "Update Routing Protocols"},
+        {"name": "replace_routing_protocol", "description": "Replace an existing Routing Protocol", "apiEndpoint": "Replace Routing Protocols"},
+        {"name": "create_routing_protocol_action", "description": "Clear or reset a BGP session for a Routing Protocol", "apiEndpoint": "Clear/Reset BGP"},
+        {"name": "list_routing_protocol_actions", "description": "Get all BGP action statuses for a Routing Protocol", "apiEndpoint": "Get BGP Actions"}
+      ]
+    },
+    {
+      "family": "Pricing",
+      "tools": [
+        {"name": "search_prices", "description": "Search for pricing information across Fabric resources", "apiEndpoint": "Search Prices"}
+      ]
+    },
+    {
+      "family": "Precision Time",
+      "tools": [
+        {"name": "search_time_services", "description": "Search for Equinix Precision Time services", "apiEndpoint": "Search Time Services"},
+        {"name": "create_time_service", "description": "Create a Precision Time service configuration", "apiEndpoint": "Create Time Service"},
+        {"name": "update_time_service", "description": "Update a Precision Time service configuration", "apiEndpoint": "Update Time Service"}
+      ]
+    },
+    {
+      "family": "Service Profiles",
+      "tools": [
+        {"name": "get_service_profile", "description": "Retrieve detailed information about a specific Service Profile by UUID", "apiEndpoint": "Get Profile"},
+        {"name": "search_service_profiles", "description": "Search for Fabric Service Profiles using advanced filtering", "apiEndpoint": "Search Service Profiles"},
+        {"name": "create_service_profile", "description": "Create a new Fabric Service Profile", "apiEndpoint": "Create Service Profile"},
+        {"name": "update_service_profile", "description": "Update an existing Service Profile", "apiEndpoint": "Update Service Profile"},
+        {"name": "replace_service_profile", "description": "Replace a Service Profile configuration", "apiEndpoint": "Replace Service Profile"},
+        {"name": "list_service_profile_metros", "description": "Get metro information for a specific Service Profile", "apiEndpoint": "Get Service Profile Metros"}
+      ]
+    },
+    {
+      "family": "Service Tokens",
+      "tools": [
+        {"name": "search_service_tokens", "description": "Search for Fabric Service Tokens", "apiEndpoint": "Search Service Tokens"},
+        {"name": "create_service_token", "description": "Create a new Service Token", "apiEndpoint": "Create Service Token"},
+        {"name": "update_service_token", "description": "Update an existing Service Token", "apiEndpoint": "Update Service Token"}
+      ]
+    },
+    {
+      "family": "Networks",
+      "tools": [
+        {"name": "search_networks", "description": "Search for Fabric Networks", "apiEndpoint": "Search Networks"},
+        {"name": "create_network", "description": "Create a new Fabric Network", "apiEndpoint": "Create Network"},
+        {"name": "update_network", "description": "Update an existing Fabric Network", "apiEndpoint": "Update Network"}
+      ]
+    },
+    {
+      "family": "Route Filters",
+      "tools": [
+        {"name": "search_route_filters", "description": "Search for Cloud Router Route Filters", "apiEndpoint": "Search Route Filters"},
+        {"name": "create_route_filter", "description": "Create a new Route Filter for traffic management", "apiEndpoint": "Create Route Filter"},
+        {"name": "update_route_filter", "description": "Update an existing Route Filter configuration", "apiEndpoint": "Update Route Filter"},
+        {"name": "attach_route_filter", "description": "Attach Route Filter to Fabric Connection", "apiEndpoint": "Attach Route Filter"},
+        {"name": "list_route_filter_connections", "description": "Retrieve all Connections using an existing Route Filter", "apiEndpoint": "Get Route Filter Connections"},
+        {"name": "get_route_filter_changes", "description": "Retrieve all changes for a specific Route Filter", "apiEndpoint": "Get All Changes"},
+        {"name": "get_route_filter_changes_by_uuid", "description": "Retrieve a specific change for a Route Filter by change ID", "apiEndpoint": "Get Change By ID"},
+        {"name": "list_route_filters_for_connection", "description": "List all Route Filters attached to a Fabric Connection", "apiEndpoint": "Get All Route Filters"},
+        {"name": "search_route_filter_attachments_for_fcr", "description": "Search Route Filter attachments for a given Cloud Router", "apiEndpoint": "Search Cloud Router Route Filter Attachments"}
+      ]
+    },
+    {
+      "family": "Route Filter Rules",
+      "tools": [
+        {"name": "list_route_filter_rules", "description": "List all rules for a specific Route Filter", "apiEndpoint": "Get Route Filter Rules"},
+        {"name": "get_route_filter_rule", "description": "Get detailed information about a specific Route Filter Rule", "apiEndpoint": "Get Route Filter Rule"},
+        {"name": "create_route_filter_rule", "description": "Create new rules for a Route Filter", "apiEndpoint": "Create Route Filter Rules"},
+        {"name": "update_route_filter_rule", "description": "Update an existing Route Filter Rule", "apiEndpoint": "Update Route Filter Rule"},
+        {"name": "get_route_filter_rule_changes", "description": "Retrieve all changes for a specific Route Filter Rule", "apiEndpoint": "Get All Changes"},
+        {"name": "get_route_filter_rule_changes_by_uuid", "description": "Retrieve a specific change for a Route Filter Rule by change ID", "apiEndpoint": "Get Change By ID"}
+      ]
+    },
+    {
+      "family": "Route Aggregation",
+      "tools": [
+        {"name": "get_route_aggregation", "description": "Retrieve detailed information about a specific Route Aggregation by UUID", "apiEndpoint": "Get Aggregation"},
+        {"name": "search_route_aggregations", "description": "Search for Cloud Router Route Aggregations", "apiEndpoint": "Search Route Aggregation"},
+        {"name": "create_route_aggregation", "description": "Create a new Route Aggregation for traffic management", "apiEndpoint": "Create Route Aggregation"},
+        {"name": "update_route_aggregation", "description": "Update an existing Route Aggregation configuration", "apiEndpoint": "Update Route Aggregation"},
+        {"name": "attach_route_aggregation", "description": "Attach Route Aggregation to Fabric Connection", "apiEndpoint": "Attach Route Aggregation"},
+        {"name": "list_route_aggregation_connections", "description": "Retrieve all Connections using an existing Route Aggregation", "apiEndpoint": "Get Route Aggregation Connections"},
+        {"name": "get_route_aggregation_changes", "description": "Retrieve all changes for a specific Route Aggregation", "apiEndpoint": "Get All Changes"},
+        {"name": "get_route_aggregation_changes_by_uuid", "description": "Retrieve a specific change for a Route Aggregation by change ID", "apiEndpoint": "Get Change By ID"},
+        {"name": "list_route_aggregations_for_connection", "description": "List all Route Aggregations attached to a Fabric Connection", "apiEndpoint": "Get All Aggregations"},
+        {"name": "search_route_aggregation_attachments_for_fcr", "description": "Search Route Aggregation attachments for a given Cloud Router", "apiEndpoint": "Search Cloud Router Route Aggregation Attachments"}
+      ]
+    },
+    {
+      "family": "Route Aggregation Rules",
+      "tools": [
+        {"name": "list_route_aggregation_rules", "description": "List all rules for a specific Route Aggregation", "apiEndpoint": "List Route Aggregation Rules"},
+        {"name": "get_route_aggregation_rule", "description": "Get detailed information about a specific Route Aggregation Rule", "apiEndpoint": "Get Route Aggregation Rule"},
+        {"name": "create_route_aggregation_rule", "description": "Create new rules for a Route Aggregation", "apiEndpoint": "Create Route Aggregation Rules"},
+        {"name": "update_route_aggregation_rule", "description": "Update an existing Route Aggregation Rule", "apiEndpoint": "Update Route Aggregation Rule"},
+        {"name": "get_route_aggregation_rule_changes", "description": "Retrieve all changes for a specific Route Aggregation Rule", "apiEndpoint": "Get All Changes"},
+        {"name": "get_route_aggregation_rule_changes_by_uuid", "description": "Retrieve a specific change for a Route Aggregation Rule by change ID", "apiEndpoint": "Get Change By ID"}
+      ]
+    },
+    {
+      "family": "Observability - Streams",
+      "tools": [
+        {"name": "list_streams", "description": "List all telemetry streams in your account", "apiEndpoint": "Get Streams"},
+        {"name": "get_stream_details", "description": "Get detailed information about a specific stream", "apiEndpoint": "Get Stream Details"},
+        {"name": "create_stream", "description": "Create a new telemetry stream", "apiEndpoint": "Create Stream"},
+        {"name": "update_stream", "description": "Update an existing telemetry stream", "apiEndpoint": "Update Stream"},
+        {"name": "get_stream_attached_asset_details", "description": "Get details about a specific asset attached to a stream", "apiEndpoint": "Get Stream Asset Details"},
+        {"name": "attach_stream_asset", "description": "Attach an asset to a telemetry stream", "apiEndpoint": "Attach Asset to Stream"},
+        {"name": "search_attached_assets", "description": "Search for assets attached to a telemetry stream", "apiEndpoint": "Search Asset to Stream"},
+        {"name": "list_stream_attached_assets_by_type", "description": "List assets attached to a telemetry stream filtered by asset type", "apiEndpoint": "Get Assets"},
+        {"name": "get_stream_network_edge_device", "description": "Get details for network edge device attached to a telemetry stream", "apiEndpoint": "Get Stream Network Edge Device"},
+        {"name": "update_stream_network_edge_device", "description": "Update or attach a network edge device for a telemetry stream", "apiEndpoint": "Update Stream Network Edge Device"},
+        {"name": "list_stream_subscriptions", "description": "List all subscriptions for a specific telemetry stream", "apiEndpoint": "List Stream Subscription"},
+        {"name": "get_stream_subscription_details", "description": "Get details about a specific telemetry stream subscription", "apiEndpoint": "Get Stream Subscription"},
+        {"name": "create_stream_subscription", "description": "Create a new telemetry stream subscription", "apiEndpoint": "Create Stream Subscription"},
+        {"name": "update_stream_subscription", "description": "Update an existing telemetry stream subscription", "apiEndpoint": "Update Stream Subscription"}
+      ]
+    },
+    {
+      "family": "Observability - Stream Alert Rules",
+      "tools": [
+        {"name": "list_stream_alert_rules", "description": "List all alert rules for a stream", "apiEndpoint": "Get Alert Rules"},
+        {"name": "get_stream_alert_rule_details", "description": "Get detailed information about a specific alert rule", "apiEndpoint": "Get Alert Rule Details"},
+        {"name": "create_stream_alert_rule", "description": "Create a new alert rule for a stream", "apiEndpoint": "Create Alert Rule"},
+        {"name": "update_stream_alert_rule", "description": "Update an existing alert rule", "apiEndpoint": "Update Alert Rule"}
+      ]
+    },
+    {
+      "family": "Observability - Cloud Events",
+      "tools": [
+        {"name": "search_cloud_events", "description": "Search for cloud events across your Fabric resources", "apiEndpoint": "Search Cloud Events"},
+        {"name": "search_cloud_events_by_asset", "description": "Get cloud events for a specific asset by asset ID", "apiEndpoint": "Get Cloud Events By Asset"}
+      ]
+    },
+    {
+      "family": "Observability - Metrics",
+      "tools": [
+        {"name": "get_metric", "description": "Get metrics for a specific asset by asset ID", "apiEndpoint": "Get Metrics"},
+        {"name": "list_metrics_by_metros", "description": "Get metrics for a specific Fabric Metro by metro code", "apiEndpoint": "Get Metrics by Asset Id"},
+        {"name": "search_metrics", "description": "Search for metrics across multiple assets", "apiEndpoint": "Search Metrics"}
+      ]
+    },
+    {
+      "family": "Agents",
+      "tools": [
+        {"name": "create_agent", "description": "Create a new Fabric Agent", "apiEndpoint": "Create Agent"},
+        {"name": "get_agent_activities", "description": "Retrieve activities for a specific agent by UUID", "apiEndpoint": "Get Agent Activities"},
+        {"name": "get_agent_details", "description": "Retrieve detailed information about a specific agent by UUID", "apiEndpoint": "Get Agent by UUID"},
+        {"name": "get_agent_template_details", "description": "Retrieve detailed information about a specific agent template by UUID", "apiEndpoint": "Get Agent Template by UUID"},
+        {"name": "list_agent_templates", "description": "List all available agent templates", "apiEndpoint": "Get Agent Templates"},
+        {"name": "list_agents", "description": "List all agents in your account", "apiEndpoint": "Get Agents"}
+      ]
+    },
+    {
+      "family": "Company Profiles",
+      "tools": [
+        {"name": "get_company_profile", "description": "Retrieve detailed information about a specific company profile by UUID", "apiEndpoint": "Get Company Profile by UUID"},
+        {"name": "list_company_profile_private_services", "description": "Get all private services attached to a company profile", "apiEndpoint": "Get Private Services"},
+        {"name": "list_company_profile_service_profiles", "description": "Get all service profiles attached to a company profile", "apiEndpoint": "Get Service Profiles"},
+        {"name": "list_company_profile_tags", "description": "Get all tags attached to a company profile", "apiEndpoint": "Get Tags"},
+        {"name": "list_private_services", "description": "Retrieve the list of private services available for Equinix Fabric company profiles", "apiEndpoint": "Get Private Services"},
+        {"name": "list_predefined_tags", "description": "List all predefined tags available in Fabric", "apiEndpoint": "List Tags"},
+        {"name": "search_company_profile", "description": "Search for company profiles using filter criteria", "apiEndpoint": "Search Company Profiles"}
+      ]
+    }
+  ]
+}

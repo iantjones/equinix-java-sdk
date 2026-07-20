@@ -5,7 +5,8 @@ import api.equinix.javasdk.core.exception.EquinixRateLimitException;
 import api.equinix.javasdk.core.exception.EquinixServerException;
 import api.equinix.javasdk.mcp.McpClientConfig;
 import api.equinix.javasdk.mcp.McpException;
-import api.equinix.javasdk.mcp.McpTokenManager;
+import api.equinix.javasdk.mcp.auth.ClientCredentialsAuthenticator;
+import api.equinix.javasdk.mcp.auth.McpAuthenticator;
 import api.equinix.javasdk.mcp.model.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -25,32 +26,46 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * JSON-RPC 2.0 client for Equinix MCP (Model Context Protocol) servers — the root-level
+ * JSON-RPC 2.0 client for the Equinix MCP (Model Context Protocol) servers — the root-level
  * entry point for MCP, alongside {@link Fabric}, {@link NetworkEdge}, {@link IAM}, and the
  * other domain clients.
  *
- * <p>Provides programmatic access to the Equinix Fabric and Peering Insights MCP servers,
- * enabling tool invocation via the standard MCP protocol. This client handles JSON-RPC
- * serialization, OAuth2 token management, and error mapping.</p>
+ * <p><strong>BETA — private-beta service, unstable client API.</strong> The Equinix MCP
+ * servers are in Private Beta (access via {@code fabric-intelligence-support@equinix.com} or
+ * your Equinix account representative), and this client should be treated as beta: its API
+ * may change incompatibly between releases. The {@code peeringInsights} endpoint reached by
+ * {@link #callPeeringTool(String, Map)} is <em>undocumented and experimental</em> — only the
+ * Fabric server appears in Equinix's MCP documentation — and may change or disappear without
+ * notice.</p>
  *
- * <p>Follows the same standalone HTTP client pattern as
+ * <p>This class is a <em>client-side</em> bridge: it consumes the remote Fabric MCP server at
+ * {@code https://mcp.equinix.com/fabric}. The SDK does not run an MCP server of its own, and
+ * neither this class nor {@code Fabric.mcp()} exposes the SDK's resources as MCP tools —
+ * {@code Fabric.mcp()} simply wraps this same client in typed helpers
+ * ({@code api.equinix.javasdk.mcp.bridge.McpBridge}).</p>
+ *
+ * <p><strong>Authentication — live-verified against the server on 2026-07-20.</strong> The
+ * server demands OAuth 2.1 bearer tokens issued by {@code https://as.equinix.com}
+ * (authorization-code and refresh-token grants only, PKCE S256, dynamic client registration).
+ * That authorization server offers no {@code client_credentials} grant, so the SDK's regular
+ * {@code api.equinix.com} client-credentials tokens can never be accepted here. Sign in
+ * interactively with the device-code flow via {@code McpLogin}.</p>
+ *
+ * <p>The client handles JSON-RPC serialization, bearer-token attachment, and error mapping.
+ * It follows the same standalone HTTP client pattern as
  * {@link api.equinix.javasdk.design.peering.client.PeeringDbClient}, using Apache HttpClient
  * and Jackson independently from the SDK's core HTTP infrastructure.</p>
  *
- * <p>To expose <em>this SDK's</em> Fabric resources as MCP tools (the server/bridge side)
- * rather than consume an external MCP server, use {@code Fabric.mcp()} instead.</p>
- *
  * <h3>Usage</h3>
  * <pre>{@code
- * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
- * Mcp mcp = new Mcp(credentials);
- * mcp.initialize();
+ * // clientId + refreshToken from .env.local, written once by McpLogin's device-code flow
+ * Mcp mcp = new Mcp(McpClientConfig.deviceAuth(clientId, refreshToken));
  *
- * // List available tools
+ * // List available tools — the client initializes itself on first use
  * Map<String, McpToolDefinition> tools = mcp.listTools();
  *
  * // Invoke a tool
- * McpToolResult result = mcp.callTool("list_metro", Map.of());
+ * McpToolResult result = mcp.callTool("list_metros", Map.of());
  * System.out.println(result.getTextContent());
  * }</pre>
  *
@@ -63,13 +78,18 @@ public class Mcp implements Closeable {
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final McpClientConfig config;
-    private final McpTokenManager tokenManager;
+    private final McpAuthenticator authenticator;
     private final Map<String, McpToolDefinition> toolRegistry = new ConcurrentHashMap<>();
 
-    private boolean initialized = false;
+    private volatile boolean initialized = false;
 
     /**
-     * Creates an MCP client with default configuration.
+     * Creates an MCP client with default configuration and the legacy client-credentials
+     * authenticator.
+     *
+     * <p><strong>Note (live-verified 2026-07-20):</strong> the documented MCP servers do not
+     * accept client-credentials tokens — see the class javadoc. Prefer
+     * {@link #Mcp(McpClientConfig)} with {@code McpClientConfig.deviceAuth(clientId, refreshToken)}.</p>
      *
      * @param credentials the OAuth2 credentials for authenticating with Equinix APIs
      */
@@ -78,7 +98,37 @@ public class Mcp implements Closeable {
     }
 
     /**
-     * Creates an MCP client with custom configuration.
+     * Creates an MCP client whose configuration carries its own
+     * {@link api.equinix.javasdk.mcp.auth.McpAuthenticator} — the standard entry point for
+     * the OAuth 2.1 device-flow credentials written by
+     * {@code api.equinix.javasdk.mcp.auth.McpLogin}:
+     *
+     * <pre>{@code
+     * Mcp mcp = new Mcp(McpClientConfig.deviceAuth(clientId, refreshToken));
+     * }</pre>
+     *
+     * @param config the client configuration; {@code config.getAuthenticator()} must be set
+     * @throws McpException if the configuration carries no authenticator
+     */
+    public Mcp(McpClientConfig config) {
+        this((EquinixCredentials) null, requireAuthenticator(config));
+    }
+
+    private static McpClientConfig requireAuthenticator(McpClientConfig config) {
+        if (config.getAuthenticator() == null) {
+            throw new McpException("Mcp(McpClientConfig) requires config.authenticator to be set - use"
+                    + " McpClientConfig.deviceAuth(clientId, refreshToken) (credentials from McpLogin /"
+                    + " .env.local), or the Mcp(EquinixCredentials, McpClientConfig) constructor for the"
+                    + " legacy client-credentials fallback.");
+        }
+        return config;
+    }
+
+    /**
+     * Creates an MCP client with custom configuration. When the configuration carries an
+     * {@code authenticator}, it is used as-is (and {@code credentials} may be {@code null});
+     * otherwise the legacy client-credentials authenticator is built from
+     * {@code credentials} and {@code config.getTokenEndpoint()}.
      *
      * @param credentials the OAuth2 credentials for authenticating with Equinix APIs
      * @param config the client configuration
@@ -97,22 +147,41 @@ public class Mcp implements Closeable {
                 .setDefaultRequestConfig(requestConfig)
                 .build();
 
-        this.tokenManager = new McpTokenManager(credentials, config.getTokenEndpoint(),
-                this.httpClient, this.objectMapper);
+        McpAuthenticator configured = config.getAuthenticator();
+        this.authenticator = configured != null
+                ? configured
+                : new ClientCredentialsAuthenticator(credentials, config.getTokenEndpoint(),
+                        this.httpClient, this.objectMapper);
     }
 
     /**
      * Performs the MCP initialization handshake with the Fabric server.
      *
-     * <p>Sends the {@code initialize} JSON-RPC request and verifies the server
-     * supports the expected protocol version. Must be called before invoking tools.</p>
+     * <p>Sends the {@code initialize} JSON-RPC request and validates the
+     * {@code protocolVersion} the server returns against the version this client offered:
+     * if the server names a different version, an {@link McpException} identifying both
+     * versions is thrown. A response that omits {@code protocolVersion} is accepted
+     * as-is (nothing to validate against).</p>
      *
-     * @throws McpException if initialization fails
+     * <p>Calling this explicitly is optional — the client initializes itself on the first
+     * {@link #listTools()} / {@link #callTool(String, Map)} invocation. Calling it again
+     * re-runs the handshake.</p>
+     *
+     * @throws McpException if initialization fails or the server's protocol version does
+     *         not match the client's
      */
-    public void initialize() {
+    public synchronized void initialize() {
         McpJsonRpcRequest request = McpJsonRpcRequest.initialize("equinix-java-sdk", sdkVersion());
+        Object offeredVersion = request.getParams().get("protocolVersion");
 
-        executeRpc(config.getFabricEndpoint(), request);
+        McpJsonRpcResponse response = executeRpc(config.getFabricEndpoint(), request);
+
+        JsonNode result = response.getResult();
+        String serverVersion = result == null ? null : result.path("protocolVersion").asText(null);
+        if (serverVersion != null && !serverVersion.equals(offeredVersion)) {
+            throw new McpException("MCP protocol version mismatch: client offered '" + offeredVersion
+                    + "' but server returned '" + serverVersion + "'");
+        }
         this.initialized = true;
     }
 
@@ -123,6 +192,7 @@ public class Mcp implements Closeable {
 
     /**
      * Retrieves the list of available MCP tools from the Fabric server and caches them.
+     * Runs the initialization handshake first if the client is not yet initialized.
      *
      * @return an unmodifiable map of tool name to tool definition
      * @throws McpException if the request fails
@@ -147,9 +217,10 @@ public class Mcp implements Closeable {
     }
 
     /**
-     * Invokes an MCP tool on the Fabric server.
+     * Invokes an MCP tool on the Fabric server. Runs the initialization handshake first
+     * if the client is not yet initialized.
      *
-     * @param toolName the name of the tool to invoke (e.g., "get_metro", "search_connection")
+     * @param toolName the name of the tool to invoke (e.g., "get_metro", "search_connections")
      * @param arguments the tool arguments as key-value pairs
      * @return the tool result
      * @throws McpException if the tool invocation fails or the tool returns an error
@@ -160,6 +231,10 @@ public class Mcp implements Closeable {
 
     /**
      * Invokes an MCP tool on the Peering Insights server.
+     *
+     * <p><strong>Experimental:</strong> the {@code peeringInsights} endpoint appears in no
+     * Equinix MCP documentation (only the Fabric server is documented) and may change or
+     * disappear without notice.</p>
      *
      * @param toolName the name of the tool to invoke
      * @param arguments the tool arguments as key-value pairs
@@ -180,7 +255,8 @@ public class Mcp implements Closeable {
     }
 
     /**
-     * Returns whether this client has been initialized.
+     * Returns whether the initialization handshake has completed — either explicitly via
+     * {@link #initialize()} or lazily on the first tools call.
      */
     public boolean isInitialized() {
         return initialized;
@@ -195,6 +271,11 @@ public class Mcp implements Closeable {
 
     @Override
     public void close() throws IOException {
+        // A config-supplied authenticator (e.g. DeviceCodeAuthenticator) owns its own HTTP
+        // client; the fallback ClientCredentialsAuthenticator shares ours and is not Closeable.
+        if (authenticator instanceof Closeable closeableAuthenticator) {
+            closeableAuthenticator.close();
+        }
         httpClient.close();
     }
 
@@ -233,7 +314,7 @@ public class Mcp implements Closeable {
             httpPost.setHeader("Content-Type", "application/json");
             httpPost.setHeader("Accept", "application/json");
             httpPost.setHeader("User-Agent", "equinix-java-sdk/Mcp");
-            httpPost.setHeader("Authorization", "Bearer " + tokenManager.getToken());
+            httpPost.setHeader("Authorization", "Bearer " + authenticator.bearerToken());
 
             String body = objectMapper.writeValueAsString(rpcRequest);
             httpPost.setEntity(new StringEntity(body, "UTF-8"));
@@ -243,9 +324,9 @@ public class Mcp implements Closeable {
                 String responseBody = EntityUtils.toString(httpResponse.getEntity());
 
                 if (statusCode == 401) {
-                    tokenManager.invalidate();
+                    authenticator.invalidate();
                     // Retry once with fresh token
-                    httpPost.setHeader("Authorization", "Bearer " + tokenManager.getToken());
+                    httpPost.setHeader("Authorization", "Bearer " + authenticator.bearerToken());
                     try (CloseableHttpResponse retryResponse = httpClient.execute(httpPost)) {
                         statusCode = retryResponse.getStatusLine().getStatusCode();
                         responseBody = EntityUtils.toString(retryResponse.getEntity());
@@ -282,9 +363,13 @@ public class Mcp implements Closeable {
         }
     }
 
-    private void ensureInitialized() {
+    /**
+     * Lazily runs the initialization handshake on first use. Synchronized (as is
+     * {@link #initialize()}) so concurrent first calls perform a single handshake.
+     */
+    private synchronized void ensureInitialized() {
         if (!initialized) {
-            throw new McpException("Mcp not initialized. Call initialize() before invoking tools.");
+            initialize();
         }
     }
 }

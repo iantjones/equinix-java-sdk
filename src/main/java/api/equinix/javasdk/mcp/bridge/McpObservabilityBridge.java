@@ -36,7 +36,7 @@ public class McpObservabilityBridge {
      */
     public McpMetrics getMetrics(String assetType, String assetId, String metricType,
                                  String startTime, String endTime) {
-        McpToolResult result = client.callTool("get_metrics", Map.of(
+        McpToolResult result = client.callTool("get_metric", Map.of(
                 "assetType", assetType,
                 "assetId", assetId,
                 "metricType", metricType,
