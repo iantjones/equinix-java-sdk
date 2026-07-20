@@ -91,9 +91,9 @@ Model Interface          - Public API contract (getters)
   `InternetAccess.java`, `Projects.java`, `IAM.java`, `STS.java`, plus the `Equinix.java` session,
   in `api.equinix.javasdk`
 - Value-add modules: `api.equinix.javasdk.design.*` (Metro Optimizer, Deployment Wizard, Peering
-  Intelligence, Savings/TCO, `design.geo` speed-of-light latency) and `api.equinix.javasdk.mcp.*`
-  (MCP JSON-RPC bridge) — the engines depend on the narrow `FabricGateway` interface, which makes
-  them straightforward to unit-test against a stub gateway
+  Intelligence, Savings/TCO, `design.geo` speed-of-light latency) — the engines depend on the
+  narrow `FabricGateway` interface, which makes them straightforward to unit-test against a stub
+  gateway
 - Config wiring: `*Config.java` + `*ConfigImpl.java` per domain
 - API endpoints: `src/main/resources/json/apiParams_*.json`
 - Base classes: `ClientBase.java`, `PageableBase.java`

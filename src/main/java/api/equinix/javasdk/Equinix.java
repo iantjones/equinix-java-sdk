@@ -42,21 +42,15 @@ import java.io.IOException;
  * }</pre>
  *
  * <p>Domain clients are created lazily and cached, so repeated accessor calls return the same
- * instance. The session owns the shared core client; closing the session closes it (and the
- * {@link Mcp} client if one was created). The individual domain clients obtained from a session
- * do <em>not</em> close the shared core when their own {@code close()} is called.</p>
+ * instance. The session owns the shared core client; closing the session closes it. The
+ * individual domain clients obtained from a session do <em>not</em> close the shared core when
+ * their own {@code close()} is called.</p>
  *
  * <p>The standalone {@code new Fabric(credentials)} (etc.) constructors remain for the common
  * single-domain case; this session is purely additive.</p>
- *
- * <p><strong>MCP note:</strong> {@link #mcp()} talks to the separate, private-beta Equinix MCP
- * servers over their own endpoints, so it uses its own transport rather than the shared
- * Fabric/REST core — that separation is inherent to MCP being a distinct service with its own
- * authorization server (see {@link Mcp}).</p>
  */
 public final class Equinix implements Closeable {
 
-    private final EquinixCredentialsProvider credentialsProvider;
     private final EquinixConfig config;
     private final api.equinix.javasdk.core.client.EquinixClient core;
 
@@ -68,7 +62,6 @@ public final class Equinix implements Closeable {
     private Projects projects;
     private IAM iam;
     private STS sts;
-    private Mcp mcp;
 
     /**
      * Opens a session against the production environment.
@@ -129,7 +122,6 @@ public final class Equinix implements Closeable {
      * @param config the construction-time options
      */
     public Equinix(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
-        this.credentialsProvider = credentialsProvider;
         this.config = config;
         this.core = new api.equinix.javasdk.core.client.EquinixClient(credentialsProvider, config.isSandbox());
         if (config.getRetryPolicy() != null) {
@@ -229,20 +221,6 @@ public final class Equinix implements Closeable {
     }
 
     /**
-     * @return the MCP client for this session. Uses its own transport (the MCP servers are a
-     *         separate, private-beta service); created lazily, initializes itself on the first
-     *         tool call, and is closed with the session. Note the {@link Mcp} authentication
-     *         caveats: the MCP servers require OAuth 2.1 tokens from {@code as.equinix.com}
-     *         and do not accept this session's client-credentials token.
-     */
-    public Mcp mcp() {
-        if (mcp == null) {
-            mcp = new Mcp(credentialsProvider.getCredentials());
-        }
-        return mcp;
-    }
-
-    /**
      * Explicitly performs OAuth2 authentication, warming the session's shared token. Optional —
      * authentication otherwise happens automatically on the first API call. When
      * {@code EquinixConfig.isAutoLoadMetros()} is enabled (the default), this also eagerly loads the
@@ -267,9 +245,6 @@ public final class Equinix implements Closeable {
 
     @Override
     public void close() throws IOException {
-        if (mcp != null) {
-            mcp.close();
-        }
         core.close();
     }
 }

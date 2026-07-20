@@ -6,8 +6,6 @@ import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
-import api.equinix.javasdk.mcp.bridge.McpBridge;
-import api.equinix.javasdk.mcp.bridge.McpConnectionBridge;
 import api.equinix.javasdk.design.optimizer.model.*;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
@@ -64,10 +62,8 @@ final class DeploymentWizardEngine {
         // Phase 2: Plan Provider Connections
         List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result);
 
-        // Phase 2b: Connection validation — the native Fabric REST dry-run is the default
-        // path; MCP is an optional additional enrichment, run only when a bridge was supplied.
+        // Phase 2b: Connection validation via the native Fabric REST dry-run surface.
         dryRunValidateConnections(config.getFabric(), providerConnections, validationErrors);
-        mcpValidateConnections(config.getMcpBridge(), providerConnections, validationErrors);
 
         // Phase 3: Plan Backbone Links
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros);
@@ -589,10 +585,9 @@ final class DeploymentWizardEngine {
      * REST dry-run surface — {@code POST /fabric/v4/connections?dryRun=true} via
      * {@code connections().define(type).name(..).bandwidth(..).dryRun().create()} — which
      * verifies the create would succeed without provisioning anything. An API rejection is
-     * folded into the plan's validation errors as a warning naming the connection (same result
-     * shape as the MCP enrichment). The dry run is best-effort: a gateway that cannot offer a
-     * connections surface at all (for example a bare test stub) skips validation rather than
-     * failing the plan.
+     * folded into the plan's validation errors as a warning naming the connection. The dry run
+     * is best-effort: a gateway that cannot offer a connections surface at all (for example a
+     * bare test stub) skips validation rather than failing the plan.
      */
     private static void dryRunValidateConnections(FabricGateway fabric,
                                                   List<PlannedConnection> connections,
@@ -625,41 +620,4 @@ final class DeploymentWizardEngine {
         }
     }
 
-    /**
-     * Optional MCP enrichment on top of the default REST dry-run: validates planned connections
-     * against the Equinix MCP server, only when a bridge was supplied via
-     * {@code withMcpValidation(McpBridge)}. Explicitly-invalid results are added as warnings to
-     * the validation errors list; transport or tool errors are swallowed — the MCP pass is
-     * best-effort and never blocks planning.
-     */
-    private static void mcpValidateConnections(McpBridge mcpBridge,
-                                                List<PlannedConnection> connections,
-                                                List<String> validationErrors) {
-        if (mcpBridge == null || connections == null || connections.isEmpty()) {
-            return;
-        }
-
-        try {
-            for (PlannedConnection conn : connections) {
-                try {
-                    Map<String, Object> spec = new HashMap<>();
-                    spec.put("type", conn.getConnectionType() != null ? conn.getConnectionType().toString() : "EVPL_VC");
-                    spec.put("name", conn.getName());
-                    spec.put("bandwidth", conn.getBandwidthMbps());
-
-                    McpConnectionBridge.McpConnectionValidation validation =
-                            mcpBridge.connections().validateConnection(spec);
-
-                    if (!validation.isValid()) {
-                        validationErrors.add("MCP validation warning for '" + conn.getName()
-                                + "': " + validation.getMessage());
-                    }
-                } catch (Exception e) {
-                    // Individual connection validation failures should not block the plan
-                }
-            }
-        } catch (Exception e) {
-            // MCP validation is optional; continue without it
-        }
-    }
 }

@@ -80,7 +80,7 @@ import api.equinix.javasdk.ibxsmartview.client.implementation.SystemAlertsImpl;
  * @see api.equinix.javasdk.ibxsmartview.client.Environmentals
  * @see api.equinix.javasdk.ibxsmartview.client.StreamingSubscriptions
  */
-public final class IBXSmartView extends EquinixClient {
+public class IBXSmartView extends EquinixClient {
 
     private Environmentals environmentals;
     private PowerEvents powerEvents;

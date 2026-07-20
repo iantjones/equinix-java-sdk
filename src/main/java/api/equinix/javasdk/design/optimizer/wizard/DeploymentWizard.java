@@ -3,7 +3,6 @@ package api.equinix.javasdk.design.optimizer.wizard;
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
-import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
@@ -105,9 +104,6 @@ public final class DeploymentWizard {
         private Long accountNumber;
         private String projectId;
         private List<String> notificationEmails = new ArrayList<>();
-
-        // MCP validation
-        private McpBridge mcpBridge;
 
         // Pricing
         private RateCard rateCard;
@@ -327,27 +323,6 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── MCP Validation ──
-
-        /**
-         * Enables optional MCP-based enrichment of the plan's connection validation.
-         *
-         * <p>By default, {@link #plan()} already validates every planned provider connection
-         * against the native Fabric REST dry-run surface
-         * ({@code POST /fabric/v4/connections?dryRun=true}) — no MCP server required. Supplying
-         * a bridge here runs an <em>additional</em> validation pass through the Equinix MCP
-         * server on top of that dry run. The MCP pass is best-effort: explicitly-invalid results
-         * are folded into the plan's validation errors as warnings, while transport or tool
-         * errors are swallowed and never block planning.</p>
-         *
-         * @param mcpBridge the MCP bridge instance (typically from {@code fabric.mcp()})
-         * @return this builder for method chaining
-         */
-        public Builder withMcpValidation(McpBridge mcpBridge) {
-            this.mcpBridge = mcpBridge;
-            return this;
-        }
-
         // ── Pricing ──
 
         /**
@@ -411,7 +386,6 @@ public final class DeploymentWizard {
         Long getAccountNumber() { return accountNumber; }
         String getProjectId() { return projectId; }
         List<String> getNotificationEmails() { return notificationEmails; }
-        McpBridge getMcpBridge() { return mcpBridge; }
         RateCard getRateCard() { return rateCard; }
         Term getTerm() { return term; }
     }

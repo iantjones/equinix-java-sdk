@@ -98,7 +98,7 @@ import api.equinix.javasdk.customerportal.client.implementation.BillingAccountsS
  * @see api.equinix.javasdk.customerportal.client.TroubleTickets
  * @see api.equinix.javasdk.customerportal.client.Invoices
  */
-public final class CustomerPortal extends EquinixClient {
+public class CustomerPortal extends EquinixClient {
 
     private Invoices invoices;
 

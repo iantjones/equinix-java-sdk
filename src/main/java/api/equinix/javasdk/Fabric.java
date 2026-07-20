@@ -27,8 +27,6 @@ import api.equinix.javasdk.fabric.model.MetroRegistry;
 import api.equinix.javasdk.internetaccess.enums.ConnectionType;
 import api.equinix.javasdk.internetaccess.model.Ibx;
 import lombok.extern.slf4j.Slf4j;
-import api.equinix.javasdk.mcp.McpClientConfig;
-import api.equinix.javasdk.mcp.bridge.McpBridge;
 import api.equinix.javasdk.design.optimizer.MetroOptimizer;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.DeploymentWizard;
@@ -153,8 +151,6 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     private Tags tags;
 
     private HealthStatus healthStatus;
-
-    private McpBridge mcpBridge;
 
     final private FabricConfigImpl fabricConfig;
 
@@ -830,58 +826,6 @@ public final class Fabric extends EquinixClient implements FabricGateway {
      */
     public TcoCalculator.Builder tcoComparison() {
         return TcoCalculator.builder(this);
-    }
-
-    /**
-     * Returns the MCP (Model Context Protocol) bridge — typed, client-side wrappers over the
-     * {@link Mcp} JSON-RPC client for the remote, private-beta Equinix Fabric MCP server.
-     *
-     * <p>The bridge covers the everyday tools (metro lookup, connection search/validation,
-     * cloud-router and observability helpers; the exact set is discovered at runtime via
-     * {@code availableTools()}). It consumes the remote server — it does not expose this
-     * SDK's resources as MCP tools. No network I/O happens here: the underlying client
-     * initializes itself on the first tool call.</p>
-     *
-     * <p><strong>Private beta:</strong> the server requires OAuth 2.1 tokens issued by
-     * {@code as.equinix.com}; this Fabric client's regular client-credentials tokens are not
-     * accepted there. See {@link Mcp} for the authentication and beta caveats.</p>
-     *
-     * <pre>{@code
-     * McpBridge mcp = fabric.mcp();
-     *
-     * // List available metros via MCP
-     * List<McpMetroBridge.McpMetro> metros = mcp.metros().listMetros();
-     *
-     * // Validate a connection before deployment
-     * McpConnectionBridge.McpConnectionValidation result =
-     *     mcp.connections().validateConnection(connectionSpec);
-     * }</pre>
-     *
-     * @return the {@link McpBridge} for MCP server interactions
-     * @see Mcp
-     */
-    public McpBridge mcp() {
-        if (this.mcpBridge == null) {
-            this.mcpBridge = new McpBridge(new Mcp(
-                    this.equinixClient.getEquinixCredentialsProvider().getCredentials()));
-        }
-        return mcpBridge;
-    }
-
-    /**
-     * Returns the MCP bridge with custom configuration. Like {@link #mcp()}, the underlying
-     * client initializes itself on the first tool call.
-     *
-     * @param config the MCP client configuration (endpoint URLs, timeouts, etc.)
-     * @return the {@link McpBridge} for MCP server interactions
-     * @see Mcp
-     */
-    public McpBridge mcp(McpClientConfig config) {
-        if (this.mcpBridge == null) {
-            this.mcpBridge = new McpBridge(new Mcp(
-                    this.equinixClient.getEquinixCredentialsProvider().getCredentials(), config));
-        }
-        return mcpBridge;
     }
 
     /**

@@ -75,7 +75,7 @@ import api.equinix.javasdk.networkedge.client.implementation.VPNsImpl;
  * @see api.equinix.javasdk.networkedge.client.Devices
  * @see api.equinix.javasdk.networkedge.client.ACLTemplates
  */
-public final class NetworkEdge extends EquinixClient {
+public class NetworkEdge extends EquinixClient {
 
     private Setup setup;
     private Devices devices;
