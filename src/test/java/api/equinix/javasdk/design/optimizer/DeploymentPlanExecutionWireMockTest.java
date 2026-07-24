@@ -72,7 +72,11 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
 
     static Fabric fabric;
 
-    // Shared MetroId instances so the engine's reference-based topology lookup resolves.
+    // Named MetroId constants, for readability. The topology lookup
+    // (DeploymentTopology.forMetro) matches on VALUE, not reference identity — MetroId is a value
+    // type that never interns, and against live data the recommendation's id and the placement's id
+    // are always separate objects. Sharing an instance is therefore a convenience here, never a
+    // requirement: do not propagate "these must be the same object" into new fixtures.
     private static final MetroId DC = MetroId.of(MetroCode.DC);
     private static final MetroId DA = MetroId.of(MetroCode.DA);
 

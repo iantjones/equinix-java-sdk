@@ -164,6 +164,77 @@ class DesignToolsTest {
         assertTrue(e.getMessage().contains("workloads"), e.getMessage());
     }
 
+    @Test
+    @DisplayName("a workload's latency_sensitivity and max_latency_ms compose: both are honoured and both are reported")
+    void workloadLatencyLeversCompose() throws Exception {
+        // The two levers arrive together in one workload object, which is the common MCP call shape.
+        // WorkloadSpec.resolvedProfile() used to consult latencySensitivity only when there was no
+        // profile override at all — and maxLatencyToleranceMs synthesizes one — so setting both
+        // silently discarded the sensitivity and the workload fell through to the by-score rule.
+        // 0.1ms is beyond every metro here (the HQ site sits in DC, whose own worst case is 0.5ms),
+        // so the ceiling must be reported as unhonoured rather than quietly dropped.
+        ObjectNode payload = call("design_optimize_placement", """
+                {"workloads": [{"label": "Edge", "type": "general_compute", "bandwidth_mbps": 1000,
+                                "latency_sensitivity": "critical", "max_latency_ms": 0.1}],
+                 "sites": [{"label": "HQ", "metro_code": "DC"}]}
+                """);
+
+        String reasoning = placementReasoning(payload, "Edge");
+        assertTrue(reasoning.contains("Lowest weighted latency to user sites"),
+                "'critical' must still reach the engine when max_latency_ms also set a profile "
+                        + "override; the by-score rule would say 'Placed in highest-scored metro': " + reasoning);
+        assertTrue(reasoning.contains("0.1ms latency tolerance"),
+                "the per-workload ceiling must appear on the placement: " + reasoning);
+        assertTrue(reasoning.contains("NOT honoured"),
+                "a ceiling no metro meets must say so rather than read like an unconstrained "
+                        + "placement: " + reasoning);
+
+        assertTrue(riskCategories(payload).contains("WORKLOAD_LATENCY_TOLERANCE_UNMET"),
+                "the unmet ceiling is also raised as a risk finding: " + payload.toPrettyString());
+    }
+
+    @Test
+    @DisplayName("a non-positive latency ceiling is rejected with a message naming what to fix")
+    void nonPositiveLatencyCeilingsRejected() {
+        IllegalArgumentException workload = assertThrows(IllegalArgumentException.class,
+                () -> call("design_optimize_placement", """
+                        {"workloads": [{"label": "Edge", "max_latency_ms": 0}],
+                         "sites": [{"label": "HQ", "metro_code": "DC"}]}
+                        """));
+        assertTrue(workload.getMessage().contains("Edge"),
+                "the message names the offending workload: " + workload.getMessage());
+
+        IllegalArgumentException global = assertThrows(IllegalArgumentException.class,
+                () -> call("design_optimize_placement", """
+                        {"workloads": [{"label": "Edge"}],
+                         "sites": [{"label": "HQ", "metro_code": "DC"}],
+                         "constraints": {"max_latency_ms": -5}}
+                        """));
+        assertTrue(global.getMessage().contains("maxLatencyMs"), global.getMessage());
+    }
+
+    /** The engine's rationale for where a workload landed, from any recommendation in the payload. */
+    private static String placementReasoning(ObjectNode payload, String workloadLabel) {
+        for (JsonNode rec : payload.get("recommendations")) {
+            JsonNode placed = rec.get("assigned_workloads");
+            if (placed == null) {
+                continue;
+            }
+            for (JsonNode wp : placed) {
+                if (workloadLabel.equals(wp.get("workload").asText())) {
+                    return wp.get("reasoning").asText();
+                }
+            }
+        }
+        throw new AssertionError("no placement for '" + workloadLabel + "' in " + payload.toPrettyString());
+    }
+
+    private static List<String> riskCategories(ObjectNode payload) {
+        List<String> categories = new java.util.ArrayList<>();
+        payload.get("risk_assessment").get("findings").forEach(f -> categories.add(f.get("category").asText()));
+        return categories;
+    }
+
     // ── design_plan_deployment + design_export_terraform ────────────────────
 
     @Test
@@ -380,6 +451,110 @@ class DesignToolsTest {
         JsonNode live = payload.get("live_pricing");
         assertFalse(live.get("attempted").asBoolean(), "no GCP adapter without GCP_BILLING_API_KEY");
         assertTrue(live.get("note").asText().contains("GCP_BILLING_API_KEY"), live.get("note").asText());
+    }
+
+    // ── schema honesty: no accepted-but-ignored input, no mis-stated contract ──
+
+    /**
+     * The tool schemas are prompts the calling model reasons from, so a field that survives in one
+     * has to be a field the engine reads, described the way the engine actually behaves. These
+     * assertions pin the levers that were removed because nothing consumed them, and the wording
+     * that distinguishes a candidacy filter from a placement rule — the distinction a model cannot
+     * recover from the payload alone.
+     */
+    @Test
+    @DisplayName("the optimizer schema drops the levers the engine ignores and states the rest precisely")
+    void optimizerSchemaMatchesTheEngine() {
+        Map<String, Object> schema = tool("design_optimize_placement").getInputSchema();
+
+        assertFalse(properties(child(schema, "constraints")).containsKey("monthly_budget_min"),
+                "BudgetRange.minMonthly is read nowhere in the engine — it must not be advertised");
+        assertTrue(description(child(schema, "constraints", "monthly_budget_max")).contains("not a filter"),
+                "the budget ceiling only sets cost_estimate.within_budget; the description must say so");
+
+        // Candidacy vs placement: the two latency ceilings do different things and must read that way.
+        assertTrue(description(child(schema, "workloads", "max_latency_ms")).contains("narrows PLACEMENT"),
+                "the per-workload ceiling narrows placement, not the recommended metro set");
+        assertTrue(description(child(schema, "constraints", "max_latency_ms")).contains("narrows CANDIDACY"),
+                "the request-level bound excludes metros before scoring");
+
+        assertTrue(description(child(schema, "workloads", "latency_sensitivity")).contains("Only 'critical'"),
+                "the other tiers change neither placement nor ranking, so the schema must not imply they do");
+        assertTrue(description(child(schema, "workloads", "type")).contains("never influence the metro ranking"),
+                "power/cooling are recorded for facility selection, not scored");
+        assertTrue(description(child(schema, "workloads", "bandwidth_mbps")).contains("cost sizing"),
+                "bandwidth prices the deployment; it does not rank metros");
+        assertTrue(description(child(schema, "sites", "weight")).contains("NOT weighted 1.0"),
+                "an unweighted site counts as an average site, not as 1.0");
+    }
+
+    @Test
+    @DisplayName("design_plan_deployment offers only real package codes and no inert pricing term")
+    void planDeploymentSchemaMatchesTheWizard() {
+        Map<String, Object> deployment = child(tool("design_plan_deployment").getInputSchema(), "deployment");
+
+        assertFalse(properties(deployment).containsKey("term"),
+                "no rate card in this server's chain resolves a price by term");
+        assertEquals(List.of("LAB", "BASIC", "STANDARD", "ADVANCED", "PREMIUM"),
+                child(deployment, "router_package").get("enum"),
+                "the schema must offer exactly the deployable GatewayPackageCode tiers — the old "
+                        + "'PRO' example is not one of them and fails at plan time");
+        assertTrue(description(child(deployment, "notifications")).contains("FIRST"),
+                "only the first address reaches the plan; the schema must not imply all of them do");
+
+        // The embedded optimization block is the same shape, so the same removals apply.
+        Map<String, Object> optimization =
+                child(tool("design_plan_deployment").getInputSchema(), "optimization");
+        assertFalse(properties(child(optimization, "constraints")).containsKey("monthly_budget_min"));
+    }
+
+    @Test
+    @DisplayName("the pricing and peering tools drop the inputs their engines never read")
+    void pricingAndPeeringSchemasMatchTheirEngines() {
+        assertFalse(properties(tool("design_estimate_tco").getInputSchema()).containsKey("term"),
+                "EquinixRateCard and ReferenceRateCard both ignore term, so no figure could change");
+        assertFalse(properties(tool("design_compare_cloud_egress").getInputSchema()).containsKey("term"),
+                "the provider cards price egress per GB by region, never by contract term");
+        assertFalse(properties(tool("design_analyze_peering").getInputSchema())
+                        .containsKey("include_fabric_connections"),
+                "PeeringIntelligenceEngine reads the flag nowhere: no Fabric connection lookup exists "
+                        + "behind it, so the tool advertised API calls it never makes");
+        assertTrue(description(child(tool("design_analyze_peering").getInputSchema(), "metros"))
+                        .contains("do not restrict"),
+                "customerMetros adds columns and drives resiliency; it does not scope the analysis");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> properties(Map<String, Object> schema) {
+        Map<String, Object> props = (Map<String, Object>) schema.get("properties");
+        assertNotNull(props, "not an object schema: " + schema);
+        return props;
+    }
+
+    /**
+     * Walks a property path through the schema. An <em>intermediate</em> array step descends into
+     * its {@code items}, so a path can name a field of a list element
+     * ({@code "workloads", "max_latency_ms"}); the final step is returned as-is, so a path can also
+     * name the array itself and read its own description.
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> child(Map<String, Object> schema, String... path) {
+        Map<String, Object> node = schema;
+        for (int i = 0; i < path.length; i++) {
+            Object next = properties(node).get(path[i]);
+            assertNotNull(next, "no '" + path[i] + "' property in " + node);
+            node = (Map<String, Object>) next;
+            if (i < path.length - 1 && "array".equals(node.get("type"))) {
+                node = (Map<String, Object>) node.get("items");
+            }
+        }
+        return node;
+    }
+
+    private static String description(Map<String, Object> schema) {
+        Object description = schema.get("description");
+        assertNotNull(description, "every schema field carries an LLM-facing description");
+        return String.valueOf(description);
     }
 
     // ── shared stub builders (same recipe as the optimizer engine tests) ────

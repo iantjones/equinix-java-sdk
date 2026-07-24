@@ -89,10 +89,11 @@ class MetroOptimizerEngineRunTest {
         Metros metros = mock(Metros.class);
         when(metros.list()).thenReturn(new PaginatedList<>(List.of(dc, da, sv), null, null, null, null));
 
-        // AWS service profile available in DC and DA but not SV. The optimizer matches a
-        // CloudProviderType requirement against the profile name via
-        // CloudProviderType.AWS.getProviderName() == "Amazon Web Services", so the name must
-        // contain that phrase for the AWS requirement to resolve.
+        // AWS service profile available in DC and DA but not SV. The optimizer resolves a
+        // CloudProviderType requirement through CloudProviderType.matchesServiceProfileName,
+        // which accepts the Fabric product name, the corporate name, or a curated alias — this
+        // profile name carries both "Amazon Web Services" and "Direct Connect". Product-only
+        // names ("AWS Direct Connect") resolve too; see MetroOptimizerProviderResolutionTest.
         ServiceProfile awsProfile = mock(ServiceProfile.class);
         when(awsProfile.getUuid()).thenReturn("sp-aws-1");
         when(awsProfile.getName()).thenReturn("Amazon Web Services Direct Connect");
