@@ -170,8 +170,17 @@ public final class DeploymentWizard {
         }
 
         /**
-         * Sets the naming prefix for Cloud Routers. Each router will be named
-         * "{prefix}-{metroCode}" (e.g., "FCR-DC"). Defaults to "FCR".
+         * Sets the naming prefix for Cloud Routers and the connection / routing-protocol names derived
+         * from them. Each router is named {@code "{prefix}-{metroCode}"} (e.g. {@code "FCR-DC"}) and a
+         * provider connection {@code "{prefix}-{metroCode}-to-{token}"} (e.g. {@code "FCR-DC-to-aws"}).
+         * Defaults to {@code "FCR"}.
+         *
+         * <p>The prefix is the stem of every generated name, and Fabric rejects any name of 24 or more
+         * characters. The prefix is therefore trimmed, reduced to name-safe characters, and bounded to
+         * a short budget at plan time: a prefix longer than that budget is truncated (the composed
+         * names always stay within the limit), and a blank prefix is rejected with an
+         * {@link IllegalArgumentException} when {@link #plan()} runs, because there is no stem to build
+         * on.</p>
          *
          * @param prefix the router name prefix
          * @return this builder for method chaining
