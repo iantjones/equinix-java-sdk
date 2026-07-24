@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Exercises the live wizard engine end-to-end through {@link DeploymentWizard.Builder#plan()}: it feeds
- * a small hand-built {@link OptimizationResult} (three metros, two providers, two workloads) into the
+ * a small hand-built {@link OptimizationResult} (three metros, two providers, three workloads) into the
  * builder and asserts the generated {@link DeploymentPlan} — Cloud Routers per metro, provider
  * connections with bandwidth sized from the topology, full-mesh backbone links, and the DIRECT+BGP
  * routing-protocol pairs the engine derives for each connection.
@@ -72,12 +72,33 @@ import static org.mockito.Mockito.when;
 @DisplayName("DeploymentWizard.plan() — live engine")
 class DeploymentWizardPlanTest {
 
-    // Shared MetroId instances. DeploymentTopology.forMetro() matches on reference identity, and
-    // MetroId.of(...) does not intern, so the recommendation and the placement MUST share the same
-    // MetroId object for the PER_WORKLOAD bandwidth path to see the workloads placed at that metro.
+    // Named MetroId constants, for readability and for asserting against.
+    //
+    // DeploymentTopology.forMetro() matches on VALUE, not reference identity (MetroId is a value type
+    // whose factories allocate per call and never intern; DeploymentTopologyTest pins that contract).
+    // Sharing an instance between a recommendation and its placements is therefore NOT required — and
+    // it is deliberately avoided in the fixtures below, which build their placements with
+    // distinctButEqual(...). An earlier revision of this file instructed maintainers to share the
+    // instances "because forMetro matches on reference identity"; that was the very misunderstanding
+    // that shipped `==` into forMetro and made the wizard silently fall back to its 1000 Mbps default
+    // against live data, where the recommendation's id and the placement's id are never the same
+    // object. Keep the fixtures using non-identical ids so a return to identity matching fails here.
     private static final MetroId DC = MetroId.of(MetroCode.DC);
     private static final MetroId DA = MetroId.of(MetroCode.DA);
     private static final MetroId SV = MetroId.of(MetroCode.SV);
+
+    /**
+     * A fresh {@link MetroId} equal to — but deliberately not the same object as — the given one, so
+     * the wizard has to resolve placements by value the way it must against live data. The
+     * assertions guard the premise: if {@code MetroId.of} ever starts interning, this fails loudly
+     * rather than letting the coverage below quietly become vacuous.
+     */
+    private static MetroId distinctButEqual(MetroId metro) {
+        MetroId copy = MetroId.of(metro.code());
+        assertNotSame(metro, copy, "MetroId.of must not intern, or these fixtures prove nothing");
+        assertEquals(metro, copy);
+        return copy;
+    }
 
     private static RateCard emptyRateCard() {
         RateCard card = mock(RateCard.class);
@@ -268,13 +289,13 @@ class DeploymentWizardPlanTest {
                                                 .build()))
                                 .assignedWorkloads(List.of(WorkloadPlacement.builder()
                                         .workloadLabel("ML Training")
-                                        .assignedMetro(DC)
+                                        .assignedMetro(distinctButEqual(DC))
                                         .reasoning("primary")
                                         .build()))
                                 .build()))
                 .topology(new DeploymentTopology(List.of(WorkloadPlacement.builder()
                         .workloadLabel("ML Training")
-                        .assignedMetro(DC)
+                        .assignedMetro(distinctButEqual(DC))
                         .reasoning("primary")
                         .build())))
                 .computedAt(Instant.now())
@@ -406,8 +427,10 @@ class DeploymentWizardPlanTest {
 
     /**
      * A three-metro optimization: DC (AWS, two AWS-dependent workloads), DA (AZURE, one AZURE-dependent
-     * workload), SV (no available providers). The topology places each workload at its metro, using the
-     * shared MetroId instances so {@code forMetro} reference-matching resolves.
+     * workload), SV (no available providers). The topology places each workload at its metro using a
+     * {@link #distinctButEqual} id, never the instance the recommendation carries, so the wizard's
+     * {@code forMetro} lookup has to match on value — the live shape, where
+     * {@code MetroRecommendation.getMetroId()} and the placement's id are separate objects.
      */
     private static OptimizationResult threeMetroResult() {
         MetroScore score = new MetroScore(90.0, Collections.emptyList());
@@ -429,17 +452,17 @@ class DeploymentWizardPlanTest {
         DeploymentTopology topology = new DeploymentTopology(List.of(
                 WorkloadPlacement.builder()
                         .workloadLabel("ML Training")
-                        .assignedMetro(DC)
+                        .assignedMetro(distinctButEqual(DC))
                         .reasoning("AWS at DC")
                         .build(),
                 WorkloadPlacement.builder()
                         .workloadLabel("DR Backup")
-                        .assignedMetro(DC)
+                        .assignedMetro(distinctButEqual(DC))
                         .reasoning("AWS at DC")
                         .build(),
                 WorkloadPlacement.builder()
                         .workloadLabel("Analytics")
-                        .assignedMetro(DA)
+                        .assignedMetro(distinctButEqual(DA))
                         .reasoning("AZURE at DA")
                         .build()));
 

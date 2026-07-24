@@ -34,7 +34,6 @@ import api.equinix.javasdk.design.optimizer.wizard.model.PlanPricing;
 import api.equinix.javasdk.design.peering.PeeringIntelligence;
 import api.equinix.javasdk.design.peering.model.PeeringIntelligenceResult;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
-import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.design.value.savings.SavingsCalculator;
 import api.equinix.javasdk.design.value.savings.SavingsEstimate;
 import api.equinix.javasdk.design.value.tco.DeploymentArchetype;
@@ -56,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static api.equinix.javasdk.mcp.server.Args.enumValue;
-import static api.equinix.javasdk.mcp.server.Args.optBool;
 import static api.equinix.javasdk.mcp.server.Args.optEnum;
 import static api.equinix.javasdk.mcp.server.Args.optInt;
 import static api.equinix.javasdk.mcp.server.Args.optLong;
@@ -65,7 +63,6 @@ import static api.equinix.javasdk.mcp.server.Args.optString;
 import static api.equinix.javasdk.mcp.server.Args.requireNumber;
 import static api.equinix.javasdk.mcp.server.Args.requireString;
 import static api.equinix.javasdk.mcp.server.Schemas.array;
-import static api.equinix.javasdk.mcp.server.Schemas.bool;
 import static api.equinix.javasdk.mcp.server.Schemas.integer;
 import static api.equinix.javasdk.mcp.server.Schemas.looseObject;
 import static api.equinix.javasdk.mcp.server.Schemas.lowerNames;
@@ -99,39 +96,112 @@ final class DesignToolFactory {
 
     // ── design_optimize_placement ───────────────────────────────────────────
 
+    /**
+     * The optimizer's input schema, shared by {@code design_optimize_placement} and the
+     * {@code optimization} block of {@code design_plan_deployment}.
+     *
+     * <p>Every description here is a prompt the calling model reasons from, so each states what the
+     * engine actually does with the field — in particular whether it narrows <em>candidacy</em> (which
+     * metros are recommended) or only <em>placement</em> (which recommended metro a single workload
+     * lands in), because the two read identically in a payload and only one of them changes the
+     * ranked list. A field the engine reads nowhere is not documented here; it is removed, so the
+     * model cannot spend a turn setting a knob that moves nothing.</p>
+     */
     private static Map<String, Object> optimizationProps() {
         Map<String, Object> workloadItem = object(props(
                 "label", string("Short name for this workload, e.g. 'ML training'."),
-                "type", stringEnum("The workload archetype; drives latency/power/cooling scoring.",
+                "type", stringEnum("The workload archetype. It selects this workload's default profile: "
+                                + "its latency sensitivity, whether placement is pulled toward the user sites, "
+                                + "and any power/cooling needs. 'disaster_recovery' and 'cold_backup' are placed "
+                                + "in a different region from the primary where one is recommended. Power and "
+                                + "cooling are recorded on the result for cabinet/cage selection only — Fabric "
+                                + "publishes no per-metro power or cooling capability, so they never influence "
+                                + "the metro ranking.",
                         lowerNames(WorkloadType.class)),
-                "bandwidth_mbps", integer("Sustained bandwidth this workload needs, in Mbps."),
-                "latency_sensitivity", stringEnum("How latency-sensitive the workload is.",
+                "bandwidth_mbps", integer("Sustained bandwidth this workload needs, in Mbps. Used for cost "
+                        + "sizing only: all workloads' bandwidth is summed and split across the recommended "
+                        + "metros to price a representative Fabric connection. It does not change which metros "
+                        + "are recommended. Where the archetype declares a higher floor, that floor is priced "
+                        + "instead and the raise is named in explanation.assumptions."),
+                "latency_sensitivity", stringEnum("How latency-sensitive the workload is. Only 'critical' "
+                                + "changes the outcome: it places this workload in the recommended metro with the "
+                                + "lowest site-weighted latency instead of the highest-scored one. 'high', "
+                                + "'medium' and 'low' are recorded but change neither placement nor ranking. To "
+                                + "make latency bind, use max_latency_ms (this workload) or "
+                                + "constraints.max_latency_ms (the whole deployment).",
                         lowerNames(LatencySensitivity.class)),
-                "max_latency_ms", number("Hard latency ceiling from user sites to the workload, in milliseconds."),
-                "requires_clouds", array("Cloud providers this workload must reach over private interconnect.",
+                "max_latency_ms", number("Hard latency ceiling from the user sites to this workload, in "
+                        + "milliseconds. It narrows PLACEMENT, not candidacy: the recommended metro set is "
+                        + "unchanged, but this workload is placed only in metros whose worst-case latency to "
+                        + "every site is within the ceiling. If no recommended metro honours it the workload is "
+                        + "still placed and the run says so — a HIGH WORKLOAD_LATENCY_TOLERANCE_UNMET finding "
+                        + "names the closest metro and its measured latency. With no 'sites' it cannot be "
+                        + "evaluated and is reported as such. Must be positive and finite; zero or negative is "
+                        + "rejected with an error."),
+                "requires_clouds", array("Cloud providers this workload must reach over private "
+                                + "interconnect. This steers where THIS workload is placed (the first recommended "
+                                + "metro carrying all of them); it does not gate which metros are recommended — use "
+                                + "the top-level require_clouds for that. If one resolves to no metro, the workload "
+                                + "is still placed and a WORKLOAD_PROVIDER_UNAVAILABLE finding says so.",
                         stringEnum("Cloud provider.", CLOUD_VALUES))),
                 "label");
         Map<String, Object> siteItem = object(props(
                 "label", string("Short name for this user site, e.g. 'London HQ'."),
-                "metro_code", string("Nearest Equinix metro code (e.g. 'LD'). Give this OR latitude+longitude."),
-                "latitude", number("Site latitude in decimal degrees (use with 'longitude' when no metro_code)."),
+                "metro_code", string("Nearest Equinix metro code (e.g. 'LD'). Give this OR "
+                        + "latitude+longitude. It must be a metro the Fabric catalogue publishes: an "
+                        + "unrecognised code has no coordinates to measure from and falls back to a 150 ms "
+                        + "placeholder latency for this site."),
+                "latitude", number("Site latitude in decimal degrees (use with 'longitude' when no "
+                        + "metro_code). Coordinates are measured by great-circle fibre distance whenever "
+                        + "Fabric publishes no metro-to-metro latency for the pair."),
                 "longitude", number("Site longitude in decimal degrees."),
-                "weight", number("Relative importance of this site (default 1.0).")),
+                "weight", number("Relative importance of this site when the per-site latencies are "
+                        + "averaged into the latency score. Must be positive. A site left unweighted is NOT "
+                        + "weighted 1.0 — it counts as an average site: with no site weighted at all every site "
+                        + "counts equally, and in a mixed request the unweighted sites take the mean of the "
+                        + "stated weights. Weights never affect candidacy, only the latency score and the "
+                        + "lowest-latency placement rule.")),
                 "label");
         Map<String, Object> constraints = object(props(
-                "monthly_budget_min", number("Lower bound of the monthly budget in USD."),
-                "monthly_budget_max", number("Upper bound of the monthly budget in USD."),
-                "require_metros", array("Metro codes that must be part of the deployment.", string("Metro code, e.g. 'DC'.")),
-                "exclude_metros", array("Metro codes that must not be used.", string("Metro code, e.g. 'SV'.")),
-                "redundancy", stringEnum("Required redundancy tier.", lowerNames(RedundancyTier.class)),
-                "max_metros", integer("Maximum number of metros to deploy into."),
-                "max_latency_ms", number("Global site-to-metro latency ceiling in milliseconds.")));
+                "monthly_budget_max", number("Monthly budget ceiling in USD. This is a REPORTING check, "
+                        + "not a filter: no metro is excluded or scored on it. The estimated monthly total is "
+                        + "compared against it and the answer appears as cost_estimate.within_budget. Cost "
+                        + "scoring is regional and independent of this value."),
+                "require_metros", array("Metro codes that must be part of the deployment. They are forced "
+                                + "in AFTER filtering, so they bypass every constraint including the latency bound, "
+                                + "and are counted separately from the metros that met the constraints. A code the "
+                                + "catalogue does not carry raises a HIGH REQUIRED_METRO_NOT_FOUND finding rather "
+                                + "than being dropped silently.",
+                        string("Metro code, e.g. 'DC'.")),
+                "exclude_metros", array("Metro codes that must not be used. Excluded before scoring.",
+                        string("Metro code, e.g. 'SV'.")),
+                "redundancy", stringEnum("Minimum redundancy tier. It raises the number of metros "
+                                + "recommended when max_metros is not set, drives the redundancy score from the "
+                                + "geographic diversity of the selected set, and raises REDUNDANCY_GAP / "
+                                + "SINGLE_REGION findings when the selection cannot meet it.",
+                        lowerNames(RedundancyTier.class)),
+                "max_metros", integer("Hard cap on how many metros are recommended. Defaults to 3, or — "
+                        + "when a redundancy tier is set — to the greater of 3 and the tier's minimum plus "
+                        + "one."),
+                "max_latency_ms", number("Ceiling on the estimated latency from a recommended metro to "
+                        + "EVERY user site, in milliseconds. Unlike the per-workload ceiling this narrows "
+                        + "CANDIDACY: metros beyond it are excluded before scoring (metros forced in by "
+                        + "require_metros bypass it and are flagged with a LATENCY_THRESHOLD finding instead). "
+                        + "With no 'sites' it cannot be evaluated and the run reports "
+                        + "LATENCY_BOUND_NOT_EVALUATED. Must be positive and finite; zero or negative is "
+                        + "rejected with an error.")));
         return props(
                 "workloads", array("The workloads to place. At least one is required.", workloadItem),
-                "sites", array("User/office/data-center sites whose proximity should drive placement.", siteItem),
-                "require_clouds", array("Clouds that MUST be reachable in every recommended metro.",
+                "sites", array("User/office/data-center sites whose proximity should drive placement. "
+                        + "Without at least one site, latency neither ranks nor filters metros and every "
+                        + "latency ceiling in this request is reported as unevaluable.", siteItem),
+                "require_clouds", array("Clouds that MUST be reachable in every recommended metro. A metro "
+                                + "without one is excluded from candidacy; a cloud that resolves to no metro at all "
+                                + "empties the candidate set and is reported as a CRITICAL finding naming whether "
+                                + "the lookup missed or the matched profiles published no coverage.",
                         stringEnum("Cloud provider.", CLOUD_VALUES)),
-                "prefer_clouds", array("Clouds that are nice to have; boosts scoring but never disqualifies.",
+                "prefer_clouds", array("Clouds that are nice to have; raises the provider-coverage score "
+                                + "but never disqualifies a metro.",
                         stringEnum("Cloud provider.", CLOUD_VALUES)),
                 "strategy", stringEnum("Which scoring dimension leads. Default is balanced.",
                         lowerNames(OptimizationStrategy.class)),
@@ -143,13 +213,18 @@ final class DesignToolFactory {
                 .name("design_optimize_placement")
                 .title("Optimize Equinix metro placement")
                 .description("Runs the Metro Optimizer engine: scores every Equinix metro against the given "
-                        + "workloads, user sites, cloud requirements, and constraints (latency, cost, "
-                        + "redundancy, provider coverage, compliance) and returns a ranked recommendation "
-                        + "with per-dimension scores, reasons, cost estimate, and methodology. Use this "
-                        + "before design_plan_deployment. Requires at least one workload.")
+                        + "workloads, user sites, cloud requirements, and constraints (excluded/required "
+                        + "metros, required-provider availability, redundancy, compliance, and a latency "
+                        + "ceiling) and returns a ranked recommendation with per-dimension scores, reasons, "
+                        + "workload placements, cost estimate, risk findings, and methodology. Cost is scored "
+                        + "regionally and the budget is reported against rather than enforced. Read the "
+                        + "risk_assessment findings and explanation.assumptions: they name every input the run "
+                        + "could not honour. Use this before design_plan_deployment. Requires at least one "
+                        + "workload.")
                 .inputSchema(object(optimizationProps(), "workloads"))
-                .outputSchema(looseObject("Ranked metro recommendations with scores, reasons, cost estimate "
-                        + "(with price provenance), risk assessment, and the optimizer's methodology."))
+                .outputSchema(looseObject("Ranked metro recommendations with scores, reasons, the workloads "
+                        + "placed in each metro and why, cost estimate (with price provenance), risk "
+                        + "assessment, and the optimizer's methodology."))
                 .toolset(Toolset.DESIGN)
                 .handler((args, ctx) -> optimizationPayload(runOptimizer(args, ctx), ctx.objectMapper()))
                 .build();
@@ -204,11 +279,12 @@ final class DesignToolFactory {
         JsonNode c = spec.get("constraints");
         if (c != null && c.isObject()) {
             MetroOptimizer.ConstraintsBuilder cb = builder.constraints();
-            Optional<Double> min = optNumber(c, "monthly_budget_min");
-            Optional<Double> max = optNumber(c, "monthly_budget_max");
-            if (min.isPresent() || max.isPresent()) {
-                cb.monthlyBudget(min.orElse(0.0), max.orElse(Double.MAX_VALUE));
-            }
+            // Only the ceiling is accepted. BudgetRange.minMonthly is read by nothing in the engine —
+            // it neither filters nor scores nor appears in any diagnostic — so exposing a
+            // 'monthly_budget_min' knob asked the model to state a floor that could never bind.
+            // The ceiling is kept because it does produce an observable answer
+            // (CostEstimate.withinBudget), and its schema description says that is all it does.
+            optNumber(c, "monthly_budget_max").ifPresent(max -> cb.monthlyBudget(0.0, max));
             List<String> required = Args.stringList(c, "require_metros");
             if (!required.isEmpty()) {
                 cb.requireMetro(required.toArray(new String[0]));
@@ -260,6 +336,19 @@ final class DesignToolFactory {
                 cost.put("monthly_recurring", rec.getEstimatedCost().getMonthlyRecurring());
                 cost.put("non_recurring", rec.getEstimatedCost().getNonRecurring());
                 cost.put("price_source", String.valueOf(rec.getEstimatedCost().getSource()));
+            }
+            // The workloads placed here, with the engine's rationale. This is the only place the
+            // per-workload levers become visible: a workload's own max_latency_ms, its recorded
+            // power/cooling requirements, and an unhonoured provider dependency are all stated on the
+            // placement rationale. Omitting it left those levers invisible from the tool surface even
+            // after the engine started honouring and disclosing them.
+            if (rec.getAssignedWorkloads() != null && !rec.getAssignedWorkloads().isEmpty()) {
+                ArrayNode placed = r.putArray("assigned_workloads");
+                rec.getAssignedWorkloads().forEach(wp -> {
+                    ObjectNode w = placed.addObject();
+                    w.put("workload", wp.getWorkloadLabel());
+                    w.put("reasoning", wp.getReasoning());
+                });
             }
         }
         if (all.size() > MAX_RECOMMENDATIONS) {
@@ -318,26 +407,38 @@ final class DesignToolFactory {
 
     private static ToolRegistration planDeployment() {
         Map<String, Object> deployment = object(props(
-                "customer_asn", integer("Your BGP ASN for the Cloud Router routing protocols (e.g. 65001)."),
-                "router_package", string("Fabric Cloud Router package code (e.g. 'STANDARD', 'ADVANCED', 'PRO')."),
-                "router_name_prefix", string("Name prefix for the planned Cloud Routers."),
-                "backbone_topology", stringEnum("Inter-metro backbone shape when more than one metro is planned.",
+                "customer_asn", integer("Your BGP ASN, stamped on every planned BGP routing protocol "
+                        + "(e.g. 65001). Defaults to 65100 when omitted."),
+                "router_package", stringEnum("Fabric Cloud Router package code. Case-insensitive; any "
+                                + "other value is rejected with an error naming the valid codes.",
+                        "LAB", "BASIC", "STANDARD", "ADVANCED", "PREMIUM"),
+                "router_name_prefix", string("Name prefix for the planned Cloud Routers and every "
+                        + "connection derived from them ('{prefix}-{metro}'). Defaults to 'FCR'."),
+                "backbone_topology", stringEnum("Inter-metro backbone shape. Only applies when the "
+                                + "optimization recommends more than one metro; with a single metro no backbone "
+                                + "link is planned at all.",
                         lowerNames(BackboneTopology.class)),
-                "backbone_bandwidth_mbps", integer("Bandwidth for each inter-metro backbone link, in Mbps."),
-                "project_id", string("Equinix Fabric project id to plan the resources under."),
-                "account_number", integer("Equinix billing account number."),
-                "notifications", array("Email addresses for provisioning notifications.",
-                        string("Email address.")),
-                "term", stringEnum("Pricing term used for the plan's cost figures.", lowerNames(Term.class))));
+                "backbone_bandwidth_mbps", integer("Bandwidth for each inter-metro backbone link, in Mbps. "
+                        + "Defaults to 10000. Applies only to backbone links, never to provider connections, "
+                        + "which are sized from the workloads placed at each metro."),
+                "project_id", string("Equinix Fabric project id recorded on each planned Cloud Router."),
+                "account_number", integer("Equinix billing account number recorded on each planned Cloud "
+                        + "Router."),
+                "notifications", array("Email addresses for provisioning notifications. Only the FIRST "
+                                + "address is used — a planned Fabric resource carries a single notification "
+                                + "address — so put the address you want on the plan first.",
+                        string("Email address."))));
         return ToolRegistration.builder()
                 .name("design_plan_deployment")
                 .title("Plan a deployment (no execution)")
                 .description("Runs the Metro Optimizer and then the Deployment Wizard in PLAN-ONLY mode: "
                         + "produces a reviewable deployment plan (Cloud Routers, provider connections, "
                         + "backbone links, routing protocols) with aggregated pricing and validation "
-                        + "findings. NOTHING is provisioned — this tool never executes a plan. The "
-                        + "returned plan_id can be passed to design_export_terraform while this server "
-                        + "process is running (plans are held in memory for 30 minutes).")
+                        + "findings. NOTHING is provisioned — this tool never executes a plan. Pricing is "
+                        + "not term-scoped: the rate cards this server reads resolve by product, bandwidth "
+                        + "and metro only, so no contract term is accepted or applied. The returned plan_id "
+                        + "can be passed to design_export_terraform while this server process is running "
+                        + "(plans are held in memory for 30 minutes).")
                 .inputSchema(object(props(
                                 "optimization", object(optimizationProps(), "workloads"),
                                 "deployment", deployment),
@@ -375,7 +476,9 @@ final class DesignToolFactory {
             if (!notifications.isEmpty()) {
                 wizard.notifications(notifications.toArray(new String[0]));
             }
-            optEnum(d, "term", Term.class).ifPresent(wizard::term);
+            // No 'term' knob: see the note on handleEstimateTco. The wizard prices through
+            // EquinixRateCard, which resolves a price row by product/bandwidth/metro and never by
+            // term, so a term accepted here would change no figure in the returned plan.
         }
 
         DeploymentPlan plan = wizard.plan();
@@ -575,17 +678,26 @@ final class DesignToolFactory {
                         + "and setup cost of the same workload across deployment archetypes — public cloud "
                         + "over the internet, on-prem, and Equinix private interconnect — and reports each "
                         + "line item with its price provenance (live Equinix pricing vs reference figures). "
-                        + "Give the monthly egress volume and the cloud it leaves from.")
+                        + "Give the monthly egress volume and the cloud it leaves from. Figures are not "
+                        + "term-scoped: the rate cards this server reads (live Fabric prices, then reference "
+                        + "figures) resolve by product, bandwidth, metro and region only, so no contract term "
+                        + "is accepted or applied.")
                 .inputSchema(object(props(
                                 "monthly_egress_gb", number("Data leaving the cloud per month, in GB."),
                                 "cloud", stringEnum("The cloud provider the egress leaves from.", CLOUD_VALUES),
                                 "region", string("The provider region the egress leaves from, e.g. 'us-east-1'."),
-                                "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'."),
-                                "bandwidth_mbps", integer("Interconnect bandwidth to price, in Mbps."),
-                                "term", stringEnum("Contract term for pricing.", lowerNames(Term.class)),
+                                "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'. Used "
+                                        + "to prefer a metro-specific price row where the live catalogue "
+                                        + "publishes one; without it (or without such a row) the same-bandwidth "
+                                        + "price is used whatever the metro."),
+                                "bandwidth_mbps", integer("Interconnect bandwidth in Mbps, default 1000. Prices "
+                                        + "the Equinix connection AND sizes the on-prem archetype's carrier IP "
+                                        + "transit line item, so it moves both sides of the comparison."),
                                 "cloud_router_package", string("Include a Fabric Cloud Router of this package "
-                                        + "code (e.g. 'STANDARD') in the Equinix archetype."),
-                                "power_kw", number("On-prem power draw in kW (for the on-prem archetype)."),
+                                        + "code (e.g. 'STANDARD') in the Equinix archetype. Skipped silently if "
+                                        + "no rate card can price that code."),
+                                "power_kw", number("On-prem power draw in kW, default 5. Used by the on-prem "
+                                        + "archetype only; it is ignored if 'archetypes' excludes on_prem."),
                                 "archetypes", array("Restrict the comparison to these archetypes.",
                                         stringEnum("Deployment archetype.", lowerNames(DeploymentArchetype.class))),
                                 "on_prem_transit_per_mbps_month", number("Override: on-prem IP transit $ per Mbps per month."),
@@ -608,7 +720,11 @@ final class DesignToolFactory {
                 .inRegion(requireString(args, "region"));
         optString(args, "metro_code").ifPresent(code -> builder.viaMetro(metroCode(code)));
         optInt(args, "bandwidth_mbps").ifPresent(builder::bandwidthMbps);
-        optEnum(args, "term", Term.class).ifPresent(builder::term);
+        // No 'term' knob. TcoCalculator.term() only binds against a CustomRateCard, and this server
+        // always prices through RateCard.standardChain (EquinixRateCard, then ReferenceRateCard) —
+        // neither of which resolves a rate by term. Accepting a term here would have let the model
+        // report "priced at a 36-month term" over figures identical to the 12-month ones. Reinstate
+        // it (schema field + builder::term) only once a rate card in the MCP chain resolves by term.
         optString(args, "cloud_router_package").ifPresent(builder::includeCloudRouter);
         optNumber(args, "power_kw").ifPresent(builder::powerKw);
         List<String> archetypes = Args.stringList(args, "archetypes");
@@ -669,15 +785,20 @@ final class DesignToolFactory {
                         + "volume over Equinix private interconnect, and reports monthly/annual savings, "
                         + "break-even volume, and payback. Live lookups run under a hard timeout — when a "
                         + "provider API is slow or down the result degrades to reference rates and names "
-                        + "the provider that failed instead of hanging.")
+                        + "the provider that failed instead of hanging. Figures are not term-scoped: no rate "
+                        + "card in this server's chain resolves a price by contract term, so none is "
+                        + "accepted.")
                 .inputSchema(object(props(
                                 "monthly_egress_gb", number("Data leaving the cloud per month, in GB."),
                                 "cloud", stringEnum("The cloud provider to compare.", CLOUD_VALUES),
-                                "region", string("The provider region the egress leaves from, e.g. 'us-east-1'."),
-                                "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'."),
-                                "bandwidth_mbps", integer("Interconnect bandwidth to price, in Mbps."),
-                                "cloud_router_package", string("Also price a Fabric Cloud Router of this package code."),
-                                "term", stringEnum("Contract term for pricing.", lowerNames(Term.class))),
+                                "region", string("The provider region the egress leaves from, e.g. 'us-east-1'. "
+                                        + "Drives the live egress-rate lookup, so give the real region."),
+                                "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'. Used "
+                                        + "to prefer a metro-specific Fabric price row where one is published; "
+                                        + "without it the same-bandwidth price is used whatever the metro."),
+                                "bandwidth_mbps", integer("Interconnect bandwidth to price, in Mbps. Default 1000."),
+                                "cloud_router_package", string("Also price a Fabric Cloud Router of this package "
+                                        + "code. Skipped silently if no rate card can price that code.")),
                         "monthly_egress_gb", "cloud", "region"))
                 .outputSchema(looseObject("The savings estimate (rates, monthly costs, net savings, break-even, "
                         + "payback) plus live-pricing provenance and any degraded providers."))
@@ -707,7 +828,8 @@ final class DesignToolFactory {
             optString(args, "metro_code").ifPresent(code -> builder.viaMetro(metroCode(code)));
             optInt(args, "bandwidth_mbps").ifPresent(builder::bandwidthMbps);
             optString(args, "cloud_router_package").ifPresent(builder::includeCloudRouter);
-            optEnum(args, "term", Term.class).ifPresent(builder::term);
+            // No 'term' knob: see the note on handleEstimateTco. Neither the live provider cards nor
+            // the Equinix/reference chain resolves a rate by term, so it could change no figure here.
 
             SavingsEstimate estimate = builder.calculate();
 
@@ -767,20 +889,25 @@ final class DesignToolFactory {
                 .description("Runs the Peering Intelligence engine: cross-references the given ASNs against "
                         + "PeeringDB and the Equinix IX footprint to report where each network is present, "
                         + "concrete peering opportunities (shared IXes per metro), and a resiliency "
-                        + "assessment. Optionally scope to specific metros. Uses the EQUINIX_PEERINGDB_KEY "
-                        + "environment variable when configured (higher PeeringDB rate limits); anonymous "
-                        + "otherwise.")
+                        + "assessment. Two of the three sections are conditional: peering_opportunities is "
+                        + "empty without 'customer_asn', and resiliency is absent without 'metros'. Uses the "
+                        + "EQUINIX_PEERINGDB_KEY environment variable when configured (higher PeeringDB rate "
+                        + "limits); anonymous otherwise.")
                 .inputSchema(object(props(
                                 "asns", array("The ASNs to analyze (at least one), e.g. [13335, 15169].",
                                         integer("An autonomous system number.")),
-                                "metros", array("Restrict the analysis to these Equinix metro codes.",
+                                "metros", array("The metros where YOU are present. These do not restrict the "
+                                                + "analysis — the ASNs are reported wherever they are present — they "
+                                                + "add your metros to the presence matrix and are the metros the "
+                                                + "resiliency assessment measures blast radius and diversity across. "
+                                                + "Without them no resiliency assessment is produced.",
                                         string("Metro code, e.g. 'FR'.")),
-                                "customer_asn", integer("Your own ASN, to compute opportunities from your side."),
-                                "include_fabric_connections", bool("Also check existing Fabric connections "
-                                        + "toward these networks (extra Equinix API calls). Default false.")),
+                                "customer_asn", integer("Your own ASN. Peering opportunities are computed from "
+                                        + "your side, so without it the peering_opportunities list is empty.")),
                         "asns"))
-                .outputSchema(looseObject("Per-ASN presence, peering opportunities, resiliency assessment, "
-                        + "and the data sources consulted."))
+                .outputSchema(looseObject("Per-ASN presence, peering opportunities (when customer_asn is "
+                        + "given), resiliency assessment (when metros are given), and the data sources "
+                        + "consulted."))
                 .toolset(Toolset.DESIGN)
                 .openWorld(true)
                 .handler(DesignToolFactory::handleAnalyzePeering)
@@ -808,10 +935,14 @@ final class DesignToolFactory {
             builder.customerMetros(metros.toArray(new String[0]));
         }
         optLong(args, "customer_asn").ifPresent(builder::customerAsn);
+        // No 'include_fabric_connections' knob. PeeringIntelligence.Builder accepts the flag and
+        // PeeringRequest stores it, but PeeringIntelligenceEngine reads it nowhere: no Fabric
+        // connection lookup exists behind it, so the tool advertised "extra Equinix API calls" that
+        // were never made and a section that could never appear. includeResiliency IS read (it gates
+        // the resiliency assessment, which also needs customerMetros).
         builder.includeCapacity(true)
                 .includePolicies(true)
-                .includeResiliency(true)
-                .includeFabricConnections(optBool(args, "include_fabric_connections", false));
+                .includeResiliency(true);
 
         PeeringIntelligenceResult result = builder.analyze();
 

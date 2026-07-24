@@ -33,6 +33,7 @@ import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.model.RiskFinding;
 import api.equinix.javasdk.design.optimizer.model.ScoreComponent;
 import api.equinix.javasdk.design.optimizer.model.ScoringWeights;
+import api.equinix.javasdk.design.optimizer.model.WorkloadPlacement;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
@@ -103,8 +104,9 @@ class MetroOptimizerLeversTest {
         Metros metros = mock(Metros.class);
         when(metros.list()).thenReturn(new PaginatedList<>(List.of(dc, da, sv, ld), null, null, null, null));
 
-        // AWS is present in DC and DA, absent in SV and LD (name must contain the
-        // CloudProviderType.AWS provider name "Amazon Web Services" to match).
+        // AWS is present in DC and DA, absent in SV and LD. The profile name resolves to
+        // CloudProviderType.AWS via matchesServiceProfileName (corporate name and product alias
+        // both present); product-only naming is covered by MetroOptimizerProviderResolutionTest.
         ServiceProfile awsProfile = mock(ServiceProfile.class);
         when(awsProfile.getUuid()).thenReturn("sp-aws-1");
         when(awsProfile.getName()).thenReturn("Amazon Web Services Direct Connect");
@@ -237,6 +239,85 @@ class MetroOptimizerLeversTest {
                 "the DC-anchored site makes DC the top-ranked metro");
     }
 
+    @Test
+    @DisplayName("the default request shape renders a resolved metro count, never 'selected top null'")
+    void defaultShapeRendersAResolvedMetroCount() {
+        // constraints.maxMetroCount is a nullable Integer that defaults through resolveMaxMetros.
+        // Appending it raw printed "selected top null" on the DEFAULT call shape — the exact shape
+        // the MCP tool produces — and that string ships verbatim to an LLM as human_readable.
+        OptimizationResult result = MetroOptimizer.builder(fabric)
+                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
+                .addWorkload("Web Tier").bandwidthMbps(1000).done()
+                .rateCard(ReferenceRateCard.standard())
+                .optimize();
+
+        String humanReadable = result.getExplanation().getHumanReadable();
+        assertFalse(humanReadable.contains("null"), "no unresolved value may reach the reader: " + humanReadable);
+        assertTrue(humanReadable.contains("selected the top " + result.getRecommendations().size()),
+                "the count reported must be the count actually selected: " + humanReadable);
+        assertTrue(humanReadable.contains("Analyzed 4 metros, 4 met constraints"), humanReadable);
+    }
+
+    @Test
+    @DisplayName("an explicit maxMetros cap is reported as the cap that bound the selection")
+    void bindingCapIsReported() {
+        OptimizationResult result = dcAnchoredBuilder()
+                .constraints().maxMetros(2).done()
+                .optimize();
+
+        String humanReadable = result.getExplanation().getHumanReadable();
+        assertTrue(humanReadable.contains("selected the top 2 (capped at 2)"), humanReadable);
+        assertFalse(humanReadable.contains("null"), humanReadable);
+    }
+
+    // ── an empty result is never HEALTHY ──
+
+    @Test
+    @DisplayName("a blackout with no provider involved is named and attributed, never reported HEALTHY")
+    void emptyResultIsNamedAndAttributed() {
+        // Every metro excluded by a plain metro exclusion: no provider requirement anywhere, so the
+        // provider-lookup-miss finding cannot fire. The old code then fell through to
+        // "No significant risks identified" — a HEALTHY verdict on a run that recommended nothing.
+        OptimizationResult result = dcAnchoredBuilder()
+                .constraints().excludeMetro("DC", "DA", "SV", "LD").done()
+                .optimize();
+
+        assertTrue(result.getRecommendations().isEmpty(), codes(result).toString());
+
+        List<RiskFinding> findings = result.getRiskAssessment().getFindings();
+        assertTrue(findings.stream().noneMatch(f -> "HEALTHY".equals(f.getCategory())),
+                "nothing was selected, so nothing is healthy: " + findings);
+
+        RiskFinding empty = findings.stream()
+                .filter(f -> "NO_VIABLE_METRO".equals(f.getCategory()))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "the empty result must be named: " + findings));
+        assertEquals(RiskSeverity.CRITICAL, empty.getSeverity());
+        assertTrue(empty.getDescription().contains("all 4 metros were eliminated"), empty.getDescription());
+        assertTrue(empty.getDescription().contains("excluded metros (4 metros)"),
+                "the finding attributes the blackout to the constraint that caused it: " + empty.getDescription());
+        assertNotNull(empty.getRecommendation(), "and tells the caller what to do about it");
+        assertEquals(RiskSeverity.CRITICAL, result.getRiskAssessment().getOverallSeverity());
+    }
+
+    @Test
+    @DisplayName("a blackout caused by the latency bound blames the latency bound, not something else")
+    void emptyResultAttributesTheLatencyBound() {
+        // DC is 0.5ms from the site, so a sub-half-millisecond bound eliminates all four metros
+        // on latency alone.
+        OptimizationResult result = dcAnchoredBuilder()
+                .constraints().maxLatencyMs(0.1).done()
+                .optimize();
+
+        assertTrue(result.getRecommendations().isEmpty(), codes(result).toString());
+        RiskFinding empty = result.getRiskAssessment().getFindings().stream()
+                .filter(f -> "NO_VIABLE_METRO".equals(f.getCategory()))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "the empty result must be named: " + result.getRiskAssessment().getFindings()));
+        assertTrue(empty.getDescription().contains("max-latency bound"),
+                "the dominant constraint is named: " + empty.getDescription());
+    }
+
     // ── constraints(): budget ──
 
     @Test
@@ -316,6 +397,88 @@ class MetroOptimizerLeversTest {
         assertTrue(latencyFindings.stream()
                         .noneMatch(f -> MetroId.of(MetroCode.DC).equals(f.getAffectedMetro())),
                 "DC (0.5ms) is within the bound and must not be flagged");
+    }
+
+    @Test
+    @DisplayName("a non-positive maxLatencyMs is refused as an input error, never silently dropped")
+    void nonPositiveMaxLatencyMsIsRejected() {
+        // Every downstream guard required a POSITIVE bound, so maxLatencyMs(0) produced no filtering,
+        // no finding and no methodology clause: a constraint accepted at the door and then
+        // indistinguishable from one that was satisfied. One input value away from the silent-drop
+        // this work exists to eliminate.
+        for (double bad : new double[] {0.0, -5.0, Double.NaN, Double.POSITIVE_INFINITY}) {
+            IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                    () -> dcAnchoredBuilder().constraints().maxLatencyMs(bad).done().optimize(),
+                    "maxLatencyMs(" + bad + ") must be refused, not ignored");
+            assertTrue(thrown.getMessage().contains("constraints.maxLatencyMs"), thrown.getMessage());
+            assertTrue(thrown.getMessage().contains("positive"), thrown.getMessage());
+        }
+
+        // The neighbouring positive value still runs, so the guard rejects only what it must
+        // (0.1ms excludes every metro here — that is a legitimate answer, not an input error).
+        assertTrue(dcAnchoredBuilder().constraints().maxLatencyMs(0.1).done()
+                        .optimize().getRecommendations().isEmpty(),
+                "a positive bound is still accepted and applied");
+    }
+
+    @Test
+    @DisplayName("a non-positive workload latency tolerance is refused the same way")
+    void nonPositiveWorkloadToleranceIsRejected() {
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () ->
+                MetroOptimizer.builder(fabric)
+                        .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
+                        .addWorkload("Web Tier").bandwidthMbps(1000).maxLatencyToleranceMs(0).done()
+                        .rateCard(ReferenceRateCard.standard())
+                        .optimize());
+        assertTrue(thrown.getMessage().contains("maxLatencyToleranceMs"), thrown.getMessage());
+        assertTrue(thrown.getMessage().contains("Web Tier"),
+                "the offending workload is named: " + thrown.getMessage());
+    }
+
+    // ── constraints(): required metros are reported honestly ──
+
+    @Test
+    @DisplayName("force-included metros are counted apart from the metros that actually met constraints")
+    void forceIncludedMetrosAreReportedSeparately() {
+        // requireMetro(SV) adds SV AFTER the tally and outside every filter, so SV met nothing.
+        // Rendering candidates.size() as "N met constraints" credited it with passing checks it
+        // never ran — while a PROVIDER_UNAVAILABLE-style narrative in the same payload said the
+        // opposite.
+        OptimizationResult result = dcAnchoredBuilder()
+                .requireProvider(CloudProviderType.AWS).done()
+                .constraints().requireMetro(MetroCode.SV).maxMetros(4).done()
+                .optimize();
+
+        String humanReadable = result.getExplanation().getHumanReadable();
+        assertTrue(humanReadable.contains("Analyzed 4 metros, 2 met constraints"),
+                "only DC and DA passed the AWS filter: " + humanReadable);
+        assertFalse(humanReadable.contains("3 met constraints"),
+                "the force-included metro met nothing: " + humanReadable);
+        assertTrue(humanReadable.contains("plus 1 force-included by the required-metro constraint, "
+                        + "which bypassed every filter and met none of them: SV"), humanReadable);
+        assertTrue(result.getExplanation().getMethodology().contains(
+                        "plus 1 metro(s) force-included by the required-metro constraint (SV)"),
+                result.getExplanation().getMethodology());
+        assertTrue(codes(result).contains("SV"), codes(result).toString());
+    }
+
+    @Test
+    @DisplayName("a required metro absent from the catalog is reported, not silently dropped")
+    void requiredMetroMissingFromTheCatalogIsNamed() {
+        OptimizationResult result = dcAnchoredBuilder()
+                .constraints().requireMetro("ZZ").maxMetros(4).done()
+                .optimize();
+
+        RiskFinding missing = result.getRiskAssessment().getFindings().stream()
+                .filter(f -> "REQUIRED_METRO_NOT_FOUND".equals(f.getCategory()))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "a required metro that could not be included must be named: "
+                                + result.getRiskAssessment().getFindings()));
+        assertEquals(RiskSeverity.HIGH, missing.getSeverity());
+        assertTrue(missing.getDescription().contains("ZZ"), missing.getDescription());
+        assertTrue(result.getExplanation().getHumanReadable().contains("Required metro(s) ZZ are not in "
+                        + "the metro catalog this run read"),
+                result.getExplanation().getHumanReadable());
     }
 
     // ── constraints(): redundancy ──
@@ -423,6 +586,215 @@ class MetroOptimizerLeversTest {
         assertTrue(primary.equals("DC") || primary.equals("DA"),
                 "provider-only weights must promote an AWS metro over SV, got " + primary);
         assertNotEquals("SV", primary);
+    }
+
+    @Test
+    @DisplayName("the methodology says 'default weights' unless the caller actually overrode them")
+    void weightProvenanceIsTruthful() {
+        // MetroOptimizer substitutes ScoringWeights.defaults() when the caller supplies none, so the
+        // field is NEVER null — and the old "!= null ? user-customized" test therefore claimed
+        // user-customized scoring on every single run, including the default MCP call shape that
+        // customizes nothing.
+        String defaults = dcAnchoredBuilder().optimize().getExplanation().getMethodology();
+        assertTrue(defaults.contains("with no user overrides (the strategy's default weights and "
+                + "latency thresholds)"), defaults);
+        assertFalse(defaults.contains("user-customized"), defaults);
+
+        String customized = dcAnchoredBuilder()
+                .scoringWeights(ScoringWeights.builder().latencyWeight(0.9).latencyGoodMs(25.0).build())
+                .optimize().getExplanation().getMethodology();
+        assertTrue(customized.contains("with user-customized overrides ("), customized);
+        assertTrue(customized.contains("latency weight"), customized);
+        assertTrue(customized.contains("good-latency threshold"),
+                "the overridden thresholds are named too: " + customized);
+        assertFalse(customized.contains("cost weight"),
+                "only what was actually overridden may be listed: " + customized);
+    }
+
+    // ── a single-metro result explains its own redundancy ──
+
+    @Test
+    @DisplayName("a one-metro recommendation carries a real redundancy explanation, not the placeholder")
+    void singleMetroRedundancyIsExplainedTruthfully() {
+        // refineRedundancyScores returned early for size <= 1, shipping the scoring-phase placeholder
+        // "refined after topology assembly" — an assertion that a refinement had run when none had,
+        // on the one result shape where redundancy matters most.
+        OptimizationResult result = dcAnchoredBuilder()
+                .constraints().maxMetros(1).done()
+                .optimize();
+
+        assertEquals(1, result.getRecommendations().size());
+        ScoreComponent redundancy = result.primaryMetro().getScore().getComponents().stream()
+                .filter(c -> c.getCategory() == ScoreCategory.REDUNDANCY)
+                .findFirst().orElseThrow();
+        assertFalse(redundancy.getExplanation().contains("refined after topology assembly"),
+                "nothing was refined after topology assembly: " + redundancy.getExplanation());
+        assertTrue(redundancy.getExplanation().contains("Single metro (DC in AMER)"),
+                redundancy.getExplanation());
+        assertTrue(redundancy.getExplanation().contains("no geographic redundancy"),
+                redundancy.getExplanation());
+    }
+
+    // ── workloads[].max_latency_ms: a documented lever nothing used to read ──
+
+    @Test
+    @DisplayName("a workload's latency tolerance narrows where it is placed, without changing candidacy")
+    void workloadLatencyToleranceNarrowsPlacement() {
+        // Two sites: the metro that wins on WEIGHTED MEAN latency (DC) breaches a 50ms worst-case
+        // ceiling to the lightly-weighted SV site, while DA honours it. Before this wiring the
+        // workload landed in DC and the report called it "the highest-scored metro" while the
+        // declared ceiling — accepted by the builder AND by the MCP schema — was read by nothing.
+        OptimizationResult result = MetroOptimizer.builder(fabric)
+                .addSite("HQ").nearestMetro(MetroCode.DC).weight(10).done()
+                .addSite("Lab").nearestMetro(MetroCode.SV).weight(1).done()
+                .addWorkload("Web Tier").bandwidthMbps(1000).maxLatencyToleranceMs(50).done()
+                .constraints().maxMetros(4).done()
+                .rateCard(ReferenceRateCard.standard())
+                .optimize();
+
+        assertEquals("DC", result.primaryMetro().getMetroId().code(),
+                "the tolerance narrows PLACEMENT, not candidacy or ranking: " + codes(result));
+
+        WorkloadPlacement placement = result.getTopology().getPlacements().get(0);
+        assertEquals(MetroId.of(MetroCode.DA), placement.getAssignedMetro(),
+                "DA is the only recommended metro within 50ms of BOTH sites: " + placement.getReasoning());
+        assertTrue(placement.getReasoning().contains(
+                        "Placed in the highest-scored metro within the workload's latency tolerance"),
+                "the rationale may not still claim the overall highest-scored metro: "
+                        + placement.getReasoning());
+        assertTrue(placement.getReasoning().contains("50ms latency tolerance to every user site ruled "
+                + "out 3 of the 4 recommended metros"), placement.getReasoning());
+        assertTrue(result.getRiskAssessment().getFindings().stream()
+                        .noneMatch(f -> "WORKLOAD_LATENCY_TOLERANCE_UNMET".equals(f.getCategory())),
+                "the tolerance WAS honoured, so nothing may be flagged: "
+                        + result.getRiskAssessment().getFindings());
+    }
+
+    @Test
+    @DisplayName("a workload latency tolerance no metro can honour is flagged, not quietly ignored")
+    void unhonouredWorkloadLatencyToleranceIsFlagged() {
+        OptimizationResult result = dcAnchoredBuilder2()
+                .addWorkload("Trading").bandwidthMbps(1000).maxLatencyToleranceMs(0.2).done()
+                .constraints().maxMetros(4).done()
+                .optimize();
+
+        RiskFinding unmet = result.getRiskAssessment().getFindings().stream()
+                .filter(f -> "WORKLOAD_LATENCY_TOLERANCE_UNMET".equals(f.getCategory()))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "an unhonourable ceiling must be named: " + result.getRiskAssessment().getFindings()));
+        assertEquals(RiskSeverity.HIGH, unmet.getSeverity());
+        assertTrue(unmet.getDescription().contains("Trading"), unmet.getDescription());
+        assertTrue(unmet.getDescription().contains("the closest is 0.5ms"),
+                "the real figure, not a sentinel: " + unmet.getDescription());
+
+        String reasoning = result.getTopology().getPlacements().get(0).getReasoning();
+        assertTrue(reasoning.contains("NOT honoured"), reasoning);
+        assertTrue(reasoning.contains("the closest is DC at 0.5ms"), reasoning);
+    }
+
+    @Test
+    @DisplayName("a workload latency tolerance with no sites to measure from is reported as not evaluated")
+    void unevaluableWorkloadLatencyToleranceIsReported() {
+        OptimizationResult result = MetroOptimizer.builder(fabric)
+                .addWorkload("Trading").bandwidthMbps(1000).maxLatencyToleranceMs(20).done()
+                .constraints().maxMetros(4).done()
+                .rateCard(ReferenceRateCard.standard())
+                .optimize();
+
+        RiskFinding notEvaluated = result.getRiskAssessment().getFindings().stream()
+                .filter(f -> "WORKLOAD_LATENCY_TOLERANCE_NOT_EVALUATED".equals(f.getCategory()))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "a ceiling that could not be evaluated must say so: "
+                                + result.getRiskAssessment().getFindings()));
+        assertEquals(RiskSeverity.MEDIUM, notEvaluated.getSeverity());
+        assertTrue(notEvaluated.getDescription().contains("was NOT applied"), notEvaluated.getDescription());
+        assertTrue(result.getTopology().getPlacements().get(0).getReasoning().contains("was NOT applied"),
+                result.getTopology().getPlacements().get(0).getReasoning());
+    }
+
+    // ── power/cooling and profile bandwidth floors reach the output ──
+
+    @Test
+    @DisplayName("recorded facility requirements reach the placement and the assumptions")
+    void facilityRequirementsAreCarriedIntoTheResult() {
+        OptimizationResult result = MetroOptimizer.builder(fabric)
+                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
+                .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
+                .rateCard(ReferenceRateCard.standard())
+                .optimize();
+
+        String reasoning = result.getTopology().getPlacements().get(0).getReasoning();
+        assertTrue(reasoning.contains("Facility requirements recorded for cabinet/cage selection: "
+                + "high power density and liquid cooling"), reasoning);
+        assertTrue(reasoning.contains("did NOT influence the metro ranking"),
+                "their presence must not be misread as scoring: " + reasoning);
+
+        assertTrue(result.getExplanation().getAssumptions().stream()
+                        .anyMatch(a -> a.contains("'ML Training' (high power density and liquid cooling)")),
+                "the assumptions name the workload: " + result.getExplanation().getAssumptions());
+    }
+
+    @Test
+    @DisplayName("a workload profile's minimum bandwidth sets the cost sizing floor and is disclosed")
+    void profileMinimumBandwidthSetsTheCostFloor() {
+        List<Integer> sized = new ArrayList<>();
+        RateCard recording = recordingRateCard(sized);
+
+        MetroOptimizer.builder(fabric)
+                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
+                .addWorkload("Web Tier").bandwidthMbps(10).done()
+                .constraints().maxMetros(1).done()
+                .rateCard(recording)
+                .optimize();
+        assertEquals(List.of(10), sized, "with no floor the declared bandwidth is priced as given");
+
+        sized.clear();
+        OptimizationResult floored = MetroOptimizer.builder(fabric)
+                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
+                .addWorkload("Web Tier").bandwidthMbps(10)
+                    .profile(api.equinix.javasdk.design.optimizer.model.WorkloadProfile.builder()
+                            .minBandwidthMbps(1000.0).build())
+                    .done()
+                .constraints().maxMetros(1).done()
+                .rateCard(recording)
+                .optimize();
+
+        assertEquals(List.of(1000), sized,
+                "a minimum that is enforced nowhere is not a minimum: " + sized);
+        assertTrue(floored.getExplanation().getAssumptions().stream()
+                        .anyMatch(a -> a.contains("'Web Tier' 10 -> 1000 Mbps")),
+                "the raise is disclosed rather than applied invisibly: "
+                        + floored.getExplanation().getAssumptions());
+    }
+
+    /** A DC-anchored builder with no workload, for tests that add their own. */
+    private MetroOptimizer.Builder dcAnchoredBuilder2() {
+        return MetroOptimizer.builder(fabric)
+                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
+                .rateCard(ReferenceRateCard.standard());
+    }
+
+    /** A rate card that records the bandwidth every lookup is priced at and always quotes. */
+    private static RateCard recordingRateCard(List<Integer> sized) {
+        return new RateCard() {
+            @Override
+            public Optional<PriceQuote> connection(ConnectionType type, int bandwidthMbps,
+                                                   MetroCode metro, Term term) {
+                sized.add(bandwidthMbps);
+                return Optional.of(PriceQuote.of(BigDecimal.valueOf(100), BigDecimal.ZERO,
+                        Currency.getInstance("USD"), PriceSource.CUSTOM));
+            }
+
+            @Override
+            public Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term) {
+                return Optional.empty();
+            }
+
+            @Override
+            public PriceSource source() {
+                return PriceSource.CUSTOM;
+            }
+        };
     }
 
     // ── term(...) ──
