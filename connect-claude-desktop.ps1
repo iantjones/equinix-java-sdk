@@ -58,7 +58,16 @@ if ($config.mcpServers.PSObject.Properties["equinix"]) {
 } else {
     $config.mcpServers | Add-Member -MemberType NoteProperty -Name "equinix" -Value $entry
 }
-$config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding utf8
+# Back up the existing config before touching it, so a bad write is always recoverable.
+if (Test-Path $configPath) {
+    Copy-Item $configPath "$configPath.bak" -Force
+    Write-Host "Backed up existing config to $configPath.bak"
+}
+# WriteAllText with UTF8Encoding($false) writes NO byte-order mark. Set-Content -Encoding utf8
+# in Windows PowerShell 5.1 prepends a BOM, which Claude Desktop's JSON parser rejects
+# ("Unexpected token" on load). Never use Set-Content for this file.
+$json = $config | ConvertTo-Json -Depth 20
+[System.IO.File]::WriteAllText($configPath, $json, (New-Object System.Text.UTF8Encoding $false))
 
 Write-Host "Registered 'equinix' MCP server in $configPath"
 Write-Host "Jar: $jar"
