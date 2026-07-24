@@ -209,6 +209,29 @@ public enum CloudProviderType {
         return false;
     }
 
+    /**
+     * A compact, wire-safe token for this provider &mdash; {@code aws}, {@code azure}, {@code gcp},
+     * {@code oci}, {@code ibm} or {@code alibaba} &mdash; suitable for composing Fabric resource
+     * names that must stay within Fabric's 24-character limit.
+     *
+     * <p>Distinct from {@link #name()} lower-cased, which would yield {@code google_cloud} and
+     * {@code oracle_cloud} rather than the conventional {@code gcp}/{@code oci}. {@link #OTHER}, a
+     * placeholder rather than a nameable provider, returns the generic {@code cloud}.</p>
+     *
+     * @return the short provider token, always non-blank and already lower-case
+     */
+    public String shortCode() {
+        return switch (this) {
+            case AWS -> "aws";
+            case AZURE -> "azure";
+            case GOOGLE_CLOUD -> "gcp";
+            case ORACLE_CLOUD -> "oci";
+            case IBM_CLOUD -> "ibm";
+            case ALIBABA_CLOUD -> "alibaba";
+            case OTHER -> "cloud";
+        };
+    }
+
     private static void addTerm(Set<String> terms, String raw) {
         String normalized = normalize(raw);
         if (!normalized.isEmpty()) terms.add(normalized);

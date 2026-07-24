@@ -139,10 +139,13 @@ final class DesignToolFactory {
                         + "evaluated and is reported as such. Must be positive and finite; zero or negative is "
                         + "rejected with an error."),
                 "requires_clouds", array("Cloud providers this workload must reach over private "
-                                + "interconnect. This steers where THIS workload is placed (the first recommended "
-                                + "metro carrying all of them); it does not gate which metros are recommended — use "
-                                + "the top-level require_clouds for that. If one resolves to no metro, the workload "
-                                + "is still placed and a WORKLOAD_PROVIDER_UNAVAILABLE finding says so.",
+                                + "interconnect. Two effects. (1) It HOMES this workload: the workload is placed in "
+                                + "the first recommended metro that carries all of them. (2) It widens CANDIDACY: a "
+                                + "metro carrying all of THIS workload's clouds qualifies as a candidate even when it "
+                                + "lacks one of the top-level require_clouds, so a single-cloud metro can be "
+                                + "recommended to host this single-cloud workload instead of being filtered out. If "
+                                + "one resolves to no metro, the workload is still placed and a "
+                                + "WORKLOAD_PROVIDER_UNAVAILABLE finding says so.",
                         stringEnum("Cloud provider.", CLOUD_VALUES))),
                 "label");
         Map<String, Object> siteItem = object(props(
@@ -163,10 +166,12 @@ final class DesignToolFactory {
                         + "lowest-latency placement rule.")),
                 "label");
         Map<String, Object> constraints = object(props(
-                "monthly_budget_max", number("Monthly budget ceiling in USD. This is a REPORTING check, "
-                        + "not a filter: no metro is excluded or scored on it. The estimated monthly total is "
-                        + "compared against it and the answer appears as cost_estimate.within_budget. Cost "
-                        + "scoring is regional and independent of this value."),
+                "monthly_budget_max", number("Monthly budget ceiling in USD. Optional; omit it for NO cap "
+                        + "— nothing installs a hidden default ceiling. This is a REPORTING check, not a filter: no "
+                        + "metro is excluded or scored on it. The estimated monthly total is compared against it and "
+                        + "the answer appears as cost_estimate.within_budget; when the estimate exceeds the ceiling a "
+                        + "MEDIUM BUDGET_EXCEEDED finding is also raised. Cost scoring is regional and independent of "
+                        + "this value."),
                 "require_metros", array("Metro codes that must be part of the deployment. They are forced "
                                 + "in AFTER filtering, so they bypass every constraint including the latency bound, "
                                 + "and are counted separately from the metros that met the constraints. A code the "
@@ -176,9 +181,16 @@ final class DesignToolFactory {
                 "exclude_metros", array("Metro codes that must not be used. Excluded before scoring.",
                         string("Metro code, e.g. 'SV'.")),
                 "redundancy", stringEnum("Minimum redundancy tier. It raises the number of metros "
-                                + "recommended when max_metros is not set, drives the redundancy score from the "
-                                + "geographic diversity of the selected set, and raises REDUNDANCY_GAP / "
-                                + "SINGLE_REGION findings when the selection cannot meet it.",
+                                + "recommended when max_metros is not set and drives the redundancy score from the "
+                                + "geographic diversity of the selected set. multi_region and multi_metro now HARD-"
+                                + "spread the selected set across regions: candidates are grouped by region and taken "
+                                + "round-robin best-per-region (regions where you have sites first), so no single "
+                                + "region can fill the set — geographic spread is enforced, not merely nudged in the "
+                                + "score. none and n_plus_1 keep the plain top-N-by-score selection. When "
+                                + "multi_region is requested but every qualifying metro sits in one region (spread "
+                                + "impossible under the given clouds/regions/compliance/latency), that is a HIGH "
+                                + "SINGLE_REGION finding naming exactly what to relax; too few metros for the tier is "
+                                + "a REDUNDANCY_GAP finding.",
                         lowerNames(RedundancyTier.class)),
                 "max_metros", integer("Hard cap on how many metros are recommended. Defaults to 3, or — "
                         + "when a redundancy tier is set — to the greater of 3 and the tier's minimum plus "
@@ -195,10 +207,17 @@ final class DesignToolFactory {
                 "sites", array("User/office/data-center sites whose proximity should drive placement. "
                         + "Without at least one site, latency neither ranks nor filters metros and every "
                         + "latency ceiling in this request is reported as unevaluable.", siteItem),
-                "require_clouds", array("Clouds that MUST be reachable in every recommended metro. A metro "
-                                + "without one is excluded from candidacy; a cloud that resolves to no metro at all "
-                                + "empties the candidate set and is reported as a CRITICAL finding naming whether "
-                                + "the lookup missed or the matched profiles published no coverage.",
+                "require_clouds", array("Clouds that must be reachable SOMEWHERE in the recommended set — a "
+                                + "coverage guarantee across the recommended metros, NOT a per-metro filter. A metro "
+                                + "is no longer excluded merely for lacking one; instead the engine guarantees each "
+                                + "listed cloud is carried by at least one recommended metro and raises a HIGH "
+                                + "REQUIRED_CLOUD_NOT_COVERED finding when the chosen set leaves one unreached (the "
+                                + "cloud exists in the account but no recommended metro carries it). Carrying all of "
+                                + "these clouds is one way a metro qualifies for candidacy; a metro also qualifies by "
+                                + "carrying all clouds of any single workload's requires_clouds, so single-cloud "
+                                + "metros are not shut out. A cloud that resolves to NO metro at all in the account "
+                                + "stays a separate CRITICAL PROVIDER_UNAVAILABLE finding, naming whether the lookup "
+                                + "missed or the matched profiles published no coverage.",
                         stringEnum("Cloud provider.", CLOUD_VALUES)),
                 "prefer_clouds", array("Clouds that are nice to have; raises the provider-coverage score "
                                 + "but never disqualifies a metro.",

@@ -56,20 +56,35 @@ final class DeploymentWizardEngine {
 
         subnetCounter = 0;
 
+        // Every generated name flows through one PlanNames instance so the whole plan shares a single
+        // uniqueness namespace and a single < 24-character cap (Fabric error EQ-3142539). The prefix is
+        // validated and length-bounded up front so the composed names still fit.
+        PlanNames names = new PlanNames();
+        String prefix = PlanNames.validatePrefix(config.getRouterNamePrefix());
+
+        // Allocate the canonical Cloud Router name per metro first, so every reference to it — the
+        // router itself, each provider connection's A-side, and each backbone link's A/Z-side — resolves
+        // to the exact same unique, capped name.
+        Map<MetroId, String> routerNames = new LinkedHashMap<>();
+        for (MetroRecommendation metro : metros) {
+            routerNames.computeIfAbsent(metro.getMetroId(),
+                    metroId -> names.unique(prefix + "-" + metroId));
+        }
+
         // Phase 1: Plan Cloud Routers
-        List<PlannedCloudRouter> cloudRouters = planCloudRouters(config, metros);
+        List<PlannedCloudRouter> cloudRouters = planCloudRouters(config, metros, routerNames);
 
         // Phase 2: Plan Provider Connections
-        List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result);
+        List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result, names, routerNames);
 
         // Phase 2b: Connection validation via the native Fabric REST dry-run surface.
         dryRunValidateConnections(config.getFabric(), providerConnections, validationErrors);
 
         // Phase 3: Plan Backbone Links
-        List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros);
+        List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros, names, routerNames);
 
         // Phase 4: Plan Routing Protocols
-        List<PlannedRoutingProtocol> routingProtocols = planRoutingProtocols(config, providerConnections, backboneLinks);
+        List<PlannedRoutingProtocol> routingProtocols = planRoutingProtocols(config, providerConnections, backboneLinks, names);
 
         // Phase 5: Estimate Pricing
         PlanPricing pricing = estimatePricing(config, cloudRouters, providerConnections, backboneLinks);
@@ -95,7 +110,8 @@ final class DeploymentWizardEngine {
     // ══════════════════════════════════════════════
 
     private static List<PlannedCloudRouter> planCloudRouters(
-            DeploymentWizard.Builder config, List<MetroRecommendation> metros) {
+            DeploymentWizard.Builder config, List<MetroRecommendation> metros,
+            Map<MetroId, String> routerNames) {
 
         String notificationEmail = config.getNotificationEmails().isEmpty()
                 ? null : config.getNotificationEmails().get(0);
@@ -103,7 +119,7 @@ final class DeploymentWizardEngine {
         return metros.stream()
                 .map(metro -> PlannedCloudRouter.builder()
                         .metroId(metro.getMetroId())
-                        .name(config.getRouterNamePrefix() + "-" + metro.getMetroId())
+                        .name(routerNames.get(metro.getMetroId()))
                         .packageCode(config.getRouterPackage())
                         .accountNumber(config.getAccountNumber())
                         .projectId(config.getProjectId())
@@ -117,7 +133,8 @@ final class DeploymentWizardEngine {
     // ══════════════════════════════════════════════
 
     private static List<PlannedConnection> planProviderConnections(
-            DeploymentWizard.Builder config, List<MetroRecommendation> metros, OptimizationResult result) {
+            DeploymentWizard.Builder config, List<MetroRecommendation> metros, OptimizationResult result,
+            PlanNames names, Map<MetroId, String> routerNames) {
 
         List<PlannedConnection> connections = new ArrayList<>();
         String notificationEmail = config.getNotificationEmails().isEmpty()
@@ -125,6 +142,8 @@ final class DeploymentWizardEngine {
 
         for (MetroRecommendation metro : metros) {
             if (metro.getAvailableProviders() == null) continue;
+
+            String routerName = routerNames.get(metro.getMetroId());
 
             List<ProviderAvailability> availableProviders = metro.getAvailableProviders().stream()
                     .filter(ProviderAvailability::isAvailable)
@@ -136,8 +155,10 @@ final class DeploymentWizardEngine {
 
                 if (bandwidth.getTotalMbps() <= 0) continue;
 
-                String connName = config.getRouterNamePrefix() + "-" + metro.getMetroId()
-                        + "-to-" + sanitizeName(provider.getProviderLabel());
+                // Compose the connection name from the Cloud Router's own (already unique, capped) name
+                // plus a COMPACT provider token — "aws", not "amazon-web-services" — then cap and dedupe
+                // it so it clears Fabric's < 24-character limit (EQ-3142539) even for long prefixes.
+                String connName = names.unique(routerName + "-to-" + PlanNames.providerToken(provider.getProviderLabel()));
 
                 String sellerRegion = provider.getSellerRegions() != null && !provider.getSellerRegions().isEmpty()
                         ? provider.getSellerRegions().get(0) : null;
@@ -149,7 +170,7 @@ final class DeploymentWizardEngine {
                         .bandwidthMbps(bandwidth.getTotalMbps())
                         .bandwidthAllocation(bandwidth)
                         .aSideMetro(metro.getMetroId())
-                        .aSideRouterName(config.getRouterNamePrefix() + "-" + metro.getMetroId())
+                        .aSideRouterName(routerName)
                         .zSideServiceProfileUuid(provider.getServiceProfileUuid())
                         .zSideProviderLabel(provider.getProviderLabel())
                         .zSideSellerRegion(sellerRegion)
@@ -240,7 +261,8 @@ final class DeploymentWizardEngine {
     // ══════════════════════════════════════════════
 
     private static List<PlannedBackboneLink> planBackboneLinks(
-            DeploymentWizard.Builder config, List<MetroRecommendation> metros) {
+            DeploymentWizard.Builder config, List<MetroRecommendation> metros,
+            PlanNames names, Map<MetroId, String> routerNames) {
 
         if (metros.size() < 2) return Collections.emptyList();
 
@@ -258,7 +280,11 @@ final class DeploymentWizardEngine {
         for (int[] pair : pairs) {
             MetroId metroA = metroCodes.get(pair[0]);
             MetroId metroZ = metroCodes.get(pair[1]);
-            String linkName = config.getRouterNamePrefix() + "-" + metroA + "-to-" + metroZ;
+            String aSideRouterName = routerNames.get(metroA);
+            String zSideRouterName = routerNames.get(metroZ);
+            // Backbone link name extends the A-side router's (unique, capped) name with the Z-side
+            // metro, then runs through the same cap-and-dedupe so it, too, stays < 24 characters.
+            String linkName = names.unique(aSideRouterName + "-to-" + metroZ);
 
             PlannedConnection connection = PlannedConnection.builder()
                     .name(linkName)
@@ -266,9 +292,9 @@ final class DeploymentWizardEngine {
                     .purpose(ConnectionPurpose.BACKBONE)
                     .bandwidthMbps(config.getBackboneBandwidthMbps())
                     .aSideMetro(metroA)
-                    .aSideRouterName(config.getRouterNamePrefix() + "-" + metroA)
+                    .aSideRouterName(aSideRouterName)
                     .zSideMetro(metroZ)
-                    .zSideRouterName(config.getRouterNamePrefix() + "-" + metroZ)
+                    .zSideRouterName(zSideRouterName)
                     .notificationEmail(notificationEmail)
                     .build();
 
@@ -320,33 +346,39 @@ final class DeploymentWizardEngine {
     private static List<PlannedRoutingProtocol> planRoutingProtocols(
             DeploymentWizard.Builder config,
             List<PlannedConnection> providerConnections,
-            List<PlannedBackboneLink> backboneLinks) {
+            List<PlannedBackboneLink> backboneLinks,
+            PlanNames names) {
 
         List<PlannedRoutingProtocol> protocols = new ArrayList<>();
 
         // Protocols for provider connections
         for (PlannedConnection conn : providerConnections) {
-            protocols.addAll(createProtocolPair(config, conn.getName()));
+            protocols.addAll(createProtocolPair(config, conn.getName(), names));
         }
 
         // Protocols for backbone links
         for (PlannedBackboneLink link : backboneLinks) {
-            protocols.addAll(createProtocolPair(config, link.getConnection().getName()));
+            protocols.addAll(createProtocolPair(config, link.getConnection().getName(), names));
         }
 
         return protocols;
     }
 
     private static List<PlannedRoutingProtocol> createProtocolPair(
-            DeploymentWizard.Builder config, String connectionName) {
+            DeploymentWizard.Builder config, String connectionName, PlanNames names) {
 
         List<PlannedRoutingProtocol> pair = new ArrayList<>(2);
         String subnet = nextSubnet();
 
+        // The protocol's own name must also clear Fabric's < 24-character limit, so it is composed
+        // through the same generator (which truncates the connection stem and, if that collides,
+        // appends a hash) rather than by raw string concatenation. connectionName stays the exact
+        // parent-connection name — it is the foreign key execute() resolves the parent by.
+
         // DIRECT protocol (IP assignment)
         pair.add(PlannedRoutingProtocol.builder()
                 .type(RoutingProtocolType.DIRECT)
-                .name(connectionName + "-DIRECT")
+                .name(names.uniqueWithSuffix(connectionName, "DIRECT"))
                 .connectionName(connectionName)
                 .equinixIfaceIpv4(subnet + ".1/30")
                 .bfdEnabled(false)
@@ -356,7 +388,7 @@ final class DeploymentWizardEngine {
         // BGP protocol (dynamic routing)
         pair.add(PlannedRoutingProtocol.builder()
                 .type(RoutingProtocolType.BGP)
-                .name(connectionName + "-BGP")
+                .name(names.uniqueWithSuffix(connectionName, "BGP"))
                 .connectionName(connectionName)
                 .customerPeerIpv4(subnet + ".2/30")
                 .equinixPeerIpv4(subnet + ".1/30")
@@ -574,10 +606,6 @@ final class DeploymentWizardEngine {
                         + link.getConnection().getZSideRouterName());
             }
         }
-    }
-
-    private static String sanitizeName(String input) {
-        return input.replaceAll("[^a-zA-Z0-9_-]", "-").toLowerCase();
     }
 
     /**

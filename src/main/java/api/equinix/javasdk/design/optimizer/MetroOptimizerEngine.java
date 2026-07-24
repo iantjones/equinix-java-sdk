@@ -66,11 +66,20 @@ final class MetroOptimizerEngine {
      *       client, traversing every page. A traversal that hits the scan bound, or that a paging
      *       failure cuts short, keeps what it read and is reported as incomplete per catalog.</li>
      *   <li><strong>Candidate Filtering</strong> -- Eliminates metros that violate hard constraints
-     *       (excluded regions/metros, compliance zones, missing required providers, and — when
-     *       {@code maxLatencyMs} is set — an estimated latency to any user site beyond the bound).</li>
+     *       (excluded regions/metros, compliance zones, and — when {@code maxLatencyMs} is set — an
+     *       estimated latency to any user site beyond the bound). The provider gate is a per-metro
+     *       <em>eligibility</em> test, not a whole-set union: a metro qualifies when it either carries
+     *       every request-level required cloud, or carries all the clouds of at least one workload that
+     *       declares its own dependencies. Request-level required clouds are enforced as a coverage
+     *       guarantee across the selected set (Risk Analysis), not as a "present in every metro" filter,
+     *       so a single-cloud metro can qualify to host a single-cloud workload.</li>
      *   <li><strong>Scoring</strong> -- Scores each candidate across five dimensions: latency, provider
      *       coverage, cost, redundancy, and compliance, using weighted aggregation.</li>
-     *   <li><strong>Selection</strong> -- Selects the top N metros by composite score.</li>
+     *   <li><strong>Selection</strong> -- Selects the top N metros by composite score. When a
+     *       multi-region or multi-metro redundancy tier is requested the selection is
+     *       region-diversity-aware: candidates are grouped by region and picked round-robin best-per-region
+     *       (regions the user has sites in first), so a single region can never monopolise the set and
+     *       genuine geographic spread is a hard outcome rather than a scoring nudge.</li>
      *   <li><strong>Redundancy Refinement</strong> -- Recalculates redundancy scores based on the
      *       actual geographic diversity of the selected set.</li>
      *   <li><strong>Latency Matrix</strong> -- Builds a metro-by-site latency grid.</li>
@@ -218,11 +227,12 @@ final class MetroOptimizerEngine {
         // Sort by composite score descending
         scoredMetros.sort((a, b) -> Double.compare(b.score.getComposite(), a.score.getComposite()));
 
-        // Phase 4: Select top N
+        // Phase 4: Selection. Greedy top-N by composite score, EXCEPT when a multi-region or
+        // multi-metro redundancy tier is requested — then selection spreads across regions
+        // (round-robin best-per-region) so a single region cannot fill the whole set and the
+        // requested geographic diversity is honoured, not merely scored.
         int maxMetros = resolveMaxMetros(request);
-        List<ScoredMetro> selected = scoredMetros.stream()
-                .limit(maxMetros)
-                .collect(Collectors.toList());
+        List<ScoredMetro> selected = selectMetros(scoredMetros, maxMetros, request, metroMap);
 
         // Phase 4b: Backfill the deferred latency/provider explanations for the selected
         // metros only. These descriptions do not influence the composite score, so the
@@ -243,13 +253,16 @@ final class MetroOptimizerEngine {
         DeploymentTopology topology = assembleTopology(selected, request, metroMap, latencyMap,
                 providerMetroMap, siteWeighting);
 
-        // Phase 9: Risk analysis
-        RiskAssessment riskAssessment = analyzeRisks(selected, request, providerMetroMap, latencyMatrix,
-                unresolvedProviders, unresolvedWorkloadProviders, candidateSet, metroScan, profileScan);
-
-        // Phase 10: Cost estimate
+        // Phase 9: Cost estimate. Computed before risk analysis so the budget check can raise a
+        // finding: the budget is reported against, and an over-budget estimate is a risk finding
+        // rather than a flag buried in the cost object.
         RateCard rateCard = request.getRateCard() != null ? request.getRateCard() : EquinixRateCard.of(fabric);
         CostEstimate costEstimate = estimateCosts(selected, request, rateCard);
+
+        // Phase 10: Risk analysis
+        RiskAssessment riskAssessment = analyzeRisks(selected, request, providerMetroMap, latencyMatrix,
+                unresolvedProviders, unresolvedWorkloadProviders, candidateSet, metroScan, profileScan,
+                costEstimate);
 
         // Phase 11: Build recommendations
         List<MetroRecommendation> recommendations = new ArrayList<>();
@@ -838,6 +851,55 @@ final class MetroOptimizerEngine {
         return "required provider '" + providerLabel + "'";
     }
 
+    /** The request-level required providers: the classic candidacy gate, now one of two eligibility paths. */
+    private static List<ProviderRequirement> requiredRequestProviders(OptimizationRequest request) {
+        return request.getProviders().stream()
+                .filter(ProviderRequirement::isRequired)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * The cloud dependencies of every workload that declares its own, one non-empty list per such
+     * workload. A metro that carries all the clouds of any one of these lists can host that workload,
+     * which is the second (widening) provider-eligibility path.
+     */
+    private static List<List<ProviderRequirement>> workloadCloudNeeds(OptimizationRequest request) {
+        List<List<ProviderRequirement>> needs = new ArrayList<>();
+        for (WorkloadSpec workload : request.getWorkloads()) {
+            List<ProviderRequirement> deps = workload.getDependsOnProviders();
+            if (deps != null && !deps.isEmpty()) {
+                needs.add(deps);
+            }
+        }
+        return needs;
+    }
+
+    /** {@code true} when the availability index places the requirement's provider in this metro. */
+    private static boolean metroHasProvider(MetroId code, ProviderRequirement req,
+                                            Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
+        Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(req.displayLabel());
+        return avail != null && avail.containsKey(code);
+    }
+
+    /**
+     * Whether a metro qualifies on providers: it carries every request-level required cloud (vacuously
+     * true when none are required), or it carries all the clouds of at least one workload that declares
+     * its own dependencies. The request-level required clouds are thus <em>a</em> way to qualify, not a
+     * "present in every metro" filter — their real enforcement is the across-the-set coverage check in
+     * {@link #analyzeRisks}, so a single-cloud metro can still qualify to host a single-cloud workload.
+     */
+    private static boolean isProviderEligible(MetroId code, List<ProviderRequirement> requestRequired,
+                                              List<List<ProviderRequirement>> workloadCloudNeeds,
+                                              Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
+        boolean carriesAllRequestRequired = requestRequired.stream()
+                .allMatch(req -> metroHasProvider(code, req, providerMetroMap));
+        if (carriesAllRequestRequired) {
+            return true;
+        }
+        return workloadCloudNeeds.stream()
+                .anyMatch(deps -> deps.stream().allMatch(dep -> metroHasProvider(code, dep, providerMetroMap)));
+    }
+
     private static CandidateSet filterCandidates(List<Metro> allMetros, OptimizationRequest request,
                                                  Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap,
                                                  Map<MetroId, Metro> metroMap,
@@ -865,6 +927,14 @@ final class MetroOptimizerEngine {
             }
         }
 
+        // Provider eligibility inputs. A metro qualifies on providers when it EITHER carries every
+        // request-level required cloud (the classic gate, and vacuously true when none are required)
+        // OR carries all the clouds of at least one workload that declares its own dependencies. The
+        // second path is what lets a single-cloud EMEA/APAC metro qualify to host a single-cloud
+        // workload, instead of the old rule that forced EVERY metro to carry the union of all clouds.
+        List<ProviderRequirement> requestRequired = requiredRequestProviders(request);
+        List<List<ProviderRequirement>> workloadCloudNeeds = workloadCloudNeeds(request);
+
         for (Metro metro : allMetros) {
             MetroId code = metro.metroId();
             Region region = metro.getRegion();
@@ -886,21 +956,22 @@ final class MetroOptimizerEngine {
                 continue;
             }
 
-            // Check required providers. Every missing requirement is tallied, not just the first,
-            // so the per-provider counts the risk text quotes are the true blast radius of each
-            // requirement rather than a first-blamed approximation.
-            boolean hasAllRequired = true;
-            for (ProviderRequirement req : request.getProviders()) {
-                if (req.isRequired()) {
-                    String key = req.displayLabel();
-                    Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
-                    if (avail == null || !avail.containsKey(code)) {
-                        hasAllRequired = false;
-                        count(eliminations, requiredProviderConstraint(key));
+            // Provider eligibility: qualify a metro when it carries every request-level required
+            // cloud, OR carries all the clouds of at least one workload that declares its own
+            // dependencies. A metro that reaches the elimination branch below therefore carries
+            // neither the full request-required set nor any single workload's clouds; every
+            // request-level required cloud it lacks is tallied, so the per-provider counts the risk
+            // text quotes are the real blast radius rather than a first-blamed approximation. When
+            // there are no request-level required clouds the first path is vacuously true, so this
+            // branch is unreachable and the tally is never silent.
+            if (!isProviderEligible(code, requestRequired, workloadCloudNeeds, providerMetroMap)) {
+                for (ProviderRequirement req : requestRequired) {
+                    if (!metroHasProvider(code, req, providerMetroMap)) {
+                        count(eliminations, requiredProviderConstraint(req.displayLabel()));
                     }
                 }
+                continue;
             }
-            if (!hasAllRequired) continue;
 
             // Hard latency bound: exclude metros whose estimated latency to ANY user site
             // exceeds constraints.maxLatencyMs. Uses the same per-metro-to-site estimate
@@ -953,6 +1024,18 @@ final class MetroOptimizerEngine {
      */
     private static String formatMs(double ms) {
         return ms == Math.rint(ms) ? String.format("%.0fms", ms) : String.format("%.1fms", ms);
+    }
+
+    /**
+     * Renders a monetary amount with its currency code, e.g. {@code "12000 USD"}, without inventing
+     * precision: a whole amount reads without decimals, a fractional one keeps two. A null currency is
+     * omitted rather than printed as the word "null".
+     */
+    private static String formatMoney(BigDecimal amount, String currency) {
+        BigDecimal scaled = amount.stripTrailingZeros();
+        String number = scaled.scale() <= 0 ? scaled.toBigInteger().toString()
+                : amount.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+        return currency != null && !currency.isBlank() ? number + " " + currency : number;
     }
 
     /**
@@ -1591,18 +1674,57 @@ final class MetroOptimizerEngine {
             MetroId fallbackMetro = eligible.get(0).metro.metroId();
             Region primaryRegion = eligible.get(0).metro.getRegion();
 
-            // DR workloads: place in a different region if possible
+            // DR / cold-backup workloads: place in a different region for geographic diversity — and,
+            // when the workload declares its own cloud dependencies, in a different-region metro that
+            // actually carries them, so the recovery site can reach its data instead of being placed
+            // for diversity alone and silently stranded from its clouds. The rationale states which of
+            // the two goals had to give when they cannot both be met.
             if (workload.getType() == WorkloadType.DISASTER_RECOVERY
                     || workload.getType() == WorkloadType.COLD_BACKUP) {
-                ScoredMetro drMetro = eligible.stream()
-                        .filter(sm -> sm.metro.getRegion() != primaryRegion)
-                        .findFirst()
-                        .orElse(eligible.size() > 1 ? eligible.get(eligible.size() - 1) : eligible.get(0));
+                List<ProviderRequirement> drDeps = workload.getDependsOnProviders();
+                boolean hasDeps = drDeps != null && !drDeps.isEmpty();
+                java.util.function.Predicate<ScoredMetro> carriesDeps = sm -> !hasDeps
+                        || drDeps.stream().allMatch(dep -> metroHasProvider(sm.metro.metroId(), dep, providerMetroMap));
+
+                ScoredMetro diffRegionWithDeps = eligible.stream()
+                        .filter(sm -> sm.metro.getRegion() != primaryRegion).filter(carriesDeps)
+                        .findFirst().orElse(null);
+                ScoredMetro anyWithDeps = eligible.stream().filter(carriesDeps).findFirst().orElse(null);
+                ScoredMetro diffRegion = eligible.stream()
+                        .filter(sm -> sm.metro.getRegion() != primaryRegion).findFirst().orElse(null);
+
+                ScoredMetro drMetro;
+                String drReason;
+                if (diffRegionWithDeps != null) {
+                    drMetro = diffRegionWithDeps;
+                    drReason = "Placed in " + drMetro.metro.getRegion() + " for geographic diversity from "
+                            + "primary" + (hasDeps ? ", where its required providers are available" : "");
+                }
+                else if (hasDeps && anyWithDeps != null) {
+                    drMetro = anyWithDeps;
+                    drReason = "Placed in " + drMetro.metro.getRegion() + ", which carries this "
+                            + "workload's providers (" + depLabels(drDeps) + "); no different-region "
+                            + "metro carries them, so cross-region diversity from the primary region "
+                            + "was not achievable for it";
+                }
+                else if (diffRegion != null) {
+                    drMetro = diffRegion;
+                    drReason = "Placed in " + drMetro.metro.getRegion() + " for geographic diversity from "
+                            + "primary" + (hasDeps ? "; NOTE its declared providers (" + depLabels(drDeps)
+                                + ") are not available in any recommended metro, so the recovery site "
+                                + "cannot reach them here" : "");
+                }
+                else {
+                    drMetro = eligible.size() > 1 ? eligible.get(eligible.size() - 1) : eligible.get(0);
+                    drReason = "Placed in " + drMetro.metro.getRegion() + " (no other region is available "
+                            + "for geographic diversity)" + (hasDeps && !carriesDeps.test(drMetro)
+                                ? "; NOTE its declared providers (" + depLabels(drDeps)
+                                    + ") are not available there" : "");
+                }
                 placements.add(WorkloadPlacement.builder()
                         .workloadLabel(workload.getLabel())
                         .assignedMetro(drMetro.metro.metroId())
-                        .reasoning("Placed in " + drMetro.metro.getRegion()
-                                + " for geographic diversity from primary" + suffix)
+                        .reasoning(drReason + suffix)
                         .build());
                 continue;
             }
@@ -1797,6 +1919,11 @@ final class MetroOptimizerEngine {
                 + "influence the metro ranking; confirm availability with your Equinix account team";
     }
 
+    /** Comma-joined display labels of a workload's provider dependencies. */
+    private static String depLabels(List<ProviderRequirement> deps) {
+        return deps.stream().map(ProviderRequirement::displayLabel).collect(Collectors.joining(", "));
+    }
+
     // ══════════════════════════════════════════════
     //  Risk Analysis
     // ══════════════════════════════════════════════
@@ -1809,7 +1936,8 @@ final class MetroOptimizerEngine {
                                                List<UnresolvedProvider> unresolvedWorkloadProviders,
                                                CandidateSet candidateSet,
                                                CatalogScan<Metro> metroScan,
-                                               CatalogScan<ServiceProfile> profileScan) {
+                                               CatalogScan<ServiceProfile> profileScan,
+                                               CostEstimate costEstimate) {
         List<RiskFinding> findings = new ArrayList<>();
         RiskSeverity worstSeverity = RiskSeverity.INFO;
         double resiliencyScore = 100.0;
@@ -1851,12 +1979,29 @@ final class MetroOptimizerEngine {
         if (selected.size() > 1 && regions.size() == 1) {
             RedundancyTier requested = request.getConstraints().getMinimumRedundancy();
             if (requested != null && requested.ordinal() >= RedundancyTier.MULTI_REGION.ordinal()) {
+                // Region-aware selection would have spread across regions had any other region
+                // carried a qualifying metro, so a single-region result here means geographic
+                // spread was IMPOSSIBLE with the given constraints, not merely out-scored. Name the
+                // hard blocker and what to relax rather than returning a single-region set quietly.
+                Region only = regions.iterator().next();
+                // Region-aware round-robin takes one metro from every candidate region before it
+                // takes a second from any, so a selected set of 2+ metros confined to ONE region can
+                // only happen when just one region had a qualifying candidate (a single-region set of
+                // size 1 is caught above as SINGLE_POINT_OF_FAILURE, not here). The former "the
+                // qualifying metros span N regions but the set collapsed to one — widen max_metros"
+                // branch was therefore unreachable and has been removed; only the genuine
+                // single-candidate-region case remains, and it states what can actually happen.
+                String blocker = "; no other region has a metro that meets the constraints (only " + only
+                        + " metros qualified), so multi-region spread is not achievable here";
                 findings.add(RiskFinding.builder()
                         .severity(RiskSeverity.HIGH)
                         .category("SINGLE_REGION")
-                        .description("All " + selected.size() + " metros are in " + regions.iterator().next()
-                                + " but MULTI_REGION redundancy was requested")
-                        .recommendation("Consider expanding to metros in other regions")
+                        .description("All " + selected.size() + " metros are in " + only
+                                + " but MULTI_REGION redundancy was requested" + blocker)
+                        .recommendation("Relax whichever constraint confines the candidates to one region "
+                                + "(required clouds, required/excluded regions, compliance zone, or the "
+                                + "max-latency bound), or add a site in another region so a metro there "
+                                + "qualifies; multi-region redundancy needs metros in 2+ regions")
                         .affectedMetro(null)
                         .build());
                 resiliencyScore -= 25;
@@ -2104,6 +2249,60 @@ final class MetroOptimizerEngine {
             }
         }
 
+        // Required-cloud coverage across the SELECTED SET. Request-level required clouds no longer
+        // force every metro to carry all of them; they are a coverage guarantee — each must be
+        // reachable somewhere in the recommendation. A cloud that resolves to no metro at all is
+        // already the CRITICAL PROVIDER_UNAVAILABLE finding above, so this fires only for a cloud that
+        // IS available in the account but that the selected set happens not to include a metro for.
+        for (ProviderRequirement req : request.getProviders()) {
+            if (!req.isRequired()) continue;
+            String key = req.displayLabel();
+            Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
+            boolean resolvedSomewhere = avail != null && !avail.isEmpty();
+            if (!resolvedSomewhere) continue; // reported as PROVIDER_UNAVAILABLE, not a coverage gap
+            boolean coveredInSet = !selected.isEmpty() && selected.stream()
+                    .anyMatch(sm -> avail.containsKey(sm.metro.metroId()));
+            if (!coveredInSet) {
+                findings.add(RiskFinding.builder()
+                        .severity(RiskSeverity.HIGH)
+                        .category("REQUIRED_CLOUD_NOT_COVERED")
+                        .description("Required cloud '" + key + "' is available in the account but no "
+                                + "recommended metro carries it, so the deployment does not reach it. "
+                                + "Required clouds are a coverage guarantee across the set, not a "
+                                + "per-metro filter, so a set can be recommended that leaves one uncovered")
+                        .recommendation("Add a metro that carries '" + key + "' (raise max_metros, or "
+                                + "require a metro that has it), or drop it from require_clouds if it need "
+                                + "not be reachable everywhere in this deployment")
+                        .affectedMetro(null)
+                        .build());
+                resiliencyScore -= 15;
+                worstSeverity = mostSevere(worstSeverity, RiskSeverity.HIGH);
+            }
+        }
+
+        // Budget: reported against, never enforced. When a ceiling is set and the estimated monthly
+        // total exceeds it, surface it as a finding (the within_budget flag is already false) so an
+        // over-budget deployment is stated rather than presented as acceptable. A null budget — the
+        // default — is a no-cap: nothing is checked and nothing is flagged.
+        BudgetRange budget = request.getConstraints().getBudget();
+        if (budget != null && budget.getMaxMonthly() != null && costEstimate != null
+                && !costEstimate.isWithinBudget()) {
+            findings.add(RiskFinding.builder()
+                    .severity(RiskSeverity.MEDIUM)
+                    .category("BUDGET_EXCEEDED")
+                    .description("Estimated monthly cost " + formatMoney(costEstimate.getMonthlyTotal(),
+                            costEstimate.getCurrency()) + " exceeds the "
+                            + formatMoney(budget.getMaxMonthly(), budget.getCurrency()) + " monthly budget "
+                            + "ceiling. The budget is a reporting check, not a filter: no metro was "
+                            + "excluded or scored on it")
+                    .recommendation("Raise the budget ceiling, reduce bandwidth or the metro count, or "
+                            + "choose a lower-cost region or a longer term; the ceiling only sets the "
+                            + "within_budget flag and this finding")
+                    .affectedMetro(null)
+                    .build());
+            worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
+        }
+
         // Redundancy gap
         RedundancyTier requested = request.getConstraints().getMinimumRedundancy();
         if (requested != null && selected.size() < requested.getMinimumMetros()) {
@@ -2316,6 +2515,23 @@ final class MetroOptimizerEngine {
             latencyClause = "";
         }
 
+        // The described selection method must match the one #selectMetros actually runs (keyed on the
+        // same #usesRegionDiversitySelection predicate): greedy top-N for NONE/N_PLUS_1, region
+        // round-robin for the geographic-diversity tiers. Calling a spread run "top N by score" would
+        // misreport a set that deliberately dropped higher-scored metros to reach other regions.
+        String selectionClause;
+        if (usesRegionDiversitySelection(request)) {
+            RedundancyTier tier = request.getConstraints().getMinimumRedundancy();
+            selectionClause = "The set is then spread across regions rather than taken as the top "
+                    + "scores: candidates are grouped by region and picked round-robin best-per-region "
+                    + "(regions where the caller has sites first) up to the metro cap, so " + tier
+                    + " geographic diversity is a guaranteed outcome — this can override raw score and "
+                    + "drop a higher-scored metro whose region is already represented.";
+        }
+        else {
+            selectionClause = "The highest-scoring metros are then selected, up to the metro cap.";
+        }
+
         String methodology = "The optimizer read " + metroScan.size() + " Equinix metros and "
                 + profileScan.size() + " Fabric service profiles" + describeScanCoverage(metroScan, profileScan)
                 + ", then filtered to " + passedFilters + " candidates based on constraints "
@@ -2328,7 +2544,8 @@ final class MetroOptimizerEngine {
                 + "redundancy (geographic diversity of the selected set), and compliance (data sovereignty). "
                 + "Scores are combined using the " + request.getStrategy() + " strategy weights"
                 + describeWeightSource(request.getScoringWeights())
-                + ". Workloads are placed using a greedy algorithm: latency-critical workloads go to the "
+                + ". " + selectionClause
+                + " Workloads are placed using a greedy algorithm: latency-critical workloads go to the "
                 + "lowest-latency metro, DR workloads to a different region, and provider-dependent workloads "
                 + "to metros where all dependencies are available.";
 
@@ -2372,15 +2589,29 @@ final class MetroOptimizerEngine {
         }
         humanReadable.append(", ");
         if (selectedMetros == 0) {
-            humanReadable.append("none selected");
+            humanReadable.append("none selected by ").append(request.getStrategy()).append(" strategy");
+        }
+        else if (usesRegionDiversitySelection(request)) {
+            // A spread run deliberately drops higher-scored metros to reach other regions, so it is
+            // NOT a plain top-N-by-score ranking and must not describe itself as one.
+            RedundancyTier tier = request.getConstraints().getMinimumRedundancy();
+            humanReadable.append("selected ").append(selectedMetros)
+                    .append(" metro(s) spread across regions (round-robin best-per-region, prioritising "
+                            + "regions where you have sites) for ").append(tier).append(" redundancy");
+            if (candidateMetros > resolvedMaxMetros) {
+                humanReadable.append(" (capped at ").append(resolvedMaxMetros).append(")");
+            }
+            humanReadable.append(" — a geographic spread that can override raw score and drop "
+                            + "higher-scored metros, not a plain top-").append(selectedMetros)
+                    .append("-by-").append(request.getStrategy()).append("-score ranking");
         }
         else {
             humanReadable.append("selected the top ").append(selectedMetros);
             if (candidateMetros > resolvedMaxMetros) {
                 humanReadable.append(" (capped at ").append(resolvedMaxMetros).append(")");
             }
+            humanReadable.append(" by ").append(request.getStrategy()).append(" strategy");
         }
-        humanReadable.append(" by ").append(request.getStrategy()).append(" strategy");
 
         if (latencyBoundRequested && !latencyBoundApplied) {
             humanReadable.append(". The requested ").append(formatMs(maxLatencyMs))
@@ -2599,6 +2830,120 @@ final class MetroOptimizerEngine {
         if (redundancy != null) return Math.max(3, redundancy.getMinimumMetros() + 1);
 
         return 3; // default
+    }
+
+    // ══════════════════════════════════════════════
+    //  Selection
+    // ══════════════════════════════════════════════
+
+    /**
+     * Chooses up to {@code maxMetros} from the score-descending candidate list.
+     *
+     * <p>For redundancy {@code NONE} and {@code N_PLUS_1} this is the plain greedy top-N: cost,
+     * latency and balanced runs are unchanged. For {@code MULTI_METRO} and {@code MULTI_REGION} —
+     * the tiers whose whole point is geographic diversity — selection is region-aware instead, so
+     * multi-region can never return an all-one-region set and only warn about it.</p>
+     */
+    private static List<ScoredMetro> selectMetros(List<ScoredMetro> scoredDesc, int maxMetros,
+                                                  OptimizationRequest request,
+                                                  Map<MetroId, Metro> metroMap) {
+        if (!usesRegionDiversitySelection(request)) {
+            return scoredDesc.stream().limit(maxMetros).collect(Collectors.toList());
+        }
+        return selectWithRegionDiversity(scoredDesc, maxMetros, request, metroMap);
+    }
+
+    /**
+     * Whether selection spreads across regions (round-robin best-per-region) instead of taking the
+     * plain greedy top-N. True exactly for the redundancy tiers whose purpose is geographic diversity
+     * ({@link RedundancyTier#MULTI_REGION} and {@link RedundancyTier#MULTI_METRO}). The explanation
+     * strings key their selection wording off this same predicate, so the method they describe and the
+     * method {@link #selectMetros} actually runs can never drift apart.
+     */
+    private static boolean usesRegionDiversitySelection(OptimizationRequest request) {
+        RedundancyTier tier = request.getConstraints().getMinimumRedundancy();
+        return tier == RedundancyTier.MULTI_REGION || tier == RedundancyTier.MULTI_METRO;
+    }
+
+    /**
+     * Region-diversity-aware selection: group the (score-descending) candidates by
+     * {@link Metro#getRegion()} and pick round-robin best-per-region until {@code maxMetros} is
+     * reached — best of the highest-priority region, best of the next, …, then the second-best of the
+     * highest-priority region, and so on. Because the first pass takes one metro from every region in
+     * turn, the selected set always spans {@code min(regionsAvailable, maxMetros)} distinct regions:
+     * no single region can monopolise it, which is exactly the multi-region guarantee. When only one
+     * region has candidates this degrades to top-N within that region, and the single-region outcome
+     * is surfaced as a risk finding rather than hidden.
+     *
+     * <p>Region priority follows demand: regions the user has sites in rank first (weighted by those
+     * sites' presence/weight), so the spread lands near the workforce — London pulls in EMEA,
+     * Singapore pulls in APAC — with the best-in-region score and then the region name as
+     * deterministic tie-breaks.</p>
+     */
+    private static List<ScoredMetro> selectWithRegionDiversity(List<ScoredMetro> scoredDesc, int maxMetros,
+                                                               OptimizationRequest request,
+                                                               Map<MetroId, Metro> metroMap) {
+        // Preserve score-descending order within each region group.
+        LinkedHashMap<Region, List<ScoredMetro>> byRegion = new LinkedHashMap<>();
+        for (ScoredMetro sm : scoredDesc) {
+            byRegion.computeIfAbsent(sm.metro.getRegion(), k -> new ArrayList<>()).add(sm);
+        }
+
+        Map<Region, Double> demand = regionSiteDemand(request, metroMap);
+        List<Region> order = new ArrayList<>(byRegion.keySet());
+        order.sort((a, b) -> {
+            int byDemand = Double.compare(demand.getOrDefault(b, 0.0), demand.getOrDefault(a, 0.0));
+            if (byDemand != 0) return byDemand;
+            int byBest = Double.compare(byRegion.get(b).get(0).score.getComposite(),
+                    byRegion.get(a).get(0).score.getComposite());
+            if (byBest != 0) return byBest;
+            return regionName(a).compareTo(regionName(b));
+        });
+
+        Map<Region, Integer> cursor = new HashMap<>();
+        List<ScoredMetro> selected = new ArrayList<>();
+        boolean progressed = true;
+        while (selected.size() < maxMetros && progressed) {
+            progressed = false;
+            for (Region region : order) {
+                if (selected.size() >= maxMetros) break;
+                int idx = cursor.getOrDefault(region, 0);
+                List<ScoredMetro> group = byRegion.get(region);
+                if (idx < group.size()) {
+                    selected.add(group.get(idx));
+                    cursor.put(region, idx + 1);
+                    progressed = true;
+                }
+            }
+        }
+        return selected;
+    }
+
+    /**
+     * Per-region demand from the user's sites, used only to order regions for round-robin selection.
+     * A site contributes to the region of its {@code nearestMetro} (sites given only by coordinates,
+     * or by an unknown metro, cannot be attributed to a region and are skipped). The contribution is
+     * the site's explicit weight, else its headcount, else 1.0 for bare presence, so the region a
+     * user actually staffs is preferred without needing a fully-weighted request.
+     */
+    private static Map<Region, Double> regionSiteDemand(OptimizationRequest request,
+                                                        Map<MetroId, Metro> metroMap) {
+        Map<Region, Double> demand = new HashMap<>();
+        for (UserSite site : request.getSites()) {
+            MetroId near = site.getNearestMetro();
+            if (near == null) continue;
+            Metro metro = metroMap.get(near);
+            if (metro == null || metro.getRegion() == null) continue;
+            double contribution = site.getWeight() > 0 ? site.getWeight()
+                    : (site.getHeadcount() > 0 ? site.getHeadcount() : 1.0);
+            demand.merge(metro.getRegion(), contribution, Double::sum);
+        }
+        return demand;
+    }
+
+    /** A stable name for a region, treating a null region as an empty string for ordering. */
+    private static String regionName(Region region) {
+        return region != null ? region.name() : "";
     }
 
     private static List<String> generateReasons(ScoredMetro sm, OptimizationRequest request,

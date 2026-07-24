@@ -122,8 +122,12 @@ class DesignToolsTest {
     }
 
     private ObjectNode call(String name, String argsJson) throws Exception {
+        return call(name, context, argsJson);
+    }
+
+    private ObjectNode call(String name, ServerContext ctx, String argsJson) throws Exception {
         JsonNode args = MAPPER.readTree(argsJson);
-        return tool(name).getHandler().handle(args, context);
+        return tool(name).getHandler().handle(args, ctx);
     }
 
     // ── design_optimize_placement ───────────────────────────────────────────
@@ -211,6 +215,99 @@ class DesignToolsTest {
                          "constraints": {"max_latency_ms": -5}}
                         """));
         assertTrue(global.getMessage().contains("maxLatencyMs"), global.getMessage());
+    }
+
+    @Test
+    @DisplayName("redundancy=multi_region HARD-spreads the set across regions, not just the score")
+    void optimizeMultiRegionSpansRegions() throws Exception {
+        // Three metros, one per region — the shape the shared fixture (all AMER) cannot exercise.
+        // Round-robin best-per-region must reach EMEA and APAC, not cluster the top-N in AMER.
+        ServerContext ctx = contextWith(List.of(
+                metro("NY", "New York", Region.AMER, 40.7128, -74.0060, List.of()),
+                metro("LD", "London", Region.EMEA, 51.5074, -0.1278, List.of()),
+                metro("SG", "Singapore", Region.APAC, 1.3521, 103.8198, List.of())),
+                List.of());
+
+        ObjectNode payload = call("design_optimize_placement", ctx, """
+                {"workloads": [{"label": "App", "type": "general_compute", "bandwidth_mbps": 1000}],
+                 "sites": [{"label": "HQ", "metro_code": "NY"}],
+                 "constraints": {"redundancy": "multi_region"}}
+                """);
+
+        java.util.Set<String> regions = new java.util.HashSet<>();
+        payload.get("recommendations").forEach(r -> {
+            if (r.hasNonNull("region")) {
+                regions.add(r.get("region").asText());
+            }
+        });
+        assertTrue(regions.size() >= 2,
+                "multi_region must span at least two regions; got " + regions + ": " + payload.toPrettyString());
+        assertFalse(riskCategories(payload).contains("SINGLE_REGION"),
+                "a genuinely multi-region set raises no SINGLE_REGION finding: " + payload.toPrettyString());
+    }
+
+    @Test
+    @DisplayName("require_clouds is a coverage-across-the-set guarantee: a single-cloud metro can still host a single-cloud workload")
+    void optimizeRequireCloudsCoversAcrossSet() throws Exception {
+        // DC carries AWS+Azure; SG carries AWS only. require_clouds=[aws,azure] used to exclude SG for
+        // lacking Azure. Now SG qualifies because it carries all of the AWS-only DR workload's clouds,
+        // and both required clouds are still reachable somewhere in the set (aws@DC,SG azure@DC).
+        ServerContext ctx = contextWith(List.of(
+                metro("DC", "Ashburn", Region.AMER, DC_LAT, DC_LON, List.of()),
+                metro("SG", "Singapore", Region.APAC, 1.3521, 103.8198, List.of())),
+                List.of(
+                        profile("sp-aws", "Amazon Web Services Direct Connect",
+                                serviceProfileMetro("DC", "us-east-1"),
+                                serviceProfileMetro("SG", "ap-southeast-1")),
+                        profile("sp-azure", "Azure ExpressRoute",
+                                serviceProfileMetro("DC", "us-east-1"))));
+
+        ObjectNode payload = call("design_optimize_placement", ctx, """
+                {"workloads": [
+                    {"label": "Payments", "type": "general_compute", "bandwidth_mbps": 1000, "requires_clouds": ["aws", "azure"]},
+                    {"label": "DR", "type": "disaster_recovery", "bandwidth_mbps": 500, "requires_clouds": ["aws"]}],
+                 "sites": [{"label": "HQ", "metro_code": "DC"}],
+                 "require_clouds": ["aws", "azure"]}
+                """);
+
+        java.util.Set<String> recommended = new java.util.HashSet<>();
+        payload.get("recommendations").forEach(r -> recommended.add(r.get("metro").asText()));
+        assertTrue(recommended.contains("SG"),
+                "SG carries only AWS but hosts the AWS-only DR workload, so require_clouds=[aws,azure] must "
+                        + "not filter it out: " + payload.toPrettyString());
+        assertFalse(riskCategories(payload).contains("REQUIRED_CLOUD_NOT_COVERED"),
+                "both required clouds are reachable across the set, so there is no coverage gap: "
+                        + payload.toPrettyString());
+    }
+
+    @Test
+    @DisplayName("require_clouds raises REQUIRED_CLOUD_NOT_COVERED when the selected set leaves a required cloud unreached")
+    void optimizeRequireCloudsCoverageGapIsFlagged() throws Exception {
+        // AWS lives only in DC, Azure only in SG. Each metro is eligible via a single-cloud workload.
+        // max_metros=1 forces one metro, so whichever is chosen, the other required cloud (available in
+        // the account but not in the selected set) is a coverage gap — the new HIGH finding.
+        ServerContext ctx = contextWith(List.of(
+                metro("DC", "Ashburn", Region.AMER, DC_LAT, DC_LON, List.of()),
+                metro("SG", "Singapore", Region.APAC, 1.3521, 103.8198, List.of())),
+                List.of(
+                        profile("sp-aws", "Amazon Web Services Direct Connect",
+                                serviceProfileMetro("DC", "us-east-1")),
+                        profile("sp-azure", "Azure ExpressRoute",
+                                serviceProfileMetro("SG", "ap-southeast-1"))));
+
+        ObjectNode payload = call("design_optimize_placement", ctx, """
+                {"workloads": [
+                    {"label": "A", "type": "general_compute", "bandwidth_mbps": 1000, "requires_clouds": ["aws"]},
+                    {"label": "B", "type": "general_compute", "bandwidth_mbps": 1000, "requires_clouds": ["azure"]}],
+                 "sites": [{"label": "HQ", "metro_code": "DC"}],
+                 "require_clouds": ["aws", "azure"],
+                 "constraints": {"max_metros": 1}}
+                """);
+
+        assertEquals(1, payload.get("recommendations").size(), "max_metros caps the set to one metro");
+        assertTrue(riskCategories(payload).contains("REQUIRED_CLOUD_NOT_COVERED"),
+                "one required cloud lives only in the unselected metro, so coverage across the set fails: "
+                        + payload.toPrettyString());
     }
 
     /** The engine's rationale for where a workload landed, from any recommendation in the payload. */
@@ -488,6 +585,45 @@ class DesignToolsTest {
                 "an unweighted site counts as an average site, not as 1.0");
     }
 
+    /**
+     * The multi-region / per-workload-cloud / budget behaviour changed the CONTRACT of three fields,
+     * not just the engine internals. Because the descriptions are the only place a calling model
+     * learns that contract, these assertions pin the corrected wording so a future edit cannot quietly
+     * revert to the pre-change promises (require_clouds "in every metro", redundancy as a mere score
+     * nudge, budget surfacing only within_budget).
+     */
+    @Test
+    @DisplayName("the optimizer schema states the new coverage / hard-spread / budget-finding contract")
+    void optimizerSchemaStatesTheNewContract() {
+        Map<String, Object> schema = tool("design_optimize_placement").getInputSchema();
+
+        // require_clouds is now a coverage-across-the-set guarantee, not a per-metro exclusion filter.
+        String requireClouds = description(child(schema, "require_clouds"));
+        assertTrue(requireClouds.contains("SOMEWHERE in the recommended set"),
+                "require_clouds must read as reachable-somewhere, not present-in-every-metro: " + requireClouds);
+        assertTrue(requireClouds.contains("REQUIRED_CLOUD_NOT_COVERED"),
+                "the coverage guarantee is enforced by this finding, which the description must name: " + requireClouds);
+        assertFalse(requireClouds.contains("excluded from candidacy"),
+                "the old per-metro-exclusion wording must be gone: " + requireClouds);
+
+        // A workload's own requires_clouds now widens candidacy, not only placement.
+        assertTrue(description(child(schema, "workloads", "requires_clouds")).contains("widens CANDIDACY"),
+                "a single-cloud metro can now be a candidate to host a single-cloud workload");
+
+        // multi_region / multi_metro now hard-spread; an impossible spread is a HIGH SINGLE_REGION block.
+        String redundancy = description(child(schema, "constraints", "redundancy"));
+        assertTrue(redundancy.contains("HARD-spread"),
+                "redundancy must state the region round-robin is enforced, not merely scored: " + redundancy);
+        assertTrue(redundancy.contains("SINGLE_REGION"),
+                "an impossible multi_region spread is surfaced as SINGLE_REGION; the description must say so: " + redundancy);
+
+        // The budget ceiling now also raises a BUDGET_EXCEEDED finding, and is still not a filter.
+        String budget = description(child(schema, "constraints", "monthly_budget_max"));
+        assertTrue(budget.contains("not a filter"), "the ceiling is still reported-against, not enforced: " + budget);
+        assertTrue(budget.contains("BUDGET_EXCEEDED"),
+                "an overrun now also surfaces a finding, which the description must name: " + budget);
+    }
+
     @Test
     @DisplayName("design_plan_deployment offers only real package codes and no inert pricing term")
     void planDeploymentSchemaMatchesTheWizard() {
@@ -561,14 +697,47 @@ class DesignToolsTest {
 
     private static Metro metro(String code, String name, double lat, double lon,
                                List<ConnectedMetro> connected) throws Exception {
+        return metro(code, name, Region.AMER, lat, lon, connected);
+    }
+
+    private static Metro metro(String code, String name, Region region, double lat, double lon,
+                               List<ConnectedMetro> connected) throws Exception {
         Metro m = mock(Metro.class);
         when(m.metroId()).thenReturn(MetroId.of(code));
         when(m.getCode()).thenReturn(MetroCode.fromCode(code));
         when(m.getName()).thenReturn(name);
-        when(m.getRegion()).thenReturn(Region.AMER);
+        when(m.getRegion()).thenReturn(region);
         when(m.geoCoordinates()).thenReturn(geo(lat, lon));
         when(m.getConnectedMetros()).thenReturn(connected);
         return m;
+    }
+
+    private static ServiceProfile profile(String uuid, String name, ServiceProfileMetro... metros) {
+        ServiceProfile p = mock(ServiceProfile.class);
+        when(p.getUuid()).thenReturn(uuid);
+        when(p.getName()).thenReturn(name);
+        when(p.metros()).thenReturn(List.of(metros));
+        return p;
+    }
+
+    /**
+     * A fresh {@link ServerContext} over a Mockito gateway carrying exactly the given metros and
+     * service profiles — used by the multi-region and required-cloud-coverage tests, which need a
+     * different metro/region/provider topology than the shared three-AMER-metro fixture.
+     */
+    private ServerContext contextWith(List<Metro> metroList, List<ServiceProfile> profiles) throws Exception {
+        Metros m = mock(Metros.class);
+        when(m.list()).thenReturn(new PaginatedList<>(metroList, null, null, null, null));
+        ServiceProfiles sp = mock(ServiceProfiles.class);
+        when(sp.search()).thenReturn(new PaginatedFilteredList<>(profiles, null, null, null, null));
+        FabricGateway f = mock(FabricGateway.class);
+        when(f.metros()).thenReturn(m);
+        when(f.serviceProfiles()).thenReturn(sp);
+        return ServerContext.builder()
+                .fabric(f)
+                .metroRegistry(MetroRegistry.load(m))
+                .environment(Map.of())
+                .build();
     }
 
     private static ConnectedMetro connectedMetro(String code, double avgLatency) throws Exception {
