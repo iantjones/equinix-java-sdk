@@ -1,14 +1,17 @@
 # Registers the Equinix Intelligence MCP Server in Claude Desktop's config.
 #
-# Claude Desktop rewrites claude_desktop_config.json from memory when it exits,
-# clobbering any edit made while it runs — so this script refuses to run until
-# the app is fully quit (tray icon -> Quit).
+# Claude Desktop rewrites claude_desktop_config.json from its in-memory settings
+# while running and on exit, clobbering any external edit - so this script
+# refuses to run until the app is fully quit (tray icon -> Quit).
 #
 # Usage:
 #   1. Fill EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY in .env.local (copy .env.local.example)
 #   2. Quit Claude Desktop completely
 #   3. .\connect-claude-desktop.ps1
-#   4. Start Claude Desktop; the tools icon in the chat box should list "equinix" with 12 tools
+#   4. Start Claude Desktop; the tools icon in the chat box should list 'equinix' with 12 tools
+#
+# NOTE: keep this file pure ASCII - Windows PowerShell 5.1 parses BOM-less
+# scripts as ANSI, and UTF-8 punctuation decodes into string-breaking smart quotes.
 
 $ErrorActionPreference = "Stop"
 
@@ -19,7 +22,7 @@ if (Get-Process -Name "Claude" -ErrorAction SilentlyContinue) {
 
 $envFile = Join-Path $PSScriptRoot ".env.local"
 if (-not (Test-Path $envFile)) {
-    Write-Error "Missing .env.local — copy .env.local.example to .env.local and fill in EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY."
+    Write-Error "Missing .env.local - copy .env.local.example to .env.local and fill in EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY."
     exit 1
 }
 $vars = @{}
@@ -27,13 +30,13 @@ Get-Content $envFile | ForEach-Object {
     if ($_ -match '^\s*([A-Z_]+)\s*=\s*(.+?)\s*$') { $vars[$Matches[1]] = $Matches[2] }
 }
 if (-not $vars["EQUINIX_ACCESS_KEY"] -or -not $vars["EQUINIX_SECRET_KEY"]) {
-    Write-Error "EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY are empty in .env.local — fill them in first."
+    Write-Error "EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY are empty in .env.local - fill them in first."
     exit 1
 }
 
 $jar = Join-Path $PSScriptRoot "target\equinix-sdk-java-2.0.1-mcp-server.jar"
 if (-not (Test-Path $jar)) {
-    Write-Error "Server jar not found at $jar — build it first: mvn -q package -DskipTests"
+    Write-Error "Server jar not found at $jar - build it first: mvn -q package -DskipTests"
     exit 1
 }
 
