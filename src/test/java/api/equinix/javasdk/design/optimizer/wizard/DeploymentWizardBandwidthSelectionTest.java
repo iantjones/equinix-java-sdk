@@ -254,6 +254,7 @@ class DeploymentWizardBandwidthSelectionTest {
                 .providerConnectionType(ConnectionType.EVPL_VC)
                 .customBandwidthMap(Map.of("DC-AWS", 10000))
                 .customerAsn(65100L)
+                .notifications("noc@example.com")
                 .rateCard(emptyRateCard())
                 .plan();
 
@@ -321,6 +322,7 @@ class DeploymentWizardBandwidthSelectionTest {
                 .bandwidthStrategy(BandwidthStrategy.AGGREGATED)
                 .customBandwidthMap(Map.of("DC-AWS", mbps))
                 .customerAsn(65100L)
+                .notifications("noc@example.com")
                 .rateCard(emptyRateCard())
                 .plan();
     }

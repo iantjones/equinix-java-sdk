@@ -118,6 +118,7 @@ class DeploymentWizardPlanTest {
                 .bandwidthStrategy(strategy)
                 .customerAsn(65100L)
                 .withBFD(true, 300)
+                .notifications("noc@example.com")
                 .rateCard(emptyRateCard())
                 .plan();
     }

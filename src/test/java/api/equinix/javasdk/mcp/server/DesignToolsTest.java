@@ -343,7 +343,8 @@ class DesignToolsTest {
                     "sites": [{"label": "HQ", "metro_code": "DC"}],
                     "require_clouds": ["aws"],
                     "constraints": {"max_metros": 1}},
-                 "deployment": {"customer_asn": 65001, "router_package": "STANDARD"}}
+                 "deployment": {"customer_asn": 65001, "router_package": "STANDARD",
+                                "notifications": ["noc@example.com"]}}
                 """);
 
         assertFalse(plan.get("executed").asBoolean(), "the wizard runs in plan-only mode");
@@ -395,7 +396,8 @@ class DesignToolsTest {
                     "workloads": [{"label": "Web Tier", "type": "general_compute", "bandwidth_mbps": 1000}],
                     "sites": [{"label": "HQ", "metro_code": "DC"}],
                     "require_clouds": ["aws"],
-                    "constraints": {"max_metros": 1}}}
+                    "constraints": {"max_metros": 1}},
+                 "deployment": {"notifications": ["noc@example.com"]}}
                 """);
 
         JsonNode validation = plan.get("validation");
@@ -458,7 +460,8 @@ class DesignToolsTest {
                     "workloads": [{"label": "Web Tier", "type": "general_compute", "bandwidth_mbps": 1000}],
                     "sites": [{"label": "HQ", "metro_code": "DC"}],
                     "require_clouds": ["aws"],
-                    "constraints": {"max_metros": 1}}}
+                    "constraints": {"max_metros": 1}},
+                 "deployment": {"notifications": ["noc@example.com"]}}
                 """);
 
         JsonNode validation = plan.get("validation");

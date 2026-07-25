@@ -187,6 +187,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
                 .routerPackage("STANDARD")
                 .routerNamePrefix("FCR")
                 .providerConnectionType(ConnectionType.EVPL_VC)
+                .notifications("noc@example.com")
                 .rateCard(fixedRateCard())
                 .plan();
 
@@ -345,6 +346,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
                 .routerPackage("STANDARD")
                 .routerNamePrefix("FCR")
                 .providerConnectionType(ConnectionType.EVPL_VC)
+                .notifications("noc@example.com")
                 .rateCard(fixedRateCard());
     }
 
