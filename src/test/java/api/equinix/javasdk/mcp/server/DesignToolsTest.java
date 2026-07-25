@@ -564,6 +564,29 @@ class DesignToolsTest {
         assertTrue(e.getMessage().contains("XX"), e.getMessage());
     }
 
+    @Test
+    @DisplayName("design_estimate_latency renders an unlisted metro's real code, not the UNKNOWN enum sentinel")
+    void latencyUnlistedMetroRendersRealCode() throws Exception {
+        // 'ZZ' is a metro this SDK's MetroCode enum does not list, so Metro.getCode() collapses it
+        // to UNKNOWN. The endpoint used to render String.valueOf(getCode()) — emitting a misleading
+        // "UNKNOWN" code for a metro that has a perfectly real one. The rendered code must be the
+        // exact metroId, so the LLM reading this tool sees the true code.
+        assertEquals(MetroCode.UNKNOWN, MetroCode.fromCode("ZZ"),
+                "precondition: ZZ must be genuinely absent from the MetroCode enum");
+        Metro dc = metro("DC", "Ashburn", DC_LAT, DC_LON, List.of());
+        Metro zz = metro("ZZ", "Newly Added Metro", 48.8566, 2.3522, List.of());
+        ServerContext ctx = contextWith(List.of(dc, zz), List.of());
+
+        ObjectNode payload = call("design_estimate_latency", ctx, "{\"from\": \"DC\", \"to\": \"ZZ\"}");
+
+        JsonNode to = payload.get("to");
+        assertEquals("metro", to.get("kind").asText());
+        assertEquals("ZZ", to.get("code").asText(),
+                "the real metro code is rendered, not the UNKNOWN enum sentinel: " + payload.toPrettyString());
+        assertFalse(to.get("code").asText().equalsIgnoreCase("UNKNOWN"),
+                "a metro absent from the MetroCode enum must not surface as 'UNKNOWN'");
+    }
+
     // ── design_estimate_tco ─────────────────────────────────────────────────
 
     @Test

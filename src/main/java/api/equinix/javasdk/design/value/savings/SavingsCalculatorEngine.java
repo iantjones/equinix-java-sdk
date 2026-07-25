@@ -1,5 +1,6 @@
 package api.equinix.javasdk.design.value.savings;
 
+import api.equinix.javasdk.design.value.CurrencyReconciler;
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
 import api.equinix.javasdk.design.value.ratecard.EgressRate;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
@@ -32,7 +33,12 @@ final class SavingsCalculatorEngine {
         // ── Egress rates (internet vs private) ──
         Optional<EgressRate> internet = rateCard.egress(b.getProvider(), b.getRegion(), EgressPath.INTERNET, term);
         Optional<EgressRate> priv = rateCard.egress(b.getProvider(), b.getRegion(), EgressPath.PRIVATE, term);
-        boolean egressPriced = internet.isPresent() && priv.isPresent();
+        Currency internetCur = internet.map(EgressRate::getCurrency).orElse(null);
+        Currency privCur = priv.map(EgressRate::getCurrency).orElse(null);
+        // internet − private is a subtraction, so the two rates must be in one currency. If they are
+        // known to differ, egress savings cannot be computed (rather than fabricated).
+        boolean egressCurrencyMismatch = CurrencyReconciler.knownDifferent(internetCur, privCur);
+        boolean egressPriced = internet.isPresent() && priv.isPresent() && !egressCurrencyMismatch;
 
         BigDecimal internetRate = internet.map(EgressRate::getPricePerGb).orElse(BigDecimal.ZERO);
         BigDecimal privateRate = priv.map(EgressRate::getPricePerGb).orElse(BigDecimal.ZERO);
@@ -40,18 +46,22 @@ final class SavingsCalculatorEngine {
         BigDecimal privateCost = privateRate.multiply(gb);
         BigDecimal egressSavings = egressPriced ? internetCost.subtract(privateCost) : BigDecimal.ZERO;
         if (!egressPriced) {
-            // Only one (or neither) egress rate resolved — don't surface a half-populated
-            // comparison; zero the per-line figures so the report is internally consistent.
+            // Only one (or neither) egress rate resolved, or the two are in different currencies —
+            // don't surface a half-populated or cross-currency comparison; zero the per-line figures
+            // so the report is internally consistent.
             internetRate = BigDecimal.ZERO;
             privateRate = BigDecimal.ZERO;
             internetCost = BigDecimal.ZERO;
             privateCost = BigDecimal.ZERO;
         }
+        // The currency egress figures (and thus egressSavings) are expressed in.
+        Currency egressCurrency = internetCur != null ? internetCur : privCur;
 
         // ── Equinix interconnect cost ──
         Optional<PriceQuote> connection = rateCard.connection(
                 b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
         boolean equinixPriced = connection.isPresent();
+        Currency equinixCurrency = connection.map(PriceQuote::getCurrency).orElse(null);
         BigDecimal equinixMonthly = BigDecimal.ZERO;
         BigDecimal equinixSetup = BigDecimal.ZERO;
         if (connection.isPresent()) {
@@ -61,39 +71,65 @@ final class SavingsCalculatorEngine {
         if (b.isIncludeRouter()) {
             Optional<PriceQuote> router = rateCard.cloudRouter(b.getRouterPackage(), b.getMetro(), term);
             if (router.isPresent()) {
-                equinixMonthly = equinixMonthly.add(router.get().getMonthlyRecurring());
-                equinixSetup = equinixSetup.add(router.get().getNonRecurring());
+                // Connection + router are summed, so they too must share a currency.
+                if (CurrencyReconciler.knownDifferent(equinixCurrency, router.get().getCurrency())) {
+                    equinixPriced = false;
+                } else {
+                    equinixMonthly = equinixMonthly.add(router.get().getMonthlyRecurring());
+                    equinixSetup = equinixSetup.add(router.get().getNonRecurring());
+                }
             } else {
                 equinixPriced = false;
             }
         }
 
         // ── Net savings & break-even ──
-        BigDecimal netMonthly = egressSavings.subtract(equinixMonthly);
-        BigDecimal annualNet = netMonthly.multiply(BigDecimal.valueOf(12));
-        BigDecimal firstYearNet = annualNet.subtract(equinixSetup);
+        // netMonthly nets the egress saving against the interconnect cost, so it is only meaningful
+        // when the two are in the same currency. When they are known to differ, the net (and the
+        // figures derived from it) are omitted rather than reported as a cross-currency subtraction.
+        boolean crossCurrencyMismatch = CurrencyReconciler.knownDifferent(egressCurrency, equinixCurrency);
+        BigDecimal netMonthly = null;
+        BigDecimal annualNet = null;
+        BigDecimal firstYearNet = null;
+        if (!crossCurrencyMismatch) {
+            netMonthly = egressSavings.subtract(equinixMonthly);
+            annualNet = netMonthly.multiply(BigDecimal.valueOf(12));
+            firstYearNet = annualNet.subtract(equinixSetup);
+        }
 
         BigDecimal perGbDelta = internetRate.subtract(privateRate);
-        BigDecimal breakEvenGb = (egressPriced && perGbDelta.signum() > 0)
+        // break-even divides the interconnect monthly (equinix currency) by the per-GB delta (egress
+        // currency), so it too needs a single currency.
+        BigDecimal breakEvenGb = (egressPriced && !crossCurrencyMismatch && perGbDelta.signum() > 0)
                 ? equinixMonthly.divide(perGbDelta, 2, RoundingMode.HALF_UP)
                 : null;
-        BigDecimal paybackMonths = (netMonthly.signum() > 0 && equinixSetup.signum() > 0)
+        BigDecimal paybackMonths = (netMonthly != null && netMonthly.signum() > 0 && equinixSetup.signum() > 0)
                 ? equinixSetup.divide(netMonthly, 1, RoundingMode.HALF_UP)
                 : null;
 
         Currency currency = resolveCurrency(internet, priv, connection);
-        boolean complete = egressPriced && equinixPriced;
+        boolean complete = egressPriced && equinixPriced && !crossCurrencyMismatch;
 
         StringBuilder disclaimer = new StringBuilder(
                 "Design-time estimate, not a quote. Equinix interconnect costs use live Fabric pricing where "
                         + "available; egress rates are indicative reference or caller-supplied figures. Actual costs "
                         + "depend on region, tiering, volume, and contract terms. Excludes per-provider free-tier "
                         + "egress allowances and compute/storage costs.");
-        if (!egressPriced) {
+        if (egressCurrencyMismatch) {
+            disclaimer.append(" The internet (").append(internetCur).append(") and private (").append(privCur)
+                    .append(") egress rates are in different currencies, so egress savings could not be computed "
+                            + "without an FX rate.");
+        } else if (!egressPriced) {
             disclaimer.append(" Egress rates were unavailable from the rate card, so egress savings could not be computed.");
         }
         if (!equinixPriced) {
             disclaimer.append(" The Equinix interconnect cost was unavailable from the rate card.");
+        }
+        if (crossCurrencyMismatch) {
+            disclaimer.append(" Egress figures are in ").append(egressCurrency)
+                    .append(" and the Equinix interconnect cost is in ").append(equinixCurrency)
+                    .append("; a net saving cannot be computed across currencies without an FX rate, so the net, "
+                            + "annual, first-year, break-even, and payback figures are omitted.");
         }
 
         return SavingsEstimate.builder()

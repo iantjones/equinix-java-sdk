@@ -43,7 +43,17 @@ public enum DiversityRating {
 
     POOR("Poor", 0.25, 150),
 
-    CRITICAL("Critical", 0.0, 0);
+    CRITICAL("Critical", 0.0, 0),
+
+    /**
+     * The distance between the two metros could not be determined (no facility or Fabric metro
+     * coordinates were available for at least one of them). This is an <em>absence</em> of data, not a
+     * proximity finding: it is never returned by {@link #fromDistance(double)} and must be excluded from
+     * same-site detection and diversity scoring rather than treated as {@code 0 km} (which would falsely
+     * read as CRITICAL "same-site"). Its {@link #score} is a placeholder and must not be averaged into a
+     * resiliency score.
+     */
+    UNKNOWN("Unknown (distance unavailable)", 0.0, Integer.MIN_VALUE);
 
     private final String displayName;
 
@@ -53,6 +63,9 @@ public enum DiversityRating {
 
     /**
      * Rates geographic diversity based on the distance between two metros.
+     *
+     * <p>Only ever returns one of the five distance-based ratings; {@link #UNKNOWN} is reserved for the
+     * caller to assign when the distance itself is unavailable and is never produced here.</p>
      *
      * @param distanceKm the distance between primary and backup metros in kilometers
      * @return the diversity rating for the given distance

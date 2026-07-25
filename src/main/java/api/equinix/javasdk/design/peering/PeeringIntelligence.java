@@ -72,7 +72,6 @@ import java.util.*;
  *     .customerAsn(65100L)
  *     .includeCapacity(true)
  *     .includePolicies(true)
- *     .includeFabricConnections(true)
  *     .includeResiliency(true)
  *     .analyze();
  *
@@ -135,7 +134,6 @@ public class PeeringIntelligence {
         private long customerAsn;
         private boolean includeCapacity = true;
         private boolean includePolicies = true;
-        private boolean includeFabricConnections;
         private boolean includeResiliency;
 
         /**
@@ -310,21 +308,6 @@ public class PeeringIntelligence {
         }
 
         /**
-         * Enables Equinix Fabric service profile cross-referencing.
-         *
-         * <p>When enabled, the engine queries the Fabric API for service profiles
-         * matching the target ASNs, adding Fabric connection availability to the
-         * presence matrix and unified connectivity views.</p>
-         *
-         * @param include {@code true} to cross-reference Fabric service profiles
-         * @return this builder
-         */
-        public Builder includeFabricConnections(boolean include) {
-            this.includeFabricConnections = include;
-            return this;
-        }
-
-        /**
          * Enables resiliency analysis (blast radius, correlated failures, failover paths).
          *
          * <p>Requires {@link #customerMetros(MetroCode...)} to have been called with
@@ -340,14 +323,16 @@ public class PeeringIntelligence {
         }
 
         /**
-         * Enables all analysis features (capacity, policies, Fabric, resiliency).
+         * Enables every analysis feature the engine actually performs: IX port-capacity analysis,
+         * peering-policy analysis, and resiliency analysis. (Capacity and policies are already on by
+         * default; this method additionally turns on the default-off resiliency analysis, which also
+         * requires at least one {@link #customerMetros(MetroCode...) customer metro}.)
          *
          * @return this builder
          */
         public Builder includeAll() {
             this.includeCapacity = true;
             this.includePolicies = true;
-            this.includeFabricConnections = true;
             this.includeResiliency = true;
             return this;
         }
@@ -374,7 +359,6 @@ public class PeeringIntelligence {
                     .customerAsn(customerAsn)
                     .includeCapacity(includeCapacity)
                     .includePolicies(includePolicies)
-                    .includeFabricConnections(includeFabricConnections)
                     .includeResiliency(includeResiliency)
                     .build();
 

@@ -53,7 +53,7 @@ public class PresenceCell {
 
     int ixSessionCount;
 
-    int totalIxCapacityMbps;
+    long totalIxCapacityMbps;
 
     boolean routeServerPeer;
 
@@ -84,10 +84,7 @@ public class PresenceCell {
     public String detailedSymbol() {
         StringBuilder sb = new StringBuilder();
         if (ixPresent) {
-            sb.append("IX:");
-            if (totalIxCapacityMbps >= 100000) sb.append(totalIxCapacityMbps / 1000).append("G");
-            else if (totalIxCapacityMbps >= 1000) sb.append(totalIxCapacityMbps / 1000).append("G");
-            else sb.append(totalIxCapacityMbps).append("M");
+            sb.append("IX:").append(compactCapacity(totalIxCapacityMbps));
             if (routeServerPeer) sb.append("*");
         }
         if (fabricAvailable) {
@@ -99,5 +96,23 @@ public class PresenceCell {
             return "---";
         }
         return sb.toString();
+    }
+
+    /**
+     * Compact capacity label for matrix cells: whole Gbps without a decimal ({@code "100G"}), fractional
+     * Gbps with one decimal ({@code "10.5G"}), and sub-Gbps capacity shown in Mbps ({@code "500M"})
+     * rather than truncating to a misleading {@code "0G"}.
+     *
+     * @param mbps the capacity in megabits per second
+     * @return a compact capacity string
+     */
+    private static String compactCapacity(long mbps) {
+        if (mbps < 1000) {
+            return mbps + "M";
+        }
+        double gbps = mbps / 1000.0;
+        return (gbps == Math.rint(gbps))
+                ? String.format("%.0fG", gbps)
+                : String.format("%.1fG", gbps);
     }
 }

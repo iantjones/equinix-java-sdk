@@ -780,7 +780,13 @@ final class DesignToolFactory {
             ObjectNode node = mapper.createObjectNode();
             if (metro != null) {
                 node.put("kind", "metro");
-                node.put("code", String.valueOf(metro.getCode()));
+                // Render the exact metro code (metroId), not getCode(): getCode() returns the
+                // MetroCode enum, which collapses any metro this SDK's enum does not list to
+                // UNKNOWN — emitting a misleading "UNKNOWN" code for a metro that has a real one.
+                // metroId() preserves the raw code verbatim, matching how metros are identified in
+                // the other handlers (e.g. getMetroId()). Only registry-resolved metros reach here,
+                // and the registry never holds a null-code metro, so metroId() is non-null.
+                node.put("code", metro.metroId().code());
                 node.put("name", metro.getName());
             }
             else {

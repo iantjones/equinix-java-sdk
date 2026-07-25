@@ -49,6 +49,13 @@ public class PlanValueRealization {
         BigDecimal privateMonthlyCost;
         BigDecimal monthlySavings;
         boolean priced;
+
+        /**
+         * The currency of this provider's egress figures, which need not match other providers' —
+         * different clouds/regions can be priced in different currencies. {@code null} for an
+         * unpriced provider. Rendered per-row so a multi-currency breakdown is never mislabelled.
+         */
+        String currency;
     }
 
     private static String money(BigDecimal v, String currency) {
@@ -68,11 +75,14 @@ public class PlanValueRealization {
         sb.append("## Deployment Value Realization\n\n");
         sb.append("| Provider | Egress (GB/mo) | Internet | Private | Saving |\n|---|---|---|---|---|\n");
         for (ProviderEgressSaving p : perProvider) {
+            // Each provider's figures are labelled in their own currency (falling back to the summary
+            // currency when unset), so a mixed-currency breakdown never mislabels a row.
+            String rowCurrency = p.getCurrency() != null ? p.getCurrency() : currency;
             sb.append("| ").append(p.getProvider() == null ? "—" : p.getProvider().name())
                     .append(" | ").append(p.getMonthlyEgressGb().setScale(0, RoundingMode.HALF_UP).toPlainString())
-                    .append(" | ").append(p.isPriced() ? money(p.getInternetMonthlyCost(), currency) : "n/a")
-                    .append(" | ").append(p.isPriced() ? money(p.getPrivateMonthlyCost(), currency) : "n/a")
-                    .append(" | ").append(p.isPriced() ? money(p.getMonthlySavings(), currency) : "n/a")
+                    .append(" | ").append(p.isPriced() ? money(p.getInternetMonthlyCost(), rowCurrency) : "n/a")
+                    .append(" | ").append(p.isPriced() ? money(p.getPrivateMonthlyCost(), rowCurrency) : "n/a")
+                    .append(" | ").append(p.isPriced() ? money(p.getMonthlySavings(), rowCurrency) : "n/a")
                     .append(" |\n");
         }
         sb.append("\n");

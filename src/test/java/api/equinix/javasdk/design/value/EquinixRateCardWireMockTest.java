@@ -160,4 +160,70 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         assertEquals(0, new BigDecimal("300.00").compareTo(q.getMonthlyRecurring()));
         assertEquals(0, new BigDecimal("1000.00").compareTo(q.getNonRecurring()));
     }
+
+    @Test
+    @DisplayName("C1: a 2-letter metro code does not false-match an unrelated row via substring")
+    void metroCodeDoesNotFalseMatchUnrelatedRow() {
+        // Two 1 Gbps EVPL_VC rows. The first is a DC/SV "Gateway" row (999) whose name/code
+        // merely CONTAINS the substring "at" (in "Gateway"); the second is the genuine AT
+        // (Atlanta) row (175). Requesting metro AT must pick the real AT row via a whole-token
+        // match — never false-match "Gateway" as the AT-specific result and return 999.
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_metrotoken.json");
+
+        PriceQuote q = EquinixRateCard.of(fabric)
+                .connection(ConnectionType.EVPL_VC, 1000, MetroCode.AT, Term.MONTH_12).orElseThrow();
+
+        assertEquals(0, new BigDecimal("175.00").compareTo(q.getMonthlyRecurring()),
+                "metro AT must match the real AT row, not substring-match 'Gateway'");
+        assertNotEquals(0, new BigDecimal("999.00").compareTo(q.getMonthlyRecurring()),
+                "the wrong-metro 'Gateway' row must not be returned as the AT-specific quote");
+        assertTrue(q.getNote().contains("EVPL_VC_AT_FR_1000"));
+    }
+
+    @Test
+    @DisplayName("C3: a row with no priced charge yields empty (not a phantom $0) and defers to a priced row")
+    void unpricedRowYieldsEmptyNotPhantomZero() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_unpriced.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        // 400 Mbps: only an all-null-price row exists. It must NOT resolve to a present $0
+        // EQUINIX_LIVE quote — it must be empty so the caller defers to the fallback.
+        Optional<PriceQuote> nullPriced = card.connection(ConnectionType.EVPL_VC, 400, MetroCode.DC, Term.MONTH_12);
+        assertTrue(nullPriced.isEmpty(),
+                "a row whose charges are all null-priced must yield empty, not a phantom $0 quote");
+
+        // 300 Mbps: an empty-charges row precedes a genuinely priced row. The unpriced row is
+        // skipped and the priced row (99.00) wins — proving "no priced charge" is skipped, not
+        // returned as $0.
+        PriceQuote priced = card.connection(ConnectionType.EVPL_VC, 300, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("99.00").compareTo(priced.getMonthlyRecurring()),
+                "the empty-charges row must be skipped in favour of the priced 300 Mbps row");
+        assertTrue(priced.getNote().contains("EVPL_VC_DC_PRICED_300"));
+    }
+
+    @Test
+    @DisplayName("C5: a failed catalogue fetch is not cached — the next lookup retries and can succeed")
+    void failedFetchIsNotCachedAndRetriesNextLookup() {
+        // First fetch fails with a 500: the card yields empty and flags the live source unavailable,
+        // but must NOT cache the failure for its lifetime.
+        stubErrorInline(wireMock, "/fabric/v4/prices/search",
+                500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12).isEmpty(),
+                "a failed fetch must yield empty, not throw");
+        assertTrue(card.isLiveSourceUnavailable(),
+                "a failed fetch must expose the 'live source unavailable' signal");
+
+        // The catalogue endpoint recovers. Because the failure was not memoized, the next lookup
+        // re-fetches and now resolves the live price — a transient error did not poison the card.
+        resetStubs();
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices.json");
+
+        PriceQuote q = card.connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("250.00").compareTo(q.getMonthlyRecurring()),
+                "the retried fetch must resolve the live price, proving the failure was not cached");
+        assertFalse(card.isLiveSourceUnavailable(),
+                "a subsequent successful fetch must clear the 'live source unavailable' signal");
+    }
 }

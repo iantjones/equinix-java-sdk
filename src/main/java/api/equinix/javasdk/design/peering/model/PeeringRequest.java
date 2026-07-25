@@ -51,7 +51,5 @@ public class PeeringRequest {
 
     boolean includePolicies;
 
-    boolean includeFabricConnections;
-
     boolean includeResiliency;
 }

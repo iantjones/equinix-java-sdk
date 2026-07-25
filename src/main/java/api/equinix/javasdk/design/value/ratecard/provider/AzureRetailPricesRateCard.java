@@ -30,7 +30,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,6 +68,13 @@ public final class AzureRetailPricesRateCard implements RateCard {
     public static final String DEFAULT_ENDPOINT = "https://prices.azure.com/api/retail/prices";
 
     private static final Currency USD = Currency.getInstance("USD");
+
+    /**
+     * Safety bound on the number of {@code NextPageLink} hops. The Retail Prices API pages at
+     * 100 items; a serviceName-scoped result set is at most a few hundred meters, so this cap is
+     * generous headroom that only ever trips on an unexpected runaway.
+     */
+    private static final int MAX_PAGES = 50;
 
     private final String endpoint;
     private final ProviderPricingHttpClient http;
@@ -125,13 +134,38 @@ public final class AzureRetailPricesRateCard implements RateCard {
         String url = endpoint + "?currencyCode='USD'&$filter="
                 + URLEncoder.encode(filter.toString(), StandardCharsets.UTF_8);
 
-        Optional<JsonNode> root = http.getJson(url);
-        if (root.isEmpty()) {
+        // The Retail Prices API returns at most 100 items per response and hands back an absolute
+        // NextPageLink for the next page (null/absent on the last). Follow it, accumulating Items
+        // across every page BEFORE selecting: the headline (internet) and lowest-metered
+        // (ExpressRoute) figures must be computed over the whole result set, not just page one —
+        // otherwise the "lowest ExpressRoute egress" could miss a cheaper meter on a later page.
+        List<JsonNode> items = new ArrayList<>();
+        String next = url;
+        int page = 0;
+        for (; next != null && !next.isEmpty() && page < MAX_PAGES; page++) {
+            Optional<JsonNode> root = http.getJson(next);
+            if (root.isEmpty()) {
+                // A genuine mid-pagination fetch failure: an aggregate (headline / lowest) computed
+                // over a partial result set would be a wrong number labelled authoritative, so
+                // surface no rate — a layered card falls back to the next source.
+                return Optional.empty();
+            }
+            JsonNode body = root.get();
+            JsonNode pageItems = body.get("Items");
+            if (pageItems != null && pageItems.isArray()) {
+                for (JsonNode item : pageItems) {
+                    items.add(item);
+                }
+            }
+            JsonNode link = body.get("NextPageLink");
+            next = (link == null || link.isNull()) ? null : link.asText("");
+        }
+        if (next != null && !next.isEmpty()) {
+            // Pagination exceeded the safety cap without exhausting the result set; we can't trust
+            // an aggregate over a truncated catalogue, so decline rather than emit a partial min/max.
             return Optional.empty();
         }
-
-        JsonNode items = root.get().get("Items");
-        if (items == null || !items.isArray()) {
+        if (items.isEmpty()) {
             return Optional.empty();
         }
 
@@ -152,7 +186,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
      * the pricier Microsoft-Global-Network routing and from inter-region / inter-AZ transfers.
      * Falls back to the highest-priced "data transfer out" GB meter if no routing-preference tag.
      */
-    private static JsonNode selectInternet(JsonNode items) {
+    private static JsonNode selectInternet(Iterable<JsonNode> items) {
         JsonNode preferred = null;
         JsonNode fallback = null;
         double preferredPrice = -1d;
@@ -184,7 +218,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
      * positive per-GB rate (the best-case zone) — the savings-relevant figure. Skips the
      * "Unlimited Data" flat-fee plans (which carry a $0 per-GB meter).
      */
-    private static JsonNode selectPrivate(JsonNode items) {
+    private static JsonNode selectPrivate(Iterable<JsonNode> items) {
         JsonNode metered = null;
         JsonNode fallback = null;
         double meteredPrice = Double.MAX_VALUE;

@@ -263,8 +263,12 @@ public final class DeploymentWizard {
         }
 
         /**
-         * Sets a custom bandwidth map for {@link BandwidthStrategy#CUSTOM}.
-         * Keys are connection names or provider labels, values are bandwidth in Mbps.
+         * Sets a custom bandwidth map for {@link BandwidthStrategy#CUSTOM}. Values are bandwidth in
+         * Mbps; keys are matched per (metro, provider) most-specific-first as either
+         * {@code "<metroId>-<providerLabel>"} (a per-metro-per-provider override, e.g.
+         * {@code "DC-Amazon Web Services"}) or {@code "<providerLabel>"} (that provider in every
+         * metro, e.g. {@code "Amazon Web Services"}). A (metro, provider) connection with no matching
+         * key is sized by the normal per-workload aggregation instead of a fabricated default.
          *
          * @param bandwidthMap the custom bandwidth mapping
          * @return this builder for method chaining

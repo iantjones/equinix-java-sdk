@@ -1,0 +1,27 @@
+{
+  "lastUpdated": "2026-06-29T00:00:00+00:00",
+  "hasMore": false,
+  "limit": 1,
+  "offset": 1,
+  "count": 1,
+  "items": [
+    {
+      "partNumber": "B88327",
+      "displayName": "Outbound Data Transfer - Originating in North America, Europe, and UK",
+      "metricName": "Gigabyte Outbound Data Transfer Per Month",
+      "serviceCategory": "Networking",
+      "currencyCodeLocalizations": [
+        {
+          "currencyCode": "USD",
+          "prices": [
+            { "model": "PAY_AS_YOU_GO", "value": 0, "rangeMin": 0 },
+            { "model": "PAY_AS_YOU_GO", "value": 0.0085, "rangeMin": 10240 }
+          ]
+        }
+      ]
+    }
+  ],
+  "links": [
+    { "rel": "self", "href": "self-link" }
+  ]
+}

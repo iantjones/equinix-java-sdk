@@ -50,7 +50,7 @@ public class FailoverPath {
 
     ConnectivityType connectivityType;
 
-    int ixCapacityMbps;
+    long ixCapacityMbps;
 
     boolean routeServerAvailable;
 

@@ -103,13 +103,31 @@ public class UnifiedConnectivityView {
         for (MetroConnectivity mc : metroConnectivity) {
             sb.append("| ").append(mc.getMetro().code());
             sb.append(" | ").append(mc.isHasIxPeering() ? "Yes" : "No");
-            sb.append(" | ").append(mc.isHasIxPeering() ? mc.getIxCapacityMbps() / 1000 + "G" : "-");
+            sb.append(" | ").append(mc.isHasIxPeering() ? formatGbps(mc.getIxCapacityMbps()) : "-");
             sb.append(" | ").append(mc.isRouteServerAvailable() ? "Yes" : "No");
             sb.append(" | ").append(mc.isHasFabric() ? "Yes" : "No");
             sb.append(" | ").append(mc.getConnectivityType().getDisplayName());
             sb.append(" |\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * Formats an Mbps capacity as Gbps without truncating sub-Gbps figures: whole Gbps without a decimal
+     * ({@code "100G"}), fractional Gbps with one decimal ({@code "10.5G"}), and sub-Gbps capacity in Mbps
+     * ({@code "500M"}) rather than collapsing to a misleading {@code "0G"}.
+     *
+     * @param mbps the capacity in megabits per second
+     * @return a formatted capacity string
+     */
+    private static String formatGbps(long mbps) {
+        if (mbps > 0 && mbps < 1000) {
+            return mbps + "M";
+        }
+        double gbps = mbps / 1000.0;
+        return (gbps == Math.rint(gbps))
+                ? String.format("%.0fG", gbps)
+                : String.format("%.1fG", gbps);
     }
 
     /**
@@ -122,7 +140,7 @@ public class UnifiedConnectivityView {
         ConnectivityType connectivityType;
         boolean hasIxPeering;
         boolean hasFabric;
-        int ixCapacityMbps;
+        long ixCapacityMbps;
         boolean routeServerAvailable;
         boolean bfdAvailable;
         List<IxPresenceDetail> ixSessions;

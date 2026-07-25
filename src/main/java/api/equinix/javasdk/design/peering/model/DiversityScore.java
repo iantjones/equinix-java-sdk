@@ -41,7 +41,24 @@ public class DiversityScore {
 
     MetroId backupMetro;
 
+    /**
+     * Great-circle distance between the two metros in kilometers.
+     *
+     * <p><b>Only meaningful when {@link #distanceUnavailable} is {@code false}.</b> When the distance
+     * could not be computed (coordinates missing for at least one metro) this is {@link Double#NaN} — a
+     * deliberate non-value, never {@code 0}, so it can never be mistaken for a "same-site" 0&nbsp;km
+     * proximity finding.</p>
+     */
     double distanceKm;
+
+    /**
+     * {@code true} when the geographic distance could not be determined because at least one metro has
+     * no known Equinix-facility or Fabric coordinate. Such a pair is honestly <em>unassessed</em>: it is
+     * excluded from same-site detection and from the overall resiliency score, its {@link #rating} is
+     * {@link DiversityRating#UNKNOWN}, and {@link #distanceKm}/{@link #estimatedRttMs} are
+     * {@link Double#NaN} rather than a fabricated {@code 0}.
+     */
+    boolean distanceUnavailable;
 
     /**
      * Estimated round-trip fibre latency between the two metros, in milliseconds — the

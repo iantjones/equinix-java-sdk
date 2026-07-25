@@ -249,8 +249,12 @@ public final class Fabric extends EquinixClient implements FabricGateway {
             try {
                 metroRegistry();
             }
-            catch (RuntimeException ignored) {
-                // best-effort eager load; metroRegistry() remains available lazily
+            catch (RuntimeException e) {
+                // Best-effort eager load: authentication still succeeds and metroRegistry() will
+                // retry lazily on first access. Log the reason at DEBUG so the failure is visible
+                // rather than silently swallowed.
+                log.debug("Eager metro-registry warm after authenticate() failed; the registry will "
+                        + "load lazily on first access. Cause: {}", e.toString());
             }
         }
     }

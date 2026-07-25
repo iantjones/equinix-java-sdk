@@ -18,6 +18,7 @@ package api.equinix.javasdk.design.value;
 
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
+import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.ReferenceRateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
@@ -63,12 +64,25 @@ class ReferenceRateCardTest {
         // 5000 Mbps has no exact tier -> ceiling to the 10G tier (350).
         assertEquals(0, new BigDecimal("350").compareTo(
                 CARD.connection(ConnectionType.EVPL_VC, 5_000, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
-        // 40000 Mbps is above the largest tier -> floor back to the 10G tier (350).
-        assertEquals(0, new BigDecimal("350").compareTo(
-                CARD.connection(ConnectionType.EVPL_VC, 40_000, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
         // 50 Mbps is below the smallest tier -> ceiling up to the 100 Mbps tier (75).
         assertEquals(0, new BigDecimal("75").compareTo(
                 CARD.connection(ConnectionType.EVPL_VC, 50, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
+    }
+
+    @Test
+    void connectionAboveTopTierIsExtrapolatedAndTaggedNotSilentlyUnderpriced() {
+        // 40000 Mbps exceeds the largest tabulated tier (10000 Mbps @ 350). It must NOT be
+        // silently priced at the 10G flat rate (the old floor-back bug). It is extrapolated
+        // linearly from the top tier's per-Mbps rate: 350 * 40000 / 10000 = 1400, and the
+        // quote's note clearly flags it as an extrapolation rather than a tabulated figure.
+        PriceQuote aboveTop = CARD.connection(ConnectionType.EVPL_VC, 40_000, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("1400").compareTo(aboveTop.getMonthlyRecurring()),
+                "above-top-tier bandwidth must not be silently under-priced at the 10G flat rate");
+        assertNotEquals(0, new BigDecimal("350").compareTo(aboveTop.getMonthlyRecurring()),
+                "must not return the top tier's flat price for a request above every tier");
+        assertTrue(aboveTop.getNote().toLowerCase().contains("extrapolat"),
+                "an above-top-tier price must be clearly tagged as extrapolated");
+        assertEquals(PriceSource.REFERENCE, aboveTop.getSource());
     }
 
     @Test
