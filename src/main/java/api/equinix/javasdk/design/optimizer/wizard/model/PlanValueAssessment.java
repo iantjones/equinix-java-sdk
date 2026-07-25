@@ -1,6 +1,7 @@
 package api.equinix.javasdk.design.optimizer.wizard.model;
 
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
+import api.equinix.javasdk.design.value.CurrencyReconciler;
 import api.equinix.javasdk.design.value.ratecard.EgressPath;
 import api.equinix.javasdk.design.value.ratecard.EgressRate;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
@@ -72,27 +73,35 @@ public final class PlanValueAssessment {
                 ? pricing.getMonthlyTotal() : BigDecimal.ZERO;
         BigDecimal planSetup = pricing != null && pricing.getSetupTotal() != null
                 ? pricing.getSetupTotal() : BigDecimal.ZERO;
-        String currency = pricing != null && pricing.getCurrency() != null ? pricing.getCurrency() : "USD";
+        String planCurrency = pricing != null && pricing.getCurrency() != null ? pricing.getCurrency() : "USD";
 
         List<PlanValueRealization.ProviderEgressSaving> perProvider = new ArrayList<>();
-        BigDecimal totalSavings = BigDecimal.ZERO;
+        // Per-provider egress savings are only summable when the providers share a currency (different
+        // clouds/regions can quote different currencies), and the aggregate is only nettable against
+        // the plan's interconnect cost when that too matches. The reconciler tracks both.
+        CurrencyReconciler egressRecon = CurrencyReconciler.create();
 
         for (EgressInput input : egressInputs) {
             Optional<EgressRate> internet = rc.egress(input.provider, null, EgressPath.INTERNET, term);
             Optional<EgressRate> priv = rc.egress(input.provider, null, EgressPath.PRIVATE, term);
-            boolean priced = internet.isPresent() && priv.isPresent();
+            java.util.Currency internetCur = internet.map(EgressRate::getCurrency).orElse(null);
+            java.util.Currency privCur = priv.map(EgressRate::getCurrency).orElse(null);
+            // internet − private is a subtraction, so this provider is only priced when both rates
+            // resolve AND agree on a currency.
+            boolean priced = internet.isPresent() && priv.isPresent()
+                    && !CurrencyReconciler.knownDifferent(internetCur, privCur);
 
             BigDecimal internetCost = BigDecimal.ZERO;
             BigDecimal privateCost = BigDecimal.ZERO;
             BigDecimal savings = BigDecimal.ZERO;
+            String providerCurrency = null;
             if (priced) {
                 internetCost = internet.get().costFor(input.gigabytes);
                 privateCost = priv.get().costFor(input.gigabytes);
                 savings = internetCost.subtract(privateCost);
-                totalSavings = totalSavings.add(savings);
-                if (internet.get().getCurrency() != null) {
-                    currency = internet.get().getCurrency().getCurrencyCode();
-                }
+                providerCurrency = internetCur != null ? internetCur.getCurrencyCode()
+                        : (privCur != null ? privCur.getCurrencyCode() : null);
+                egressRecon.add(providerCurrency, savings, BigDecimal.ZERO);
             }
 
             perProvider.add(PlanValueRealization.ProviderEgressSaving.builder()
@@ -102,16 +111,54 @@ public final class PlanValueAssessment {
                     .privateMonthlyCost(privateCost)
                     .monthlySavings(savings)
                     .priced(priced)
+                    .currency(providerCurrency)
                     .build());
         }
 
-        BigDecimal net = totalSavings.subtract(planMonthly);
-        BigDecimal annual = net.multiply(BigDecimal.valueOf(12));
-        BigDecimal firstYear = annual.subtract(planSetup);
+        boolean egressMixed = egressRecon.isMixed();
+        String egressCurrency = egressRecon.soleCurrency();
+        // Cross-currency: egress savings versus the plan interconnect cost.
+        boolean crossMismatch = !egressMixed && CurrencyReconciler.knownDifferent(egressCurrency, planCurrency);
+        boolean reconciled = !egressMixed && !crossMismatch;
 
+        BigDecimal totalSavings;
+        BigDecimal net;
+        BigDecimal annual;
+        BigDecimal firstYear;
+        String currency;
         String disclaimer = "Egress savings use indicative/caller-supplied per-GB rates; the plan's interconnect "
                 + "cost reflects the plan's pricing (live Fabric pricing where available). Design-time estimate, "
                 + "not a quote. Excludes compute, storage, and per-provider free-tier allowances.";
+
+        if (reconciled) {
+            totalSavings = egressRecon.monthlyTotal().orElse(BigDecimal.ZERO);
+            net = totalSavings.subtract(planMonthly);
+            annual = net.multiply(BigDecimal.valueOf(12));
+            firstYear = annual.subtract(planSetup);
+            // Egress currency when any provider priced, else the plan's currency (both equal here).
+            currency = egressCurrency != null ? egressCurrency : planCurrency;
+        } else {
+            // Do not fabricate a cross-currency total or net. Keep the per-provider figures (each in
+            // its own currency) and the plan cost (in the plan's currency), and null the aggregates so
+            // they render as "n/a" rather than a wrong number.
+            totalSavings = null;
+            net = null;
+            annual = null;
+            firstYear = null;
+            currency = planCurrency;
+            if (egressMixed) {
+                disclaimer += " Provider egress savings are quoted in multiple currencies ("
+                        + egressRecon.describeCurrencies() + "): " + egressRecon.describeMonthlySubtotals()
+                        + " per month. A single total and net saving cannot be formed across currencies without an "
+                        + "FX rate, so they are omitted; the per-provider figures above are each in their own currency,"
+                        + " and the plan cost is in " + planCurrency + ".";
+            } else {
+                disclaimer += " Egress savings are in " + egressCurrency + " but the plan's interconnect cost is in "
+                        + planCurrency + "; a net saving cannot be computed across currencies without an FX rate, so"
+                        + " the total, net, annual, and first-year figures are omitted (the per-provider egress"
+                        + " figures above remain valid in " + egressCurrency + ").";
+            }
+        }
 
         return PlanValueRealization.builder()
                 .planMonthlyCost(planMonthly)

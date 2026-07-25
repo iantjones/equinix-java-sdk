@@ -83,6 +83,24 @@ public class PeeringIntelligenceResult {
     List<String> dataSources;
 
     /**
+     * Non-fatal data-completeness notes accumulated during the analysis: a data source that could not
+     * be loaded, records that could not be resolved and were excluded, or an optional phase that was
+     * skipped after a recoverable failure. Empty (or {@code null}) when the analysis ran cleanly. These
+     * exist so an incomplete result is never silently presented as complete — always surface them rather
+     * than reading the figures as authoritative when this list is non-empty.
+     */
+    List<String> warnings;
+
+    /**
+     * Returns the data-completeness warnings, never {@code null}.
+     *
+     * @return the warnings list, or an empty list when the analysis ran cleanly
+     */
+    public List<String> warnings() {
+        return warnings != null ? warnings : java.util.Collections.emptyList();
+    }
+
+    /**
      * Returns the unified connectivity view for a specific ASN.
      *
      * @param asn the target ASN
@@ -133,6 +151,11 @@ public class PeeringIntelligenceResult {
             sb.append("Peering opportunities: ").append(peeringOpportunities.size()).append("\n");
         }
 
+        if (!warnings().isEmpty()) {
+            sb.append("Data-completeness warnings: ").append(warnings().size())
+                    .append(" (see toMarkdown() or warnings())\n");
+        }
+
         sb.append("Computed in ").append(computeTimeMs).append("ms\n");
         return sb.toString();
     }
@@ -150,6 +173,17 @@ public class PeeringIntelligenceResult {
         sb.append("**Computed:** ").append(computedAt).append(" (").append(computeTimeMs).append("ms)\n");
         sb.append("**Sources:** ").append(String.join(", ", dataSources)).append("\n\n");
 
+        // Data-completeness warnings — surfaced up front so an incomplete result is never read as
+        // complete. Empty when the analysis ran cleanly.
+        if (!warnings().isEmpty()) {
+            sb.append("> ⚠ **Data completeness:** this analysis is partial — read the figures below with "
+                    + "these caveats in mind:\n");
+            for (String warning : warnings()) {
+                sb.append("> - ").append(warning).append("\n");
+            }
+            sb.append("\n");
+        }
+
         // Presence Matrix
         sb.append("## Presence Matrix\n\n");
         sb.append(presenceMatrix.toMarkdown()).append("\n");
@@ -166,7 +200,7 @@ public class PeeringIntelligenceResult {
             sb.append("- **Type:** ").append(np.getNetworkType().getDisplayName()).append("\n");
             sb.append("- **Peering Policy:** ").append(np.getPeeringPolicy().getDisplayName()).append("\n");
             sb.append("- **IX Metros:** ").append(np.ixMetroCount()).append("\n");
-            sb.append("- **Total IX Capacity:** ").append(np.getTotalIxCapacityMbps() / 1000).append(" Gbps\n");
+            sb.append("- **Total IX Capacity:** ").append(formatGbps(np.getTotalIxCapacityMbps())).append("\n");
             sb.append("- **Route Server:** ").append(np.isRouteServerParticipant() ? "Yes" : "No").append("\n");
             sb.append("- **IPv6:** ").append(np.isIpv6Capable() ? "Yes" : "No").append("\n\n");
         }
@@ -221,5 +255,24 @@ public class PeeringIntelligenceResult {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Formats an Mbps capacity as a human-readable Gbps string without truncating sub-Gbps figures:
+     * whole Gbps render without a decimal ({@code "100 Gbps"}), fractional Gbps keep one decimal
+     * ({@code "0.5 Gbps"}), and sub-Gbps capacity is shown in Mbps ({@code "500 Mbps"}) rather than
+     * collapsing to a misleading {@code "0 Gbps"}.
+     *
+     * @param mbps the capacity in megabits per second
+     * @return a formatted capacity string
+     */
+    static String formatGbps(long mbps) {
+        if (mbps > 0 && mbps < 1000) {
+            return mbps + " Mbps";
+        }
+        double gbps = mbps / 1000.0;
+        return (gbps == Math.rint(gbps))
+                ? String.format("%.0f Gbps", gbps)
+                : String.format("%.1f Gbps", gbps);
     }
 }

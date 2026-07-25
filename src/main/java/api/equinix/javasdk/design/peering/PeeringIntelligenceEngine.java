@@ -59,9 +59,20 @@ class PeeringIntelligenceEngine {
 
     private static final double EARTH_RADIUS_KM = 6371.0;
 
+    /** Sentinel for a metro whose Fabric region was not loaded — an absence, never a real region. */
+    private static final String UNKNOWN_REGION = "UNKNOWN";
+
     private final FabricGateway fabric;
     private final PeeringDbClient peeringDb;
     private final PeeringRequest request;
+
+    /**
+     * Non-fatal data-completeness notes accumulated across the pipeline (a data source that could not be
+     * loaded, records excluded because they would not resolve, an optional phase skipped after a
+     * recoverable failure). Surfaced on {@link PeeringIntelligenceResult#warnings()} so a partial result
+     * is never silently presented as complete.
+     */
+    private final List<String> warnings = new ArrayList<>();
 
     private EquinixIXMapping ixMapping;
     private final Map<Long, PeeringDbNetwork> networkMetadata = new LinkedHashMap<>();
@@ -138,10 +149,19 @@ class PeeringIntelligenceEngine {
                 resiliency = buildResiliencyAssessment(matrix);
             }
 
-            // Phase 7: Peering opportunity discovery (if customer ASN provided)
+            // Phase 7: Peering opportunity discovery (if customer ASN provided). This is an OPTIONAL
+            // enrichment phase: a failure here (e.g. the extra PeeringDB lookup for the customer ASN)
+            // must not abort the core analysis, so it is caught and surfaced as a skipped-phase note
+            // rather than propagating out of execute().
             List<PeeringOpportunity> opportunities = Collections.emptyList();
             if (request.getCustomerAsn() > 0) {
-                opportunities = discoverPeeringOpportunities();
+                try {
+                    opportunities = discoverPeeringOpportunities();
+                } catch (IOException | RuntimeException e) {
+                    warnings.add("Peering-opportunity discovery was skipped: the PeeringDB lookup for your "
+                            + "ASN " + request.getCustomerAsn() + " failed (" + describe(e) + "). The rest "
+                            + "of the analysis is unaffected; peering_opportunities is empty for this run.");
+                }
             }
 
             // Phase 8: Unified connectivity views
@@ -160,11 +180,21 @@ class PeeringIntelligenceEngine {
                     .computedAt(Instant.now())
                     .computeTimeMs(computeTime)
                     .dataSources(dataSources)
+                    .warnings(new ArrayList<>(warnings))
                     .build();
 
         } catch (IOException e) {
             throw new RuntimeException("PeeringDB API call failed: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Extracts a short, human-readable reason from a failure for a warning message, falling back to the
+     * exception's simple class name when it carries no message.
+     */
+    private static String describe(Throwable t) {
+        String message = t.getMessage();
+        return (message != null && !message.isBlank()) ? message : t.getClass().getSimpleName();
     }
 
     // ---- Phase 2: Per-ASN data collection ----
@@ -228,6 +258,15 @@ class PeeringIntelligenceEngine {
     // ---- Phase 3: Build NetworkPresence ----
 
     private void buildNetworkPresences() {
+        boolean includeCapacity = request.isIncludeCapacity();
+        boolean includePolicies = request.isIncludePolicies();
+        // Count Equinix IX/facility presence records that could not be bound to a metro. These are
+        // dropped from the presence matrix (there is no column to place them in); tracking the count lets
+        // the analysis honestly report that the matrix may understate presence rather than silently
+        // hiding the gap.
+        int droppedIxRecords = 0;
+        int droppedFacRecords = 0;
+
         for (Map.Entry<Long, String> entry : request.getTargetAsns().entrySet()) {
             long asn = entry.getKey();
             String userLabel = entry.getValue();
@@ -250,18 +289,27 @@ class PeeringIntelligenceEngine {
 
             for (PeeringDbNetIxlan nix : ixEntries) {
                 MetroId metro = ixMapping.metroForIx(nix.getIxId());
-                if (metro == null) continue;
+                if (metro == null) {
+                    // An Equinix IX (already filtered to Equinix by the client) whose IX could not be
+                    // resolved to a metro — exclude it, but count it so the gap is surfaced.
+                    droppedIxRecords++;
+                    continue;
+                }
 
                 ixMetros.add(metro);
 
                 PeeringDbIx ix = peeringDb.getEquinixIx(nix.getIxId());
                 String ixName = ix != null ? ix.getName() : "IX-" + nix.getIxId();
 
+                // Capacity is collected only when capacity analysis is enabled; when disabled the speed
+                // is left at 0 and a warning marks the figures as "not analyzed" (never a real 0 Gbps).
+                int speedMbps = includeCapacity ? nix.getSpeed() : 0;
+
                 IxPresenceDetail detail = IxPresenceDetail.builder()
                         .metro(metro)
                         .ixId(nix.getIxId())
                         .ixName(ixName)
-                        .speedMbps(nix.getSpeed())
+                        .speedMbps(speedMbps)
                         .ipv4Address(nix.getIpaddr4())
                         .ipv6Address(nix.getIpaddr6())
                         .routeServerPeer(nix.isRsPeer())
@@ -273,14 +321,18 @@ class PeeringIntelligenceEngine {
                 if (nix.isRsPeer()) anyRouteServer = true;
                 if (nix.isBfdSupport()) anyBfd = true;
                 if (nix.getIpaddr6() != null && !nix.getIpaddr6().isEmpty()) anyIpv6 = true;
-                totalCapacity += nix.getSpeed();
+                totalCapacity += speedMbps;
             }
 
             // Facility metros
             Set<MetroId> facMetros = new LinkedHashSet<>();
             for (PeeringDbNetFac nf : facEntries) {
                 MetroId metro = ixMapping.metroForFacility(nf.getFacId());
-                if (metro != null) facMetros.add(metro);
+                if (metro != null) {
+                    facMetros.add(metro);
+                } else {
+                    droppedFacRecords++;
+                }
             }
 
             // All metros
@@ -292,7 +344,8 @@ class PeeringIntelligenceEngine {
                     .asn(asn)
                     .label(label)
                     .peeringDbName(net != null ? net.getName() : null)
-                    .peeringPolicy(net != null ? PeeringPolicy.fromPeeringDb(net.getPolicyGeneral()) : PeeringPolicy.UNKNOWN)
+                    .peeringPolicy((includePolicies && net != null)
+                            ? PeeringPolicy.fromPeeringDb(net.getPolicyGeneral()) : PeeringPolicy.UNKNOWN)
                     .networkType(net != null ? NetworkType.fromPeeringDb(net.getInfoType()) : NetworkType.UNKNOWN)
                     .trafficVolume(net != null ? net.getInfoTraffic() : null)
                     .trafficRatio(net != null ? net.getInfoRatio() : null)
@@ -307,6 +360,22 @@ class PeeringIntelligenceEngine {
                     .build();
 
             networkPresences.put(asn, presence);
+        }
+
+        // Surface any presence records that were excluded, and any capacity/policy analysis the caller
+        // turned off, so the presence matrix is never shown as complete when it is not.
+        if (droppedIxRecords > 0 || droppedFacRecords > 0) {
+            warnings.add(droppedIxRecords + " Equinix IX session(s) and " + droppedFacRecords
+                    + " facility record(s) could not be resolved to an Equinix metro and were excluded "
+                    + "from the presence matrix; presence may be understated for the affected networks.");
+        }
+        if (!includeCapacity) {
+            warnings.add("IX port-capacity analysis was disabled (includeCapacity=false); all capacity "
+                    + "figures in this result are 0 and must be read as 'not analyzed', not as zero capacity.");
+        }
+        if (!includePolicies) {
+            warnings.add("Peering-policy analysis was disabled (includePolicies=false); peering policies "
+                    + "are reported as UNKNOWN and peering-opportunity feasibility is not policy-based.");
         }
     }
 
@@ -342,7 +411,9 @@ class PeeringIntelligenceEngine {
                             .collect(Collectors.toList())
                         : Collections.emptyList();
 
-                int totalCapacity = metroIxSessions.stream().mapToInt(IxPresenceDetail::getSpeedMbps).sum();
+                // Sum as long: a metro can aggregate many high-speed sessions, and an int sum could
+                // overflow (each PresenceCell.totalIxCapacityMbps is a long for the same reason).
+                long totalCapacity = metroIxSessions.stream().mapToLong(IxPresenceDetail::getSpeedMbps).sum();
                 boolean anyRs = metroIxSessions.stream().anyMatch(IxPresenceDetail::isRouteServerPeer);
                 boolean anyBfd = metroIxSessions.stream().anyMatch(IxPresenceDetail::isBfdSupport);
 
@@ -551,8 +622,17 @@ class PeeringIntelligenceEngine {
                         String.format("%.0f%%", br.getImpactRatio() * 100) + " of analyzed ASN connectivity.");
             }
         }
-        if (correlatedFailures.stream().anyMatch(cf -> "CRITICAL".equals(cf.getSeverity()))) {
-            findings.add("Critical correlated failure detected — some ASNs have no IX failover path.");
+        // Correlated failures here are all single-customer-metro cases (an ASN that peers at only ONE
+        // of the customer's metros), created with HIGH/MEDIUM severity — never CRITICAL. The old finding
+        // gated on "CRITICAL" so it could never fire, and its "no IX failover path" wording was wrong
+        // (the ASN may still peer at non-customer metros). Report the real, reachable condition instead.
+        long singleMetroAsns = correlatedFailures.stream()
+                .filter(cf -> cf.getScope() == FailureScope.METRO)
+                .count();
+        if (singleMetroAsns > 0) {
+            findings.add(singleMetroAsns + " analyzed network(s) have IX peering at only one of your "
+                    + "metros — a failure of that metro removes IX peering to them from your footprint. "
+                    + "Establish IX peering at a second metro for these networks.");
         }
 
         return ResiliencyAssessment.builder()
@@ -683,20 +763,40 @@ class PeeringIntelligenceEngine {
         // no facility coordinates are available. Both lookups are precomputed once per analysis.
         double[] c1 = resolveCoordinates(metro1);
         double[] c2 = resolveCoordinates(metro2);
-        boolean found1 = c1 != null;
-        boolean found2 = c2 != null;
 
-        double distance = (found1 && found2)
-                ? haversineKm(c1[0], c1[1], c2[0], c2[1])
-                : 0;
+        // Same-region is a coarse, independent signal (region buckets, not coordinates); an UNKNOWN
+        // region for either metro is honestly reported as "not the same region" rather than matched.
+        boolean sameRegion = isSameRegion(metro1, metro2);
+
+        // If either metro has no known coordinate, the distance is genuinely UNAVAILABLE. Do NOT
+        // fabricate 0 km — that would misread as a CRITICAL "same-site" pairing, invent a "0 km apart"
+        // narrative, and drag the resiliency score toward 0. Model it as absent instead: NaN distance,
+        // an UNKNOWN rating (excluded from the score), and an explanation that names the missing metros.
+        if (c1 == null || c2 == null) {
+            List<String> missing = new ArrayList<>();
+            if (c1 == null) missing.add(metro1.code());
+            if (c2 == null) missing.add(metro2.code());
+            String explanation = "Geographic distance between " + metro1 + " and " + metro2
+                    + " is unavailable — no Equinix facility or Fabric coordinates for "
+                    + String.join(" and ", missing) + "; diversity could not be assessed for this pair.";
+            return DiversityScore.builder()
+                    .primaryMetro(metro1)
+                    .backupMetro(metro2)
+                    .distanceKm(Double.NaN)
+                    .estimatedRttMs(Double.NaN)
+                    .distanceUnavailable(true)
+                    .sameRegion(sameRegion)
+                    .rating(DiversityRating.UNKNOWN)
+                    .explanation(explanation)
+                    .build();
+        }
+
+        double distance = haversineKm(c1[0], c1[1], c2[0], c2[1]);
         DiversityRating rating = DiversityRating.fromDistance(distance);
 
         // Speed-of-light floor for the round-trip between the two metros (physical lower bound).
         double rttMs = SpeedOfLightLatency.roundTrip().millisForKm(distance);
-        String rttHint = distance > 0 ? String.format(" (~%.1f ms RTT floor)", rttMs) : "";
-
-        // Check if same region (basic check via metro naming conventions)
-        boolean sameRegion = isSameRegion(metro1, metro2);
+        String rttHint = String.format(" (~%.1f ms RTT floor)", rttMs);
 
         String explanation;
         if (rating == DiversityRating.EXCELLENT) {
@@ -718,6 +818,7 @@ class PeeringIntelligenceEngine {
                 .backupMetro(metro2)
                 .distanceKm(distance)
                 .estimatedRttMs(rttMs)
+                .distanceUnavailable(false)
                 .sameRegion(sameRegion)
                 .rating(rating)
                 .explanation(explanation)
@@ -756,7 +857,11 @@ class PeeringIntelligenceEngine {
             }
         }
         catch (RuntimeException e) {
-            // Fabric metros unavailable; proceed with whatever is already loaded.
+            // Fabric metros unavailable: proceed with whatever loaded, but never swallow it silently —
+            // geographic diversity and the IX/facility-to-metro bridge are degraded, so say so.
+            warnings.add("Equinix Fabric metro data could not be fully loaded (" + describe(e) + "); "
+                    + "geographic diversity scoring and IX/facility-to-metro binding are degraded for "
+                    + "this run, and some presence may be unresolved.");
         }
     }
 
@@ -817,13 +922,20 @@ class PeeringIntelligenceEngine {
     }
 
     private boolean isSameRegion(MetroId m1, MetroId m2) {
-        return getRegionForMetro(m1).equals(getRegionForMetro(m2));
+        String r1 = getRegionForMetro(m1);
+        String r2 = getRegionForMetro(m2);
+        // "UNKNOWN" is a not-loaded sentinel, not a region: two metros with unknown regions are NOT
+        // known to share a region, so never report them as same-region on the strength of the sentinel.
+        if (UNKNOWN_REGION.equals(r1) || UNKNOWN_REGION.equals(r2)) {
+            return false;
+        }
+        return r1.equals(r2);
     }
 
     private String getRegionForMetro(MetroId metro) {
         // Live Fabric region (AMER/EMEA/APAC), loaded in loadMetroGeo(); the geographic-distance
         // measure in computeDiversity() — not this coarse bucket — is the primary diversity signal.
-        return metroRegion.getOrDefault(metro, "UNKNOWN");
+        return metroRegion.getOrDefault(metro, UNKNOWN_REGION);
     }
 
     private double computeOverallResiliency(List<BlastRadiusReport> blastReports,
@@ -843,8 +955,12 @@ class PeeringIntelligenceEngine {
                 .count();
         double correlationPenalty = Math.min(0.3, criticalCorrelations * 0.1);
 
-        // Factor 3: Diversity bonus
+        // Factor 3: Diversity bonus. Pairs whose distance is unavailable are EXCLUDED — they carry no
+        // real diversity signal, and folding their placeholder score in would drag the result toward 0
+        // (a data gap must not masquerade as poor resiliency). If every pair is unavailable, fall back
+        // to a neutral 0.5 rather than inventing a diversity verdict.
         double avgDiversity = diversity.stream()
+                .filter(ds -> !ds.isDistanceUnavailable())
                 .mapToDouble(ds -> ds.getRating().getScore())
                 .average().orElse(0.5);
 
@@ -864,10 +980,30 @@ class PeeringIntelligenceEngine {
             sb.append(" via bilateral BGP session");
         }
 
-        sb.append(". Capacity: ").append(altCell.getTotalIxCapacityMbps() / 1000).append("G");
-        sb.append(". Geographic diversity: ").append(diversity.getRating().getDisplayName());
+        sb.append(". Capacity: ").append(formatCapacityGbps(altCell.getTotalIxCapacityMbps()));
+        sb.append(". Geographic diversity: ");
+        if (diversity.isDistanceUnavailable()) {
+            sb.append("unavailable (metro distance unknown)");
+        } else {
+            sb.append(diversity.getRating().getDisplayName());
+        }
         sb.append(".");
         return sb.toString();
+    }
+
+    /**
+     * Formats an Mbps capacity as a Gbps string without the integer-division truncation that silently
+     * dropped sub-Gbps capacity: whole Gbps render as {@code "10G"}, fractional Gbps keep one decimal
+     * ({@code "0.5G"}), and any positive sub-Gbps figure shows Mbps rather than collapsing to {@code "0G"}.
+     */
+    private static String formatCapacityGbps(long mbps) {
+        if (mbps > 0 && mbps < 1000) {
+            return mbps + "M";
+        }
+        double gbps = mbps / 1000.0;
+        return (gbps == Math.rint(gbps))
+                ? String.format("%.0fG", gbps)
+                : String.format("%.1fG", gbps);
     }
 
     private String buildPeeringRecommendation(NetworkPresence np, IxPresenceDetail ix, String complexity) {

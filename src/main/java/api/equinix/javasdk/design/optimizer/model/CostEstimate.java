@@ -6,6 +6,7 @@ import lombok.Value;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Aggregated cost estimate across all recommended metros.
@@ -14,9 +15,29 @@ import java.util.List;
 @Builder
 public class CostEstimate {
 
+    /**
+     * The aggregate monthly cost across all recommended metros, in {@link #currency}. This is
+     * {@code null} when the selected metros are priced in more than one currency: summing across
+     * currencies without an FX rate would be a fabricated figure, so no single total is produced and
+     * the per-currency subtotals are exposed via {@link #monthlyByCurrency} instead (see also
+     * {@link #costDisclaimer}).
+     */
     BigDecimal monthlyTotal;
     BigDecimal setupTotal;
+
+    /**
+     * The single currency of {@link #monthlyTotal}/{@link #setupTotal}, or {@code null} when the
+     * metros span multiple currencies (see {@link #monthlyByCurrency}).
+     */
     String currency;
+
+    /**
+     * Monthly subtotal per currency code, always populated. When the estimate is single-currency it
+     * holds one entry equal to {@link #monthlyTotal}; when the metros span currencies it is the only
+     * honest breakdown of the monthly cost, since {@link #monthlyTotal} is then {@code null}.
+     */
+    Map<String, BigDecimal> monthlyByCurrency;
+
     List<MetroCostBreakdown> perMetro;
     boolean withinBudget;
     String costDisclaimer;

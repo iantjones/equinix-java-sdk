@@ -59,8 +59,9 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
         EgressRate rate = card().egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
                 .orElseThrow();
 
-        assertEquals(0, new BigDecimal("0.12").compareTo(rate.getPricePerGb()),
-                "units 0 + nanos 120000000 = $0.12/GiB");
+        // units 0 + nanos 120000000 = $0.12/GiB, converted $/GiB -> $/GB (÷ 1.073741824).
+        assertEquals(0, new BigDecimal("0.1117587090").compareTo(rate.getPricePerGb()),
+                "$0.12/GiB expressed per decimal GB is 0.12 / 1.073741824 = 0.1117587090");
         assertEquals(PriceSource.PROVIDER_API, rate.getSource());
         assertNotNull(rate.getNote());
     }
@@ -74,8 +75,29 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
         EgressRate rate = card().egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.PRIVATE, Term.MONTH_12)
                 .orElseThrow();
 
-        assertEquals(0, new BigDecimal("0.02").compareTo(rate.getPricePerGb()),
-                "interconnect egress nanos 20000000 = $0.02/GiB");
+        // interconnect egress nanos 20000000 = $0.02/GiB, converted to per decimal GB.
+        assertEquals(0, new BigDecimal("0.0186264515").compareTo(rate.getPricePerGb()),
+                "$0.02/GiB expressed per decimal GB is 0.02 / 1.073741824 = 0.0186264515");
+    }
+
+    @Test
+    @DisplayName("internet egress selection is deterministic: the standard worldwide SKU wins, not the first, premium, or destination-qualified one")
+    void deterministicInternetEgressSelection() {
+        // Catalogue order is premium, China, standard, interconnect — so a naive "first egress SKU"
+        // would pick premium ($0.19). The adapter must pick the representative standard worldwide
+        // meter ($0.12) regardless of order.
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus_multi.json"))));
+
+        EgressRate rate = card().egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+
+        assertEquals(0, new BigDecimal("0.1117587090").compareTo(rate.getPricePerGb()),
+                "picks the standard $0.12/GiB worldwide meter (converted), not premium $0.19 or China $0.23");
+        assertTrue(rate.getNote().contains("Network Internet Egress Worldwide"),
+                "the note identifies the standard worldwide SKU it chose");
+        assertFalse(rate.getNote().toLowerCase().contains("premium"), "not the Premium-Tier SKU");
+        assertFalse(rate.getNote().toLowerCase().contains("china"), "not the China-destination SKU");
     }
 
     @Test
@@ -118,14 +140,14 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
                 .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.PRIVATE, Term.MONTH_12)
                 .orElseThrow();
 
-        assertEquals(0, new BigDecimal("0.02").compareTo(privateRate.getPricePerGb()),
-                "the page-2 Interconnect SKU must be reachable through pagination");
+        assertEquals(0, new BigDecimal("0.0186264515").compareTo(privateRate.getPricePerGb()),
+                "the page-2 Interconnect SKU must be reachable through pagination ($0.02/GiB per GB)");
 
         // A page-1 SKU still resolves from the same (cached, both-pages) catalogue.
         EgressRate internetRate = card
                 .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
                 .orElseThrow();
-        assertEquals(0, new BigDecimal("0.12").compareTo(internetRate.getPricePerGb()));
+        assertEquals(0, new BigDecimal("0.1117587090").compareTo(internetRate.getPricePerGb()));
 
         // The wire: exactly two GETs — page 1 without a token, page 2 echoing the server's
         // nextPageToken (plus the key and page-size params on both).

@@ -52,7 +52,6 @@ class PeeringIntelligenceResultTest {
                 .customerAsn(65100L)
                 .includeCapacity(true)
                 .includePolicies(true)
-                .includeFabricConnections(false)
                 .includeResiliency(true)
                 .build();
 

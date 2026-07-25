@@ -713,11 +713,18 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Sets the acceptable monthly budget range in USD. Metros whose estimated cost
-         * falls outside this range will be penalized in the cost scoring dimension.
+         * Sets a monthly budget range in USD used purely as a reporting ceiling. The budget is
+         * <em>reported against, never enforced</em>: no metro is excluded for falling outside the
+         * range, and the range does <em>not</em> feed the cost scoring dimension. After
+         * optimization the estimated monthly total is compared against {@code max}; if it exceeds
+         * {@code max}, the result's {@code within_budget} flag is set to {@code false} and an
+         * over-budget {@code BUDGET_EXCEEDED} finding is surfaced — but the selected metros are
+         * unchanged. The {@code min} bound is not currently checked or reported against.
          *
-         * @param min the minimum acceptable monthly spend in USD
-         * @param max the maximum acceptable monthly spend in USD
+         * @param min the minimum monthly spend in USD (currently informational only — not enforced
+         *            or reported against)
+         * @param max the maximum monthly spend in USD; the estimate is reported against this
+         *            ceiling and an over-budget result raises a finding
          * @return this builder for method chaining
          */
         public ConstraintsBuilder monthlyBudget(double min, double max) {
@@ -726,8 +733,9 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Sets the acceptable monthly budget range using a pre-built {@link BudgetRange}
-         * that supports custom currencies.
+         * Sets the monthly budget range using a pre-built {@link BudgetRange} that supports custom
+         * currencies. The budget is reported against, not enforced — see
+         * {@link #monthlyBudget(double, double)} for exactly how the ceiling is applied.
          *
          * @param budget the budget range with min, max, and currency
          * @return this builder for method chaining

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Currency;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -152,15 +153,27 @@ public final class ReferenceRateCard implements RateCard {
         if (connectionByBandwidth.isEmpty()) {
             return Optional.empty();
         }
+        // The smallest tabulated tier at or above the requested bandwidth is a direct
+        // reference figure (a request below the smallest tier ceilings up to it).
         Map.Entry<Integer, BigDecimal> tier = connectionByBandwidth.ceilingEntry(bandwidthMbps);
-        if (tier == null) {
-            tier = connectionByBandwidth.floorEntry(bandwidthMbps);
+        if (tier != null) {
+            return Optional.of(PriceQuote.monthly(tier.getValue(), currency, PriceSource.REFERENCE)
+                    .withNote("reference VC ~" + tier.getKey() + " Mbps"));
         }
-        if (tier == null) {
-            return Optional.empty();
-        }
-        return Optional.of(PriceQuote.monthly(tier.getValue(), currency, PriceSource.REFERENCE)
-                .withNote("reference VC ~" + tier.getKey() + " Mbps"));
+        // The request exceeds every tabulated tier. Do NOT fall back to the top tier's flat
+        // price — that would price, e.g., a 100G link at the 10G rate, a silent under-price.
+        // Extrapolate linearly from the top tier's per-Mbps rate and TAG the result as an
+        // extrapolation so callers never mistake it for a tabulated figure. Linear
+        // extrapolation of a flat schedule over-prices at higher bandwidth (the safe
+        // direction), and REFERENCE already carries the "indicative, not a quote" disclaimer.
+        Map.Entry<Integer, BigDecimal> top = connectionByBandwidth.lastEntry();
+        BigDecimal extrapolated = top.getValue()
+                .multiply(BigDecimal.valueOf(bandwidthMbps))
+                .divide(BigDecimal.valueOf(top.getKey()), 2, RoundingMode.HALF_UP);
+        return Optional.of(PriceQuote.monthly(extrapolated, currency, PriceSource.REFERENCE)
+                .withNote("reference VC EXTRAPOLATED above top tabulated tier (" + top.getKey() + " Mbps = "
+                        + top.getValue() + "): linear per-Mbps estimate for " + bandwidthMbps
+                        + " Mbps, not a tabulated rate"));
     }
 
     @Override

@@ -7,6 +7,7 @@ import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.core.enums.Region;
 import api.equinix.javasdk.fabric.model.Metro;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
+import api.equinix.javasdk.fabric.model.implementation.AccessPointTypeConfig;
 import api.equinix.javasdk.fabric.model.implementation.ConnectedMetro;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
 import api.equinix.javasdk.fabric.model.implementation.ServiceProfileMetro;
@@ -14,6 +15,7 @@ import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.design.optimizer.enums.*;
 import api.equinix.javasdk.design.optimizer.model.*;
+import api.equinix.javasdk.design.value.CurrencyReconciler;
 import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
@@ -561,6 +563,15 @@ final class MetroOptimizerEngine {
      *   <li>then the lexicographically smallest {@code serviceProfileUuid} (nulls last) purely as a
      *       deterministic tie-break, so two runs against the same catalog agree.</li>
      * </ol>
+     *
+     * <p>The single winner drives scoring and the default the wizard pins, but bandwidth-aware
+     * profile selection needs more than the winner: a provider's hosted profile (capped at, say,
+     * 500&nbsp;Mbps) can win a metro on region/uuid and then be paired with a 3000&nbsp;Mbps
+     * connection it cannot build, because the winner is chosen before any connection bandwidth
+     * exists. So EVERY matching profile's capability for the metro — its allowed tiers, custom-band
+     * flag and per-metro ceiling — is also carried forward on the entry's
+     * {@link ProviderAvailability#getProfileOptions() profileOptions}, letting the wizard choose a
+     * covering profile once the bandwidth is known while {@code outranks} still decides the default.</p>
      */
     private static ProviderIndex buildProviderIndex(
             List<ProviderRequirement> requirements, List<ServiceProfile> profiles) {
@@ -573,6 +584,9 @@ final class MetroOptimizerEngine {
             Set<String> preferredRegions = req.getPreferredSellerRegions() != null
                     ? new HashSet<>(req.getPreferredSellerRegions()) : Collections.emptySet();
             Map<MetroId, ProviderAvailability> metroAvail = new HashMap<>();
+            // Every matching profile's bandwidth capability per metro, in catalog order, so the wizard
+            // can pick a covering profile by bandwidth rather than being handed only the outranks winner.
+            Map<MetroId, List<ServiceProfileOption>> metroOptions = new HashMap<>();
             int matched = 0;
 
             for (ServiceProfile profile : profiles) {
@@ -584,6 +598,23 @@ final class MetroOptimizerEngine {
 
                 List<ServiceProfileMetro> metros = profile.metros();
                 if (metros == null) continue;
+
+                // Profile-level bandwidth capability (metro-independent): the discrete tier list
+                // aggregated across every access-point-type config, plus the allow-custom escape
+                // hatch. Read once per profile and mirrors PlanValidator.checkProfile's aggregation.
+                List<Integer> supportedBandwidths = new ArrayList<>();
+                boolean allowCustom = false;
+                if (profile.getAccessPointTypeConfigs() != null) {
+                    for (AccessPointTypeConfig cfg : profile.getAccessPointTypeConfigs()) {
+                        if (cfg == null) continue;
+                        if (Boolean.TRUE.equals(cfg.getAllowCustomBandwidth())) {
+                            allowCustom = true;
+                        }
+                        if (cfg.getSupportedBandwidths() != null) {
+                            supportedBandwidths.addAll(cfg.getSupportedBandwidths());
+                        }
+                    }
+                }
 
                 for (ServiceProfileMetro spm : metros) {
                     if (spm == null || spm.metroId() == null) continue;
@@ -600,9 +631,30 @@ final class MetroOptimizerEngine {
                     if (incumbent == null || outranks(candidate, incumbent, preferredRegions)) {
                         metroAvail.put(spm.metroId(), candidate);
                     }
+                    // Carry this profile's capability (uuid + seller regions kept as a pair, its
+                    // aggregated tiers, its custom-band flag, and THIS metro's ceiling) as a candidate
+                    // the wizard can choose by bandwidth. The winner above is unaffected.
+                    metroOptions.computeIfAbsent(spm.metroId(), k -> new ArrayList<>())
+                            .add(ServiceProfileOption.builder()
+                                    .serviceProfileUuid(profile.getUuid())
+                                    .sellerRegions(regions)
+                                    .supportedBandwidths(new ArrayList<>(supportedBandwidths))
+                                    .allowCustomBandwidth(allowCustom)
+                                    .vcBandwidthMax(spm.getVcBandwidthMax())
+                                    .build());
                 }
             }
-            result.put(key, metroAvail);
+
+            // Attach the accumulated candidate options onto each metro's winning availability entry,
+            // so the single-uuid default and the full candidate list travel together.
+            Map<MetroId, ProviderAvailability> withOptions = new HashMap<>();
+            for (Map.Entry<MetroId, ProviderAvailability> entry : metroAvail.entrySet()) {
+                List<ServiceProfileOption> options =
+                        metroOptions.getOrDefault(entry.getKey(), Collections.emptyList());
+                withOptions.put(entry.getKey(),
+                        entry.getValue().toBuilder().profileOptions(options).build());
+            }
+            result.put(key, withOptions);
             matchedCounts.put(key, matched);
         }
         return new ProviderIndex(result, matchedCounts);
@@ -666,7 +718,7 @@ final class MetroOptimizerEngine {
 
     /**
      * Total order over two availability entries for the same metro and requirement. See
-     * {@link #buildProviderMetroMap} for the ranking rationale.
+     * {@link #buildProviderIndex} for the ranking rationale.
      */
     private static boolean outranks(ProviderAvailability candidate, ProviderAvailability incumbent,
                                     Set<String> preferredRegions) {
@@ -1390,7 +1442,15 @@ final class MetroOptimizerEngine {
                             .filter(r -> pa.getSellerRegions() != null && pa.getSellerRegions().contains(r))
                             .count();
                     double regionBonus = (double) regionMatches / req.getPreferredSellerRegions().size() * 10.0;
-                    matchedWeight += Math.min(regionBonus * provWeight / reqWeight, provWeight * 0.1);
+                    // reqWeight can legitimately be 0 (a caller may zero the required-provider weight),
+                    // which would make regionBonus/reqWeight a division by zero — NaN/Infinity that then
+                    // poisons matchedWeight and every composite score derived from it. The bonus is
+                    // capped at provWeight*0.1 anyway, so fall back to that cap when reqWeight is 0
+                    // rather than propagating a non-finite score.
+                    double cappedBonus = reqWeight > 0
+                            ? Math.min(regionBonus * provWeight / reqWeight, provWeight * 0.1)
+                            : provWeight * 0.1;
+                    matchedWeight += cappedBonus;
                 }
             }
         }
@@ -1629,6 +1689,7 @@ final class MetroOptimizerEngine {
                             .available(false)
                             .sellerRegions(Collections.emptyList())
                             .serviceProfileUuid(null)
+                            .profileOptions(Collections.emptyList())
                             .build());
                 }
             }
@@ -2387,24 +2448,36 @@ final class MetroOptimizerEngine {
     private static CostEstimate estimateCosts(List<ScoredMetro> selected, OptimizationRequest request,
                                               RateCard rateCard) {
         List<MetroCostBreakdown> perMetro = new ArrayList<>();
-        BigDecimal totalMonthly = BigDecimal.ZERO;
-        BigDecimal totalSetup = BigDecimal.ZERO;
 
         int totalBandwidth = request.getWorkloads().stream()
                 .mapToInt(MetroOptimizerEngine::effectiveBandwidthMbps)
                 .sum();
+        // Split the total bandwidth across the selected metros. Plain integer division silently
+        // dropped up to (n-1) Mbps to truncation (e.g. 100 Mbps over 3 metros priced 33+33+33=99);
+        // the remainder is distributed across the first metros so the per-metro sizing sums to the
+        // total instead of losing bandwidth that a caller declared.
+        int metroCount = Math.max(1, selected.size());
+        int baseBandwidth = totalBandwidth / metroCount;
+        int bandwidthRemainder = totalBandwidth % metroCount;
+
         Term term = request.getTerm() != null ? request.getTerm() : Term.MONTH_12;
         boolean anyLive = false;
-        String currency = "USD";
         PriceSource aggregateSource = null;
         boolean mixedSources = false;
+        // Per-metro figures are summed into one aggregate, so they must reconcile to one currency.
+        // Live Fabric pricing genuinely quotes different currencies per region (EUR for Frankfurt,
+        // USD for Ashburn, ...), so a multi-region set can legitimately span currencies — in which
+        // case a single total would be a fabricated cross-currency sum.
+        CurrencyReconciler recon = CurrencyReconciler.create();
 
-        for (ScoredMetro sm : selected) {
-            int metroBandwidth = totalBandwidth / Math.max(1, selected.size());
+        for (int i = 0; i < selected.size(); i++) {
+            ScoredMetro sm = selected.get(i);
+            int metroBandwidth = baseBandwidth + (i < bandwidthRemainder ? 1 : 0);
 
             BigDecimal monthly;
             BigDecimal setup;
             PriceSource metroSource;
+            String metroCurrency;
             Map<String, BigDecimal> lineItems = new LinkedHashMap<>();
 
             Optional<PriceQuote> live = rateCard != null
@@ -2415,12 +2488,13 @@ final class MetroOptimizerEngine {
                 PriceQuote quote = live.get();
                 monthly = quote.getMonthlyRecurring();
                 setup = quote.getNonRecurring();
-                currency = quote.getCurrency().getCurrencyCode();
+                metroCurrency = quote.getCurrency() != null ? quote.getCurrency().getCurrencyCode() : null;
                 metroSource = quote.getSource();
                 anyLive = true;
                 lineItems.put("Fabric connection (EVPL_VC, " + metroBandwidth + " Mbps)", monthly);
             } else {
                 // Heuristic fallback: base port + per-Mbps connection cost with a regional multiplier.
+                // These figures are USD by construction.
                 BigDecimal basePortCost = BigDecimal.valueOf(500);
                 BigDecimal perMbpsCost = BigDecimal.valueOf(0.50);
                 BigDecimal setupCost = BigDecimal.valueOf(1000);
@@ -2433,6 +2507,7 @@ final class MetroOptimizerEngine {
                 monthly = basePortCost.add(bandwidthAllocation).multiply(BigDecimal.valueOf(regionMultiplier));
                 setup = setupCost.multiply(BigDecimal.valueOf(regionMultiplier));
                 metroSource = PriceSource.ESTIMATE;
+                metroCurrency = "USD";
 
                 lineItems.put("Base port", basePortCost);
                 lineItems.put("Bandwidth allocation", bandwidthAllocation);
@@ -2445,18 +2520,11 @@ final class MetroOptimizerEngine {
                 mixedSources = true;
             }
 
+            recon.add(metroCurrency, monthly, setup);
             perMetro.add(new MetroCostBreakdown(sm.metro.metroId(), monthly, setup, lineItems, metroSource));
-            totalMonthly = totalMonthly.add(monthly);
-            totalSetup = totalSetup.add(setup);
         }
 
-        boolean withinBudget = true;
-        BudgetRange budget = request.getConstraints().getBudget();
-        if (budget != null && budget.getMaxMonthly() != null) {
-            withinBudget = totalMonthly.compareTo(budget.getMaxMonthly()) <= 0;
-        }
-
-        String disclaimer = anyLive
+        String baseDisclaimer = anyLive
                 ? "Per-metro costs use live Equinix Fabric pricing where available, otherwise a regional "
                     + "estimate. Actual costs vary by connection type, bandwidth tier, and contract terms. "
                     + "Contact your Equinix account team for precise quotes."
@@ -2467,13 +2535,48 @@ final class MetroOptimizerEngine {
         PriceSource source = mixedSources ? PriceSource.COMPOSITE
                 : (aggregateSource != null ? aggregateSource : PriceSource.ESTIMATE);
 
+        BudgetRange budget = request.getConstraints().getBudget();
+
+        if (recon.isMixed()) {
+            // Metros span currencies: surface the per-currency subtotals and omit a single aggregate
+            // rather than report a false cross-currency total. Budget cannot be evaluated against a
+            // total that does not exist, so withinBudget stays true (no false over-budget alarm) and
+            // the disclaimer says so.
+            String mixDisclaimer = baseDisclaimer + " The selected metros are priced in multiple currencies ("
+                    + recon.describeCurrencies() + "): " + recon.describeMonthlySubtotals() + " per month. A single "
+                    + "aggregate total is not shown because summing across currencies without an FX rate would be a "
+                    + "fabricated figure; the per-metro figures above are each in their own currency."
+                    + (budget != null && budget.getMaxMonthly() != null
+                        ? " The monthly budget could not be evaluated against a mixed-currency estimate." : "");
+            return CostEstimate.builder()
+                    .monthlyTotal(null)
+                    .setupTotal(null)
+                    .currency(null)
+                    .monthlyByCurrency(recon.monthlySubtotals())
+                    .perMetro(perMetro)
+                    .withinBudget(true)
+                    .costDisclaimer(mixDisclaimer)
+                    .source(source)
+                    .build();
+        }
+
+        BigDecimal totalMonthly = recon.monthlyTotal().orElse(BigDecimal.ZERO);
+        BigDecimal totalSetup = recon.setupTotal().orElse(BigDecimal.ZERO);
+        String currency = recon.soleCurrencyOr("USD");
+
+        boolean withinBudget = true;
+        if (budget != null && budget.getMaxMonthly() != null) {
+            withinBudget = totalMonthly.compareTo(budget.getMaxMonthly()) <= 0;
+        }
+
         return CostEstimate.builder()
                 .monthlyTotal(totalMonthly)
                 .setupTotal(totalSetup)
                 .currency(currency)
+                .monthlyByCurrency(recon.monthlySubtotals())
                 .perMetro(perMetro)
                 .withinBudget(withinBudget)
-                .costDisclaimer(disclaimer)
+                .costDisclaimer(baseDisclaimer)
                 .source(source)
                 .build();
     }

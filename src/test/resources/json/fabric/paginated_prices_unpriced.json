@@ -1,0 +1,39 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 3
+  },
+  "data": [
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_EMPTY_300",
+      "name": "EVPL Virtual Connection DC 300Mbps (no charges)",
+      "charges": [],
+      "connection": { "bandwidth": 300 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_PRICED_300",
+      "name": "EVPL Virtual Connection DC 300Mbps (priced)",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 99.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 300 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_NULLPRICE_400",
+      "name": "EVPL Virtual Connection DC 400Mbps (null prices)",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": null },
+        { "type": "NON_RECURRING", "price": null }
+      ],
+      "connection": { "bandwidth": 400 }
+    }
+  ]
+}

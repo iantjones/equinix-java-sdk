@@ -28,7 +28,9 @@ import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
@@ -58,10 +60,16 @@ public final class OracleCloudPriceListRateCard implements RateCard {
 
     private static final Currency USD = Currency.getInstance("USD");
 
+    /**
+     * Safety bound on ORDS "next"-link hops. The cetools products endpoint returns its catalogue
+     * in a single response today; this cap only matters if it ever switches to paged collections.
+     */
+    private static final int MAX_PAGES = 100;
+
     private final String endpoint;
     private final ProviderPricingHttpClient http;
     private final Map<String, Optional<EgressRate>> cache = new ConcurrentHashMap<>();
-    private volatile JsonNode priceList;
+    private volatile List<JsonNode> priceItems;
     private volatile boolean fetched;
 
     private OracleCloudPriceListRateCard(String endpoint) {
@@ -106,17 +114,8 @@ public final class OracleCloudPriceListRateCard implements RateCard {
     }
 
     private Optional<EgressRate> resolveInternetEgress(String region) {
-        JsonNode root = priceList();
-        if (root == null) {
-            return Optional.empty();
-        }
-        JsonNode items = root.path("items");
-        if (!items.isArray()) {
-            return Optional.empty();
-        }
-
         String geography = geographyFor(region);
-        for (JsonNode item : items) {
+        for (JsonNode item : priceItems()) {
             String name = item.path("displayName").asText("");
             String lower = name.toLowerCase();
             // The generic OCI egress SKUs (not service-specific ones like "MySQL Database - ...").
@@ -165,15 +164,66 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         return null;
     }
 
-    private JsonNode priceList() {
+    private List<JsonNode> priceItems() {
         if (!fetched) {
             synchronized (this) {
                 if (!fetched) {
-                    priceList = http.getJson(endpoint + "?currencyCode=USD").orElse(null);
+                    priceItems = fetchAllItems();
                     fetched = true;
                 }
             }
         }
-        return priceList;
+        return priceItems;
+    }
+
+    /**
+     * Fetches the price-list products, following ORDS pagination when the endpoint returns it.
+     * The cetools handler currently serves the whole catalogue in one response (no {@code hasMore}
+     * / {@code links.next}), in which case this is a single GET. If it ever paginates, every page
+     * is accumulated before the caller matches — so a "not found" is only ever reported after the
+     * continuation has been exhausted, never off a truncated first page.
+     */
+    private List<JsonNode> fetchAllItems() {
+        List<JsonNode> collected = new ArrayList<>();
+        String url = endpoint + (endpoint.contains("?") ? "&" : "?") + "currencyCode=USD";
+        for (int page = 0; url != null && !url.isEmpty() && page < MAX_PAGES; page++) {
+            Optional<JsonNode> body = http.getJson(url);
+            if (body.isEmpty()) {
+                // Fetch failure: stop paginating and match over whatever pages we did retrieve.
+                // A found SKU is a real datum; a miss simply yields no rate (a layered card falls
+                // back), never a fabricated number.
+                break;
+            }
+            JsonNode root = body.get();
+            JsonNode items = root.path("items");
+            if (items.isArray()) {
+                for (JsonNode item : items) {
+                    collected.add(item);
+                }
+            }
+            url = nextLink(root);
+        }
+        return collected;
+    }
+
+    /**
+     * The ORDS continuation URL, or {@code null} when the page is the last. A {@code "next"} link
+     * is present only while more rows remain; an explicit {@code hasMore:false} is a hard stop.
+     * When neither is present the endpoint returned everything in one page.
+     */
+    private static String nextLink(JsonNode root) {
+        JsonNode hasMore = root.get("hasMore");
+        if (hasMore != null && hasMore.isBoolean() && !hasMore.booleanValue()) {
+            return null;
+        }
+        for (JsonNode link : root.path("links")) {
+            if ("next".equalsIgnoreCase(link.path("rel").asText(""))) {
+                String href = link.path("href").asText("");
+                if (!href.isEmpty()) {
+                    return href;
+                }
+            }
+        }
+        return null;
     }
 }

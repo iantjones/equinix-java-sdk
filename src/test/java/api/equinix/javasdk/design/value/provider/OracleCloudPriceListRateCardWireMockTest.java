@@ -91,6 +91,30 @@ class OracleCloudPriceListRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("follows ORDS pagination: a data-transfer SKU on page 2 is reached via the next link")
+    void followsOrdsPagination() {
+        // Page 1 carries only a non-matching service SKU plus hasMore=true and a "next" link; the
+        // NA/EU outbound-data-transfer SKU lives on page 2, so resolving it proves the continuation
+        // was followed and a "not found" is never reported off a truncated first page.
+        String page1 = loadFixture("/json/provider/oci_prices_page1.json")
+                .replace("__NEXT__", wireMockUrl() + PATH + "?offset=1");
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("offset", absent())
+                .willReturn(okJson(page1)));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("offset", equalTo("1"))
+                .willReturn(okJson(loadFixture("/json/provider/oci_prices_page2.json"))));
+
+        EgressRate rate = card().egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+
+        assertEquals(0, new BigDecimal("0.0085").compareTo(rate.getPricePerGb()),
+                "the NA/EU SKU is on page 2, only reachable by following the ORDS next link");
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH)).withQueryParam("offset", equalTo("1")));
+    }
+
+    @Test
     @DisplayName("prices only Oracle internet egress; PRIVATE and other providers are empty; degrades on error")
     void guardsAndDegradation() {
         stubPriceList();

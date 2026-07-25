@@ -10,6 +10,7 @@ import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
 import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import api.equinix.javasdk.design.optimizer.wizard.model.*;
+import api.equinix.javasdk.design.value.CurrencyReconciler;
 import api.equinix.javasdk.design.value.ratecard.EquinixRateCard;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
@@ -73,8 +74,12 @@ final class DeploymentWizardEngine {
         // Phase 1: Plan Cloud Routers
         List<PlannedCloudRouter> cloudRouters = planCloudRouters(config, metros, routerNames);
 
-        // Phase 2: Plan Provider Connections
-        List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result, names, routerNames);
+        // Phase 2: Plan Provider Connections. Bandwidth-aware profile selection may find a metro's
+        // provider offers no service profile that covers the computed connection bandwidth; that is a
+        // real, plan-invalidating error (an unbuildable connection), so it is recorded here rather than
+        // emitted silently and left for the Layer-1 tier check to catch downstream.
+        List<PlannedConnection> providerConnections =
+                planProviderConnections(config, metros, result, names, routerNames, validationErrors);
 
         // Phase 3: Plan Backbone Links
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros, names, routerNames);
@@ -149,7 +154,7 @@ final class DeploymentWizardEngine {
 
     private static List<PlannedConnection> planProviderConnections(
             DeploymentWizard.Builder config, List<MetroRecommendation> metros, OptimizationResult result,
-            PlanNames names, Map<MetroId, String> routerNames) {
+            PlanNames names, Map<MetroId, String> routerNames, List<String> validationErrors) {
 
         List<PlannedConnection> connections = new ArrayList<>();
         String notificationEmail = config.getNotificationEmails().isEmpty()
@@ -175,8 +180,30 @@ final class DeploymentWizardEngine {
                 // it so it clears Fabric's < 24-character limit (EQ-3142539) even for long prefixes.
                 String connName = names.unique(routerName + "-to-" + PlanNames.providerToken(provider.getProviderLabel()));
 
-                String sellerRegion = provider.getSellerRegions() != null && !provider.getSellerRegions().isEmpty()
-                        ? provider.getSellerRegions().get(0) : null;
+                // Bandwidth-aware profile selection. The optimizer's single winner was chosen with no
+                // knowledge of this bandwidth, so a hosted profile (capped at, say, 500 Mbps) can be the
+                // default for a metro sized at 3000 Mbps. When the provider carries candidate profiles,
+                // pick one whose allowed tiers actually cover the bandwidth (a dedicated profile when the
+                // speed exceeds the hosted maximum). If NONE covers it, the connection is not buildable
+                // as-is: record a precise, actionable error and do not emit an unbuildable connection.
+                String serviceProfileUuid;
+                String sellerRegion;
+                List<ServiceProfileOption> options = provider.getProfileOptions();
+                if (options != null && !options.isEmpty()) {
+                    Optional<ServiceProfileOption> chosen =
+                            chooseProfileForBandwidth(provider, bandwidth.getTotalMbps());
+                    if (chosen.isEmpty()) {
+                        validationErrors.add(noCoveringProfileError(
+                                connName, provider, metro.getMetroId(), bandwidth.getTotalMbps(), options));
+                        continue;
+                    }
+                    serviceProfileUuid = chosen.get().getServiceProfileUuid();
+                    sellerRegion = firstOrNull(chosen.get().getSellerRegions());
+                } else {
+                    // Legacy / hand-built entry with no capability data: keep the pre-selected default.
+                    serviceProfileUuid = provider.getServiceProfileUuid();
+                    sellerRegion = firstOrNull(provider.getSellerRegions());
+                }
 
                 connections.add(PlannedConnection.builder()
                         .name(connName)
@@ -186,7 +213,7 @@ final class DeploymentWizardEngine {
                         .bandwidthAllocation(bandwidth)
                         .aSideMetro(metro.getMetroId())
                         .aSideRouterName(routerName)
-                        .zSideServiceProfileUuid(provider.getServiceProfileUuid())
+                        .zSideServiceProfileUuid(serviceProfileUuid)
                         .zSideProviderLabel(provider.getProviderLabel())
                         .zSideSellerRegion(sellerRegion)
                         // Resolve the provider label to a typed cloud provider so the plan can
@@ -201,6 +228,81 @@ final class DeploymentWizardEngine {
         return connections;
     }
 
+    /**
+     * Picks, among a provider's candidate service profiles for a metro, one whose allowed bandwidths
+     * cover the requested speed. Policy: prefer the smallest-capable covering profile (so a 300&nbsp;Mbps
+     * connection takes a hosted profile and a 10000&nbsp;Mbps connection takes a dedicated one rather
+     * than the reverse), breaking ties by fewest wasted tiers, then by preferring the optimizer's
+     * default winner (which preserves its seller-region preference), then by the lowest uuid so the
+     * choice is deterministic regardless of catalog order.
+     *
+     * @param provider the available provider entry, carrying its candidate {@code profileOptions}
+     * @param mbps     the computed connection bandwidth in Mbps
+     * @return the chosen profile, or empty when no candidate can carry {@code mbps}
+     */
+    private static Optional<ServiceProfileOption> chooseProfileForBandwidth(
+            ProviderAvailability provider, int mbps) {
+        List<ServiceProfileOption> options = provider.getProfileOptions();
+        if (options == null || options.isEmpty()) {
+            return Optional.empty();
+        }
+        String defaultUuid = provider.getServiceProfileUuid();
+        return options.stream()
+                .filter(option -> option.covers(mbps))
+                .min(Comparator
+                        .comparingInt(ServiceProfileOption::capacityCeiling)
+                        .thenComparingInt((ServiceProfileOption o) -> o.excessTiersAbove(mbps))
+                        .thenComparingInt(o -> Objects.equals(o.getServiceProfileUuid(), defaultUuid) ? 0 : 1)
+                        .thenComparing(ServiceProfileOption::getServiceProfileUuid,
+                                Comparator.nullsLast(Comparator.naturalOrder())));
+    }
+
+    /**
+     * A precise, actionable error for a connection whose bandwidth no available profile offers: it
+     * names the provider, metro and requested bandwidth, lists what each candidate DOES offer, and
+     * (when discrete tiers exist) suggests the supported bandwidths — the honest outcome, since
+     * silently snapping to a nearby tier would change the customer's stated intent.
+     */
+    private static String noCoveringProfileError(String connName, ProviderAvailability provider,
+                                                 MetroId metro, int mbps, List<ServiceProfileOption> options) {
+        List<Integer> offered = options.stream()
+                .filter(o -> o.getSupportedBandwidths() != null)
+                .flatMap(o -> o.getSupportedBandwidths().stream())
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        String suggestion = offered.isEmpty()
+                ? "choose a bandwidth within a candidate profile's ceiling, or split the workload across "
+                    + "multiple connections"
+                : "choose a supported bandwidth " + offered + ", or split the workload across multiple connections";
+        return "Connection '" + connName + "' to provider '" + provider.getProviderLabel() + "' at metro "
+                + metro + ": bandwidth " + mbps + " Mbps is not offered by any available service profile — "
+                + describeProfileOptions(options) + ". " + suggestion + ".";
+    }
+
+    /** Renders each candidate profile's bandwidth capability for the no-covering-profile error. */
+    private static String describeProfileOptions(List<ServiceProfileOption> options) {
+        return options.stream().map(option -> {
+            String uuid = option.getServiceProfileUuid() != null ? option.getServiceProfileUuid() : "(unknown)";
+            if (option.getSupportedBandwidths() != null && !option.getSupportedBandwidths().isEmpty()) {
+                String custom = option.isAllowCustomBandwidth() ? " or custom" : "";
+                String max = option.getVcBandwidthMax() != null ? " (max " + option.getVcBandwidthMax() + " Mbps)" : "";
+                return "profile " + uuid + " offers " + option.getSupportedBandwidths() + custom + max;
+            }
+            if (option.isAllowCustomBandwidth()) {
+                String max = option.getVcBandwidthMax() != null ? " up to " + option.getVcBandwidthMax() + " Mbps" : "";
+                return "profile " + uuid + " allows custom bandwidth" + max;
+            }
+            String max = option.getVcBandwidthMax() != null ? " (ceiling " + option.getVcBandwidthMax() + " Mbps)" : "";
+            return "profile " + uuid + " publishes no discrete tiers" + max;
+        }).collect(Collectors.joining("; "));
+    }
+
+    private static String firstOrNull(List<String> values) {
+        return values != null && !values.isEmpty() ? values.get(0) : null;
+    }
+
     private static BandwidthAllocation computeBandwidth(
             DeploymentWizard.Builder config,
             MetroRecommendation metro,
@@ -211,12 +313,32 @@ final class DeploymentWizardEngine {
         Map<String, Integer> perWorkload = new LinkedHashMap<>();
 
         if (strategy == BandwidthStrategy.CUSTOM && config.getCustomBandwidthMap() != null) {
-            String key = metro.getMetroId() + "-" + provider.getProviderLabel();
-            int customBw = config.getCustomBandwidthMap().getOrDefault(key, 1000);
+            // Match the documented key forms, most specific first: "<metroId>-<providerLabel>" (a
+            // per-metro-per-provider override) then "<providerLabel>" (that provider in every metro).
+            // The old code looked up ONLY the compound key with the full provider label, so a caller
+            // whose real provider label differs from the key they wrote silently matched nothing. The
+            // provider-label form is now honoured too, and — crucially — the reasoning states plainly
+            // whether the map actually supplied the value or the documented default was used, instead
+            // of labelling the default as though it came from the caller's map.
+            Map<String, Integer> customMap = config.getCustomBandwidthMap();
+            String perMetroKey = metro.getMetroId() + "-" + provider.getProviderLabel();
+            String providerKey = provider.getProviderLabel();
+            String matchedKey = customMap.containsKey(perMetroKey) ? perMetroKey
+                    : (customMap.containsKey(providerKey) ? providerKey : null);
+            if (matchedKey != null) {
+                int customBw = customMap.get(matchedKey);
+                return BandwidthAllocation.builder()
+                        .totalMbps(customBw)
+                        .perWorkload(Collections.singletonMap("custom", customBw))
+                        .reasoning("Custom bandwidth map (key '" + matchedKey + "'): " + customBw + " Mbps")
+                        .build();
+            }
+            int defaultBw = 1000;
             return BandwidthAllocation.builder()
-                    .totalMbps(customBw)
-                    .perWorkload(Collections.singletonMap("custom", customBw))
-                    .reasoning("Custom bandwidth map: " + customBw + " Mbps")
+                    .totalMbps(defaultBw)
+                    .perWorkload(Collections.singletonMap("custom", defaultBw))
+                    .reasoning("Custom strategy: no bandwidth-map key matched '" + perMetroKey + "' or '"
+                            + providerKey + "', so the documented " + defaultBw + " Mbps default was used")
                     .build();
         }
 
@@ -253,7 +375,11 @@ final class DeploymentWizardEngine {
                 continue;
             }
 
-            int bw = spec.getBandwidthMbps() > 0 ? spec.getBandwidthMbps() : 1000;
+            // Honour the workload profile's minimum bandwidth: a workload declaring 10 Mbps against a
+            // profile whose floor is 1000 must be sized (and priced) at 1000, not silently under-sized.
+            // Mirrors MetroOptimizerEngine.effectiveBandwidthMbps so the wizard and the optimizer agree.
+            int effective = effectiveWorkloadBandwidth(spec);
+            int bw = effective > 0 ? effective : 1000;
             perWorkload.put(spec.getLabel(), bw);
             totalMbps += bw;
         }
@@ -273,6 +399,21 @@ final class DeploymentWizardEngine {
                 .perWorkload(perWorkload)
                 .reasoning(reasoning)
                 .build();
+    }
+
+    /**
+     * The bandwidth a workload is actually sized at: its declared {@code bandwidthMbps}, raised to the
+     * resolved profile's {@code minBandwidthMbps} when the declaration falls below that floor. A
+     * minimum that is enforced nowhere is not a minimum, so the wizard applies it just as the
+     * optimizer does (see {@code MetroOptimizerEngine.effectiveBandwidthMbps}).
+     */
+    private static int effectiveWorkloadBandwidth(WorkloadSpec spec) {
+        int declared = spec.getBandwidthMbps();
+        Double floor = spec.resolvedProfile() != null ? spec.resolvedProfile().getMinBandwidthMbps() : null;
+        if (floor == null || !Double.isFinite(floor) || floor <= 0) {
+            return declared;
+        }
+        return (int) Math.max(declared, Math.ceil(floor));
     }
 
     // ══════════════════════════════════════════════
@@ -440,8 +581,11 @@ final class DeploymentWizardEngine {
         Term term = config.getTerm();
 
         Map<String, BigDecimal> perConnectionCost = new LinkedHashMap<>();
-        Currency currency = null;
         Set<PriceSource> sources = new HashSet<>();
+        // Every priced line flows through one reconciler. A plan can legitimately span metros in
+        // different currencies (live Fabric pricing quotes EUR in Frankfurt, USD in Ashburn, ...), and
+        // summing those into one monthly total would be a fabricated cross-currency figure.
+        CurrencyReconciler recon = CurrencyReconciler.create();
 
         // Cloud Routers
         BigDecimal routerMonthly = BigDecimal.ZERO;
@@ -450,7 +594,7 @@ final class DeploymentWizardEngine {
             PriceQuote quote = priceRouter(rateCard, router, term);
             routerMonthly = routerMonthly.add(quote.getMonthlyRecurring());
             routerSetup = routerSetup.add(quote.getNonRecurring());
-            currency = firstNonNull(currency, quote.getCurrency());
+            recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
             sources.add(quote.getSource());
         }
 
@@ -463,7 +607,7 @@ final class DeploymentWizardEngine {
             providerMonthly = providerMonthly.add(quote.getMonthlyRecurring());
             providerSetup = providerSetup.add(quote.getNonRecurring());
             perConnectionCost.put(conn.getName(), quote.getMonthlyRecurring());
-            currency = firstNonNull(currency, quote.getCurrency());
+            recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
             sources.add(quote.getSource());
         }
 
@@ -476,19 +620,39 @@ final class DeploymentWizardEngine {
             backboneMonthly = backboneMonthly.add(quote.getMonthlyRecurring());
             backboneSetup = backboneSetup.add(quote.getNonRecurring());
             perConnectionCost.put(link.getName(), quote.getMonthlyRecurring());
-            currency = firstNonNull(currency, quote.getCurrency());
+            recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
             sources.add(quote.getSource());
         }
 
-        if (currency == null) {
-            currency = Currency.getInstance("USD");
-        }
-
-        BigDecimal monthlyTotal = routerMonthly.add(providerMonthly).add(backboneMonthly);
-        BigDecimal setupTotal = routerSetup.add(providerSetup).add(backboneSetup);
-
         PriceSource source = dominantSource(sources);
         boolean authoritative = source == PriceSource.EQUINIX_LIVE || source == PriceSource.CUSTOM;
+
+        if (recon.isMixed()) {
+            // Mixed currencies: do not fabricate a combined total. Omit the monthly/setup totals and
+            // the single currency, surface the per-currency subtotals, and keep the per-category and
+            // per-connection figures (each valid in its own currency).
+            String mixDisclaimer = "This plan's connections are priced in multiple currencies ("
+                    + recon.describeCurrencies() + "): " + recon.describeMonthlySubtotals() + " per month. A single "
+                    + "plan total cannot be formed without an FX rate, so the monthly and setup totals are omitted "
+                    + "rather than reported as a fabricated cross-currency sum; the per-connection and per-category "
+                    + "figures are each shown in their own currency.";
+            return PlanPricing.builder()
+                    .monthlyTotal(null)
+                    .setupTotal(null)
+                    .currency(null)
+                    .routerMonthlyCost(routerMonthly)
+                    .providerConnectionMonthlyCost(providerMonthly)
+                    .backboneMonthlyCost(backboneMonthly)
+                    .perConnectionCost(perConnectionCost)
+                    .source(source)
+                    .disclaimer(mixDisclaimer)
+                    .build();
+        }
+
+        String currency = recon.soleCurrencyOr("USD");
+        BigDecimal monthlyTotal = recon.monthlyTotal().orElse(BigDecimal.ZERO);
+        BigDecimal setupTotal = recon.setupTotal().orElse(BigDecimal.ZERO);
+
         String disclaimer = authoritative
                 ? "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume "
                     + "discounts, and promotional offers."
@@ -498,7 +662,7 @@ final class DeploymentWizardEngine {
         return PlanPricing.builder()
                 .monthlyTotal(monthlyTotal)
                 .setupTotal(setupTotal)
-                .currency(currency.getCurrencyCode())
+                .currency(currency)
                 .routerMonthlyCost(routerMonthly)
                 .providerConnectionMonthlyCost(providerMonthly)
                 .backboneMonthlyCost(backboneMonthly)
@@ -573,10 +737,6 @@ final class DeploymentWizardEngine {
         }
         return PriceQuote.of(BigDecimal.valueOf(300), BigDecimal.ZERO,
                 Currency.getInstance("USD"), PriceSource.ESTIMATE);
-    }
-
-    private static Currency firstNonNull(Currency current, Currency candidate) {
-        return current != null ? current : candidate;
     }
 
     private static BigDecimal estimateConnectionCost(int bandwidthMbps) {

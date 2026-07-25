@@ -1,0 +1,100 @@
+{
+  "skus": [
+    {
+      "skuId": "SKU-INET-PREMIUM",
+      "description": "Network Internet Premium Tier Egress Worldwide",
+      "category": {
+        "serviceDisplayName": "Compute Engine",
+        "resourceFamily": "Network",
+        "resourceGroup": "InternetEgress",
+        "usageType": "OnDemand"
+      },
+      "serviceRegions": ["us-central1"],
+      "pricingInfo": [
+        {
+          "summary": "",
+          "pricingExpression": {
+            "usageUnit": "GiBy",
+            "usageUnitDescription": "gibibyte",
+            "tieredRates": [
+              { "startUsageAmount": 0, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 0 } },
+              { "startUsageAmount": 1, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 190000000 } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "skuId": "SKU-INET-CHINA",
+      "description": "Network Internet Egress Worldwide to China",
+      "category": {
+        "serviceDisplayName": "Compute Engine",
+        "resourceFamily": "Network",
+        "resourceGroup": "InternetEgress",
+        "usageType": "OnDemand"
+      },
+      "serviceRegions": ["us-central1"],
+      "pricingInfo": [
+        {
+          "summary": "",
+          "pricingExpression": {
+            "usageUnit": "GiBy",
+            "usageUnitDescription": "gibibyte",
+            "tieredRates": [
+              { "startUsageAmount": 0, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 0 } },
+              { "startUsageAmount": 1, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 230000000 } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "skuId": "SKU-INET-STANDARD",
+      "description": "Network Internet Egress Worldwide",
+      "category": {
+        "serviceDisplayName": "Compute Engine",
+        "resourceFamily": "Network",
+        "resourceGroup": "InternetEgress",
+        "usageType": "OnDemand"
+      },
+      "serviceRegions": ["us-central1"],
+      "pricingInfo": [
+        {
+          "summary": "",
+          "pricingExpression": {
+            "usageUnit": "GiBy",
+            "usageUnitDescription": "gibibyte",
+            "tieredRates": [
+              { "startUsageAmount": 0, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 0 } },
+              { "startUsageAmount": 1, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 120000000 } }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "skuId": "SKU-IC-AMER",
+      "description": "Network Interconnect Egress Worldwide",
+      "category": {
+        "serviceDisplayName": "Compute Engine",
+        "resourceFamily": "Network",
+        "resourceGroup": "InterconnectEgress",
+        "usageType": "OnDemand"
+      },
+      "serviceRegions": ["us-central1"],
+      "pricingInfo": [
+        {
+          "summary": "",
+          "pricingExpression": {
+            "usageUnit": "GiBy",
+            "usageUnitDescription": "gibibyte",
+            "tieredRates": [
+              { "startUsageAmount": 0, "unitPrice": { "currencyCode": "USD", "units": "0", "nanos": 20000000 } }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "nextPageToken": ""
+}

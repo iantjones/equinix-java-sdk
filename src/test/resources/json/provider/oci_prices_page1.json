@@ -1,0 +1,26 @@
+{
+  "lastUpdated": "2026-06-29T00:00:00+00:00",
+  "hasMore": true,
+  "limit": 1,
+  "offset": 0,
+  "count": 1,
+  "items": [
+    {
+      "partNumber": "B96160",
+      "displayName": "MySQL Database - AWS - Outbound Data Transfer - To Internet",
+      "metricName": "Gigabyte of Data Transferred",
+      "serviceCategory": "Database",
+      "currencyCodeLocalizations": [
+        {
+          "currencyCode": "USD",
+          "prices": [
+            { "model": "PAY_AS_YOU_GO", "value": 0.0911, "rangeMin": 0 }
+          ]
+        }
+      ]
+    }
+  ],
+  "links": [
+    { "rel": "next", "href": "__NEXT__" }
+  ]
+}

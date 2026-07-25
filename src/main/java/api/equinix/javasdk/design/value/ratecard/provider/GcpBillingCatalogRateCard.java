@@ -28,6 +28,7 @@ import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -46,9 +47,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>It lists the SKUs of the Compute Engine service and selects the network-egress
  * ones: {@link EgressPath#INTERNET} maps to "Network Internet Egress" SKUs and
  * {@link EgressPath#PRIVATE} to "Interconnect"/"Network Inter-Region" egress SKUs.
- * The per-GB figure is the first paid pricing tier (the free tier is skipped),
+ * The per-GiB figure is the first paid pricing tier (the free tier is skipped),
  * computed from {@code unitPrice.units + nanos}. Every rate it returns is tagged
  * {@link PriceSource#PROVIDER_API}.</p>
+ *
+ * <p>Internet-egress selection is <em>deterministic</em>: many egress SKUs contain the word
+ * "egress", so a match must carry the "internet" marker (not merely "not-interconnect"), and when
+ * several qualify the adapter prefers the representative base rate — the standard, worldwide meter
+ * over the pricier Premium-Tier and destination-qualified (China/Australia) variants — rather than
+ * whichever happened to appear first in the catalogue.</p>
+ *
+ * <p>GCP meters egress <em>per gibibyte</em> ({@code GiBy}), but the savings engine multiplies the
+ * rate by a <em>decimal</em>-gigabyte volume (1&nbsp;TB = 1000&nbsp;GB). To keep the two consistent
+ * the adapter converts $/GiB&nbsp;&rarr;&nbsp;$/GB by dividing by 1.073741824 (1&nbsp;GiB = 1.073741824&nbsp;GB),
+ * yielding a slightly lower per-GB number; the returned note records the original per-GiB figure.</p>
  *
  * <p>This is an opt-in, pluggable source intended for a
  * {@link RateCard#layered(RateCard...)} chain. It is fault-tolerant — a missing key,
@@ -64,6 +76,12 @@ public final class GcpBillingCatalogRateCard implements RateCard {
 
     private static final Currency USD = Currency.getInstance("USD");
     private static final int MAX_PAGES = 25;
+
+    /** 1 GiB = 1.073741824 GB (decimal). GCP prices per GiB; the engine costs per decimal GB. */
+    private static final BigDecimal GIB_PER_GB = new BigDecimal("1.073741824");
+
+    /** Decimal places retained when converting the per-GiB rate to a per-GB rate. */
+    private static final int PRICE_SCALE = 10;
 
     private final String endpoint;
     private final String apiKey;
@@ -122,34 +140,85 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     }
 
     private Optional<EgressRate> resolve(String region, EgressPath path) {
+        // Deterministic pick across ALL matching SKUs — never "the first one in catalogue order".
+        // Higher representativeness score wins; ties break to the lower per-GiB rate, then to the
+        // lexicographically-lower skuId, so the choice is stable regardless of catalogue ordering.
+        JsonNode chosen = null;
+        BigDecimal chosenPerGib = null;
+        int chosenScore = Integer.MIN_VALUE;
         for (JsonNode sku : skus()) {
             if (!matchesPath(sku, path) || !matchesRegion(sku, region)) {
                 continue;
             }
-            BigDecimal perGb = firstPaidTier(sku);
-            if (perGb != null) {
-                return Optional.of(EgressRate.of(perGb, USD, PriceSource.PROVIDER_API)
-                        .withNote("GCP Billing Catalog: " + sku.path("description").asText("egress")));
+            BigDecimal perGib = firstPaidTier(sku);
+            if (perGib == null) {
+                continue;
+            }
+            int score = representativeScore(sku, path);
+            if (chosen == null
+                    || score > chosenScore
+                    || (score == chosenScore && perGib.compareTo(chosenPerGib) < 0)
+                    || (score == chosenScore && perGib.compareTo(chosenPerGib) == 0
+                            && skuId(sku).compareTo(skuId(chosen)) < 0)) {
+                chosen = sku;
+                chosenPerGib = perGib;
+                chosenScore = score;
             }
         }
-        return Optional.empty();
+        if (chosen == null) {
+            return Optional.empty();
+        }
+        // $/GiB → $/GB: GCP meters per gibibyte, the engine costs per decimal gigabyte.
+        BigDecimal perGb = chosenPerGib.divide(GIB_PER_GB, PRICE_SCALE, RoundingMode.HALF_UP);
+        return Optional.of(EgressRate.of(perGb, USD, PriceSource.PROVIDER_API)
+                .withNote("GCP Billing Catalog: " + chosen.path("description").asText("egress")
+                        + " (" + chosenPerGib.toPlainString() + "/GiB ÷ 1.073741824 = per GB)"));
     }
 
     private static boolean matchesPath(JsonNode sku, EgressPath path) {
         String descriptor = (sku.path("description").asText("") + " "
                 + sku.path("category").path("resourceGroup").asText("")).toLowerCase();
-        boolean egress = descriptor.contains("egress");
-        if (!egress) {
+        if (!descriptor.contains("egress")) {
             return false;
         }
+        boolean interconnect = descriptor.contains("interconnect")
+                || descriptor.contains("inter region") || descriptor.contains("inter-region");
         if (path == EgressPath.PRIVATE) {
-            return descriptor.contains("interconnect") || descriptor.contains("inter region")
-                    || descriptor.contains("inter-region");
+            return interconnect;
         }
-        // INTERNET: an egress SKU that is not an interconnect/inter-region one.
-        return descriptor.contains("internet")
-                || !(descriptor.contains("interconnect") || descriptor.contains("inter region")
-                        || descriptor.contains("inter-region"));
+        // INTERNET: an internet-egress SKU specifically. Requiring the "internet" marker (rather
+        // than "any egress that isn't interconnect") avoids classifying, e.g., an inter-zone or
+        // service-specific egress SKU as internet egress.
+        return descriptor.contains("internet") && !interconnect;
+    }
+
+    /**
+     * Ranks how representative a matching SKU is of the headline egress rate, so a deterministic
+     * winner can be chosen. Only meaningful for {@link EgressPath#INTERNET}, where several variants
+     * (Premium-Tier, China/Australia destinations) coexist with the standard worldwide meter; the
+     * standard one scores highest. {@link EgressPath#PRIVATE} SKUs all score equally (0) — their
+     * winner is decided by the price/skuId tie-break.
+     */
+    private static int representativeScore(JsonNode sku, EgressPath path) {
+        if (path != EgressPath.INTERNET) {
+            return 0;
+        }
+        String desc = sku.path("description").asText("").toLowerCase();
+        int score = 0;
+        // Prefer the base internet-egress rate over the pricier Premium-Tier variant.
+        if (!desc.contains("premium")) {
+            score += 4;
+        }
+        // Prefer the general/worldwide rate over destination-qualified SKUs, which are billed at a
+        // higher, non-representative rate.
+        if (!desc.contains("china") && !desc.contains("australia")) {
+            score += 2;
+        }
+        return score;
+    }
+
+    private static String skuId(JsonNode sku) {
+        return sku.path("skuId").asText(sku.path("description").asText(""));
     }
 
     private static boolean matchesRegion(JsonNode sku, String region) {

@@ -79,6 +79,30 @@ class AzureRetailPricesRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("private egress follows NextPageLink: a cheaper ExpressRoute meter on page 2 is considered")
+    void followsNextPageLinkAcrossPages() {
+        // Page 1's cheapest metered rate is $0.05; the true minimum ($0.025) lives on page 2, so it
+        // is only found by following NextPageLink and computing the lowest over BOTH pages.
+        String page1 = loadFixture("/json/provider/azure_expressroute_page1.json")
+                .replace("__NEXT__", wireMockUrl() + PATH + "?$skip=100");
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("$filter", containing("ExpressRoute"))
+                .withQueryParam("$skip", absent())
+                .willReturn(okJson(page1)));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("$skip", equalTo("100"))
+                .willReturn(okJson(loadFixture("/json/provider/azure_expressroute_page2.json"))));
+
+        EgressRate rate = card().egress(CloudProviderType.AZURE, "eastus", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+
+        assertEquals(0, new BigDecimal("0.025").compareTo(rate.getPricePerGb()),
+                "the cheapest metered rate is on page 2, reachable only by following NextPageLink");
+        wireMock.verify(2, getRequestedFor(urlPathEqualTo(PATH)));
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH)).withQueryParam("$skip", equalTo("100")));
+    }
+
+    @Test
     @DisplayName("prices only Azure; other providers and connection/router lookups are empty")
     void onlyPricesAzureEgress() {
         wireMock.stubFor(get(urlPathEqualTo(PATH))

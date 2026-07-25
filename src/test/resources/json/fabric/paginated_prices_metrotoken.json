@@ -1,0 +1,31 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 2
+  },
+  "data": [
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_SV_DC_1000_GW",
+      "name": "EVPL Virtual Connection Gateway SV-DC 1Gbps",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 999.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 1000 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_AT_FR_1000",
+      "name": "EVPL Virtual Connection AT to FR 1Gbps",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 175.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 1000 }
+    }
+  ]
+}

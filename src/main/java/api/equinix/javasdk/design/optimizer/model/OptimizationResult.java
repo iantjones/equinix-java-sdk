@@ -7,8 +7,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Builder;
 import lombok.Value;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -74,12 +76,20 @@ public class OptimizationResult {
         }
 
         if (costEstimate != null) {
-            sb.append("Estimated monthly cost: $").append(costEstimate.getMonthlyTotal())
-                    .append(" ").append(costEstimate.getCurrency());
-            if (!costEstimate.isWithinBudget()) {
-                sb.append(" (OVER BUDGET)");
+            if (costEstimate.getMonthlyTotal() != null) {
+                sb.append("Estimated monthly cost: $").append(costEstimate.getMonthlyTotal())
+                        .append(" ").append(costEstimate.getCurrency());
+                if (!costEstimate.isWithinBudget()) {
+                    sb.append(" (OVER BUDGET)");
+                }
+                sb.append(".\n");
+            } else {
+                // The metros span currencies, so there is no single total to state — show the
+                // per-currency subtotals rather than a fabricated cross-currency figure.
+                sb.append("Estimated monthly cost spans multiple currencies: ")
+                        .append(describeByCurrency(costEstimate.getMonthlyByCurrency()))
+                        .append(" (no single-currency total).\n");
             }
-            sb.append(".\n");
         }
 
         sb.append("Computed in ").append(computeTimeMs).append("ms.");
@@ -170,8 +180,14 @@ public class OptimizationResult {
                         .append(" | $").append(mcb.getMonthlyRecurring())
                         .append(" | $").append(mcb.getNonRecurring()).append(" |\n");
             }
-            md.append("| **Total** | **$").append(costEstimate.getMonthlyTotal())
-                    .append("** | **$").append(costEstimate.getSetupTotal()).append("** |\n\n");
+            if (costEstimate.getMonthlyTotal() != null) {
+                md.append("| **Total** | **$").append(costEstimate.getMonthlyTotal())
+                        .append("** | **$").append(costEstimate.getSetupTotal()).append("** |\n\n");
+            } else {
+                md.append("| **Total** | **")
+                        .append(describeByCurrency(costEstimate.getMonthlyByCurrency()))
+                        .append("** | _multiple currencies_ |\n\n");
+            }
             md.append("_").append(costEstimate.getCostDisclaimer()).append("_\n\n");
         }
 
@@ -186,6 +202,19 @@ public class OptimizationResult {
         }
 
         return md.toString();
+    }
+
+    /**
+     * Renders a per-currency monthly breakdown, e.g. {@code "USD 2300.00, EUR 1800.00"}, used when
+     * the metros span currencies and no single aggregate total exists.
+     */
+    private static String describeByCurrency(Map<String, BigDecimal> monthlyByCurrency) {
+        if (monthlyByCurrency == null || monthlyByCurrency.isEmpty()) {
+            return "unavailable";
+        }
+        return monthlyByCurrency.entrySet().stream()
+                .map(e -> e.getKey() + " " + e.getValue().toPlainString())
+                .collect(Collectors.joining(", "));
     }
 
     /**
