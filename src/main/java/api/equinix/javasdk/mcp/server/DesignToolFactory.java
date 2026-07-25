@@ -455,9 +455,13 @@ final class DesignToolFactory {
                         + "account numbers to pass here). Supplying it explicitly skips resolution "
                         + "entirely. If none can be resolved, no number is fabricated — the plan is "
                         + "returned without one and says so."),
-                "notifications", array("Email addresses for provisioning notifications. Only the FIRST "
-                                + "address is used — a planned Fabric resource carries a single notification "
-                                + "address — so put the address you want on the plan first.",
+                "notifications", array("REQUIRED for provisioning: email address(es) for provisioning "
+                                + "notifications. Fabric MANDATES at least one notification recipient on EVERY "
+                                + "Cloud Router — a plan whose routers have none fails structural validation "
+                                + "with a clear 'requires a notification email' error (the live API rejects a "
+                                + "notification-less router with HTTP 400 EQ-3040013), so supply at least one. "
+                                + "Only the FIRST address is used — a planned Fabric resource carries a single "
+                                + "notification address — so put the address you want on the plan first.",
                         string("Email address."))));
         return ToolRegistration.builder()
                 .name("design_plan_deployment")
@@ -488,7 +492,10 @@ final class DesignToolFactory {
                         + "dry-runs cannot run — the skip is called out, not hidden. required_inputs is a "
                         + "per-connection checklist of exactly what the customer must gather before "
                         + "provisioning (the cloud authorization key, a VLAN tag, and for Azure the peering "
-                        + "type) — never fabricated. The billing account_number is OPTIONAL and "
+                        + "type) — never fabricated. Every planned Cloud Router additionally REQUIRES a "
+                        + "notification recipient: supply deployment.notifications (Fabric rejects a Cloud "
+                        + "Router created without one, HTTP 400 EQ-3040013), or the plan is invalid with a "
+                        + "clear per-router error. The billing account_number is OPTIONAL and "
                         + "auto-resolved from the authenticated identity: a single visible account is used, "
                         + "several prompt you to choose (and, when the client cannot prompt, the tool "
                         + "returns 'choice_required' naming the candidate account numbers instead of a "

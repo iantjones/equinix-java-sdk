@@ -420,6 +420,68 @@ class PlanValidatorTest {
     }
 
     // ══════════════════════════════════════════════
+    //  Layer 1 — notifications required (EQ-3040013)
+    // ══════════════════════════════════════════════
+
+    @Test
+    @DisplayName("a Cloud Router with no notification email is a Layer-1 error per router AND its live dry-run is never attempted")
+    void missingNotificationIsStructuralErrorAndSkipsDryRun() {
+        // A CloudRouters surface that WOULD serve a dry-run if one were attempted — so verifying it is
+        // never called proves the doomed dry-run (which would 400 live on the mandatory $.notifications
+        // field, EQ-3040013) is skipped, not sent.
+        CloudRouters cr = mock(CloudRouters.class);
+        CloudRouterOperator.CloudRouterBuilder crb =
+                mock(CloudRouterOperator.CloudRouterBuilder.class, org.mockito.Answers.RETURNS_SELF);
+        when(cr.define()).thenReturn(crb);
+        when(crb.create()).thenReturn(mock(CloudRouter.class));
+        FabricGateway fabric = mock(FabricGateway.class);
+        when(fabric.cloudRouters()).thenReturn(cr);
+
+        PlannedCloudRouter noNotify = PlannedCloudRouter.builder()
+                .name("FCR-DC").metroId(DC).packageCode(GatewayPackageCode.STANDARD).build();
+        PlannedCloudRouter blankNotify = PlannedCloudRouter.builder()
+                .name("FCR-SV").metroId(SV).packageCode(GatewayPackageCode.STANDARD)
+                .notificationEmail("   ").build();
+
+        PlanValidator.Result r = validate(fabric, List.of(noNotify, blankNotify), Collections.emptyList());
+
+        // A clear per-router structural error, naming each router and the fix — not a raw EQ-3040013.
+        assertTrue(r.errors.stream().anyMatch(e -> e.contains("FCR-DC")
+                        && e.contains("requires at least one notification recipient")
+                        && e.contains("deployment.notifications")),
+                () -> "expected a missing-notification error for FCR-DC: " + r.errors);
+        assertTrue(r.errors.stream().anyMatch(e -> e.contains("FCR-SV")
+                        && e.contains("requires at least one notification recipient")),
+                () -> "a blank notification is flagged too, per router: " + r.errors);
+
+        // The doomed live dry-run is NEVER attempted for a router that failed the notifications check.
+        verify(cr, never()).define();
+    }
+
+    @Test
+    @DisplayName("a Cloud Router WITH a notification email raises no notification error and proceeds to the live dry-run")
+    void presentNotificationHasNoErrorAndDryRunProceeds() {
+        CloudRouters cr = mock(CloudRouters.class);
+        CloudRouterOperator.CloudRouterBuilder crb =
+                mock(CloudRouterOperator.CloudRouterBuilder.class, org.mockito.Answers.RETURNS_SELF);
+        when(cr.define()).thenReturn(crb);
+        when(crb.create()).thenReturn(mock(CloudRouter.class));
+        FabricGateway fabric = mock(FabricGateway.class);
+        when(fabric.cloudRouters()).thenReturn(cr);
+
+        // router() carries a notification email, so the notifications check passes.
+        PlanValidator.Result r = validate(fabric, List.of(router("FCR-DC", DC)), Collections.emptyList());
+
+        assertTrue(r.errors.stream().noneMatch(e -> e.contains("notification recipient")),
+                () -> "a router with a notification email must not raise a notification error: " + r.errors);
+        // The live router dry-run proceeds exactly as before, stamping the notification onto the body.
+        verify(cr).define();
+        verify(crb).notification(any(), any());
+        verify(crb).dryRun();
+        verify(crb).create();
+    }
+
+    // ══════════════════════════════════════════════
     //  Skipped — offline / bare-stub infeasibility
     // ══════════════════════════════════════════════
 
@@ -549,8 +611,11 @@ class PlanValidatorTest {
     }
 
     private static PlannedCloudRouter router(String name, MetroId metro) {
+        // Fabric requires a notification recipient on every Cloud Router, so a plan-valid router carries
+        // one. Tests that exercise the missing-notification path build their routers explicitly instead.
         return PlannedCloudRouter.builder()
-                .name(name).metroId(metro).packageCode(GatewayPackageCode.STANDARD).build();
+                .name(name).metroId(metro).packageCode(GatewayPackageCode.STANDARD)
+                .notificationEmail("noc@example.com").build();
     }
 
     private static PlannedConnection provider(String name, String routerName, MetroId metro, int bw,

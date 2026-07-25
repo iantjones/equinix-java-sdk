@@ -187,6 +187,7 @@ public final class PlanValidator {
         checkSubnetOverlap(rps, errors);
         checkAsn(customerAsn, errors);
         checkPackagesAndMetros(rs, errors);
+        checkNotifications(rs, errors);
 
         // ── Layer 1: new-market gap (required provider not available at a placed metro) ──
         checkNewMarketGaps(metros, request, topology, errors);
@@ -336,6 +337,23 @@ public final class PlanValidator {
             GatewayPackageCode pkg = r.getPackageCode();
             if (pkg == null || pkg == GatewayPackageCode.UNKNOWN) {
                 errors.add("Cloud Router '" + r.getName() + "': missing or unknown package code (" + pkg + ")");
+            }
+        }
+    }
+
+    /**
+     * Fabric REQUIRES at least one notification recipient to create a Cloud Router. A router POSTed
+     * without one is rejected live with HTTP 400 {@code EQ-3040013} ("Notifications is mandatory field /
+     * Property: $.notifications"). This asserts the requirement structurally, at plan time, so an omitted
+     * notification surfaces as a friendly pre-flight error here — and its router is skipped by the live
+     * router dry-run ({@link #routerDryRun}) — instead of a raw API 400 from a doomed dry-run.
+     */
+    private static void checkNotifications(List<PlannedCloudRouter> routers, List<String> errors) {
+        for (PlannedCloudRouter r : routers) {
+            if (isBlank(r.getNotificationEmail())) {
+                errors.add("Cloud Router '" + r.getName() + "' (" + r.getMetroId()
+                        + ") has no notification email: Fabric requires at least one notification recipient "
+                        + "to create a Cloud Router. Supply deployment.notifications.");
             }
         }
     }
@@ -617,9 +635,12 @@ public final class PlanValidator {
             return;
         }
         for (PlannedCloudRouter r : routers) {
-            // Layer 1 already flags a missing metro / package; do not send a doomed dry-run for it.
+            // Layer 1 already flags a missing metro / package / notification; do not send a doomed dry-run
+            // for it — a router with no notification would 400 live on the mandatory $.notifications field
+            // (EQ-3040013), so the friendly Layer-1 error stands in for it rather than a raw API rejection.
             if (r.getMetroId() == null || r.getPackageCode() == null
-                    || r.getPackageCode() == GatewayPackageCode.UNKNOWN) {
+                    || r.getPackageCode() == GatewayPackageCode.UNKNOWN
+                    || isBlank(r.getNotificationEmail())) {
                 continue;
             }
             try {
@@ -913,6 +934,10 @@ public final class PlanValidator {
 
     private static String orEmpty(String s) {
         return s == null ? "" : s;
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     /**
