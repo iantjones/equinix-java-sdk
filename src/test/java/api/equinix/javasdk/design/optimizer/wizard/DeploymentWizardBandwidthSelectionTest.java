@@ -27,6 +27,7 @@ import api.equinix.javasdk.design.optimizer.model.ServiceProfileOption;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlannedConnection;
+import api.equinix.javasdk.design.optimizer.wizard.model.ProfileSelection;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.fabric.client.ServiceProfiles;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
@@ -45,6 +46,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -107,25 +109,102 @@ class DeploymentWizardBandwidthSelectionTest {
     }
 
     @Test
-    @DisplayName("a bandwidth no profile offers yields a precise actionable error, not a silent unbuildable plan")
-    void uncoveredBandwidthYieldsActionableErrorNotSilentPlan() {
-        // 3000 Mbps is on neither the hosted ([50..500]) nor the dedicated ([1000, 10000]) profile.
-        DeploymentPlan plan = planWithPinnedBandwidth(awsHostedAndDedicated(), 3000);
+    @DisplayName("a non-exact bandwidth ROUNDS UP to the smallest satisfying tier (3000 → 5000), never an error")
+    void nonExactBandwidthRoundsUpToSmallestCoveringTier() {
+        // The owner's explicit fix: 3000 Mbps is on no tier of [1000, 5000, 10000], so it must round UP
+        // to 5000 (the smallest tier that satisfies it), not error.
+        DeploymentPlan plan = planWithPinnedBandwidth(awsTiered(List.of(1000, 5000, 10000)), 3000);
+
+        PlannedConnection aws = onlyProviderConnection(plan);
+        assertEquals(5000, aws.getBandwidthMbps(),
+                "3000 Mbps must be stamped at the smallest satisfying tier, 5000 Mbps");
+        assertTrue(plan.getValidationErrors().isEmpty(),
+                () -> "round-up is not an error: " + plan.getValidationErrors());
+
+        // The round-up is RECORDED, never silent — requested, billed tier, and the delta.
+        assertNotNull(aws.getProfileSelection(), "the profile selection must be exposed on the connection");
+        assertEquals(3000, aws.getProfileSelection().getRequestedMbps());
+        assertEquals(5000, aws.getProfileSelection().getSelectedTierMbps());
+        assertTrue(aws.getProfileSelection().isRoundedUp());
+        assertEquals(2000, aws.getProfileSelection().roundedUpByMbps());
+        assertTrue(aws.getProfileSelection().getReasoning().contains("rounded up"),
+                aws.getProfileSelection().getReasoning());
+        // And it is surfaced in the plan render so it can never be a silent upsell.
+        assertTrue(plan.toMarkdown().contains("BANDWIDTH ROUNDED UP"), "round-up must appear in the report");
+    }
+
+    @Test
+    @DisplayName("a low bandwidth still selects the smallest covering (hosted) profile, exactly not rounded")
+    void lowBandwidthPrefersSmallestCoveringProfileExactly() {
+        DeploymentPlan plan = planWithPinnedBandwidth(awsHostedAndDedicated(), 200);
+
+        PlannedConnection aws = onlyProviderConnection(plan);
+        assertEquals(HOSTED, aws.getZSideServiceProfileUuid(), "200 Mbps is a hosted tier");
+        assertEquals(200, aws.getBandwidthMbps());
+        assertNotNull(aws.getProfileSelection());
+        assertFalse(aws.getProfileSelection().isRoundedUp(), "200 is an exact hosted tier — no round-up");
+    }
+
+    @Test
+    @DisplayName("a bandwidth above EVERY tier yields an actionable over-capacity error with a split suggestion")
+    void bandwidthAboveEveryTierYieldsActionableErrorWithSplitSuggestion() {
+        // 20000 Mbps exceeds the hosted ceiling (500) AND the dedicated maximum (10000): no round-up can
+        // satisfy it, so THIS is the genuine over-capacity error (the only remaining error case).
+        DeploymentPlan plan = planWithPinnedBandwidth(awsHostedAndDedicated(), 20000);
 
         assertTrue(plan.getProviderConnections().isEmpty(),
                 "an unbuildable connection must NOT be emitted: " + plan.getProviderConnections());
-        assertFalse(plan.isValid(), "a bandwidth no profile offers makes the plan invalid");
+        assertFalse(plan.isValid(), "a bandwidth above every tier makes the plan invalid");
 
         String error = plan.getValidationErrors().stream()
-                .filter(e -> e.contains("3000") && e.contains("not offered by any available service profile"))
+                .filter(e -> e.contains("20000") && e.contains("exceeds every available service profile"))
                 .findFirst().orElseThrow(() -> new AssertionError(
-                        "expected a no-covering-profile error: " + plan.getValidationErrors()));
+                        "expected an over-capacity error: " + plan.getValidationErrors()));
         assertTrue(error.contains("AWS") && error.contains("DC"),
                 "the error names the provider and metro: " + error);
-        assertTrue(error.contains("[50, 100, 200, 300, 400, 500]") && error.contains("[1000, 10000]"),
-                "the error lists what each candidate DOES offer: " + error);
-        assertTrue(error.contains("choose a supported bandwidth [50, 100, 200, 300, 400, 500, 1000, 10000]"),
-                "the error suggests the supported bandwidths rather than silently snapping: " + error);
+        assertTrue(error.contains("largest bandwidth any available service profile can carry is 10000 Mbps"),
+                "the error states the real maximum available: " + error);
+        assertTrue(error.contains("split the workload across multiple connections"),
+                "the error suggests splitting across connections: " + error);
+    }
+
+    @Test
+    @DisplayName("multiple profiles covering the same bandwidth expose the alternatives with a valid default")
+    void multipleCoveringProfilesExposeAlternativesWithValidDefault() {
+        // Two dedicated profiles, both listing 10000, in different seller regions: a genuine choice. The
+        // wizard picks a deterministic default AND exposes both so an interactive layer can elicit.
+        ProviderAvailability aws = ProviderAvailability.builder()
+                .providerLabel("AWS")
+                .available(true)
+                .sellerRegions(List.of("us-east-1-dx"))
+                .serviceProfileUuid("sp-aws-dx-a")
+                .profileOptions(List.of(
+                        ServiceProfileOption.builder()
+                                .serviceProfileUuid("sp-aws-dx-a")
+                                .sellerRegions(List.of("us-east-1-dx"))
+                                .supportedBandwidths(List.of(1000, 10000))
+                                .allowCustomBandwidth(false)
+                                .build(),
+                        ServiceProfileOption.builder()
+                                .serviceProfileUuid("sp-aws-dx-b")
+                                .sellerRegions(List.of("us-east-1-dx2"))
+                                .supportedBandwidths(List.of(1000, 10000))
+                                .allowCustomBandwidth(false)
+                                .build()))
+                .build();
+
+        DeploymentPlan plan = planWithPinnedBandwidth(aws, 10000);
+
+        PlannedConnection conn = onlyProviderConnection(plan);
+        ProfileSelection sel = conn.getProfileSelection();
+        assertNotNull(sel, "the profile selection must be exposed");
+        assertTrue(sel.hasChoice(), "two covering profiles are a genuine decision point");
+        assertEquals(2, sel.getAlternatives().size(), "both covering candidates are exposed");
+        assertEquals("sp-aws-dx-a", sel.getSelectedProfileUuid(),
+                "the deterministic default (lowest uuid) is chosen so a non-eliciting caller gets a valid plan");
+        assertEquals("sp-aws-dx-a", conn.getZSideServiceProfileUuid());
+        assertEquals(10000, conn.getBandwidthMbps());
+        assertTrue(plan.getValidationErrors().isEmpty(), () -> "valid: " + plan.getValidationErrors());
     }
 
     @Test
@@ -210,6 +289,23 @@ class DeploymentWizardBandwidthSelectionTest {
                                 .serviceProfileUuid(DEDICATED)
                                 .sellerRegions(List.of("us-east-1-dx"))
                                 .supportedBandwidths(List.of(1000, 10000))
+                                .allowCustomBandwidth(false)
+                                .build()))
+                .build();
+    }
+
+    /** An AWS entry carrying a single dedicated profile that publishes the given discrete tiers. */
+    private static ProviderAvailability awsTiered(List<Integer> tiers) {
+        return ProviderAvailability.builder()
+                .providerLabel("AWS")
+                .available(true)
+                .sellerRegions(List.of("us-east-1-dx"))
+                .serviceProfileUuid(DEDICATED)
+                .profileOptions(List.of(
+                        ServiceProfileOption.builder()
+                                .serviceProfileUuid(DEDICATED)
+                                .sellerRegions(List.of("us-east-1-dx"))
+                                .supportedBandwidths(tiers)
                                 .allowCustomBandwidth(false)
                                 .build()))
                 .build();

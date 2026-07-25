@@ -7,6 +7,7 @@ import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
+import api.equinix.javasdk.design.optimizer.wizard.model.PlanPricing;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.design.value.ratecard.Term;
 
@@ -386,6 +387,28 @@ public final class DeploymentWizard {
          */
         public DeploymentPlan plan() {
             return DeploymentWizardEngine.generatePlan(this);
+        }
+
+        /**
+         * Reprices an existing plan in place after its connections changed (e.g. an MCP profile choice
+         * altered a billable tier), so the monthly and setup totals match the plan's <em>current</em>
+         * connections rather than the tiers they were originally priced at.
+         *
+         * <p>The plan's current Cloud Routers, provider connections and backbone links are re-priced
+         * against <em>this</em> builder's rate card and commitment term — the same configuration the plan
+         * was built with — through the wizard's single pricing authority
+         * ({@code DeploymentWizardEngine.estimatePricing}), so per-metro currency reconciliation is
+         * preserved exactly as at plan time. Only the plan's {@code pricing} is replaced; every other
+         * field is carried through unchanged. Repricing a plan whose connections did not change yields
+         * the same figures (a no-op-equivalent).</p>
+         *
+         * @param plan the plan whose pricing is stale relative to its current connections
+         * @return a copy of the plan with pricing recomputed from its current connections
+         */
+        public DeploymentPlan reprice(DeploymentPlan plan) {
+            PlanPricing pricing = DeploymentWizardEngine.estimatePricing(
+                    this, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks());
+            return plan.toBuilder().pricing(pricing).build();
         }
 
         // Package-private accessors for the engine

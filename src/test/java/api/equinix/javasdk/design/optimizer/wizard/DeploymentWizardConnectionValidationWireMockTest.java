@@ -30,12 +30,15 @@ import api.equinix.javasdk.design.optimizer.model.ProviderAvailability;
 import api.equinix.javasdk.design.optimizer.model.ProviderRequirement;
 import api.equinix.javasdk.design.optimizer.model.WorkloadPlacement;
 import api.equinix.javasdk.design.optimizer.model.WorkloadSpec;
+import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import api.equinix.javasdk.design.optimizer.wizard.model.ConnectionInputRequirement;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
+import api.equinix.javasdk.design.optimizer.wizard.model.PlannedConnection;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
 import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
+import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -205,6 +208,120 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
                 () -> "expected a catalog skip note offline: " + plan.getSkippedValidations());
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
+    }
+
+    // ── connection-config resilience: redundancy assembly (lens-3b real dry-run) ──
+
+    @Test
+    @DisplayName("a connection-level redundancy group is stamped onto the connection body, not silently dropped")
+    void redundancyGroupIsStampedOntoConnectionBody() {
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
+                .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+        // A lens-3b provider connection (pre-existing A-side + auth key present) so the live endpoint
+        // dry-run runs for REAL at plan time — the wire is what proves the redundancy group survives.
+        DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
+                .name("FCR-DC-to-aws")
+                .connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000)
+                .aSideMetro(DC)
+                .aSideRouterName("FCR-DC")
+                .aSideExistingRouterUuid("cr-existing-uuid")
+                .zSideServiceProfileUuid("sp-aws")
+                .zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1")
+                .zSideCloudType(CloudProviderType.AWS)
+                .zSideAuthenticationKey("123456789012")
+                .zSideVlanTag(1001)
+                .zSideRedundancyGroup("aws-redundant-pair")
+                .redundancyPriority(RedundancyPriority.SECONDARY)
+                .build());
+
+        plan.dryRun();
+
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
+                .withRequestBody(matchingJsonPath("$.redundancy.group", equalTo("aws-redundant-pair")))
+                .withRequestBody(matchingJsonPath("$.redundancy.priority", equalTo("SECONDARY")))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.linkProtocol.vlanTag", equalTo("1001"))));
+    }
+
+    @Test
+    @DisplayName("a connection with no redundancy group stays standalone — no redundancy is sent")
+    void noRedundancyGroupLeavesConnectionStandalone() {
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
+                .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+        DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
+                .name("FCR-DC-to-aws")
+                .connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000)
+                .aSideMetro(DC)
+                .aSideRouterName("FCR-DC")
+                .aSideExistingRouterUuid("cr-existing-uuid")
+                .zSideServiceProfileUuid("sp-aws")
+                .zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1")
+                .zSideCloudType(CloudProviderType.AWS)
+                .zSideAuthenticationKey("123456789012")
+                .zSideVlanTag(1001)
+                .build());
+
+        plan.dryRun();
+
+        // The connection is still dry-run (the standalone path works), but carries no redundancy block.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
+                .withRequestBody(notMatching("(?s).*\"redundancy\".*")));
+    }
+
+    @Test
+    @DisplayName("a connection with no VLAN tag still dry-runs — a tagless DOT1Q, not a crash or a guessed tag")
+    void missingVlanTagDegradesToTaglessDot1q() {
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
+                .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+
+        // Auth key present so the dry-run is attempted; VLAN deliberately null (the customer input the
+        // wizard never fabricates). The body must be a valid DOT1Q request WITHOUT a guessed vlanTag.
+        DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
+                .name("FCR-DC-to-aws")
+                .connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000)
+                .aSideMetro(DC)
+                .aSideRouterName("FCR-DC")
+                .aSideExistingRouterUuid("cr-existing-uuid")
+                .zSideServiceProfileUuid("sp-aws")
+                .zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1")
+                .zSideCloudType(CloudProviderType.AWS)
+                .zSideAuthenticationKey("123456789012")
+                // zSideVlanTag intentionally omitted (null)
+                .build());
+
+        plan.dryRun();
+
+        // The dry-run is attempted (no crash from the null VLAN) and the body carries NO guessed vlanTag —
+        // the API is left to surface the missing tag rather than the SDK inventing one.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
+                .withRequestBody(notMatching("(?s).*\"vlanTag\".*")));
+    }
+
+    /**
+     * A minimal plan carrying a single lens-3b provider connection (pre-existing A-side endpoint), so
+     * {@code dryRun()} runs the connection's live endpoint dry-run for real against WireMock.
+     */
+    private DeploymentPlan lens3bPlan(PlannedConnection connection) {
+        return DeploymentPlan.builder()
+                .cloudRouters(Collections.emptyList())
+                .providerConnections(List.of(connection))
+                .backboneLinks(Collections.emptyList())
+                .routingProtocols(Collections.emptyList())
+                .fabric(fabric)
+                .build();
     }
 
     // ── stubbing helpers ──

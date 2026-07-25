@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpServerFeatures;
+import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,12 @@ import java.util.Map;
  * invokes the {@link ToolHandler}, and returns the payload as {@code structuredContent} plus a
  * serialized text block. Any exception becomes an MCP tool <em>error result</em>
  * ({@code isError: true}) — never a protocol failure — with the diagnostic logged to stderr.
+ *
+ * <p>The SDK hands each {@code callHandler} the client {@link McpSyncServerExchange}. Rather than
+ * widen the {@link ToolHandler} signature (every handler and every test would change), the adapter
+ * binds the exchange onto the {@link ServerContext} for the duration of the call via
+ * {@link ServerContext#withExchange}, so a handler that needs to prompt the user can read it back
+ * with {@link ServerContext#currentExchange()} and the rest stay untouched.</p>
  */
 final class McpToolAdapter {
 
@@ -64,18 +71,21 @@ final class McpToolAdapter {
 
         return McpServerFeatures.SyncToolSpecification.builder()
                 .tool(tool.build())
-                .callHandler((exchange, request) -> execute(registration, context, request))
+                .callHandler((exchange, request) -> execute(registration, context, exchange, request))
                 .build();
     }
 
     private static McpSchema.CallToolResult execute(ToolRegistration registration, ServerContext context,
+                                                    McpSyncServerExchange exchange,
                                                     McpSchema.CallToolRequest request) {
         ObjectMapper mapper = context.objectMapper();
         try {
             Map<String, Object> rawArguments = request.arguments();
             JsonNode arguments = rawArguments == null
                     ? mapper.createObjectNode() : mapper.valueToTree(rawArguments);
-            ObjectNode payload = registration.getHandler().handle(arguments, context);
+            // Bind the client exchange for this call so a handler can elicit; cleared on return.
+            ObjectNode payload = context.withExchange(exchange,
+                    () -> registration.getHandler().handle(arguments, context));
             return McpSchema.CallToolResult.builder()
                     .structuredContent(mapper.convertValue(payload, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() { }))
                     .addTextContent(mapper.writeValueAsString(payload))

@@ -183,34 +183,54 @@ final class DeploymentWizardEngine {
                 // Bandwidth-aware profile selection. The optimizer's single winner was chosen with no
                 // knowledge of this bandwidth, so a hosted profile (capped at, say, 500 Mbps) can be the
                 // default for a metro sized at 3000 Mbps. When the provider carries candidate profiles,
-                // pick one whose allowed tiers actually cover the bandwidth (a dedicated profile when the
-                // speed exceeds the hosted maximum). If NONE covers it, the connection is not buildable
-                // as-is: record a precise, actionable error and do not emit an unbuildable connection.
+                // pick one whose tiers cover the bandwidth — ROUNDING UP to the smallest satisfying tier
+                // (3000 -> 5000) rather than erroring on a non-exact requirement. The connection is
+                // stamped at that covering tier (so the Layer-1 tier check and pricing agree), the choice
+                // and any round-up are recorded on the connection's ProfileSelection (never a silent
+                // upsell), and every covering candidate is exposed for an interactive layer to resolve.
+                // Only when NOTHING can carry the bandwidth even rounded up is a precise error recorded.
+                int requestedMbps = bandwidth.getTotalMbps();
                 String serviceProfileUuid;
                 String sellerRegion;
+                int stampedBandwidth;
+                ProfileSelection profileSelection = null;
+                BandwidthAllocation stampedAllocation = bandwidth;
                 List<ServiceProfileOption> options = provider.getProfileOptions();
                 if (options != null && !options.isEmpty()) {
-                    Optional<ServiceProfileOption> chosen =
-                            chooseProfileForBandwidth(provider, bandwidth.getTotalMbps());
-                    if (chosen.isEmpty()) {
+                    ProfileSelection selection = selectProfile(provider, requestedMbps);
+                    if (selection == null) {
                         validationErrors.add(noCoveringProfileError(
-                                connName, provider, metro.getMetroId(), bandwidth.getTotalMbps(), options));
+                                connName, provider, metro.getMetroId(), requestedMbps, options));
                         continue;
                     }
-                    serviceProfileUuid = chosen.get().getServiceProfileUuid();
-                    sellerRegion = firstOrNull(chosen.get().getSellerRegions());
+                    profileSelection = selection;
+                    serviceProfileUuid = selection.getSelectedProfileUuid();
+                    sellerRegion = selection.getSelectedSellerRegion();
+                    stampedBandwidth = selection.getSelectedTierMbps();
+                    if (selection.isRoundedUp()) {
+                        // Surface the round-up on the sizing rationale too, so a reader of the bandwidth
+                        // breakdown sees the requirement AND the billed tier, not just the billed tier.
+                        stampedAllocation = bandwidth.toBuilder()
+                                .reasoning(bandwidth.getReasoning() + " | Rounded up " + requestedMbps + "→"
+                                        + stampedBandwidth + " Mbps to the nearest service-profile tier (+"
+                                        + selection.roundedUpByMbps() + " Mbps billable)")
+                                .build();
+                    }
                 } else {
-                    // Legacy / hand-built entry with no capability data: keep the pre-selected default.
+                    // Legacy / hand-built entry with no capability data: keep the pre-selected default and
+                    // the raw requirement — there is no tier list to round against.
                     serviceProfileUuid = provider.getServiceProfileUuid();
                     sellerRegion = firstOrNull(provider.getSellerRegions());
+                    stampedBandwidth = requestedMbps;
                 }
 
                 connections.add(PlannedConnection.builder()
                         .name(connName)
                         .connectionType(config.getProviderConnectionType())
                         .purpose(ConnectionPurpose.PROVIDER)
-                        .bandwidthMbps(bandwidth.getTotalMbps())
-                        .bandwidthAllocation(bandwidth)
+                        .bandwidthMbps(stampedBandwidth)
+                        .bandwidthAllocation(stampedAllocation)
+                        .profileSelection(profileSelection)
                         .aSideMetro(metro.getMetroId())
                         .aSideRouterName(routerName)
                         .zSideServiceProfileUuid(serviceProfileUuid)
@@ -229,56 +249,123 @@ final class DeploymentWizardEngine {
     }
 
     /**
-     * Picks, among a provider's candidate service profiles for a metro, one whose allowed bandwidths
-     * cover the requested speed. Policy: prefer the smallest-capable covering profile (so a 300&nbsp;Mbps
-     * connection takes a hosted profile and a 10000&nbsp;Mbps connection takes a dedicated one rather
-     * than the reverse), breaking ties by fewest wasted tiers, then by preferring the optimizer's
-     * default winner (which preserves its seller-region preference), then by the lowest uuid so the
-     * choice is deterministic regardless of catalog order.
+     * Selects, among a provider's candidate service profiles for a metro, the one to build a connection
+     * of the requested speed on — <em>rounding up</em> to the smallest tier that satisfies the
+     * requirement when no exact tier exists (3000&nbsp;Mbps against {@code [1000, 5000, 10000]} selects
+     * 5000, never an error), and stamping the connection at that covering tier.
+     *
+     * <p>Policy: prefer the profile whose smallest satisfying tier is smallest (least over-provisioning,
+     * so a 3000&nbsp;Mbps request prefers a profile rounding to 4000 over one rounding to 5000, and a
+     * profile carrying it exactly over either); then the tighter overall ceiling (hosted before
+     * dedicated when both would round to the same tier); then fewest wasted tiers; then the optimizer's
+     * default winner (preserving its seller-region preference); then the lowest uuid, so the choice is
+     * deterministic regardless of catalog order. Every covering candidate is returned on the selection
+     * so an interactive layer can present the alternatives.</p>
      *
      * @param provider the available provider entry, carrying its candidate {@code profileOptions}
-     * @param mbps     the computed connection bandwidth in Mbps
-     * @return the chosen profile, or empty when no candidate can carry {@code mbps}
+     * @param mbps     the computed connection bandwidth requirement in Mbps
+     * @return the selection (default profile, stamped tier, and covering alternatives), or {@code null}
+     *         when no candidate can carry {@code mbps} even after rounding up
      */
-    private static Optional<ServiceProfileOption> chooseProfileForBandwidth(
-            ProviderAvailability provider, int mbps) {
+    private static ProfileSelection selectProfile(ProviderAvailability provider, int mbps) {
         List<ServiceProfileOption> options = provider.getProfileOptions();
         if (options == null || options.isEmpty()) {
-            return Optional.empty();
+            return null;
         }
         String defaultUuid = provider.getServiceProfileUuid();
-        return options.stream()
-                .filter(option -> option.covers(mbps))
-                .min(Comparator
-                        .comparingInt(ServiceProfileOption::capacityCeiling)
-                        .thenComparingInt((ServiceProfileOption o) -> o.excessTiersAbove(mbps))
-                        .thenComparingInt(o -> Objects.equals(o.getServiceProfileUuid(), defaultUuid) ? 0 : 1)
-                        .thenComparing(ServiceProfileOption::getServiceProfileUuid,
-                                Comparator.nullsLast(Comparator.naturalOrder())));
+        Comparator<ServiceProfileOption> byFit = Comparator
+                .comparingInt((ServiceProfileOption o) -> o.coveringTier(mbps))
+                .thenComparingInt(ServiceProfileOption::capacityCeiling)
+                .thenComparingInt(o -> o.excessTiersAbove(mbps))
+                .thenComparingInt(o -> Objects.equals(o.getServiceProfileUuid(), defaultUuid) ? 0 : 1)
+                .thenComparing(ServiceProfileOption::getServiceProfileUuid,
+                        Comparator.nullsLast(Comparator.naturalOrder()));
+
+        List<ServiceProfileOption> covering = options.stream()
+                .filter(option -> option.canCover(mbps))
+                .sorted(byFit)
+                .collect(Collectors.toList());
+        if (covering.isEmpty()) {
+            return null;
+        }
+        ServiceProfileOption chosen = covering.get(0);
+        int chosenTier = chosen.coveringTier(mbps);
+        boolean roundedUp = chosenTier > mbps;
+        List<ProfileCandidate> alternatives = covering.stream()
+                .map(option -> toCandidate(option, mbps))
+                .collect(Collectors.toList());
+
+        return ProfileSelection.builder()
+                .requestedMbps(mbps)
+                .selectedProfileUuid(chosen.getServiceProfileUuid())
+                .selectedSellerRegion(firstOrNull(chosen.getSellerRegions()))
+                .selectedTierMbps(chosenTier)
+                .roundedUp(roundedUp)
+                .alternatives(alternatives)
+                .reasoning(selectionReasoning(chosen, mbps, chosenTier, covering.size(), roundedUp))
+                .build();
+    }
+
+    /** Projects a chosen/candidate service-profile option into the exposed {@link ProfileCandidate}. */
+    private static ProfileCandidate toCandidate(ServiceProfileOption option, int mbps) {
+        return ProfileCandidate.builder()
+                .serviceProfileUuid(option.getServiceProfileUuid())
+                .sellerRegions(option.getSellerRegions())
+                .coveringTierMbps(option.coveringTier(mbps))
+                .supportedBandwidths(option.getSupportedBandwidths())
+                .allowCustomBandwidth(option.isAllowCustomBandwidth())
+                .vcBandwidthMax(option.getVcBandwidthMax())
+                .build();
+    }
+
+    /** A one-line, honest explanation of the profile selection, including any round-up and its cost. */
+    private static String selectionReasoning(ServiceProfileOption chosen, int requested, int chosenTier,
+                                             int candidateCount, boolean roundedUp) {
+        String profile = chosen.getServiceProfileUuid() != null ? chosen.getServiceProfileUuid() : "(unknown)";
+        String choice = candidateCount > 1
+                ? " " + candidateCount + " profiles can carry this bandwidth; the tightest-fitting was chosen "
+                    + "(the alternatives are exposed for review)."
+                : "";
+        if (roundedUp) {
+            return "Requested " + requested + " Mbps has no exact tier on any candidate profile; rounded up to "
+                    + "the smallest satisfying tier " + chosenTier + " Mbps on profile " + profile
+                    + " (+" + (chosenTier - requested) + " Mbps billable)." + choice;
+        }
+        return "Requested " + requested + " Mbps is carried exactly at " + chosenTier + " Mbps by profile "
+                + profile + "." + choice;
     }
 
     /**
-     * A precise, actionable error for a connection whose bandwidth no available profile offers: it
-     * names the provider, metro and requested bandwidth, lists what each candidate DOES offer, and
-     * (when discrete tiers exist) suggests the supported bandwidths — the honest outcome, since
-     * silently snapping to a nearby tier would change the customer's stated intent.
+     * A precise, actionable error for a connection whose bandwidth exceeds every available profile even
+     * after rounding up — the genuine over-capacity case (never the merely-non-exact case, which now
+     * rounds up). It names the provider, metro and requested bandwidth, states the largest bandwidth any
+     * candidate can actually carry, and suggests reducing the speed or splitting across connections.
      */
     private static String noCoveringProfileError(String connName, ProviderAvailability provider,
                                                  MetroId metro, int mbps, List<ServiceProfileOption> options) {
-        List<Integer> offered = options.stream()
-                .filter(o -> o.getSupportedBandwidths() != null)
-                .flatMap(o -> o.getSupportedBandwidths().stream())
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-        String suggestion = offered.isEmpty()
-                ? "choose a bandwidth within a candidate profile's ceiling, or split the workload across "
-                    + "multiple connections"
-                : "choose a supported bandwidth " + offered + ", or split the workload across multiple connections";
+        int maxCoverable = options.stream()
+                .mapToInt(ServiceProfileOption::maxCoverableMbps)
+                .filter(m -> m > 0 && m != Integer.MAX_VALUE)
+                .max()
+                .orElse(0);
+        String ceilingClause;
+        String suggestion;
+        if (maxCoverable > 0) {
+            int splits = (int) Math.ceil((double) mbps / maxCoverable);
+            ceilingClause = "the largest bandwidth any available service profile can carry is " + maxCoverable
+                    + " Mbps";
+            suggestion = "reduce the bandwidth to " + maxCoverable + " Mbps or below, or split the workload "
+                    + "across multiple connections (for example " + splits + " connections of " + maxCoverable
+                    + " Mbps)";
+        } else {
+            ceilingClause = "no available service profile publishes a usable bandwidth";
+            suggestion = "choose a bandwidth within a candidate profile's ceiling, or split the workload "
+                    + "across multiple connections";
+        }
         return "Connection '" + connName + "' to provider '" + provider.getProviderLabel() + "' at metro "
-                + metro + ": bandwidth " + mbps + " Mbps is not offered by any available service profile — "
-                + describeProfileOptions(options) + ". " + suggestion + ".";
+                + metro + ": bandwidth " + mbps + " Mbps exceeds every available service profile even after "
+                + "rounding up to the nearest tier — " + ceilingClause + ". " + suggestion + ". Candidate "
+                + "profiles: " + describeProfileOptions(options) + ".";
     }
 
     /** Renders each candidate profile's bandwidth capability for the no-covering-profile error. */
@@ -571,7 +658,10 @@ final class DeploymentWizardEngine {
     //  Phase 5: Pricing
     // ══════════════════════════════════════════════
 
-    private static PlanPricing estimatePricing(
+    // Package-private (not private) so DeploymentWizard — in this package — can reprice an existing
+    // plan after its connections change (e.g. an MCP profile choice altered a billable tier). The
+    // logic is unchanged; only the visibility is widened for that one same-package caller.
+    static PlanPricing estimatePricing(
             DeploymentWizard.Builder config,
             List<PlannedCloudRouter> routers,
             List<PlannedConnection> providerConnections,

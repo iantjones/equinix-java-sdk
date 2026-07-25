@@ -26,10 +26,25 @@ import java.util.Objects;
  * of the discrete {@link #getSupportedBandwidths() supportedBandwidths} tiers — unless the profile
  * {@link #isAllowCustomBandwidth() allows custom bandwidth} or publishes no discrete tier list at
  * all, either of which lifts the discrete-tier constraint.</p>
+ *
+ * <p>{@link #covers(int)} answers the <em>exact</em> question ("can this profile build a VC at exactly
+ * this speed?"). Bandwidth <em>round-up</em> — the owner's rule that a requirement with no exact tier
+ * selects the smallest tier that satisfies it (3000&nbsp;&rarr;&nbsp;5000, never an error) — is a
+ * separate primitive, {@link #coveringTier(int)}: the smallest thing this profile can actually build
+ * that is not below the requirement. The wizard stamps the connection at that covering tier (which
+ * {@code covers()} then accepts exactly), so the round-up selection and the Layer-1 tier check stay in
+ * agreement. {@code covers()} is deliberately left exact so it keeps mirroring {@code checkProfile}.</p>
  */
 @Value
 @Builder
 public class ServiceProfileOption {
+
+    /**
+     * The {@link #coveringTier(int)} sentinel returned when a profile cannot build the requested
+     * bandwidth even after rounding up — the requirement exceeds its largest tier (and its per-metro
+     * ceiling). Chosen negative so it sorts below every real tier in a smallest-fit comparator.
+     */
+    public static final int NO_COVERING_TIER = -1;
 
     /** The Fabric service-profile uuid this candidate refers to. */
     String serviceProfileUuid;
@@ -74,6 +89,84 @@ public class ServiceProfileOption {
             return true;
         }
         return supportedBandwidths.contains(mbps);
+    }
+
+    /**
+     * The smallest bandwidth this profile can actually build that <em>satisfies</em> (is not below) the
+     * requested speed — the bandwidth round-up primitive. This is what the wizard stamps the connection
+     * at when the exact requirement is not an offered tier:
+     * <ul>
+     *   <li>a discrete-tier profile returns its smallest published tier {@code >= mbps} (so 3000 against
+     *       {@code [1000, 5000, 10000]} returns 5000);</li>
+     *   <li>a {@link #isAllowCustomBandwidth() custom-bandwidth} or tierless profile returns {@code mbps}
+     *       itself — the exact speed is buildable, so nothing is rounded;</li>
+     *   <li>in either case the result is clamped to the per-metro ceiling
+     *       ({@link #getVcBandwidthMax() vcBandwidthMax}): a tier above the ceiling is not selectable.</li>
+     * </ul>
+     * Returns {@link #NO_COVERING_TIER} when even rounding up cannot satisfy the requirement (it exceeds
+     * the largest tier this profile publishes and its ceiling). Because the returned tier is always one
+     * {@link #covers(int)} accepts exactly, stamping the connection at it keeps the selector and the
+     * Layer-1 validator in agreement.
+     *
+     * @param mbps the requested connection bandwidth in Mbps
+     * @return the smallest satisfying tier in Mbps, or {@link #NO_COVERING_TIER} if none exists
+     */
+    public int coveringTier(int mbps) {
+        if (mbps <= 0) {
+            return NO_COVERING_TIER;
+        }
+        // Custom-bandwidth or tierless: the exact requested speed is buildable, up to the ceiling.
+        if (allowCustomBandwidth || supportedBandwidths == null || supportedBandwidths.isEmpty()) {
+            if (vcBandwidthMax != null && mbps > vcBandwidthMax) {
+                return NO_COVERING_TIER;
+            }
+            return mbps;
+        }
+        int best = NO_COVERING_TIER;
+        for (Integer tier : supportedBandwidths) {
+            if (tier == null || tier < mbps) {
+                continue;
+            }
+            if (vcBandwidthMax != null && tier > vcBandwidthMax) {
+                continue;
+            }
+            if (best == NO_COVERING_TIER || tier < best) {
+                best = tier;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Whether this profile can carry the requested bandwidth <em>after rounding up</em> — i.e. whether
+     * {@link #coveringTier(int)} finds a satisfying tier. Distinct from {@link #covers(int)}, which is
+     * the exact-tier test: a 3000&nbsp;Mbps request {@code covers()==false} but {@code canCover()==true}
+     * on a profile publishing a 5000&nbsp;Mbps tier.
+     *
+     * @param mbps the requested connection bandwidth in Mbps
+     * @return {@code true} when a satisfying tier exists (exact or rounded up)
+     */
+    public boolean canCover(int mbps) {
+        return coveringTier(mbps) != NO_COVERING_TIER;
+    }
+
+    /**
+     * The largest bandwidth this profile can build in Mbps — its largest published tier clamped to the
+     * per-metro ceiling, the ceiling itself for a custom/tierless profile, or {@link Integer#MAX_VALUE}
+     * when it is unbounded. Used to phrase the "requirement exceeds every profile" error with the real
+     * maximum a customer could ask for instead.
+     *
+     * @return the largest buildable bandwidth in Mbps
+     */
+    public int maxCoverableMbps() {
+        if (allowCustomBandwidth || supportedBandwidths == null || supportedBandwidths.isEmpty()) {
+            return vcBandwidthMax != null ? vcBandwidthMax : Integer.MAX_VALUE;
+        }
+        int maxTier = maxSupportedBandwidth();
+        if (maxTier <= 0) {
+            return vcBandwidthMax != null ? vcBandwidthMax : Integer.MAX_VALUE;
+        }
+        return vcBandwidthMax != null ? Math.min(maxTier, vcBandwidthMax) : maxTier;
     }
 
     /**

@@ -365,6 +365,10 @@ public final class EquinixMcpServer implements AutoCloseable {
                         : base + " All tools are read-only — nothing is ever provisioned by this server.";
             }
 
+            // Elicitation is a CLIENT capability (roots/sampling/elicitation are declared by the client
+            // at initialize), not a server one — the SDK's ServerCapabilities has no elicitation flag to
+            // set here. A handler that wants to prompt the user reads the negotiated client capability
+            // off the exchange (see ElicitationSupport.supportsForm) and elicits, or falls back cleanly.
             McpSyncServer mcpServer = McpServer.sync(transport)
                     .serverInfo(SERVER_NAME, serverVersion())
                     .capabilities(McpSchema.ServerCapabilities.builder().tools(false).build())

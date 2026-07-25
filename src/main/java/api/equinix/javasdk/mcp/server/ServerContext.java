@@ -31,9 +31,11 @@ import api.equinix.javasdk.fabric.model.MetroRegistry;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.modelcontextprotocol.server.McpSyncServerExchange;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 /**
  * The shared state a {@link ToolHandler} executes against: the lazily-built SDK facades
@@ -64,11 +66,29 @@ public final class ServerContext {
     /** Default hard timeout for a single live provider-pricing lookup. */
     public static final long DEFAULT_PRICING_TIMEOUT_MS = 12_000L;
 
+    /** Environment variable overriding the hard timeout for a single elicitation round-trip, in ms. */
+    public static final String ENV_ELICIT_TIMEOUT_MS = "EQUINIX_MCP_ELICIT_TIMEOUT_MS";
+
+    /**
+     * Default hard timeout for a single elicitation round-trip. Generous (a human may be answering
+     * the prompt) but bounded, so a tool call can never block forever waiting on the client.
+     */
+    public static final long DEFAULT_ELICIT_TIMEOUT_MS = 300_000L;
+
     private final Equinix session;
     private final Map<String, String> environment;
     private final ObjectMapper objectMapper;
     private final PlanStore planStore;
     private final ProviderRateCardFactory providerRateCardFactory;
+
+    /**
+     * The MCP client exchange bound for the duration of the current tool call, or {@code null} when a
+     * handler is invoked outside a served call (e.g. a unit test invoking a handler directly). Held per
+     * thread — the sync server runs each {@code callHandler} on the thread that reads
+     * {@link #currentExchange()}, so a request-scoped {@link ThreadLocal} keeps concurrent calls
+     * isolated without threading a new parameter through the whole {@link ToolHandler} seam.
+     */
+    private final ThreadLocal<McpSyncServerExchange> currentExchange = new ThreadLocal<>();
 
     private FabricGateway fabric;
     private Design design;
@@ -211,6 +231,66 @@ public final class ServerContext {
                 return DEFAULT_PRICING_TIMEOUT_MS;
             }
         }).orElse(DEFAULT_PRICING_TIMEOUT_MS);
+    }
+
+    /**
+     * @return the hard timeout for a single elicitation round-trip, from {@link #ENV_ELICIT_TIMEOUT_MS}
+     *         or the {@link #DEFAULT_ELICIT_TIMEOUT_MS default}
+     */
+    public long elicitTimeoutMillis() {
+        return env(ENV_ELICIT_TIMEOUT_MS).map(v -> {
+            try {
+                return Long.parseLong(v);
+            }
+            catch (NumberFormatException e) {
+                return DEFAULT_ELICIT_TIMEOUT_MS;
+            }
+        }).orElse(DEFAULT_ELICIT_TIMEOUT_MS);
+    }
+
+    /**
+     * The MCP client exchange bound for the current tool call, or {@code null} when the handler is
+     * running outside a served call (a direct unit-test invocation, or a transport that supplied none).
+     * A handler that wants to prompt the user reads this and hands it to {@link ElicitationSupport};
+     * a {@code null} exchange means "no interactive client", and the elicitation degrades cleanly.
+     *
+     * @return the current call's exchange, or {@code null}
+     */
+    public McpSyncServerExchange currentExchange() {
+        return currentExchange.get();
+    }
+
+    /**
+     * Runs {@code body} with {@code exchange} bound as the {@link #currentExchange()} for its duration,
+     * restoring the previous binding afterwards. The adapter wraps every handler invocation in this so a
+     * handler can elicit; tests use it to bind a stub exchange around a direct handler call. A
+     * {@code null} exchange clears the binding for the call.
+     *
+     * @param exchange the exchange to bind (may be {@code null})
+     * @param body the work to run with the binding in effect
+     * @param <T> the body's result type
+     * @return the body's result
+     * @throws Exception whatever {@code body} throws
+     */
+    <T> T withExchange(McpSyncServerExchange exchange, Callable<T> body) throws Exception {
+        McpSyncServerExchange previous = currentExchange.get();
+        if (exchange == null) {
+            currentExchange.remove();
+        }
+        else {
+            currentExchange.set(exchange);
+        }
+        try {
+            return body.call();
+        }
+        finally {
+            if (previous == null) {
+                currentExchange.remove();
+            }
+            else {
+                currentExchange.set(previous);
+            }
+        }
     }
 
     private Equinix requireSession(String what) {

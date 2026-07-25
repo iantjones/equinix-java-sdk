@@ -31,6 +31,9 @@ import api.equinix.javasdk.design.optimizer.wizard.DeploymentWizard;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlanPricing;
+import api.equinix.javasdk.design.optimizer.wizard.model.PlannedConnection;
+import api.equinix.javasdk.design.optimizer.wizard.model.ProfileCandidate;
+import api.equinix.javasdk.design.optimizer.wizard.model.ProfileSelection;
 import api.equinix.javasdk.design.peering.PeeringIntelligence;
 import api.equinix.javasdk.design.peering.model.PeeringIntelligenceResult;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
@@ -47,8 +50,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.modelcontextprotocol.server.McpSyncServerExchange;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -442,7 +448,13 @@ final class DesignToolFactory {
                         + "which are sized from the workloads placed at each metro."),
                 "project_id", string("Equinix Fabric project id recorded on each planned Cloud Router."),
                 "account_number", integer("Equinix billing account number recorded on each planned Cloud "
-                        + "Router."),
+                        + "Router. OPTIONAL: when omitted it is auto-resolved from the authenticated "
+                        + "identity's billing accounts — a single visible account is used automatically, "
+                        + "and when several are visible you are prompted to choose (or, when the client "
+                        + "cannot prompt, the plan comes back as 'choice_required' naming the candidate "
+                        + "account numbers to pass here). Supplying it explicitly skips resolution "
+                        + "entirely. If none can be resolved, no number is fabricated — the plan is "
+                        + "returned without one and says so."),
                 "notifications", array("Email addresses for provisioning notifications. Only the FIRST "
                                 + "address is used — a planned Fabric resource carries a single notification "
                                 + "address — so put the address you want on the plan first.",
@@ -476,7 +488,18 @@ final class DesignToolFactory {
                         + "dry-runs cannot run — the skip is called out, not hidden. required_inputs is a "
                         + "per-connection checklist of exactly what the customer must gather before "
                         + "provisioning (the cloud authorization key, a VLAN tag, and for Azure the peering "
-                        + "type) — never fabricated. Pricing is not term-scoped: the rate cards this server "
+                        + "type) — never fabricated. The billing account_number is OPTIONAL and "
+                        + "auto-resolved from the authenticated identity: a single visible account is used, "
+                        + "several prompt you to choose (and, when the client cannot prompt, the tool "
+                        + "returns 'choice_required' naming the candidate account numbers instead of a "
+                        + "plan), and when none can be resolved the plan comes back without one and says so "
+                        + "— never a fabricated number; the resolution is reported under account_resolution. "
+                        + "Each provider connection carries a profile_selection block showing the requested "
+                        + "bandwidth, the billable tier it was stamped at (rounded up to the nearest "
+                        + "service-profile tier when no exact tier exists — surfaced, never silent), the "
+                        + "chosen service profile and seller region, and every covering alternative; when a "
+                        + "connection has more than one covering profile you are prompted to pick, defaulting "
+                        + "to the tightest fit when the client cannot prompt. Pricing is not term-scoped: the rate cards this server "
                         + "reads resolve by product, bandwidth and metro only, so no contract term is "
                         + "accepted or applied. The returned plan_id can be passed to "
                         + "design_export_terraform while this server process is running (plans are held in "
@@ -510,8 +533,13 @@ final class DesignToolFactory {
                     + "so there is nothing to plan. Relax the constraints and try again.");
         }
 
+        // The MCP client exchange bound for this call (null outside a served call). It is what lets a
+        // handler prompt the user — for the multi-account choice and any multi-profile connection.
+        McpSyncServerExchange exchange = ctx.currentExchange();
+
         DeploymentWizard.Builder wizard = ctx.design().deploymentWizard(optimized);
         JsonNode d = args.get("deployment");
+        Optional<Long> explicitAccount = Optional.empty();
         if (d != null && d.isObject()) {
             optLong(d, "customer_asn").ifPresent(wizard::customerAsn);
             optString(d, "router_package").ifPresent(wizard::routerPackage);
@@ -519,7 +547,7 @@ final class DesignToolFactory {
             optEnum(d, "backbone_topology", BackboneTopology.class).ifPresent(wizard::backboneTopology);
             optInt(d, "backbone_bandwidth_mbps").ifPresent(wizard::backboneBandwidthMbps);
             optString(d, "project_id").ifPresent(wizard::projectId);
-            optLong(d, "account_number").ifPresent(wizard::accountNumber);
+            explicitAccount = optLong(d, "account_number");
             List<String> notifications = Args.stringList(d, "notifications");
             if (!notifications.isEmpty()) {
                 wizard.notifications(notifications.toArray(new String[0]));
@@ -529,12 +557,238 @@ final class DesignToolFactory {
             // term, so a term accepted here would change no figure in the returned plan.
         }
 
+        // Billing account: an explicit account_number wins and skips resolution entirely; otherwise
+        // auto-resolve it from the authenticated identity. A multi-account case the client cannot (or
+        // the user did not) resolve returns a 'choice_required' result naming the candidates rather
+        // than a plan; a zero/failed resolution leaves the account unset and is called out honestly —
+        // a number is never fabricated.
+        ObjectNode accountBlock;
+        if (explicitAccount.isPresent()) {
+            wizard.accountNumber(explicitAccount.get());
+            accountBlock = explicitAccountBlock(ctx, explicitAccount.get());
+        }
+        else {
+            AccountResolver.Resolution resolution = AccountResolver.resolve(ctx, exchange);
+            if (resolution.kind() == AccountResolver.Kind.CHOICE_REQUIRED) {
+                return accountChoiceRequiredPayload(ctx, resolution);
+            }
+            if (resolution.kind() == AccountResolver.Kind.RESOLVED) {
+                wizard.accountNumber(resolution.accountNumber());
+            }
+            accountBlock = accountResolutionBlock(ctx, resolution);
+        }
+
         DeploymentPlan plan = wizard.plan();
+
+        // Profile choice: for every provider connection whose bandwidth can be carried by more than one
+        // service profile, prompt the user to pick. When the client cannot elicit (or the user declines)
+        // the wizard's already-valid default is kept. Non-fatal — a prompt failure never fails the plan.
+        ProfileChoices choices = applyProfileChoices(plan, ctx, exchange);
+        plan = choices.plan();
+
+        // A profile pick that moved a connection onto a different service profile can change its billable
+        // bandwidth tier; the rebuilt plan still carries the pricing computed from the pre-swap tiers, so
+        // recompute it from the now-current connections (same rate card + term the plan was built with).
+        // Only when a choice actually changed the plan — repricing an unchanged plan is a no-op-equivalent.
+        if (choices.changed()) {
+            plan = wizard.reprice(plan);
+        }
+
         String planId = ctx.planStore().put(plan);
-        return planPayload(plan, planId, ctx);
+        ObjectNode payload = planPayload(plan, planId, ctx, choices);
+        payload.set("account_resolution", accountBlock);
+        return payload;
     }
 
-    private static ObjectNode planPayload(DeploymentPlan plan, String planId, ServerContext ctx) {
+    // ── account-number resolution (serialization) ───────────────────────────
+
+    /** The account_resolution block for an explicitly supplied account number (resolution skipped). */
+    private static ObjectNode explicitAccountBlock(ServerContext ctx, long account) {
+        ObjectNode block = ctx.objectMapper().createObjectNode();
+        block.put("resolution", "explicit");
+        block.put("account_number", String.valueOf(account));
+        block.put("source", "the account_number supplied in the request — auto-resolution was skipped");
+        return block;
+    }
+
+    /** The account_resolution block for an auto-resolved or unresolved account number. */
+    private static ObjectNode accountResolutionBlock(ServerContext ctx, AccountResolver.Resolution resolution) {
+        ObjectNode block = ctx.objectMapper().createObjectNode();
+        if (resolution.kind() == AccountResolver.Kind.RESOLVED) {
+            block.put("resolution", "auto_resolved");
+            block.put("account_number", resolution.accountNumberText());
+            block.put("source", resolution.source());
+        }
+        else {
+            block.put("resolution", "unresolved");
+            block.putNull("account_number");
+            block.put("message", resolution.message());
+        }
+        return block;
+    }
+
+    /**
+     * The whole tool result when a multi-account choice must be made but was not (the client cannot
+     * elicit, or the user declined): a 'choice_required' payload naming every candidate account number,
+     * so the agent can re-call with an explicit account_number. No plan is built or stored.
+     */
+    private static ObjectNode accountChoiceRequiredPayload(ServerContext ctx, AccountResolver.Resolution resolution) {
+        ObjectNode payload = ctx.objectMapper().createObjectNode();
+        payload.put("status", "choice_required");
+        payload.put("executed", false);
+        payload.put("reason", resolution.message());
+        ObjectNode account = payload.putObject("account_number");
+        account.put("resolution", "choice_required");
+        account.put("message", resolution.message());
+        ArrayNode candidates = account.putArray("candidates");
+        resolution.candidates().forEach(candidate -> {
+            ObjectNode c = candidates.addObject();
+            c.put("account_number", candidate.number());
+            c.put("account_name", candidate.name());
+        });
+        payload.put("next_step", "Re-call design_plan_deployment with an explicit account_number chosen "
+                + "from the candidates above.");
+        return payload;
+    }
+
+    // ── profile-choice elicitation ──────────────────────────────────────────
+
+    /**
+     * For each provider connection with more than one covering service profile, prompts the user to
+     * pick one; a pick that differs from the wizard's default rebuilds that connection (and the plan)
+     * onto the chosen profile. When the client cannot elicit, or the user declines, the default is kept
+     * — it is always valid. Returns the (possibly rebuilt) plan plus a per-connection record of what
+     * happened, for serialization. Never throws: a prompt failure keeps the default.
+     */
+    static ProfileChoices applyProfileChoices(DeploymentPlan plan, ServerContext ctx, McpSyncServerExchange exchange) {
+        Map<String, ProfileChoiceRecord> records = new LinkedHashMap<>();
+        List<PlannedConnection> connections = plan.getProviderConnections();
+        if (connections == null || connections.isEmpty()) {
+            return new ProfileChoices(plan, records, false);
+        }
+        boolean canElicit = ElicitationSupport.supportsForm(exchange);
+        List<PlannedConnection> rebuilt = new ArrayList<>(connections.size());
+        boolean changed = false;
+        for (PlannedConnection conn : connections) {
+            ProfileSelection selection = conn.getProfileSelection();
+            if (selection == null || !selection.hasChoice()) {
+                rebuilt.add(conn);
+                continue;
+            }
+            if (!canElicit) {
+                records.put(conn.getName(), ProfileChoiceRecord.keptDefault(selection.getSelectedProfileUuid(),
+                        "the client did not declare elicitation support — kept the default (tightest-fit) profile"));
+                rebuilt.add(conn);
+                continue;
+            }
+
+            List<ElicitationSupport.Option> options = new ArrayList<>();
+            for (ProfileCandidate candidate : selection.getAlternatives()) {
+                String detail = candidate.getCoveringTierMbps() + " Mbps"
+                        + (candidate.firstSellerRegion() != null ? " @ " + candidate.firstSellerRegion() : "")
+                        + (candidate.getServiceProfileUuid().equals(selection.getSelectedProfileUuid())
+                        ? " (default)" : "");
+                options.add(new ElicitationSupport.Option(candidate.getServiceProfileUuid(),
+                        "Profile " + candidate.getServiceProfileUuid(), detail));
+            }
+            ElicitationSupport.Outcome outcome = ElicitationSupport.chooseOne(ctx, exchange,
+                    "Connection '" + conn.getName() + "' can be carried by more than one service profile. "
+                            + "Which profile should it use?", options);
+
+            if (!outcome.picked()) {
+                records.put(conn.getName(), ProfileChoiceRecord.keptDefault(selection.getSelectedProfileUuid(),
+                        outcome.detail() + " — kept the default (tightest-fit) profile"));
+                rebuilt.add(conn);
+                continue;
+            }
+            String pickedUuid = outcome.option().id();
+            if (pickedUuid.equals(selection.getSelectedProfileUuid())) {
+                records.put(conn.getName(), ProfileChoiceRecord.picked(pickedUuid,
+                        "the user confirmed the default profile"));
+                rebuilt.add(conn);
+                continue;
+            }
+            ProfileCandidate chosen = candidateByUuid(selection, pickedUuid);
+            if (chosen == null) {
+                records.put(conn.getName(), ProfileChoiceRecord.keptDefault(selection.getSelectedProfileUuid(),
+                        "the selection matched no candidate — kept the default profile"));
+                rebuilt.add(conn);
+                continue;
+            }
+            rebuilt.add(withChosenProfile(conn, selection, chosen));
+            records.put(conn.getName(), ProfileChoiceRecord.picked(pickedUuid,
+                    "the user selected profile " + pickedUuid + " at " + chosen.getCoveringTierMbps() + " Mbps"));
+            changed = true;
+        }
+        return new ProfileChoices(changed ? rebuildWithConnections(plan, rebuilt) : plan, records, changed);
+    }
+
+    private static ProfileCandidate candidateByUuid(ProfileSelection selection, String uuid) {
+        if (selection.getAlternatives() == null) {
+            return null;
+        }
+        for (ProfileCandidate candidate : selection.getAlternatives()) {
+            if (candidate.getServiceProfileUuid().equals(uuid)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Rebuilds a planned connection onto a user-chosen covering profile: the Z-side service profile,
+     * its seller region and the billable tier this profile uses, plus a refreshed {@link ProfileSelection}
+     * with the pick as the default and the alternatives reordered pick-first.
+     */
+    private static PlannedConnection withChosenProfile(PlannedConnection conn, ProfileSelection selection,
+                                                       ProfileCandidate chosen) {
+        List<ProfileCandidate> reordered = new ArrayList<>();
+        reordered.add(chosen);
+        for (ProfileCandidate candidate : selection.getAlternatives()) {
+            if (!candidate.getServiceProfileUuid().equals(chosen.getServiceProfileUuid())) {
+                reordered.add(candidate);
+            }
+        }
+        String reasoning = (selection.getReasoning() == null ? "" : selection.getReasoning() + " ")
+                + "User selected profile " + chosen.getServiceProfileUuid() + " at "
+                + chosen.getCoveringTierMbps() + " Mbps.";
+        ProfileSelection updated = ProfileSelection.builder()
+                .requestedMbps(selection.getRequestedMbps())
+                .selectedProfileUuid(chosen.getServiceProfileUuid())
+                .selectedSellerRegion(chosen.firstSellerRegion())
+                .selectedTierMbps(chosen.getCoveringTierMbps())
+                .roundedUp(chosen.getCoveringTierMbps() > selection.getRequestedMbps())
+                .alternatives(reordered)
+                .reasoning(reasoning)
+                .build();
+        return conn.toBuilder()
+                .zSideServiceProfileUuid(chosen.getServiceProfileUuid())
+                .zSideSellerRegion(chosen.firstSellerRegion())
+                .bandwidthMbps(chosen.getCoveringTierMbps())
+                .profileSelection(updated)
+                .build();
+    }
+
+    /** Rebuilds an otherwise-identical plan with a replaced provider-connection list. */
+    private static DeploymentPlan rebuildWithConnections(DeploymentPlan plan, List<PlannedConnection> connections) {
+        return DeploymentPlan.builder()
+                .sourceOptimization(plan.getSourceOptimization())
+                .cloudRouters(plan.getCloudRouters())
+                .providerConnections(connections)
+                .backboneLinks(plan.getBackboneLinks())
+                .routingProtocols(plan.getRoutingProtocols())
+                .pricing(plan.getPricing())
+                .valid(plan.isValid())
+                .validationErrors(plan.getValidationErrors())
+                .deferredValidations(plan.getDeferredValidations())
+                .skippedValidations(plan.getSkippedValidations())
+                .requiredInputs(plan.getRequiredInputs())
+                .fabric(plan.getFabric())
+                .build();
+    }
+
+    static ObjectNode planPayload(DeploymentPlan plan, String planId, ServerContext ctx,
+                                  ProfileChoices choices) {
         ObjectMapper mapper = ctx.objectMapper();
         ObjectNode payload = mapper.createObjectNode();
         payload.put("plan_id", planId);
@@ -551,6 +805,14 @@ final class DesignToolFactory {
                 r.put("metro", String.valueOf(cr.getMetroId()));
                 r.put("package", String.valueOf(cr.getPackageCode()));
                 r.put("project_id", cr.getProjectId());
+                // The resolved (or explicitly supplied) billing account, stamped on the router body the
+                // plan will dry-run/create — null when no account could be resolved (never fabricated).
+                if (cr.getAccountNumber() != null) {
+                    r.put("account_number", cr.getAccountNumber());
+                }
+                else {
+                    r.putNull("account_number");
+                }
             });
         }
 
@@ -564,6 +826,10 @@ final class DesignToolFactory {
                 cn.put("provider", pc.getZSideProviderLabel());
                 cn.put("seller_region", pc.getZSideSellerRegion());
                 cn.put("router", pc.getASideRouterName());
+                // The bandwidth-aware profile selection: the requested speed, the billable tier it was
+                // stamped at (possibly rounded up), the chosen profile/region, every covering
+                // alternative, and — when the connection had a genuine choice — how it was resolved.
+                serializeProfileSelection(cn, pc, choices);
             });
         }
 
@@ -675,6 +941,94 @@ final class DesignToolFactory {
             });
         }
         return payload;
+    }
+
+    /**
+     * Serializes a provider connection's {@link ProfileSelection} into a {@code profile_selection} block
+     * on {@code cn}: the requested bandwidth, the billable tier (with the round-up made explicit), the
+     * chosen profile and seller region, every covering alternative, and — for a connection that had a
+     * genuine choice — how the choice was resolved (elicited pick, or default kept and why). Emits
+     * nothing for a connection with no selection (a backbone link or a legacy availability entry).
+     */
+    private static void serializeProfileSelection(ObjectNode cn, PlannedConnection pc, ProfileChoices choices) {
+        ProfileSelection selection = pc.getProfileSelection();
+        if (selection == null) {
+            return;
+        }
+        ObjectNode ps = cn.putObject("profile_selection");
+        ps.put("requested_mbps", selection.getRequestedMbps());
+        ps.put("selected_tier_mbps", selection.getSelectedTierMbps());
+        ps.put("rounded_up", selection.isRoundedUp());
+        ps.put("rounded_up_by_mbps", selection.roundedUpByMbps());
+        ps.put("selected_profile_uuid", selection.getSelectedProfileUuid());
+        ps.put("seller_region", selection.getSelectedSellerRegion());
+        ps.put("has_choice", selection.hasChoice());
+        if (selection.getReasoning() != null) {
+            ps.put("reasoning", selection.getReasoning());
+        }
+
+        ArrayNode alternatives = ps.putArray("alternatives");
+        if (selection.getAlternatives() != null) {
+            for (ProfileCandidate candidate : selection.getAlternatives()) {
+                ObjectNode a = alternatives.addObject();
+                a.put("service_profile_uuid", candidate.getServiceProfileUuid());
+                a.put("covering_tier_mbps", candidate.getCoveringTierMbps());
+                a.put("allow_custom_bandwidth", candidate.isAllowCustomBandwidth());
+                ArrayNode regions = a.putArray("seller_regions");
+                if (candidate.getSellerRegions() != null) {
+                    candidate.getSellerRegions().forEach(regions::add);
+                }
+                ArrayNode bandwidths = a.putArray("supported_bandwidths");
+                if (candidate.getSupportedBandwidths() != null) {
+                    for (Integer bandwidth : candidate.getSupportedBandwidths()) {
+                        bandwidths.add(bandwidth);
+                    }
+                }
+                if (candidate.getVcBandwidthMax() != null) {
+                    a.put("vc_bandwidth_max_mbps", candidate.getVcBandwidthMax());
+                }
+            }
+        }
+
+        // How a genuine choice was resolved for this connection (elicited pick, or default kept).
+        ProfileChoiceRecord record = choices == null ? null : choices.records().get(pc.getName());
+        if (record != null) {
+            ObjectNode choice = ps.putObject("choice");
+            choice.put("status", record.status());
+            choice.put("selected_profile_uuid", record.selectedProfileUuid());
+            choice.put("detail", record.detail());
+        }
+    }
+
+    /**
+     * The result of resolving profile choices for a plan: the (possibly rebuilt) plan and a
+     * per-connection-name record of how each genuine choice was resolved.
+     *
+     * @param plan the plan, rebuilt onto any user-chosen profiles (or the original when nothing changed)
+     * @param records the per-connection choice records, keyed by connection name
+     * @param changed whether a pick actually rebuilt the plan (a connection moved to a different profile);
+     *                {@code true} means the plan's connections — and possibly their billable tiers —
+     *                differ from the wizard's default, so the plan's pricing must be recomputed
+     */
+    record ProfileChoices(DeploymentPlan plan, Map<String, ProfileChoiceRecord> records, boolean changed) {
+    }
+
+    /**
+     * How one connection's profile choice was resolved.
+     *
+     * @param status {@code "picked"} (the user chose) or {@code "kept_default"} (no prompt / declined)
+     * @param selectedProfileUuid the profile the plan ended up on
+     * @param detail a human/LLM-readable explanation
+     */
+    record ProfileChoiceRecord(String status, String selectedProfileUuid, String detail) {
+
+        static ProfileChoiceRecord picked(String profileUuid, String detail) {
+            return new ProfileChoiceRecord("picked", profileUuid, detail);
+        }
+
+        static ProfileChoiceRecord keptDefault(String profileUuid, String detail) {
+            return new ProfileChoiceRecord("kept_default", profileUuid, detail);
+        }
     }
 
     // ── design_estimate_latency ─────────────────────────────────────────────
