@@ -3,7 +3,6 @@ package api.equinix.javasdk.design.optimizer.wizard;
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.enums.MetroCode;
 import api.equinix.javasdk.core.model.MetroId;
-import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.design.optimizer.model.*;
@@ -77,9 +76,6 @@ final class DeploymentWizardEngine {
         // Phase 2: Plan Provider Connections
         List<PlannedConnection> providerConnections = planProviderConnections(config, metros, result, names, routerNames);
 
-        // Phase 2b: Connection validation via the native Fabric REST dry-run surface.
-        dryRunValidateConnections(config.getFabric(), providerConnections, validationErrors);
-
         // Phase 3: Plan Backbone Links
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros, names, routerNames);
 
@@ -89,8 +85,24 @@ final class DeploymentWizardEngine {
         // Phase 5: Estimate Pricing
         PlanPricing pricing = estimatePricing(config, cloudRouters, providerConnections, backboneLinks);
 
-        // Validate
-        validate(cloudRouters, providerConnections, backboneLinks, validationErrors);
+        // Phase 6: Layered plan-time validation.
+        //   Layer 1 — structural + catalog checks (no provisioning, no live connection dry-run).
+        //   Layer 2 — live router dry-run (self-contained FCRs, POST /routers?dryRun=true).
+        //   Layer 3 — connection endpoint dry-run: DEFERRED for a to-be-created FCR (recorded, not sent
+        //             as a doomed endpoint-less dry-run), or a REAL dry-run for a pre-existing endpoint.
+        // The connection-authorization each connection will need before provisioning is enumerated
+        // separately so a structurally-fine plan is never reported as a validation error.
+        PlanValidator.Result validation = PlanValidator.validate(
+                metros,
+                result.getRequest(),
+                result.getTopology(),
+                cloudRouters,
+                providerConnections,
+                backboneLinks,
+                routingProtocols,
+                config.getCustomerAsn(),
+                config.getFabric());
+        validationErrors.addAll(validation.errors);
 
         return DeploymentPlan.builder()
                 .sourceOptimization(result)
@@ -101,6 +113,9 @@ final class DeploymentWizardEngine {
                 .pricing(pricing)
                 .valid(validationErrors.isEmpty())
                 .validationErrors(validationErrors)
+                .deferredValidations(validation.deferred)
+                .skippedValidations(validation.skipped)
+                .requiredInputs(validation.requiredInputs)
                 .fabric(config.getFabric())
                 .build();
     }
@@ -174,6 +189,10 @@ final class DeploymentWizardEngine {
                         .zSideServiceProfileUuid(provider.getServiceProfileUuid())
                         .zSideProviderLabel(provider.getProviderLabel())
                         .zSideSellerRegion(sellerRegion)
+                        // Resolve the provider label to a typed cloud provider so the plan can
+                        // enumerate the exact authorization key the connection will need at
+                        // provisioning (AWS Account ID, Azure service key, GCP pairing key, ...).
+                        .zSideCloudType(ConnectionBodies.resolveCloudType(provider.getProviderLabel()))
                         .notificationEmail(notificationEmail)
                         .build());
             }
@@ -569,83 +588,6 @@ final class DeploymentWizardEngine {
         if (bandwidthMbps <= 5000) return BigDecimal.valueOf(3000);
         if (bandwidthMbps <= 10000) return BigDecimal.valueOf(5000);
         return BigDecimal.valueOf(8000);
-    }
-
-    // ══════════════════════════════════════════════
-    //  Validation
-    // ══════════════════════════════════════════════
-
-    private static void validate(
-            List<PlannedCloudRouter> routers,
-            List<PlannedConnection> connections,
-            List<PlannedBackboneLink> links,
-            List<String> errors) {
-
-        if (routers.isEmpty()) {
-            errors.add("No Cloud Routers planned — at least one metro recommendation is required");
-        }
-
-        // Verify all connections reference valid router names
-        Set<String> routerNames = routers.stream()
-                .map(PlannedCloudRouter::getName)
-                .collect(Collectors.toSet());
-
-        for (PlannedConnection conn : connections) {
-            if (!routerNames.contains(conn.getASideRouterName())) {
-                errors.add("Connection '" + conn.getName() + "' references unknown router: " + conn.getASideRouterName());
-            }
-        }
-
-        for (PlannedBackboneLink link : links) {
-            if (!routerNames.contains(link.getConnection().getASideRouterName())) {
-                errors.add("Backbone link '" + link.getName() + "' references unknown A-side router: "
-                        + link.getConnection().getASideRouterName());
-            }
-            if (!routerNames.contains(link.getConnection().getZSideRouterName())) {
-                errors.add("Backbone link '" + link.getName() + "' references unknown Z-side router: "
-                        + link.getConnection().getZSideRouterName());
-            }
-        }
-    }
-
-    /**
-     * Default validation for planned provider connections: posts each one to the native Fabric
-     * REST dry-run surface — {@code POST /fabric/v4/connections?dryRun=true} via
-     * {@code connections().define(type).name(..).bandwidth(..).dryRun().create()} — which
-     * verifies the create would succeed without provisioning anything. An API rejection is
-     * folded into the plan's validation errors as a warning naming the connection. The dry run
-     * is best-effort: a gateway that cannot offer a connections surface at all (for example a
-     * bare test stub) skips validation rather than failing the plan.
-     */
-    private static void dryRunValidateConnections(FabricGateway fabric,
-                                                  List<PlannedConnection> connections,
-                                                  List<String> validationErrors) {
-        if (fabric == null || connections == null || connections.isEmpty()) {
-            return;
-        }
-
-        Connections connectionsClient;
-        try {
-            connectionsClient = fabric.connections();
-        } catch (RuntimeException e) {
-            return; // no usable connections surface — validation is best-effort, never fatal
-        }
-        if (connectionsClient == null) {
-            return;
-        }
-
-        for (PlannedConnection conn : connections) {
-            try {
-                connectionsClient.define(conn.getConnectionType())
-                        .name(conn.getName())
-                        .bandwidth(conn.getBandwidthMbps())
-                        .dryRun()
-                        .create();
-            } catch (Exception e) {
-                validationErrors.add("Dry-run validation warning for '" + conn.getName()
-                        + "': " + e.getMessage());
-            }
-        }
     }
 
 }

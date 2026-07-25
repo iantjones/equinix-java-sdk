@@ -31,9 +31,12 @@ import api.equinix.javasdk.design.optimizer.model.WorkloadPlacement;
 import api.equinix.javasdk.design.optimizer.model.WorkloadSpec;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BackboneTopology;
 import api.equinix.javasdk.design.optimizer.wizard.enums.BandwidthStrategy;
+import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentOutcome;
 import api.equinix.javasdk.design.optimizer.wizard.model.DeploymentPlan;
+import api.equinix.javasdk.design.optimizer.wizard.model.ExecutionInputs;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlannedCloudRouter;
+import api.equinix.javasdk.design.optimizer.wizard.model.PlannedConnection;
 import api.equinix.javasdk.design.optimizer.wizard.model.ProvisionedResource;
 import api.equinix.javasdk.design.optimizer.wizard.model.ProvisioningError;
 import api.equinix.javasdk.design.value.ratecard.PriceQuote;
@@ -41,6 +44,7 @@ import api.equinix.javasdk.design.value.ratecard.PriceSource;
 import api.equinix.javasdk.design.value.ratecard.RateCard;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
@@ -104,11 +108,11 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
     void executeProvisionsInOrder() {
         stubCreatedResources();
         DeploymentPlan plan = twoMetroPlan();
-        // plan() itself now dry-run validates the provider connection over REST (phase 2b);
-        // clear the journal so the verifies below count execute()'s wire traffic alone.
+        // plan()'s own layered validation issues Layer-2 router dry-runs + catalog GETs; clear the
+        // journal so the verifies below count execute()'s wire traffic alone.
         wireMock.resetRequests();
 
-        DeploymentOutcome outcome = plan.execute();
+        DeploymentOutcome outcome = plan.execute(awsInputs());
 
         assertTrue(outcome.isFullySuccessful(),
                 () -> "expected a clean execution, got errors: " + outcome.getErrors());
@@ -138,55 +142,188 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         assertEquals(RP_UUID, resources.stream()
                 .filter(r -> r.getResourceType().equals("RoutingProtocol")).findFirst().orElseThrow().getUuid());
 
-        // The wire: two router POSTs, two connection POSTs (provider + backbone), four routing-protocol POSTs.
+        // The wire: two router POSTs. Each of the two connections (provider + backbone) is pre-flighted
+        // with a live dry-run and only then created for real — so two dryRun=true POSTs and two real
+        // POSTs. Then four routing-protocol POSTs.
         wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
-        wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
+        wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true")));
+        wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent()));
         wireMock.verify(4, postRequestedFor(
                 urlPathEqualTo("/fabric/v4/connections/" + CONNECTION_UUID + "/routingProtocols")));
     }
 
     @Test
-    @DisplayName("execute() posts the planned router name/metro/package and the connection name/bandwidth")
+    @DisplayName("execute() pre-flights the connection with the REAL A-side FCR uuid + the customer auth key, then creates it with the same complete body")
     void executeSendsPlannedFields() {
         stubCreatedResources();
 
-        twoMetroPlan().execute();
+        DeploymentPlan plan = twoMetroPlan();
+        // Count only execute()'s wire traffic (plan() also dry-runs the routers over REST).
+        wireMock.resetRequests();
+
+        plan.execute(awsInputs());
 
         wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
                 .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC")))
                 .withRequestBody(matchingJsonPath("$.location.metroCode", equalTo("DC")))
                 .withRequestBody(matchingJsonPath("$.package.code", equalTo("STANDARD"))));
 
-        // Provider connection: FCR-DC-to-aws sized to the single 5000 Mbps AWS-dependent workload.
+        // The Layer-3a pre-flight: the connection dry-run (dryRun=true) carries the COMPLETE cloud VC
+        // body — the real A-side FCR uuid (which only exists after Phase 1), and a Z-side cloud provider
+        // access point with the customer's AWS Account ID authentication key, the seller region, the
+        // service-profile uuid and the DOT1Q VLAN. This is exactly the body the old name+bandwidth shell
+        // was missing (EQ-3142501 "Null value for aSide access point").
         wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
                 .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC-to-aws")))
-                .withRequestBody(matchingJsonPath("$.bandwidth", equalTo("5000"))));
+                .withRequestBody(matchingJsonPath("$.bandwidth", equalTo("5000")))
+                .withRequestBody(matchingJsonPath("$.aSide.accessPoint.type", equalTo("CLOUD_ROUTER")))
+                .withRequestBody(matchingJsonPath("$.aSide.accessPoint.router.uuid", equalTo(ROUTER_UUID)))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012")))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.sellerRegion", equalTo("us-east-1")))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.profile.uuid", equalTo("sp-aws")))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.linkProtocol.vlanTag", equalTo("1001"))));
+
+        // Only AFTER the dry-run passes is the connection created for real, with the same complete body.
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent())
+                .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC-to-aws")))
+                .withRequestBody(matchingJsonPath("$.aSide.accessPoint.router.uuid", equalTo(ROUTER_UUID)))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012"))));
     }
 
     @Test
-    @DisplayName("execute() captures a create failure as a recoverable error without aborting the rest of the plan")
-    void executeCapturesConnectionFailure() {
-        // Routers succeed; the connection POST fails. execute() must record the error but keep going,
-        // and the routing protocols whose parent connection never provisioned become their own errors.
+    @DisplayName("execute() aborts and rolls back everything already provisioned when a connection's pre-flight dry-run is rejected")
+    void executeDryRunFailureAbortsAndRollsBack() {
+        // Routers provision cleanly; the provider connection's live pre-flight dry-run is rejected. The
+        // connection must NOT be created for real, and the two Cloud Routers already built must be
+        // unwound (LIFO) rather than left billing against a plan that cannot complete.
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
                 .willReturn(created("/json/fabric/cloud_router_response.json")));
-        stubSingleton(wireMock, "/fabric/v4/routers/.*", "/json/fabric/cloud_router_response.json");
+        stubSingleton(wireMock, "/fabric/v4/routers/[^/]+", "/json/fabric/cloud_router_response.json");
+        wireMock.stubFor(delete(urlPathMatching("/fabric/v4/routers/.*"))
+                .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+        // Any POST to /connections (the pre-flight dry-run) is rejected.
         stubErrorInline(wireMock, "/fabric/v4/connections",
                 422, "[{\"errorCode\":\"ERR-422\",\"errorMessage\":\"Bandwidth unavailable\"}]");
 
-        DeploymentOutcome outcome = twoMetroPlan().execute();
+        DeploymentPlan plan = twoMetroPlan();
+        wireMock.resetRequests();
+
+        DeploymentOutcome outcome = plan.execute(awsInputs());
 
         assertFalse(outcome.isFullySuccessful());
-        // The 2 routers still provisioned.
+        // The rejection is recorded as a pre-flight dry-run failure naming the connection.
+        assertTrue(outcome.getErrors().stream()
+                        .anyMatch(e -> e.getResourceType().equals("Connection")
+                                && e.getResourceName().equals("FCR-DC-to-aws")
+                                && e.getReason().contains("pre-flight dry-run rejected")),
+                () -> "expected a pre-flight dry-run rejection, got: " + outcome.getErrors());
+
+        // The connection was NEVER created for real — only the single failing dryRun=true POST was sent.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true")));
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent()));
+        // The run aborted before Phase 4, so no routing protocols were attempted.
+        wireMock.verify(0, postRequestedFor(urlPathMatching("/fabric/v4/connections/[^/]+/routingProtocols")));
+
+        // The unwind: both Cloud Routers built in Phase 1 were rolled back — deleted, not left billing.
+        wireMock.verify(2, deleteRequestedFor(urlPathMatching("/fabric/v4/routers/" + ROUTER_UUID)));
+    }
+
+    @Test
+    @DisplayName("execute() does NOT abort on an INFEASIBLE (403) pre-flight: it records a skip and proceeds to the real create")
+    void executePreflight403SkipsAndProceedsToRealCreate() {
+        // Routers provision cleanly.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(created("/json/fabric/cloud_router_response.json")));
+        stubSingleton(wireMock, "/fabric/v4/routers/[^/]+", "/json/fabric/cloud_router_response.json");
+        wireMock.stubFor(delete(urlPathMatching("/fabric/v4/routers/.*"))
+                .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+        // The pre-flight dry-run (dryRun=true) is answered 403 — the credential is not entitled to the
+        // dry-run endpoint. That is an INFEASIBILITY, not a rejection: the run must NOT abort.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
+                .willReturn(aResponse().withStatus(403).withHeader("Content-Type", "application/json")
+                        .withBody("[{\"errorCode\":\"ERR-403\",\"errorMessage\":\"Not entitled to dry-run\"}]")));
+        // The REAL create (dryRun absent) succeeds — this is where any true error would surface.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent())
+                .willReturn(created("/json/fabric/connection_provisioned_response.json")));
+        stubSingleton(wireMock, "/fabric/v4/connections/[^/]+",
+                "/json/fabric/connection_provisioned_response.json");
+        wireMock.stubFor(post(urlPathMatching("/fabric/v4/connections/[^/]+/routingProtocols"))
+                .willReturn(created("/json/fabric/routing_protocol_response.json")));
+
+        DeploymentPlan plan = twoMetroPlan();
+        wireMock.resetRequests();
+
+        DeploymentOutcome outcome = plan.execute(awsInputs());
+
+        // The provider connection was still created for real — the 403 pre-flight did NOT abort the run.
+        assertTrue(outcome.getResources().stream()
+                        .anyMatch(r -> r.getResourceType().equals("Connection")
+                                && r.getName().equals("FCR-DC-to-aws")),
+                () -> "the connection must be created despite the infeasible pre-flight: " + outcome.getResources());
+        // Nothing was rolled back — the two Cloud Routers survive.
         assertEquals(2, count(outcome.getResources(), "CloudRouter"));
-        // Both connection POSTs (provider + backbone) failed → 2 connection errors, plus the 4 routing
-        // protocols orphaned by the missing parent connections.
+        wireMock.verify(0, deleteRequestedFor(urlPathMatching("/fabric/v4/routers/.*")));
+        // A recoverable skip warning was recorded, naming the connection and the 403 infeasibility —
+        // NOT a "pre-flight dry-run rejected" abort.
+        ProvisioningError skip = outcome.getErrors().stream()
+                .filter(e -> e.getResourceName().equals("FCR-DC-to-aws"))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "expected a recorded pre-flight skip for the connection: " + outcome.getErrors()));
+        assertTrue(skip.isRecoverable(), "an infeasible pre-flight skip is recoverable");
+        assertTrue(skip.getReason().contains("pre-flight dry-run skipped") && skip.getReason().contains("403"),
+                () -> "expected a skip reason naming the 403 infeasibility: " + skip.getReason());
+        assertFalse(skip.getReason().contains("rejected"),
+                () -> "an infeasibility must not be reported as a rejection: " + skip.getReason());
+
+        // The connection was pre-flighted once (403) then created for real once.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
+                .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC-to-aws"))));
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent())
+                .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC-to-aws"))));
+    }
+
+    @Test
+    @DisplayName("execute() DOES abort and roll back on a REJECTION (400) pre-flight — a well-formed request the API rejects is a real defect")
+    void executePreflight400AbortsAndRollsBack() {
+        // Routers provision cleanly; the provider connection's pre-flight dry-run is rejected 400 (a
+        // validation rejection of a well-formed request). Unlike a 403 infeasibility, a rejection MUST
+        // abort and unwind the two Cloud Routers rather than proceed to a doomed create.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(created("/json/fabric/cloud_router_response.json")));
+        stubSingleton(wireMock, "/fabric/v4/routers/[^/]+", "/json/fabric/cloud_router_response.json");
+        wireMock.stubFor(delete(urlPathMatching("/fabric/v4/routers/.*"))
+                .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
+        stubErrorInline(wireMock, "/fabric/v4/connections",
+                400, "[{\"errorCode\":\"ERR-400\",\"errorMessage\":\"Invalid connection body\"}]");
+
+        DeploymentPlan plan = twoMetroPlan();
+        wireMock.resetRequests();
+
+        DeploymentOutcome outcome = plan.execute(awsInputs());
+
+        assertFalse(outcome.isFullySuccessful());
         assertTrue(outcome.getErrors().stream()
-                .anyMatch(e -> e.getResourceType().equals("Connection")));
-        assertTrue(outcome.getErrors().stream()
-                .anyMatch(e -> e.getResourceType().equals("RoutingProtocol")
-                        && e.getReason().contains("was not provisioned")
-                        && !e.isRecoverable()));
+                        .anyMatch(e -> e.getResourceType().equals("Connection")
+                                && e.getResourceName().equals("FCR-DC-to-aws")
+                                && e.getReason().contains("pre-flight dry-run rejected")),
+                () -> "a 400 rejection must be recorded as a pre-flight rejection: " + outcome.getErrors());
+        // Never created for real — only the single failing dryRun=true POST was sent.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true")));
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent()));
+        // Both Cloud Routers were rolled back (deleted), not left billing behind a plan that cannot complete.
+        wireMock.verify(2, deleteRequestedFor(urlPathMatching("/fabric/v4/routers/" + ROUTER_UUID)));
     }
 
     @Test
@@ -198,7 +335,11 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         // validated once at plan time; execute() consumes the enum.
         stubCreatedResources();
 
-        DeploymentOutcome outcome = twoMetroPlan("standard").execute();
+        DeploymentPlan plan = twoMetroPlan("standard");
+        // Count only execute()'s two real router creates (plan() also dry-runs each router).
+        wireMock.resetRequests();
+
+        DeploymentOutcome outcome = plan.execute(awsInputs());
 
         assertTrue(outcome.isFullySuccessful(),
                 () -> "a leniently-set package code must not fail at execute time, got: " + outcome.getErrors());
@@ -234,6 +375,82 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         assertTrue(error.getReason().contains("package code"), error.getReason());
         assertTrue(outcome.getResources().isEmpty(), "nothing must be provisioned");
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
+    }
+
+    // ── execute() customer inputs + lens-3b pre-existing endpoints ──
+
+    @Test
+    @DisplayName("execute() fails fast and provisions NOTHING when a provider connection is missing its cloud authorization key")
+    void executeMissingAuthKeyFailsFast() {
+        stubCreatedResources();
+
+        // twoMetroPlan has an AWS provider connection; the no-arg execute() supplies no key.
+        DeploymentPlan plan = twoMetroPlan();
+        wireMock.resetRequests();
+
+        DeploymentOutcome outcome = plan.execute();
+
+        assertFalse(outcome.isFullySuccessful());
+        assertTrue(outcome.getResources().isEmpty(), "nothing must be provisioned before the fail-fast");
+        // The error is non-recoverable and names the connection and the exact key to gather.
+        ProvisioningError error = outcome.getErrors().stream()
+                .filter(e -> e.getResourceName().equals("FCR-DC-to-aws"))
+                .findFirst().orElseThrow();
+        assertFalse(error.isRecoverable());
+        assertTrue(error.getReason().contains("AWS Account ID"), error.getReason());
+        // Not a single API call was issued — not even the routers.
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
+    }
+
+    @Test
+    @DisplayName("execute() dry-runs and creates a lens-3b connection against a caller-supplied EXISTING FCR, using the key carried on the plan — no ExecutionInputs needed")
+    void executeDryRunsAgainstPlanCarriedExistingEndpoint() {
+        String existingFcr = "existing-fcr-uuid-1234";
+        stubCreatedResources();
+
+        // A provider connection whose A-side is an already-existing FCR (lens 3b), with its cloud
+        // authorization key carried on the plan itself — so execute() needs no ExecutionInputs and
+        // creates no Cloud Router.
+        PlannedConnection conn = PlannedConnection.builder()
+                .name("to-aws-existing")
+                .connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000)
+                .aSideRouterName("no-phase1-router")
+                .aSideExistingRouterUuid(existingFcr)
+                .zSideServiceProfileUuid("sp-aws")
+                .zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1")
+                .zSideCloudType(CloudProviderType.AWS)
+                .zSideAuthenticationKey("123456789012")
+                .zSideVlanTag(1100)
+                .build();
+
+        DeploymentPlan plan = DeploymentPlan.builder()
+                .cloudRouters(List.of())
+                .providerConnections(List.of(conn))
+                .backboneLinks(List.of())
+                .routingProtocols(List.of())
+                .valid(true)
+                .validationErrors(List.of())
+                .fabric(fabric)
+                .build();
+
+        DeploymentOutcome outcome = plan.execute();
+
+        assertTrue(outcome.isFullySuccessful(),
+                () -> "lens-3b execution should succeed, got: " + outcome.getErrors());
+        // No Cloud Router was created — the A-side already exists.
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
+        // The connection was pre-flighted, then created, both against the EXISTING FCR uuid.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", equalTo("true"))
+                .withRequestBody(matchingJsonPath("$.aSide.accessPoint.router.uuid", equalTo(existingFcr)))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012"))));
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
+                .withQueryParam("dryRun", absent())
+                .withRequestBody(matchingJsonPath("$.aSide.accessPoint.router.uuid", equalTo(existingFcr))));
     }
 
     // ── execute() state waiter (awaitState poll loop) ──
@@ -319,43 +536,48 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
     // ── dryRun() ──
 
     @Test
-    @DisplayName("dryRun() validates each provider connection via the dryRun create and reports the plan valid")
-    void dryRunValidatesConnections() {
-        // dryRun create hits POST /connections?dryRun=true; return a connection body for it.
-        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
-                .willReturn(okJson(loadFixture("/json/fabric/connection_provisioned_response.json"))));
-
+    @DisplayName("dryRun() DEFERS a keyless provider connection's live endpoint dry-run (never posts a connection) and enumerates its required inputs")
+    void dryRunDefersKeylessConnection() {
+        // The provider connection has no pre-existing endpoint and no authorization key, so its live
+        // endpoint dry-run cannot run at plan time: dryRun() must DEFER it (never POST a doomed
+        // endpoint-less connection) and enumerate the AWS Account ID the customer must gather. The
+        // Layer-2 router dry-run still runs for real.
+        stubRouterDryRunOk();
         DeploymentPlan plan = twoMetroPlan();
-        // plan() already issued its own phase-2b dry-run POST; clear the journal so this test
-        // counts only the explicit plan.dryRun() traffic.
         wireMock.resetRequests();
 
         DeploymentPlan validated = plan.dryRun();
 
-        assertTrue(validated.isValid(),
-                () -> "dry run should pass, errors: " + validated.getValidationErrors());
-        assertTrue(validated.getValidationErrors().isEmpty());
+        // No connection is posted at plan time — the endpoint-less dry-run that fails with EQ-3142501
+        // is never sent; it is deferred to provisioning instead.
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
 
-        // Only provider connections are dry-run validated (one here); every request carries dryRun=true and
-        // creates nothing durably. Cloud Routers and backbone links are NOT dry-run created.
-        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
-                .withQueryParam("dryRun", equalTo("true"))
-                .withRequestBody(matchingJsonPath("$.name", equalTo("FCR-DC-to-aws"))));
-        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
+        assertNotNull(validated.getDeferredValidations());
+        assertTrue(validated.getDeferredValidations().stream().anyMatch(d -> d.contains("FCR-DC-to-aws")),
+                () -> "connection should be deferred, got: " + validated.getDeferredValidations());
+        assertNotNull(validated.getRequiredInputs());
+        assertTrue(validated.getRequiredInputs().stream()
+                        .anyMatch(r -> r.getConnectionName().equals("FCR-DC-to-aws")
+                                && r.getCloudType() == CloudProviderType.AWS
+                                && r.isAuthenticationKeyRequired()),
+                () -> "AWS key should be enumerated as a required input, got: " + validated.getRequiredInputs());
     }
 
     @Test
-    @DisplayName("dryRun() surfaces a validation failure from the dryRun create as a plan validation error")
-    void dryRunSurfacesValidationError() {
-        stubErrorInline(wireMock, "/fabric/v4/connections",
-                400, "[{\"errorCode\":\"ERR-400\",\"errorMessage\":\"Invalid connection spec\"}]");
+    @DisplayName("dryRun() surfaces a live router dry-run rejection as a plan validation error")
+    void dryRunSurfacesRouterRejection() {
+        // The Layer-2 router dry-run (POST /routers?dryRun=true) is rejected → dryRun() folds it into
+        // the validation errors and reports the plan invalid.
+        stubErrorInline(wireMock, "/fabric/v4/routers",
+                400, "[{\"errorCode\":\"ERR-400\",\"errorMessage\":\"Invalid router spec\"}]");
 
         DeploymentPlan validated = twoMetroPlan().dryRun();
 
         assertFalse(validated.isValid());
         assertFalse(validated.getValidationErrors().isEmpty());
-        assertTrue(validated.getValidationErrors().stream()
-                .anyMatch(e -> e.contains("FCR-DC-to-aws")));
+        assertTrue(validated.getValidationErrors().stream().anyMatch(e -> e.contains("FCR-D")),
+                () -> "expected a router dry-run rejection naming the router, got: "
+                        + validated.getValidationErrors());
     }
 
     // ── rollback() ──
@@ -371,7 +593,7 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
 
         DeploymentPlan plan = twoMetroPlan();
-        DeploymentOutcome outcome = plan.execute();
+        DeploymentOutcome outcome = plan.execute(awsInputs());
         assertTrue(outcome.isFullySuccessful());
 
         List<ProvisioningError> failures = plan.rollback(outcome);
@@ -394,7 +616,7 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .willReturn(okJson(loadFixture("/json/fabric/cloud_router_response.json"))));
 
         DeploymentPlan plan = twoMetroPlan();
-        DeploymentOutcome outcome = plan.execute();
+        DeploymentOutcome outcome = plan.execute(awsInputs());
 
         List<ProvisioningError> failures = plan.rollback(outcome);
 
@@ -434,6 +656,23 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         return aResponse().withStatus(201)
                 .withHeader("Content-Type", "application/json")
                 .withBody(loadFixture(fixture));
+    }
+
+    /** Stubs the Layer-2 plan-time router dry-run (POST /routers?dryRun=true) to succeed. */
+    private static void stubRouterDryRunOk() {
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(created("/json/fabric/cloud_router_response.json")));
+    }
+
+    /**
+     * The per-connection authorization a first-time customer supplies at execution: the AWS Account ID
+     * and DOT1Q VLAN for the {@code FCR-DC-to-aws} provider connection of {@link #twoMetroPlan()}.
+     */
+    private static ExecutionInputs awsInputs() {
+        return ExecutionInputs.builder()
+                .authenticationKey("FCR-DC-to-aws", "123456789012")
+                .vlanTag("FCR-DC-to-aws", 1001)
+                .build();
     }
 
     private static long count(List<ProvisionedResource> resources, String type) {
