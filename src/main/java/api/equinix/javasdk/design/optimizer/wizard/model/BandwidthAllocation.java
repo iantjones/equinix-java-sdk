@@ -10,7 +10,7 @@ import java.util.Map;
  * bandwidth was derived from individual workload requirements.
  */
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class BandwidthAllocation {
 
     int totalMbps;

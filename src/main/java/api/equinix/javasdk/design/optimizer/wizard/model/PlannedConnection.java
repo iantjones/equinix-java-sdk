@@ -3,6 +3,7 @@ package api.equinix.javasdk.design.optimizer.wizard.model;
 import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.PeeringType;
+import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import lombok.Builder;
@@ -35,6 +36,15 @@ public class PlannedConnection {
     int bandwidthMbps;
 
     BandwidthAllocation bandwidthAllocation;
+
+    /**
+     * How the wizard selected this connection's Z-side service profile and billable bandwidth — the raw
+     * requirement, the tier it was stamped at (possibly rounded up), and every covering candidate. Set
+     * for a provider connection built from bandwidth-aware capability data; {@code null} for a backbone
+     * link or a legacy availability entry that carried no candidate profiles. Exposes the choice (and
+     * any round-up) so an interactive layer can confirm rather than the wizard picking silently.
+     */
+    ProfileSelection profileSelection;
 
     MetroId aSideMetro;
 
@@ -71,6 +81,22 @@ public class PlannedConnection {
 
     /** The DOT1Q VLAN tag for the Z-side. A customer input; {@code null} at plan time. */
     Integer zSideVlanTag;
+
+    /**
+     * The Fabric connection-level redundancy group this connection belongs to, or {@code null} for a
+     * standalone connection. A primary VC and its diverse secondary VC to the same cloud share one
+     * group; when set, {@link ConnectionBodies} stamps it (with {@link #redundancyPriority}) onto the
+     * connection body via {@code ConnectionOperator.ConnectionBuilder.redundancy(group, priority)} so a
+     * redundant pair is expressed rather than silently dropped. {@code null} means no group is sent.
+     */
+    String zSideRedundancyGroup;
+
+    /**
+     * This connection's role within its {@link #zSideRedundancyGroup} —
+     * {@link RedundancyPriority#PRIMARY} or {@link RedundancyPriority#SECONDARY}. Ignored (and no
+     * redundancy is stamped) when {@link #zSideRedundancyGroup} is {@code null}.
+     */
+    RedundancyPriority redundancyPriority;
 
     /**
      * An existing Fabric Cloud Router uuid supplied by the caller to serve as the A-side (lens 3b).

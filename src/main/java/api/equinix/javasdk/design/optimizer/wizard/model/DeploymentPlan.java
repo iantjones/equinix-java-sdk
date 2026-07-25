@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * validation via {@link #dryRun()}, and full execution via {@link #execute()}.
  */
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class DeploymentPlan {
 
     OptimizationResult sourceOptimization;
@@ -129,6 +129,14 @@ public class DeploymentPlan {
                     .append(" (offline or the API could not be reached — see the reasons).");
         }
 
+        long roundedUp = providerConnections == null ? 0 : providerConnections.stream()
+                .filter(c -> c.getProfileSelection() != null && c.getProfileSelection().isRoundedUp())
+                .count();
+        if (roundedUp > 0) {
+            sb.append(" BANDWIDTH ROUNDED UP: ").append(roundedUp)
+                    .append(" connection(s) to the nearest service-profile tier (raises billed bandwidth).");
+        }
+
         return sb.toString();
     }
 
@@ -173,6 +181,10 @@ public class DeploymentPlan {
             }
             md.append("\n");
         }
+
+        // Bandwidth round-up + profile choice — surfaced, never silent, since rounding up raises the
+        // billed bandwidth and several profiles may cover a connection in different ways.
+        appendBandwidthSelectionNotes(md);
 
         // Required customer inputs — what a first-time customer must gather before provisioning.
         if (requiredInputs != null && !requiredInputs.isEmpty()) {
@@ -224,6 +236,10 @@ public class DeploymentPlan {
                     md.append(" [").append(conn.getZSideSellerRegion()).append("]");
                 }
                 md.append(" | ").append(conn.getBandwidthMbps()).append(" Mbps");
+                ProfileSelection sel = conn.getProfileSelection();
+                if (sel != null && sel.isRoundedUp()) {
+                    md.append(" (rounded up from ").append(sel.getRequestedMbps()).append(")");
+                }
                 md.append(" | ");
                 if (conn.getBandwidthAllocation() != null && conn.getBandwidthAllocation().getPerWorkload() != null) {
                     md.append(conn.getBandwidthAllocation().getPerWorkload().entrySet().stream()
@@ -301,6 +317,59 @@ public class DeploymentPlan {
         md.append("Call `plan.dryRun()` to validate, or `plan.execute()` to provision all resources.\n");
 
         return md.toString();
+    }
+
+    /**
+     * Appends the bandwidth round-up and profile-choice notes to the markdown report. A round-up raises
+     * the billed bandwidth, so it is called out with the requirement, the billed tier, and the increase;
+     * a connection with more than one covering profile is called out as a decision point (the default is
+     * used, but the alternatives are named for review). Emits nothing when neither applies.
+     */
+    private void appendBandwidthSelectionNotes(StringBuilder md) {
+        if (providerConnections == null || providerConnections.isEmpty()) {
+            return;
+        }
+        List<PlannedConnection> roundedUp = new ArrayList<>();
+        List<PlannedConnection> multiChoice = new ArrayList<>();
+        for (PlannedConnection conn : providerConnections) {
+            ProfileSelection sel = conn.getProfileSelection();
+            if (sel == null) {
+                continue;
+            }
+            if (sel.isRoundedUp()) {
+                roundedUp.add(conn);
+            }
+            if (sel.hasChoice()) {
+                multiChoice.add(conn);
+            }
+        }
+        if (roundedUp.isEmpty() && multiChoice.isEmpty()) {
+            return;
+        }
+        if (!roundedUp.isEmpty()) {
+            md.append("> **BANDWIDTH ROUNDED UP** — a requirement with no exact service-profile tier was "
+                    + "rounded up to the smallest tier that satisfies it (this raises the billed bandwidth)\n");
+            for (PlannedConnection conn : roundedUp) {
+                ProfileSelection sel = conn.getProfileSelection();
+                md.append("> - ").append(conn.getName()).append(": ")
+                        .append(sel.getRequestedMbps()).append(" → ").append(sel.getSelectedTierMbps())
+                        .append(" Mbps (+").append(sel.roundedUpByMbps()).append(" Mbps billable)\n");
+            }
+            md.append("\n");
+        }
+        if (!multiChoice.isEmpty()) {
+            md.append("> **PROFILE CHOICE** — more than one service profile can carry these connections; "
+                    + "the tightest-fitting default is used, and the alternatives are available to choose\n");
+            for (PlannedConnection conn : multiChoice) {
+                ProfileSelection sel = conn.getProfileSelection();
+                String alts = sel.getAlternatives().stream()
+                        .map(c -> c.getServiceProfileUuid() + " @ " + c.getCoveringTierMbps() + " Mbps")
+                        .collect(Collectors.joining(", "));
+                md.append("> - ").append(conn.getName()).append(": default ")
+                        .append(sel.getSelectedProfileUuid()).append("; options: ").append(alts).append("\n");
+            }
+            md.append("\n");
+        }
     }
 
     /**

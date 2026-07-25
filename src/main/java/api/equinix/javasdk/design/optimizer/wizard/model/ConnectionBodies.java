@@ -18,6 +18,7 @@ package api.equinix.javasdk.design.optimizer.wizard.model;
 
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.enums.PeeringType;
+import api.equinix.javasdk.fabric.enums.RedundancyPriority;
 import api.equinix.javasdk.fabric.model.implementation.LinkProtocol;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
@@ -120,7 +121,7 @@ public final class ConnectionBodies {
                 .bandwidth(connection.getBandwidthMbps())
                 .aSideAccessPointCloudRouter(aSideRouterUuid)
                 .zSideCloudProvider(cloudAdapter(connection), linkProtocol(connection.getZSideVlanTag()));
-        return withNotification(builder, connection);
+        return withNotification(withRedundancy(builder, connection), connection);
     }
 
     /**
@@ -139,7 +140,7 @@ public final class ConnectionBodies {
                 .bandwidth(connection.getBandwidthMbps())
                 .aSideAccessPointPort(aSidePortUuid, linkProtocol(connection.getZSideVlanTag()))
                 .zSideCloudProvider(cloudAdapter(connection), linkProtocol(connection.getZSideVlanTag()));
-        return withNotification(builder, connection);
+        return withNotification(withRedundancy(builder, connection), connection);
     }
 
     /**
@@ -167,6 +168,26 @@ public final class ConnectionBodies {
         if (connection.getNotificationEmail() != null) {
             builder.notification(connection.getNotificationEmail());
         }
+        return builder;
+    }
+
+    /**
+     * Stamps connection-level redundancy when the planned connection names a redundancy group, so a
+     * primary + diverse-secondary VC pair to the same cloud is expressed on the wire instead of being
+     * silently dropped. A connection with no group is left standalone (the common case). When a group is
+     * set but no priority is given, {@link RedundancyPriority#PRIMARY} is the documented default rather
+     * than sending an ambiguous group with no role.
+     */
+    private static ConnectionOperator.ConnectionBuilder withRedundancy(
+            ConnectionOperator.ConnectionBuilder builder, PlannedConnection connection) {
+        String group = connection.getZSideRedundancyGroup();
+        if (group == null || group.isBlank()) {
+            return builder;
+        }
+        RedundancyPriority priority = connection.getRedundancyPriority() != null
+                ? connection.getRedundancyPriority()
+                : RedundancyPriority.PRIMARY;
+        builder.redundancy(group, priority);
         return builder;
     }
 
