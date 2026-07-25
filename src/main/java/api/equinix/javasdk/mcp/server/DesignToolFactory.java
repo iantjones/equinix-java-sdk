@@ -452,18 +452,47 @@ final class DesignToolFactory {
                 .title("Plan a deployment (no execution)")
                 .description("Runs the Metro Optimizer and then the Deployment Wizard in PLAN-ONLY mode: "
                         + "produces a reviewable deployment plan (Cloud Routers, provider connections, "
-                        + "backbone links, routing protocols) with aggregated pricing and validation "
-                        + "findings. NOTHING is provisioned — this tool never executes a plan. Pricing is "
-                        + "not term-scoped: the rate cards this server reads resolve by product, bandwidth "
-                        + "and metro only, so no contract term is accepted or applied. The returned plan_id "
-                        + "can be passed to design_export_terraform while this server process is running "
-                        + "(plans are held in memory for 30 minutes).")
+                        + "backbone links, routing protocols) with aggregated pricing and LAYERED "
+                        + "validation. NOTHING is provisioned — this tool never executes a plan. "
+                        + "Validation needs ZERO provisioned resources, so a brand-new customer targeting a "
+                        + "metro where they own nothing still gets a fully validated plan: "
+                        + "validation.validated_now covers structural + catalog checks and a live Cloud "
+                        + "Router dry-run (routers are self-contained, so this is real), and its "
+                        + "new_market_gaps flag any required cloud/profile not offered at a targeted metro. "
+                        + "The live CONNECTION endpoint dry-run cannot run here — it needs the target Cloud "
+                        + "Router (created at apply time) and the customer's cloud authorization keys — so "
+                        + "it is listed under validation.deferred_to_provisioning and runs when the plan is "
+                        + "applied through the SDK (or at plan time only when a pre-existing endpoint and "
+                        + "its authorization key are supplied through the SDK). Deferred items are NOT "
+                        + "errors: a structurally sound "
+                        + "plan is validation.valid=true with items there. There is also a THIRD bucket, "
+                        + "validation.skipped: when a live dry-run CANNOT be performed — the credential is "
+                        + "not entitled to it yet (a brand-new customer, HTTP 403), the API is "
+                        + "rate-limited (429), a server or transport error hit, or the API is simply "
+                        + "unreachable/offline — the check is neither an error nor deferred. It is SKIPPED "
+                        + "and reported there with a plain reason saying what could not be checked and why. "
+                        + "A SKIPPED check NEVER invalidates a structurally-sound plan: validation.valid "
+                        + "stays true and the structural + catalog validity still stands even when the live "
+                        + "dry-runs cannot run — the skip is called out, not hidden. required_inputs is a "
+                        + "per-connection checklist of exactly what the customer must gather before "
+                        + "provisioning (the cloud authorization key, a VLAN tag, and for Azure the peering "
+                        + "type) — never fabricated. Pricing is not term-scoped: the rate cards this server "
+                        + "reads resolve by product, bandwidth and metro only, so no contract term is "
+                        + "accepted or applied. The returned plan_id can be passed to "
+                        + "design_export_terraform while this server process is running (plans are held in "
+                        + "memory for 30 minutes).")
                 .inputSchema(object(props(
                                 "optimization", object(optimizationProps(), "workloads"),
                                 "deployment", deployment),
                         "optimization"))
                 .outputSchema(looseObject("The serialized deployment plan: plan_id, planned resources, "
-                        + "pricing with provenance, and validation errors/warnings."))
+                        + "pricing with provenance, and layered validation — validation.valid, "
+                        + "validation.validated_now (structural + catalog + Cloud Router dry-run, with "
+                        + "new_market_gaps), validation.deferred_to_provisioning (the connection endpoint "
+                        + "dry-run, deferred to apply time — not errors), validation.skipped (live checks "
+                        + "that could not be attempted now — offline, unreachable, not entitled, "
+                        + "throttled, or server-side — each with a reason; not errors), and required_inputs "
+                        + "(the per-connection customer-authorization checklist)."))
                 .toolset(Toolset.DESIGN)
                 .handler(DesignToolFactory::handlePlanDeployment)
                 .build();
@@ -565,9 +594,85 @@ final class DesignToolFactory {
             p.put("disclaimer", pricing.getDisclaimer());
         }
 
-        ArrayNode validation = payload.putArray("validation_errors");
-        if (plan.getValidationErrors() != null) {
-            plan.getValidationErrors().forEach(validation::add);
+        // Validation is layered and honest. It separates what was validated NOW — structural +
+        // catalog checks and the live Cloud Router dry-run (POST /routers?dryRun=true), all of which
+        // need zero provisioned customer resources — from what is DEFERRED to provisioning: the live
+        // connection endpoint dry-run, which needs the target Cloud Router (created at apply time) and
+        // the customer's cloud authorization keys. Deferred items are NOT errors, so a structurally
+        // sound plan reads valid:true even with items listed there. This replaces the old flat
+        // 'validation_errors' array, which reported a structurally-fine, not-yet-provisionable
+        // connection as a failure.
+        ObjectNode validation = payload.putObject("validation");
+        validation.put("valid", plan.isValid());
+
+        List<String> validationErrors = plan.getValidationErrors() == null
+                ? List.of() : plan.getValidationErrors();
+        ObjectNode validatedNow = validation.putObject("validated_now");
+        validatedNow.put("scope", "Structural + catalog checks and the live Cloud Router dry-run "
+                + "(POST /routers?dryRun=true). Runs against the public catalog with nothing the "
+                + "customer owns, so a brand-new customer targeting an empty metro still gets these fully "
+                + "checked. A non-empty 'errors' list makes the plan invalid.");
+        ArrayNode errors = validatedNow.putArray("errors");
+        validationErrors.forEach(errors::add);
+        validatedNow.put("error_count", validationErrors.size());
+        // New-market gaps (a required cloud/profile not offered at a targeted metro) are recorded by the
+        // validator as hard errors; surface them as a filtered subset so an agent can call out, to a
+        // customer entering a new market, exactly which provider/metro is missing. They remain in
+        // 'errors' above — this is a convenience view, not an additional finding.
+        ArrayNode newMarketGaps = validatedNow.putArray("new_market_gaps");
+        validationErrors.stream()
+                .filter(e -> e != null && e.toLowerCase(Locale.ROOT).contains("new-market"))
+                .forEach(newMarketGaps::add);
+
+        List<String> deferredValidations = plan.getDeferredValidations() == null
+                ? List.of() : plan.getDeferredValidations();
+        ObjectNode deferred = validation.putObject("deferred_to_provisioning");
+        deferred.put("scope", "The live connection endpoint dry-run. Each provider connection needs "
+                + "its A-side Cloud Router (created at provisioning) and the customer's cloud "
+                + "authorization key, so it is validated when the plan is applied through the SDK — not "
+                + "here. Supplying a pre-existing endpoint and its authorization key through the SDK "
+                + "upgrades a connection to a live plan-time dry-run instead. These are NOT errors.");
+        ArrayNode deferredNotes = deferred.putArray("notes");
+        deferredValidations.forEach(deferredNotes::add);
+        deferred.put("count", deferredValidations.size());
+
+        // The THIRD bucket, a sibling of deferred_to_provisioning: live checks that could NOT be
+        // ATTEMPTED now. This is an infeasibility, never a plan defect — so it can never invalidate the
+        // plan (validation.valid stays == validationErrors.isEmpty(); deferred and skipped both leave a
+        // plan valid). Read it identically to the deferred list, with the same null-guard: it may be null
+        // on hand-built plans. Owner requirement: when a dry-run cannot be done, skip it and CALL IT OUT —
+        // each note names exactly what could not be checked and why.
+        List<String> skippedValidations = plan.getSkippedValidations() == null
+                ? List.of() : plan.getSkippedValidations();
+        ObjectNode skipped = validation.putObject("skipped");
+        skipped.put("scope", "Live checks that could not be ATTEMPTED: the gateway served no live surface "
+                + "(offline / bare stub), or a live dry-run was answered with a non-rejection failure "
+                + "(401/403 not entitled — the brand-new-customer case, 429 throttled, 5xx server-side, or "
+                + "a transport/timeout error). These are NOT errors and do not invalidate the plan; each "
+                + "note says what could not be checked and why.");
+        ArrayNode skippedNotes = skipped.putArray("notes");
+        skippedValidations.forEach(skippedNotes::add);
+        skipped.put("count", skippedValidations.size());
+
+        // The per-connection authorization a (brand-new) customer must gather before each provider
+        // connection can be provisioned — the cloud-specific key, the VLAN tag, and (Azure) the peering
+        // type. Populated for every provider connection so a first-time customer sees the full checklist.
+        ArrayNode requiredInputs = payload.putArray("required_inputs");
+        if (plan.getRequiredInputs() != null) {
+            plan.getRequiredInputs().forEach(req -> {
+                ObjectNode r = requiredInputs.addObject();
+                r.put("connection", req.getConnectionName());
+                r.put("provider", req.getProviderLabel());
+                r.put("cloud_type", String.valueOf(req.getCloudType()));
+                r.put("authentication_key_required", req.isAuthenticationKeyRequired());
+                if (req.isAuthenticationKeyRequired()) {
+                    r.put("authentication_key_label", req.getAuthenticationKeyLabel());
+                }
+                r.put("authentication_key_provided", req.isAuthenticationKeyProvided());
+                r.put("vlan_tag_required", req.isVlanTagRequired());
+                r.put("peering_type_required", req.isPeeringTypeRequired());
+                r.put("summary", req.describe());
+            });
         }
         return payload;
     }

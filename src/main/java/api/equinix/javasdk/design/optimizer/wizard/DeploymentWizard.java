@@ -42,7 +42,14 @@ import java.util.stream.Stream;
  *
  * System.out.println(plan.toMarkdown());
  * plan.dryRun();
- * DeploymentOutcome outcome = plan.execute();
+ *
+ * // A brand-new customer gathers the per-connection authorization the plan enumerated
+ * // (plan.getRequiredInputs()) and supplies it at execution time; each provider connection is
+ * // then dry-run against its now-real Cloud Router before it is created for real:
+ * DeploymentOutcome outcome = plan.execute(ExecutionInputs.builder()
+ *     .authenticationKey("FCR-DC-to-aws", "123456789012")
+ *     .vlanTag("FCR-DC-to-aws", 1001)
+ *     .build());
  * }</pre>
  *
  * @see DeploymentPlan

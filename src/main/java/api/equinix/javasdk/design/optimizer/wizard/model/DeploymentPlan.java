@@ -4,13 +4,16 @@ import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.waiter.ResourceWaiter;
 import api.equinix.javasdk.fabric.enums.CloudRouterState;
 import api.equinix.javasdk.fabric.enums.ConnectionState;
-import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
+import api.equinix.javasdk.fabric.enums.PeeringType;
 import api.equinix.javasdk.fabric.enums.RoutingProtocolType;
 import api.equinix.javasdk.fabric.model.CloudRouter;
 import api.equinix.javasdk.fabric.model.Connection;
 import api.equinix.javasdk.fabric.model.RoutingProtocol;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
+import api.equinix.javasdk.fabric.model.json.creators.ConnectionOperator;
 import api.equinix.javasdk.design.optimizer.model.OptimizationResult;
+import api.equinix.javasdk.design.optimizer.wizard.PlanValidator;
 import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
@@ -55,6 +58,31 @@ public class DeploymentPlan {
 
     List<String> validationErrors;
 
+    /**
+     * Validations that could NOT be completed at plan time and will run at provisioning — chiefly the
+     * live connection endpoint dry-run, which needs the target Cloud Router (which does not exist yet)
+     * and the customer's cloud authorization keys. These are <em>not</em> errors: a structurally-fine
+     * plan is valid with items here, and each note says what will be validated and what to gather.
+     */
+    List<String> deferredValidations;
+
+    /**
+     * Validations that could NOT be attempted at plan time — an infeasibility, never a plan defect: a
+     * live surface was unavailable (an offline / bare-stub run), or the API answered a live dry-run with
+     * a non-rejection failure (401/403 not entitled — the brand-new-customer case, 429 throttled, 5xx
+     * server-side, or a transport/timeout error). Each entry is a human/LLM-readable reason. These are
+     * <em>not</em> errors: a structurally-fine plan stays {@link #valid} with items here, and each note
+     * says exactly what could not be checked and why, so the gap is called out rather than hidden.
+     */
+    List<String> skippedValidations;
+
+    /**
+     * The per-connection authorization a customer must gather before each provider connection can be
+     * provisioned (the cloud-specific key, the VLAN tag, and — for Azure — the peering type). Populated
+     * for every provider connection so a brand-new customer sees exactly what to collect.
+     */
+    List<ConnectionInputRequirement> requiredInputs;
+
     @JsonIgnore
     FabricGateway fabric;
 
@@ -91,6 +119,16 @@ public class DeploymentPlan {
             sb.append(" VALIDATION ERRORS: ").append(validationErrors.size());
         }
 
+        if (deferredValidations != null && !deferredValidations.isEmpty()) {
+            sb.append(" DEFERRED TO PROVISIONING: ").append(deferredValidations.size())
+                    .append(" (validated at provisioning; needs your authorization keys).");
+        }
+
+        if (skippedValidations != null && !skippedValidations.isEmpty()) {
+            sb.append(" SKIPPED (could not validate now): ").append(skippedValidations.size())
+                    .append(" (offline or the API could not be reached — see the reasons).");
+        }
+
         return sb.toString();
     }
 
@@ -104,11 +142,56 @@ public class DeploymentPlan {
         md.append("_Generated from optimization computed at ").append(sourceOptimization.getComputedAt()).append("_\n\n");
         md.append("**Total Resources:** ").append(totalResourceCount()).append("\n\n");
 
-        // Validation status
+        // Validation status — validated now (structural + router dry-run).
         if (!valid && validationErrors != null && !validationErrors.isEmpty()) {
-            md.append("> **VALIDATION ERRORS**\n");
+            md.append("> **VALIDATION ERRORS** (validated now — structural + router dry-run)\n");
             for (String error : validationErrors) {
                 md.append("> - ").append(error).append("\n");
+            }
+            md.append("\n");
+        }
+
+        // Deferred to provisioning — the live connection endpoint dry-run (needs the target Cloud
+        // Router to exist and the customer's authorization keys). These are NOT errors.
+        if (deferredValidations != null && !deferredValidations.isEmpty()) {
+            md.append("> **DEFERRED TO PROVISIONING** — the live connection endpoint dry-run runs when the "
+                    + "plan is applied (needs your authorization keys)\n");
+            for (String note : deferredValidations) {
+                md.append("> - ").append(note).append("\n");
+            }
+            md.append("\n");
+        }
+
+        // Skipped — validations that could NOT be attempted now (an offline/bare-stub run, or the API
+        // answered a live dry-run with a non-rejection failure such as 403/429/5xx/timeout). These are
+        // NOT errors: each note says what could not be checked and why, so the gap is called out.
+        if (skippedValidations != null && !skippedValidations.isEmpty()) {
+            md.append("> **SKIPPED (could not validate now)** — these checks could not be attempted; "
+                    + "each reason says why. They do not invalidate the plan.\n");
+            for (String note : skippedValidations) {
+                md.append("> - ").append(note).append("\n");
+            }
+            md.append("\n");
+        }
+
+        // Required customer inputs — what a first-time customer must gather before provisioning.
+        if (requiredInputs != null && !requiredInputs.isEmpty()) {
+            md.append("## Required Customer Inputs (before provisioning)\n\n");
+            md.append("| Connection | Provider | Authorization key | VLAN | Azure peering |\n");
+            md.append("|------------|----------|-------------------|------|---------------|\n");
+            for (ConnectionInputRequirement req : requiredInputs) {
+                md.append("| ").append(req.getConnectionName())
+                        .append(" | ").append(req.getProviderLabel() != null ? req.getProviderLabel() : "-")
+                        .append(" | ");
+                if (req.isAuthenticationKeyRequired()) {
+                    md.append(req.getAuthenticationKeyLabel())
+                            .append(req.isAuthenticationKeyProvided() ? " (provided)" : "");
+                } else {
+                    md.append("-");
+                }
+                md.append(" | ").append(req.isVlanTagRequired() ? "required" : "-")
+                        .append(" | ").append(req.isPeeringTypeRequired() ? "required" : "-")
+                        .append(" |\n");
             }
             md.append("\n");
         }
@@ -239,44 +322,36 @@ public class DeploymentPlan {
     }
 
     /**
-     * Validates the deployment plan using Fabric's dry-run API.
-     * Returns a new DeploymentPlan with updated validation status.
+     * Re-runs the layered plan-time validation and returns a new plan with the refreshed status.
+     *
+     * <p>This is the same validation the wizard runs when it builds the plan: Layer&nbsp;1 structural +
+     * catalog checks, Layer&nbsp;2 live Cloud Router dry-run ({@code POST /routers?dryRun=true}), and
+     * Layer&nbsp;3 connection endpoint dispatch — a connection whose A-side Cloud Router does not exist
+     * yet is recorded as <em>deferred</em> (its live endpoint dry-run runs at provisioning, and needs
+     * your authorization keys) rather than sent a doomed endpoint-less dry-run, while a connection with
+     * a pre-existing endpoint is dry-run for real. Nothing is provisioned: the router dry-run creates
+     * nothing, and to-be-created connections are never posted here.</p>
+     *
+     * <p>A live step that cannot be attempted — an offline / bare-stub run, or a live dry-run that the
+     * API answers with a non-rejection failure (403 not entitled, 429 throttled, 5xx, or a
+     * transport/timeout error) — is recorded as a <em>skipped</em> validation with a reason, never
+     * folded into the errors that invalidate the plan. Only a genuine rejection of a well-formed request
+     * (a 4xx validation rejection) is an error.</p>
+     *
+     * @return a new {@link DeploymentPlan} with refreshed validity, deferred validations, skipped
+     *         validations, and the required customer inputs
      */
     public DeploymentPlan dryRun() {
-        List<String> errors = new ArrayList<>();
-
-        // Validate Cloud Routers with client-side field checks only. Cloud Router creation has no
-        // dry-run mode, and calling create() here would provision live, billable routers — which a
-        // dry run must never do — so we validate the required fields instead.
-        if (cloudRouters != null) {
-            for (PlannedCloudRouter cr : cloudRouters) {
-                if (cr.getName() == null || cr.getName().isBlank()) {
-                    errors.add("Cloud Router: missing name");
-                }
-                if (cr.getMetroId() == null) {
-                    errors.add("Cloud Router '" + cr.getName() + "': missing metro");
-                }
-                if (cr.getPackageCode() == null || cr.getPackageCode() == GatewayPackageCode.UNKNOWN) {
-                    errors.add("Cloud Router '" + cr.getName() + "': missing or unknown package code");
-                }
-            }
-        }
-
-        // Validate connections
-        if (providerConnections != null) {
-            for (PlannedConnection conn : providerConnections) {
-                try {
-                    fabric.connections().define(conn.getConnectionType())
-                            .name(conn.getName())
-                            .bandwidth(conn.getBandwidthMbps())
-                            .dryRun()
-                            .create();
-                }
-                catch (Exception e) {
-                    errors.add("Connection '" + conn.getName() + "': " + e.getMessage());
-                }
-            }
-        }
+        PlanValidator.Result result = PlanValidator.validate(
+                sourceOptimization != null ? sourceOptimization.getRecommendations() : null,
+                sourceOptimization != null ? sourceOptimization.getRequest() : null,
+                sourceOptimization != null ? sourceOptimization.getTopology() : null,
+                cloudRouters,
+                providerConnections,
+                backboneLinks,
+                routingProtocols,
+                deriveCustomerAsn(),
+                fabric);
 
         return DeploymentPlan.builder()
                 .sourceOptimization(sourceOptimization)
@@ -285,27 +360,96 @@ public class DeploymentPlan {
                 .backboneLinks(backboneLinks)
                 .routingProtocols(routingProtocols)
                 .pricing(pricing)
-                .valid(errors.isEmpty())
-                .validationErrors(errors)
+                .valid(result.errors.isEmpty())
+                .validationErrors(result.errors)
+                .deferredValidations(result.deferred)
+                .skippedValidations(result.skipped)
+                .requiredInputs(result.requiredInputs)
                 .fabric(fabric)
                 .build();
     }
 
     /**
-     * Executes the deployment plan, creating all resources in the correct order:
-     * Cloud Routers, then provider connections, then backbone links, then routing protocols.
-     *
-     * <p>Errors are captured in the outcome rather than thrown, allowing partial
-     * deployments to be inspected and retried.</p>
+     * The customer ASN to sanity-check, read from the first BGP routing protocol that carries one
+     * (the plan does not store the wizard configuration, but every BGP protocol was stamped with it).
+     */
+    private Long deriveCustomerAsn() {
+        if (routingProtocols == null) {
+            return null;
+        }
+        return routingProtocols.stream()
+                .map(PlannedRoutingProtocol::getCustomerAsn)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Executes the deployment plan with no extra customer inputs — for a backbone-only plan, or a plan
+     * whose provider connections already carry their own authorization keys. Equivalent to
+     * {@link #execute(ExecutionInputs) execute(ExecutionInputs.none())}: a provider connection that
+     * still needs a cloud authorization key fails fast (nothing is provisioned) naming the key to
+     * gather.
      *
      * @return the execution outcome with all provisioned resources and any errors
+     * @see #execute(ExecutionInputs)
      */
     public DeploymentOutcome execute() {
+        return execute(ExecutionInputs.none());
+    }
+
+    /**
+     * Executes the deployment plan, creating all resources in the correct order: Cloud Routers, then
+     * provider connections, then backbone links, then routing protocols.
+     *
+     * <p><b>Execution-time connection pre-flight (Layer&nbsp;3a).</b> A provider connection's live
+     * endpoint dry-run cannot run at plan time because its A-side Cloud Router does not exist yet; it
+     * runs <em>here</em>, at the only point it is possible. For each connection, once its A-side FCR is
+     * provisioned and its real uuid is known, a full connection body — real A-side uuid, Z-side service
+     * profile + seller region + the customer's authorization key, DOT1Q VLAN — is
+     * {@link ConnectionOperator.ConnectionBuilder#dryRun() dry-run} against the live API; only if the
+     * dry-run passes is the connection created for real. A dry-run <em>rejection</em> of a well-formed
+     * request (a 4xx validation rejection, e.g. HTTP 400/409) aborts the run and rolls back everything
+     * already provisioned (LIFO), so a broken plan never leaves billable Cloud Routers stranded.</p>
+     *
+     * <p><b>Pre-flight infeasibility never silently aborts.</b> When the pre-flight dry-run cannot be
+     * <em>attempted</em> — an infeasibility rather than a rejection: 401/403 (not entitled), 429
+     * (throttled), 5xx (server-side), or a transport/timeout error, classified by
+     * {@link PlanValidator#classifyLiveFailure(Throwable)} — the run does <em>not</em> abort. It records
+     * a recoverable warning that the pre-flight could not run and proceeds to the real create, which
+     * surfaces any genuine error itself. Only a true rejection aborts and rolls back. The fail-fast on a
+     * missing cloud authorization key (below) is unchanged.</p>
+     *
+     * <p><b>Required customer inputs.</b> The cloud authorization keys — which a brand-new customer
+     * gathers from each cloud console — are supplied via {@code inputs} (keyed by connection name), or
+     * carried on the plan itself for a lens-3b plan. Before anything is provisioned, execution fails
+     * fast if any provider connection that needs a key is missing one, naming the connection and the
+     * exact key ({@link ConnectionInputRequirement}).</p>
+     *
+     * <p>Operational errors (a Cloud Router that does not reach {@code PROVISIONED} within the timeout,
+     * a missing upstream dependency) are captured in the outcome rather than thrown, allowing a partial
+     * deployment to be inspected and {@link #rollback(DeploymentOutcome) rolled back} by the caller.</p>
+     *
+     * @param inputs the per-connection authorization keys, VLAN tags and Azure peering types the
+     *               customer supplies; {@code null} is treated as {@link ExecutionInputs#none()}
+     * @return the execution outcome with all provisioned resources and any errors
+     */
+    public DeploymentOutcome execute(ExecutionInputs inputs) {
+        ExecutionInputs in = inputs != null ? inputs : ExecutionInputs.none();
         long startTime = System.currentTimeMillis();
         List<ProvisionedResource> resources = new ArrayList<>();
         List<ProvisioningError> errors = new ArrayList<>();
         Map<String, String> routerUuids = new HashMap<>();
         Map<String, String> connectionUuids = new HashMap<>();
+
+        // Fail fast BEFORE any billable resource is created: every provider connection that needs a
+        // cloud authorization key must have one, from the plan or from the supplied inputs. A missing
+        // key names the connection and the exact key a first-time customer must gather.
+        List<ProvisioningError> missingInputs = missingRequiredInputs(in);
+        if (!missingInputs.isEmpty()) {
+            errors.addAll(missingInputs);
+            return outcome(resources, false, errors, startTime);
+        }
 
         // Phase 1: Create Cloud Routers
         if (cloudRouters != null) {
@@ -368,14 +512,68 @@ public class DeploymentPlan {
             }
         }
 
-        // Phase 2: Create Provider Connections
+        // Phase 2: Create Provider Connections — the Layer 3a pre-flight lives here. By now the A-side
+        // FCR is provisioned, so its real uuid can carry a full connection body: pre-flight it with a
+        // live dry-run, and create it for real only if the dry-run passes.
         if (providerConnections != null) {
             for (PlannedConnection planned : providerConnections) {
+                boolean onPort = planned.getASidePortUuid() != null;
+                // Resolve the real A-side endpoint: a caller-supplied pre-existing FCR (lens 3b),
+                // otherwise the FCR this run just provisioned in Phase 1 (lens 3a).
+                String aSideUuid = planned.getASideExistingRouterUuid() != null
+                        ? planned.getASideExistingRouterUuid()
+                        : routerUuids.get(planned.getASideRouterName());
+                if (!onPort && aSideUuid == null) {
+                    // The A-side FCR failed to provision upstream — skip the dependent connection
+                    // (a missing dependency, not a validation failure), consistent with orphaned
+                    // routing protocols below.
+                    errors.add(ProvisioningError.builder()
+                            .resourceType("Connection")
+                            .resourceName(planned.getName())
+                            .reason("A-side Cloud Router '" + planned.getASideRouterName()
+                                    + "' was not provisioned — connection skipped")
+                            .recoverable(false)
+                            .build());
+                    continue;
+                }
+
+                // Merge the customer inputs (auth key, VLAN, Azure peering) onto the planned connection
+                // so the reused ConnectionBodies builder assembles a complete cloud VC body.
+                PlannedConnection resolved = withInputs(planned, in);
+
+                // Pre-flight: a REAL dry-run against the now-real A-side + the customer auth key. A
+                // genuine REJECTION means the connection is not viable — abort and roll back everything
+                // prior. An INFEASIBILITY (not entitled / throttled / server-side / transport) must NOT
+                // silently abort the whole provisioning: record a skip and proceed to the real create.
                 try {
-                    Connection conn = fabric.connections().define(planned.getConnectionType())
-                            .name(planned.getName())
-                            .bandwidth(planned.getBandwidthMbps())
-                            .create();
+                    providerBody(resolved, aSideUuid, onPort).dryRun().create();
+                }
+                catch (Exception e) {
+                    PlanValidator.LiveFailure failure = PlanValidator.classifyLiveFailure(e);
+                    if (failure.isInfeasible()) {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("Connection")
+                                .resourceName(planned.getName())
+                                .reason("pre-flight dry-run skipped (" + failure.reason()
+                                        + ") — proceeding to create, which surfaces any true error")
+                                .recoverable(true)
+                                .build());
+                    }
+                    else {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("Connection")
+                                .resourceName(planned.getName())
+                                .reason("pre-flight dry-run rejected: " + e.getMessage())
+                                .recoverable(true)
+                                .build());
+                        return abortAndRollback(resources, errors, startTime);
+                    }
+                }
+
+                // Dry-run passed (or was skipped as infeasible): create for real (a fresh builder — the
+                // dry-run one is spent). A rejection would have aborted above, so reaching here is safe.
+                try {
+                    Connection conn = providerBody(resolved, aSideUuid, onPort).create();
 
                     connectionUuids.put(planned.getName(), conn.getUuid());
                     String state = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
@@ -397,24 +595,69 @@ public class DeploymentPlan {
                             .build());
                 }
                 catch (Exception e) {
+                    // The dry-run passed but the real create was rejected — a hard failure; abort and
+                    // roll back rather than leave a half-built, billable deployment behind.
                     errors.add(ProvisioningError.builder()
                             .resourceType("Connection")
                             .resourceName(planned.getName())
                             .reason(e.getMessage())
                             .recoverable(true)
                             .build());
+                    return abortAndRollback(resources, errors, startTime);
                 }
             }
         }
 
-        // Phase 3: Create Backbone Links
+        // Phase 3: Create Backbone Links (Cloud Router → Cloud Router). Both router uuids are known
+        // after Phase 1, so the same pre-flight applies: dry-run the full CR→CR body, then create.
         if (backboneLinks != null) {
             for (PlannedBackboneLink link : backboneLinks) {
                 PlannedConnection planned = link.getConnection();
+                String aSideUuid = routerUuids.get(planned.getASideRouterName());
+                String zSideUuid = routerUuids.get(planned.getZSideRouterName());
+                if (aSideUuid == null || zSideUuid == null) {
+                    errors.add(ProvisioningError.builder()
+                            .resourceType("BackboneLink")
+                            .resourceName(planned.getName())
+                            .reason("backbone endpoints were not provisioned (A-side '"
+                                    + planned.getASideRouterName() + "', Z-side '"
+                                    + planned.getZSideRouterName() + "') — link skipped")
+                            .recoverable(false)
+                            .build());
+                    continue;
+                }
+
+                // Pre-flight the backbone link the same way (both endpoints are real). A genuine
+                // rejection aborts + rolls back; an infeasibility is skipped and the create proceeds.
                 try {
-                    Connection conn = fabric.connections().define(planned.getConnectionType())
-                            .name(planned.getName())
-                            .bandwidth(planned.getBandwidthMbps())
+                    ConnectionBodies.backboneBody(fabric.connections(), planned, aSideUuid, zSideUuid)
+                            .dryRun().create();
+                }
+                catch (Exception e) {
+                    PlanValidator.LiveFailure failure = PlanValidator.classifyLiveFailure(e);
+                    if (failure.isInfeasible()) {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("BackboneLink")
+                                .resourceName(planned.getName())
+                                .reason("pre-flight dry-run skipped (" + failure.reason()
+                                        + ") — proceeding to create, which surfaces any true error")
+                                .recoverable(true)
+                                .build());
+                    }
+                    else {
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("BackboneLink")
+                                .resourceName(planned.getName())
+                                .reason("pre-flight dry-run rejected: " + e.getMessage())
+                                .recoverable(true)
+                                .build());
+                        return abortAndRollback(resources, errors, startTime);
+                    }
+                }
+
+                try {
+                    Connection conn = ConnectionBodies
+                            .backboneBody(fabric.connections(), planned, aSideUuid, zSideUuid)
                             .create();
 
                     connectionUuids.put(planned.getName(), conn.getUuid());
@@ -443,6 +686,7 @@ public class DeploymentPlan {
                             .reason(e.getMessage())
                             .recoverable(true)
                             .build());
+                    return abortAndRollback(resources, errors, startTime);
                 }
             }
         }
@@ -493,13 +737,107 @@ public class DeploymentPlan {
             }
         }
 
-        long elapsed = System.currentTimeMillis() - startTime;
+        return outcome(resources, errors.isEmpty(), errors, startTime);
+    }
+
+    // ══════════════════════════════════════════════
+    //  Execution-time connection pre-flight helpers (Layer 3a)
+    // ══════════════════════════════════════════════
+
+    /**
+     * The provider connections that cannot be provisioned because a required cloud authorization key is
+     * neither carried on the plan nor supplied in {@code inputs}. A key is required for every
+     * well-known cloud (AWS, Azure, GCP, ...); a third-party ({@link CloudProviderType#OTHER}) profile
+     * needs none. Each returned error names the connection and the exact key to gather.
+     */
+    private List<ProvisioningError> missingRequiredInputs(ExecutionInputs inputs) {
+        List<ProvisioningError> missing = new ArrayList<>();
+        if (providerConnections == null) {
+            return missing;
+        }
+        for (PlannedConnection conn : providerConnections) {
+            CloudProviderType type = conn.getZSideCloudType() != null
+                    ? conn.getZSideCloudType()
+                    : ConnectionBodies.resolveCloudType(conn.getZSideProviderLabel());
+            if (type == CloudProviderType.OTHER) {
+                continue; // a third-party service profile needs no cloud authorization key
+            }
+            String key = conn.getZSideAuthenticationKey() != null
+                    ? conn.getZSideAuthenticationKey()
+                    : inputs.authenticationKeyFor(conn.getName());
+            if (key == null || key.isBlank()) {
+                missing.add(ProvisioningError.builder()
+                        .resourceType("Connection")
+                        .resourceName(conn.getName())
+                        .reason("missing required authorization key: "
+                                + ConnectionBodies.authenticationKeyLabel(type)
+                                + " — supply it via ExecutionInputs before executing")
+                        .recoverable(false)
+                        .build());
+            }
+        }
+        return missing;
+    }
+
+    /**
+     * Returns a copy of the planned connection with the customer-supplied authorization key, VLAN tag
+     * and Azure peering type merged in. A value already on the plan (a lens-3b plan) wins; otherwise
+     * the value from {@code inputs} fills the field the plan deliberately left null.
+     */
+    private static PlannedConnection withInputs(PlannedConnection planned, ExecutionInputs inputs) {
+        String key = planned.getZSideAuthenticationKey() != null
+                ? planned.getZSideAuthenticationKey()
+                : inputs.authenticationKeyFor(planned.getName());
+        Integer vlan = planned.getZSideVlanTag() != null
+                ? planned.getZSideVlanTag()
+                : inputs.vlanTagFor(planned.getName());
+        PeeringType peering = planned.getZSidePeeringType() != null
+                ? planned.getZSidePeeringType()
+                : inputs.peeringTypeFor(planned.getName());
+        return planned.toBuilder()
+                .zSideAuthenticationKey(key)
+                .zSideVlanTag(vlan)
+                .zSidePeeringType(peering)
+                .build();
+    }
+
+    /**
+     * Assembles a provider connection body via the shared {@link ConnectionBodies}, against a
+     * pre-existing customer port (lens 3b) or the resolved A-side Cloud Router uuid. The returned
+     * builder is un-terminated: chain {@code .dryRun().create()} to pre-flight or {@code .create()} to
+     * provision.
+     */
+    private ConnectionOperator.ConnectionBuilder providerBody(
+            PlannedConnection resolved, String aSideUuid, boolean onPort) {
+        return onPort
+                ? ConnectionBodies.providerBodyOnPort(fabric.connections(), resolved, resolved.getASidePortUuid())
+                : ConnectionBodies.providerBody(fabric.connections(), resolved, aSideUuid);
+    }
+
+    /**
+     * Aborts an in-flight execution and unwinds every resource provisioned so far (LIFO), reusing the
+     * existing {@link #rollback(DeploymentOutcome)} machinery. Returns a not-successful outcome whose
+     * errors carry the failure that triggered the abort plus any rollback-delete failures; the
+     * {@code resources} list is the audit trail of what was created (and has now been torn down).
+     */
+    private DeploymentOutcome abortAndRollback(
+            List<ProvisionedResource> resources, List<ProvisioningError> errors, long startTime) {
+        DeploymentOutcome interim = outcome(resources, false, errors, startTime);
+        List<ProvisioningError> rollbackFailures = rollback(interim);
+        List<ProvisioningError> combined = new ArrayList<>(errors);
+        combined.addAll(rollbackFailures);
+        return outcome(resources, false, combined, startTime);
+    }
+
+    private DeploymentOutcome outcome(
+            List<ProvisionedResource> resources, boolean success,
+            List<ProvisioningError> errors, long startTime) {
         return DeploymentOutcome.builder()
                 .plan(this)
                 .resources(resources)
-                .fullySuccessful(errors.isEmpty())
+                .fullySuccessful(success)
                 .errors(errors)
-                .executionTimeMs(elapsed)
+                .executionTimeMs(System.currentTimeMillis() - startTime)
                 .build();
     }
 

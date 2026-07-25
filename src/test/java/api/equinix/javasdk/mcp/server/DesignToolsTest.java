@@ -355,7 +355,13 @@ class DesignToolsTest {
         assertTrue(plan.get("provider_connections").size() > 0, "the AWS connection is planned");
         assertNotNull(plan.get("pricing"), "plan pricing is included");
         assertNotNull(plan.get("pricing").get("price_source"), "pricing carries provenance");
-        assertNotNull(plan.get("validation_errors"), "validation findings are surfaced");
+        JsonNode validation = plan.get("validation");
+        assertNotNull(validation, "the layered validation block is surfaced");
+        assertTrue(validation.get("valid").asBoolean(),
+                "a structurally sound plan reads as valid: " + validation.toPrettyString());
+        assertNotNull(validation.get("validated_now"), "the validated-now section is present");
+        assertNotNull(validation.get("deferred_to_provisioning"), "the deferred section is present");
+        assertNotNull(validation.get("skipped"), "the skipped (could-not-validate-now) section is present");
         assertEquals(1, context.planStore().size(), "the plan is retained for export");
 
         ObjectNode export = call("design_export_terraform", "{\"plan_id\": \"" + planId + "\"}");
@@ -371,6 +377,161 @@ class DesignToolsTest {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
                 () -> call("design_export_terraform", "{\"plan_id\": \"plan-999\"}"));
         assertTrue(e.getMessage().contains("design_plan_deployment"), e.getMessage());
+    }
+
+    /**
+     * The brand-new-customer lens: a first-time customer owns no resources and the target Cloud Router
+     * does not exist yet, so the AWS connection's live endpoint dry-run cannot run at plan time. The
+     * plan must (a) still read as VALID — a structurally-fine, not-yet-provisionable connection is not
+     * a validation error — (b) list that connection under 'deferred_to_provisioning', and (c) hand the
+     * customer a per-connection 'required_inputs' checklist naming the exact cloud authorization key,
+     * with nothing fabricated. This is the whole point of the layered-validation rework.
+     */
+    @Test
+    @DisplayName("design_plan_deployment surfaces a valid plan with a deferred connection dry-run and a per-connection required-inputs checklist")
+    void planSurfacesDeferredAndRequiredInputs() throws Exception {
+        ObjectNode plan = call("design_plan_deployment", """
+                {"optimization": {
+                    "workloads": [{"label": "Web Tier", "type": "general_compute", "bandwidth_mbps": 1000}],
+                    "sites": [{"label": "HQ", "metro_code": "DC"}],
+                    "require_clouds": ["aws"],
+                    "constraints": {"max_metros": 1}}}
+                """);
+
+        JsonNode validation = plan.get("validation");
+        assertNotNull(validation, "the layered validation block is present");
+        assertTrue(validation.get("valid").asBoolean(),
+                "a structurally-fine plan whose only outstanding check is a deferred connection dry-run "
+                        + "must read as VALID, not failed: " + validation.toPrettyString());
+        assertEquals(0, validation.get("validated_now").get("error_count").asInt(),
+                "no structural / catalog / router-dry-run errors for this plan: " + validation.toPrettyString());
+        // The stubbed gateway serves no cloud-router or connection surface, so no live dry-run runs and
+        // no live error can appear — the plan is validated structurally only, exactly as a bare/offline
+        // run should degrade.
+        assertEquals(0, validation.get("validated_now").get("new_market_gaps").size(),
+                "AWS is offered at DC in the fixture, so there is no new-market gap");
+
+        JsonNode deferred = validation.get("deferred_to_provisioning");
+        assertTrue(deferred.get("count").asInt() >= 1,
+                "the AWS connection has no pre-existing endpoint, so its live endpoint dry-run is deferred "
+                        + "to provisioning: " + deferred.toPrettyString());
+        assertTrue(deferred.get("notes").get(0).asText().toLowerCase(java.util.Locale.ROOT).contains("provisioning"),
+                "the deferred note explains it runs at provisioning: " + deferred.get("notes").toPrettyString());
+
+        JsonNode requiredInputs = plan.get("required_inputs");
+        assertTrue(requiredInputs.size() >= 1, "a per-connection required-inputs checklist is surfaced");
+        JsonNode aws = null;
+        for (JsonNode req : requiredInputs) {
+            if ("AWS".equals(req.get("cloud_type").asText())) {
+                aws = req;
+            }
+        }
+        assertNotNull(aws, "the AWS connection appears in the checklist: " + requiredInputs.toPrettyString());
+        assertTrue(aws.get("authentication_key_required").asBoolean(), "AWS needs an authorization key");
+        assertFalse(aws.get("authentication_key_provided").asBoolean(),
+                "no key is fabricated at plan time — the customer must supply it");
+        assertTrue(aws.get("authentication_key_label").asText().contains("AWS Account ID"),
+                "the checklist names the exact key the connection needs: " + aws.toPrettyString());
+        assertTrue(aws.get("vlan_tag_required").asBoolean(), "a cloud VC always needs a VLAN tag");
+        assertFalse(aws.get("peering_type_required").asBoolean(), "only Azure needs a peering type");
+        assertTrue(aws.get("summary").asText().contains("AWS Account ID"),
+                "the one-line summary restates what to gather: " + aws.get("summary").asText());
+
+        // The headline summary must not read as a failure for a valid plan.
+        assertFalse(plan.get("summary").asText().contains("VALIDATION ERRORS"),
+                "a valid plan's summary must not shout VALIDATION ERRORS: " + plan.get("summary").asText());
+    }
+
+    /**
+     * The owner's skip-and-call-out requirement, surfaced end-to-end: a live dry-run that cannot be
+     * ATTEMPTED must land in a THIRD validation bucket, {@code validation.skipped}, each entry carrying a
+     * reason. Here the stubbed gateway wires metros + service profiles but NO cloud-router API surface, so
+     * the live router dry-run and the package-ceiling checks have nowhere to run — each is SKIPPED with a
+     * reason rather than returning silently (the gap hidden) or being dumped into errors (a sound plan
+     * wrongly invalidated). A skip is an infeasibility, never a plan defect: the plan stays VALID.
+     */
+    @Test
+    @DisplayName("design_plan_deployment surfaces a third 'skipped' bucket, with reasons, that never invalidates the plan")
+    void planSurfacesSkippedValidations() throws Exception {
+        ObjectNode plan = call("design_plan_deployment", """
+                {"optimization": {
+                    "workloads": [{"label": "Web Tier", "type": "general_compute", "bandwidth_mbps": 1000}],
+                    "sites": [{"label": "HQ", "metro_code": "DC"}],
+                    "require_clouds": ["aws"],
+                    "constraints": {"max_metros": 1}}}
+                """);
+
+        JsonNode validation = plan.get("validation");
+        JsonNode skipped = validation.get("skipped");
+        assertNotNull(skipped, "the third (skipped) validation bucket is surfaced: " + validation.toPrettyString());
+        assertTrue(skipped.get("scope").asText().contains("invalidate"),
+                "the scope states a skip does not invalidate the plan: " + skipped.get("scope").asText());
+
+        // The stub serves no cloud-router surface, so the live router dry-run and the package-ceiling
+        // checks cannot be attempted — each is SKIPPED with a reason (never a silent return, never an error).
+        assertTrue(skipped.get("count").asInt() >= 1,
+                "an offline live surface makes at least one check un-attemptable, and it must be called out: "
+                        + skipped.toPrettyString());
+        assertEquals(skipped.get("count").asInt(), skipped.get("notes").size(),
+                "count mirrors the notes array");
+        assertTrue(skipped.get("notes").get(0).asText().toLowerCase(java.util.Locale.ROOT).contains("skipped"),
+                "each skip note calls out the check it could not run: " + skipped.get("notes").toPrettyString());
+
+        // A skip is an infeasibility, never a defect: it must neither invalidate the plan nor count as an error.
+        assertTrue(validation.get("valid").asBoolean(),
+                "skipped live checks never invalidate a structurally-sound plan: " + validation.toPrettyString());
+        assertEquals(0, validation.get("validated_now").get("error_count").asInt(),
+                "the skips are not folded into errors: " + validation.toPrettyString());
+    }
+
+    /**
+     * The tool description is the prompt the calling model reasons from, so the layered-validation
+     * contract has to live in it verbatim: validation runs with zero provisioned resources, the
+     * connection endpoint dry-run is deferred to provisioning (not an error), a live dry-run that cannot
+     * be performed is SKIPPED with a reason (and never invalidates a sound plan), and new customers get a
+     * required-inputs checklist that is never fabricated. This also pins the deliberate decision NOT to
+     * advertise a plan-time existing-endpoint input: the Deployment Wizard builder exposes no hook to
+     * inject a pre-existing port/FCR (that path is SDK-only, by hand-building the plan), so a schema
+     * field for it would be an accepted-but-ignored lever — the exact dishonesty this catalog forbids.
+     */
+    @Test
+    @DisplayName("design_plan_deployment description states the layered-validation contract and adds no un-wireable existing-endpoint input")
+    void planDeploymentDescriptionStatesLayeredValidation() {
+        ToolRegistration plan = tool("design_plan_deployment");
+        String description = plan.getDescription();
+
+        assertTrue(description.contains("PLAN-ONLY"), "the tool never executes: " + description);
+        assertTrue(description.contains("ZERO provisioned resources"),
+                "validation works for a brand-new customer with nothing provisioned: " + description);
+        assertTrue(description.contains("deferred_to_provisioning"),
+                "the connection endpoint dry-run is deferred, and the description must name where: " + description);
+        assertTrue(description.contains("NOT errors"),
+                "a deferred item is not a validation error, and the description must say so: " + description);
+        assertTrue(description.contains("required_inputs"),
+                "the per-connection customer checklist must be named: " + description);
+        assertTrue(description.contains("never fabricated"),
+                "the authorization keys are gathered by the customer, not invented: " + description);
+
+        // The skip-and-call-out contract: a dry-run that cannot be performed is SKIPPED, reported with a
+        // reason, and never invalidates a structurally-sound plan — a new customer must read this verbatim.
+        assertTrue(description.contains("validation.skipped"),
+                "the third validation bucket must be named so a model knows where skips land: " + description);
+        assertTrue(description.contains("SKIPPED"),
+                "the description must state that an un-performable dry-run is SKIPPED, not errored: " + description);
+        assertTrue(description.contains("NEVER invalidates"),
+                "the description must promise a skip never invalidates a structurally-sound plan: " + description);
+        assertTrue(description.contains("rate-limited") && description.contains("unreachable"),
+                "the description must name the infeasibility cases (403/429/offline/unreachable): " + description);
+
+        // No existing-endpoint input is advertised, because the wizard builder cannot accept one.
+        Map<String, Object> deployment = child(plan.getInputSchema(), "deployment");
+        Map<String, Object> deploymentProps = properties(deployment);
+        assertFalse(deploymentProps.containsKey("existing_router_uuid"),
+                "the wizard builder exposes no pre-existing-endpoint hook, so no such input may be advertised");
+        assertFalse(deploymentProps.containsKey("existing_port_uuid"),
+                "the wizard builder exposes no pre-existing-endpoint hook, so no such input may be advertised");
+        assertFalse(deploymentProps.containsKey("existing_endpoints"),
+                "the wizard builder exposes no pre-existing-endpoint hook, so no such input may be advertised");
     }
 
     // ── design_estimate_latency ─────────────────────────────────────────────
