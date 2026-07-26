@@ -2176,10 +2176,10 @@ Read-only tests skip only when the credential lacks the product entitlement (401
 Full Javadoc documentation is published at **[iantjones.github.io/equinix-java-sdk](https://iantjones.github.io/equinix-java-sdk/)** and is updated with each release.
 
 Browse Javadocs by domain:
-- [Fabric](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/package-summary.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
-- [Network Edge](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/networkedge/package-summary.html) — Virtual Devices, ACL Templates, VPNs, BGP Peerings
-- [Customer Portal](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
-- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
+- [Fabric](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/Fabric.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
+- [Network Edge](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/NetworkEdge.html) — Virtual Devices, ACL Templates, VPNs, BGP Peerings
+- [Customer Portal](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/CustomerPortal.html) — Cross-Connects, Trouble Tickets, Invoices
+- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/IBXSmartView.html) — Environmental Sensors, Power Events, Streaming
 - [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
 - [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/package-summary.html) — Metro placement engine
 - [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
