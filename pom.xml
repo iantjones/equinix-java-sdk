@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Copyright 2021 Ian Jones. All Rights Reserved.
   ~
@@ -70,7 +70,7 @@
           it on the test classpath) and the logging backend bundled into the shaded mcp-server
           jar (the shade plugin bundles compile+runtime artifacts; test scope would leave the
           runnable server jar without a binding). It is <optional> so library consumers never
-          inherit a logging BINDING from this SDK â€” only the slf4j-api facade above is a real
+          inherit a logging BINDING from this SDK — only the slf4j-api facade above is a real
           transitive dependency. Locked by DependencyHygieneTest.
         -->
         <dependency>
@@ -247,7 +247,7 @@
             </plugin>
             <!--
               Javadoc reference-integrity gate. The previous <doclint>none</doclint> passed
-              -Xdoclint:none, which disabled EVERY doclint group including 'reference' â€” so a broken
+              -Xdoclint:none, which disabled EVERY doclint group including 'reference' — so a broken
               {@link} (e.g. to a Lombok-generated getter, which does not exist in the raw source
               javadoc sees) produced ZERO warnings, and the plugin's failOnWarnings default (false)
               meant even emitted warnings never failed `mvn javadoc:javadoc`. Now:
@@ -255,7 +255,7 @@
                   are reported; other doclint groups stay off so the gate is precisely scoped), and
                 - <failOnWarnings>true</failOnWarnings> fails the build on any remaining
                   warning-level output.
-              House rule (see MEMORY / CONTRIBUTING): never {@link} a Lombok-generated getter â€”
+              House rule (see MEMORY / CONTRIBUTING): never {@link} a Lombok-generated getter —
               use {@code getX()} instead. This configuration is plugin-level, so it applies both to
               the `javadoc:javadoc` gate goal and the attach-javadocs jar execution.
             -->
@@ -282,12 +282,12 @@
               Runnable embedded MCP server jar (target/${artifactId}-${version}-mcp-server.jar):
               `java -jar` it from Claude Desktop / Claude Code / Cursor / VS Code. Shade attaches
               it as the SECONDARY artifact with classifier 'mcp-server' (shadedArtifactAttached),
-              so the primary library jar and its pom are untouched â€” createDependencyReducedPom
+              so the primary library jar and its pom are untouched — createDependencyReducedPom
               is explicitly false because the default (true) would rewrite the pom that
               install/deploy publish. The uber jar bundles the SDK plus every compile/runtime
               dependency: the two <optional> io.modelcontextprotocol.sdk artifacts and their
               transitives (reactor-core, networknt json-schema-validator, ...), Jackson,
-              HttpClient, slf4j-api and the <optional> slf4j-simple binding â€” a project's OWN
+              HttpClient, slf4j-api and the <optional> slf4j-simple binding — a project's OWN
               optional dependencies are on its runtime classpath (optionality only stops
               consumers inheriting them), so shade includes them. Lombok is provided scope and
               is excluded automatically. Jar signature files are stripped (invalid once
@@ -568,9 +568,9 @@
 
         <!--
             Opt-in mutation testing (PIT re-runs the unit suite per mutant, far too slow for every
-            build â€” but -Ppit IS part of the release checklist, see CONTRIBUTING.md).
+            build — but -Ppit IS part of the release checklist, see CONTRIBUTING.md).
 
-            1) Core report (ungated, informational â€” the shared transport/serialization engine):
+            1) Core report (ungated, informational — the shared transport/serialization engine):
                 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage
                Uses the plugin-level configuration below; report lands in target/pit-reports.
 
@@ -578,8 +578,8 @@
                 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage@design-value-gate
                Scoped to com.eqixiac.equinix.design.value.* (the rate-card / TCO / savings money
                math, where a surviving mutant means a silently wrong dollar figure) and killed by
-               the design.* unit tests. mutationThreshold starts at 50 â€” a floor today's suite
-               passes â€” and RATCHETS: whenever a measured run reports a comfortably higher kill
+               the design.* unit tests. mutationThreshold starts at 50 — a floor today's suite
+               passes — and RATCHETS: whenever a measured run reports a comfortably higher kill
                rate, raise the threshold to just below it (never lower it). WireMock/integration
                tagged tests are excluded so the gate stays fast and offline-deterministic.
         -->
