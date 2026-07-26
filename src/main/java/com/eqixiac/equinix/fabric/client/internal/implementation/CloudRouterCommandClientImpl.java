@@ -1,0 +1,79 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix.fabric.client.internal.implementation;
+
+import com.eqixiac.equinix.core.client.ResourceClientBase;
+import com.eqixiac.equinix.core.enums.RequestType;
+import com.eqixiac.equinix.core.http.ResponseHandler;
+import com.eqixiac.equinix.core.http.SerializationHelper;
+import com.eqixiac.equinix.core.http.request.EquinixRequest;
+import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
+import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
+import com.eqixiac.equinix.fabric.client.internal.CloudRouterCommandClient;
+import com.eqixiac.equinix.fabric.model.CloudRouterCommand;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
+import com.eqixiac.equinix.fabric.model.json.CloudRouterCommandJson;
+import com.eqixiac.equinix.fabric.model.json.creators.CloudRouterCommandCreatorJson;
+
+import java.util.Map;
+
+/**
+ * Internal client for Fabric Cloud Router diagnostic commands (ping / traceroute). The JSON model
+ * implements the public interface directly, so {@link #wrap(CloudRouterCommandJson)} is the identity.
+ *
+ * @author ianjones
+ */
+public class CloudRouterCommandClientImpl extends ResourceClientBase<CloudRouterCommand, CloudRouterCommandJson> implements CloudRouterCommandClient<CloudRouterCommand> {
+
+    public CloudRouterCommandClientImpl(FabricConfigImpl configClient) {
+        super(configClient, "Fabric", "CloudRouters", CloudRouterCommandJson.class);
+    }
+
+    @Override
+    protected CloudRouterCommand wrap(CloudRouterCommandJson json) {
+        return json;
+    }
+
+    public Page<CloudRouterCommandJson> list(String routerId) {
+        return listPagePath("GetCloudRouterCommands", Map.of("routerId", routerId));
+    }
+
+    public Page<CloudRouterCommandJson> search(String routerId, FilterPropertyList filter, SortPropertyList sort) {
+        EquinixRequest<CloudRouterCommand> request = buildRequestWithPathParams("SearchCloudRouterCommands", RequestType.PAGINATED_POST,
+                Map.of("routerId", routerId), CloudRouterCommandJson.class);
+        SerializationHelper.serializeJson(request, new FilteredSortedPaginatedPost<>(filter, sort));
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    public CloudRouterCommandJson getByUuid(String routerId, String uuid) {
+        return getOne("GetCloudRouterCommand", Map.of("routerId", routerId, "uuid", uuid));
+    }
+
+    public CloudRouterCommandJson create(String routerId, CloudRouterCommandCreatorJson creatorJson) {
+        return postOne("PostCloudRouterCommand", Map.of("routerId", routerId), creatorJson);
+    }
+
+    public CloudRouterCommandJson delete(String routerId, String uuid) {
+        return deleteOne("DeleteCloudRouterCommand", Map.of("routerId", routerId, "uuid", uuid));
+    }
+
+    public CloudRouterCommandJson refresh(String routerId, String uuid) {
+        return getByUuid(routerId, uuid);
+    }
+}

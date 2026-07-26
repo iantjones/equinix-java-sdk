@@ -1,0 +1,49 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix.core.auth;
+
+/**
+ * Represents credentials for authenticating with the Equinix Platform APIs.
+ *
+ * <p>Implementations of this interface provide the OAuth2 client credentials
+ * (Client ID and Client Secret) required for API authentication. The SDK uses
+ * these credentials to obtain and manage OAuth2 access tokens automatically.</p>
+ *
+ * <p>Implementations need only supply the two getters below. The instance itself is never
+ * serialized onto the wire — the SDK builds a dedicated {@link Oauth2TokenRequest} from
+ * {@code getAccessKey()}/{@code getSecretKey()} when authenticating — so custom implementations
+ * (records, vault-backed classes, etc.) require no Jackson annotations.</p>
+ *
+ * @author ianjones
+ * @see BasicEquinixCredentials
+ * @see Oauth2TokenRequest
+ */
+public interface EquinixCredentials {
+    /**
+     * Returns the OAuth2 Client ID (access key) for API authentication.
+     *
+     * @return the client ID string
+     */
+    String getAccessKey();
+    /**
+     * Returns the OAuth2 Client Secret (secret key) for API authentication.
+     *
+     * @return the client secret string
+     */
+    String getSecretKey();
+}
+

@@ -1,0 +1,250 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix;
+
+import com.eqixiac.equinix.core.auth.EquinixCredentials;
+import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
+import com.eqixiac.equinix.core.auth.EquinixStaticCredentialsProvider;
+import com.eqixiac.equinix.core.exception.EquinixClientException;
+import com.eqixiac.equinix.fabric.model.MetroRegistry;
+
+import java.io.Closeable;
+import java.io.IOException;
+
+/**
+ * A single Equinix session that owns <strong>one</strong> authenticated core client — a single
+ * OAuth token and a single HTTP connection pool — and vends every domain client over it. Use this
+ * when an application talks to more than one domain so they share the token and pool instead of
+ * each {@code new Fabric(creds)} / {@code new NetworkEdge(creds)} standing up its own (which would
+ * authenticate and pool independently).
+ *
+ * <pre>{@code
+ * try (Equinix eq = new Equinix(credentials)) {
+ *     Fabric fabric       = eq.fabric();        // shares the session's token + pool
+ *     NetworkEdge edge    = eq.networkEdge();    // ditto
+ *     Design design       = eq.design();         // value-add engines over the shared Fabric
+ *     // ... one token fetched, one pool, closed once when the session closes
+ * }
+ * }</pre>
+ *
+ * <p>Domain clients are created lazily and cached, so repeated accessor calls return the same
+ * instance. The session owns the shared core client; closing the session closes it. The
+ * individual domain clients obtained from a session do <em>not</em> close the shared core when
+ * their own {@code close()} is called.</p>
+ *
+ * <p>The standalone {@code new Fabric(credentials)} (etc.) constructors remain for the common
+ * single-domain case; this session is purely additive.</p>
+ */
+public final class Equinix implements Closeable {
+
+    private final EquinixConfig config;
+    private final com.eqixiac.equinix.core.client.EquinixClient core;
+
+    private Fabric fabric;
+    private NetworkEdge networkEdge;
+    private CustomerPortal customerPortal;
+    private IBXSmartView ibxSmartView;
+    private InternetAccess internetAccess;
+    private Projects projects;
+    private IAM iam;
+    private STS sts;
+
+    /**
+     * Opens a session against the production environment.
+     *
+     * @param credentials the OAuth2 credentials shared by every client in this session
+     */
+    public Equinix(EquinixCredentials credentials) {
+        this(credentials, false);
+    }
+
+    /**
+     * Opens a session, optionally against the sandbox environment.
+     *
+     * @param credentials the OAuth2 credentials shared by every client in this session
+     * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
+     */
+    public Equinix(EquinixCredentials credentials, boolean isSandBoxed) {
+        this(new EquinixStaticCredentialsProvider(credentials), EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Opens a session with explicit {@link EquinixConfig} options (sandbox, retry, metro auto-loading).
+     *
+     * @param credentials the OAuth2 credentials shared by every client in this session
+     * @param config the construction-time options
+     */
+    public Equinix(EquinixCredentials credentials, EquinixConfig config) {
+        this(new EquinixStaticCredentialsProvider(credentials), config);
+    }
+
+    /**
+     * Opens a session whose credentials are resolved through the given provider — consulted on each
+     * authentication, so the whole session (every domain client over the shared core) can rotate
+     * credentials at runtime.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
+     */
+    public Equinix(EquinixCredentialsProvider credentialsProvider) {
+        this(credentialsProvider, EquinixConfig.defaults());
+    }
+
+    /**
+     * Opens a session over a custom credentials provider, optionally against the sandbox environment.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
+     * @param isSandBoxed {@code true} to use the sandbox environment; {@code false} for production
+     */
+    public Equinix(EquinixCredentialsProvider credentialsProvider, boolean isSandBoxed) {
+        this(credentialsProvider, EquinixConfig.builder().sandbox(isSandBoxed).build());
+    }
+
+    /**
+     * Opens a session over a custom credentials provider with explicit {@link EquinixConfig} options.
+     * When {@code EquinixConfig.isAutoLoadMetros()} is set (the default), {@link #authenticate()}
+     * eagerly loads the shared metro catalogue.
+     *
+     * @param credentialsProvider supplies the OAuth2 credentials shared by every client in this session
+     * @param config the construction-time options
+     */
+    public Equinix(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        this.config = config;
+        this.core = new com.eqixiac.equinix.core.client.EquinixClient(credentialsProvider, config.isSandbox());
+        if (config.getRetryPolicy() != null) {
+            this.core.setRetryPolicy(config.getRetryPolicy());
+        }
+        if (config.getCircuitBreaker() != null) {
+            this.core.setCircuitBreaker(config.getCircuitBreaker());
+        }
+    }
+
+    public Fabric fabric() {
+        if (fabric == null) {
+            fabric = new Fabric(core, config);
+        }
+        return fabric;
+    }
+
+    public NetworkEdge networkEdge() {
+        if (networkEdge == null) {
+            networkEdge = new NetworkEdge(core);
+        }
+        return networkEdge;
+    }
+
+    public CustomerPortal customerPortal() {
+        if (customerPortal == null) {
+            customerPortal = new CustomerPortal(core);
+        }
+        return customerPortal;
+    }
+
+    public IBXSmartView ibxSmartView() {
+        if (ibxSmartView == null) {
+            ibxSmartView = new IBXSmartView(core);
+        }
+        return ibxSmartView;
+    }
+
+    public InternetAccess internetAccess() {
+        if (internetAccess == null) {
+            internetAccess = new InternetAccess(core);
+        }
+        return internetAccess;
+    }
+
+    public Projects projects() {
+        if (projects == null) {
+            projects = new Projects(core);
+        }
+        return projects;
+    }
+
+    public IAM iam() {
+        if (iam == null) {
+            iam = new IAM(core);
+        }
+        return iam;
+    }
+
+    public STS sts() {
+        if (sts == null) {
+            sts = new STS(core);
+        }
+        return sts;
+    }
+
+    /**
+     * @return the value-add design facade (Metro Optimizer, Deployment Wizard, Peering
+     *         Intelligence, Savings, TCO) over this session's shared Fabric client
+     */
+    public Design design() {
+        return Design.over(fabric());
+    }
+
+    /**
+     * The live metro catalogue — every metro with its IBXs, coordinates, region, and inter-metro
+     * latencies — keyed by {@link com.eqixiac.equinix.core.model.MetroId}. Sourced from the Fabric
+     * Metros API (the only catalogue with that depth) but surfaced here as a session-level,
+     * cross-domain concern; it shares this session's single Fabric cache. Loaded eagerly on
+     * {@link #authenticate()} when {@code EquinixConfig.isAutoLoadMetros()} is set (the default),
+     * otherwise lazily on first access.
+     *
+     * @return the shared metro registry
+     */
+    public MetroRegistry metroRegistry() {
+        return fabric().metroRegistry();
+    }
+
+    /**
+     * Rebuilds the {@link #metroRegistry()} from a fresh Metros API call, picking up any metros added
+     * since it was last loaded.
+     *
+     * @return the refreshed metro registry
+     */
+    public MetroRegistry reloadMetroRegistry() {
+        return fabric().reloadMetroRegistry();
+    }
+
+    /**
+     * Explicitly performs OAuth2 authentication, warming the session's shared token. Optional —
+     * authentication otherwise happens automatically on the first API call. When
+     * {@code EquinixConfig.isAutoLoadMetros()} is enabled (the default), this also eagerly loads the
+     * shared metro catalogue ({@code fabric().metroRegistry()}); the load is best-effort and does
+     * not fail authentication.
+     *
+     * @return this session, for chaining
+     * @throws EquinixClientException if authentication fails
+     */
+    public Equinix authenticate() throws EquinixClientException {
+        fabric().authenticate();
+        if (config.isAutoLoadMetros()) {
+            try {
+                fabric().metroRegistry();
+            }
+            catch (RuntimeException ignored) {
+                // best-effort eager load; metroRegistry() remains available lazily
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public void close() throws IOException {
+        core.close();
+    }
+}

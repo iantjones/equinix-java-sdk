@@ -1,0 +1,70 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix.customerportal.model;
+
+import com.eqixiac.equinix.customerportal.enums.LoaState;
+import com.eqixiac.equinix.customerportal.model.implementation.LoaChangeLog;
+import com.eqixiac.equinix.customerportal.model.implementation.LoaChangeReference;
+import com.eqixiac.equinix.customerportal.model.implementation.LoaLink;
+import com.eqixiac.equinix.customerportal.model.implementation.LoaParty;
+import com.eqixiac.equinix.customerportal.model.implementation.LoaProduct;
+
+import java.util.List;
+
+/**
+ * A Digital Letter of Authorization (Digital LOA) document from the Equinix Customer Portal
+ * diLOA v1 API.
+ */
+public interface DigitalLoa {
+
+    String getUuid();
+
+    String getToken();
+
+    LoaState getState();
+
+    List<LoaProduct> getProducts();
+
+    LoaParty getRequestor();
+
+    LoaParty getProvider();
+
+    String getNotes();
+
+    String getExpiryDateTime();
+
+    LoaChangeLog getChangeLog();
+
+    /**
+     * Returns the reference to the change that produced this document ({@code Change} schema).
+     * Populated on the create response only.
+     *
+     * @return the change reference, or {@code null} if not provided
+     */
+    LoaChangeReference getChange();
+
+    /**
+     * Returns whether this document is a draft. Populated on the create response only.
+     *
+     * @return {@code true} if the document is a draft, or {@code null} if not provided
+     */
+    Boolean getDraft();
+
+    List<LoaLink> getLinks();
+
+    String getHref();
+}

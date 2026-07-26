@@ -26,7 +26,7 @@ authorization-server metadata) and Equinix's MCP documentation:
   client-credentials tokens can never authenticate to it. A library cannot reasonably pop a
   browser; the private-beta service is designed for interactive MCP hosts, not SDKs.
 
-**Added — the embedded Equinix Intelligence MCP Server** (`api.equinix.javasdk.mcp.server`), a
+**Added — the embedded Equinix Intelligence MCP Server** (`com.eqixiac.equinix.mcp.server`), a
 *community* server (not affiliated with Equinix, unrelated to their private-beta Fabric MCP
 server) that MCP hosts (Claude Desktop/Code, Cursor, VS Code) launch over **stdio only**,
 executing through the SDK's typed clients and design engines under the operator's own
@@ -45,7 +45,7 @@ client-credentials (`EQUINIX_ACCESS_KEY`/`EQUINIX_SECRET_KEY`, or `.env.local`):
   not the prompt.*
 - **Packaging** — `mvn package` now also attaches a self-contained runnable jar
   (`equinix-sdk-java-<version>-mcp-server.jar`, maven-shade classifier `mcp-server`,
-  `Main-Class: api.equinix.javasdk.mcp.server.EquinixMcpServerMain`); the primary library
+  `Main-Class: com.eqixiac.equinix.mcp.server.EquinixMcpServerMain`); the primary library
   artifact is untouched. The `io.modelcontextprotocol.sdk` dependencies (`mcp-core`,
   `mcp-json-jackson2`) and the bundled `slf4j-simple` binding are `<optional>`, so consumers'
   dependency trees stay clean — locked by a new architecture test (`DependencyHygieneTest`).
@@ -478,12 +478,12 @@ at `docs.equinix.com/api-catalog`) and brought to spec-accurate coverage across 
   automatically as Equinix adds them. (`EquinixIXMapping` now takes the live IBX→metro map at
   construction; its static `resolveMetroFromCity`/`getCityToMetroMap` are removed.)
 - **Modules extracted out of `fabric.*`:** Metro Optimizer + Deployment Wizard + Peering
-  Intelligence → `api.equinix.javasdk.design.*`; MCP bridge → `api.equinix.javasdk.mcp.*`.
+  Intelligence → `com.eqixiac.equinix.design.*`; MCP bridge → `com.eqixiac.equinix.mcp.*`.
   `Fabric.optimizeMetros()/deploymentWizard()/peeringIntelligence()/mcp()` remain as accessors.
 - **Root-level `Mcp` client**: the standalone MCP JSON-RPC client (`mcp.McpClient`) is promoted to
-  `api.equinix.javasdk.Mcp` — `new Mcp(creds)` — so every credential-constructed client sits in
+  `com.eqixiac.equinix.Mcp` — `new Mcp(creds)` — so every credential-constructed client sits in
   the root package alongside `Fabric`, `NetworkEdge`, `IAM`, etc. The Fabric-integration bridge
-  stays behind `Fabric.mcp()`; supporting types remain in `api.equinix.javasdk.mcp.*`.
+  stays behind `Fabric.mcp()`; supporting types remain in `com.eqixiac.equinix.mcp.*`.
 - **`FabricGateway` interface** — the value-add design engines now depend on a narrow read/build
   interface (`metros()`/`serviceProfiles()`/`cloudRouters()`/`connections()`/`routingProtocols()`/
   `prices()`) rather than the concrete `Fabric`; `Fabric implements FabricGateway`, so existing

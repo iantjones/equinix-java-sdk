@@ -1,0 +1,247 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix.networkedge.model.json.creators;
+
+import com.eqixiac.equinix.core.enums.BandwidthUnit;
+import com.eqixiac.equinix.core.enums.MetroCode;
+import com.eqixiac.equinix.networkedge.enums.Connectivity;
+import com.eqixiac.equinix.networkedge.enums.DeviceManagementType;
+import com.eqixiac.equinix.networkedge.enums.IPAssignment;
+import com.eqixiac.equinix.networkedge.enums.LicenseType;
+import com.eqixiac.equinix.networkedge.model.implementation.DeviceVendorConfig;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ *
+ * @author ianjones
+ */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter(AccessLevel.PRIVATE)
+public class DeviceCreatorJson {
+
+    @Setter(AccessLevel.PACKAGE)
+    @JsonProperty("secondary")
+    private DeviceCreatorJson secondary;
+
+    @JsonProperty("deviceTypeCode")
+    private String deviceTypeCode;
+
+    @JsonProperty("metroCode")
+    private MetroCode metroCode;
+
+    @JsonProperty("throughput")
+    private Integer throughput;
+
+    @JsonProperty("throughputUnit")
+    private BandwidthUnit throughputUnit;
+
+    @JsonProperty("packageCode")
+    private String packageCode;
+
+    @JsonProperty("version")
+    private String version;
+
+    @JsonProperty("licenseType")
+    private LicenseType licenseType;
+
+    @JsonProperty("accountNumber")
+    private String accountNumber;
+
+    @JsonProperty("agreeOrderTerms")
+    private Boolean agreeOrderTerms;
+
+    @JsonProperty("projectId")
+    private String projectId;
+
+    @JsonProperty("tier")
+    private Integer tier;
+
+    @JsonProperty("termlength")
+    private String termlength;
+
+    @JsonProperty("connectivity")
+    private Connectivity connectivity;
+
+    @JsonProperty("clusterDetails")
+    private ClusterConfig clusterDetails;
+
+    @JsonProperty("day0TextFileId")
+    private String day0TextFileId;
+
+    @JsonProperty("cloudInitFileId")
+    private String cloudInitFileId;
+
+    @JsonProperty("purchaseOrderNumber")
+    private String purchaseOrderNumber;
+
+    @JsonProperty("orderReference")
+    private String orderReference;
+
+    @JsonProperty("channelPartner")
+    private String channelPartner;
+
+    @JsonProperty("licenseCategory")
+    private String licenseCategory;
+
+    @JsonProperty("notifications")
+    private ArrayList<String> notifications;
+
+    @JsonProperty("accountReferenceId")
+    private String accountReferenceId;
+
+    @JsonProperty("userPublicKey")
+    private DeviceOperator.PublicKeyJson userPublicKey;
+
+    @JsonProperty("sshUsers")
+    private List<DeviceOperator.SSHUserJson> sshUsers;
+
+    @JsonProperty("additionalBandwidth")
+    private Integer additionalBandwidth;
+
+    @JsonProperty("interfaceCount")
+    private Integer interfaceCount;
+
+    @JsonProperty("systemIpAddress")
+    private String systemIpAddress;
+
+    @JsonProperty("ipType")
+    private IPAssignment ipType;
+
+    @JsonProperty("siteId")
+    private String siteId;
+
+    @JsonProperty("aclDetails")
+    private List<ACLDetail> aclDetails;
+
+    @JsonProperty("core")
+    private Integer core;
+
+    @JsonProperty("deviceManagementType")
+    private DeviceManagementType deviceManagementType;
+
+    @JsonProperty("virtualDeviceName")
+    private String virtualDeviceName;
+
+    @JsonProperty("hostNamePrefix")
+    private String hostNamePrefix;
+
+    @JsonProperty("licenseMode")
+    private LicenseType licenseMode;
+
+    @JsonProperty("licenseFileId")
+    private String licenseFileId;
+
+    @JsonProperty("diverseFromDeviceUuid")
+    private String diverseFromDeviceUuid;
+
+    @JsonProperty("primaryDeviceUuid")
+    private String primaryDeviceUuid;
+
+    @JsonProperty("licenseToken")
+    private String licenseToken;
+
+    @JsonProperty("smartLicenseUrl")
+    private String smartLicenseUrl;
+
+    @JsonProperty("orderingContact")
+    public String orderingContact;
+
+    @JsonProperty("sshInterfaceId")
+    private Integer sshInterfaceId;
+
+    @JsonProperty("vendorConfig")
+    private DeviceVendorConfig vendorConfig;
+
+
+    public DeviceCreatorJson(DeviceOperator.DeviceBuilderSecondary deviceBuilderSecondary) {
+        
+        this.virtualDeviceName = deviceBuilderSecondary.getDeviceName();
+        this.accountNumber = deviceBuilderSecondary.getAccountNumber();
+        this.accountReferenceId = deviceBuilderSecondary.getAccountReferenceId();
+        this.sshUsers = deviceBuilderSecondary.getSshUsers();
+        this.metroCode = deviceBuilderSecondary.getMetroCode();
+        this.hostNamePrefix = deviceBuilderSecondary.getHostNamePrefix();
+        this.notifications = deviceBuilderSecondary.getNotifications();
+
+        this.primaryDeviceUuid = deviceBuilderSecondary.getPrimaryDeviceUuid();
+        this.licenseFileId = deviceBuilderSecondary.getLicenseFileId();
+        this.licenseToken = deviceBuilderSecondary.getLicenseToken();
+        this.smartLicenseUrl = deviceBuilderSecondary.getSmartLicenseUrl();
+        this.aclDetails = deviceBuilderSecondary.getAclDetails();
+        this.siteId = deviceBuilderSecondary.getSiteId();
+        this.systemIpAddress = deviceBuilderSecondary.getSystemIpAddress();
+        this.additionalBandwidth = deviceBuilderSecondary.getAdditionalBandwidth();
+        this.day0TextFileId = deviceBuilderSecondary.getDay0TextFileId();
+        this.cloudInitFileId = deviceBuilderSecondary.getCloudInitFileId();
+        this.vendorConfig = deviceBuilderSecondary.getVendorConfig();
+        this.sshInterfaceId = deviceBuilderSecondary.getSshInterfaceId();
+        this.version = deviceBuilderSecondary.getVersion();
+    }
+
+    public DeviceCreatorJson(DeviceOperator.DeviceBuilder deviceBuilder) {
+        this.virtualDeviceName = deviceBuilder.getDeviceName();
+        this.accountNumber = deviceBuilder.getAccountNumber();
+        this.accountReferenceId = deviceBuilder.getAccountReferenceId();
+        this.userPublicKey = deviceBuilder.getUserPublicKey();
+        this.deviceTypeCode = deviceBuilder.getDeviceTypeCode();
+        this.sshUsers = deviceBuilder.getSshUsers();
+        this.metroCode = deviceBuilder.getMetroCode();
+        this.deviceManagementType = deviceBuilder.getDeviceManagementType();
+        this.licenseMode = deviceBuilder.getLicenseMode();
+        this.hostNamePrefix = deviceBuilder.getHostNamePrefix();
+        this.packageCode = deviceBuilder.getPackageCode();
+        this.version = deviceBuilder.getVersion();
+        this.core = deviceBuilder.getCore();
+        this.throughput = deviceBuilder.getThroughput();
+        this.throughputUnit = deviceBuilder.getThroughputUnit();
+        this.notifications = deviceBuilder.getNotifications();
+
+        this.primaryDeviceUuid = deviceBuilder.getPrimaryDeviceUuid();
+        this.diverseFromDeviceUuid = deviceBuilder.getDiverseFromDeviceUuid();
+        this.licenseFileId = deviceBuilder.getLicenseFileId();
+        this.licenseToken = deviceBuilder.getLicenseToken();
+        this.smartLicenseUrl = deviceBuilder.getSmartLicenseUrl();
+        this.orderingContact = deviceBuilder.getOrderingContact();
+        this.aclDetails = deviceBuilder.getAclDetails();
+        this.siteId = deviceBuilder.getSiteId();
+        this.ipType = deviceBuilder.getIpType();
+        this.systemIpAddress = deviceBuilder.getSystemIpAddress();
+        this.sshInterfaceId = deviceBuilder.getSshInterfaceId();
+        this.vendorConfig = deviceBuilder.getVendorConfig();
+        this.interfaceCount = deviceBuilder.getInterfaceCount();
+        this.additionalBandwidth = deviceBuilder.getAdditionalBandwidth();
+
+        this.agreeOrderTerms = deviceBuilder.getAgreeOrderTerms();
+        this.projectId = deviceBuilder.getProjectId();
+        this.tier = deviceBuilder.getTier();
+        this.termlength = deviceBuilder.getTermlength();
+        this.connectivity = deviceBuilder.getConnectivity();
+        this.clusterDetails = deviceBuilder.getClusterDetails();
+        this.day0TextFileId = deviceBuilder.getDay0TextFileId();
+        this.cloudInitFileId = deviceBuilder.getCloudInitFileId();
+        this.purchaseOrderNumber = deviceBuilder.getPurchaseOrderNumber();
+        this.orderReference = deviceBuilder.getOrderReference();
+        this.channelPartner = deviceBuilder.getChannelPartner();
+        this.licenseCategory = deviceBuilder.getLicenseCategory();
+    }
+}
