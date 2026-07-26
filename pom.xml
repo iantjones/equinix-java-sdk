@@ -171,7 +171,7 @@
         </dependency>
         <!--
           Official MCP Java SDK, used ONLY by the embedded MCP server
-          (api.equinix.javasdk.mcp.server). Both are <optional> so SDK consumers'
+          (com.eqixiac.equinix.mcp.server). Both are <optional> so SDK consumers'
           dependency trees are untouched; the runnable server ships as the shaded
           "mcp-server" classifier jar, which bundles them. mcp-json-jackson2 keeps
           the server on this project's Jackson 2 stack (the default mcp aggregate
@@ -311,7 +311,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>api.equinix.javasdk.mcp.server.EquinixMcpServerMain</mainClass>
+                                    <mainClass>com.eqixiac.equinix.mcp.server.EquinixMcpServerMain</mainClass>
                                 </transformer>
                                 <!-- Merge META-INF/services across Jackson/Reactor/etc. -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
@@ -545,10 +545,10 @@
                                 <rule>
                                     <element>PACKAGE</element>
                                     <includes>
-                                        <include>api.equinix.javasdk.iam.client.implementation</include>
-                                        <include>api.equinix.javasdk.iam.client.internal.implementation</include>
-                                        <include>api.equinix.javasdk.sts.client.implementation</include>
-                                        <include>api.equinix.javasdk.sts.client.internal.implementation</include>
+                                        <include>com.eqixiac.equinix.iam.client.implementation</include>
+                                        <include>com.eqixiac.equinix.iam.client.internal.implementation</include>
+                                        <include>com.eqixiac.equinix.sts.client.implementation</include>
+                                        <include>com.eqixiac.equinix.sts.client.internal.implementation</include>
                                     </includes>
                                     <limits>
                                         <limit>
@@ -576,7 +576,7 @@
 
             2) design.value mutation GATE (fails the build under threshold):
                 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage@design-value-gate
-               Scoped to api.equinix.javasdk.design.value.* (the rate-card / TCO / savings money
+               Scoped to com.eqixiac.equinix.design.value.* (the rate-card / TCO / savings money
                math, where a surviving mutant means a silently wrong dollar figure) and killed by
                the design.* unit tests. mutationThreshold starts at 50 — a floor today's suite
                passes — and RATCHETS: whenever a measured run reports a comfortably higher kill
@@ -600,10 +600,10 @@
                         </dependencies>
                         <configuration>
                             <targetClasses>
-                                <param>api.equinix.javasdk.core.*</param>
+                                <param>com.eqixiac.equinix.core.*</param>
                             </targetClasses>
                             <targetTests>
-                                <param>api.equinix.javasdk.core.*</param>
+                                <param>com.eqixiac.equinix.core.*</param>
                             </targetTests>
                             <threads>4</threads>
                             <timestampedReports>false</timestampedReports>
@@ -614,10 +614,10 @@
                                 <id>design-value-gate</id>
                                 <configuration>
                                     <targetClasses combine.self="override">
-                                        <param>api.equinix.javasdk.design.value.*</param>
+                                        <param>com.eqixiac.equinix.design.value.*</param>
                                     </targetClasses>
                                     <targetTests combine.self="override">
-                                        <param>api.equinix.javasdk.design.*</param>
+                                        <param>com.eqixiac.equinix.design.*</param>
                                     </targetTests>
                                     <!-- Same tags the default surefire run excludes: the gate must
                                          be runnable offline and not spin up WireMock per mutant. -->

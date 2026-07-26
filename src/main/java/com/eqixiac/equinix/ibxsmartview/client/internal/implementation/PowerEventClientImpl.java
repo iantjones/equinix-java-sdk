@@ -1,0 +1,176 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix.ibxsmartview.client.internal.implementation;
+
+import com.eqixiac.equinix.core.client.ResourceClientBase;
+import com.eqixiac.equinix.core.enums.RequestType;
+import com.eqixiac.equinix.core.http.ResponseHandler;
+import com.eqixiac.equinix.core.http.request.EquinixRequest;
+import com.eqixiac.equinix.core.http.request.PaginatedRequest;
+import com.eqixiac.equinix.core.http.response.EquinixResponse;
+import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.http.response.Pageable;
+import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.core.http.response.Pagination;
+import com.eqixiac.equinix.core.internal.Constants;
+import com.eqixiac.equinix.ibxsmartview.client.implementation.IBXSmartViewConfigImpl;
+import com.eqixiac.equinix.ibxsmartview.client.internal.PowerEventClient;
+import com.eqixiac.equinix.ibxsmartview.model.PowerAlertConfiguration;
+import com.eqixiac.equinix.ibxsmartview.model.PowerEvent;
+import com.eqixiac.equinix.ibxsmartview.model.json.PowerAlertConfigurationCreateResponseJson;
+import com.eqixiac.equinix.ibxsmartview.model.json.PowerAlertConfigurationJson;
+import com.eqixiac.equinix.ibxsmartview.model.json.PowerEventJson;
+import com.eqixiac.equinix.ibxsmartview.model.json.PowerEventsPaginatedResponseJson;
+import com.eqixiac.equinix.ibxsmartview.model.json.creators.PowerAlertConfigurationCreatorJson;
+import com.eqixiac.equinix.ibxsmartview.model.json.creators.PowerAlertConfigurationUpdateJson;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEventJson> implements PowerEventClient<PowerEvent> {
+
+    public PowerEventClientImpl(IBXSmartViewConfigImpl configClient) {
+        super(configClient, "IBXSmartView", "PowerEvents", PowerEventJson.class);
+    }
+
+    @Override
+    protected PowerEvent wrap(PowerEventJson json) {
+        return json;
+    }
+
+    // GET /dcim/v3/powerEvents/search — operationId getPowerEvents
+    //
+    // PowerEventsPaginatedResponse returns its pagination fields (items/limit/offset/totalCount) at
+    // the TOP LEVEL rather than under a nested 'pagination' object, so the response cannot be
+    // deserialized directly into the core Page (which expects {data/items, pagination{offset,limit,
+    // total}}). We deserialize the flat shape ourselves and assemble a Page with a Pagination whose
+    // total is mapped from totalCount, so isLastPage()/total are correct for the returned page.
+    public Page<PowerEventJson> getPowerEvents(List<String> ibx, List<String> status, String edgeCollectedOn, int offset, int limit) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        if (ibx != null && !ibx.isEmpty()) {
+            qParams.put("ibx", List.of(String.join(",", ibx)));
+        }
+        if (status != null && !status.isEmpty()) {
+            qParams.put("status", List.of(String.join(",", status)));
+        }
+        if (edgeCollectedOn != null) {
+            qParams.put("edgeCollectedOn", List.of(edgeCollectedOn));
+        }
+        qParams.put("offset", List.of(String.valueOf(offset)));
+        qParams.put("limit", List.of(String.valueOf(limit)));
+
+        EquinixRequest<PowerEvent> request = buildRequestWithQueryParams(
+                "GetPowerEvents", RequestType.PAGINATED, qParams, PowerEventJson.class);
+        return flatPowerEventsPage(request, invoke(request));
+    }
+
+    // Deserializes the flat PowerEventsPaginatedResponse and synthesizes a core Page (mapping
+    // totalCount → Pagination.total). Shared by the initial getPowerEvents call and the paging
+    // nextPage override so subsequent pages keep a non-null Pagination instead of NPE-ing.
+    private Page<PowerEventJson> flatPowerEventsPage(EquinixRequest<PowerEvent> request, EquinixResponse<PowerEvent> response) {
+        // Re-target deserialization at the flat response holder before reading the body.
+        request.setJavaType(Constants.mapper().getTypeFactory().constructType(PowerEventsPaginatedResponseJson.class));
+        PowerEventsPaginatedResponseJson flat = ResponseHandler.handleSingletonResponse(response, request);
+
+        Page<PowerEventJson> page = new Page<>();
+        page.setItems(flat != null && flat.getItems() != null ? flat.getItems() : new ArrayList<>());
+        page.setPagination(toPagination(flat));
+        page.setAssociatedRequest(request);
+        page.setAssociatedResponse(response);
+        return page;
+    }
+
+    // PowerEvents pages off the flat PowerEventsPaginatedResponse (no nested 'pagination' object), so
+    // the inherited ResourceClientBase.nextPage (which expects the standard nested Page) would lose
+    // pagination and NPE on hasNextPage(). Reuse the flat deserialization + Pagination synthesis here.
+    @Override
+    public PaginatedList<PowerEvent> nextPage(PaginatedRequest<PowerEvent> equinixRequest) {
+        Page<PowerEventJson> page = flatPowerEventsPage(equinixRequest, invoke(equinixRequest));
+        return ResponseHandler.toPaginatedList(page, this, (json, client) -> json);
+    }
+
+    private Pagination toPagination(PowerEventsPaginatedResponseJson flat) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("offset", flat != null ? flat.getOffset() : null);
+        values.put("limit", flat != null ? flat.getLimit() : null);
+        values.put("total", flat != null ? flat.getTotalCount() : null);
+        return Constants.mapper().convertValue(values, Pagination.class);
+    }
+
+    // POST /dcim/v3/powerEvents/configurations — operationId createPowerAlertConfiguration
+    public PowerAlertConfigurationCreateResponseJson createPowerAlertConfiguration(PowerAlertConfigurationCreatorJson creatorJson) {
+        return postAs("CreatePowerAlertConfiguration", creatorJson, PowerAlertConfigurationCreateResponseJson.class);
+    }
+
+    // PUT /dcim/v3/powerEvents/configurations — operationId updatePowerAlertConfiguration
+    public void updatePowerAlertConfiguration(PowerAlertConfigurationUpdateJson updateJson) {
+        voidOp("UpdatePowerAlertConfiguration", RequestType.SINGLE, null, null, updateJson);
+    }
+
+    // GET /dcim/v3/powerEvents/configurations/search — operationId searchAlertConfigurations
+    public Page<PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit) {
+        Map<String, List<String>> qParams = new HashMap<>();
+        if (ibx != null && !ibx.isEmpty()) {
+            qParams.put("ibx", List.of(String.join(",", ibx)));
+        }
+        if (state != null && !state.isEmpty()) {
+            qParams.put("state", List.of(String.join(",", state)));
+        }
+        qParams.put("offset", List.of(String.valueOf(offset)));
+        qParams.put("limit", List.of(String.valueOf(limit)));
+        EquinixRequest<PowerAlertConfiguration> request = buildRequestWithQueryParams(
+                "SearchAlertConfigurations", RequestType.PAGINATED, qParams, PowerAlertConfigurationJson.class);
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    /**
+     * Returns a {@link Pageable} dedicated to paging power alert configurations. Unlike power events,
+     * AlertPaginatedResponse uses the standard nested {@code data}/{@code pagination} shape, so paging
+     * just needs the standard handler — but with {@code PowerAlertConfigurationJson} as the item type
+     * and an identity wrap. Reusing this client's own {@link #nextPage(PaginatedRequest)} (which is
+     * typed for PowerEvent/PowerEventJson) would ClassCastException on the deserialized configurations,
+     * so configuration paging is given its own pageable here.
+     */
+    public Pageable<PowerAlertConfiguration> alertConfigurationPageable() {
+        return new Pageable<>() {
+            @Override
+            public PaginatedList<PowerAlertConfiguration> nextPage(PaginatedRequest<PowerAlertConfiguration> equinixRequest) {
+                Page<PowerAlertConfigurationJson> page =
+                        ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
+                return ResponseHandler.toPaginatedList(page, this, (json, client) -> json);
+            }
+        };
+    }
+
+    // PUT /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/pause — operationId pauseAlertConfiguration
+    public void pauseAlertConfiguration(String alertConfigurationUid) {
+        voidOp("PauseAlertConfiguration", RequestType.SINGLE, Map.of("alertConfigurationUid", alertConfigurationUid), null, null);
+    }
+
+    // PUT /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/resume — operationId resumeAlertConfiguration
+    public void resumeAlertConfiguration(String alertConfigurationUid) {
+        voidOp("ResumeAlertConfiguration", RequestType.SINGLE, Map.of("alertConfigurationUid", alertConfigurationUid), null, null);
+    }
+
+    // DELETE /dcim/v3/powerEvents/configurations/{alertConfigurationUid} — operationId deleteAlertConfiguration
+    public void deleteAlertConfiguration(String alertConfigurationUid) {
+        voidOp("DeleteAlertConfiguration", RequestType.SINGLE, Map.of("alertConfigurationUid", alertConfigurationUid), null, null);
+    }
+}

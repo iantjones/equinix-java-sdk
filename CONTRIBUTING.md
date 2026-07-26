@@ -53,7 +53,7 @@ mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage
 # design.value mutation GATE — fails under the threshold
 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage@design-value-gate
 ```
-The `design-value-gate` execution is scoped to `api.equinix.javasdk.design.value.*` (the rate-card /
+The `design-value-gate` execution is scoped to `com.eqixiac.equinix.design.value.*` (the rate-card /
 TCO / savings money math) with `mutationThreshold=50`. The threshold is a **ratchet**: when a run
 measures a comfortably higher kill rate, raise it to just below the measured value in the same PR —
 never lower it.
@@ -82,14 +82,14 @@ expected to follow them; reviewers should ask for each of these by name.
 3. **Documented behavioral promises get doc-contract tests.** If javadoc promises behavior
    ("returns a copy, never mutates", "empty means cannot-price, never zero", "throws naming the
    offender"), a test must enforce it and quote the javadoc line it locks — see
-   `src/test/java/api/equinix/javasdk/design/DocContractTest.java`. If a promise is deliberately
+   `src/test/java/com/eqixiac/equinix/design/DocContractTest.java`. If a promise is deliberately
    changed, change the javadoc and the test's quote in the same commit. A documented promise
    without a test is a defect.
 
 4. **Live-observed API errors get corpus stubs.** Every real error observed against the live API
    gets a regression test stubbed with the REAL error JSON the API returned, asserting the SDK's
    classified handling (error vs. deferred vs. skipped) — see
-   `src/test/java/api/equinix/javasdk/design/optimizer/wizard/LiveErrorCorpusWireMockTest.java`
+   `src/test/java/com/eqixiac/equinix/design/optimizer/wizard/LiveErrorCorpusWireMockTest.java`
    (EQ-3040013, EQ-3040063, EQ-3142539, EQ-3142501). Add to the corpus whenever a new live error is
    observed; never trim or "clean up" the observed body.
 
@@ -154,8 +154,8 @@ Model Interface          - Public API contract (getters)
 ### Key Files
 - Entry points: `Fabric.java`, `NetworkEdge.java`, `CustomerPortal.java`, `IBXSmartView.java`,
   `InternetAccess.java`, `Projects.java`, `IAM.java`, `STS.java`, plus the `Equinix.java` session,
-  in `api.equinix.javasdk`
-- Value-add modules: `api.equinix.javasdk.design.*` (Metro Optimizer, Deployment Wizard, Peering
+  in `com.eqixiac.equinix`
+- Value-add modules: `com.eqixiac.equinix.design.*` (Metro Optimizer, Deployment Wizard, Peering
   Intelligence, Savings/TCO, `design.geo` speed-of-light latency) — the engines depend on the
   narrow `FabricGateway` interface, which makes them straightforward to unit-test against a stub
   gateway

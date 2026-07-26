@@ -53,8 +53,8 @@ server, not affiliated with Equinix.
 All domain clients use OAuth2 client credentials. Obtain your Client ID and Client Secret from the [Equinix Developer Portal](https://developer.equinix.com/).
 
 ```java
-import api.equinix.javasdk.Fabric;
-import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
+import com.eqixiac.equinix.Fabric;
+import com.eqixiac.equinix.core.auth.BasicEquinixCredentials;
 
 BasicEquinixCredentials credentials = new BasicEquinixCredentials("YOUR_CLIENT_ID", "YOUR_CLIENT_SECRET");
 Fabric fabric = new Fabric(credentials);
@@ -67,7 +67,7 @@ each authentication (the first call and re-auth on expiry), so a rotated secret 
 rebuilding the client:
 
 ```java
-import api.equinix.javasdk.core.auth.EquinixCredentialsProvider;
+import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
 
 EquinixCredentialsProvider provider = () -> new BasicEquinixCredentials(vault.clientId(), vault.clientSecret());
 Fabric fabric = new Fabric(provider);          // also: new Equinix(provider), new NetworkEdge(provider), ...
@@ -80,7 +80,7 @@ connection pool. When you use more than one domain, open an `Equinix` session in
 **single** token + pool and shares it across every domain (and the design facade):
 
 ```java
-import api.equinix.javasdk.Equinix;
+import com.eqixiac.equinix.Equinix;
 
 try (Equinix eq = new Equinix(credentials)) {     // one token, one pool
     Fabric fabric    = eq.fabric();
@@ -160,7 +160,7 @@ registry.refresh();   // re-pulls both sources at runtime, atomically, in place 
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
-| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Cost & Value Engineering (rate cards, savings calculator, TCO comparison), Terraform export, topology diagrams (`api.equinix.javasdk.design.*`) — a facade over an existing Fabric client (reuses its transport) |
+| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Cost & Value Engineering (rate cards, savings calculator, TCO comparison), Terraform export, topology diagrams (`com.eqixiac.equinix.design.*`) — a facade over an existing Fabric client (reuses its transport) |
 
 ## Usage Examples
 
@@ -432,11 +432,11 @@ from `ServiceProfile.metros()`, and pricing from the Prices API — not from a s
 #### Defining the Optimization
 
 ```java
-import api.equinix.javasdk.Fabric;
-import api.equinix.javasdk.core.enums.MetroCode;
-import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
-import api.equinix.javasdk.design.optimizer.enums.*;
-import api.equinix.javasdk.design.optimizer.model.*;
+import com.eqixiac.equinix.Fabric;
+import com.eqixiac.equinix.core.enums.MetroCode;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
+import com.eqixiac.equinix.design.optimizer.enums.*;
+import com.eqixiac.equinix.design.optimizer.model.*;
 
 Fabric fabric = new Fabric(credentials);
 
@@ -790,8 +790,8 @@ renders it as Equinix Terraform-provider HCL — `equinix_fabric_cloud_router`,
 `.id` references:
 
 ```java
-import api.equinix.javasdk.design.export.TerraformExporter;
-import api.equinix.javasdk.design.export.TopologyDiagram;
+import com.eqixiac.equinix.design.export.TerraformExporter;
+import com.eqixiac.equinix.design.export.TopologyDiagram;
 
 String hcl = new TerraformExporter().export(plan);      // stateless, thread-safe
 Files.writeString(Path.of("deployment.tf"), hcl);
@@ -860,7 +860,7 @@ System.out.println(result.getPresenceMatrix().toDetailedTableString());
 
 ```java
 // Which ASNs are available at Ashburn?
-// Peering lookups are keyed by MetroId (import api.equinix.javasdk.core.model.MetroId)
+// Peering lookups are keyed by MetroId (import com.eqixiac.equinix.core.model.MetroId)
 MetroPresenceReport dcReport = result.metroReport(MetroId.of(MetroCode.DC));
 System.out.println("ASNs with IX peering at DC: " + dcReport.withIxPeering().size());
 System.out.println("Total IX capacity: " + dcReport.totalIxCapacityMbps() / 1000 + " Gbps");
@@ -936,7 +936,7 @@ estimates fibre latency from coordinates (great-circle distance × speed of ligh
 | raw | `millisForKm(km)`, `distanceKm(lat, lon, lat, lon)` | none | fully offline |
 
 ```java
-import api.equinix.javasdk.design.geo.SpeedOfLightLatency;
+import com.eqixiac.equinix.design.geo.SpeedOfLightLatency;
 
 // Inputs: IBXes come from EIA (the only per-IBX coordinate source in the Equinix catalog);
 // metros come from Fabric.
@@ -1042,7 +1042,7 @@ defaults. To put your negotiated rates in front of the chain instead, layer expl
 that can price an item wins):
 
 ```java
-import api.equinix.javasdk.design.value.ratecard.*;
+import com.eqixiac.equinix.design.value.ratecard.*;
 
 RateCard rates = RateCard.layered(
     CustomRateCard.builder()                 // your contract, most-trusted layer
@@ -1101,7 +1101,7 @@ providers' own public pricing APIs. Each is a `RateCard` that prices egress only
 Compose them like any other card — canonical ordering is most-trusted first:
 
 ```java
-import api.equinix.javasdk.design.value.ratecard.provider.*;
+import com.eqixiac.equinix.design.value.ratecard.provider.*;
 
 RateCard rates = RateCard.layered(
     EquinixRateCard.of(fabric),          // Equinix-side costs, live
@@ -1130,7 +1130,7 @@ cabinets of payment gear (four cross-connects, 5 kW) colocated next to the cloud
 contract has negotiated cabinet and cross-connect rates. Does the move pay for itself?
 
 > The full runnable version of this example is compile-checked against the SDK in
-> [`src/test/java/api/equinix/javasdk/design/readme/ReadmeCostValueShowcase.java`](src/test/java/api/equinix/javasdk/design/readme/ReadmeCostValueShowcase.java)
+> [`src/test/java/com/eqixiac/equinix/design/readme/ReadmeCostValueShowcase.java`](src/test/java/com/eqixiac/equinix/design/readme/ReadmeCostValueShowcase.java)
 > — if the API drifts, the build breaks before this README can lie to you.
 
 **Step 1 — per-cloud egress economics.** One `SavingsCalculator` per cloud, each netting the egress
@@ -1138,8 +1138,8 @@ saving against a right-sized Fabric connection. No rate card is supplied, so the
 applies (live Equinix pricing → bundled reference figures):
 
 ```java
-import api.equinix.javasdk.design.value.savings.DataUnit;
-import api.equinix.javasdk.design.value.savings.SavingsEstimate;
+import com.eqixiac.equinix.design.value.savings.DataUnit;
+import com.eqixiac.equinix.design.value.savings.SavingsEstimate;
 
 SavingsEstimate aws = fabric.savingsCalculator()
     .egress(40, DataUnit.TERABYTE)
@@ -1198,7 +1198,7 @@ well below GlobalPay's actual volumes (5,000 GB/mo for the AWS link vs. 40,000 G
 front, everything else falling through to live-then-reference:
 
 ```java
-import api.equinix.javasdk.design.value.ratecard.*;
+import com.eqixiac.equinix.design.value.ratecard.*;
 
 CustomRateCard negotiated = CustomRateCard.builder()
     .currency("USD")
@@ -1222,7 +1222,7 @@ per-GB delta closest to the blended one. `cabinets(...)` / `crossConnects(...)` 
 colocation quotes by quantity, the same way `powerKw(...)` scales the per-kW quote:
 
 ```java
-import api.equinix.javasdk.design.value.tco.*;
+import com.eqixiac.equinix.design.value.tco.*;
 
 TcoComparison tco = fabric.tcoComparison()
     .egress(80, DataUnit.TERABYTE)      // consolidated hub: 40 AWS + 25 Azure + 15 GCP
@@ -1578,16 +1578,16 @@ Every FCR joins the IP-WAN backbone, so routes propagate between metros over BGP
 paths (SV↔SY, SV↔SG, DC↔LD, DC↔AM) come for free, with no direct FCR-to-FCR connections.
 
 ```java
-import api.equinix.javasdk.*;
-import api.equinix.javasdk.core.auth.BasicEquinixCredentials;
-import api.equinix.javasdk.core.enums.*;
-import api.equinix.javasdk.fabric.enums.*;
-import api.equinix.javasdk.fabric.enums.NotificationType;   // disambiguates from networkedge.enums.NotificationType
-import api.equinix.javasdk.fabric.model.*;
-import api.equinix.javasdk.fabric.model.implementation.LinkProtocol;
-import api.equinix.javasdk.fabric.model.implementation.cloud.*;
-import api.equinix.javasdk.networkedge.enums.*;
-import api.equinix.javasdk.networkedge.model.Device;
+import com.eqixiac.equinix.*;
+import com.eqixiac.equinix.core.auth.BasicEquinixCredentials;
+import com.eqixiac.equinix.core.enums.*;
+import com.eqixiac.equinix.fabric.enums.*;
+import com.eqixiac.equinix.fabric.enums.NotificationType;   // disambiguates from networkedge.enums.NotificationType
+import com.eqixiac.equinix.fabric.model.*;
+import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.*;
+import com.eqixiac.equinix.networkedge.enums.*;
+import com.eqixiac.equinix.networkedge.model.Device;
 
 import java.util.*;
 
@@ -2176,16 +2176,16 @@ Read-only tests skip only when the credential lacks the product entitlement (401
 Full Javadoc documentation is published at **[iantjones.github.io/equinix-java-sdk](https://iantjones.github.io/equinix-java-sdk/)** and is updated with each release.
 
 Browse Javadocs by domain:
-- [Fabric](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/package-summary.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
-- [Network Edge](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/networkedge/package-summary.html) — Virtual Devices, ACL Templates, VPNs, BGP Peerings
-- [Customer Portal](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
-- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
-- [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
-- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/package-summary.html) — Metro placement engine
-- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
-- [Cost & Value Engineering](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/value/ratecard/package-summary.html) — Rate cards, savings calculator, TCO comparison
-- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
-- [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/api/equinix/javasdk/design/geo/package-summary.html) — IBX-to-IBX fibre latency calculator
+- [Fabric](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/package-summary.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
+- [Network Edge](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/networkedge/package-summary.html) — Virtual Devices, ACL Templates, VPNs, BGP Peerings
+- [Customer Portal](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
+- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
+- [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
+- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/package-summary.html) — Metro placement engine
+- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
+- [Cost & Value Engineering](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/value/ratecard/package-summary.html) — Rate cards, savings calculator, TCO comparison
+- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
+- [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/geo/package-summary.html) — IBX-to-IBX fibre latency calculator
 
 ## Building
 

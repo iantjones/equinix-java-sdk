@@ -1,0 +1,87 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.eqixiac.equinix.ibxsmartview.client;
+
+import com.eqixiac.equinix.ibxsmartview.model.StreamingSubscription;
+import com.eqixiac.equinix.ibxsmartview.model.SubscriptionCertificate;
+import com.eqixiac.equinix.ibxsmartview.model.SubscriptionData;
+import com.eqixiac.equinix.ibxsmartview.model.json.creators.StreamingSubscriptionOperator;
+
+import java.util.List;
+
+/**
+ * Client interface for managing IBX SmartView streaming subscriptions. Provides methods
+ * to list, retrieve, and create streaming subscriptions that enable real-time delivery
+ * of environmental and power data from monitored IBX assets.
+ */
+public interface StreamingSubscriptions {
+
+    /**
+     * Lists all streaming subscriptions for the current account.
+     *
+     * @return a list of streaming subscriptions
+     */
+    List<StreamingSubscription> list();
+
+    /**
+     * Retrieves a specific streaming subscription by its unique identifier.
+     *
+     * @param uuid the unique identifier of the streaming subscription
+     * @return the streaming subscription
+     */
+    StreamingSubscription getByUuid(String uuid);
+
+    /**
+     * Returns a builder for defining and creating a new streaming subscription.
+     *
+     * @return a streaming subscription builder
+     */
+    StreamingSubscriptionOperator.StreamingSubscriptionBuilder define();
+
+    /**
+     * Retrieves the near real-time data associated with a specific subscription.
+     *
+     * @param subscriptionId the unique identifier of the subscription
+     * @return the subscription data
+     */
+    SubscriptionData getSubscriptionData(String subscriptionId);
+
+    /**
+     * Retrieves the near real-time data associated with a specific subscription, narrowed by the
+     * given filters and pagination.
+     *
+     * @param subscriptionId the unique identifier of the subscription
+     * @param ibxs filter to the given set of IBXs, or {@code null} for all
+     * @param messageTypes filter to the given message types
+     *                     ({@code ALARM}, {@code ALERT}, {@code ENVIRONMENTAL},
+     *                     {@code METERED_POWER}, {@code POWER}, {@code TAG_POINT}), or {@code null} for all
+     * @param streamIds filter to the given set of stream IDs, or {@code null} for all
+     * @param offset the zero-based offset of the first item, or {@code null} for the default
+     * @param limit the maximum number of items to return, or {@code null} for the default (250)
+     * @return the subscription data
+     */
+    SubscriptionData getSubscriptionData(String subscriptionId, List<String> ibxs, List<String> messageTypes,
+                                         List<String> streamIds, Integer offset, Integer limit);
+
+    /**
+     * Retrieves the certificate used for authenticating a streaming channel.
+     *
+     * @param channelType the type of streaming channel
+     * @return the subscription certificate
+     */
+    SubscriptionCertificate getCertificate(String channelType);
+}
