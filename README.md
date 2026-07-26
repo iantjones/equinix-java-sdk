@@ -1,26 +1,26 @@
-# Equinix Java SDK
+﻿# Equinix Java SDK
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/Java-21%2B-orange.svg)](https://openjdk.java.net/)
 [![Javadoc](https://img.shields.io/badge/Javadoc-API%20Reference-blue.svg)](https://iantjones.github.io/equinix-java-sdk/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.eqixiac.equinix/equinix-sdk-java.svg)](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)
 
-> A Java client for the Equinix platform APIs — Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS — plus a `Design` module (metro optimizer, deployment wizard, peering intelligence, cost calculators).
+> A Java client for the Equinix platform APIs â€” Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, IAM, and STS â€” plus a `Design` module (metro optimizer, deployment wizard, peering intelligence, cost calculators).
 
-**[View Full API Documentation (Javadoc)](https://iantjones.github.io/equinix-java-sdk/)** · **[Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)**
+**[View Full API Documentation (Javadoc)](https://iantjones.github.io/equinix-java-sdk/)** Â· **[Maven Central](https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java)**
 
 ## What's in the box
 
-The SDK covers all eight Equinix API domains — Fabric, Network Edge, Customer Portal, IBX SmartView,
-Internet Access, Projects, IAM, and STS — with fluent builders for both create and update. A few
+The SDK covers all eight Equinix API domains â€” Fabric, Network Edge, Customer Portal, IBX SmartView,
+Internet Access, Projects, IAM, and STS â€” with fluent builders for both create and update. A few
 things it handles so you don't have to:
 
 - **OAuth2**, token refresh on expiry included. Open an `Equinix` session and every domain shares a
   single token and connection pool.
-- **Pagination** — `loadAll()`/`stream()` when you want the whole set, lazy paging when you don't.
+- **Pagination** â€” `loadAll()`/`stream()` when you want the whole set, lazy paging when you don't.
 - **Errors** mapped from HTTP status onto a typed exception hierarchy you can actually `catch`.
-- **Cloud provider adapters** — AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect,
-  Oracle FastConnect — that drop straight into the Fabric connection builder.
+- **Cloud provider adapters** â€” AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect,
+  Oracle FastConnect â€” that drop straight into the Fabric connection builder.
 - **Dry-run validation** for Fabric connections and service tokens before you commit to anything.
 - **Real-time streaming** from IBX SmartView (AWS IoT, Azure Event Hub, webhook, REST).
 
@@ -31,8 +31,8 @@ calculators.
 
 And the whole thing doubles as an **MCP server for AI agents**: one build produces a runnable
 `-mcp-server.jar` that Claude Desktop, Claude Code, Cursor, or VS Code launch over stdio, exposing
-the design engines and cross-domain reads as 12 read-only tools — plus an opt-in dry-run-first
-mutation broker — under your own API credentials. See
+the design engines and cross-domain reads as 12 read-only tools â€” plus an opt-in dry-run-first
+mutation broker â€” under your own API credentials. See
 [Intelligence MCP Server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server). It's a community
 server, not affiliated with Equinix.
 
@@ -44,7 +44,7 @@ server, not affiliated with Equinix.
 <dependency>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>2.0.1</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
@@ -61,7 +61,7 @@ Fabric fabric = new Fabric(credentials);
 // Authentication happens automatically on first API call
 ```
 
-To resolve or rotate credentials at runtime — from a secrets manager, for example — implement
+To resolve or rotate credentials at runtime â€” from a secrets manager, for example â€” implement
 `EquinixCredentialsProvider` and pass it instead of a fixed credentials object. It is consulted on
 each authentication (the first call and re-auth on expiry), so a rotated secret takes effect without
 rebuilding the client:
@@ -76,7 +76,7 @@ Fabric fabric = new Fabric(provider);          // also: new Equinix(provider), n
 ### One session for multiple domains
 
 Each `new Fabric(creds)` / `new NetworkEdge(creds)` stands up its **own** OAuth token and
-connection pool. When you use more than one domain, open an `Equinix` session instead — it owns a
+connection pool. When you use more than one domain, open an `Equinix` session instead â€” it owns a
 **single** token + pool and shares it across every domain (and the design facade):
 
 ```java
@@ -96,12 +96,12 @@ The standalone `new Fabric(credentials)` constructors remain for the single-doma
 `MetroCode` is a convenience enum of well-known metros. Because Equinix adds metros over time, the
 SDK never depends on the enum being complete:
 
-- Reads never fail on an unlisted metro — a metro the enum does not list deserializes to
+- Reads never fail on an unlisted metro â€” a metro the enum does not list deserializes to
   `MetroCode.UNKNOWN`, and the model preserves the real code via `metro.metroId()`.
 - `Metro.metroId()` returns a `MetroId` (a normalized code string) that names *any* metro;
   `metroId().asMetroCode()` bridges back to the enum when the metro is well-known.
 - `fabric.metroRegistry()` is a cached, live snapshot of every metro (and its IBX data centers)
-  from the Metros API — the authoritative set — keyed by `MetroId`:
+  from the Metros API â€” the authoritative set â€” keyed by `MetroId`:
 
 ```java
 MetroRegistry registry = fabric.metroRegistry();
@@ -118,8 +118,8 @@ fabric.metros().getByMetroCode("ZZ");    // MetroCode and String overloads; getB
 ```
 
 By default the catalog is loaded eagerly on the first explicit `authenticate()` (so it's ready up
-front) and otherwise lazily on first `metroRegistry()` access. Control this — and the other
-construction-time options — with `EquinixConfig`:
+front) and otherwise lazily on first `metroRegistry()` access. Control this â€” and the other
+construction-time options â€” with `EquinixConfig`:
 
 ```java
 Fabric fabric = new Fabric(credentials, EquinixConfig.builder()
@@ -134,7 +134,7 @@ Fabric fabric = new Fabric(credentials, EquinixConfig.builder()
 
 `enrichMetroRegistry` turns the registry into the SDK's cross-source location directory: Fabric
 supplies the metro-level picture (centroids, connected-metro latency, IBX codes) and EIA supplies
-the per-IBX detail (coordinates, country) — the only API that has it. The merge is best-effort
+the per-IBX detail (coordinates, country) â€” the only API that has it. The merge is best-effort
 (an EIA outage never fails the registry load), and it feeds IBX-to-IBX latency directly:
 
 ```java
@@ -144,7 +144,7 @@ Ibx la4 = registry.ibx("LA4").orElseThrow();
 double rttFloor = SpeedOfLightLatency.roundTrip().millisBetween(sv5, la4);
 List<Ibx> svIbxes = registry.ibxDetails("SV");     // every enriched IBX in a metro
 
-registry.refresh();   // re-pulls both sources at runtime, atomically, in place —
+registry.refresh();   // re-pulls both sources at runtime, atomically, in place â€”
                       // existing references see new metros/IBXes immediately
 ```
 
@@ -152,7 +152,7 @@ registry.refresh();   // re-pulls both sources at runtime, atomically, in place 
 
 | Domain | Entry Point | Resources | Description |
 |--------|-------------|-----------|-------------|
-| **Fabric** | `new Fabric(creds)` | 28 | Connections (+ advertised/received routes), Ports (+ search/VLANs), Service Tokens, Cloud Routers (+ route search/commands/validate), Networks, Streams (+ Subscriptions/Alert Rules/Assets), Precision Time (+ packages), Route Filters/Aggregations (+Rules), Routing Protocols (+ BGP actions), Service Profiles, Prices, Metrics, Cloud Events, Marketplace Subscriptions, IP Blocks, Agents (+Templates), Company Profiles (+Tags), Port Packages, Health — all mutable resources support fluent `update()` |
+| **Fabric** | `new Fabric(creds)` | 28 | Connections (+ advertised/received routes), Ports (+ search/VLANs), Service Tokens, Cloud Routers (+ route search/commands/validate), Networks, Streams (+ Subscriptions/Alert Rules/Assets), Precision Time (+ packages), Route Filters/Aggregations (+Rules), Routing Protocols (+ BGP actions), Service Profiles, Prices, Metrics, Cloud Events, Marketplace Subscriptions, IP Blocks, Agents (+Templates), Company Profiles (+Tags), Port Packages, Health â€” all mutable resources support fluent `update()` |
 | **Network Edge** | `new NetworkEdge(creds)` | 8 | Virtual Devices (+ soft-reboot/RMA/ACL/file upload), ACL Templates, VPNs, BGP Peerings, Device Links, Public Keys, Backups, Setup |
 | **Customer Portal** | `new CustomerPortal(creds)` | 22 | Orders, Order History, Cross-Connects, Trouble Tickets (+ Ticket Orders), Work Visits, Smart Hands, Shipments, Secure Cabinets, Invoices, Billing Accounts, Quotes, Assets, Attachments, Reports, Notifications, Unified Notifications, Support Cases, Support Plans, Digital LOAs, Lookups |
 | **IBX SmartView** | `new IBXSmartView(creds)` | 8 | Environmental Sensors, Power Events (`dcim/v3`), System Alerts, Streaming Subscriptions, Asset Management, Hierarchy, Legacy Environmentals, Legacy Power |
@@ -160,7 +160,7 @@ registry.refresh();   // re-pulls both sources at runtime, atomically, in place 
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
-| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Cost & Value Engineering (rate cards, savings calculator, TCO comparison), Terraform export, topology diagrams (`com.eqixiac.equinix.design.*`) — a facade over an existing Fabric client (reuses its transport) |
+| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` â€¦ | â€” | Metro Optimizer, Deployment Wizard, Peering Intelligence, Cost & Value Engineering (rate cards, savings calculator, TCO comparison), Terraform export, topology diagrams (`com.eqixiac.equinix.design.*`) â€” a facade over an existing Fabric client (reuses its transport) |
 
 ## Usage Examples
 
@@ -270,7 +270,7 @@ PaginatedList<StreamSubscription> subs = fabric.streamSubscriptions().list(strea
 
 ### Fabric: Cloud Provider SDK Interoperability
 
-Cloud provider adapters let you hand a provider's own SDK object — an AWS `Connection`, an Azure ExpressRoute service key, a GCP pairing key, an Oracle virtual-circuit OCID — straight to the Fabric connection builder, instead of copying the fields across yourself.
+Cloud provider adapters let you hand a provider's own SDK object â€” an AWS `Connection`, an Azure ExpressRoute service key, a GCP pairing key, an Oracle virtual-circuit OCID â€” straight to the Fabric connection builder, instead of copying the fields across yourself.
 
 #### Built-in Adapters
 
@@ -422,12 +422,12 @@ Connection azureValidated = fabric.connections()
 ### Fabric: Metro Optimizer
 
 Give the optimizer your sites, the providers you need to reach, your workloads, and your constraints,
-and it ranks Equinix metros — and tells you why each one landed where it did. You get back a latency
+and it ranks Equinix metros â€” and tells you why each one landed where it did. You get back a latency
 matrix, a suggested workload-to-metro layout, a risk assessment, and a cost estimate.
 
 Scoring weighs five things: latency, provider coverage, cost, redundancy, and compliance. The numbers
-come from live Fabric data — inter-metro latency from `Metro.connectedMetros`, provider availability
-from `ServiceProfile.metros()`, and pricing from the Prices API — not from a static table.
+come from live Fabric data â€” inter-metro latency from `Metro.connectedMetros`, provider availability
+from `ServiceProfile.metros()`, and pricing from the Prices API â€” not from a static table.
 
 #### Defining the Optimization
 
@@ -442,7 +442,7 @@ Fabric fabric = new Fabric(credentials);
 
 OptimizationResult result = fabric.optimizeMetros()
 
-    // ── Sites: where your people and operations are ──
+    // â”€â”€ Sites: where your people and operations are â”€â”€
     .addSite("New York HQ")
         .nearestMetro(MetroCode.NY)
         .role(SiteRole.HEADQUARTERS)
@@ -464,7 +464,7 @@ OptimizationResult result = fabric.optimizeMetros()
         .headcount(25)
         .done()
 
-    // ── Providers: what you need to connect to ──
+    // â”€â”€ Providers: what you need to connect to â”€â”€
     .requireProvider(CloudProviderType.AWS)
         .sellerRegions("us-east-1", "eu-west-1")
         .done()
@@ -475,7 +475,7 @@ OptimizationResult result = fabric.optimizeMetros()
     .preferProvider(CloudProviderType.GOOGLE_CLOUD)
         .done()
 
-    // ── Workloads: what you're running and where it matters ──
+    // â”€â”€ Workloads: what you're running and where it matters â”€â”€
     .addWorkload("ML Training Pipeline")
         .type(WorkloadType.AI_ML_TRAINING)          // pre-built profile: high power, liquid cooling
         .bandwidthMbps(10_000)
@@ -510,7 +510,7 @@ OptimizationResult result = fabric.optimizeMetros()
         .dependsOn(CloudProviderType.AWS)
         .done()
 
-    // ── Constraints: business and compliance boundaries ──
+    // â”€â”€ Constraints: business and compliance boundaries â”€â”€
     .constraints()
         .monthlyBudget(50_000, 150_000)             // USD range
         .redundancy(RedundancyTier.MULTI_REGION)    // metros across 2+ regions
@@ -520,7 +520,7 @@ OptimizationResult result = fabric.optimizeMetros()
         .maxMetros(5)
         .done()
 
-    // ── Strategy and scoring tuning ──
+    // â”€â”€ Strategy and scoring tuning â”€â”€
     .strategy(OptimizationStrategy.BALANCED)
     .scoringWeights(ScoringWeights.builder()
         .latencyWeight(0.35)                        // increase latency importance
@@ -528,14 +528,14 @@ OptimizationResult result = fabric.optimizeMetros()
         .latencyExcellentMs(8.0)                    // tighter latency grading curve
         .build())
 
-    // ── Execute ──
+    // â”€â”€ Execute â”€â”€
     .optimize();
 ```
 
 #### Working with Results
 
 ```java
-// ── Quick summary ──
+// â”€â”€ Quick summary â”€â”€
 System.out.println(result.toSummary());
 // Output:
 // Recommended primary metro: Ashburn (DC) with a score of 87.3/100.
@@ -543,7 +543,7 @@ System.out.println(result.toSummary());
 // Estimated monthly cost: $8,750.00 USD.
 // Computed in 1243ms.
 
-// ── Primary recommendation ──
+// â”€â”€ Primary recommendation â”€â”€
 MetroRecommendation primary = result.primaryMetro();
 System.out.println(primary.getMetroId());             // DC (MetroId.toString() is the code)
 System.out.println(primary.getScore().getComposite()); // 87.3
@@ -552,7 +552,7 @@ System.out.println(primary.getReasons());
 //  All 4 required/preferred providers available,
 //  Located in AMER region]
 
-// ── Score breakdown ──
+// â”€â”€ Score breakdown â”€â”€
 MetroScore score = primary.getScore();
 System.out.println("Latency:    " + score.latencyScore());      // 91.2
 System.out.println("Providers:  " + score.providerScore());     // 100.0
@@ -560,7 +560,7 @@ System.out.println("Cost:       " + score.costScore());         // 80.0
 System.out.println("Redundancy: " + score.redundancyScore());   // 90.0
 System.out.println("Compliance: " + score.complianceScore());   // 100.0
 
-// ── Latency matrix (ASCII table) ──
+// â”€â”€ Latency matrix (ASCII table) â”€â”€
 System.out.println(result.getLatencyMatrix().toTableString());
 // Metro |  New York HQ | London Office | Singapore Office | Frankfurt DC
 // ------+--------------+---------------+------------------+-------------
@@ -571,7 +571,7 @@ System.out.println(result.getLatencyMatrix().toTableString());
 //
 // * = estimated (no direct latency data available)
 
-// ── Deployment topology ──
+// â”€â”€ Deployment topology â”€â”€
 DeploymentTopology topology = result.getTopology();
 System.out.println(topology.summary());
 // Deployment Topology:
@@ -586,21 +586,21 @@ System.out.println(topology.summary());
 //   SG:
 //     - (edge presence for APAC workforce)
 
-// ── Risk assessment ──
+// â”€â”€ Risk assessment â”€â”€
 RiskAssessment risks = result.getRiskAssessment();
 System.out.println("Resiliency: " + risks.getResiliencyScore() + "/100");
 for (RiskFinding finding : risks.getFindings()) {
     System.out.println("[" + finding.getSeverity() + "] " + finding.getDescription());
     if (finding.getRecommendation() != null) {
-        System.out.println("  → " + finding.getRecommendation());
+        System.out.println("  â†’ " + finding.getRecommendation());
     }
 }
 // [MEDIUM] SG has worst-case latency of 230.1ms which exceeds the 100ms threshold
-//   → Consider adding a metro closer to the affected site
+//   â†’ Consider adding a metro closer to the affected site
 // [MEDIUM] Amazon Web Services is only available in 1 of 4 recommended metros
-//   → Consider selecting metros where Amazon Web Services has broader presence
+//   â†’ Consider selecting metros where Amazon Web Services has broader presence
 
-// ── Cost estimate ──
+// â”€â”€ Cost estimate â”€â”€
 CostEstimate cost = result.getCostEstimate();
 System.out.println("Monthly: $" + cost.getMonthlyTotal() + " " + cost.getCurrency());
 System.out.println("Setup:   $" + cost.getSetupTotal());
@@ -609,11 +609,11 @@ for (MetroCostBreakdown metro : cost.getPerMetro()) {
     System.out.println("  " + metro.getMetroId() + ": $" + metro.getMonthlyRecurring() + "/mo");
 }
 
-// ── Full markdown report (for architecture review docs) ──
+// â”€â”€ Full markdown report (for architecture review docs) â”€â”€
 String report = result.toMarkdown();
 Files.writeString(Path.of("metro-optimization-report.md"), report);
 
-// ── JSON export (for programmatic consumption) ──
+// â”€â”€ JSON export (for programmatic consumption) â”€â”€
 String json = result.toJson();
 ```
 
@@ -663,7 +663,7 @@ Each workload type carries a default infrastructure profile that drives placemen
 | `EDGE_COMPUTE` | Critical | No | No | Yes |
 | `BIG_DATA_ANALYTICS` | Medium | Yes | No | No |
 
-### Fabric: Deployment Wizard — From Optimization to Execution
+### Fabric: Deployment Wizard â€” From Optimization to Execution
 
 Hand the wizard a finished `OptimizationResult` and it works out the concrete plan: a Cloud Router in
 each metro, the connections to your cloud providers, inter-metro backbone links, and the routing
@@ -690,7 +690,7 @@ OptimizationResult result = fabric.optimizeMetros()
 DeploymentPlan plan = fabric.deploymentWizard(result)
     .routerPackage("STANDARD")                           // Cloud Router package (validated at plan time)
     .routerNamePrefix("FCR")                             // Router naming: FCR-DC, FCR-SV, etc.
-    .providerConnectionType(ConnectionType.IP_VC)        // Default — the only type Fabric accepts on an FCR A-side
+    .providerConnectionType(ConnectionType.IP_VC)        // Default â€” the only type Fabric accepts on an FCR A-side
     .backboneBandwidthMbps(10_000)                       // Inter-metro backbone bandwidth
     .backboneTopology(BackboneTopology.FULL_MESH)        // Full mesh between all metros
     .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)   // Size connections per workload
@@ -699,12 +699,12 @@ DeploymentPlan plan = fabric.deploymentWizard(result)
     .withBFD(true, 300)                                  // BFD enabled, 300ms interval
     .accountNumber(272010L)                              // Billing account
     .projectId("your-project-uuid")                      // Project grouping
-    .notifications("noc@example.com", "netops@example.com")  // REQUIRED — Fabric mandates >= 1 recipient
+    .notifications("noc@example.com", "netops@example.com")  // REQUIRED â€” Fabric mandates >= 1 recipient
                                                              // per Cloud Router; every address is applied
     .plan();
 ```
 
-Both connection types default to `IP_VC` — every wizard-planned connection originates on a Fabric
+Both connection types default to `IP_VC` â€” every wizard-planned connection originates on a Fabric
 Cloud Router A-side, and Fabric accepts an FCR-originated virtual connection only as `IP_VC`. An
 incompatible type (e.g. the port-based `EVPL_VC`) is flagged by the plan's validation instead of
 failing live mid-deployment. Plans executed into the same project should get distinct
@@ -718,7 +718,7 @@ System.out.println(plan.toMarkdown());
 
 // Quick summary
 System.out.println(plan.toSummary());
-// → "Deployment Plan: 3 Cloud Router(s), 4 provider connection(s), 3 backbone link(s),
+// â†’ "Deployment Plan: 3 Cloud Router(s), 4 provider connection(s), 3 backbone link(s),
 //    14 routing protocol(s). Total resources: 24. Estimated monthly cost: $25,400 USD."
 
 // Inspect individual components
@@ -726,11 +726,11 @@ plan.getCloudRouters().forEach(cr ->
     System.out.println(cr.getName() + " in " + cr.getMetroId()));
 
 plan.getProviderConnections().forEach(conn ->
-    System.out.println(conn.getName() + ": " + conn.getBandwidthMbps() + " Mbps → "
+    System.out.println(conn.getName() + ": " + conn.getBandwidthMbps() + " Mbps â†’ "
         + conn.getZSideProviderLabel()));
 
 plan.getBackboneLinks().forEach(link ->
-    System.out.println(link.getMetroA() + " ↔ " + link.getMetroZ()
+    System.out.println(link.getMetroA() + " â†” " + link.getMetroZ()
         + ": " + link.getBandwidthMbps() + " Mbps"));
 ```
 
@@ -738,7 +738,7 @@ plan.getBackboneLinks().forEach(link ->
 
 ```java
 // Dry-run validation against Fabric API. dryRun() returns a NEW plan with refreshed
-// valid/errors/deferred/skipped state — always reassign the result.
+// valid/errors/deferred/skipped state â€” always reassign the result.
 plan = plan.dryRun();
 if (!plan.isValid()) {
     plan.getValidationErrors().forEach(System.err::println);
@@ -749,7 +749,7 @@ if (!plan.isValid()) {
 plan.getRequiredInputs().forEach(req -> System.out.println(req.describe()));
 // "FCR-DC-to-aws (AWS): AWS Account ID (12-digit), VLAN tag"
 
-// Execute — creates all resources in order:
+// Execute â€” creates all resources in order:
 // 1. Cloud Routers  2. Provider Connections  3. Backbone Links  4. Routing Protocols
 // Each provider connection is live dry-run against its now-real Cloud Router before the
 // real create; a dry-run rejection aborts and rolls back everything already provisioned (LIFO).
@@ -762,7 +762,7 @@ System.out.println(outcome.toMarkdown());
 // Shows provisioned resource UUIDs, statuses, and any errors
 ```
 
-`execute(...)` refuses an invalid plan up front — it throws `IllegalStateException` listing every
+`execute(...)` refuses an invalid plan up front â€” it throws `IllegalStateException` listing every
 recorded validation error rather than provisioning billable resources that are known to fail.
 Fix the errors and re-plan (or `dryRun()` again) first.
 
@@ -785,7 +785,7 @@ Fix the errors and re-plan (or `dryRun()` again) first.
 #### Terraform Export & Topology Diagrams
 
 If you'd rather hand the plan to your IaC pipeline than let the SDK execute it, `TerraformExporter`
-renders it as Equinix Terraform-provider HCL — `equinix_fabric_cloud_router`,
+renders it as Equinix Terraform-provider HCL â€” `equinix_fabric_cloud_router`,
 `equinix_fabric_connection`, and `equinix_fabric_routing_protocol` resources with cross-resource
 `.id` references:
 
@@ -797,8 +797,8 @@ String hcl = new TerraformExporter().export(plan);      // stateless, thread-saf
 Files.writeString(Path.of("deployment.tf"), hcl);
 ```
 
-Customer inputs the plan cannot know — each connection's cloud authorization key and, when not yet
-chosen, its DOT1Q VLAN tag — are emitted as `variable` blocks (the authorization key marked
+Customer inputs the plan cannot know â€” each connection's cloud authorization key and, when not yet
+chosen, its DOT1Q VLAN tag â€” are emitted as `variable` blocks (the authorization key marked
 `sensitive`) referenced from the connection resource, so the output never embeds a secret and
 `terraform plan` prompts for exactly what `plan.getRequiredInputs()` enumerates. BGP routing
 protocols are emitted with `depends_on` on their DIRECT sibling, matching the create order Fabric
@@ -820,14 +820,14 @@ Both are also reachable from an agent: the MCP tool `design_export_terraform` ex
 This one cross-references [PeeringDB](https://www.peeringdb.com/) against Equinix's own IXes and
 facilities to answer questions like "where are AWS, Azure, and Google all reachable at an Equinix
 exchange?" and "if Ashburn went down, who would I lose?" It builds presence matrices, resiliency
-assessments, and peering opportunities — all scoped to Equinix. A PeeringDB API key is optional;
+assessments, and peering opportunities â€” all scoped to Equinix. A PeeringDB API key is optional;
 without one you get PeeringDB's anonymous rate limit (~20 requests/minute), which is fine for a few
-ASNs. The key (created on [peeringdb.com](https://docs.peeringdb.com/howto/api_keys/) — it's separate
+ASNs. The key (created on [peeringdb.com](https://docs.peeringdb.com/howto/api_keys/) â€” it's separate
 from your Equinix credentials) can be passed inline as below, set once via
 `EquinixConfig.builder().peeringDbApiKey("...")` on the client or session, or exported as the
-`PEERINGDB_API_KEY` environment variable — resolved in that order.
+`PEERINGDB_API_KEY` environment variable â€” resolved in that order.
 
-#### Presence Matrix — Which ASNs Are Where?
+#### Presence Matrix â€” Which ASNs Are Where?
 
 ```java
 // Build a presence matrix for target ASNs across all Equinix metros
@@ -856,7 +856,7 @@ System.out.println(result.getPresenceMatrix().toDetailedTableString());
 //   (* = route server participant)
 ```
 
-#### Metro-Centric View — Who Can I Peer With Here?
+#### Metro-Centric View â€” Who Can I Peer With Here?
 
 ```java
 // Which ASNs are available at Ashburn?
@@ -871,7 +871,7 @@ List<MetroId> fullCoverage = result.getPresenceMatrix()
 System.out.println("Metros with all 3 providers: " + fullCoverage);
 ```
 
-#### Network Profiles — Peering Policy & Feasibility
+#### Network Profiles â€” Peering Policy & Feasibility
 
 ```java
 // Examine network metadata from PeeringDB
@@ -884,7 +884,7 @@ System.out.println("AWS uses route servers: " + aws.isRouteServerParticipant());
 System.out.println("AWS supports BFD: " + aws.isBfdSupported());           // true
 ```
 
-#### Resiliency Analysis — Blast Radius & Failover Paths
+#### Resiliency Analysis â€” Blast Radius & Failover Paths
 
 ```java
 // Full analysis with customer context
@@ -908,7 +908,7 @@ List<FailoverPath> awsFailovers = result.getResiliency().failoverPathsForAsn(165
 for (FailoverPath fp : awsFailovers) {
     System.out.println(fp.getFailoverMetro() + ": " + fp.getIxCapacityMbps() / 1000 + "G"
         + " (diversity: " + fp.getDiversity().getRating() + ")"
-        + " — " + fp.getRecommendation());
+        + " â€” " + fp.getRecommendation());
 }
 
 // Correlated failure detection
@@ -922,17 +922,17 @@ System.out.println("Resiliency: " + result.getResiliency().getOverallRating()
     + " (" + (int)(result.getResiliency().getOverallScore() * 100) + "%)");
 ```
 
-#### Speed-of-Light Latency — IBX-to-IBX, Metro-to-Metro, or Mixed
+#### Speed-of-Light Latency â€” IBX-to-IBX, Metro-to-Metro, or Mixed
 
 The diversity RTT above comes from `design.geo.SpeedOfLightLatency`, a reusable calculator that
-estimates fibre latency from coordinates (great-circle distance × speed of light in fibre,
-~4.9 µs/km one-way). It accepts any mix of the SDK's location types:
+estimates fibre latency from coordinates (great-circle distance Ã— speed of light in fibre,
+~4.9 Âµs/km one-way). It accepts any mix of the SDK's location types:
 
 | Endpoints | Overload | Coordinate source | Precision |
 |---|---|---|---|
-| IBX ↔ IBX | `millisBetween(Ibx, Ibx)` | `internetAccess.ibxs()` (EIA) | per data center — same-metro pairs get a real, non-zero figure |
-| Metro ↔ Metro | `millisBetween(Metro, Metro)` | `fabric.metros()` | metro centroid — city-to-city planning |
-| IBX ↔ Metro | `millisBetween(Ibx, Metro)` (either order) | both | mixed — "my cage in LA4 to the Dallas metro" |
+| IBX â†” IBX | `millisBetween(Ibx, Ibx)` | `internetAccess.ibxs()` (EIA) | per data center â€” same-metro pairs get a real, non-zero figure |
+| Metro â†” Metro | `millisBetween(Metro, Metro)` | `fabric.metros()` | metro centroid â€” city-to-city planning |
+| IBX â†” Metro | `millisBetween(Ibx, Metro)` (either order) | both | mixed â€” "my cage in LA4 to the Dallas metro" |
 | raw | `millisForKm(km)`, `distanceKm(lat, lon, lat, lon)` | none | fully offline |
 
 ```java
@@ -945,7 +945,7 @@ Ibx sv5  = internetAccess.ibxs().getByCode("SV5");
 Metro dc = fabric.metros().getByMetroCode(MetroCode.DC);
 Metro sv = fabric.metros().getByMetroCode(MetroCode.SV);
 
-// Round-trip (RTT) speed-of-light floor — RTT is the default
+// Round-trip (RTT) speed-of-light floor â€” RTT is the default
 SpeedOfLightLatency rtt = SpeedOfLightLatency.roundTrip();
 double ibxToIbx     = rtt.millisBetween(la4, sv5);   // precise
 double metroToMetro = rtt.millisBetween(dc, sv);     // centroids
@@ -955,17 +955,17 @@ double km           = SpeedOfLightLatency.distanceKm(la4, sv5);
 // One-way, with a realistic non-direct-fibre route factor (must be >= 1.0)
 SpeedOfLightLatency realistic = SpeedOfLightLatency.builder()
     .mode(SpeedOfLightLatency.Mode.ONE_WAY)
-    .routeFactor(1.4)          // 1.0 = theoretical floor; ~1.3–1.5 = real terrestrial routes
+    .routeFactor(1.4)          // 1.0 = theoretical floor; ~1.3â€“1.5 = real terrestrial routes
     .refractiveIndex(1.467)    // single-mode fibre (the default)
     .build();
 double oneWayMs = realistic.millisBetween(la4, sv5);
 ```
 
 Every typed overload throws `IllegalArgumentException` naming the offending IBX/metro if it has no
-coordinates (`geoCoordinates` is optional in both source APIs) — better loud than a bogus zero. The
+coordinates (`geoCoordinates` is optional in both source APIs) â€” better loud than a bogus zero. The
 result is a physical lower bound; it excludes switching, queuing, and serialization delay. For
 metro pairs, compare the floor against Equinix's *measured* backbone RTT:
-`metro.getConnectedMetros()` carries `avgLatency` in ms — physics vs. what the network delivers.
+`metro.getConnectedMetros()` carries `avgLatency` in ms â€” physics vs. what the network delivers.
 
 #### Mutual Peering Opportunity Discovery
 
@@ -980,10 +980,10 @@ PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-ap
 for (PeeringOpportunity opp : result.getPeeringOpportunities()) {
     System.out.println(opp.getTargetLabel() + " at " + opp.getMetro()
         + " (" + opp.getIxName() + ")"
-        + " — " + opp.getComplexity()
+        + " â€” " + opp.getComplexity()
         + " [feasibility: " + (int)(opp.getFeasibility() * 100) + "%]");
-    // "AWS at DC (Equinix Ashburn) — Automatic [feasibility: 100%]"
-    // "Cloudflare at DC (Equinix Ashburn) — Simple [feasibility: 100%]"
+    // "AWS at DC (Equinix Ashburn) â€” Automatic [feasibility: 100%]"
+    // "Cloudflare at DC (Equinix Ashburn) â€” Simple [feasibility: 100%]"
 }
 ```
 
@@ -1000,10 +1000,10 @@ System.out.println(result.toMarkdown());
 
 ```mermaid
 flowchart LR
-    pdb["PeeringDB<br/>org · netixlan · netfac · net"]
+    pdb["PeeringDB<br/>org Â· netixlan Â· netfac Â· net"]
     fab["Equinix Fabric<br/>service profiles"]
     engine["PeeringIntelligence engine<br/>8-phase pipeline"]
-    result["PeeringIntelligenceResult<br/>getPresenceMatrix() · getResiliency()<br/>unifiedView(asn) · getPeeringOpportunities()<br/>toMarkdown()"]
+    result["PeeringIntelligenceResult<br/>getPresenceMatrix() Â· getResiliency()<br/>unifiedView(asn) Â· getPeeringOpportunities()<br/>toMarkdown()"]
     pdb --> engine
     fab --> engine
     engine --> result
@@ -1012,7 +1012,7 @@ flowchart LR
 ### Design: Cost & Value Engineering
 
 The `design.value` package answers the two questions every interconnect design eventually faces:
-*what does this cost, and what does it save?* It has three moving parts — **rate cards** (where
+*what does this cost, and what does it save?* It has three moving parts â€” **rate cards** (where
 prices come from, and how much to trust them), the **Savings Calculator** (per-cloud egress
 economics), and the **TCO comparison** (the whole deployment, over a commitment term). Everything
 below is a design-time estimate, and the tooling is built so that every number is traceable to its
@@ -1020,7 +1020,7 @@ source and every gap is stated instead of papered over.
 
 #### Rate Cards & Price Provenance
 
-A `RateCard` resolves the price of one planned item — a Fabric connection, a Cloud Router, a GB of
+A `RateCard` resolves the price of one planned item â€” a Fabric connection, a Cloud Router, a GB of
 cloud egress, or a colocation primitive (cabinet / kW of power / cross-connect). Lookups return
 `Optional`: **empty means "this card cannot price that item"**, which is deliberately distinct from
 a zero price. No engine in the SDK ever turns "unknown" into "$0".
@@ -1033,11 +1033,11 @@ RateCard.standardChain(fabric)
 //                    ReferenceRateCard.standard()) // bundled 2026-06 reference figures (indicative)
 ```
 
-The live card is consulted first; anything it can't price (including all cloud-egress rates —
+The live card is consulted first; anything it can't price (including all cloud-egress rates â€”
 Equinix doesn't sell egress) falls through to the bundled reference card, so the calculators work
 out of the box with no configuration and no live connection.
 
-A card passed to `rateCard(...)` **replaces** the chain entirely — it is not layered over the
+A card passed to `rateCard(...)` **replaces** the chain entirely â€” it is not layered over the
 defaults. To put your negotiated rates in front of the chain instead, layer explicitly (first card
 that can price an item wins):
 
@@ -1050,11 +1050,11 @@ RateCard rates = RateCard.layered(
         .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("1800.00"))
         .cloudRouterRate("STANDARD", new BigDecimal("950.00"))
         .build(),
-    RateCard.standardChain(fabric));         // live Equinix pricing → bundled reference card
+    RateCard.standardChain(fabric));         // live Equinix pricing â†’ bundled reference card
 ```
 
-`CustomRateCard` rates can be declared at several levels of specificity — with or without a metro
-and a term — and a lookup resolves to the *most specific* declared entry (exact metro+term, then
+`CustomRateCard` rates can be declared at several levels of specificity â€” with or without a metro
+and a term â€” and a lookup resolves to the *most specific* declared entry (exact metro+term, then
 metro-only, term-only, fully agnostic, then a declared default). Re-declaring the same key is
 last-declaration-wins.
 
@@ -1062,25 +1062,25 @@ Every quote is stamped with a `PriceSource`, the trust spectrum the disclaimers 
 
 | `PriceSource` | What it is | How much to trust it |
 |---|---|---|
-| `CUSTOM` | Caller-declared (negotiated contract rates) | Authoritative — they're your figures |
+| `CUSTOM` | Caller-declared (negotiated contract rates) | Authoritative â€” they're your figures |
 | `EQUINIX_LIVE` | Live Fabric Pricing API | Authoritative for Equinix-side costs |
-| `PROVIDER_API` | Public cloud pricing APIs (AWS / Azure / GCP / OCI) | Live and current, but a public *list* price — your negotiated discount isn't in it |
-| `REFERENCE` | Bundled, dated table (`asOf()` = 2026-06) | Indicative only — never a quote |
+| `PROVIDER_API` | Public cloud pricing APIs (AWS / Azure / GCP / OCI) | Live and current, but a public *list* price â€” your negotiated discount isn't in it |
+| `REFERENCE` | Bundled, dated table (`asOf()` = 2026-06) | Indicative only â€” never a quote |
 | `ESTIMATE` | Heuristic / derived, no external source | Least trustworthy |
-| `COMPOSITE` | Aggregate over mixed sources (layered cards, summed quotes) | Inherits its parts — read the note |
+| `COMPOSITE` | Aggregate over mixed sources (layered cards, summed quotes) | Inherits its parts â€” read the note |
 
 The value model enforces a few **honesty invariants** end to end:
 
 - **No phantom zeros.** An unpriceable item is `Optional.empty()`, and an engine that can't price a
-  component reports the archetype/estimate as *unpriced* or *partial* with the reason — never a
+  component reports the archetype/estimate as *unpriced* or *partial* with the reason â€” never a
   quietly smaller total.
 - **No fabricated FX.** Amounts are only ever summed or subtracted within one currency. When
   components resolve in different currencies (live EMEA pricing in EUR against USD egress, say),
   the engines surface per-currency subtotals and leave the savings figures `null`, naming the
-  conflict in the disclaimer — they never invent an exchange rate.
+  conflict in the disclaimer â€” they never invent an exchange rate.
 - **Labeled fallbacks.** Reference lookups above the top tabulated bandwidth tier are linearly
   extrapolated and tagged `EXTRAPOLATED` in the note; an unlisted router package priced at the
-  STANDARD figure says so ("STANDARD substituted for …"); the live card prefers a row matching your
+  STANDARD figure says so ("STANDARD substituted for â€¦"); the live card prefers a row matching your
   requested term and only returns a different-term row with a note naming the substitution.
 - **Traceable everything.** Quotes carry source + note; reports carry a disclaimer and the
   reference data's `asOf` vintage.
@@ -1093,12 +1093,12 @@ providers' own public pricing APIs. Each is a `RateCard` that prices egress only
 
 | Adapter | Source | Auth | What it prices |
 |---|---|---|---|
-| `AwsPriceListRateCard.create()` | AWS Price List Bulk API (`AWSDataTransfer` + `AWSDirectConnect` offers) | none | `INTERNET`: first paid data-transfer-out tier for the region; `PRIVATE`: lowest positive Direct Connect outbound rate. Region required — AWS egress pricing is region-specific. |
+| `AwsPriceListRateCard.create()` | AWS Price List Bulk API (`AWSDataTransfer` + `AWSDirectConnect` offers) | none | `INTERNET`: first paid data-transfer-out tier for the region; `PRIVATE`: lowest positive Direct Connect outbound rate. Region required â€” AWS egress pricing is region-specific. |
 | `AzureRetailPricesRateCard.create()` | Azure Retail Prices API | none | `INTERNET`: the Bandwidth service (internet egress); `PRIVATE`: ExpressRoute metered egress. |
-| `GcpBillingCatalogRateCard.create(apiKey)` | GCP Cloud Billing Catalog | Google API key | Compute Engine network-egress SKUs. GCP lists per-GiB prices; the adapter converts to per-decimal-GB (÷ 1.073741824) and records the original per-GiB figure in the note. |
+| `GcpBillingCatalogRateCard.create(apiKey)` | GCP Cloud Billing Catalog | Google API key | Compute Engine network-egress SKUs. GCP lists per-GiB prices; the adapter converts to per-decimal-GB (Ã· 1.073741824) and records the original per-GiB figure in the note. |
 | `OracleCloudPriceListRateCard.create()` | OCI Price List API | none | `INTERNET` by source geography; `PRIVATE` returns empty (FastConnect is port-based, not per-GB) and a layered card falls through. |
 
-Compose them like any other card — canonical ordering is most-trusted first:
+Compose them like any other card â€” canonical ordering is most-trusted first:
 
 ```java
 import com.eqixiac.equinix.design.value.ratecard.provider.*;
@@ -1113,7 +1113,7 @@ RateCard rates = RateCard.layered(
 ```
 
 Degradation is graceful by construction: every request runs under hard timeouts (5 s connect /
-10 s socket), and any failure — network error, throttling, an unrecognised response — yields an
+10 s socket), and any failure â€” network error, throttling, an unrecognised response â€” yields an
 empty result so the next layer answers instead. Only *successful* fetches are memoized; a failed
 fetch is retried on the next lookup, so a transient outage never pins "no rate" for the adapter's
 lifetime. (The MCP server adds one more belt: each rate-card lookup in
@@ -1121,21 +1121,21 @@ lifetime. (The MCP server adds one more belt: each rate-card lookup in
 `EQUINIX_MCP_PRICING_TIMEOUT_MS`, default 12 s, degrading per provider *by name* in the tool
 output.)
 
-#### Worked Scenario: GlobalPay — Multi-Cloud Egress Consolidation
+#### Worked Scenario: GlobalPay â€” Multi-Cloud Egress Consolidation
 
 GlobalPay (a fictional payments processor) egresses **40 TB/mo from AWS us-east-1, 25 TB/mo from
-Azure, and 15 TB/mo from GCP** — all over the public internet — and wants to consolidate the three
+Azure, and 15 TB/mo from GCP** â€” all over the public internet â€” and wants to consolidate the three
 flows onto Equinix Fabric through an Ashburn (DC) hub: one 10G port, a Fabric Cloud Router, and two
 cabinets of payment gear (four cross-connects, 5 kW) colocated next to the clouds. Their Equinix
 contract has negotiated cabinet and cross-connect rates. Does the move pay for itself?
 
 > The full runnable version of this example is compile-checked against the SDK in
 > [`src/test/java/com/eqixiac/equinix/design/readme/ReadmeCostValueShowcase.java`](src/test/java/com/eqixiac/equinix/design/readme/ReadmeCostValueShowcase.java)
-> — if the API drifts, the build breaks before this README can lie to you.
+> â€” if the API drifts, the build breaks before this README can lie to you.
 
-**Step 1 — per-cloud egress economics.** One `SavingsCalculator` per cloud, each netting the egress
+**Step 1 â€” per-cloud egress economics.** One `SavingsCalculator` per cloud, each netting the egress
 saving against a right-sized Fabric connection. No rate card is supplied, so the standard chain
-applies (live Equinix pricing → bundled reference figures):
+applies (live Equinix pricing â†’ bundled reference figures):
 
 ```java
 import com.eqixiac.equinix.design.value.savings.DataUnit;
@@ -1163,7 +1163,7 @@ System.out.println(aws.toMarkdown());
 ```
 
 Run offline (live pricing unreachable, so every figure resolves from the bundled 2026-06 reference
-card — deterministic and reproducible), the AWS report renders as:
+card â€” deterministic and reproducible), the AWS report renders as:
 
 ```markdown
 ## Egress Savings Estimate
@@ -1175,7 +1175,7 @@ card — deterministic and reproducible), the AWS report renders as:
 | Egress over public internet | USD 3600.00 |
 | Egress over private interconnect | USD 800.00 |
 | **Egress saving** | **USD 2800.00** |
-| Equinix interconnect (recurring) | −USD 350.00 |
+| Equinix interconnect (recurring) | âˆ’USD 350.00 |
 | **Net monthly saving** | **USD 2450.00** |
 
 - One-time Equinix setup: USD 0.00
@@ -1189,12 +1189,12 @@ on region, tiering, volume, and contract terms. Excludes per-provider free-tier 
 and compute/storage costs._
 ```
 
-Same shape for the other two: Azure nets ≈ USD 1,200/mo (25 TB × the $0.087 → $0.025 delta, less
-its connection) and GCP ≈ USD 1,248/mo — roughly **USD 4,900/mo of net egress-side saving**
+Same shape for the other two: Azure nets â‰ˆ USD 1,200/mo (25 TB Ã— the $0.087 â†’ $0.025 delta, less
+its connection) and GCP â‰ˆ USD 1,248/mo â€” roughly **USD 4,900/mo of net egress-side saving**
 across the three clouds, with the break-even volume telling you each interconnect pays for itself
 well below GlobalPay's actual volumes (5,000 GB/mo for the AWS link vs. 40,000 GB/mo flowing).
 
-**Step 2 — negotiated rates over the standard chain.** GlobalPay's contract prices layered in
+**Step 2 â€” negotiated rates over the standard chain.** GlobalPay's contract prices layered in
 front, everything else falling through to live-then-reference:
 
 ```java
@@ -1206,7 +1206,7 @@ CustomRateCard negotiated = CustomRateCard.builder()
     .connectionRate(ConnectionType.IP_VC, 10_000, MetroCode.DC, Term.MONTH_36,
                     new BigDecimal("300.00"))
     .cloudRouterRate("STANDARD", new BigDecimal("950.00"))
-    // colocation primitives — per cabinet, per cross-connect, per kW:
+    // colocation primitives â€” per cabinet, per cross-connect, per kW:
     .colocationRate(ColocationItem.CABINET, MetroCode.DC, Term.MONTH_36,
                     new BigDecimal("550.00"), new BigDecimal("500.00"))   // monthly + one-time setup
     .colocationRate(ColocationItem.CROSS_CONNECT, new BigDecimal("150.00"))
@@ -1216,8 +1216,8 @@ CustomRateCard negotiated = CustomRateCard.builder()
 RateCard rates = RateCard.layered(negotiated, RateCard.standardChain(fabric));
 ```
 
-**Step 3 — the whole hub, over the full term.** The TCO comparison prices the consolidated 80 TB/mo
-(40 AWS + 25 Azure + 15 GCP) through the DC hub, modelled at AWS rates — the dominant flow, and the
+**Step 3 â€” the whole hub, over the full term.** The TCO comparison prices the consolidated 80 TB/mo
+(40 AWS + 25 Azure + 15 GCP) through the DC hub, modelled at AWS rates â€” the dominant flow, and the
 per-GB delta closest to the blended one. `cabinets(...)` / `crossConnects(...)` scale the per-unit
 colocation quotes by quantity, the same way `powerKw(...)` scales the per-kW quote:
 
@@ -1231,9 +1231,9 @@ TcoComparison tco = fabric.tcoComparison()
     .bandwidthMbps(10_000)              // one shared 10G port
     .connectionType(ConnectionType.IP_VC)
     .includeCloudRouter("STANDARD")
-    .cabinets(2)                        // 2 × the per-cabinet quote
-    .crossConnects(4)                   // 4 × the per-cross-connect quote
-    .powerKw(5.0)                       // 5 × the per-kW quote
+    .cabinets(2)                        // 2 Ã— the per-cabinet quote
+    .crossConnects(4)                   // 4 Ã— the per-cross-connect quote
+    .powerKw(5.0)                       // 5 Ã— the per-kW quote
     .term(Term.MONTH_36)
     .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET,
                 DeploymentArchetype.EQUINIX_INTERCONNECT)
@@ -1242,8 +1242,8 @@ TcoComparison tco = fabric.tcoComparison()
 ```
 
 **Reading the result.** The comparison ranks archetypes by *total cost over the term*
-(`MRC × months + setup`), so one-time charges are never ignored, and the savings accessors are
-`null` — not zero — whenever a side is unpriced or the currencies differ:
+(`MRC Ã— months + setup`), so one-time charges are never ignored, and the savings accessors are
+`null` â€” not zero â€” whenever a side is unpriced or the currencies differ:
 
 ```java
 CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
@@ -1258,18 +1258,18 @@ if (tco.getSavingsOverTermVsBaseline() != null) {   // null when unpriced or cro
 ```
 
 ```text
-  Cloud egress (private interconnect)          1,600.00     ← REFERENCE ($0.02/GB DX data transfer out)
-  Equinix Fabric connection                      300.00     ← CUSTOM (negotiated 10G IP_VC)
-  Fabric Cloud Router                            950.00     ← CUSTOM (negotiated)
-  Equinix cross-connect (4x @ 150.00/mo)         600.00     ← CUSTOM (negotiated)
-  Colocation cabinet (2x @ 550.00/mo)          1,100.00     ← CUSTOM (negotiated)
-  Colocation power (5.0 kW)                      700.00     ← CUSTOM (negotiated)
-  Cloud provider interconnect port             1,642.50     ← REFERENCE (AWS DX 10G dedicated port)
+  Cloud egress (private interconnect)          1,600.00     â† REFERENCE ($0.02/GB DX data transfer out)
+  Equinix Fabric connection                      300.00     â† CUSTOM (negotiated 10G IP_VC)
+  Fabric Cloud Router                            950.00     â† CUSTOM (negotiated)
+  Equinix cross-connect (4x @ 150.00/mo)         600.00     â† CUSTOM (negotiated)
+  Colocation cabinet (2x @ 550.00/mo)          1,100.00     â† CUSTOM (negotiated)
+  Colocation power (5.0 kW)                      700.00     â† CUSTOM (negotiated)
+  Cloud provider interconnect port             1,642.50     â† REFERENCE (AWS DX 10G dedicated port)
 Total over term: 249,130.00 USD
 36-month saving vs. internet egress: 10,070.00 USD
 ```
 
-(The provenance arrows are annotations — the breakdown map itself is item → amount. Ask the card
+(The provenance arrows are annotations â€” the breakdown map itself is item â†’ amount. Ask the card
 for the quotes when you need the provenance programmatically: `rates.connection(...)` returns a
 `PriceQuote` whose `getSource()` is `CUSTOM` here, and
 `rates.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_36)` resolves
@@ -1279,14 +1279,14 @@ US"`.)
 And `tco.toMarkdown()` renders the side-by-side (again offline, all-reference/custom figures):
 
 ```markdown
-## Total Cost of Ownership — Deployment Comparison
+## Total Cost of Ownership â€” Deployment Comparison
 
 **Term:** 36 months (archetypes are ranked by total cost over the term, including one-time setup)
 
 | Approach | Monthly | One-time | Total over term | |
 |---|---|---|---|---|
 | Public cloud over internet | USD 7200.00 | USD 0.00 | USD 259200.00 |  |
-| Equinix interconnected | USD 6892.50 | USD 1000.00 | USD 249130.00 | ✅ recommended |
+| Equinix interconnected | USD 6892.50 | USD 1000.00 | USD 249130.00 | âœ… recommended |
 
 **Recommended:** Equinix interconnected
 
@@ -1302,7 +1302,7 @@ depend on region, volume, tiering, and contract terms. (reference data as of 202
 ```
 
 That's the honest punchline: the egress deltas alone look spectacular (Step 1), and the *complete*
-hub — router, 10G DX port, two cabinets, cross-connects, power, setup fees — still comes out ahead
+hub â€” router, 10G DX port, two cabinets, cross-connects, power, setup fees â€” still comes out ahead
 of doing nothing. The colocation build that puts GlobalPay's payment gear milliseconds from three
 clouds is, on these figures, self-funding on egress alone; everything else it buys (latency, private
 connectivity, one hub for three clouds) is upside. And where the reference figures stand in for
@@ -1310,8 +1310,8 @@ live ones, the report says so, with the data's vintage.
 
 #### Facade & Agent Equivalents
 
-Both engines are equivalently reachable from the design facade — `Design.over(fabric).savingsCalculator()`
-/ `.tcoComparison()`, or `eq.design()…` on a shared session — and from AI agents through the
+Both engines are equivalently reachable from the design facade â€” `Design.over(fabric).savingsCalculator()`
+/ `.tcoComparison()`, or `eq.design()â€¦` on a shared session â€” and from AI agents through the
 [MCP server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server): **`design_estimate_tco`** and
 **`design_compare_cloud_egress`** are the agent-facing versions of these same engines, with the same
 layered rate-card chain, the live provider adapters (GCP behind `GCP_BILLING_API_KEY`), a hard
@@ -1320,8 +1320,8 @@ per-lookup pricing timeout, and the same provenance notes and disclaimers in the
 #### Estimates, Honestly
 
 The bundled reference figures are indicative headline rates, dated (`ReferenceRateCard.standard().asOf()`
-→ `"2026-06"`), and say so in every report. That is a feature, not a caveat: a cost tool you can
-present to a finance team needs every number to answer *"where did this come from?"* — and here
+â†’ `"2026-06"`), and say so in every report. That is a feature, not a caveat: a cost tool you can
+present to a finance team needs every number to answer *"where did this come from?"* â€” and here
 each one does, via `PriceSource`, per-quote notes, per-archetype pricing flags, and disclaimers
 that name exactly which component couldn't be priced instead of hiding it in a total. Swap in your
 negotiated rates with a `CustomRateCard` and the same machinery labels *those* as the authoritative
@@ -1329,10 +1329,10 @@ layer.
 
 ### Intelligence MCP Server: Run the SDK as an MCP Server
 
-The SDK embeds the **Equinix Intelligence MCP Server** — a [Model Context
+The SDK embeds the **Equinix Intelligence MCP Server** â€” a [Model Context
 Protocol](https://modelcontextprotocol.io/) server that lets AI agents (Claude Desktop, Claude
 Code, Cursor, VS Code, or any MCP host) use the SDK's design engines and cross-domain reads as
-tools. It runs **locally, over stdio only**, under **your** API application's client credentials —
+tools. It runs **locally, over stdio only**, under **your** API application's client credentials â€”
 no browser sign-in, no hosted endpoint, no data leaving your machine except the SDK's own calls to
 `api.equinix.com`.
 
@@ -1340,7 +1340,7 @@ no browser sign-in, no hosted endpoint, no data leaving your machine except the 
 > with Equinix** and is unrelated to Equinix's own private-beta *Fabric MCP server* (a hosted
 > service with OAuth 2.1 user consent). See the [comparison below](#how-this-differs-from-equinixs-official-fabric-mcp-server).
 
-The tool catalog is deliberately small — every tool either embeds one of the SDK's design engines
+The tool catalog is deliberately small â€” every tool either embeds one of the SDK's design engines
 or reaches across API domains; none of them mirror single REST endpoints (the SDK's typed clients
 already do that, and Equinix's official server owns the Fabric-catalog-mirroring niche).
 
@@ -1350,12 +1350,12 @@ One build produces the runnable server jar alongside the library jar:
 
 ```bash
 mvn -q package -DskipTests
-# → target/equinix-sdk-java-<version>-mcp-server.jar
+# â†’ target/equinix-sdk-java-<version>-mcp-server.jar
 ```
 
 Credentials are the same client-credentials keys the SDK uses (an API application from the
 [Equinix Developer Portal](https://developer.equinix.com/)), passed as `EQUINIX_ACCESS_KEY` /
-`EQUINIX_SECRET_KEY` environment variables — or, if you'd rather keep secrets out of host config
+`EQUINIX_SECRET_KEY` environment variables â€” or, if you'd rather keep secrets out of host config
 files, as `KEY=VALUE` lines in a `.env.local` file in the server's working directory.
 
 **Claude Desktop** (`claude_desktop_config.json`):
@@ -1427,46 +1427,46 @@ Optional environment variables:
 | `EQUINIX_SANDBOX` | `true` targets the Equinix sandbox environment. |
 | `EQUINIX_MCP_LOG_LEVEL` | slf4j-simple level for the stderr diagnostics (default `info`). stdout carries only the MCP protocol. |
 | `EQUINIX_PEERINGDB_KEY` | Optional PeeringDB API key for `design_analyze_peering`. |
-| `GCP_BILLING_API_KEY` | Optional Google Cloud Billing Catalog key — enables the live GCP adapter in `design_compare_cloud_egress`. |
+| `GCP_BILLING_API_KEY` | Optional Google Cloud Billing Catalog key â€” enables the live GCP adapter in `design_compare_cloud_egress`. |
 | `EQUINIX_MCP_PRICING_TIMEOUT_MS` | Hard per-lookup timeout for live provider pricing (default `12000`). A slow provider degrades gracefully by name; the server never hangs. |
 
 Only the two credential keys are read from `.env.local`; everything else must be a real
 environment variable (the host config's `env` block).
 
-Java applications can also embed the server directly — `EquinixMcpServer.builder()` accepts an
+Java applications can also embed the server directly â€” `EquinixMcpServer.builder()` accepts an
 existing `Equinix` session (shared token + pool) and a custom `ToolRegistration` seam for
 extension tools.
 
 #### Tool catalog
 
-Fourteen tools across five toolsets. Everything outside `mutate` is strictly read-only — those
+Fourteen tools across five toolsets. Everything outside `mutate` is strictly read-only â€” those
 tools never provision, modify, or delete anything.
 
 | Tool | What it does |
 |---|---|
 | **`design` toolset** (also selected by `fabric`) | |
-| `design_optimize_placement` | The MetroOptimizer engine: workloads, sites, cloud requirements, and constraints in; ranked metro recommendations out — per-dimension scores, reasons, risk assessment, and a cost estimate with price provenance. |
-| `design_plan_deployment` | MetroOptimizer + DeploymentWizard in **plan-only** mode — it never executes. Returns the serialized deployment plan (cloud routers, provider connections, backbone links, routing protocols) with pricing + disclaimer, and a `plan_id` held for 30 minutes. |
+| `design_optimize_placement` | The MetroOptimizer engine: workloads, sites, cloud requirements, and constraints in; ranked metro recommendations out â€” per-dimension scores, reasons, risk assessment, and a cost estimate with price provenance. |
+| `design_plan_deployment` | MetroOptimizer + DeploymentWizard in **plan-only** mode â€” it never executes. Returns the serialized deployment plan (cloud routers, provider connections, backbone links, routing protocols) with pricing + disclaimer, and a `plan_id` held for 30 minutes. |
 | `design_estimate_latency` | Speed-of-light-in-fibre latency between two metros or IBX data centers: distance, estimated ms (round-trip or one-way), and the physics-lower-bound caveats. |
 | `design_estimate_tco` | The TCO calculator over the layered rate card: per-archetype cost breakdowns (public cloud / on-prem / Equinix interconnect) with line items, provenance notes, and a recommended archetype. |
 | `design_compare_cloud_egress` | Live cloud-egress pricing (AWS, Azure, OCI public price APIs; GCP with a key) vs. Fabric, under a hard timeout with graceful per-provider degradation. |
 | `design_analyze_peering` | PeeringIntelligence for a set of ASNs: per-ASN Equinix presence, peering opportunities, resiliency assessment, and data-source provenance. |
 | `design_export_terraform` | Equinix Terraform-provider HCL from a `design_plan_deployment` plan_id. |
 | **`portal` toolset** | |
-| `portal_list_open_tickets` | Open trouble tickets account-wide (via order history — the Tickets v2 API has no list endpoint), optionally filtered by IBX. |
+| `portal_list_open_tickets` | Open trouble tickets account-wide (via order history â€” the Tickets v2 API has no list endpoint), optionally filtered by IBX. |
 | `portal_get_billing_summary` | Invoice summaries with per-invoice amounts and totals by currency. |
 | **`ne` toolset** | |
 | `ne_list_devices` | Network Edge virtual-device inventory: uuid, name, type, metro, status. |
 | **`ibx` toolset** | |
 | `ibx_get_environmentals` | IBX SmartView per-sensor temperature + humidity readings for one IBX. |
 | `ibx_list_power_events` | IBX SmartView power events (active by default) for a list of IBXs. |
-| **`mutate` toolset** — *off by default, opt-in only* | |
+| **`mutate` toolset** â€” *off by default, opt-in only* | |
 | `fabric_propose_change` | Phase 1 of the Safe Mutation Broker: validates a proposed create via the **real** spec-documented `dryRun=true` API call and returns the validation, a price context, and a single-use confirm token. Nothing is provisioned. |
-| `fabric_confirm_change` | Phase 2: executes exactly the previously validated, hash-bound spec — only with a valid, unexpired, unused token. |
+| `fabric_confirm_change` | Phase 2: executes exactly the previously validated, hash-bound spec â€” only with a valid, unexpired, unused token. |
 
 #### The Safe Mutation Broker
 
-> **Agents propose, dry-run diffs decide, humans confirm — enforced by the server, not the prompt.**
+> **Agents propose, dry-run diffs decide, humans confirm â€” enforced by the server, not the prompt.**
 
 Mutations are structurally constrained, not politely requested:
 
@@ -1477,14 +1477,14 @@ Mutations are structurally constrained, not politely requested:
   `service_token_create`). There are no update change types at launch and, by policy, **no delete
   tools ever**.
 - **Dry-run first, for real.** `fabric_propose_change` executes the actual Fabric v4 endpoint with
-  the spec-documented `dryRun=true` parameter — the Equinix API itself validates the exact payload
+  the spec-documented `dryRun=true` parameter â€” the Equinix API itself validates the exact payload
   a confirm would send, while provisioning nothing. Invalid specs never earn a confirm token.
 - **Hash-bound, single-use, expiring tokens.** The proposal is canonicalized and SHA-256-bound;
   `fabric_confirm_change` executes only the stored spec (never a re-supplied one), tokens are
   consumed on first use (success or not), expire after 10 minutes, and exist only in that server
   process's memory.
 - **Priced for the human.** Where a rate card can honestly price the change (connection
-  bandwidth), the proposal carries a monthly/non-recurring estimate with provenance — and an
+  bandwidth), the proposal carries a monthly/non-recurring estimate with provenance â€” and an
   explicit `priced: false` everywhere else.
 
 The guarantee holds at the server boundary: no prompt, tool description, or model behavior can
@@ -1499,10 +1499,10 @@ serve different needs and can coexist in the same MCP host:
 | | Official Equinix Fabric MCP server | This SDK's Intelligence MCP server |
 |---|---|---|
 | What it is | Hosted remote service by Equinix (private beta) | Community server embedded in this SDK; runs locally |
-| Coverage | Deep Fabric catalog — tools mirroring the Fabric v4 API | Design engines (placement, planning, latency, TCO, egress savings, peering, Terraform export) + cross-domain reach (Customer Portal, Network Edge, IBX SmartView) |
-| Auth | OAuth 2.1 authorization-code with browser-based user consent | Your API application's client credentials via environment variables — headless, no browser |
-| Availability | Private beta | Build from source, any account with API credentials — no allowlist |
-| Transport | Remote (HTTP) | stdio only — no network listener |
+| Coverage | Deep Fabric catalog â€” tools mirroring the Fabric v4 API | Design engines (placement, planning, latency, TCO, egress savings, peering, Terraform export) + cross-domain reach (Customer Portal, Network Edge, IBX SmartView) |
+| Auth | OAuth 2.1 authorization-code with browser-based user consent | Your API application's client credentials via environment variables â€” headless, no browser |
+| Availability | Private beta | Build from source, any account with API credentials â€” no allowlist |
+| Transport | Remote (HTTP) | stdio only â€” no network listener |
 | Mutations | Per Equinix's product | Read-only by default; opt-in two-phase dry-run-first broker; no delete tools |
 
 If you have private-beta access and need exhaustive Fabric API tools, use Equinix's server. If you
@@ -1515,7 +1515,7 @@ Equinix's own MCP documentation recommends running its server as a dedicated, le
 user. The same principle applies here, translated to client credentials:
 
 - **Create a dedicated API application** in the [Equinix Developer Portal](https://developer.equinix.com/)
-  just for agent use — don't hand an agent the credentials your production automation uses. That
+  just for agent use â€” don't hand an agent the credentials your production automation uses. That
   gives the agent its own audit trail, its own blast radius, and a key you can revoke without
   touching anything else.
 - **Grant it the least privilege that covers the toolsets you enable.** The read-only catalog
@@ -1532,27 +1532,27 @@ user. The same principle applies here, translated to client credentials:
 A larger end-to-end example spanning Fabric, Network Edge, and Internet Access. It stands up a Cloud
 Router in six metros across three regions, wires each to two cloud providers at 5 Gbps, drops a Cisco
 C8000V router and an FTDv firewall into every metro, links the lot over a 10 Gbps IP-WAN backbone, and
-runs BGP on every connection. It's long, but it's one flow — builders, cloud adapters, and routing
+runs BGP on every connection. It's long, but it's one flow â€” builders, cloud adapters, and routing
 config all pulling together.
 
 ```mermaid
 flowchart TB
-    ipwan(["Global IP-WAN backbone · 10 Gbps"])
+    ipwan(["Global IP-WAN backbone Â· 10 Gbps"])
     AWS(["AWS"])
     AZ(["Azure"])
     GCP(["GCP"])
     OCI(["Oracle"])
     subgraph AMER
-        SV["SV<br/>FCR · C8000V · FTDv · DIA"]
-        DC["DC<br/>FCR · C8000V · FTDv · DIA"]
+        SV["SV<br/>FCR Â· C8000V Â· FTDv Â· DIA"]
+        DC["DC<br/>FCR Â· C8000V Â· FTDv Â· DIA"]
     end
     subgraph EMEA
-        LD["LD<br/>FCR · C8000V · FTDv · DIA"]
-        AM["AM<br/>FCR · C8000V · FTDv · DIA"]
+        LD["LD<br/>FCR Â· C8000V Â· FTDv Â· DIA"]
+        AM["AM<br/>FCR Â· C8000V Â· FTDv Â· DIA"]
     end
     subgraph APAC
-        SG["SG<br/>FCR · C8000V · FTDv · DIA"]
-        SY["SY<br/>FCR · C8000V · FTDv · DIA"]
+        SG["SG<br/>FCR Â· C8000V Â· FTDv Â· DIA"]
+        SY["SY<br/>FCR Â· C8000V Â· FTDv Â· DIA"]
     end
     SV --- ipwan
     DC --- ipwan
@@ -1574,8 +1574,8 @@ flowchart TB
     SY -->|5G| OCI
 ```
 
-Every FCR joins the IP-WAN backbone, so routes propagate between metros over BGP — the cross-region
-paths (SV↔SY, SV↔SG, DC↔LD, DC↔AM) come for free, with no direct FCR-to-FCR connections.
+Every FCR joins the IP-WAN backbone, so routes propagate between metros over BGP â€” the cross-region
+paths (SVâ†”SY, SVâ†”SG, DCâ†”LD, DCâ†”AM) come for free, with no direct FCR-to-FCR connections.
 
 ```java
 import com.eqixiac.equinix.*;
@@ -1648,7 +1648,7 @@ public class GlobalNetworkDeployment {
         Map<MetroCode, Device> ciscoFirewalls = new LinkedHashMap<>();
 
         for (MetroCode metro : metros) {
-            // Cisco Catalyst 8000V — enterprise SD-WAN router
+            // Cisco Catalyst 8000V â€” enterprise SD-WAN router
             Device router = networkEdge.devices().define("C8000V-" + metro)
                     .withDeviceTypeCode("C8000V")
                     .withMetroCode(metro)
@@ -1665,7 +1665,7 @@ public class GlobalNetworkDeployment {
 
             ciscoRouters.put(metro, router);
 
-            // Cisco Secure Firewall Threat Defense (FTDv) — next-gen firewall
+            // Cisco Secure Firewall Threat Defense (FTDv) â€” next-gen firewall
             Device firewall = networkEdge.devices().define("FTDv-" + metro)
                     .withDeviceTypeCode("FTD")
                     .withMetroCode(metro)
@@ -1736,7 +1736,7 @@ public class GlobalNetworkDeployment {
         for (MetroCode metro : metros) {
             CloudRouter fcr = routers.get(metro);
 
-            // FCR → Cisco C8000V router (1 Gbps)
+            // FCR â†’ Cisco C8000V router (1 Gbps)
             Connection routerConn = fabric.connections()
                     .define(ConnectionType.IP_VC)
                     .name("FCR-to-C8000V-" + metro)
@@ -1748,7 +1748,7 @@ public class GlobalNetworkDeployment {
                     .notification(NOTIFY_EMAIL)
                     .create();
 
-            // FCR → Cisco FTDv firewall (1 Gbps)
+            // FCR â†’ Cisco FTDv firewall (1 Gbps)
             Connection fwConn = fabric.connections()
                     .define(ConnectionType.IP_VC)
                     .name("FCR-to-FTDv-" + metro)
@@ -1767,8 +1767,8 @@ public class GlobalNetworkDeployment {
         // Phase 6: Connect FCRs to Global IP-WAN Backbone (10 Gbps each)
         //
         // A Global IP-WAN network enables automatic route propagation between
-        // all connected FCRs via BGP — no direct FCR-to-FCR connections needed.
-        // Cross-region links (SV↔SY, SV↔SG, DC↔LD, DC↔AM) are handled
+        // all connected FCRs via BGP â€” no direct FCR-to-FCR connections needed.
+        // Cross-region links (SVâ†”SY, SVâ†”SG, DCâ†”LD, DCâ†”AM) are handled
         // automatically through the IP-WAN mesh.
         // ---------------------------------------------------------------
         List<Connection> ipwanConnections = new ArrayList<>();
@@ -1794,8 +1794,8 @@ public class GlobalNetworkDeployment {
         // Phase 7: Configure BGP Routing on All Connections
         //
         // Each FCR connection requires two routing protocols:
-        //   1. DIRECT — establishes the IP subnet for the peering link
-        //   2. BGP    — enables dynamic route exchange with BFD for fast failover
+        //   1. DIRECT â€” establishes the IP subnet for the peering link
+        //   2. BGP    â€” enables dynamic route exchange with BFD for fast failover
         // ---------------------------------------------------------------
         List<Connection> allConnections = new ArrayList<>();
         allConnections.addAll(cloudConnections);
@@ -1839,7 +1839,7 @@ public class GlobalNetworkDeployment {
 }
 ```
 
-> **Note:** This example uses placeholder UUIDs for service profiles, project IDs, and authentication keys. Replace them with values from your Equinix account. The Global IP-WAN network must be created via the [Equinix Portal](https://portal.equinix.com) before connecting FCRs to it. Internet Access (DIA) is provisioned through the Network Edge devices — see the [Internet Access documentation](https://docs.equinix.com/internet-access/) for connecting DIA services to virtual devices.
+> **Note:** This example uses placeholder UUIDs for service profiles, project IDs, and authentication keys. Replace them with values from your Equinix account. The Global IP-WAN network must be created via the [Equinix Portal](https://portal.equinix.com) before connecting FCRs to it. Internet Access (DIA) is provisioned through the Network Edge devices â€” see the [Internet Access documentation](https://docs.equinix.com/internet-access/) for connecting DIA services to virtual devices.
 
 ### Network Edge: Virtual Devices
 
@@ -1976,14 +1976,14 @@ SmartHandResponse order = portal.smartHandsRequests().createEquipmentInstall(sma
 
 ### Internet Access: EIA v2 Service Lifecycle
 
-The Internet Access domain covers the full EIA v2 service lifecycle — create via a fluent builder,
+The Internet Access domain covers the full EIA v2 service lifecycle â€” create via a fluent builder,
 read, JSON-Patch-style update, and delete, the latter two with an optional dry-run mode that
 validates the request without applying it:
 
 ```java
 InternetAccess internet = new InternetAccess(credentials);
 
-// Read a service, then bump its bandwidth — validated first, then for real
+// Read a service, then bump its bandwidth â€” validated first, then for real
 InternetAccessService svc = internet.services().getByUuid("service-uuid");
 List<ChangeOperationUpdate> ops = List.of(ChangeOperationUpdate.replace("/bandwidth", "500"));
 internet.services().update(svc.getUuid(), ops, true);    // dryRun = validate only
@@ -1994,13 +1994,13 @@ internet.services().delete(svc.getUuid(), true);         // validate the delete 
 
 `internet.services().define()` starts the create builder (`name`, `type`, `connection(s)`,
 `routingProtocol`, `order`), and `search(ServiceSearchRequest)` drives the filtered
-`POST /services/search`. The domain also exposes the EIA catalog surfaces — `ibxs()` (the per-IBX
+`POST /services/search`. The domain also exposes the EIA catalog surfaces â€” `ibxs()` (the per-IBX
 availability data that feeds the metro-registry enrichment), `prices()`, `accounts()`, plus the
 site-infrastructure reads (`cages()`, `cabinets()`, `patchPanels()`, `connectionServices()`).
 
 ### Projects: Read-Only Listing
 
-A single-resource domain over `resourceManager/v2` — enumerate the projects your credential can
+A single-resource domain over `resourceManager/v2` â€” enumerate the projects your credential can
 see (useful for finding the `projectId` the Fabric builders and deployment wizard ask for):
 
 ```java
@@ -2015,7 +2015,7 @@ for (Project p : projects.projects().list()) {
 ### IAM: Roles & Assignments
 
 Reads for roles and role assignments (plus access policies, permission sets, and effective
-permissions). IAM's list endpoints use opaque-token pagination rather than `PaginatedList` — pass
+permissions). IAM's list endpoints use opaque-token pagination rather than `PaginatedList` â€” pass
 each response's `nextPageToken` back to fetch the next page:
 
 ```java
@@ -2033,7 +2033,7 @@ RoleAssignmentList assignments = iam.roleAssignments().list("project-id", "PROJE
 
 ### STS: Token Exchange
 
-The STS domain issues Equinix access tokens by RFC 8693 token exchange — trade an OIDC ID token
+The STS domain issues Equinix access tokens by RFC 8693 token exchange â€” trade an OIDC ID token
 (from a provider registered via `sts.oidcProviders()`) for an Equinix STS token:
 
 ```java
@@ -2052,7 +2052,7 @@ the registered providers (including suspend/resume).
 
 ### Observability: Chaining Resources
 
-Resources chain the way you'd expect — list, filter, then read statistics off what you found:
+Resources chain the way you'd expect â€” list, filter, then read statistics off what you found:
 
 ```java
 Fabric fabric = new Fabric(credentials);
@@ -2147,11 +2147,11 @@ Unit tests cover JSON deserialization, pagination, exception mapping, and the bu
 ```bash
 mvn test -Pwiremock
 ```
-WireMock tests stand up a local HTTP server that mimics the Equinix APIs, so they exercise the full request/response cycle — URLs, verbs, bodies, pagination, error mapping, OAuth2 — across every domain without touching a live endpoint or needing credentials.
+WireMock tests stand up a local HTTP server that mimics the Equinix APIs, so they exercise the full request/response cycle â€” URLs, verbs, bodies, pagination, error mapping, OAuth2 â€” across every domain without touching a live endpoint or needing credentials.
 
 ### Integration Tests (Credentials Required)
 
-Live tests run against the real Equinix APIs in three escalating tiers — each tier includes the ones before it:
+Live tests run against the real Equinix APIs in three escalating tiers â€” each tier includes the ones before it:
 
 ```bash
 # Read-only: every GET / list / search across all domains. Zero mutations; safe for production accounts.
@@ -2160,7 +2160,7 @@ mvn test -Pintegration-readonly -Dauth.access=YOUR_CLIENT_ID -Dauth.secret=YOUR_
 # + Dry-run: adds the spec-documented dryRun / validate operations. Still zero real mutations.
 mvn test -Pintegration-dryrun -Dauth.access=YOUR_CLIENT_ID -Dauth.secret=YOUR_CLIENT_SECRET
 
-# + Full CRUD: create → update → delete lifecycles with automatic LIFO cleanup. Double opt-in required.
+# + Full CRUD: create â†’ update â†’ delete lifecycles with automatic LIFO cleanup. Double opt-in required.
 mvn test -Pintegration-full -Dauth.access=YOUR_CLIENT_ID -Dauth.secret=YOUR_CLIENT_SECRET \
     -Dconfirm.destructive=true
 ```
@@ -2169,23 +2169,23 @@ The profiles wire `auth.access` / `auth.secret` (and, for the full tier, `confir
 into the forked test JVM; the test mode itself is set by the profile, so there is no separate
 `testMode` flag to pass.
 
-Read-only tests skip only when the credential lacks the product entitlement (401/403); any other live failure — a deserialization error, an unmapped enum, a 5xx — fails the test, so a green readonly run certifies the SDK's models against API reality. Each run writes a per-call report to `target/integration-report.json`.
+Read-only tests skip only when the credential lacks the product entitlement (401/403); any other live failure â€” a deserialization error, an unmapped enum, a 5xx â€” fails the test, so a green readonly run certifies the SDK's models against API reality. Each run writes a per-call report to `target/integration-report.json`.
 
 ## API Reference
 
 Full Javadoc documentation is published at **[iantjones.github.io/equinix-java-sdk](https://iantjones.github.io/equinix-java-sdk/)** and is updated with each release.
 
 Browse Javadocs by domain:
-- [Fabric](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/package-summary.html) — Connections, Ports, Service Tokens, Cloud Routers, Streams
-- [Network Edge](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/networkedge/package-summary.html) — Virtual Devices, ACL Templates, VPNs, BGP Peerings
-- [Customer Portal](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/customerportal/package-summary.html) — Cross-Connects, Trouble Tickets, Invoices
-- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/ibxsmartview/package-summary.html) — Environmental Sensors, Power Events, Streaming
-- [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/model/implementation/cloud/package-summary.html) — AWS, Azure, GCP, Oracle interoperability
-- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/package-summary.html) — Metro placement engine
-- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/wizard/package-summary.html) — Optimization-to-execution deployment pipeline
-- [Cost & Value Engineering](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/value/ratecard/package-summary.html) — Rate cards, savings calculator, TCO comparison
-- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/peering/package-summary.html) — Interconnection analysis with PeeringDB integration
-- [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/geo/package-summary.html) — IBX-to-IBX fibre latency calculator
+- [Fabric](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/package-summary.html) â€” Connections, Ports, Service Tokens, Cloud Routers, Streams
+- [Network Edge](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/networkedge/package-summary.html) â€” Virtual Devices, ACL Templates, VPNs, BGP Peerings
+- [Customer Portal](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/customerportal/package-summary.html) â€” Cross-Connects, Trouble Tickets, Invoices
+- [IBX SmartView](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/ibxsmartview/package-summary.html) â€” Environmental Sensors, Power Events, Streaming
+- [Cloud Provider Adapters](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/fabric/model/implementation/cloud/package-summary.html) â€” AWS, Azure, GCP, Oracle interoperability
+- [Metro Optimizer](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/package-summary.html) â€” Metro placement engine
+- [Deployment Wizard](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/optimizer/wizard/package-summary.html) â€” Optimization-to-execution deployment pipeline
+- [Cost & Value Engineering](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/value/ratecard/package-summary.html) â€” Rate cards, savings calculator, TCO comparison
+- [Peering Intelligence](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/peering/package-summary.html) â€” Interconnection analysis with PeeringDB integration
+- [Speed-of-Light Latency](https://iantjones.github.io/equinix-java-sdk/com/eqixiac/equinix/design/geo/package-summary.html) â€” IBX-to-IBX fibre latency calculator
 
 ## Building
 
@@ -2216,12 +2216,12 @@ The SDK follows a layered architecture:
 
 ```mermaid
 flowchart TB
-    e["Entry point — Fabric"]
-    pc["Public client — Connections"]
-    pi["Public impl — ConnectionsImpl"]
-    ic["Internal client — ConnectionClient"]
-    ii["Internal impl — ConnectionClientImpl"]
-    http["HTTP — ClientBase → EquinixHttpClient"]
+    e["Entry point â€” Fabric"]
+    pc["Public client â€” Connections"]
+    pi["Public impl â€” ConnectionsImpl"]
+    ic["Internal client â€” ConnectionClient"]
+    ii["Internal impl â€” ConnectionClientImpl"]
+    http["HTTP â€” ClientBase â†’ EquinixHttpClient"]
     e --> pc --> pi --> ic --> ii --> http
 ```
 
@@ -2238,7 +2238,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation.
 - Jackson 2.21.1 (JSON serialization)
 - Apache HttpClient 4.5.14 (HTTP communication)
 - Lombok 1.18.42 (compile-time code generation)
-- MCP Java SDK 2.0.0 (`mcp-core` + `mcp-json-jackson2`) — **optional**; used only by the embedded
+- MCP Java SDK 2.0.0 (`mcp-core` + `mcp-json-jackson2`) â€” **optional**; used only by the embedded
   [Intelligence MCP server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server) and bundled into
   the `-mcp-server.jar`. Library consumers never inherit it (nor the bundled `slf4j-simple`
   binding) transitively.
