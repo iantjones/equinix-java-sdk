@@ -23,6 +23,13 @@ public class CostEstimate {
      * {@link #costDisclaimer}).
      */
     BigDecimal monthlyTotal;
+
+    /**
+     * The aggregate one-time setup cost across all recommended metros, in {@link #currency}.
+     * Like {@link #monthlyTotal}, this is {@code null} when the selected metros are priced in
+     * more than one currency — no cross-currency sum is fabricated; the per-metro rows in
+     * {@link #perMetro} are then the honest breakdown.
+     */
     BigDecimal setupTotal;
 
     /**
@@ -38,8 +45,17 @@ public class CostEstimate {
      */
     Map<String, BigDecimal> monthlyByCurrency;
 
+    /** One cost row per recommended metro, each stamped with its own currency and price source. */
     List<MetroCostBreakdown> perMetro;
+
+    /**
+     * Whether the estimated monthly total fits the requested budget ceiling. {@code true} when no
+     * budget was set, or when the metros span currencies (there is then no single total to compare,
+     * so no false over-budget alarm is raised).
+     */
     boolean withinBudget;
+
+    /** Human-readable provenance/caveat line rendered with the estimate (data source, mixed-currency note). */
     String costDisclaimer;
 
     /**

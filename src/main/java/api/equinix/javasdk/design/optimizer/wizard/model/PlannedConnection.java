@@ -9,6 +9,8 @@ import api.equinix.javasdk.design.optimizer.wizard.enums.ConnectionPurpose;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 /**
  * A Fabric connection to be created as part of a deployment plan. Represents
  * either a provider connection (Cloud Router to service profile) or a backbone
@@ -60,7 +62,12 @@ public class PlannedConnection {
 
     String zSideRouterName;
 
-    String notificationEmail;
+    /**
+     * Every notification recipient configured on the wizard ({@code deployment.notifications}).
+     * All of them are stamped onto the connection wire body ({@code ConnectionBodies}) and rendered
+     * into exported HCL — never just the first address.
+     */
+    List<String> notificationEmails;
 
     /**
      * The resolved cloud provider type for a provider connection's Z-side (for example

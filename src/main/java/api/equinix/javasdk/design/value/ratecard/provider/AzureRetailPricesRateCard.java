@@ -26,6 +26,7 @@ import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -62,9 +63,19 @@ import java.util.concurrent.ConcurrentHashMap;
  *     AzureRetailPricesRateCard.create(),
  *     ReferenceRateCard.standard());
  * }</pre>
+ *
+ * <p>Results are cached per lookup key for the adapter's lifetime, but only <em>authoritative</em>
+ * ones: a rate, or a genuinely empty result set from a fully-paginated response. A transport
+ * failure (network error, non-200, truncated pagination) is never cached — the next lookup
+ * retries, so a transient outage cannot pin "no rate" forever.</p>
  */
+@Slf4j
 public final class AzureRetailPricesRateCard implements RateCard {
 
+    /**
+     * The public Azure Retail Prices endpoint; the default for {@link #create()}. Override via
+     * {@link #create(String)} for a sovereign/government cloud, a proxy, or testing.
+     */
     public static final String DEFAULT_ENDPOINT = "https://prices.azure.com/api/retail/prices";
 
     private static final Currency USD = Currency.getInstance("USD");
@@ -85,6 +96,12 @@ public final class AzureRetailPricesRateCard implements RateCard {
         this.http = new ProviderPricingHttpClient();
     }
 
+    /**
+     * Creates an adapter against the public Azure Retail Prices endpoint
+     * ({@link #DEFAULT_ENDPOINT}). No credentials required.
+     *
+     * @return a new Azure pricing adapter
+     */
     public static AzureRetailPricesRateCard create() {
         return new AzureRetailPricesRateCard(DEFAULT_ENDPOINT);
     }
@@ -114,8 +131,34 @@ public final class AzureRetailPricesRateCard implements RateCard {
         if (provider != CloudProviderType.AZURE || path == null) {
             return Optional.empty();
         }
-        String key = path.name() + "|" + (region == null ? "*" : region);
-        return cache.computeIfAbsent(key, k -> fetch(region, path));
+        String key = cacheKey(region, path);
+        Optional<EgressRate> cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        // The fetch runs OUTSIDE the result map: a paginated network walk must never run inside
+        // ConcurrentHashMap's mapping function holding a bin lock. Concurrent first lookups may
+        // rarely fetch twice; putIfAbsent keeps the winner.
+        Optional<EgressRate> fetched = fetch(region, path);
+        if (fetched == null) {
+            // Transport failure — NOT "no such SKU". Yield no rate but don't cache it, so the
+            // next lookup retries instead of the failure being memoized for the adapter's lifetime.
+            return Optional.empty();
+        }
+        Optional<EgressRate> raced = cache.putIfAbsent(key, fetched);
+        return raced != null ? raced : fetched;
+    }
+
+    /**
+     * The result-cache key. {@link EgressPath#PRIVATE} (ExpressRoute) lookups deliberately ignore
+     * the region — the meters are zone-based — so every region shares one {@code PRIVATE} entry;
+     * otherwise each distinct region would trigger an identical full fetch.
+     */
+    private static String cacheKey(String region, EgressPath path) {
+        if (path == EgressPath.PRIVATE) {
+            return path.name() + "|*";
+        }
+        return path.name() + "|" + (region == null ? "*" : region);
     }
 
     @Override
@@ -123,6 +166,14 @@ public final class AzureRetailPricesRateCard implements RateCard {
         return PriceSource.PROVIDER_API;
     }
 
+    /**
+     * Fetches and selects the rate for one lookup key.
+     *
+     * @return the selected rate; {@link Optional#empty()} when the fully-paginated response
+     *         authoritatively contains no matching meter (cacheable); or {@code null} when the
+     *         fetch <em>failed</em> — a transport error or truncated pagination — which the caller
+     *         must not cache
+     */
     private Optional<EgressRate> fetch(String region, EgressPath path) {
         String serviceName = path == EgressPath.INTERNET ? "Bandwidth" : "ExpressRoute";
         StringBuilder filter = new StringBuilder("serviceName eq '").append(serviceName).append("'");
@@ -145,10 +196,10 @@ public final class AzureRetailPricesRateCard implements RateCard {
         for (; next != null && !next.isEmpty() && page < MAX_PAGES; page++) {
             Optional<JsonNode> root = http.getJson(next);
             if (root.isEmpty()) {
-                // A genuine mid-pagination fetch failure: an aggregate (headline / lowest) computed
-                // over a partial result set would be a wrong number labelled authoritative, so
-                // surface no rate — a layered card falls back to the next source.
-                return Optional.empty();
+                // A fetch failure (first page or mid-pagination): an aggregate (headline / lowest)
+                // computed over a partial result set would be a wrong number labelled authoritative,
+                // so fail the whole lookup — null tells the caller "do not cache; retry next call".
+                return null;
             }
             JsonNode body = root.get();
             JsonNode pageItems = body.get("Items");
@@ -162,8 +213,11 @@ public final class AzureRetailPricesRateCard implements RateCard {
         }
         if (next != null && !next.isEmpty()) {
             // Pagination exceeded the safety cap without exhausting the result set; we can't trust
-            // an aggregate over a truncated catalogue, so decline rather than emit a partial min/max.
-            return Optional.empty();
+            // an aggregate over a truncated catalogue, so decline (uncached) rather than emit a
+            // partial min/max.
+            log.warn("Azure Retail Prices pagination for {} truncated at the {}-page safety cap with a live "
+                    + "NextPageLink; declining to price over a partial result set", serviceName, MAX_PAGES);
+            return null;
         }
         if (items.isEmpty()) {
             return Optional.empty();

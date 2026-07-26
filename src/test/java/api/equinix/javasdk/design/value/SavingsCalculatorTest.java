@@ -200,4 +200,77 @@ class SavingsCalculatorTest {
         assertThrows(IllegalArgumentException.class,
                 () -> SavingsCalculator.builder(null).egress(-5, DataUnit.TERABYTE));
     }
+
+    // ── Requested-but-unpriceable Cloud Router (D8) ──
+
+    @Test
+    void unpriceableRouterKeepsPartialFiguresAndNamesTheMissingComponent() {
+        // fullCard() prices the connection (2000/mo + 1000 setup) but has no Cloud Router rate.
+        SavingsEstimate s = SavingsCalculator.builder(null)
+                .egress(50, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .includeCloudRouter("STANDARD")
+                .rateCard(fullCard())
+                .calculate();
+
+        assertFalse(s.isEquinixPriced());
+        assertFalse(s.isComplete());
+        // The connection figures are kept, explicitly labelled partial via the disclaimer —
+        // consistent numbers, honestly flagged.
+        assertEquals(0, new BigDecimal("2000").compareTo(s.getEquinixMonthlyCost()));
+        assertEquals(0, new BigDecimal("1000").compareTo(s.getEquinixSetupCost()));
+        assertTrue(s.getDisclaimer().contains("Cloud Router (STANDARD)"),
+                "the disclaimer names the exact unpriced component: " + s.getDisclaimer());
+        assertTrue(s.getDisclaimer().contains("partial"),
+                "the disclaimer states the figures are partial: " + s.getDisclaimer());
+        assertFalse(s.getDisclaimer().contains("connection cost was unavailable"),
+                "the cause must not be misstated as a missing connection price: " + s.getDisclaimer());
+        assertTrue(s.toMarkdown().contains("Incomplete"));
+    }
+
+    @Test
+    void routerInADifferentCurrencyIsExcludedAndNamed() {
+        // The router resolves from a EUR card while the connection is USD: they cannot be summed,
+        // so the router is excluded, the figures stay connection-only, and the disclaimer says why.
+        api.equinix.javasdk.design.value.ratecard.RateCard layered =
+                api.equinix.javasdk.design.value.ratecard.RateCard.layered(
+                        fullCard(),
+                        CustomRateCard.builder().currency("EUR")
+                                .cloudRouterRate("STANDARD", new BigDecimal("300"))
+                                .build());
+
+        SavingsEstimate s = SavingsCalculator.builder(null)
+                .egress(50, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS)
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .includeCloudRouter("STANDARD")
+                .rateCard(layered)
+                .calculate();
+
+        assertFalse(s.isEquinixPriced());
+        assertEquals(0, new BigDecimal("2000").compareTo(s.getEquinixMonthlyCost()),
+                "router excluded; connection kept");
+        assertTrue(s.getDisclaimer().contains("Cloud Router"), s.getDisclaimer());
+        assertTrue(s.getDisclaimer().contains("EUR") && s.getDisclaimer().contains("USD"),
+                "the disclaimer names both currencies: " + s.getDisclaimer());
+    }
+
+    // ── Builder validation (D7) ──
+
+    @Test
+    void builderFailsFastOnInvalidInputs() {
+        SavingsCalculator.Builder b = SavingsCalculator.builder(null);
+        assertThrows(IllegalArgumentException.class, () -> b.egress(5, null));
+        assertThrows(IllegalArgumentException.class, () -> b.egress(Double.NaN, DataUnit.GIGABYTE));
+        assertThrows(IllegalArgumentException.class, () -> b.egress(Double.POSITIVE_INFINITY, DataUnit.GIGABYTE));
+        assertThrows(IllegalArgumentException.class, () -> b.bandwidthMbps(0));
+        assertThrows(IllegalArgumentException.class, () -> b.bandwidthMbps(-10));
+        assertThrows(IllegalArgumentException.class, () -> b.fromCloud(null));
+        assertThrows(IllegalArgumentException.class, () -> b.viaMetro(null));
+        assertThrows(IllegalArgumentException.class, () -> b.connectionType(null));
+        assertThrows(IllegalArgumentException.class, () -> b.term(null));
+        assertThrows(IllegalArgumentException.class, () -> b.includeCloudRouter(null));
+        assertThrows(IllegalArgumentException.class, () -> b.includeCloudRouter(" "));
+    }
 }

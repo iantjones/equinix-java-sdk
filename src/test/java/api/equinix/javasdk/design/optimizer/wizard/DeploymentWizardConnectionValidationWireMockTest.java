@@ -186,7 +186,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         DeploymentPlan plan = DeploymentWizard.builder(bareStub, twoMetroResult())
                 .routerPackage("STANDARD")
                 .routerNamePrefix("FCR")
-                .providerConnectionType(ConnectionType.EVPL_VC)
+                .providerConnectionType(ConnectionType.IP_VC)
                 .notifications("noc@example.com")
                 .rateCard(fixedRateCard())
                 .plan();
@@ -223,7 +223,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         // dry-run runs for REAL at plan time — the wire is what proves the redundancy group survives.
         DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
                 .name("FCR-DC-to-aws")
-                .connectionType(ConnectionType.EVPL_VC)
+                .connectionType(ConnectionType.IP_VC)
                 .purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(1000)
                 .aSideMetro(DC)
@@ -256,7 +256,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
 
         DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
                 .name("FCR-DC-to-aws")
-                .connectionType(ConnectionType.EVPL_VC)
+                .connectionType(ConnectionType.IP_VC)
                 .purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(1000)
                 .aSideMetro(DC)
@@ -288,7 +288,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         // wizard never fabricates). The body must be a valid DOT1Q request WITHOUT a guessed vlanTag.
         DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
                 .name("FCR-DC-to-aws")
-                .connectionType(ConnectionType.EVPL_VC)
+                .connectionType(ConnectionType.IP_VC)
                 .purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(1000)
                 .aSideMetro(DC)
@@ -345,7 +345,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         return fabric.deploymentWizard(twoMetroResult())
                 .routerPackage("STANDARD")
                 .routerNamePrefix("FCR")
-                .providerConnectionType(ConnectionType.EVPL_VC)
+                .providerConnectionType(ConnectionType.IP_VC)
                 .notifications("noc@example.com")
                 .rateCard(fixedRateCard());
     }

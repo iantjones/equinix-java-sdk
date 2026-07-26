@@ -5,6 +5,8 @@ import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 /**
  * A Cloud Router (FCR) to be created as part of a deployment plan.
  * One Cloud Router is created per recommended metro.
@@ -28,5 +30,11 @@ public class PlannedCloudRouter {
 
     String projectId;
 
-    String notificationEmail;
+    /**
+     * Every notification recipient configured on the wizard ({@code deployment.notifications}) —
+     * Fabric mandates at least one on a Cloud Router ({@code EQ-3040013}), and ALL of them are sent
+     * on the wire body ({@code RouterBodies}), not just the first. {@code null}/empty means none was
+     * configured, which Layer-1 validation flags as an error.
+     */
+    List<String> notificationEmails;
 }

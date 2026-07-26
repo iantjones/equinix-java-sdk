@@ -182,4 +182,86 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.cloudRouter("STANDARD", null, Term.MONTH_12).isEmpty(),
                 "GCP egress adapter prices egress only, never Fabric Cloud Routers");
     }
+
+    @Test
+    @DisplayName("a mid-pagination failure fails the WHOLE fetch — no answer from a partial catalogue — and is retried")
+    void midPaginationFailureFailsWholeFetchAndIsRetried() {
+        // Page 1 alone carries the internet SKU, so a partial-catalogue implementation would
+        // happily answer the INTERNET lookup. It must not: the "cheapest matching SKU" over a
+        // partial catalogue is a wrong number, so a page-2 failure fails the whole fetch.
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", absent())
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus_page1.json"))));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", equalTo("gcp-page-2-token"))
+                .willReturn(aResponse().withStatus(502)));
+
+        GcpBillingCatalogRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .isEmpty(), "a failed page 2 must suppress the whole catalogue, including page 1's SKUs");
+
+        // Page 2 recovers. The SAME adapter must refetch (the failed fetch was not memoized)
+        // and now serve both paths from the complete catalogue.
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", equalTo("gcp-page-2-token"))
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus_page2.json"))));
+
+        EgressRate internet = card
+                .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.1117587090").compareTo(internet.getPricePerGb()));
+        EgressRate privateRate = card
+                .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.0186264515").compareTo(privateRate.getPricePerGb()));
+    }
+
+    @Test
+    @DisplayName("a transient first-page failure is not memoized: the same adapter retries and succeeds")
+    void transientFirstPageFailureIsRetried() {
+        wireMock.stubFor(get(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(503)));
+
+        GcpBillingCatalogRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .isEmpty(), "the outage yields no rate");
+
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .willReturn(okJson(loadFixture("/json/provider/gcp_skus.json"))));
+
+        EgressRate rate = card
+                .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.1117587090").compareTo(rate.getPricePerGb()),
+                "after the endpoint recovers the same adapter resolves the rate");
+    }
+
+    @Test
+    @DisplayName("a MAX_PAGES trip with a live nextPageToken proceeds (with a warning) over the collected prefix")
+    void maxPagesTruncationProceedsWithCollectedSkus() {
+        // Every page advertises another page, so the fetch runs into the 25-page safety cap
+        // (GcpBillingCatalogRateCard.MAX_PAGES) with a live token. The adapter logs the
+        // truncation and selects over the SKUs collected so far rather than failing.
+        String loopingPage = loadFixture("/json/provider/gcp_skus_page1.json")
+                .replace("gcp-page-2-token", "gcp-loop-token");
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", absent())
+                .willReturn(okJson(loopingPage)));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("pageToken", equalTo("gcp-loop-token"))
+                .willReturn(okJson(loopingPage)));
+
+        GcpBillingCatalogRateCard card = card();
+        EgressRate rate = card
+                .egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.1117587090").compareTo(rate.getPricePerGb()),
+                "truncation still selects over the collected prefix");
+        wireMock.verify(25, getRequestedFor(urlPathEqualTo(PATH)));
+
+        // The truncated catalogue is memoized (every fetched page succeeded), so further lookups
+        // must not restart the 25-page walk.
+        assertTrue(card.egress(CloudProviderType.GOOGLE_CLOUD, "us-central1", EgressPath.PRIVATE, Term.MONTH_12)
+                .isEmpty(), "no interconnect SKU in the looping fixture");
+        wireMock.verify(25, getRequestedFor(urlPathEqualTo(PATH)));
+    }
 }

@@ -130,4 +130,110 @@ class OracleCloudPriceListRateCardWireMockTest extends WireMockTestBase {
         wireMock.stubFor(get(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(500)));
         assertTrue(card().egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
     }
+
+    @Test
+    @DisplayName("a transient fetch failure is not memoized: the same adapter retries and succeeds")
+    void transientFailureIsRetriedNotCached() {
+        wireMock.stubFor(get(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(503)));
+
+        OracleCloudPriceListRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12)
+                .isEmpty(), "the outage yields no rate");
+
+        // The endpoint recovers. The SAME adapter must fetch again — the failure must not have
+        // been memoized as an empty catalogue for the adapter's lifetime.
+        stubPriceList();
+
+        EgressRate rate = card.egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.0085").compareTo(rate.getPricePerGb()),
+                "after the endpoint recovers the same adapter resolves the rate");
+    }
+
+    @Test
+    @DisplayName("a complete catalogue is fetched once and reused across lookups")
+    void completeCatalogueFetchedOnceAcrossLookups() {
+        stubPriceList();
+
+        OracleCloudPriceListRateCard card = card();
+        card.egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12).orElseThrow();
+        card.egress(CloudProviderType.ORACLE_CLOUD, "ap-tokyo-1", EgressPath.INTERNET, Term.MONTH_12).orElseThrow();
+        card.egress(CloudProviderType.ORACLE_CLOUD, null, EgressPath.INTERNET, Term.MONTH_12).orElseThrow();
+
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH)));
+    }
+
+    @Test
+    @DisplayName("over an incomplete catalogue a found SKU is a real datum, but a miss is not cached and is retried")
+    void incompleteCatalogueMissIsNotCached() {
+        // Page 1 carries the NA/EU SKU and a continuation; page 2 is down. The catalogue is
+        // therefore incomplete: a positive match from page 1 is trustworthy, but a miss could
+        // just mean the SKU lives on the unreachable page.
+        String page1 = """
+                {
+                  "hasMore": true,
+                  "items": [
+                    {
+                      "partNumber": "B88327",
+                      "displayName": "Outbound Data Transfer - Originating in North America, Europe, and UK",
+                      "currencyCodeLocalizations": [
+                        {
+                          "currencyCode": "USD",
+                          "prices": [
+                            { "model": "PAY_AS_YOU_GO", "value": 0, "rangeMin": 0 },
+                            { "model": "PAY_AS_YOU_GO", "value": 0.0085, "rangeMin": 10240 }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "links": [ { "rel": "next", "href": "__NEXT__" } ]
+                }
+                """.replace("__NEXT__", wireMockUrl() + PATH + "?offset=1");
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("offset", absent())
+                .willReturn(okJson(page1)));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("offset", equalTo("1"))
+                .willReturn(aResponse().withStatus(502)));
+
+        OracleCloudPriceListRateCard card = card();
+        EgressRate found = card.egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.0085").compareTo(found.getPricePerGb()),
+                "a SKU found in the retrieved pages is a real datum despite the truncation");
+
+        assertTrue(card.egress(CloudProviderType.ORACLE_CLOUD, "ap-tokyo-1", EgressPath.INTERNET, Term.MONTH_12)
+                .isEmpty(), "the APAC SKU may live on the unreachable page — a miss is not authoritative");
+
+        // Page 2 recovers with the APAC SKU. The miss was not cached and the incomplete catalogue
+        // was not memoized, so the SAME adapter retries and now finds it.
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("offset", equalTo("1"))
+                .willReturn(okJson("""
+                        {
+                          "hasMore": false,
+                          "items": [
+                            {
+                              "partNumber": "B93455",
+                              "displayName": "Outbound Data Transfer - Originating in APAC, Japan, and South America",
+                              "currencyCodeLocalizations": [
+                                {
+                                  "currencyCode": "USD",
+                                  "prices": [
+                                    { "model": "PAY_AS_YOU_GO", "value": 0, "rangeMin": 0 },
+                                    { "model": "PAY_AS_YOU_GO", "value": 0.025, "rangeMin": 10240 }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                        """)));
+
+        EgressRate apac = card.egress(CloudProviderType.ORACLE_CLOUD, "ap-tokyo-1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.025").compareTo(apac.getPricePerGb()),
+                "the retried, complete walk finds the page-2 APAC SKU");
+    }
 }

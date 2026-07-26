@@ -11,9 +11,24 @@ package api.equinix.javasdk.design.value.ratecard;
  */
 public enum ColocationItem {
 
+    /**
+     * A colocation cabinet, priced <em>per cabinet per month</em>. The TCO model multiplies
+     * the per-cabinet quote by the configured cabinet count
+     * ({@code TcoCalculator.Builder.cabinets(int)}, default 1).
+     */
     CABINET,
 
+    /**
+     * Power (and the space it implies), priced <em>per kW of draw per month</em>. The TCO
+     * model multiplies the per-kW quote by the configured draw
+     * ({@code TcoCalculator.Builder.powerKw(double)}, default 5.0).
+     */
     POWER_PER_KW,
 
+    /**
+     * A physical cross-connect, priced <em>per cross-connect per month</em>. The TCO model
+     * multiplies the per-unit quote by the configured count
+     * ({@code TcoCalculator.Builder.crossConnects(int)}, default 1).
+     */
     CROSS_CONNECT
 }

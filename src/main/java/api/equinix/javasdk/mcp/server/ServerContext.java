@@ -36,6 +36,7 @@ import io.modelcontextprotocol.server.McpSyncServerExchange;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The shared state a {@link ToolHandler} executes against: the lazily-built SDK facades
@@ -80,6 +81,14 @@ public final class ServerContext {
     private final ObjectMapper objectMapper;
     private final PlanStore planStore;
     private final ProviderRateCardFactory providerRateCardFactory;
+
+    /**
+     * Lazily-built live pricing adapters, one per provider for the context's lifetime. The
+     * adapters memoize their (multi-megabyte) offer/SKU catalogues internally, so they must be
+     * reused across tool calls — constructing a fresh adapter per call would refetch the
+     * catalogue on every invocation and the adapter-lifetime caching would never help.
+     */
+    private final Map<CloudProviderType, Optional<RateCard>> providerRateCards = new ConcurrentHashMap<>();
 
     /**
      * The MCP client exchange bound for the duration of the current tool call, or {@code null} when a
@@ -207,15 +216,20 @@ public final class ServerContext {
     }
 
     /**
-     * Builds the live pricing adapter for a cloud provider, if one can be constructed
-     * (GCP requires {@link #ENV_GCP_BILLING_KEY}). The returned card is <em>not</em> yet
-     * timeout-guarded — {@code design_compare_cloud_egress} wraps it.
+     * Returns the live pricing adapter for a cloud provider, if one can be constructed
+     * (GCP requires {@link #ENV_GCP_BILLING_KEY}). The adapter is built once per provider and
+     * reused for the context's lifetime, so its internal offer/SKU catalogue caches actually pay
+     * off across tool calls. The returned card is <em>not</em> yet timeout-guarded —
+     * {@code design_compare_cloud_egress} wraps it per invocation.
      *
      * @param provider the cloud provider
      * @return the live rate card, or empty when no adapter is available for the provider
      */
     public Optional<RateCard> providerRateCard(CloudProviderType provider) {
-        return providerRateCardFactory.create(provider, this);
+        if (provider == null) {
+            return providerRateCardFactory.create(null, this);
+        }
+        return providerRateCards.computeIfAbsent(provider, p -> providerRateCardFactory.create(p, this));
     }
 
     /**
@@ -325,7 +339,8 @@ public final class ServerContext {
 
     /**
      * Creates the live pricing adapter for a provider. Replaceable for tests (canned or
-     * failing cards) and for embedders with custom pricing endpoints.
+     * failing cards) and for embedders with custom pricing endpoints. Invoked at most once per
+     * provider per context — {@link #providerRateCard(CloudProviderType)} caches the result.
      */
     @FunctionalInterface
     public interface ProviderRateCardFactory {

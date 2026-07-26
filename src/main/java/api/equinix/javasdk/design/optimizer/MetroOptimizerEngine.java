@@ -214,8 +214,11 @@ final class MetroOptimizerEngine {
                             .category(ScoreCategory.COMPLIANCE)
                             .score(complianceScore)
                             .weight(wCompliance)
+                            // Scored as the fraction of requested zones this metro helps satisfy;
+                            // whether every zone is covered by the SET is the COMPLIANCE_GAP check.
                             .explanation(complianceScore >= 100 ? "Meets all compliance requirements"
-                                    : "Some compliance zones not fully satisfied")
+                                    : "Helps satisfy a subset of the requested compliance zones "
+                                            + "(scored by the fraction of zones its region is allowed by)")
                             .build()
             );
 
@@ -257,9 +260,10 @@ final class MetroOptimizerEngine {
 
         // Phase 9: Cost estimate. Computed before risk analysis so the budget check can raise a
         // finding: the budget is reported against, and an over-budget estimate is a risk finding
-        // rather than a flag buried in the cost object.
+        // rather than a flag buried in the cost object. Priced from the topology assembled in
+        // Phase 8, so each metro is costed at the bandwidth its assigned workloads actually carry.
         RateCard rateCard = request.getRateCard() != null ? request.getRateCard() : EquinixRateCard.of(fabric);
-        CostEstimate costEstimate = estimateCosts(selected, request, rateCard);
+        CostEstimate costEstimate = estimateCosts(selected, request, rateCard, topology);
 
         // Phase 10: Risk analysis
         RiskAssessment riskAssessment = analyzeRisks(selected, request, providerMetroMap, latencyMatrix,
@@ -570,7 +574,7 @@ final class MetroOptimizerEngine {
      * connection it cannot build, because the winner is chosen before any connection bandwidth
      * exists. So EVERY matching profile's capability for the metro — its allowed tiers, custom-band
      * flag and per-metro ceiling — is also carried forward on the entry's
-     * {@link ProviderAvailability#getProfileOptions() profileOptions}, letting the wizard choose a
+     * {@code profileOptions} ({@link ProviderAvailability}), letting the wizard choose a
      * covering profile once the bandwidth is known while {@code outranks} still decides the default.</p>
      */
     private static ProviderIndex buildProviderIndex(
@@ -970,7 +974,13 @@ final class MetroOptimizerEngine {
         Set<Region> requiredRegions = c.getRequiredRegions() != null
                 ? new HashSet<>(c.getRequiredRegions()) : Collections.emptySet();
 
-        // Compliance zone allowed regions
+        // Compliance zone allowed regions. Deliberately the UNION across zones: a metro is a
+        // candidate when it helps satisfy at least ONE requested zone, because the deployment-level
+        // contract is "each zone covered by at least one selected metro", not "every metro inside
+        // every zone" (no single region can satisfy EU_GDPR + US_FEDRAMP at once). scoreCompliance
+        // grades by the fraction of zones a metro helps satisfy — filter-pass iff score > 0 — and
+        // analyzeRisks raises COMPLIANCE_GAP for any requested zone the selected set leaves
+        // uncovered. See scoreCompliance for the full semantics.
         Set<Region> complianceAllowed = null;
         if (c.getComplianceZones() != null && !c.getComplianceZones().isEmpty()) {
             complianceAllowed = new HashSet<>();
@@ -1299,6 +1309,18 @@ final class MetroOptimizerEngine {
     //  Latency Scoring
     // ══════════════════════════════════════════════
 
+    /**
+     * Grades a metro's weighted mean latency on a continuous piecewise-linear curve anchored at the
+     * configurable thresholds: 100 at 0ms, 95 at {@code excellent}, 75 at {@code good}, 50 at
+     * {@code acceptable}, 0 at {@code poor} and beyond.
+     *
+     * <p>The curve is continuous by construction &mdash; each segment starts at the value the
+     * previous segment ended on. The final segment used to start at 25 instead of 50, a 25-point
+     * cliff at the {@code acceptable} threshold: a metro at {@code acceptable} scored 50 while one
+     * 0.1ms slower scored just under 25, and no input could ever produce a score in (25, 50). Two
+     * near-identical metros must never be graded a quarter of the scale apart on a rounding-sized
+     * difference.</p>
+     */
     private static double scoreLatency(Metro candidate, OptimizationRequest request,
                                        Map<MetroId, Metro> metroMap,
                                        Map<MetroId, Map<MetroId, Double>> latencyMap,
@@ -1318,7 +1340,9 @@ final class MetroOptimizerEngine {
         if (avgWeightedLatency <= excellent) return 95.0 + 5.0 * (1.0 - avgWeightedLatency / excellent);
         if (avgWeightedLatency <= good) return 75.0 + 20.0 * (1.0 - (avgWeightedLatency - excellent) / (good - excellent));
         if (avgWeightedLatency <= acceptable) return 50.0 + 25.0 * (1.0 - (avgWeightedLatency - good) / (acceptable - good));
-        if (avgWeightedLatency <= poor) return 25.0 * (1.0 - (avgWeightedLatency - acceptable) / (poor - acceptable));
+        // Continuous final segment: interpolates 50 -> 0 between 'acceptable' and 'poor'. The
+        // former 25 * (...) start point put a 25-point discontinuity at 'acceptable'.
+        if (avgWeightedLatency <= poor) return 50.0 * (1.0 - (avgWeightedLatency - acceptable) / (poor - acceptable));
         return 0.0;
     }
 
@@ -1500,17 +1524,40 @@ final class MetroOptimizerEngine {
     //  Compliance Scoring
     // ══════════════════════════════════════════════
 
+    /**
+     * Scores a metro by the fraction of the requested compliance zones it helps satisfy.
+     *
+     * <p><strong>Compliance-zone semantics</strong> (shared by this score, the candidate filter in
+     * {@link #filterCandidates}, and the {@code COMPLIANCE_GAP} check in {@link #analyzeRisks}): a
+     * deployment satisfies multiple compliance zones when <em>each requested zone is covered by at
+     * least one selected metro</em> &mdash; a deployment-level AND over zones, to which every metro
+     * contributes the zones its region is allowed by. No single metro is expected to sit in every
+     * zone at once (EU_GDPR + US_FEDRAMP is not satisfiable by any one region), so:</p>
+     * <ul>
+     *   <li>the candidate <em>filter</em> keeps a metro that helps satisfy at least one requested
+     *       zone (region in the union of allowed regions);</li>
+     *   <li>this <em>score</em> is {@code 100 * (zones the metro's region is allowed by) / (zones
+     *       requested)} &mdash; a metro passes the filter if and only if it scores above zero, so
+     *       the two paths can never disagree;</li>
+     *   <li>whether every requested zone ends up covered by the <em>selected set</em> is checked in
+     *       {@link #analyzeRisks}, which raises {@code COMPLIANCE_GAP} for any zone left
+     *       unsatisfied.</li>
+     * </ul>
+     *
+     * <p>The previous implementation ANDed the zones per metro (any missed zone scored 0) while the
+     * filter ORed them, so with two or more disjoint zones every metro passed the filter and then
+     * scored 0 &mdash; the two paths disagreed about what "compliant" meant.</p>
+     */
     private static double scoreCompliance(Metro candidate, OptimizationRequest request) {
         OptimizationConstraints c = request.getConstraints();
         if (c.getComplianceZones() == null || c.getComplianceZones().isEmpty()) return 100.0;
 
         Region metroRegion = candidate.getRegion();
-        for (ComplianceZone zone : c.getComplianceZones()) {
-            if (!zone.getAllowedRegions().contains(metroRegion)) {
-                return 0.0;
-            }
-        }
-        return 100.0;
+        List<ComplianceZone> zones = c.getComplianceZones();
+        long satisfied = zones.stream()
+                .filter(zone -> zone.getAllowedRegions().contains(metroRegion))
+                .count();
+        return 100.0 * satisfied / zones.size();
     }
 
     // ══════════════════════════════════════════════
@@ -1706,13 +1753,20 @@ final class MetroOptimizerEngine {
      * Assigns each workload to one of the selected metros.
      *
      * <p>Per workload the candidate set is first narrowed to the metros that honour that workload's
-     * own {@code maxLatencyToleranceMs} ceiling — the documented contract of the lever — and the
-     * placement rules (DR diversity, proximity, provider dependency, highest score) then run over
-     * that narrowed set. A tolerance no metro can honour is not silently dropped: the placement says
-     * which the closest metro was and by how much it misses, and {@link #analyzeRisks} raises the
-     * matching finding. Recorded facility requirements (high power density, liquid cooling) are
+     * effective latency ceiling — its explicit {@code maxLatencyToleranceMs} when set, else the
+     * default threshold of its {@link LatencySensitivity} tier — and the placement rules
+     * (DR diversity, proximity, provider dependency, highest score) then run over that narrowed set.
+     * A ceiling no metro can honour is not silently dropped: the placement says which the closest
+     * metro was and by how much it misses, and {@link #analyzeRisks} raises the matching finding for
+     * explicit ceilings. Recorded facility requirements (high power density, liquid cooling) are
      * carried onto the rationale for the same reason: they are accepted from the caller, so they must
      * appear in the output rather than vanish.</p>
+     *
+     * <p>A workload's declared provider dependencies are a <em>hard constraint for every placement
+     * path</em>: the DR rule, the latency/proximity rule and the provider-dependent rule all choose
+     * among metros that carry them. Only when no recommended metro carries the dependencies does a
+     * rule degrade — and then the degradation is stated on the placement itself and surfaced as a
+     * {@code WORKLOAD_PROVIDER_NOT_COVERED} risk finding, never silently.</p>
      */
     private static DeploymentTopology assembleTopology(List<ScoredMetro> selected, OptimizationRequest request,
                                                        Map<MetroId, Metro> metroMap,
@@ -1735,6 +1789,14 @@ final class MetroOptimizerEngine {
             MetroId fallbackMetro = eligible.get(0).metro.metroId();
             Region primaryRegion = eligible.get(0).metro.getRegion();
 
+            // Declared provider dependencies, shared by every placement rule below: each rule
+            // chooses among the metros that carry them (a hard constraint), degrading only — and
+            // audibly — when no recommended metro does.
+            List<ProviderRequirement> deps = workload.getDependsOnProviders();
+            boolean hasDeps = deps != null && !deps.isEmpty();
+            java.util.function.Predicate<ScoredMetro> carriesDeps = sm -> !hasDeps
+                    || deps.stream().allMatch(dep -> metroHasProvider(sm.metro.metroId(), dep, providerMetroMap));
+
             // DR / cold-backup workloads: place in a different region for geographic diversity — and,
             // when the workload declares its own cloud dependencies, in a different-region metro that
             // actually carries them, so the recovery site can reach its data instead of being placed
@@ -1742,11 +1804,6 @@ final class MetroOptimizerEngine {
             // the two goals had to give when they cannot both be met.
             if (workload.getType() == WorkloadType.DISASTER_RECOVERY
                     || workload.getType() == WorkloadType.COLD_BACKUP) {
-                List<ProviderRequirement> drDeps = workload.getDependsOnProviders();
-                boolean hasDeps = drDeps != null && !drDeps.isEmpty();
-                java.util.function.Predicate<ScoredMetro> carriesDeps = sm -> !hasDeps
-                        || drDeps.stream().allMatch(dep -> metroHasProvider(sm.metro.metroId(), dep, providerMetroMap));
-
                 ScoredMetro diffRegionWithDeps = eligible.stream()
                         .filter(sm -> sm.metro.getRegion() != primaryRegion).filter(carriesDeps)
                         .findFirst().orElse(null);
@@ -1764,14 +1821,14 @@ final class MetroOptimizerEngine {
                 else if (hasDeps && anyWithDeps != null) {
                     drMetro = anyWithDeps;
                     drReason = "Placed in " + drMetro.metro.getRegion() + ", which carries this "
-                            + "workload's providers (" + depLabels(drDeps) + "); no different-region "
+                            + "workload's providers (" + depLabels(deps) + "); no different-region "
                             + "metro carries them, so cross-region diversity from the primary region "
                             + "was not achievable for it";
                 }
                 else if (diffRegion != null) {
                     drMetro = diffRegion;
                     drReason = "Placed in " + drMetro.metro.getRegion() + " for geographic diversity from "
-                            + "primary" + (hasDeps ? "; NOTE its declared providers (" + depLabels(drDeps)
+                            + "primary" + (hasDeps ? "; NOTE its declared providers (" + depLabels(deps)
                                 + ") are not available in any recommended metro, so the recovery site "
                                 + "cannot reach them here" : "");
                 }
@@ -1779,7 +1836,7 @@ final class MetroOptimizerEngine {
                     drMetro = eligible.size() > 1 ? eligible.get(eligible.size() - 1) : eligible.get(0);
                     drReason = "Placed in " + drMetro.metro.getRegion() + " (no other region is available "
                             + "for geographic diversity)" + (hasDeps && !carriesDeps.test(drMetro)
-                                ? "; NOTE its declared providers (" + depLabels(drDeps)
+                                ? "; NOTE its declared providers (" + depLabels(deps)
                                     + ") are not available there" : "");
                 }
                 placements.add(WorkloadPlacement.builder()
@@ -1790,16 +1847,38 @@ final class MetroOptimizerEngine {
                 continue;
             }
 
-            // Latency-critical or proximity-weighted: place closest to weighted site center.
+            // Latency-critical or proximity-weighted: place closest to the weighted site center,
+            // choosing among the metros that carry the workload's declared providers. This branch
+            // used to ignore the dependencies entirely, so a latency-critical workload could land in
+            // a metro missing the very cloud it declared — behind a rationale that read like an
+            // unconstrained proximity win. The dependency is a hard constraint here as in every
+            // other placement path; it even outranks the workload's latency ceiling (a reachable
+            // cloud beats a fast metro that cannot reach it), and only when NO recommended metro
+            // carries the providers does the rule degrade to pure best-latency — stated on the
+            // placement, with analyzeRisks raising WORKLOAD_PROVIDER_NOT_COVERED alongside.
             // Gated on there being a measurable proximity signal — at least one site — not on the
             // weights being non-zero: every site now carries a positive weight, so a request with
             // sites always produces a real weighted mean rather than a division that never happened.
             // A request with no sites falls through to the provider-dependent and highest-score rules.
             if ((sensitivity == LatencySensitivity.CRITICAL || profile.isProximityWeighted())
                     && siteWeighting.isMeasurable()) {
+                List<ScoredMetro> pool = eligible.stream().filter(carriesDeps)
+                        .collect(Collectors.toList());
+                boolean depsHonoured = !pool.isEmpty();
+                boolean widenedPastCeiling = false;
+                if (!depsHonoured) {
+                    // The dependency outranks the latency ceiling: look past the ceiling-narrowed
+                    // set before declaring the dependency unplaceable.
+                    pool = selected.stream().filter(carriesDeps).collect(Collectors.toList());
+                    depsHonoured = !pool.isEmpty();
+                    widenedPastCeiling = depsHonoured;
+                }
+                if (!depsHonoured) {
+                    pool = eligible;
+                }
                 ScoredMetro bestLatency = null;
                 double bestAvg = Double.NaN;
-                for (ScoredMetro sm : eligible) {
+                for (ScoredMetro sm : pool) {
                     double avg = siteWeighting.weightedMeanLatencyMs(sm.metro.metroId(), metroMap, latencyMap);
                     // NaN never wins a comparison, so an unmeasurable metro is skipped explicitly
                     // rather than being carried by a sentinel seed into the rationale text.
@@ -1810,38 +1889,61 @@ final class MetroOptimizerEngine {
                     }
                 }
                 if (bestLatency != null) {
+                    String depClause = "";
+                    if (hasDeps) {
+                        if (widenedPastCeiling) {
+                            depClause = "; its declared providers (" + depLabels(deps) + ") are only "
+                                    + "available outside its latency ceiling, and the dependency is "
+                                    + "the harder constraint, so it was placed where the providers "
+                                    + "are reachable";
+                        }
+                        else if (depsHonoured) {
+                            depClause = "; chosen among the metros carrying its declared providers ("
+                                    + depLabels(deps) + ")";
+                        }
+                        else {
+                            depClause = "; NOTE its declared providers (" + depLabels(deps)
+                                    + ") are not all available in any recommended metro, so the "
+                                    + "dependency could not be honoured and the lowest-latency metro "
+                                    + "was used";
+                        }
+                    }
                     placements.add(WorkloadPlacement.builder()
                             .workloadLabel(workload.getLabel())
                             .assignedMetro(bestLatency.metro.metroId())
                             .reasoning("Lowest weighted latency to user sites ("
                                     + String.format("%.1fms avg", bestAvg) + "; "
-                                    + siteWeighting.provenance() + ")" + suffix)
+                                    + siteWeighting.provenance() + ")" + depClause + suffix)
                             .build());
                     continue;
                 }
                 // No metro produced a measurable average: fall through rather than invent one.
             }
 
-            // Provider-dependent workloads: place where all dependencies are available
-            List<ProviderRequirement> dependencies = workload.getDependsOnProviders();
-            if (dependencies != null && !dependencies.isEmpty()) {
-                ScoredMetro bestProvider = null;
-                for (ScoredMetro sm : eligible) {
-                    boolean allAvailable = dependencies.stream().allMatch(dep -> {
-                        String key = dep.displayLabel();
-                        Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(key);
-                        return avail != null && avail.containsKey(sm.metro.metroId());
-                    });
-                    if (allAvailable) {
-                        bestProvider = sm;
-                        break;
-                    }
-                }
+            // Provider-dependent workloads: place where all dependencies are available. The
+            // dependency outranks the workload's latency ceiling here too — a metro outside the
+            // ceiling that carries the clouds beats one inside it that cannot reach them.
+            if (hasDeps) {
+                ScoredMetro bestProvider = eligible.stream().filter(carriesDeps)
+                        .findFirst().orElse(null);
                 if (bestProvider != null) {
                     placements.add(WorkloadPlacement.builder()
                             .workloadLabel(workload.getLabel())
                             .assignedMetro(bestProvider.metro.metroId())
                             .reasoning("All required providers available" + suffix)
+                            .build());
+                    continue;
+                }
+                ScoredMetro beyondCeiling = selected.stream().filter(carriesDeps)
+                        .findFirst().orElse(null);
+                if (beyondCeiling != null) {
+                    placements.add(WorkloadPlacement.builder()
+                            .workloadLabel(workload.getLabel())
+                            .assignedMetro(beyondCeiling.metro.metroId())
+                            .reasoning("All required providers available; its declared providers ("
+                                    + depLabels(deps) + ") are only available outside its latency "
+                                    + "ceiling, and the dependency is the harder constraint, so it "
+                                    + "was placed where the providers are reachable" + suffix)
                             .build());
                     continue;
                 }
@@ -1852,9 +1954,7 @@ final class MetroOptimizerEngine {
                         .workloadLabel(workload.getLabel())
                         .assignedMetro(fallbackMetro)
                         .reasoning(scope.highestScoredLead + "; its declared provider "
-                                + "dependencies (" + dependencies.stream()
-                                        .map(ProviderRequirement::displayLabel)
-                                        .collect(Collectors.joining(", "))
+                                + "dependencies (" + depLabels(deps)
                                 + ") are not all available in any recommended metro" + suffix)
                         .build());
                 continue;
@@ -1872,24 +1972,39 @@ final class MetroOptimizerEngine {
     }
 
     /**
-     * The metros one workload may be placed in once its own {@code maxLatencyToleranceMs} ceiling is
-     * applied, plus the clause that states what the ceiling did.
+     * The metros one workload may be placed in once its effective latency ceiling is applied, plus
+     * the clause that states what the ceiling did.
      *
-     * <p>{@code WorkloadProfile.maxLatencyToleranceMs} is documented — including in the
-     * {@code design_optimize_placement} tool schema, as "hard latency ceiling from user sites to the
-     * workload" — and was read by nothing. It is a per-workload ceiling, not a request-wide one, so
-     * it narrows placement rather than candidacy: the metros recommended for the deployment as a whole
+     * <p>The effective ceiling is the workload's explicit {@code maxLatencyToleranceMs} when set
+     * &mdash; documented, including in the {@code design_optimize_placement} tool schema, as the
+     * "hard latency ceiling from user sites to the workload" &mdash; and otherwise the default
+     * threshold of its {@link LatencySensitivity} tier ({@code thresholdMs}), which is that
+     * threshold's documented purpose. It is a per-workload ceiling, not a request-wide one, so it
+     * narrows placement rather than candidacy: the metros recommended for the deployment as a whole
      * are unchanged, but a workload with a 20ms ceiling is not dropped into a 60ms metro while the
      * report calls it "the highest-scored metro" and says nothing about the ceiling.</p>
+     *
+     * <p>The two ceiling kinds are reported differently, because one was stated by the caller and
+     * the other is a tier default:</p>
+     * <ul>
+     *   <li>an <em>explicit</em> ceiling behaves exactly as before &mdash; it is always accounted
+     *       for in the rationale, and an unevaluable or unhonourable one is called out here and in
+     *       {@link #analyzeRisks};</li>
+     *   <li>an <em>implied</em> ceiling narrows placement the same way, and the rationale names the
+     *       sensitivity tier it came from whenever it actually changed or failed to change anything
+     *       &mdash; but when it binds nothing (all metros within it, no sites to measure from, or
+     *       nothing measurable) it stays silent, since there is no caller statement to account
+     *       for and no behavior to explain.</li>
+     * </ul>
      */
     private static final class ToleranceScope {
 
-        /** The metros this workload may be placed in once its own ceiling is applied. */
+        /** The metros this workload may be placed in once its effective ceiling is applied. */
         final List<ScoredMetro> eligible;
         /** A clause stating what the ceiling did, appended to the placement rationale. */
         final String clause;
         /**
-         * How to describe "place it in the best metro" for this workload. Once a tolerance has
+         * How to describe "place it in the best metro" for this workload. Once a ceiling has
          * narrowed the set, "the highest-scored metro" would name a metro the workload was NOT
          * placed in, so the phrase says which set the winner was drawn from.
          */
@@ -1907,11 +2022,21 @@ final class MetroOptimizerEngine {
                                  List<ScoredMetro> selected, List<UserSite> sites,
                                  Map<MetroId, Metro> metroMap,
                                  Map<MetroId, Map<MetroId, Double>> latencyMap) {
-            Double tolerance = profile.getMaxLatencyToleranceMs();
-            if (tolerance == null) {
+            Double explicitTolerance = profile.getMaxLatencyToleranceMs();
+            LatencySensitivity sensitivity = profile.getDefaultLatencySensitivity();
+            boolean implied = explicitTolerance == null;
+            if (implied && sensitivity == null) {
+                // Defensive: resolvedProfile() guarantees a sensitivity, but a hand-built profile
+                // reaching here without one simply has no ceiling of either kind.
                 return new ToleranceScope(selected, "", SCORE_LEAD);
             }
+            double tolerance = implied ? sensitivity.getThresholdMs() : explicitTolerance;
             if (sites == null || sites.isEmpty()) {
+                if (implied) {
+                    // A tier default that cannot be measured is a non-event: the caller never
+                    // stated it, so there is nothing to account for.
+                    return new ToleranceScope(selected, "", SCORE_LEAD);
+                }
                 // Same rule as the request-level bound: a ceiling measured to user sites cannot be
                 // evaluated without any, and the run says so instead of looking constrained.
                 return new ToleranceScope(selected, "; its " + formatMs(tolerance) + " latency "
@@ -1935,10 +2060,22 @@ final class MetroOptimizerEngine {
                 }
             }
             if (within.size() == selected.size()) {
+                if (implied) {
+                    return new ToleranceScope(selected, "", SCORE_LEAD);
+                }
                 return new ToleranceScope(selected, "; within the workload's " + formatMs(tolerance)
                         + " latency tolerance to every user site", SCORE_LEAD);
             }
             if (!within.isEmpty()) {
+                if (implied) {
+                    return new ToleranceScope(within, "; the " + formatMs(tolerance)
+                            + " default latency ceiling implied by its " + sensitivity
+                            + " latency sensitivity (no explicit maxLatencyToleranceMs was set) "
+                            + "ruled out " + (selected.size() - within.size()) + " of the "
+                            + selected.size() + " recommended metros",
+                            "Placed in the highest-scored metro within the workload's implied "
+                                    + "latency ceiling");
+                }
                 return new ToleranceScope(within, "; the workload's " + formatMs(tolerance)
                         + " latency tolerance to every user site ruled out "
                         + (selected.size() - within.size()) + " of the " + selected.size()
@@ -1946,9 +2083,19 @@ final class MetroOptimizerEngine {
                         "Placed in the highest-scored metro within the workload's latency tolerance");
             }
             if (closest == null) {
+                if (implied) {
+                    return new ToleranceScope(selected, "", SCORE_LEAD);
+                }
                 return new ToleranceScope(selected, "; its " + formatMs(tolerance) + " latency "
                         + "tolerance could not be evaluated: no recommended metro has a measurable "
                         + "latency to any user site", SCORE_LEAD);
+            }
+            if (implied) {
+                return new ToleranceScope(selected, "; NOTE: no recommended metro is within the "
+                        + formatMs(tolerance) + " default latency ceiling implied by its "
+                        + sensitivity + " latency sensitivity, so the implied ceiling was NOT "
+                        + "honoured - the closest is " + closest.metro.metroId() + " at "
+                        + formatMs(closestWorst) + " to its worst-case site", SCORE_LEAD);
             }
             return new ToleranceScope(selected, "; NOTE: no recommended metro is within the workload's "
                     + formatMs(tolerance) + " latency tolerance, so the tolerance was NOT honoured - "
@@ -2130,6 +2277,10 @@ final class MetroOptimizerEngine {
         // documented as a hard ceiling from the user sites to the workload, so a ceiling no
         // recommended metro can honour — or one that cannot be evaluated at all — is stated, not
         // left to be inferred from a placement that reads exactly like an unconstrained one.
+        // Deliberately EXPLICIT ceilings only: the default ceiling a LatencySensitivity tier
+        // implies narrows placement (see ToleranceScope) and is explained on the placement
+        // rationale when it binds, but it is a tier default the caller never stated, so it does
+        // not raise findings of its own.
         for (WorkloadSpec workload : request.getWorkloads()) {
             Double tolerance = workload.resolvedProfile().getMaxLatencyToleranceMs();
             if (tolerance == null || selected.isEmpty()) continue;
@@ -2288,6 +2439,115 @@ final class MetroOptimizerEngine {
             worstSeverity = mostSevere(worstSeverity, RiskSeverity.MEDIUM);
         }
 
+        // Workload dependencies the SELECTED SET cannot satisfy. Distinct from the unresolved
+        // misses above: these dependencies DO resolve to metros in the account, but no single
+        // recommended metro carries all of a workload's clouds, so every placement rule had to
+        // degrade — the workload sits in a metro that cannot reach (all of) its declared providers.
+        // The placement rationale states the degradation; this finding makes it a first-class risk
+        // instead of a sentence buried in one placement.
+        for (WorkloadSpec workload : request.getWorkloads()) {
+            List<ProviderRequirement> deps = workload.getDependsOnProviders();
+            if (deps == null || deps.isEmpty() || selected.isEmpty()) continue;
+            // Only the dependencies that resolved somewhere: the ones that resolved nowhere are
+            // already the WORKLOAD_PROVIDER_UNAVAILABLE / PROVIDER_UNAVAILABLE findings above, and
+            // re-flagging them here would double-report one root cause as two risks.
+            List<ProviderRequirement> resolvedDeps = deps.stream()
+                    .filter(dep -> {
+                        Map<MetroId, ProviderAvailability> avail = providerMetroMap.get(dep.displayLabel());
+                        return avail != null && !avail.isEmpty();
+                    })
+                    .collect(Collectors.toList());
+            if (resolvedDeps.isEmpty()) continue;
+            boolean anyMetroCarriesAll = selected.stream().anyMatch(sm -> resolvedDeps.stream()
+                    .allMatch(dep -> metroHasProvider(sm.metro.metroId(), dep, providerMetroMap)));
+            if (anyMetroCarriesAll) continue;
+
+            List<String> nowhereInSet = resolvedDeps.stream()
+                    .filter(dep -> selected.stream()
+                            .noneMatch(sm -> metroHasProvider(sm.metro.metroId(), dep, providerMetroMap)))
+                    .map(ProviderRequirement::displayLabel)
+                    .collect(Collectors.toList());
+            String shape = nowhereInSet.isEmpty()
+                    ? "each of them is available somewhere in the set, but never all together in one metro"
+                    : "no recommended metro carries " + String.join(", ", nowhereInSet) + " at all";
+            findings.add(RiskFinding.builder()
+                    .severity(RiskSeverity.HIGH)
+                    .category("WORKLOAD_PROVIDER_NOT_COVERED")
+                    .description("Workload '" + workload.getLabel() + "' declares provider "
+                            + "dependencies (" + depLabels(resolvedDeps) + ") that no recommended "
+                            + "metro satisfies in full: " + shape + ". The workload was still placed, "
+                            + "so it cannot reach all of its declared providers from its metro")
+                    .recommendation("Add or require a metro that carries all of the workload's "
+                            + "providers (raise max_metros, or requireMetro one that has them), or "
+                            + "split the workload so each part depends only on the clouds its metro "
+                            + "carries")
+                    .affectedMetro(null)
+                    .build());
+            resiliencyScore -= 10;
+            worstSeverity = mostSevere(worstSeverity, RiskSeverity.HIGH);
+        }
+
+        // Compliance-zone coverage across the SELECTED SET, matching the semantics documented on
+        // scoreCompliance: the deployment satisfies its compliance zones when EACH requested zone is
+        // covered by at least one selected metro. The candidate filter only guarantees every
+        // non-forced metro helps at least one zone, so a zone can still end up covered by nobody —
+        // and a force-included metro can conflict with every requested zone. Both are COMPLIANCE_GAP
+        // findings; without them hasComplianceGaps() could never return true.
+        List<ComplianceZone> requestedZones = request.getConstraints().getComplianceZones();
+        if (requestedZones != null && !requestedZones.isEmpty() && !selected.isEmpty()) {
+            Set<ComplianceZone> distinctZones = new LinkedHashSet<>(requestedZones);
+            for (ComplianceZone zone : distinctZones) {
+                boolean covered = selected.stream()
+                        .anyMatch(sm -> zone.getAllowedRegions().contains(sm.metro.getRegion()));
+                if (!covered) {
+                    findings.add(RiskFinding.builder()
+                            .severity(RiskSeverity.HIGH)
+                            .category("COMPLIANCE_GAP")
+                            .description("Requested compliance zone " + zone + " (" + zone.getDescription()
+                                    + ") is not satisfied by any recommended metro: none is in its "
+                                    + "allowed region(s) " + zone.getAllowedRegions()
+                                    + ". A deployment satisfies its compliance zones only when each "
+                                    + "zone is covered by at least one selected metro")
+                            .recommendation("Add a metro in " + zone.getAllowedRegions() + " (raise "
+                                    + "max_metros or require one), or drop " + zone + " from the "
+                                    + "compliance constraints if it does not apply to this deployment")
+                            .affectedMetro(null)
+                            .build());
+                    resiliencyScore -= 15;
+                    worstSeverity = mostSevere(worstSeverity, RiskSeverity.HIGH);
+                }
+            }
+            // Force-included metros bypassed the compliance filter, so one can sit outside the
+            // allowed regions of EVERY requested zone — a metro the constraints would have rejected,
+            // present in the recommendation. Named per metro, not folded into the zone check.
+            Set<MetroId> forced = new HashSet<>(candidateSet.forceIncluded);
+            for (ScoredMetro sm : selected) {
+                if (!forced.contains(sm.metro.metroId())) continue;
+                boolean helpsAnyZone = distinctZones.stream()
+                        .anyMatch(zone -> zone.getAllowedRegions().contains(sm.metro.getRegion()));
+                if (!helpsAnyZone) {
+                    findings.add(RiskFinding.builder()
+                            .severity(RiskSeverity.HIGH)
+                            .category("COMPLIANCE_GAP")
+                            .description("Force-included metro " + sm.metro.metroId() + " (region "
+                                    + sm.metro.getRegion() + ") is outside the allowed regions of "
+                                    + "every requested compliance zone (" + distinctZones.stream()
+                                            .map(Enum::name).collect(Collectors.joining(", "))
+                                    + "); it bypassed the compliance filter via the required-metro "
+                                    + "constraint, so workloads placed there sit outside the "
+                                    + "requested zones")
+                            .recommendation("Drop the requireMetro(" + sm.metro.metroId() + ") "
+                                    + "constraint, or confirm that metro is genuinely exempt from "
+                                    + "the requested compliance zones before deploying regulated "
+                                    + "workloads there")
+                            .affectedMetro(sm.metro.metroId())
+                            .build());
+                    resiliencyScore -= 10;
+                    worstSeverity = mostSevere(worstSeverity, RiskSeverity.HIGH);
+                }
+            }
+        }
+
         // Provider concentration
         for (ProviderRequirement req : request.getProviders()) {
             if (req.isRequired()) {
@@ -2442,23 +2702,42 @@ final class MetroOptimizerEngine {
     /**
      * Produces per-metro and aggregate cost estimates. Each metro is priced via the
      * resolved {@link RateCard} (live Equinix pricing by default) for a representative
-     * Fabric connection at the metro's allocated bandwidth, falling back to a regional
-     * heuristic (tagged {@link PriceSource#ESTIMATE}) when the rate card cannot price it.
+     * Fabric connection at the bandwidth of the workloads the topology assigns to that metro,
+     * falling back to a regional heuristic (tagged {@link PriceSource#ESTIMATE}) when the rate
+     * card cannot price it.
+     *
+     * <p>Per-metro bandwidth is read from the {@link DeploymentTopology} assembled two phases
+     * earlier &mdash; the sum of {@link #effectiveBandwidthMbps} over the workloads placed in the
+     * metro &mdash; not split evenly across the set. The even split priced a fiction: the topology
+     * in the very same result could put every workload in one metro while the cost table showed
+     * each metro carrying an equal share, so the two sections of one report contradicted each
+     * other. A selected metro the topology assigns no workload to is priced at zero workload
+     * bandwidth (its line item says so), which for the heuristic is the base port cost and for a
+     * rate card whatever its smallest tier quotes.</p>
      */
     private static CostEstimate estimateCosts(List<ScoredMetro> selected, OptimizationRequest request,
-                                              RateCard rateCard) {
+                                              RateCard rateCard, DeploymentTopology topology) {
         List<MetroCostBreakdown> perMetro = new ArrayList<>();
 
-        int totalBandwidth = request.getWorkloads().stream()
-                .mapToInt(MetroOptimizerEngine::effectiveBandwidthMbps)
-                .sum();
-        // Split the total bandwidth across the selected metros. Plain integer division silently
-        // dropped up to (n-1) Mbps to truncation (e.g. 100 Mbps over 3 metros priced 33+33+33=99);
-        // the remainder is distributed across the first metros so the per-metro sizing sums to the
-        // total instead of losing bandwidth that a caller declared.
-        int metroCount = Math.max(1, selected.size());
-        int baseBandwidth = totalBandwidth / metroCount;
-        int bandwidthRemainder = totalBandwidth % metroCount;
+        // Per-metro workload bandwidth from the actual topology. Placements are emitted 1:1 with
+        // request.getWorkloads() in declaration order by assembleTopology; the index pairing keeps
+        // duplicate workload labels from double-counting, with a label lookup as the defensive
+        // fallback should the shapes ever diverge.
+        Map<MetroId, Integer> assignedBandwidth = new HashMap<>();
+        List<WorkloadPlacement> placements = topology != null
+                ? topology.getPlacements() : Collections.emptyList();
+        List<WorkloadSpec> workloads = request.getWorkloads();
+        for (int i = 0; i < placements.size(); i++) {
+            WorkloadPlacement placement = placements.get(i);
+            WorkloadSpec spec = i < workloads.size()
+                    && java.util.Objects.equals(workloads.get(i).getLabel(), placement.getWorkloadLabel())
+                    ? workloads.get(i)
+                    : workloads.stream()
+                            .filter(w -> java.util.Objects.equals(w.getLabel(), placement.getWorkloadLabel()))
+                            .findFirst().orElse(null);
+            if (spec == null || placement.getAssignedMetro() == null) continue;
+            assignedBandwidth.merge(placement.getAssignedMetro(), effectiveBandwidthMbps(spec), Integer::sum);
+        }
 
         Term term = request.getTerm() != null ? request.getTerm() : Term.MONTH_12;
         boolean anyLive = false;
@@ -2472,7 +2751,7 @@ final class MetroOptimizerEngine {
 
         for (int i = 0; i < selected.size(); i++) {
             ScoredMetro sm = selected.get(i);
-            int metroBandwidth = baseBandwidth + (i < bandwidthRemainder ? 1 : 0);
+            int metroBandwidth = assignedBandwidth.getOrDefault(sm.metro.metroId(), 0);
 
             BigDecimal monthly;
             BigDecimal setup;
@@ -2484,6 +2763,10 @@ final class MetroOptimizerEngine {
                     ? rateCard.connection(ConnectionType.EVPL_VC, metroBandwidth, sm.metro.getCode(), term)
                     : Optional.empty();
 
+            String connectionLabel = metroBandwidth > 0
+                    ? "Fabric connection (EVPL_VC, " + metroBandwidth + " Mbps assigned by the topology)"
+                    : "Fabric connection (EVPL_VC, no workload bandwidth assigned to this metro)";
+
             if (live.isPresent()) {
                 PriceQuote quote = live.get();
                 monthly = quote.getMonthlyRecurring();
@@ -2491,7 +2774,7 @@ final class MetroOptimizerEngine {
                 metroCurrency = quote.getCurrency() != null ? quote.getCurrency().getCurrencyCode() : null;
                 metroSource = quote.getSource();
                 anyLive = true;
-                lineItems.put("Fabric connection (EVPL_VC, " + metroBandwidth + " Mbps)", monthly);
+                lineItems.put(connectionLabel, monthly);
             } else {
                 // Heuristic fallback: base port + per-Mbps connection cost with a regional multiplier.
                 // These figures are USD by construction.
@@ -2521,14 +2804,17 @@ final class MetroOptimizerEngine {
             }
 
             recon.add(metroCurrency, monthly, setup);
-            perMetro.add(new MetroCostBreakdown(sm.metro.metroId(), monthly, setup, lineItems, metroSource));
+            perMetro.add(new MetroCostBreakdown(sm.metro.metroId(), monthly, setup, lineItems,
+                    metroCurrency, metroSource));
         }
 
         String baseDisclaimer = anyLive
                 ? "Per-metro costs use live Equinix Fabric pricing where available, otherwise a regional "
-                    + "estimate. Actual costs vary by connection type, bandwidth tier, and contract terms. "
-                    + "Contact your Equinix account team for precise quotes."
-                : "Estimates based on a regional pricing heuristic (live Fabric pricing was unavailable). "
+                    + "estimate, each metro sized at the workload bandwidth the deployment topology "
+                    + "assigns to it. Actual costs vary by connection type, bandwidth tier, and contract "
+                    + "terms. Contact your Equinix account team for precise quotes."
+                : "Estimates based on a regional pricing heuristic (live Fabric pricing was unavailable), "
+                    + "each metro sized at the workload bandwidth the deployment topology assigns to it. "
                     + "Actual costs vary by connection type, bandwidth tier, and contract terms. "
                     + "Contact your Equinix account team for precise quotes.";
 
@@ -2649,8 +2935,10 @@ final class MetroOptimizerEngine {
                 + describeWeightSource(request.getScoringWeights())
                 + ". " + selectionClause
                 + " Workloads are placed using a greedy algorithm: latency-critical workloads go to the "
-                + "lowest-latency metro, DR workloads to a different region, and provider-dependent workloads "
-                + "to metros where all dependencies are available.";
+                + "lowest-latency metro among those carrying their declared providers, DR workloads to a "
+                + "different region that carries theirs, and provider-dependent workloads to metros where "
+                + "all dependencies are available — a workload's declared providers are a hard constraint "
+                + "on every placement rule, and any degradation is stated on the placement itself.";
 
         List<String> assumptions = new ArrayList<>(Arrays.asList(
                 "Latency between metros uses Equinix Fabric avgLatency data where available; "
@@ -2850,8 +3138,6 @@ final class MetroOptimizerEngine {
                 weights.getLatencyPoorMs(), defaults.getLatencyPoorMs());
         addOverride(overrides, "required-provider weight",
                 weights.getRequiredProviderWeight(), defaults.getRequiredProviderWeight());
-        addOverride(overrides, "cost tolerance",
-                weights.getCostTolerancePercent(), defaults.getCostTolerancePercent());
         return overrides.isEmpty()
                 ? " with user-customized overrides"
                 : " with user-customized overrides (" + String.join(", ", overrides) + ")";

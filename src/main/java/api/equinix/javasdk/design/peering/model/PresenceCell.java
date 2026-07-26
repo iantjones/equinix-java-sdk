@@ -51,6 +51,13 @@ public class PresenceCell {
 
     boolean fabricAvailable;
 
+    /**
+     * The UUID of the Fabric service profile that evidences Fabric availability at this metro,
+     * or {@code null} when {@code isFabricAvailable()} is {@code false}. When several matching
+     * profiles publish this metro, the first in catalog order is carried.
+     */
+    String fabricServiceProfileUuid;
+
     int ixSessionCount;
 
     long totalIxCapacityMbps;
@@ -62,9 +69,12 @@ public class PresenceCell {
     List<IxPresenceDetail> ixSessions;
 
     /**
-     * Returns a compact symbol for matrix display.
+     * Returns a compact, fixed-width (4-character) symbol for matrix display. The values are
+     * space-padded for column alignment — compare with {@code trim()} or use
+     * {@code getConnectivityType()} for logic; do not {@code equals()} against unpadded literals.
      *
-     * @return "IX+F" for both, "IX" for IX only, "FAB" for Fabric only, "FAC" for facility only, "---" for none
+     * @return {@code "IX+F"} for both, {@code " IX "} for IX only, {@code "FAB "} for Fabric only,
+     *         {@code "FAC "} for facility only, {@code " -- "} for none
      */
     public String symbol() {
         switch (connectivityType) {
@@ -77,9 +87,11 @@ public class PresenceCell {
     }
 
     /**
-     * Returns a detailed symbol including capacity.
+     * Returns a detailed, variable-width symbol including capacity (unpadded, unlike
+     * {@link #symbol()}). A {@code *} after the capacity marks route-server participation.
      *
-     * @return e.g., "IX:100G+F" or "IX:10G" or "FAB" or "---"
+     * @return e.g. {@code "IX:100G*+FAB"}, {@code "IX:10G"}, {@code "FAB"}, {@code "FAC"},
+     *         or {@code "---"} for none
      */
     public String detailedSymbol() {
         StringBuilder sb = new StringBuilder();

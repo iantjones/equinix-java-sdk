@@ -460,8 +460,8 @@ final class DesignToolFactory {
                                 + "Cloud Router — a plan whose routers have none fails structural validation "
                                 + "with a clear 'requires a notification email' error (the live API rejects a "
                                 + "notification-less router with HTTP 400 EQ-3040013), so supply at least one. "
-                                + "Only the FIRST address is used — a planned Fabric resource carries a single "
-                                + "notification address — so put the address you want on the plan first.",
+                                + "EVERY address is applied to every planned Cloud Router and connection — all "
+                                + "of them are sent on the wire bodies and rendered into exported HCL.",
                         string("Email address."))));
         return ToolRegistration.builder()
                 .name("design_plan_deployment")
@@ -1426,11 +1426,13 @@ final class DesignToolFactory {
             builder.customerMetros(metros.toArray(new String[0]));
         }
         optLong(args, "customer_asn").ifPresent(builder::customerAsn);
-        // No 'include_fabric_connections' knob. PeeringIntelligence.Builder accepts the flag and
-        // PeeringRequest stores it, but PeeringIntelligenceEngine reads it nowhere: no Fabric
-        // connection lookup exists behind it, so the tool advertised "extra Equinix API calls" that
-        // were never made and a section that could never appear. includeResiliency IS read (it gates
-        // the resiliency assessment, which also needs customerMetros).
+        // No 'include_fabric_connections' knob. The peering engine now ALWAYS cross-references the
+        // Fabric service-profile catalog (its best-effort Phase 3.5, analyzeFabricAvailability:
+        // per-target/per-metro fabricAvailable, degrading to "not analyzed" with a warning when the
+        // catalog cannot be read), so there is nothing left for the flag to gate —
+        // PeeringIntelligence.Builder still accepts it and PeeringRequest stores it, but the engine
+        // reads it nowhere. includeResiliency IS read (it gates the resiliency assessment, which
+        // also needs customerMetros).
         builder.includeCapacity(true)
                 .includePolicies(true)
                 .includeResiliency(true);

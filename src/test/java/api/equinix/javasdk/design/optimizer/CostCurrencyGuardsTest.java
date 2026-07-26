@@ -172,14 +172,19 @@ class CostCurrencyGuardsTest {
         assertTrue(cost.isWithinBudget(), "no budget set => within budget");
     }
 
-    // ── integer division of bandwidth across metros ──
+    // ── per-metro cost bandwidth follows the topology ──
 
     @Test
-    @DisplayName("bandwidth split across metros loses no Mbps to integer truncation")
+    @DisplayName("per-metro pricing bandwidth follows the topology and loses no Mbps")
     void bandwidthSplitPreservesTotal() {
         List<Integer> sized = new ArrayList<>();
-        // 101 Mbps over 2 metros: naive integer division gives 50+50=100 (1 Mbps dropped); the
-        // remainder must be distributed so the per-metro sizes sum back to 101.
+        // Updated for the topology-driven cost fix: the estimate no longer splits the total
+        // EVENLY across metros (the even split priced a fiction that contradicted the topology in
+        // the same result — this run's single workload sits in ONE metro, yet each metro was
+        // costed at half of it). Each metro is now priced at the bandwidth the topology assigns
+        // it, so the single 101 Mbps workload prices as 101 at its assigned metro and 0 at the
+        // other — and the per-metro sizes still sum to the declared total, preserving the original
+        // no-truncation guarantee (the old integer division dropped 1 Mbps of a 101 split).
         MetroOptimizer.builder(fabric)
                 .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
                 .addWorkload("Web Tier").bandwidthMbps(101).done()
@@ -190,6 +195,10 @@ class CostCurrencyGuardsTest {
         assertEquals(2, sized.size(), "one pricing lookup per selected metro: " + sized);
         assertEquals(101, sized.stream().mapToInt(Integer::intValue).sum(),
                 "the per-metro bandwidths must sum to the total, not 100: " + sized);
+        assertTrue(sized.contains(101),
+                "the workload's whole bandwidth is priced at its assigned metro, not split evenly: " + sized);
+        assertTrue(sized.contains(0),
+                "a metro the topology assigns nothing to is priced at zero workload bandwidth: " + sized);
     }
 
     // ── NaN guard in provider-coverage scoring ──

@@ -31,8 +31,15 @@ import java.util.stream.Collectors;
  *
  * <p>This is the "one view to rule them all" — for a given ASN, it shows every
  * way the customer can reach that network through Equinix, at every metro,
- * through both public peering and private connectivity. No other SDK provides
- * this unified perspective.</p>
+ * through both public peering and private connectivity.</p>
+ *
+ * <p>Fabric availability here is <em>service-profile evidence</em>: a metro is marked
+ * Fabric-reachable when a Fabric service profile whose name identifies this network publishes
+ * that metro (see the matching contract on
+ * {@link api.equinix.javasdk.design.peering.PeeringIntelligence}). It indicates an available
+ * private on-ramp that could be ordered — not an existing connection — and when the Fabric
+ * catalog could not be read at all, a result warning marks Fabric availability as not analyzed
+ * rather than genuinely absent.</p>
  *
  * @author ianjones
  * @see PresenceMatrix

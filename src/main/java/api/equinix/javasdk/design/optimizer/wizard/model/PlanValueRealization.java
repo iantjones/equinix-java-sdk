@@ -22,32 +22,69 @@ import java.util.List;
 @Builder
 public class PlanValueRealization {
 
+    /** The plan's monthly interconnect cost, from {@link PlanPricing} (ZERO when unpriced). */
     BigDecimal planMonthlyCost;
 
+    /** The plan's one-time setup cost, from {@link PlanPricing} (ZERO when unpriced). */
     BigDecimal planSetupCost;
 
+    /**
+     * The summed monthly egress saving across providers — {@code null} when the per-provider
+     * figures span currencies (or mismatch the plan's currency), so a cross-currency total is
+     * never fabricated; the per-provider rows remain valid each in its own currency.
+     */
     BigDecimal totalMonthlyEgressSavings;
 
+    /** Egress saving net of the plan's monthly cost — {@code null} whenever the total is. */
     BigDecimal netMonthlySavings;
 
+    /** Twelve times the net monthly saving — {@code null} whenever the total is. */
     BigDecimal annualNetSavings;
 
+    /** The annual net saving minus the plan's setup cost — {@code null} whenever the total is. */
     BigDecimal firstYearNetSavings;
 
+    /** One row per declared provider, in declaration order — priced or not. */
     List<ProviderEgressSaving> perProvider;
 
+    /** The currency the aggregates are quoted in (the plan's currency when they are omitted). */
     String currency;
 
+    /** Provenance and honesty notes — including why any aggregate figures were omitted. */
     String disclaimer;
 
+    /**
+     * The egress-saving row for one declared cloud provider: the internet-egress cost the
+     * declared volume would incur, the private-interconnect cost the plan enables instead, and
+     * the difference. {@code priced} is {@code false} — with the money fields left at ZERO —
+     * when the internet or private rate could not be resolved, or the two rates disagreed on
+     * currency (a subtraction across currencies is never fabricated). Rows are per-provider
+     * currency-labelled precisely because different clouds/regions can quote different
+     * currencies.
+     */
     @Value
     @Builder
     public static class ProviderEgressSaving {
+
+        /** The cloud provider this row describes. */
         CloudProviderType provider;
+
+        /** The declared monthly egress volume in decimal gigabytes. */
         BigDecimal monthlyEgressGb;
+
+        /** What the declared volume costs over public-internet egress. ZERO when not priced. */
         BigDecimal internetMonthlyCost;
+
+        /** What the declared volume costs over the plan's private interconnect. ZERO when not priced. */
         BigDecimal privateMonthlyCost;
+
+        /** {@code internetMonthlyCost - privateMonthlyCost}. ZERO when not priced. */
         BigDecimal monthlySavings;
+
+        /**
+         * Whether both egress rates resolved in a single currency; {@code false} means the money
+         * fields on this row are placeholders (ZERO), not real figures.
+         */
         boolean priced;
 
         /**

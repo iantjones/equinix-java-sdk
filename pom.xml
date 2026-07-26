@@ -245,6 +245,20 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+              Javadoc reference-integrity gate. The previous <doclint>none</doclint> passed
+              -Xdoclint:none, which disabled EVERY doclint group including 'reference' — so a broken
+              {@link} (e.g. to a Lombok-generated getter, which does not exist in the raw source
+              javadoc sees) produced ZERO warnings, and the plugin's failOnWarnings default (false)
+              meant even emitted warnings never failed `mvn javadoc:javadoc`. Now:
+                - <doclint>reference</doclint> turns reference checking back on (broken {@link}/@see
+                  are reported; other doclint groups stay off so the gate is precisely scoped), and
+                - <failOnWarnings>true</failOnWarnings> fails the build on any remaining
+                  warning-level output.
+              House rule (see MEMORY / CONTRIBUTING): never {@link} a Lombok-generated getter —
+              use {@code getX()} instead. This configuration is plugin-level, so it applies both to
+              the `javadoc:javadoc` gate goal and the attach-javadocs jar execution.
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -252,7 +266,8 @@
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                     <source>21</source>
-                    <doclint>none</doclint>
+                    <doclint>reference</doclint>
+                    <failOnWarnings>true</failOnWarnings>
                 </configuration>
                 <executions>
                     <execution>
@@ -552,11 +567,21 @@
         </profile>
 
         <!--
-            Opt-in mutation testing over the core module (the shared transport/serialization
-            engine every domain rides on):
+            Opt-in mutation testing (PIT re-runs the unit suite per mutant, far too slow for every
+            build — but -Ppit IS part of the release checklist, see CONTRIBUTING.md).
+
+            1) Core report (ungated, informational — the shared transport/serialization engine):
                 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage
-            Scoped to core because PIT re-runs the unit suite per mutant; report lands in
-            target/pit-reports. Not part of CI - run before releases or after core changes.
+               Uses the plugin-level configuration below; report lands in target/pit-reports.
+
+            2) design.value mutation GATE (fails the build under threshold):
+                mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage@design-value-gate
+               Scoped to api.equinix.javasdk.design.value.* (the rate-card / TCO / savings money
+               math, where a surviving mutant means a silently wrong dollar figure) and killed by
+               the design.* unit tests. mutationThreshold starts at 50 — a floor today's suite
+               passes — and RATCHETS: whenever a measured run reports a comfortably higher kill
+               rate, raise the threshold to just below it (never lower it). WireMock/integration
+               tagged tests are excluded so the gate stays fast and offline-deterministic.
         -->
         <profile>
             <id>pit</id>
@@ -584,6 +609,36 @@
                             <timestampedReports>false</timestampedReports>
                             <failWhenNoMutations>false</failWhenNoMutations>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>design-value-gate</id>
+                                <configuration>
+                                    <targetClasses combine.self="override">
+                                        <param>api.equinix.javasdk.design.value.*</param>
+                                    </targetClasses>
+                                    <targetTests combine.self="override">
+                                        <param>api.equinix.javasdk.design.*</param>
+                                    </targetTests>
+                                    <!-- Same tags the default surefire run excludes: the gate must
+                                         be runnable offline and not spin up WireMock per mutant. -->
+                                    <excludedTestClasses combine.self="override">
+                                        <param>*WireMockTest</param>
+                                    </excludedTestClasses>
+                                    <excludedGroups combine.self="override">
+                                        <param>wiremock</param>
+                                        <param>integration-readonly</param>
+                                        <param>integration-dryrun</param>
+                                        <param>integration-full</param>
+                                        <param>integration-scenario</param>
+                                    </excludedGroups>
+                                    <!-- Ratchet: raise (never lower) as measured kill rate grows. -->
+                                    <mutationThreshold>50</mutationThreshold>
+                                    <failWhenNoMutations>true</failWhenNoMutations>
+                                    <threads>4</threads>
+                                    <timestampedReports>false</timestampedReports>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

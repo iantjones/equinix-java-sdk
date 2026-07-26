@@ -228,7 +228,7 @@ class DeploymentWizardNameGenerationTest {
         return DeploymentWizard.builder(fabric, result)
                 .routerPackage("STANDARD")
                 .routerNamePrefix(prefix)
-                .providerConnectionType(ConnectionType.EVPL_VC)
+                .providerConnectionType(ConnectionType.IP_VC)
                 .backboneTopology(BackboneTopology.FULL_MESH)
                 .backboneBandwidthMbps(10_000)
                 .rateCard(emptyRateCard())

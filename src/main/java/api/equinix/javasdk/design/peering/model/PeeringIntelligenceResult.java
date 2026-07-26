@@ -38,13 +38,15 @@ import java.util.Map;
  *     .addAsn(16509, "AWS")
  *     .addAsn(8075, "Microsoft")
  *     .customerMetros(MetroCode.DC, MetroCode.DA)
+ *     .includeResiliency(true)   // default off; requires at least one customer metro
  *     .analyze();
  *
  * // Matrix view
- * System.out.println(result.presenceMatrix().toTableString());
+ * System.out.println(result.getPresenceMatrix().toTableString());
  *
- * // Resiliency for a specific ASN
- * result.resiliency().failoverPathsForAsn(16509);
+ * // Resiliency for a specific ASN (getResiliency() is null unless
+ * // includeResiliency(true) was set with at least one customer metro)
+ * result.getResiliency().failoverPathsForAsn(16509);
  *
  * // Unified connectivity view
  * result.unifiedView(16509).toMarkdown();

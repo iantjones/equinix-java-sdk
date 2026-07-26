@@ -25,17 +25,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Quantifies the impact of hypothetical failure scenarios on a customer's connectivity.
+ * Quantifies the impact of a hypothetical failure of one customer metro on the customer's
+ * IX peering connectivity.
  *
- * <p>For each customer metro, evaluates what percentage of target ASN connectivity
- * would be lost under various failure scenarios (metro outage, IX failure, facility
- * loss, provider outage, regional event). The report identifies the most impactful
- * failure domains and recommends diversification strategies.</p>
+ * <p>For each customer metro, the engine evaluates which analyzed ASNs would lose their IX
+ * peering there and how much aggregate IX port capacity that removes, expressed as
+ * {@code impactRatio} — the fraction of analyzed ASNs affected. Metros with no analyzed-ASN
+ * presence are excluded from the overall resiliency score (an empty metro is not resilience)
+ * and are called out in the assessment findings instead.</p>
  *
  * <h3>Example</h3>
- * <p>"Losing DC metro takes out IX peering with 3 ASNs (AWS, Azure, Google) and
- * 2 Fabric connections (AWS Direct Connect, Azure ExpressRoute), affecting 65%
- * of your total analyzed connectivity."</p>
+ * <p>"Losing DC metro takes out IX peering with 3 of your 5 analyzed ASNs (AWS, Azure, Google),
+ * an impact ratio of 60% — HIGH."</p>
  *
  * @author ianjones
  * @see FailureScope
@@ -45,30 +46,49 @@ import java.util.Map;
 @Builder
 public class BlastRadiusReport {
 
+    /** The customer metro whose hypothetical failure this report quantifies. */
     MetroId metro;
 
+    /** The failure domain evaluated — currently always {@link FailureScope#METRO}. */
     FailureScope scope;
 
+    /** The analyzed ASNs whose IX peering at this metro would be lost. */
     List<Long> lostIxPeeringAsns;
 
+    /**
+     * Reserved for Fabric-connection losses; the current analysis evaluates IX peering only,
+     * so this list is always empty.
+     */
     List<Long> lostFabricAsns;
 
+    /** Display labels parallel to {@code lostIxPeeringAsns}. */
     List<String> lostIxPeeringLabels;
 
+    /** Reserved, parallel to {@code lostFabricAsns}; currently always empty. */
     List<String> lostFabricLabels;
 
+    /** Aggregate IX port capacity lost at this metro, in Mbps. */
     long lostIxCapacityMbps;
 
+    /** The fraction (0.0&ndash;1.0) of analyzed ASNs affected by this metro's failure. */
     double impactRatio;
 
+    /**
+     * The engine-stored severity, derived from {@code impactRatio} at analysis time with the same
+     * thresholds {@link #computeSeverity()} uses. Closed value set: {@code "CRITICAL"},
+     * {@code "HIGH"}, {@code "MEDIUM"}, {@code "LOW"}.
+     */
     String severity;
 
+    /** Suggested diversification steps, populated for impact ratios above 50%. */
     List<String> mitigations;
 
     /**
-     * Returns a severity classification based on the impact ratio.
+     * Re-derives the severity classification from {@link #impactRatio} — by construction this
+     * matches the stored {@code severity} on engine-built reports.
      *
-     * @return "CRITICAL" ({@code >80%}), "HIGH" ({@code >50%}), "MEDIUM" ({@code >25%}), "LOW" ({@code <=25%})
+     * @return {@code "CRITICAL"} ({@code >80%}), {@code "HIGH"} ({@code >50%}),
+     *         {@code "MEDIUM"} ({@code >25%}), {@code "LOW"} ({@code <=25%})
      */
     public String computeSeverity() {
         if (impactRatio > 0.8) return "CRITICAL";
@@ -78,9 +98,12 @@ public class BlastRadiusReport {
     }
 
     /**
-     * Returns the total number of ASNs affected (IX + Fabric combined, deduplicated concept).
+     * Returns the total number of affected ASN entries: the size of {@code lostIxPeeringAsns} plus
+     * the size of {@code lostFabricAsns} — a plain sum, not a set union. It cannot double-count
+     * today because the Fabric list is always empty (the analysis evaluates IX peering only), but
+     * if Fabric losses are ever populated an ASN lost on both paths would count twice.
      *
-     * @return count of unique affected ASNs
+     * @return the summed count of affected ASN entries
      */
     public int totalAffectedAsns() {
         return lostIxPeeringAsns.size() + lostFabricAsns.size();

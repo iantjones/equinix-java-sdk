@@ -56,7 +56,7 @@ class DeploymentWizardModelTest {
                     .packageCode(GatewayPackageCode.STANDARD)
                     .accountNumber(272010L)
                     .projectId("proj-uuid-123")
-                    .notificationEmail("noc@example.com")
+                    .notificationEmails(java.util.List.of("noc@example.com"))
                     .build();
 
             assertEquals(MetroId.of(MetroCode.DC), cr.getMetroId());
@@ -77,7 +77,7 @@ class DeploymentWizardModelTest {
 
             assertNull(cr.getAccountNumber());
             assertNull(cr.getProjectId());
-            assertNull(cr.getNotificationEmail());
+            assertNull(cr.getNotificationEmails());
         }
     }
 
@@ -90,7 +90,7 @@ class DeploymentWizardModelTest {
         void providerConnection() {
             PlannedConnection conn = PlannedConnection.builder()
                     .name("FCR-DC-to-AWS")
-                    .connectionType(ConnectionType.EVPL_VC)
+                    .connectionType(ConnectionType.IP_VC)
                     .purpose(ConnectionPurpose.PROVIDER)
                     .bandwidthMbps(1000)
                     .aSideMetro(MetroId.of(MetroCode.DC))
@@ -111,7 +111,7 @@ class DeploymentWizardModelTest {
         void backboneConnection() {
             PlannedConnection conn = PlannedConnection.builder()
                     .name("Backbone-DC-DA")
-                    .connectionType(ConnectionType.EVPL_VC)
+                    .connectionType(ConnectionType.IP_VC)
                     .purpose(ConnectionPurpose.BACKBONE)
                     .bandwidthMbps(10000)
                     .aSideMetro(MetroId.of(MetroCode.DC))
@@ -139,7 +139,7 @@ class DeploymentWizardModelTest {
 
             PlannedConnection conn = PlannedConnection.builder()
                     .name("FCR-DC-to-AWS")
-                    .connectionType(ConnectionType.EVPL_VC)
+                    .connectionType(ConnectionType.IP_VC)
                     .purpose(ConnectionPurpose.PROVIDER)
                     .bandwidthMbps(10000)
                     .bandwidthAllocation(allocation)
@@ -163,7 +163,7 @@ class DeploymentWizardModelTest {
         void fullMeshLink() {
             PlannedConnection conn = PlannedConnection.builder()
                     .name("Backbone-DC-DA")
-                    .connectionType(ConnectionType.EVPL_VC)
+                    .connectionType(ConnectionType.IP_VC)
                     .purpose(ConnectionPurpose.BACKBONE)
                     .bandwidthMbps(10000)
                     .aSideMetro(MetroId.of(MetroCode.DC))
@@ -238,14 +238,14 @@ class DeploymentWizardModelTest {
 
             List<PlannedConnection> connections = Arrays.asList(
                     PlannedConnection.builder()
-                            .name("FCR-DC-to-AWS").connectionType(ConnectionType.EVPL_VC)
+                            .name("FCR-DC-to-AWS").connectionType(ConnectionType.IP_VC)
                             .purpose(ConnectionPurpose.PROVIDER).bandwidthMbps(1000)
                             .aSideMetro(MetroId.of(MetroCode.DC)).aSideRouterName("FCR-DC")
                             .zSideProviderLabel("AWS").build()
             );
 
             PlannedConnection bbConn = PlannedConnection.builder()
-                    .name("Backbone-DC-DA").connectionType(ConnectionType.EVPL_VC)
+                    .name("Backbone-DC-DA").connectionType(ConnectionType.IP_VC)
                     .purpose(ConnectionPurpose.BACKBONE).bandwidthMbps(10000)
                     .aSideMetro(MetroId.of(MetroCode.DC)).aSideRouterName("FCR-DC")
                     .zSideMetro(MetroId.of(MetroCode.DA)).zSideRouterName("FCR-DA")

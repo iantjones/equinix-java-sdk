@@ -21,7 +21,7 @@
  * and Metros. Each interface defines CRUD operations appropriate for the resource,
  * enabling provisioning and lifecycle management of Network Edge appliances.
  *
- * @see api.equinix.javasdk.networkedge.client.NetworkEdgeConfigImpl
+ * @see api.equinix.javasdk.networkedge.client.implementation.NetworkEdgeConfigImpl
  * @see api.equinix.javasdk.NetworkEdge
  */
 package api.equinix.javasdk.networkedge.client;

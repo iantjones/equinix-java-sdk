@@ -33,7 +33,8 @@ import java.util.Optional;
  * }</pre>
  *
  * <h3>Granularity &amp; resolution order</h3>
- * <p>Rates may be declared at four levels of specificity. A lookup for a given
+ * <p>Rates may be declared at several levels of specificity — with or without a metro,
+ * a term, and (for connections) a concrete type. A lookup for a given
  * {@code (type, bandwidth, metro, term)} resolves to the <em>most specific</em>
  * declared entry, trying in order:</p>
  * <ol>
@@ -41,9 +42,15 @@ import java.util.Optional;
  *   <li>exact metro, any term;</li>
  *   <li>any metro, exact term;</li>
  *   <li>any metro, any term (the metro/term-agnostic {@code connectionRate(type, bandwidth, …)} entry);</li>
+ *   <li>a type-agnostic entry (declared with a {@code null} type, meaning "any connection type"),
+ *       probed at the same four levels of metro/term specificity;</li>
  *   <li>the declared default, otherwise {@link Optional#empty()} so a layered card can defer.</li>
  * </ol>
- * <p>Cloud-router rates resolve the same way over {@code (packageCode, metro, term)}.
+ * <p>Cloud-router rates resolve the same way over {@code (packageCode, metro, term)},
+ * and colocation rates over {@code (item, metro, term)}. Egress rates are keyed by
+ * provider + path only — the {@code region} and {@code term} lookup parameters are
+ * ignored on this card. Declaring the same key twice is
+ * <em>last-declaration-wins</em>: the later call silently replaces the earlier rate.
  * Every quote this card returns is tagged {@link PriceSource#CUSTOM}.</p>
  */
 public final class CustomRateCard implements RateCard {
@@ -87,6 +94,11 @@ public final class CustomRateCard implements RateCard {
                 : PriceQuote.of(b.defaultRouterMonthly, b.defaultRouterSetup, currency, PriceSource.CUSTOM);
     }
 
+    /**
+     * Starts a new custom rate card.
+     *
+     * @return a fresh {@link Builder} (currency defaults to USD)
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -149,11 +161,21 @@ public final class CustomRateCard implements RateCard {
     }
 
     private static List<String> connKeyCandidates(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
-        List<String> keys = new ArrayList<>(4);
+        List<String> keys = new ArrayList<>(8);
         keys.add(connKey(type, bandwidthMbps, metro, term));
         keys.add(connKey(type, bandwidthMbps, metro, null));
         keys.add(connKey(type, bandwidthMbps, null, term));
         keys.add(connKey(type, bandwidthMbps, null, null));
+        if (type != null) {
+            // A rate declared with a null ConnectionType is stored under the ANY type key; probe
+            // those variants too so the type-agnostic entry is reachable from a concrete-type
+            // lookup — after the concrete-type candidates (a typed entry is more specific and
+            // wins) but before the declared default.
+            keys.add(connKey(null, bandwidthMbps, metro, term));
+            keys.add(connKey(null, bandwidthMbps, metro, null));
+            keys.add(connKey(null, bandwidthMbps, null, term));
+            keys.add(connKey(null, bandwidthMbps, null, null));
+        }
         return keys;
     }
 
@@ -193,6 +215,15 @@ public final class CustomRateCard implements RateCard {
 
     // ── Builder ──
 
+    /**
+     * Fluent builder for a {@link CustomRateCard}. All declared amounts share one
+     * currency — default USD; whatever {@link #currency(String)} value is in force at
+     * {@link #build()} time stamps <em>every</em> entry, regardless of declaration
+     * order. Shorthand overloads without a metro/term declare "any metro, any term"
+     * entries and overloads without a setup amount declare a zero NRC; at lookup time
+     * the most specific declared entry wins (see the class javadoc), and re-declaring
+     * an identical key replaces the earlier rate (last declaration wins).
+     */
     public static final class Builder {
 
         private Currency currency = Currency.getInstance("USD");
@@ -205,20 +236,42 @@ public final class CustomRateCard implements RateCard {
         private BigDecimal defaultRouterMonthly;
         private BigDecimal defaultRouterSetup = BigDecimal.ZERO;
 
+        /**
+         * Sets the currency every declared amount is expressed in (default USD). The value in
+         * force at {@link #build()} time applies to all entries.
+         *
+         * @param currency the currency of all declared amounts
+         * @return this builder for method chaining
+         */
         public Builder currency(Currency currency) {
             this.currency = currency;
             return this;
         }
 
+        /**
+         * Sets the currency by ISO&nbsp;4217 code, e.g. {@code "USD"} or {@code "EUR"}.
+         *
+         * @param currencyCode the ISO 4217 currency code
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if the code is not a supported ISO 4217 code
+         */
         public Builder currency(String currencyCode) {
             this.currency = Currency.getInstance(currencyCode);
             return this;
         }
 
+        /**
+         * Declares a metro/term-agnostic monthly-only connection rate ({@code null} type
+         * means "any connection type"; setup is zero).
+         */
         public Builder connectionRate(ConnectionType type, int bandwidthMbps, BigDecimal monthly) {
             return connectionRate(type, bandwidthMbps, null, null, monthly, BigDecimal.ZERO);
         }
 
+        /**
+         * Declares a metro/term-agnostic monthly + one-time setup connection rate
+         * ({@code null} type means "any connection type").
+         */
         public Builder connectionRate(ConnectionType type, int bandwidthMbps, BigDecimal monthly, BigDecimal setup) {
             return connectionRate(type, bandwidthMbps, null, null, monthly, setup);
         }
@@ -244,20 +297,34 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
+        /**
+         * Declares the fallback monthly connection rate (zero setup) returned when no declared
+         * connection entry matches a lookup. Without a default, unmatched lookups return empty
+         * so a layered card can defer.
+         */
         public Builder defaultConnectionRate(BigDecimal monthly) {
             return defaultConnectionRate(monthly, BigDecimal.ZERO);
         }
 
+        /**
+         * Declares the fallback monthly + one-time setup connection rate returned when no
+         * declared connection entry matches a lookup.
+         */
         public Builder defaultConnectionRate(BigDecimal monthly, BigDecimal setup) {
             this.defaultConnectionMonthly = monthly;
             this.defaultConnectionSetup = setup;
             return this;
         }
 
+        /**
+         * Declares a metro/term-agnostic monthly-only rate for a Cloud Router package
+         * (setup is zero).
+         */
         public Builder cloudRouterRate(String packageCode, BigDecimal monthly) {
             return cloudRouterRate(packageCode, null, null, monthly, BigDecimal.ZERO);
         }
 
+        /** Declares a metro/term-agnostic monthly + one-time setup rate for a Cloud Router package. */
         public Builder cloudRouterRate(String packageCode, BigDecimal monthly, BigDecimal setup) {
             return cloudRouterRate(packageCode, null, null, monthly, setup);
         }
@@ -281,10 +348,18 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
+        /**
+         * Declares the fallback monthly Cloud Router rate (zero setup) returned when no
+         * declared router entry matches a lookup.
+         */
         public Builder defaultCloudRouterRate(BigDecimal monthly) {
             return defaultCloudRouterRate(monthly, BigDecimal.ZERO);
         }
 
+        /**
+         * Declares the fallback monthly + one-time setup Cloud Router rate returned when no
+         * declared router entry matches a lookup.
+         */
         public Builder defaultCloudRouterRate(BigDecimal monthly, BigDecimal setup) {
             this.defaultRouterMonthly = monthly;
             this.defaultRouterSetup = setup;
@@ -294,11 +369,14 @@ public final class CustomRateCard implements RateCard {
         /**
          * Declares a per-GB data-egress rate for a cloud provider over a given path.
          * Provide both {@link EgressPath#INTERNET} and {@link EgressPath#PRIVATE} rates
-         * for a provider to drive the egress savings calculation.
+         * for a provider to drive the egress savings calculation. Egress entries have no
+         * region or term axis on this card — a declared rate answers every
+         * {@code egress(provider, region, path, term)} lookup for its provider + path,
+         * whatever region and term are requested.
          *
          * @param provider the cloud provider the data leaves
          * @param path     internet vs. private interconnect
-         * @param perGb    the price per GB of egress
+         * @param perGb    the price per decimal (SI) GB of egress
          * @return this builder for method chaining
          */
         public Builder egressRate(CloudProviderType provider, EgressPath path, BigDecimal perGb) {
@@ -314,6 +392,10 @@ public final class CustomRateCard implements RateCard {
             return colocationRate(item, null, null, monthly, BigDecimal.ZERO);
         }
 
+        /**
+         * Declares a metro/term-agnostic monthly + one-time setup rate for an Equinix
+         * colocation primitive (per the unit named on {@link ColocationItem}).
+         */
         public Builder colocationRate(ColocationItem item, BigDecimal monthly, BigDecimal setup) {
             return colocationRate(item, null, null, monthly, setup);
         }
@@ -336,6 +418,12 @@ public final class CustomRateCard implements RateCard {
             return this;
         }
 
+        /**
+         * Builds the immutable rate card. Every declared entry is stamped with the builder's
+         * final currency and tagged {@link PriceSource#CUSTOM}.
+         *
+         * @return the built rate card
+         */
         public CustomRateCard build() {
             return new CustomRateCard(this);
         }

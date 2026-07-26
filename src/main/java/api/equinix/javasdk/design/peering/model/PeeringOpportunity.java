@@ -22,13 +22,21 @@ import lombok.Builder;
 import lombok.Value;
 
 /**
- * Represents a mutual peering opportunity — a metro where both the customer's ASN
- * and a target ASN are present at an Equinix IX but not currently peering.
+ * Represents a mutual IX presence — an Equinix IX where both the customer's ASN and a target
+ * ASN are connected, and peering could therefore be established (or may already exist).
  *
- * <p>This is an immediately actionable finding: both networks are in the same building,
- * on the same IX LAN. Establishing peering requires only a BGP session configuration
- * (or, if the target uses route servers, may be automatic). The opportunity includes
- * a feasibility assessment based on the target's peering policy.</p>
+ * <p>PeeringDB records IX <em>membership</em>, not BGP sessions, so whether the two networks
+ * already peer at this IX is not — and cannot be — determined from this data; the finding is
+ * mutual presence, and opportunities for pairs that already peer should simply be ignored.
+ * Where peering does not yet exist, the finding is immediately actionable: both networks are on
+ * the same IX LAN, so establishing peering requires only a BGP session configuration (or, if the
+ * target uses route servers, may be automatic). The opportunity includes a feasibility
+ * assessment based on the target's peering policy.</p>
+ *
+ * <p>Exactly one opportunity is emitted per (target ASN, IX) pair: a target with several
+ * parallel ports on the same IX LAN is still a single peering opportunity, with
+ * {@code getTargetSpeedMbps()} aggregating the capacity across those sessions and
+ * {@code getTargetSessionCount()} reporting how many there are.</p>
  *
  * @author ianjones
  * @see PeeringPolicy
@@ -52,9 +60,17 @@ public class PeeringOpportunity {
 
     PeeringPolicy targetPolicy;
 
+    /** Whether ANY of the target's sessions on this IX peers with the route servers. */
     boolean targetUsesRouteServer;
 
-    int targetSpeedMbps;
+    /**
+     * The target's total port capacity on this IX in Mbps, aggregated across all of its
+     * sessions there (a {@code long}: parallel high-speed ports can exceed an int).
+     */
+    long targetSpeedMbps;
+
+    /** How many parallel sessions (ports) the target has on this IX. */
+    int targetSessionCount;
 
     double feasibility;
 

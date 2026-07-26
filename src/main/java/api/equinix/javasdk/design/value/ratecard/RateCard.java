@@ -37,10 +37,23 @@ public interface RateCard {
     /**
      * Resolves the price of a single Fabric connection / virtual connection.
      *
-     * @param type          the connection type (e.g. {@code EVPL_VC})
+     * <p><strong>Implementation contract.</strong> The matching strategy is
+     * implementation-specific, and a card whose data lacks an axis (metro, term, type)
+     * still returns its best figure — or empty — rather than failing; callers must not
+     * assume every card is sensitive to every parameter. Of the bundled cards:
+     * {@link CustomRateCard} resolves the most specific declared entry (exact metro+term
+     * down to metro/term-agnostic, then a declared default); {@code EquinixRateCard}
+     * matches bandwidth and type against the live catalogue, honours a requested metro
+     * strictly (a wrong-metro row is never returned), and prefers a term-matched row —
+     * a different-term row is only ever returned with a note naming the substitution;
+     * {@code ReferenceRateCard} matches on bandwidth alone (smallest tabulated tier at or
+     * above the request, linearly extrapolated with an {@code EXTRAPOLATED} note above
+     * the top tier) and ignores type, metro, and term entirely.</p>
+     *
+     * @param type          the connection type (e.g. {@code EVPL_VC}); may be {@code null} for any type
      * @param bandwidthMbps the provisioned bandwidth in Mbps
      * @param metro         the metro the connection originates in (may be {@code null} if metro-agnostic)
-     * @param term          the commitment term
+     * @param term          the commitment term (may be {@code null} if term-agnostic)
      * @return the resolved quote, or {@link Optional#empty()} if this card cannot price the connection
      */
     Optional<PriceQuote> connection(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term);
@@ -48,9 +61,20 @@ public interface RateCard {
     /**
      * Resolves the price of a single Fabric Cloud Router instance.
      *
-     * @param packageCode the router package / tier code (e.g. {@code "STANDARD"})
+     * <p><strong>Implementation contract.</strong> As with
+     * {@link #connection(ConnectionType, int, MetroCode, Term)}, matching is
+     * implementation-specific and cards without a metro/term axis return their best
+     * figure regardless. Of the bundled cards: {@link CustomRateCard} resolves the most
+     * specific declared {@code (packageCode, metro, term)} entry; {@code EquinixRateCard}
+     * matches the package code and metro <em>structurally</em> against the row's own
+     * descriptor (exact package equality, the row's own metro code) and prefers a
+     * term-matched row, labelling any term substitution; {@code ReferenceRateCard}
+     * ignores metro and term, and substitutes its STANDARD figure for an unlisted
+     * package with a note naming the substitution.</p>
+     *
+     * @param packageCode the router package / tier code (e.g. {@code "STANDARD"}); may be {@code null} for any
      * @param metro       the metro the router is deployed in (may be {@code null} if metro-agnostic)
-     * @param term        the commitment term
+     * @param term        the commitment term (may be {@code null} if term-agnostic)
      * @return the resolved quote, or {@link Optional#empty()} if this card cannot price the router
      */
     Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term);
@@ -62,12 +86,15 @@ public interface RateCard {
      * {@link Optional#empty()} here (the default); egress rates come from a
      * {@link CustomRateCard} (your figures), a {@code ReferenceRateCard} (bundled
      * indicative figures), or a provider-pricing-API card. The default returns
-     * empty so cards that do not model egress need not override it.</p>
+     * empty so cards that do not model egress need not override it. Cards whose
+     * data has no region or term axis ignore those parameters — the custom and
+     * reference cards match on provider + path alone; only the provider-API
+     * adapters are region-sensitive.</p>
      *
      * @param provider the cloud provider the data is leaving
      * @param region   the provider region (may be {@code null} for a provider-wide rate)
      * @param path     internet vs. private interconnect
-     * @param term     the commitment term
+     * @param term     the commitment term (may be {@code null}; ignored by term-agnostic cards)
      * @return the resolved egress rate, or {@link Optional#empty()} if this card cannot price it
      */
     default Optional<EgressRate> egress(CloudProviderType provider, String region, EgressPath path, Term term) {

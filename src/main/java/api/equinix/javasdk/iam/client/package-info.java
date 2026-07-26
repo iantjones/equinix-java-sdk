@@ -21,7 +21,7 @@
  * policy-authoring discovery (resource types, actions, action sets, resource type actions and the
  * service policy schema).
  *
- * @see api.equinix.javasdk.iam.client.IAMConfigImpl
+ * @see api.equinix.javasdk.iam.client.implementation.IAMConfigImpl
  * @see api.equinix.javasdk.IAM
  */
 package api.equinix.javasdk.iam.client;

@@ -28,6 +28,7 @@ import api.equinix.javasdk.design.peering.client.PeeringDbNetwork;
 import api.equinix.javasdk.design.peering.enums.ConnectivityType;
 import api.equinix.javasdk.design.peering.enums.DiversityRating;
 import api.equinix.javasdk.design.peering.model.DiversityScore;
+import api.equinix.javasdk.design.peering.model.IxPresenceDetail;
 import api.equinix.javasdk.design.peering.model.PeeringIntelligenceResult;
 import api.equinix.javasdk.design.peering.model.PeeringRequest;
 import api.equinix.javasdk.design.peering.model.PresenceCell;
@@ -268,6 +269,26 @@ class PeeringHonestyFixesTest {
                     .build();
             assertTrue(cell.detailedSymbol().contains("10.5G"),
                     "10.5 Gbps must not truncate to 10G, was: " + cell.detailedSymbol());
+        }
+
+        @Test
+        @DisplayName("IxPresenceDetail.speedFormatted keeps fractional Gbps and sub-Gbps Mbps")
+        void speedFormattedNoIntegerTruncation() {
+            assertEquals("2.5G", detailWithSpeed(2500).speedFormatted(),
+                    "2500 Mbps must render as 2.5G, not integer-truncate to 2G");
+            assertEquals("1G", detailWithSpeed(1000).speedFormatted());
+            assertEquals("10G", detailWithSpeed(10000).speedFormatted());
+            assertEquals("100G", detailWithSpeed(100000).speedFormatted(),
+                    "the >=100000 branch was a duplicate of >=1000 and must stay equivalent");
+            assertEquals("500M", detailWithSpeed(500).speedFormatted(),
+                    "sub-Gbps speeds render in Mbps, never a truncated 0G");
+        }
+
+        private IxPresenceDetail detailWithSpeed(int speedMbps) {
+            return IxPresenceDetail.builder()
+                    .metro(MetroId.of("DC")).ixId(100).ixName("Equinix Ashburn")
+                    .speedMbps(speedMbps).routeServerPeer(false).bfdSupport(false)
+                    .operational(true).build();
         }
     }
 

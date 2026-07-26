@@ -38,6 +38,16 @@ public final class PlanValueAssessment {
         this.plan = plan;
     }
 
+    /**
+     * Declares a cloud provider's monthly egress volume. Repeatable — call once per provider;
+     * each declared provider becomes one row of the assessment.
+     *
+     * @param provider the cloud provider the egress leaves
+     * @param amount the monthly egress volume, in {@code unit}s
+     * @param unit the unit of {@code amount} (SI decimal: 1 TB = 1000 GB)
+     * @return this assessment for method chaining
+     * @throws IllegalArgumentException if {@code amount} is negative
+     */
     public PlanValueAssessment egress(CloudProviderType provider, double amount, DataUnit unit) {
         if (amount < 0) {
             throw new IllegalArgumentException("egress amount must be non-negative: " + amount);
@@ -46,15 +56,39 @@ public final class PlanValueAssessment {
         return this;
     }
 
+    /**
+     * Declares a cloud provider's monthly egress volume in terabytes. Shorthand for
+     * {@link #egress(CloudProviderType, double, DataUnit) egress(provider, terabytes, DataUnit.TERABYTE)}.
+     *
+     * @param provider the cloud provider the egress leaves
+     * @param terabytes the monthly egress volume in terabytes (SI decimal)
+     * @return this assessment for method chaining
+     * @throws IllegalArgumentException if {@code terabytes} is negative
+     */
     public PlanValueAssessment egressTerabytes(CloudProviderType provider, double terabytes) {
         return egress(provider, terabytes, DataUnit.TERABYTE);
     }
 
+    /**
+     * Sets the rate card the egress rates are resolved from. When omitted, {@code assess()}
+     * defaults to {@code RateCard.standardChain(plan's fabric)} — live Equinix pricing layered
+     * over the bundled reference figures.
+     *
+     * @param rateCard the rate card to resolve egress rates from
+     * @return this assessment for method chaining
+     */
     public PlanValueAssessment rateCard(RateCard rateCard) {
         this.rateCard = rateCard;
         return this;
     }
 
+    /**
+     * Sets the commitment term used when resolving egress rates. Defaults to
+     * {@link Term#MONTH_12}.
+     *
+     * @param term the commitment term
+     * @return this assessment for method chaining
+     */
     public PlanValueAssessment term(Term term) {
         this.term = term;
         return this;

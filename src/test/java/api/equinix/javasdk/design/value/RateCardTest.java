@@ -105,6 +105,46 @@ class RateCardTest {
     }
 
     @Test
+    void customRateCard_nullTypeRateIsAWildcardReachableFromConcreteTypeLookups() {
+        // A rate declared with a null ConnectionType means "any type" — a lookup for a concrete
+        // type must find it (it was stored under the ANY key, which concrete-type lookups never
+        // probed before, leaving the wildcard unreachable).
+        CustomRateCard card = CustomRateCard.builder()
+                .connectionRate(null, 1_000, new BigDecimal("275.00"))
+                .build();
+
+        PriceQuote q = card.connection(ConnectionType.EVPL_VC, 1_000, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(new BigDecimal("275.00"), q.getMonthlyRecurring(),
+                "a null-type (any-type) rate must match a concrete-type lookup");
+        assertEquals(PriceSource.CUSTOM, q.getSource());
+
+        // The wildcard applies across concrete types and to type-less lookups alike...
+        assertEquals(new BigDecimal("275.00"),
+                card.connection(ConnectionType.IP_VC, 1_000, null, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
+        assertEquals(new BigDecimal("275.00"),
+                card.connection(null, 1_000, null, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
+        // ...but never bleeds across bandwidths.
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 5_000, null, Term.MONTH_12).isEmpty());
+    }
+
+    @Test
+    void customRateCard_concreteTypeRateWinsOverNullTypeWildcard() {
+        // A typed entry is more specific than the any-type wildcard, so it wins for its own type
+        // — even when it is metro/term-agnostic and the wildcard is not probed first.
+        CustomRateCard card = CustomRateCard.builder()
+                .connectionRate(null, 1_000, new BigDecimal("275.00"))
+                .connectionRate(ConnectionType.EVPL_VC, 1_000, new BigDecimal("250.00"))
+                .build();
+
+        assertEquals(new BigDecimal("250.00"),
+                card.connection(ConnectionType.EVPL_VC, 1_000, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring(),
+                "the concrete-type entry outranks the any-type wildcard");
+        assertEquals(new BigDecimal("275.00"),
+                card.connection(ConnectionType.IP_VC, 1_000, MetroCode.DC, Term.MONTH_12).orElseThrow().getMonthlyRecurring(),
+                "other types still resolve the wildcard");
+    }
+
+    @Test
     void customRateCard_emptyWhenNoMatchAndNoDefault() {
         CustomRateCard card = CustomRateCard.builder()
                 .cloudRouterRate("STANDARD", new BigDecimal("285.00"))

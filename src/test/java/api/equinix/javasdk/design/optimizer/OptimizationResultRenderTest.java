@@ -224,11 +224,12 @@ class OptimizationResultRenderTest {
                 RiskSeverity.CRITICAL,
                 45.0);
 
-        // ── Cost estimate ──
+        // ── Cost estimate (per-metro rows carry their own currency since the currency-fidelity
+        // fix: MetroCostBreakdown gained a currency field and the renders stopped hardcoding $) ──
         MetroCostBreakdown dcCost = new MetroCostBreakdown(DC, new BigDecimal("1200.00"),
-                new BigDecimal("1000.00"), lineItems(), PriceSource.EQUINIX_LIVE);
+                new BigDecimal("1000.00"), lineItems(), "USD", PriceSource.EQUINIX_LIVE);
         MetroCostBreakdown daCost = new MetroCostBreakdown(DA, new BigDecimal("1100.00"),
-                new BigDecimal("1000.00"), lineItems(), PriceSource.ESTIMATE);
+                new BigDecimal("1000.00"), lineItems(), "USD", PriceSource.ESTIMATE);
         CostEstimate cost = CostEstimate.builder()
                 .monthlyTotal(new BigDecimal("2300.00"))
                 .setupTotal(new BigDecimal("2000.00"))
@@ -275,8 +276,11 @@ class OptimizationResultRenderTest {
                     "summary should list the secondary metro");
             assertTrue(summary.contains("WARNING: 1 critical risk(s) identified"),
                     "summary should flag the critical risk");
-            assertTrue(summary.contains("Estimated monthly cost: $2300.00 USD"),
-                    "summary should carry the aggregate monthly cost");
+            // Updated by the currency-fidelity fix: the amount renders with the ACTUAL currency's
+            // symbol from CostEstimate.getCurrency() ("$" for USD) instead of a hardcoded "$"
+            // followed by the code — the old "$2300.00 USD" printed dollars for every currency.
+            assertTrue(summary.contains("Estimated monthly cost: $2300.00"),
+                    "summary should carry the aggregate monthly cost in its actual currency: " + summary);
             assertTrue(summary.contains("OVER BUDGET"),
                     "summary should flag the over-budget estimate");
             assertTrue(summary.contains("Computed in 420ms"), "summary should carry the compute time");
@@ -329,6 +333,103 @@ class OptimizationResultRenderTest {
             assertTrue(md.contains("**[CRITICAL]**"), "critical finding rendered");
             assertTrue(md.contains("| **Total** | **$2300.00**"), "cost total row");
             assertTrue(md.contains("_Generated: 2026-07-01T12:00:00Z (420ms)_"), "generated timestamp");
+        }
+    }
+
+    @Nested
+    @DisplayName("currency fidelity (no hardcoded dollar sign)")
+    class CurrencyFidelity {
+
+        @Test
+        @DisplayName("a EUR estimate renders euro amounts everywhere and never a dollar sign")
+        void euroEstimateRendersEuroNotDollar() {
+            // Regression for the currency-fidelity fix: toSummary/toMarkdown hardcoded "$" for
+            // every currency and MetroCostBreakdown carried no currency field at all, so a
+            // EUR-quoted Frankfurt/London estimate rendered as dollars — misstating the amount by
+            // whatever the exchange rate happened to be. Amounts must render with the actual
+            // currency from CostEstimate.getCurrency() and each row's MetroCostBreakdown.getCurrency().
+            MetroId ld = MetroId.of("LD");
+            MetroCostBreakdown ldCost = new MetroCostBreakdown(ld, new BigDecimal("1800.00"),
+                    new BigDecimal("500.00"), lineItems(), "EUR", PriceSource.EQUINIX_LIVE);
+            assertEquals("EUR", ldCost.getCurrency(), "the per-metro breakdown carries its currency");
+
+            CostEstimate euros = CostEstimate.builder()
+                    .monthlyTotal(new BigDecimal("1800.00"))
+                    .setupTotal(new BigDecimal("500.00"))
+                    .currency("EUR")
+                    .perMetro(Collections.singletonList(ldCost))
+                    .withinBudget(true)
+                    .costDisclaimer("Live Fabric pricing, quoted in EUR for EMEA metros.")
+                    .source(PriceSource.EQUINIX_LIVE)
+                    .build();
+
+            MetroRecommendation london = MetroRecommendation.builder()
+                    .rank(1)
+                    .metroId(ld)
+                    .metroName("London")
+                    .region(Region.EMEA)
+                    .score(new MetroScore(80.0, Collections.emptyList()))
+                    .reasons(Collections.singletonList("Located in EMEA region"))
+                    .availableProviders(Collections.emptyList())
+                    .siteLatencies(Collections.emptyMap())
+                    .estimatedCost(ldCost)
+                    .assignedWorkloads(Collections.emptyList())
+                    .build();
+
+            OptimizationResult euroResult = OptimizationResult.builder()
+                    .recommendations(Collections.singletonList(london))
+                    .costEstimate(euros)
+                    .computedAt(Instant.parse("2026-07-01T12:00:00Z"))
+                    .computeTimeMs(10)
+                    .build();
+
+            String summary = euroResult.toSummary();
+            assertTrue(summary.contains("Estimated monthly cost: €1800.00"),
+                    "the summary renders the euro symbol for a EUR estimate: " + summary);
+            assertFalse(summary.contains("$"), "no dollar sign may appear in a EUR summary: " + summary);
+
+            String md = euroResult.toMarkdown();
+            assertTrue(md.contains("| LD | €1800.00 | €500.00 |"),
+                    "per-metro rows render their own currency: " + md);
+            assertTrue(md.contains("| **Total** | **€1800.00** | **€500.00** |"),
+                    "the total row renders the aggregate currency: " + md);
+            assertFalse(md.contains("$"), "no dollar sign may appear in a EUR report: " + md);
+        }
+
+        @Test
+        @DisplayName("a currency with no distinct symbol renders as '<amount> <code>'")
+        void symbollessCurrencyRendersAmountThenCode() {
+            MetroId sg = MetroId.of("SG");
+            // CHF has no distinct symbol in the US locale, so the code itself is rendered.
+            MetroCostBreakdown sgCost = new MetroCostBreakdown(sg, new BigDecimal("900.00"),
+                    new BigDecimal("100.00"), lineItems(), "CHF", PriceSource.EQUINIX_LIVE);
+            CostEstimate francs = CostEstimate.builder()
+                    .monthlyTotal(new BigDecimal("900.00"))
+                    .setupTotal(new BigDecimal("100.00"))
+                    .currency("CHF")
+                    .perMetro(Collections.singletonList(sgCost))
+                    .withinBudget(true)
+                    .costDisclaimer("d")
+                    .source(PriceSource.EQUINIX_LIVE)
+                    .build();
+            OptimizationResult chfResult = OptimizationResult.builder()
+                    .recommendations(Collections.singletonList(MetroRecommendation.builder()
+                            .rank(1).metroId(sg).metroName("Zurich-ish").region(Region.EMEA)
+                            .score(new MetroScore(70.0, Collections.emptyList()))
+                            .reasons(Collections.emptyList())
+                            .availableProviders(Collections.emptyList())
+                            .siteLatencies(Collections.emptyMap())
+                            .assignedWorkloads(Collections.emptyList())
+                            .build()))
+                    .costEstimate(francs)
+                    .computedAt(Instant.parse("2026-07-01T12:00:00Z"))
+                    .computeTimeMs(10)
+                    .build();
+
+            String summary = chfResult.toSummary();
+            assertTrue(summary.contains("Estimated monthly cost: 900.00 CHF"),
+                    "a symbol-less currency renders amount-then-code: " + summary);
+            assertFalse(summary.contains("$"), summary);
         }
     }
 

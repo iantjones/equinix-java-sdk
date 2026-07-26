@@ -14,11 +14,35 @@ import lombok.Value;
 @Builder(toBuilder = true)
 public class WorkloadProfile {
 
+    /**
+     * The latency tier this profile implies; its {@code thresholdMs} is the workload's default
+     * placement ceiling when {@code maxLatencyToleranceMs} is unset.
+     */
     LatencySensitivity defaultLatencySensitivity;
+
+    /** High power density required (e.g. GPU racks). Recorded for facility selection; not a scoring input. */
     boolean requiresHighPowerDensity;
+
+    /** Liquid cooling required. Recorded for facility selection; not a scoring input. */
     boolean requiresLiquidCooling;
+
+    /**
+     * When {@code true}, the workload is placed by the lowest-weighted-latency rule rather than
+     * the highest-scored-metro rule (same effect as {@code LatencySensitivity.CRITICAL}).
+     */
     boolean proximityWeighted;
+
+    /**
+     * Explicit per-workload latency ceiling in ms; overrides the tier's default ceiling. Breaches
+     * raise {@code WORKLOAD_LATENCY_TOLERANCE_*} risk findings. {@code null} = use the tier's
+     * {@code thresholdMs}.
+     */
     Double maxLatencyToleranceMs;
+
+    /**
+     * Bandwidth floor in Mbps used for cost sizing: a workload declaring less bandwidth than this
+     * is costed at the floor. {@code null} = no floor.
+     */
     Double minBandwidthMbps;
 
     /**

@@ -23,7 +23,7 @@
  * Lookups. Each interface defines list, get, create, update, and cancel operations
  * as appropriate for the resource type.
  *
- * @see api.equinix.javasdk.customerportal.client.CustomerPortalConfigImpl
+ * @see api.equinix.javasdk.customerportal.client.implementation.CustomerPortalConfigImpl
  * @see api.equinix.javasdk.CustomerPortal
  */
 package api.equinix.javasdk.customerportal.client;

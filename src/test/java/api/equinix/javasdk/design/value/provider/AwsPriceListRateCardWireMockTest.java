@@ -119,4 +119,49 @@ class AwsPriceListRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
         assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12).isEmpty());
     }
+
+    @Test
+    @DisplayName("a transient offer-fetch failure is not memoized: the same adapter retries and succeeds")
+    void transientOfferFailureIsRetried() {
+        wireMock.stubFor(get(urlPathEqualTo(DT_PATH)).willReturn(aResponse().withStatus(503)));
+        wireMock.stubFor(get(urlPathEqualTo(DX_PATH)).willReturn(aResponse().withStatus(503)));
+
+        AwsPriceListRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
+                "the outage yields no rate");
+        assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12).isEmpty());
+
+        // The endpoint recovers. The SAME adapter instance must fetch again — a transient failure
+        // must not have been memoized as a permanent "no offer" for the adapter's lifetime.
+        wireMock.stubFor(get(urlPathEqualTo(DT_PATH))
+                .willReturn(okJson(loadFixture("/json/provider/aws_datatransfer.json"))));
+        wireMock.stubFor(get(urlPathEqualTo(DX_PATH))
+                .willReturn(okJson(loadFixture("/json/provider/aws_directconnect.json"))));
+
+        EgressRate internet = card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.09").compareTo(internet.getPricePerGb()),
+                "after the endpoint recovers the same adapter resolves the internet rate");
+        EgressRate direct = card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.02").compareTo(direct.getPricePerGb()),
+                "after the endpoint recovers the same adapter resolves the Direct Connect rate");
+    }
+
+    @Test
+    @DisplayName("a successful offer fetch is made once and reused; an authoritative regional miss is cached")
+    void successfulOfferFetchedOnceAndReused() {
+        wireMock.stubFor(get(urlPathEqualTo(DT_PATH))
+                .willReturn(okJson(loadFixture("/json/provider/aws_datatransfer.json"))));
+
+        AwsPriceListRateCard card = card();
+        card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).orElseThrow();
+        assertTrue(card.egress(CloudProviderType.AWS, "eu-west-99", EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
+                "no product for the unknown region in a successfully fetched offer");
+        assertTrue(card.egress(CloudProviderType.AWS, "eu-west-99", EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
+                "the authoritative miss is served from the result cache");
+        card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.INTERNET, Term.MONTH_12).orElseThrow();
+
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(DT_PATH)));
+    }
 }

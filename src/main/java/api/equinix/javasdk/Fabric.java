@@ -281,7 +281,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
      * <p>When {@code EquinixConfig.enrichMetroRegistry} is enabled, the load also pulls the EIA
      * per-IBX catalogue (the only Equinix API with per-data-center coordinates) over this client's
      * own transport and exposes it via {@code MetroRegistry.ibx(String)} — see
-     * {@link EquinixConfig#isEnrichMetroRegistry()}.</p>
+     * {@code EquinixConfig.isEnrichMetroRegistry()}.</p>
      *
      * @return the metro registry
      */
@@ -733,6 +733,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
      *     .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
      *     .customerAsn(65100L)
      *     .withBFD(true, 300)
+     *     .notifications("noc@example.com")   // required: Fabric mandates a recipient on every resource
      *     .plan();
      *
      * System.out.println(plan.toMarkdown());
@@ -782,7 +783,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
      *
      * @return a {@link PeeringIntelligence.Builder} for configuring the analysis
      * @see #peeringIntelligence(String)
-     * @see EquinixConfig#getPeeringDbApiKey()
+     * @see EquinixConfig
      */
     public PeeringIntelligence.Builder peeringIntelligence() {
         return PeeringIntelligence.builder(this, peeringDbApiKey);

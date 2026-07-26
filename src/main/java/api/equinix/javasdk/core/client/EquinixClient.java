@@ -177,7 +177,8 @@ public class EquinixClient implements Closeable {
     /**
      * Merges a domain's apiParams resource into the shared catalogue. Thread-safe: the merge is
      * copy-on-write under {@link #apiParamsLock} and published atomically through the
-     * {@code volatile} {@link #getClientResourceFile() clientResourceFile} field, so request
+     * {@code volatile} {@code clientResourceFile} field (read via the Lombok-generated
+     * {@code getClientResourceFile()}), so request
      * threads reading the tree concurrently (Jackson's {@code ObjectNode} is not safe for
      * concurrent read/write) always see either the old or the fully-merged catalogue.
      *

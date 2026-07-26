@@ -7,8 +7,8 @@
     { "provider": "AWS", "path": "PRIVATE", "perGb": 0.02, "note": "Direct Connect DTO, contiguous US", "source": "https://aws.amazon.com/directconnect/pricing/" },
     { "provider": "AZURE", "path": "INTERNET", "perGb": 0.087, "note": "Zone 1, first 10 TB/mo tier", "source": "https://azure.microsoft.com/en-us/pricing/details/bandwidth/" },
     { "provider": "AZURE", "path": "PRIVATE", "perGb": 0.025, "note": "ExpressRoute metered, Zone 1, flat", "source": "https://azure.microsoft.com/en-us/pricing/details/expressroute/" },
-    { "provider": "GOOGLE_CLOUD", "path": "INTERNET", "perGb": 0.12, "note": "Premium Tier, North America, 0-1 TiB tier", "source": "https://cloud.google.com/network-tiers/pricing" },
-    { "provider": "GOOGLE_CLOUD", "path": "PRIVATE", "perGb": 0.02, "note": "Cloud Interconnect, North America, flat", "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing" }
+    { "provider": "GOOGLE_CLOUD", "path": "INTERNET", "perGb": 0.1118, "note": "Premium Tier, North America, 0-1 TiB tier; converted from per-GiB list price ($0.12/GiB)", "source": "https://cloud.google.com/network-tiers/pricing" },
+    { "provider": "GOOGLE_CLOUD", "path": "PRIVATE", "perGb": 0.0186, "note": "Cloud Interconnect, North America, flat; converted from per-GiB list price ($0.02/GiB)", "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing" }
   ],
   "equinixConnection": [
     { "bandwidthMbps": 100, "monthly": 75, "note": "intra-metro VC, indicative" },

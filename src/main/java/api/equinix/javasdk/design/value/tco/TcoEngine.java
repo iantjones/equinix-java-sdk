@@ -18,9 +18,12 @@ import java.util.Optional;
 
 /**
  * Internal engine that turns a {@link TcoCalculator.Builder} configuration into a
- * {@link TcoComparison}. Stateless. Cloud egress and on-prem inputs come from the
- * bundled {@link ReferenceRateCard}; Equinix interconnect costs use the resolved
- * (live-then-reference) rate card.
+ * {@link TcoComparison}. Stateless. Cloud egress and Equinix interconnect costs come
+ * from the resolved rate card (the caller's, or the standard live-then-reference
+ * chain); on-prem inputs come from the caller's overrides, falling back to the
+ * bundled {@link ReferenceRateCard} midpoints. Every cross-component sum runs
+ * through a {@code CurrencyReconciler}, so mixed-currency figures are reported as
+ * unpriced/partial with a reason, never silently combined.
  */
 final class TcoEngine {
 
@@ -60,10 +63,21 @@ final class TcoEngine {
             breakdowns = withExtra;
         }
 
-        // Recommend the cheapest priced archetype.
+        // Stamp every breakdown with its cost over the full commitment term (MRC × months + NRC)
+        // so the recommendation and savings account for one-time setup charges, not just the
+        // monthly rate.
+        List<CostBreakdown> withTermTotals = new ArrayList<>(breakdowns.size());
+        for (CostBreakdown cb : breakdowns) {
+            withTermTotals.add(withTermTotal(cb, term));
+        }
+        breakdowns = withTermTotals;
+
+        // Recommend the priced archetype that is cheapest over the term, not by MRC alone —
+        // a low monthly rate with a heavy setup charge must not beat a slightly higher
+        // monthly rate with none.
         CostBreakdown recommended = breakdowns.stream()
                 .filter(CostBreakdown::isPriced)
-                .min((x, y) -> x.getMonthlyTotal().compareTo(y.getMonthlyTotal()))
+                .min((x, y) -> x.getTotalOverTerm().compareTo(y.getTotalOverTerm()))
                 .orElse(null);
 
         Optional<CostBreakdown> baseline = breakdowns.stream()
@@ -71,13 +85,13 @@ final class TcoEngine {
                 .findFirst();
 
         // Baseline-minus-recommended is a subtraction, so it is only valid when both breakdowns are
-        // in the same currency. Every breakdown here is stamped with the comparison-wide `currency`
-        // (resolved from egress), and a breakdown whose own components mixed currencies is marked
-        // unpriced by equinixInterconnect(...) and thus never chosen as recommended/baseline — so this
-        // guard normally holds trivially. It is kept explicit rather than assumed: on the off chance
-        // the two disagree, the saving is left null (not a fabricated cross-currency figure).
+        // in the same currency. Each breakdown is stamped with the currency its own components
+        // reconciled to (which the layered default chain can genuinely make differ from the
+        // comparison-wide egress currency), so this guard does real work: when the two disagree,
+        // the saving is left null (not a fabricated cross-currency figure).
         BigDecimal monthlySavings = null;
         BigDecimal annualSavings = null;
+        BigDecimal termSavings = null;
         String currencyNote = null;
         if (recommended != null && baseline.isPresent()) {
             if (CurrencyReconciler.knownDifferent(baseline.get().getCurrency(), recommended.getCurrency())) {
@@ -88,6 +102,7 @@ final class TcoEngine {
             } else {
                 monthlySavings = baseline.get().getMonthlyTotal().subtract(recommended.getMonthlyTotal());
                 annualSavings = monthlySavings.multiply(BigDecimal.valueOf(12));
+                termSavings = baseline.get().getTotalOverTerm().subtract(recommended.getTotalOverTerm());
             }
         }
 
@@ -106,10 +121,19 @@ final class TcoEngine {
                 .baseline(DeploymentArchetype.PUBLIC_CLOUD_INTERNET)
                 .monthlySavingsVsBaseline(monthlySavings)
                 .annualSavingsVsBaseline(annualSavings)
+                .savingsOverTermVsBaseline(termSavings)
+                .term(term)
                 .currency(currency)
                 .disclaimer(disclaimer)
                 .asOf(reference.asOf())
                 .build();
+    }
+
+    private static CostBreakdown withTermTotal(CostBreakdown cb, Term term) {
+        BigDecimal total = cb.getMonthlyTotal()
+                .multiply(BigDecimal.valueOf(term.months()))
+                .add(cb.getSetupTotal());
+        return cb.toBuilder().totalOverTerm(total).build();
     }
 
     private static CostBreakdown publicCloudInternet(Optional<EgressRate> internet, BigDecimal gb, String currency) {
@@ -144,6 +168,29 @@ final class TcoEngine {
                     .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
                     .currency(currency).lineItems(items).priced(false)
                     .note("On-prem reference figures unavailable.")
+                    .build();
+        }
+
+        // The bundled midpoints are published in the reference card's own currency (USD). When the
+        // comparison currency (resolved from egress) is known to differ, stamping those figures with
+        // it would mislabel them — the same guard the reference fold-ins in equinixInterconnect(...)
+        // apply. Per the CurrencyReconciler policy the archetype is reported unpriced with the
+        // reason, never as a relabelled cross-currency number. Caller-supplied overrides are taken
+        // to be in the comparison currency, so a fully overridden archetype still prices.
+        boolean usesReferenceMidpoints = b.getOnPremTransitPerMbpsMonth() == null
+                || b.getOnPremHardwareMonthly() == null
+                || b.getOnPremCrossConnectMonthly() == null
+                || b.getOnPremPowerPerKwMonth() == null;
+        if (usesReferenceMidpoints && CurrencyReconciler.knownDifferent(reference.currencyCode(), currency)) {
+            return CostBreakdown.builder()
+                    .archetype(DeploymentArchetype.ON_PREM)
+                    .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
+                    .currency(currency).lineItems(items).priced(false)
+                    .note("On-prem reference midpoints are " + reference.currencyCode()
+                            + " but this comparison is priced in " + currency
+                            + "; they cannot be relabelled without an FX rate, so this archetype is reported "
+                            + "as unpriced. Supply all four on-prem overrides in " + currency
+                            + " to price it.")
                     .build();
         }
         BigDecimal transit = transitPerMbps.multiply(BigDecimal.valueOf(b.getBandwidthMbps()));
@@ -193,22 +240,43 @@ final class TcoEngine {
                 items.put("Fabric Cloud Router", router.get().getMonthlyRecurring());
                 recon.add(router.get().getCurrency(),
                         router.get().getMonthlyRecurring(), router.get().getNonRecurring());
+            } else {
+                // A requested component that cannot be priced must not silently vanish from the
+                // total. Follow the unpriced-component convention: flag the archetype as not fully
+                // priced and name the missing component, leaving the partial figures visible.
+                priced = false;
+                String routerNote = "Fabric Cloud Router (" + b.getRouterPackage() + ") was requested but "
+                        + "could not be priced by the rate card; this archetype's totals are partial and "
+                        + "exclude the Cloud Router.";
+                note = note == null ? routerNote : note + " " + routerNote;
             }
         }
 
         // Caller-supplied colocation primitives (cabinet, cross-connect, and per-kW power) take
-        // precedence and make the physical-infrastructure side of the comparison reflect real figures.
-        Optional<PriceQuote> coloCrossConnect = rateCard.colocation(ColocationItem.CROSS_CONNECT, b.getMetro(), term);
+        // precedence and make the physical-infrastructure side of the comparison reflect real
+        // figures. Cabinet and cross-connect quotes are per unit, so they scale by the configured
+        // counts (default 1), mirroring how POWER_PER_KW scales by the configured kW below.
+        int crossConnectCount = b.getCrossConnects();
+        Optional<PriceQuote> coloCrossConnect = crossConnectCount == 0 ? Optional.empty()
+                : rateCard.colocation(ColocationItem.CROSS_CONNECT, b.getMetro(), term);
         if (coloCrossConnect.isPresent()) {
-            items.put("Equinix cross-connect", coloCrossConnect.get().getMonthlyRecurring());
-            recon.add(coloCrossConnect.get().getCurrency(),
-                    coloCrossConnect.get().getMonthlyRecurring(), coloCrossConnect.get().getNonRecurring());
+            BigDecimal qty = BigDecimal.valueOf(crossConnectCount);
+            BigDecimal crossConnectMonthly = coloCrossConnect.get().getMonthlyRecurring().multiply(qty);
+            BigDecimal crossConnectSetup = coloCrossConnect.get().getNonRecurring().multiply(qty);
+            items.put(countedLabel("Equinix cross-connect", crossConnectCount,
+                    coloCrossConnect.get().getMonthlyRecurring()), crossConnectMonthly);
+            recon.add(coloCrossConnect.get().getCurrency(), crossConnectMonthly, crossConnectSetup);
         }
-        Optional<PriceQuote> coloCabinet = rateCard.colocation(ColocationItem.CABINET, b.getMetro(), term);
+        int cabinetCount = b.getCabinets();
+        Optional<PriceQuote> coloCabinet = cabinetCount == 0 ? Optional.empty()
+                : rateCard.colocation(ColocationItem.CABINET, b.getMetro(), term);
         if (coloCabinet.isPresent()) {
-            items.put("Colocation cabinet", coloCabinet.get().getMonthlyRecurring());
-            recon.add(coloCabinet.get().getCurrency(),
-                    coloCabinet.get().getMonthlyRecurring(), coloCabinet.get().getNonRecurring());
+            BigDecimal qty = BigDecimal.valueOf(cabinetCount);
+            BigDecimal cabinetMonthly = coloCabinet.get().getMonthlyRecurring().multiply(qty);
+            BigDecimal cabinetSetup = coloCabinet.get().getNonRecurring().multiply(qty);
+            items.put(countedLabel("Colocation cabinet", cabinetCount,
+                    coloCabinet.get().getMonthlyRecurring()), cabinetMonthly);
+            recon.add(coloCabinet.get().getCurrency(), cabinetMonthly, cabinetSetup);
         }
         // POWER_PER_KW is priced per kW per month (see ColocationItem), so it is multiplied by the
         // configured power draw before being folded in — previously it was never consumed at all.
@@ -241,12 +309,13 @@ final class TcoEngine {
         BigDecimal setup = recon.setupTotal().orElse(BigDecimal.ZERO);
         String coreCurrency = recon.soleCurrencyOr(currency);
 
-        // The CSP interconnect port and (unless a colocation cross-connect was supplied above) the
-        // Equinix cross-connect come from the bundled reference card (USD). Only fold them in when the
-        // reconciled currency of the components above matches, so reference figures never silently mix
-        // currencies into the total.
+        // The CSP interconnect port and (unless a colocation cross-connect was supplied above, or the
+        // caller set crossConnects(0)) the Equinix cross-connect come from the bundled reference card
+        // (USD). Only fold them in when the reconciled currency of the components above matches, so
+        // reference figures never silently mix currencies into the total. The reference cross-connect
+        // is per unit, so it scales by the configured count too.
         Optional<BigDecimal> cspPort = reference.cspInterconnectPortMonthly(b.getProvider(), b.getBandwidthMbps());
-        Optional<BigDecimal> crossConnect = coloCrossConnect.isPresent()
+        Optional<BigDecimal> crossConnect = (coloCrossConnect.isPresent() || crossConnectCount == 0)
                 ? Optional.empty() : reference.equinixCrossConnectMonthly();
         if (coreCurrency.equals(reference.currencyCode())) {
             if (cspPort.isPresent()) {
@@ -254,8 +323,10 @@ final class TcoEngine {
                 monthly = monthly.add(cspPort.get());
             }
             if (crossConnect.isPresent()) {
-                items.put("Equinix cross-connect", crossConnect.get());
-                monthly = monthly.add(crossConnect.get());
+                BigDecimal crossConnectMonthly = crossConnect.get().multiply(BigDecimal.valueOf(crossConnectCount));
+                items.put(countedLabel("Equinix cross-connect", crossConnectCount, crossConnect.get()),
+                        crossConnectMonthly);
+                monthly = monthly.add(crossConnectMonthly);
             }
         } else if (cspPort.isPresent() || crossConnect.isPresent()) {
             String skip = "CSP interconnect port and Equinix cross-connect omitted: reference figures are "
@@ -263,12 +334,27 @@ final class TcoEngine {
             note = note == null ? skip : note + " " + skip;
         }
 
+        // Stamp the breakdown with the currency its own components reconciled to — not the
+        // comparison-wide egress currency — so the baseline-vs-recommended currency guard in
+        // compute() compares labels that actually describe these figures.
         return CostBreakdown.builder()
                 .archetype(DeploymentArchetype.EQUINIX_INTERCONNECT)
                 .monthlyTotal(monthly).setupTotal(setup)
-                .currency(currency).lineItems(items).priced(priced)
+                .currency(coreCurrency).lineItems(items).priced(priced)
                 .note(note)
                 .build();
+    }
+
+    /**
+     * A per-unit line-item label carrying the count and unit rate when more than one unit is
+     * folded in, e.g. {@code "Colocation cabinet (2x @ 500.00/mo)"}.
+     */
+    private static String countedLabel(String base, int count, BigDecimal unitMonthly) {
+        if (count == 1) {
+            return base;
+        }
+        return base + " (" + count + "x @ "
+                + unitMonthly.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + "/mo)";
     }
 
     private static CostBreakdown withAdditional(CostBreakdown cb, Map<String, BigDecimal> extra) {
@@ -281,14 +367,9 @@ final class TcoEngine {
             items.put(e.getKey(), e.getValue());
             monthly = monthly.add(e.getValue());
         }
-        return CostBreakdown.builder()
-                .archetype(cb.getArchetype())
+        return cb.toBuilder()
                 .monthlyTotal(monthly)
-                .setupTotal(cb.getSetupTotal())
-                .currency(cb.getCurrency())
                 .lineItems(items)
-                .priced(true)
-                .note(cb.getNote())
                 .build();
     }
 

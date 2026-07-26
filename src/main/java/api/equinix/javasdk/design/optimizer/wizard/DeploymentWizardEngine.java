@@ -30,8 +30,6 @@ final class DeploymentWizardEngine {
 
     private DeploymentWizardEngine() {}
 
-    private static int subnetCounter = 0;
-
     /**
      * Generates a complete deployment plan from the wizard builder configuration.
      */
@@ -54,7 +52,12 @@ final class DeploymentWizardEngine {
                     .build();
         }
 
-        subnetCounter = 0;
+        // The /30 peering-subnet allocator is PLAN-SCOPED (never static): concurrent generatePlan
+        // calls — the embedded MCP server plans on server threads — each get their own sequence, so
+        // one plan's allocation can never corrupt another's. Note the documented cross-plan caveat on
+        // DeploymentWizard.Builder#subnetBase: sequential plans deliberately restart from the same
+        // base, so plans executed into the same project should be given distinct bases.
+        SubnetAllocator subnets = new SubnetAllocator(config.getSubnetBase());
 
         // Every generated name flows through one PlanNames instance so the whole plan shares a single
         // uniqueness namespace and a single < 24-character cap (Fabric error EQ-3142539). The prefix is
@@ -85,7 +88,8 @@ final class DeploymentWizardEngine {
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros, names, routerNames);
 
         // Phase 4: Plan Routing Protocols
-        List<PlannedRoutingProtocol> routingProtocols = planRoutingProtocols(config, providerConnections, backboneLinks, names);
+        List<PlannedRoutingProtocol> routingProtocols =
+                planRoutingProtocols(config, providerConnections, backboneLinks, names, subnets);
 
         // Phase 5: Estimate Pricing
         PlanPricing pricing = estimatePricing(config, cloudRouters, providerConnections, backboneLinks);
@@ -133,8 +137,7 @@ final class DeploymentWizardEngine {
             DeploymentWizard.Builder config, List<MetroRecommendation> metros,
             Map<MetroId, String> routerNames) {
 
-        String notificationEmail = config.getNotificationEmails().isEmpty()
-                ? null : config.getNotificationEmails().get(0);
+        List<String> notificationEmails = notificationEmails(config);
 
         return metros.stream()
                 .map(metro -> PlannedCloudRouter.builder()
@@ -143,9 +146,19 @@ final class DeploymentWizardEngine {
                         .packageCode(config.getRouterPackage())
                         .accountNumber(config.getAccountNumber())
                         .projectId(config.getProjectId())
-                        .notificationEmail(notificationEmail)
+                        .notificationEmails(notificationEmails)
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * The FULL configured notification list, stamped verbatim onto every planned resource — the old
+     * code took only {@code get(0)}, silently dropping every additional recipient the caller
+     * supplied. {@code null} when none was configured (Layer-1 validation flags that).
+     */
+    private static List<String> notificationEmails(DeploymentWizard.Builder config) {
+        List<String> emails = config.getNotificationEmails();
+        return emails == null || emails.isEmpty() ? null : List.copyOf(emails);
     }
 
     // ══════════════════════════════════════════════
@@ -157,8 +170,7 @@ final class DeploymentWizardEngine {
             PlanNames names, Map<MetroId, String> routerNames, List<String> validationErrors) {
 
         List<PlannedConnection> connections = new ArrayList<>();
-        String notificationEmail = config.getNotificationEmails().isEmpty()
-                ? null : config.getNotificationEmails().get(0);
+        List<String> notificationEmails = notificationEmails(config);
 
         for (MetroRecommendation metro : metros) {
             if (metro.getAvailableProviders() == null) continue;
@@ -240,7 +252,7 @@ final class DeploymentWizardEngine {
                         // enumerate the exact authorization key the connection will need at
                         // provisioning (AWS Account ID, Azure service key, GCP pairing key, ...).
                         .zSideCloudType(ConnectionBodies.resolveCloudType(provider.getProviderLabel()))
-                        .notificationEmail(notificationEmail)
+                        .notificationEmails(notificationEmails)
                         .build());
             }
         }
@@ -399,14 +411,13 @@ final class DeploymentWizardEngine {
         BandwidthStrategy strategy = config.getBandwidthStrategy();
         Map<String, Integer> perWorkload = new LinkedHashMap<>();
 
+        String unmatchedCustomKeys = null;
         if (strategy == BandwidthStrategy.CUSTOM && config.getCustomBandwidthMap() != null) {
             // Match the documented key forms, most specific first: "<metroId>-<providerLabel>" (a
             // per-metro-per-provider override) then "<providerLabel>" (that provider in every metro).
             // The old code looked up ONLY the compound key with the full provider label, so a caller
             // whose real provider label differs from the key they wrote silently matched nothing. The
-            // provider-label form is now honoured too, and — crucially — the reasoning states plainly
-            // whether the map actually supplied the value or the documented default was used, instead
-            // of labelling the default as though it came from the caller's map.
+            // provider-label form is now honoured too.
             Map<String, Integer> customMap = config.getCustomBandwidthMap();
             String perMetroKey = metro.getMetroId() + "-" + provider.getProviderLabel();
             String providerKey = provider.getProviderLabel();
@@ -420,13 +431,12 @@ final class DeploymentWizardEngine {
                         .reasoning("Custom bandwidth map (key '" + matchedKey + "'): " + customBw + " Mbps")
                         .build();
             }
-            int defaultBw = 1000;
-            return BandwidthAllocation.builder()
-                    .totalMbps(defaultBw)
-                    .perWorkload(Collections.singletonMap("custom", defaultBw))
-                    .reasoning("Custom strategy: no bandwidth-map key matched '" + perMetroKey + "' or '"
-                            + providerKey + "', so the documented " + defaultBw + " Mbps default was used")
-                    .build();
+            // No key matched. The Builder#customBandwidthMap contract promises fallback to the
+            // normal per-workload aggregation for an unmatched (metro, provider) — NOT a fabricated
+            // flat default (the old 1000 Mbps invention, which mis-sized and mis-priced every
+            // unmapped connection). Fall through to the standard sizing below, recording the keys
+            // that were tried so the reasoning states plainly why the map did not supply the value.
+            unmatchedCustomKeys = "'" + perMetroKey + "' or '" + providerKey + "'";
         }
 
         // Determine workloads at this metro
@@ -458,7 +468,10 @@ final class DeploymentWizardEngine {
                 }
             }
 
-            if (strategy == BandwidthStrategy.PER_WORKLOAD && !dependsOnProvider) {
+            // PER_WORKLOAD sizes from the workloads that depend on this provider; the CUSTOM
+            // strategy's documented unmatched-key fallback is that same per-workload aggregation.
+            if ((strategy == BandwidthStrategy.PER_WORKLOAD || strategy == BandwidthStrategy.CUSTOM)
+                    && !dependsOnProvider) {
                 continue;
             }
 
@@ -477,9 +490,20 @@ final class DeploymentWizardEngine {
             perWorkload.put("default", 1000);
         }
 
-        String reasoning = strategy == BandwidthStrategy.PER_WORKLOAD
-                ? "Sum of dependent workload bandwidths at " + metro.getMetroId()
-                : "Aggregated bandwidth for all workloads at " + metro.getMetroId();
+        String reasoning;
+        if (unmatchedCustomKeys != null) {
+            reasoning = "Custom strategy: no bandwidth-map key matched " + unmatchedCustomKeys
+                    + ", so the documented fallback applied — sized by the normal per-workload "
+                    + "aggregation at " + metro.getMetroId();
+        }
+        else if (strategy == BandwidthStrategy.AGGREGATED) {
+            reasoning = "Aggregated bandwidth for all workloads at " + metro.getMetroId();
+        }
+        else {
+            // PER_WORKLOAD, and CUSTOM configured with no bandwidth map at all (which sizes the
+            // same way: by the workloads that depend on this provider).
+            reasoning = "Sum of dependent workload bandwidths at " + metro.getMetroId();
+        }
 
         return BandwidthAllocation.builder()
                 .totalMbps(totalMbps)
@@ -515,8 +539,7 @@ final class DeploymentWizardEngine {
 
         List<PlannedBackboneLink> links = new ArrayList<>();
         BackboneTopology topology = config.getBackboneTopology();
-        String notificationEmail = config.getNotificationEmails().isEmpty()
-                ? null : config.getNotificationEmails().get(0);
+        List<String> notificationEmails = notificationEmails(config);
 
         List<MetroId> metroCodes = metros.stream()
                 .map(MetroRecommendation::getMetroId)
@@ -542,7 +565,7 @@ final class DeploymentWizardEngine {
                     .aSideRouterName(aSideRouterName)
                     .zSideMetro(metroZ)
                     .zSideRouterName(zSideRouterName)
-                    .notificationEmail(notificationEmail)
+                    .notificationEmails(notificationEmails)
                     .build();
 
             links.add(PlannedBackboneLink.builder()
@@ -577,6 +600,13 @@ final class DeploymentWizardEngine {
                 break;
 
             case RING:
+                if (n == 2) {
+                    // A 2-metro "ring" degenerates to the single A-B link (as FULL_MESH yields).
+                    // The naive modulo walk would emit BOTH (0,1) and (1,0) — two distinctly-named,
+                    // doubly-billed connections between the same pair of routers.
+                    pairs.add(new int[]{0, 1});
+                    break;
+                }
                 for (int i = 0; i < n; i++) {
                     pairs.add(new int[]{i, (i + 1) % n});
                 }
@@ -594,28 +624,29 @@ final class DeploymentWizardEngine {
             DeploymentWizard.Builder config,
             List<PlannedConnection> providerConnections,
             List<PlannedBackboneLink> backboneLinks,
-            PlanNames names) {
+            PlanNames names, SubnetAllocator subnets) {
 
         List<PlannedRoutingProtocol> protocols = new ArrayList<>();
 
         // Protocols for provider connections
         for (PlannedConnection conn : providerConnections) {
-            protocols.addAll(createProtocolPair(config, conn.getName(), names));
+            protocols.addAll(createProtocolPair(config, conn.getName(), names, subnets));
         }
 
         // Protocols for backbone links
         for (PlannedBackboneLink link : backboneLinks) {
-            protocols.addAll(createProtocolPair(config, link.getConnection().getName(), names));
+            protocols.addAll(createProtocolPair(config, link.getConnection().getName(), names, subnets));
         }
 
         return protocols;
     }
 
     private static List<PlannedRoutingProtocol> createProtocolPair(
-            DeploymentWizard.Builder config, String connectionName, PlanNames names) {
+            DeploymentWizard.Builder config, String connectionName, PlanNames names,
+            SubnetAllocator subnets) {
 
         List<PlannedRoutingProtocol> pair = new ArrayList<>(2);
-        String subnet = nextSubnet();
+        String subnet = subnets.next();
 
         // The protocol's own name must also clear Fabric's < 24-character limit, so it is composed
         // through the same generator (which truncates the connection stem and, if that collides,
@@ -647,11 +678,36 @@ final class DeploymentWizardEngine {
         return pair;
     }
 
-    private static String nextSubnet() {
-        int index = subnetCounter++;
-        int third = index % 256;
-        int second = 100 + (index / 256);
-        return "10." + second + "." + third;
+    /**
+     * Plan-scoped allocator for the /30 peering subnets stamped onto each connection's DIRECT+BGP
+     * pair. One instance is built per {@code generatePlan} call (like {@link PlanNames}), so
+     * concurrent plans — the embedded MCP server plans on server threads — never interleave into
+     * each other's sequence, and a plan's addressing is deterministic for its configuration.
+     *
+     * <p>Each connection consumes one third-octet step of the configured base (default
+     * {@code 10.100.0.0}): the first pair peers on {@code 10.100.0.1/30}÷{@code .2/30}, the next on
+     * {@code 10.100.1.x}, carrying into the second octet past 256 connections — the exact sequence
+     * the old static counter produced. Sequential plans deliberately restart from the same base;
+     * see the cross-plan caveat on {@code DeploymentWizard.Builder#subnetBase}.</p>
+     */
+    static final class SubnetAllocator {
+
+        /** The /24-aligned starting network, packed as an int (the base's fourth octet is ignored). */
+        private final int base;
+        private int counter;
+
+        SubnetAllocator(String subnetBase) {
+            String[] octets = subnetBase.split("\\.");
+            this.base = (Integer.parseInt(octets[0]) << 24)
+                    | (Integer.parseInt(octets[1]) << 16)
+                    | (Integer.parseInt(octets[2]) << 8);
+        }
+
+        /** The next three-octet prefix (e.g. {@code "10.100.3"}); the caller appends the host part. */
+        String next() {
+            int network = base + (counter++ << 8);
+            return ((network >>> 24) & 0xFF) + "." + ((network >>> 16) & 0xFF) + "." + ((network >>> 8) & 0xFF);
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -672,94 +728,98 @@ final class DeploymentWizardEngine {
 
         Map<String, BigDecimal> perConnectionCost = new LinkedHashMap<>();
         Set<PriceSource> sources = new HashSet<>();
-        // Every priced line flows through one reconciler. A plan can legitimately span metros in
-        // different currencies (live Fabric pricing quotes EUR in Frankfurt, USD in Ashburn, ...), and
-        // summing those into one monthly total would be a fabricated cross-currency figure.
+        // Every priced line flows through one plan-wide reconciler PLUS its category's reconciler. A
+        // plan can legitimately span metros in different currencies (live Fabric pricing quotes EUR in
+        // Frankfurt, USD in Ashburn, ...), and summing those into one monthly total — at the plan
+        // level OR within a category — would be a fabricated cross-currency figure.
         CurrencyReconciler recon = CurrencyReconciler.create();
+        CurrencyReconciler routerRecon = CurrencyReconciler.create();
+        CurrencyReconciler providerRecon = CurrencyReconciler.create();
+        CurrencyReconciler backboneRecon = CurrencyReconciler.create();
 
         // Cloud Routers
-        BigDecimal routerMonthly = BigDecimal.ZERO;
-        BigDecimal routerSetup = BigDecimal.ZERO;
         for (PlannedCloudRouter router : routers) {
             PriceQuote quote = priceRouter(rateCard, router, term);
-            routerMonthly = routerMonthly.add(quote.getMonthlyRecurring());
-            routerSetup = routerSetup.add(quote.getNonRecurring());
             recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
+            routerRecon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
             sources.add(quote.getSource());
         }
 
         // Provider connections
-        BigDecimal providerMonthly = BigDecimal.ZERO;
-        BigDecimal providerSetup = BigDecimal.ZERO;
         for (PlannedConnection conn : providerConnections) {
             PriceQuote quote = priceConnection(rateCard, conn.getConnectionType(),
                     conn.getBandwidthMbps(), conn.getASideMetro(), term);
-            providerMonthly = providerMonthly.add(quote.getMonthlyRecurring());
-            providerSetup = providerSetup.add(quote.getNonRecurring());
             perConnectionCost.put(conn.getName(), quote.getMonthlyRecurring());
             recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
+            providerRecon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
             sources.add(quote.getSource());
         }
 
         // Backbone links
-        BigDecimal backboneMonthly = BigDecimal.ZERO;
-        BigDecimal backboneSetup = BigDecimal.ZERO;
         for (PlannedBackboneLink link : backboneLinks) {
             ConnectionType type = link.getConnection() != null ? link.getConnection().getConnectionType() : null;
             PriceQuote quote = priceConnection(rateCard, type, link.getBandwidthMbps(), link.getMetroA(), term);
-            backboneMonthly = backboneMonthly.add(quote.getMonthlyRecurring());
-            backboneSetup = backboneSetup.add(quote.getNonRecurring());
             perConnectionCost.put(link.getName(), quote.getMonthlyRecurring());
             recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
+            backboneRecon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
             sources.add(quote.getSource());
         }
 
         PriceSource source = dominantSource(sources);
         boolean authoritative = source == PriceSource.EQUINIX_LIVE || source == PriceSource.CUSTOM;
+        boolean mixed = recon.isMixed();
 
-        if (recon.isMixed()) {
+        String currency = mixed ? null : recon.soleCurrencyOr("USD");
+
+        String disclaimer;
+        if (mixed) {
             // Mixed currencies: do not fabricate a combined total. Omit the monthly/setup totals and
-            // the single currency, surface the per-currency subtotals, and keep the per-category and
-            // per-connection figures (each valid in its own currency).
-            String mixDisclaimer = "This plan's connections are priced in multiple currencies ("
+            // the single currency, and surface the per-currency subtotals. Each CATEGORY figure gets
+            // the same treatment: kept (with its own currency) only when that category reconciles to
+            // a single currency, otherwise nulled with its per-currency subtotals carrying the truth.
+            disclaimer = "This plan's connections are priced in multiple currencies ("
                     + recon.describeCurrencies() + "): " + recon.describeMonthlySubtotals() + " per month. A single "
                     + "plan total cannot be formed without an FX rate, so the monthly and setup totals are omitted "
-                    + "rather than reported as a fabricated cross-currency sum; the per-connection and per-category "
-                    + "figures are each shown in their own currency.";
-            return PlanPricing.builder()
-                    .monthlyTotal(null)
-                    .setupTotal(null)
-                    .currency(null)
-                    .routerMonthlyCost(routerMonthly)
-                    .providerConnectionMonthlyCost(providerMonthly)
-                    .backboneMonthlyCost(backboneMonthly)
-                    .perConnectionCost(perConnectionCost)
-                    .source(source)
-                    .disclaimer(mixDisclaimer)
-                    .build();
+                    + "rather than reported as a fabricated cross-currency sum. A per-category figure is shown (in "
+                    + "its own currency) only when that category reconciles to one currency; a category that itself "
+                    + "spans currencies is reported as per-currency subtotals instead of a single figure.";
+        }
+        else {
+            disclaimer = authoritative
+                    ? "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume "
+                        + "discounts, and promotional offers."
+                    : "Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable "
+                        + "for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.";
         }
 
-        String currency = recon.soleCurrencyOr("USD");
-        BigDecimal monthlyTotal = recon.monthlyTotal().orElse(BigDecimal.ZERO);
-        BigDecimal setupTotal = recon.setupTotal().orElse(BigDecimal.ZERO);
-
-        String disclaimer = authoritative
-                ? "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume "
-                    + "discounts, and promotional offers."
-                : "Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable "
-                    + "for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.";
-
         return PlanPricing.builder()
-                .monthlyTotal(monthlyTotal)
-                .setupTotal(setupTotal)
+                .monthlyTotal(mixed ? null : recon.monthlyTotal().orElse(BigDecimal.ZERO))
+                .setupTotal(mixed ? null : recon.setupTotal().orElse(BigDecimal.ZERO))
                 .currency(currency)
-                .routerMonthlyCost(routerMonthly)
-                .providerConnectionMonthlyCost(providerMonthly)
-                .backboneMonthlyCost(backboneMonthly)
+                .monthlyByCurrency(recon.monthlySubtotals())
+                .routerMonthlyCost(categoryMonthly(routerRecon))
+                .routerCurrency(routerRecon.soleCurrencyOr(currency))
+                .routerMonthlyByCurrency(routerRecon.monthlySubtotals())
+                .providerConnectionMonthlyCost(categoryMonthly(providerRecon))
+                .providerConnectionCurrency(providerRecon.soleCurrencyOr(currency))
+                .providerConnectionMonthlyByCurrency(providerRecon.monthlySubtotals())
+                .backboneMonthlyCost(categoryMonthly(backboneRecon))
+                .backboneCurrency(backboneRecon.soleCurrencyOr(currency))
+                .backboneMonthlyByCurrency(backboneRecon.monthlySubtotals())
                 .perConnectionCost(perConnectionCost)
                 .source(source)
                 .disclaimer(disclaimer)
                 .build();
+    }
+
+    /**
+     * A category's single monthly figure: its reconciled sum when all its line items share a
+     * currency (zero for an empty category), or {@code null} when the category itself is mixed —
+     * a raw cross-currency category sum (EUR&nbsp;280 + USD&nbsp;300 = "580") is a fabricated
+     * number and is never reported.
+     */
+    private static BigDecimal categoryMonthly(CurrencyReconciler categoryRecon) {
+        return categoryRecon.monthlyTotal().orElse(null);
     }
 
     private static PriceSource dominantSource(Set<PriceSource> sources) {
