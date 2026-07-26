@@ -37,12 +37,13 @@ import api.equinix.javasdk.design.optimizer.wizard.model.PlannedBackboneLink;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlannedCloudRouter;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlannedConnection;
 import api.equinix.javasdk.design.optimizer.wizard.model.PlannedRoutingProtocol;
+import api.equinix.javasdk.design.optimizer.wizard.model.RouterBodies;
 import api.equinix.javasdk.fabric.client.CloudRouters;
 import api.equinix.javasdk.fabric.client.Connections;
 import api.equinix.javasdk.fabric.client.ServiceProfiles;
 import api.equinix.javasdk.fabric.enums.CloudRouterPackageCode;
+import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
-import api.equinix.javasdk.fabric.enums.NotificationType;
 import api.equinix.javasdk.fabric.model.CloudRouterPackage;
 import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.AccessPointTypeConfig;
@@ -188,6 +189,7 @@ public final class PlanValidator {
         checkAsn(customerAsn, errors);
         checkPackagesAndMetros(rs, errors);
         checkNotifications(rs, errors);
+        checkConnectionTypes(pcs, bbs, errors);
 
         // ── Layer 1: new-market gap (required provider not available at a placed metro) ──
         checkNewMarketGaps(metros, request, topology, errors);
@@ -347,14 +349,48 @@ public final class PlanValidator {
      * Property: $.notifications"). This asserts the requirement structurally, at plan time, so an omitted
      * notification surfaces as a friendly pre-flight error here — and its router is skipped by the live
      * router dry-run ({@link #routerDryRun}) — instead of a raw API 400 from a doomed dry-run.
+     * "No notification email" means the router's recipient LIST is empty (or holds only blanks) —
+     * routers carry every configured address, not a single one.
      */
     private static void checkNotifications(List<PlannedCloudRouter> routers, List<String> errors) {
         for (PlannedCloudRouter r : routers) {
-            if (isBlank(r.getNotificationEmail())) {
+            if (RouterBodies.usableNotificationEmails(r).isEmpty()) {
                 errors.add("Cloud Router '" + r.getName() + "' (" + r.getMetroId()
                         + ") has no notification email: Fabric requires at least one notification recipient "
                         + "to create a Cloud Router. Supply deployment.notifications.");
             }
+        }
+    }
+
+    /**
+     * Fabric accepts a virtual connection whose A-side is a Cloud Router only as {@code IP_VC}
+     * (FCR A-side =&gt; IP_VC); the port-based types ({@code EVPL_VC}, ...) are rejected live. Every
+     * wizard-planned connection — provider connections (unless redeemed from a caller-supplied
+     * customer port) and all backbone links (Cloud Router to Cloud Router) — has an FCR A-side, so
+     * an incompatible explicitly-configured type is a structural error here rather than a live 400.
+     */
+    private static void checkConnectionTypes(
+            List<PlannedConnection> connections, List<PlannedBackboneLink> links, List<String> errors) {
+        for (PlannedConnection conn : connections) {
+            checkFcrConnectionType("Connection", conn, errors);
+        }
+        for (PlannedBackboneLink link : links) {
+            if (link.getConnection() != null) {
+                checkFcrConnectionType("Backbone link", link.getConnection(), errors);
+            }
+        }
+    }
+
+    private static void checkFcrConnectionType(String kind, PlannedConnection conn, List<String> errors) {
+        if (conn.getASidePortUuid() != null) {
+            return; // a customer-port A-side may legitimately be EVPL_VC etc.
+        }
+        ConnectionType type = conn.getConnectionType();
+        if (type != null && type != ConnectionType.IP_VC) {
+            errors.add(kind + " '" + conn.getName() + "': connection type " + type
+                    + " is incompatible with a Cloud Router A-side — Fabric only accepts IP_VC for "
+                    + "FCR-originated connections (FCR A-side => IP_VC). Use IP_VC, or supply a "
+                    + "customer port A-side for a port-based type.");
         }
     }
 
@@ -640,24 +676,14 @@ public final class PlanValidator {
             // (EQ-3040013), so the friendly Layer-1 error stands in for it rather than a raw API rejection.
             if (r.getMetroId() == null || r.getPackageCode() == null
                     || r.getPackageCode() == GatewayPackageCode.UNKNOWN
-                    || isBlank(r.getNotificationEmail())) {
+                    || RouterBodies.usableNotificationEmails(r).isEmpty()) {
                 continue;
             }
             try {
-                var builder = client.define()
-                        .name(r.getName())
-                        .inMetro(r.getMetroId().code())
-                        .withPackage(r.getPackageCode());
-                if (r.getAccountNumber() != null) {
-                    builder.accountNumber(r.getAccountNumber());
-                }
-                if (r.getProjectId() != null) {
-                    builder.projectId(r.getProjectId());
-                }
-                if (r.getNotificationEmail() != null) {
-                    builder.notification(NotificationType.ALL, List.of(r.getNotificationEmail()));
-                }
-                builder.dryRun().create();
+                // The body comes from the SAME shared builder the execution-time Phase-1 create uses
+                // (RouterBodies), so what this dry-run validates is byte-for-byte what execute() will
+                // send — the only difference is the dryRun() terminator.
+                RouterBodies.routerBody(client, r).dryRun().create();
             } catch (Exception e) {
                 LiveFailure failure = classifyLiveFailure(e);
                 if (failure.isInfeasible()) {
@@ -934,10 +960,6 @@ public final class PlanValidator {
 
     private static String orEmpty(String s) {
         return s == null ? "" : s;
-    }
-
-    private static boolean isBlank(String s) {
-        return s == null || s.isBlank();
     }
 
     /**

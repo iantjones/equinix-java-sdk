@@ -414,7 +414,7 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
         // creates no Cloud Router.
         PlannedConnection conn = PlannedConnection.builder()
                 .name("to-aws-existing")
-                .connectionType(ConnectionType.EVPL_VC)
+                .connectionType(ConnectionType.IP_VC)
                 .purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(1000)
                 .aSideRouterName("no-phase1-router")
@@ -488,11 +488,12 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("execute() records a recoverable error when the waiter hits a terminal failure state")
+    @DisplayName("execute() records the REAL terminal state when the waiter hits a terminal failure")
     void executeWaiterRecordsTerminalFailure() {
         // The router create succeeds but every poll reports NOT_PROVISIONED — one of the waiter's
         // terminal failure states — so awaitState() gives up immediately (no 5-minute wait) and
-        // execute() records a recoverable error while keeping the resource with its interim status.
+        // execute() records a recoverable error naming the REAL terminal state (not a mislabelled
+        // "PROVISIONING") while keeping the resource so rollback can find it.
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
                 .willReturn(created("/json/fabric/cloud_router_provisioning_response.json")));
         stubSingleton(wireMock, "/fabric/v4/routers/[^/]+",
@@ -505,16 +506,182 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .filter(e -> e.getResourceType().equals("CloudRouter"))
                 .findFirst().orElseThrow();
         assertTrue(error.isRecoverable(), "a state-waiter failure is retryable");
-        assertTrue(error.getReason().contains("did not reach PROVISIONED"), error.getReason());
+        assertTrue(error.getReason().contains("reached terminal state NOT_PROVISIONED"),
+                "the error reports the actual terminal state observed: " + error.getReason());
 
-        // The resource is still recorded (with the interim status), so rollback can find it.
+        // The resource is still recorded — with the REAL observed state — so rollback can find it.
         ProvisionedResource router = outcome.getResources().get(0);
         assertEquals(ROUTER_UUID, router.getUuid());
-        assertEquals("PROVISIONING", router.getStatus(),
-                "a failed wait must not assert a PROVISIONED state that never held");
+        assertEquals("NOT_PROVISIONED", router.getStatus(),
+                "a terminally-failed wait records the state that actually held, never PROVISIONING");
 
         // failWhen fires on the very first fetch: exactly one poll, no timeout burn.
         wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/routers/" + ROUTER_UUID)));
+    }
+
+    @Test
+    @DisplayName("a connection that lands FAILED stops polling immediately, reports FAILED, and its routing protocols are skipped")
+    void executeConnectionTerminalFailureSkipsRoutingProtocols() {
+        // Router provisions cleanly; the provider connection's create succeeds but the first poll
+        // reports FAILED — a state that will never become PROVISIONED. The old code passed Set.of()
+        // as the terminal set here, so it polled the full 5-minute timeout, misreported the
+        // connection as "PROVISIONING", and Phase 4 still attempted routing protocols on it.
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(created("/json/fabric/cloud_router_response.json")));
+        stubSingleton(wireMock, "/fabric/v4/routers/[^/]+", "/json/fabric/cloud_router_response.json");
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
+                .willReturn(created("/json/fabric/connection_provisioned_response.json")));
+        wireMock.stubFor(get(urlPathMatching("/fabric/v4/connections/[^/]+"))
+                .willReturn(okJson("{\"uuid\": \"" + CONNECTION_UUID + "\", \"state\": \"FAILED\"}")));
+        wireMock.stubFor(post(urlPathMatching("/fabric/v4/connections/[^/]+/routingProtocols"))
+                .willReturn(created("/json/fabric/routing_protocol_response.json")));
+
+        PlannedConnection conn = PlannedConnection.builder()
+                .name("to-aws-failing")
+                .connectionType(ConnectionType.IP_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000)
+                .aSideRouterName("FCR-DC")
+                .zSideServiceProfileUuid("sp-aws")
+                .zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1")
+                .zSideCloudType(CloudProviderType.AWS)
+                .zSideAuthenticationKey("123456789012")
+                .zSideVlanTag(1001)
+                .build();
+        DeploymentPlan plan = DeploymentPlan.builder()
+                .cloudRouters(List.of(PlannedCloudRouter.builder()
+                        .metroId(DC).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD)
+                        .build()))
+                .providerConnections(List.of(conn))
+                .backboneLinks(List.of())
+                .routingProtocols(List.of(
+                        api.equinix.javasdk.design.optimizer.wizard.model.PlannedRoutingProtocol.builder()
+                                .name("to-aws-failing-DIR")
+                                .connectionName("to-aws-failing")
+                                .type(api.equinix.javasdk.fabric.enums.RoutingProtocolType.DIRECT)
+                                .equinixIfaceIpv4("10.100.0.1/30")
+                                .build(),
+                        api.equinix.javasdk.design.optimizer.wizard.model.PlannedRoutingProtocol.builder()
+                                .name("to-aws-failing-BGP")
+                                .connectionName("to-aws-failing")
+                                .type(api.equinix.javasdk.fabric.enums.RoutingProtocolType.BGP)
+                                .customerAsn(65100L)
+                                .customerPeerIpv4("10.100.0.2/30").equinixPeerIpv4("10.100.0.1/30")
+                                .build()))
+                .valid(true)
+                .validationErrors(List.of())
+                .fabric(fabric)
+                .build();
+        wireMock.resetRequests();
+
+        DeploymentOutcome outcome = plan.execute();
+
+        assertFalse(outcome.isFullySuccessful());
+        // The connection error names the REAL terminal state and says the protocols are skipped.
+        ProvisioningError connError = outcome.getErrors().stream()
+                .filter(e -> e.getResourceType().equals("Connection")
+                        && e.getResourceName().equals("to-aws-failing"))
+                .findFirst().orElseThrow(() -> new AssertionError(
+                        "expected a terminal-state connection error: " + outcome.getErrors()));
+        assertTrue(connError.getReason().contains("reached terminal state FAILED"),
+                "the real terminal state, never 'PROVISIONING': " + connError.getReason());
+        assertTrue(connError.getReason().contains("routing protocols skipped"), connError.getReason());
+
+        // The recorded resource carries the REAL state.
+        ProvisionedResource resource = outcome.getResources().stream()
+                .filter(r -> r.getResourceType().equals("Connection"))
+                .findFirst().orElseThrow();
+        assertEquals("FAILED", resource.getStatus());
+
+        // Both dependent routing protocols were skipped — no POST was ever attempted for them.
+        assertEquals(2, outcome.getErrors().stream()
+                        .filter(e -> e.getResourceType().equals("RoutingProtocol")
+                                && e.getReason().contains("was not provisioned"))
+                        .count(),
+                () -> "both protocols must be skipped as unprovisionable: " + outcome.getErrors());
+        wireMock.verify(0, postRequestedFor(urlPathMatching("/fabric/v4/connections/[^/]+/routingProtocols")));
+
+        // failWhen fires on the very first poll — no 5-minute timeout burn.
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/connections/" + CONNECTION_UUID)));
+    }
+
+    // ── execute() refuses an invalid plan (billable-resource guard) ──
+
+    @Test
+    @DisplayName("execute() throws IllegalStateException listing the validation errors when the plan is invalid — nothing is provisioned")
+    void executeRefusesInvalidPlan() {
+        stubCreatedResources();
+
+        DeploymentPlan invalid = DeploymentPlan.builder()
+                .cloudRouters(List.of(PlannedCloudRouter.builder()
+                        .metroId(DC).name("FCR-DC").packageCode(GatewayPackageCode.STANDARD)
+                        .build()))
+                .providerConnections(List.of())
+                .backboneLinks(List.of())
+                .routingProtocols(List.of())
+                .valid(false)
+                .validationErrors(List.of(
+                        "Cloud Router 'FCR-DC' (DC) has no notification email: Fabric requires at "
+                                + "least one notification recipient to create a Cloud Router."))
+                .fabric(fabric)
+                .build();
+        wireMock.resetRequests();
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, invalid::execute);
+        assertTrue(ex.getMessage().contains("re-plan"),
+                "the message tells the caller to fix and re-plan: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains("no notification email"),
+                "the message lists the recorded validation errors: " + ex.getMessage());
+
+        // Nothing was provisioned — not a single API call.
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/routers")));
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
+    }
+
+    // ── router-body parity: plan-time dry-run vs execute-time create (shared RouterBodies) ──
+
+    @Test
+    @DisplayName("the plan-time router dry-run and the execute-time real create send IDENTICAL wire bodies (both from RouterBodies)")
+    void routerDryRunAndCreateSendIdenticalBodies() throws Exception {
+        // The defect this pins: execute() Phase 1 used to hand-assemble its own router body WITHOUT
+        // the Fabric-mandated notifications (EQ-3040013) and with unguarded null account/project
+        // refs, while the Layer-2 dry-run (PlanValidator) stamped them — so a green dry-run was
+        // followed by every real create 400ing. Both paths now flow through RouterBodies; this test
+        // captures both requests off the wire and diffs them.
+        stubCreatedResources();
+        DeploymentPlan plan = twoMetroPlan(); // plan() dry-runs both routers over REST
+        plan.execute(awsInputs());            // Phase 1 creates both routers for real
+
+        List<com.github.tomakehurst.wiremock.verification.LoggedRequest> dryRuns =
+                wireMock.findAll(postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
+                        .withQueryParam("dryRun", equalTo("true")));
+        List<com.github.tomakehurst.wiremock.verification.LoggedRequest> creates =
+                wireMock.findAll(postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
+                        .withQueryParam("dryRun", absent()));
+        assertEquals(2, dryRuns.size(), "one dry-run per planned router (FCR-DC, FCR-DA)");
+        assertEquals(2, creates.size(), "one real create per planned router");
+
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        java.util.Map<String, com.fasterxml.jackson.databind.JsonNode> dryByName = new java.util.HashMap<>();
+        for (var req : dryRuns) {
+            com.fasterxml.jackson.databind.JsonNode body = mapper.readTree(req.getBodyAsString());
+            dryByName.put(body.get("name").asText(), body);
+        }
+        for (var req : creates) {
+            com.fasterxml.jackson.databind.JsonNode body = mapper.readTree(req.getBodyAsString());
+            String name = body.get("name").asText();
+            assertEquals(dryByName.get(name), body,
+                    "the real create body for '" + name + "' must equal the dry-run body it was "
+                            + "validated as — same notifications, same null guards");
+            // And the notification regression in particular: the REAL create carries the mandatory
+            // notifications (EQ-3040013), which the old hand-assembled body dropped.
+            assertEquals("noc@example.com", body.at("/notifications/0/emails/0").asText(),
+                    "the real create stamps the mandatory notification recipient: " + body);
+            // The null account/project guard: no null-valued account/project refs are sent.
+            assertTrue(body.path("account").isMissingNode() || !body.path("account").isNull(),
+                    "no AccountRef(null) is fabricated for an unset account: " + body);
+        }
     }
 
     /** A hand-built single-router plan so waiter tests poll exactly one resource. */
@@ -664,6 +831,12 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .willReturn(created("/json/fabric/cloud_router_response.json")));
     }
 
+    /** Stubs the sp-aws service-profile lookup so plan()'s Layer-1 catalog checks resolve and pass. */
+    private static void stubServiceProfileOk() {
+        wireMock.stubFor(get(urlPathMatching("/fabric/v4/serviceProfiles/.*"))
+                .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
+    }
+
     /**
      * The per-connection authorization a first-time customer supplies at execution: the AWS Account ID
      * and DOT1Q VLAN for the {@code FCR-DC-to-aws} provider connection of {@link #twoMetroPlan()}.
@@ -747,11 +920,17 @@ class DeploymentPlanExecutionWireMockTest extends WireMockTestBase {
                 .computeTimeMs(10)
                 .build();
 
+        // plan() now runs Layer-1 catalog checks whose failure would (rightly) invalidate the plan —
+        // and execute() refuses an invalid plan — so the sp-aws service-profile lookup must resolve.
+        stubServiceProfileOk();
+
         return fabric.deploymentWizard(result)
                 .routerPackage(routerPackage)
                 .routerNamePrefix("FCR")
-                .providerConnectionType(ConnectionType.EVPL_VC)
-                .backboneConnectionType(ConnectionType.EVPL_VC)
+                // IP_VC (the new default, set explicitly here): every planned connection has a Cloud
+                // Router A-side, which Fabric accepts only as IP_VC (FCR A-side => IP_VC fix).
+                .providerConnectionType(ConnectionType.IP_VC)
+                .backboneConnectionType(ConnectionType.IP_VC)
                 .backboneBandwidthMbps(10_000)
                 .backboneTopology(BackboneTopology.FULL_MESH)
                 .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)

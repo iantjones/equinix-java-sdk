@@ -46,7 +46,7 @@ public class TagCreatorJson {
      * @param type        the tag type
      * @param name        the tag name
      * @param displayName the tag display name
-     * @deprecated use {@link #builder()} — three same-typed {@code String} parameters make
+     * @deprecated use {@code builder()} — three same-typed {@code String} parameters make
      *             positional construction transposition-prone; scheduled for removal at the
      *             next major version
      */

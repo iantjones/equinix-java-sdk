@@ -211,6 +211,52 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("multiple target ASNs are queried in ONE batched asn__in request per endpoint")
+    void multiAsnAnalyzeBatchesRequests() {
+        long google = 15169L;
+        // The engine must collapse the per-ASN loop into one asn__in request per endpoint
+        // (net, netixlan, netfac) — deliberately NO per-ASN asn= stubs here, so a regression
+        // back to per-ASN requests fails loudly.
+        wireMock.stubFor(get(urlPathEqualTo("/api/net"))
+                .withQueryParam("asn__in", equalTo("16509,15169"))
+                .willReturn(okJson("{\"data\":["
+                        + "{\"asn\":16509,\"name\":\"Amazon.com, Inc.\",\"info_type\":\"Content\","
+                        + "\"policy_general\":\"Selective\",\"info_ipv6\":true},"
+                        + "{\"asn\":15169,\"name\":\"Google LLC\",\"info_type\":\"Content\","
+                        + "\"policy_general\":\"Open\",\"info_ipv6\":true}]}")));
+        wireMock.stubFor(get(urlPathEqualTo("/api/netixlan"))
+                .withQueryParam("asn__in", equalTo("16509,15169"))
+                .willReturn(okJson("{\"data\":["
+                        + "{\"ix_id\":100,\"asn\":16509,\"speed\":100000,\"is_rs_peer\":true,\"operational\":true},"
+                        + "{\"ix_id\":100,\"asn\":15169,\"speed\":40000,\"is_rs_peer\":true,\"operational\":true},"
+                        + "{\"ix_id\":999,\"asn\":15169,\"speed\":10000,\"is_rs_peer\":false,\"operational\":true}]}")));
+        wireMock.stubFor(get(urlPathEqualTo("/api/netfac"))
+                .withQueryParam("asn__in", equalTo("16509,15169"))
+                .willReturn(okJson("{\"data\":[]}")));
+
+        PeeringIntelligenceResult result = PeeringIntelligence.builder(stubFabric(), null)
+                .peeringDbBaseUrl(baseUrl())
+                .addAsn(AWS, "AWS")
+                .addAsn(google, "Google")
+                .analyze();
+
+        // Both networks were analyzed from the single batched response set.
+        assertNotNull(result.networkPresence(AWS));
+        assertNotNull(result.networkPresence(google));
+        assertEquals("Amazon.com, Inc.", result.networkPresence(AWS).getPeeringDbName());
+        assertEquals("Google LLC", result.networkPresence(google).getPeeringDbName());
+        assertTrue(result.networkPresence(AWS).hasIxPeeringAt(MetroId.of("DC")));
+        assertTrue(result.networkPresence(google).hasIxPeeringAt(MetroId.of("DC")));
+        assertEquals(40000, result.networkPresence(google).getTotalIxCapacityMbps(),
+                "the non-Equinix ix 999 session must still be filtered from the batched response");
+
+        // Exactly ONE request per endpoint for the whole two-ASN analysis.
+        wireMock.verify(exactly(1), getRequestedFor(urlPathEqualTo("/api/net")));
+        wireMock.verify(exactly(1), getRequestedFor(urlPathEqualTo("/api/netixlan")));
+        wireMock.verify(exactly(1), getRequestedFor(urlPathEqualTo("/api/netfac")));
+    }
+
+    @Test
     @DisplayName("analyze() with no target ASNs throws before any HTTP call")
     void analyzeRejectsNoAsns() {
         assertThrows(IllegalStateException.class, () ->

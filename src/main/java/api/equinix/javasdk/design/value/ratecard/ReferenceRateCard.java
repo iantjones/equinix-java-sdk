@@ -32,6 +32,17 @@ import java.util.TreeMap;
  * live Fabric Pricing API (use a {@code LayeredRateCard} with
  * {@code EquinixRateCard} ahead of this one).</p>
  *
+ * <p>Because the bundled table is deliberately coarse, the lookups are coarse too:
+ * {@code connection(...)} matches on <em>bandwidth alone</em> — the smallest
+ * tabulated tier at or above the request, linearly extrapolated (with an
+ * {@code EXTRAPOLATED} note) above the top tier — and ignores connection type,
+ * metro, and term; {@code cloudRouter(...)} ignores metro and term, and
+ * substitutes the STANDARD figure for an unlisted package with a note naming the
+ * substitution; {@code egress(...)} matches provider + path, ignoring region and
+ * term. The emitted notes identify the tier or substitution; the data vintage is
+ * available via {@link #asOf()} (the engines surface it in their reports'
+ * "as of" line).</p>
+ *
  * <p>The bundled data set is loaded once from
  * {@code /json/ratecard_reference_2026_06.json} and cached.</p>
  */
@@ -179,14 +190,21 @@ public final class ReferenceRateCard implements RateCard {
     @Override
     public Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term) {
         BigDecimal monthly = packageCode == null ? null : routerByPackage.get(packageCode);
+        String note = "reference Cloud Router";
         if (monthly == null) {
             monthly = routerByPackage.get("STANDARD");
+            // The STANDARD figure standing in for a package the table does not list is a
+            // substitution, and the note must say so — a PREMIUM estimate silently priced at the
+            // STANDARD rate would read as a genuine PREMIUM reference figure.
+            if (monthly != null && packageCode != null && !"STANDARD".equals(packageCode)) {
+                note = "reference Cloud Router (STANDARD substituted for " + packageCode + ")";
+            }
         }
         if (monthly == null) {
             return Optional.empty();
         }
         return Optional.of(PriceQuote.monthly(monthly, currency, PriceSource.REFERENCE)
-                .withNote("reference Cloud Router"));
+                .withNote(note));
     }
 
     @Override
@@ -204,22 +222,65 @@ public final class ReferenceRateCard implements RateCard {
 
     // ── Reference accessors used by the TCO archetype models ──
 
+    /**
+     * The vintage of the bundled figures, e.g. {@code "2026-06"}. Reports should surface
+     * this next to any reference-derived number so its age is visible.
+     *
+     * @return the data set's as-of stamp, or {@code null} if the bundle omits it
+     */
     public String asOf() {
         return asOf;
     }
 
+    /**
+     * The bundled data set's own disclaimer text — what the figures are, what they
+     * exclude, and why they are estimates rather than quotes. Engines append it to
+     * their report output.
+     *
+     * @return the disclaimer, or {@code null} if the bundle omits it
+     */
     public String disclaimer() {
         return disclaimer;
     }
 
+    /**
+     * The ISO&nbsp;4217 code of the currency every bundled figure is expressed in
+     * ({@code "USD"} for the standard bundle). The engines compare it against their
+     * comparison currency before folding reference figures into a total — reference
+     * numbers are never mixed into a differently-denominated sum.
+     *
+     * @return the reference data's currency code
+     */
     public String currencyCode() {
         return currency.getCurrencyCode();
     }
 
+    /**
+     * An indicative on-premises cost midpoint by key. The bundled keys are:
+     * <ul>
+     *   <li>{@code "transitPerMbpsMonth"} — carrier IP transit, per Mbps per month;</li>
+     *   <li>{@code "crossConnectMonthly"} — a carrier-hotel cross-connect, per month;</li>
+     *   <li>{@code "hardwareMonthly"} — amortized network hardware, per month;</li>
+     *   <li>{@code "powerPerKwMonth"} — power/space, per kW per month.</li>
+     * </ul>
+     * These feed the TCO model's on-prem archetype and are individually overridable via
+     * the {@code TcoCalculator.Builder.onPrem*} methods.
+     *
+     * @param key one of the keys above
+     * @return the midpoint in the reference currency, or empty for an unknown key or an
+     *         entry missing from the bundle
+     */
     public Optional<BigDecimal> onPrem(String key) {
         return Optional.ofNullable(onPrem.get(key));
     }
 
+    /**
+     * The indicative monthly fee for one Equinix cross-connect (per physical
+     * cross-connect, in the reference currency) — the fallback the TCO model uses when
+     * the caller supplies no {@code ColocationItem.CROSS_CONNECT} rate.
+     *
+     * @return the per-unit monthly fee, or empty if the bundle omits it
+     */
     public Optional<BigDecimal> equinixCrossConnectMonthly() {
         return Optional.ofNullable(equinixCrossConnectMonthly);
     }
@@ -227,22 +288,56 @@ public final class ReferenceRateCard implements RateCard {
     /**
      * The indicative monthly fee for a cloud provider's interconnect port/circuit
      * (AWS Direct Connect / Azure ExpressRoute / GCP Interconnect) at or above the
-     * requested bandwidth.
+     * requested bandwidth. A request above the largest tabulated tier is never
+     * silently floored back to that tier's flat price (which would price a 100G
+     * requirement as a single 10G circuit) — it is extrapolated linearly from the
+     * top tier's per-Mbps rate, exactly as {@code connection(...)} does; use
+     * {@link #cspInterconnectPortMonthlyQuote} to see the extrapolation tag.
      *
      * @param provider      the cloud provider
      * @param bandwidthMbps the desired bandwidth
-     * @return the reference monthly port fee, or empty if none is tabulated
+     * @return the reference monthly port fee (extrapolated above the top tabulated
+     *         tier), or empty if none is tabulated
      */
     public Optional<BigDecimal> cspInterconnectPortMonthly(CloudProviderType provider, int bandwidthMbps) {
+        return cspInterconnectPortMonthlyQuote(provider, bandwidthMbps)
+                .map(PriceQuote::getMonthlyRecurring);
+    }
+
+    /**
+     * As {@link #cspInterconnectPortMonthly}, returning the fee as a tagged
+     * {@link PriceQuote}: an at-or-above tabulated tier carries a plain reference
+     * note, while a request above the top tier carries a note flagging the figure
+     * as {@code EXTRAPOLATED above top tabulated tier} so it is never mistaken for
+     * a tabulated rate.
+     *
+     * @param provider      the cloud provider
+     * @param bandwidthMbps the desired bandwidth
+     * @return the reference monthly port fee as a noted quote, or empty if none is tabulated
+     */
+    public Optional<PriceQuote> cspInterconnectPortMonthlyQuote(CloudProviderType provider, int bandwidthMbps) {
         NavigableMap<Integer, BigDecimal> tiers = cspPortByBandwidth.get(provider);
         if (tiers == null || tiers.isEmpty()) {
             return Optional.empty();
         }
         Map.Entry<Integer, BigDecimal> tier = tiers.ceilingEntry(bandwidthMbps);
-        if (tier == null) {
-            tier = tiers.floorEntry(bandwidthMbps);
+        if (tier != null) {
+            return Optional.of(PriceQuote.monthly(tier.getValue(), currency, PriceSource.REFERENCE)
+                    .withNote("reference " + provider + " interconnect port ~" + tier.getKey() + " Mbps"));
         }
-        return tier == null ? Optional.empty() : Optional.of(tier.getValue());
+        // The request exceeds every tabulated tier. Do NOT floor back to the top tier's flat
+        // price — that would price, e.g., a 100G requirement as one 10G circuit, a silent
+        // under-price. Mirror connection(): extrapolate linearly from the top tier's per-Mbps
+        // rate and TAG the result as an extrapolation. Linear extrapolation of a flat schedule
+        // over-prices at higher bandwidth (the safe direction).
+        Map.Entry<Integer, BigDecimal> top = tiers.lastEntry();
+        BigDecimal extrapolated = top.getValue()
+                .multiply(BigDecimal.valueOf(bandwidthMbps))
+                .divide(BigDecimal.valueOf(top.getKey()), 2, RoundingMode.HALF_UP);
+        return Optional.of(PriceQuote.monthly(extrapolated, currency, PriceSource.REFERENCE)
+                .withNote("reference " + provider + " interconnect port EXTRAPOLATED above top tabulated tier ("
+                        + top.getKey() + " Mbps = " + top.getValue() + "): linear per-Mbps estimate for "
+                        + bandwidthMbps + " Mbps, not a tabulated rate"));
     }
 
     private static CloudProviderType parseProvider(String name) {

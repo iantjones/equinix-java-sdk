@@ -1,0 +1,63 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 4
+  },
+  "data": [
+    {
+      "type": "CLOUD_ROUTER_PRODUCT",
+      "currency": "USD",
+      "code": "FCR_NONSTANDARD_DC",
+      "name": "Fabric Cloud Router NONSTANDARD",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 111.00 }
+      ],
+      "router": {
+        "package": { "code": "NONSTANDARD" },
+        "location": { "metroCode": "DC" }
+      }
+    },
+    {
+      "type": "CLOUD_ROUTER_PRODUCT",
+      "currency": "USD",
+      "code": "FCR_PREMIUM_SG",
+      "name": "Fabric Cloud Router PREMIUM Singapore",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 2400.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "router": {
+        "package": { "code": "PREMIUM" },
+        "location": { "metroCode": "SG" }
+      }
+    },
+    {
+      "type": "CLOUD_ROUTER_PRODUCT",
+      "currency": "USD",
+      "code": "FCR_STANDARD_DC",
+      "name": "Fabric Cloud Router STANDARD",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 1200.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "router": {
+        "package": { "code": "STANDARD" },
+        "location": { "metroCode": "DC" }
+      }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_SV_600_SPLIT",
+      "name": "EVPL Virtual Connection DC 600Mbps (base plus surcharge)",
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 500.00 },
+        { "type": "MONTHLY_RECURRING", "price": 120.00 },
+        { "type": "NON_RECURRING", "price": 100.00 },
+        { "type": "NON_RECURRING", "price": 50.00 }
+      ],
+      "connection": { "bandwidth": 600 }
+    }
+  ]
+}

@@ -31,14 +31,14 @@ import java.util.List;
  * <h3>Round-up is surfaced, never silent</h3>
  * <p>When a requirement has no exact service-profile tier the wizard selects the smallest tier that
  * satisfies it (3000&nbsp;&rarr;&nbsp;5000) rather than erroring — but rounding up increases the billed
- * bandwidth, so it is recorded here ({@link #isRoundedUp()}, {@link #roundedUpByMbps()}) and rendered
+ * bandwidth, so it is recorded here ({@code isRoundedUp()}, {@link #roundedUpByMbps()}) and rendered
  * in the plan. A non-interactive caller still gets a valid plan (the smallest covering tier); an
  * interactive caller can confirm the increase before provisioning.</p>
  *
  * <h3>Choice is exposed, with a valid default</h3>
- * <p>{@link #getAlternatives()} lists every covering candidate, the wizard's default first. When more
+ * <p>{@code getAlternatives()} lists every covering candidate, the wizard's default first. When more
  * than one candidate can carry the bandwidth ({@link #hasChoice()}), the MCP layer may elicit a choice;
- * either way {@link #getSelectedProfileUuid()} / {@link #getSelectedSellerRegion()} are the default the
+ * either way {@code getSelectedProfileUuid()} / {@code getSelectedSellerRegion()} are the default the
  * plan is built with, so the plan is always executable without interaction.</p>
  */
 @Value

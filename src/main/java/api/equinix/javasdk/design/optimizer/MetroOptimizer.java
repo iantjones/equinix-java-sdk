@@ -244,7 +244,7 @@ public final class MetroOptimizer {
         /**
          * Executes the optimization pipeline. Assembles an {@link OptimizationRequest} from
          * the configured sites, providers, workloads, constraints, strategy, and scoring weights,
-         * then delegates to the {@link MetroOptimizerEngine} for scoring and ranking.
+         * then delegates to the internal {@code MetroOptimizerEngine} for scoring and ranking.
          *
          * <p>This method makes live API calls to retrieve metro and service profile data from
          * Equinix Fabric. The {@link api.equinix.javasdk.Fabric Fabric} client must be authenticated before calling this method.</p>
@@ -559,8 +559,11 @@ public final class MetroOptimizer {
 
         /**
          * Overrides the latency sensitivity tier for this workload, independent of the
-         * {@link WorkloadType}'s default. This affects how aggressively the optimizer
-         * penalizes high-latency metros for this workload.
+         * {@link WorkloadType}'s default. The tier's {@code thresholdMs} acts as the workload's
+         * default latency ceiling during placement whenever no explicit
+         * {@link #maxLatencyToleranceMs(double)} is set — so {@code CRITICAL}/{@code HIGH}
+         * workloads are placed under a tighter default ceiling than {@code LOW} ones — and
+         * {@code CRITICAL} additionally routes the workload through lowest-latency placement.
          *
          * @param sensitivity the latency sensitivity tier
          * @return this builder for method chaining
@@ -585,8 +588,10 @@ public final class MetroOptimizer {
 
         /**
          * Sets an explicit maximum latency tolerance in milliseconds for this workload,
-         * overriding the threshold derived from the latency sensitivity tier. Metros
-         * exceeding this latency to any required site will be penalized.
+         * overriding the default ceiling derived from the latency sensitivity tier's
+         * {@code thresholdMs}. The ceiling narrows which recommended metros this workload may be
+         * placed in (worst-case estimated latency to any user site); a ceiling no recommended
+         * metro can honour is stated on the placement and raised as a risk finding.
          *
          * @param maxMs the maximum acceptable latency in milliseconds
          * @return this builder for method chaining
@@ -833,8 +838,13 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Sets compliance zone requirements for data sovereignty. Metros outside the
-         * allowed regions for the specified compliance zones will be penalized or excluded.
+         * Sets compliance zone requirements for data sovereignty. A deployment satisfies the
+         * requested zones when <em>each zone is covered by at least one recommended metro</em>:
+         * candidacy keeps any metro that helps satisfy at least one zone, scoring grades each metro
+         * by the fraction of requested zones its region is allowed by, and a zone the selected set
+         * leaves uncovered raises a {@code COMPLIANCE_GAP} risk finding. A metro outside every
+         * requested zone's allowed regions is excluded from candidacy (unless force-included via
+         * {@code requireMetro(...)}, which is then flagged as a compliance gap).
          *
          * @param zones the compliance zones to enforce (e.g., {@code ComplianceZone.EU_GDPR})
          * @return this builder for method chaining

@@ -1,0 +1,75 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 5
+  },
+  "data": [
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_SV_1000_36M",
+      "name": "EVPL Virtual Connection DC to SV 1Gbps 36-month",
+      "termLength": 36,
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 90.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 1000 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_DC_SV_1000_1M",
+      "name": "EVPL Virtual Connection DC to SV 1Gbps on-demand",
+      "termLength": 1,
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 180.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 1000 }
+    },
+    {
+      "type": "VIRTUAL_CONNECTION_PRODUCT",
+      "currency": "USD",
+      "code": "EVPL_VC_SV_LA_2000_36M",
+      "name": "EVPL Virtual Connection SV to LA 2Gbps 36-month",
+      "termLength": 36,
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 120.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "connection": { "bandwidth": 2000 }
+    },
+    {
+      "type": "CLOUD_ROUTER_PRODUCT",
+      "currency": "USD",
+      "code": "FCR_STANDARD_DC_36M",
+      "name": "Fabric Cloud Router STANDARD 36-month",
+      "termLength": 36,
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 950.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "router": {
+        "package": { "code": "STANDARD" },
+        "location": { "metroCode": "DC" }
+      }
+    },
+    {
+      "type": "CLOUD_ROUTER_PRODUCT",
+      "currency": "USD",
+      "code": "FCR_STANDARD_DC_1M",
+      "name": "Fabric Cloud Router STANDARD on-demand",
+      "termLength": 1,
+      "charges": [
+        { "type": "MONTHLY_RECURRING", "price": 1300.00 },
+        { "type": "NON_RECURRING", "price": 0.00 }
+      ],
+      "router": {
+        "package": { "code": "STANDARD" },
+        "location": { "metroCode": "DC" }
+      }
+    }
+  ]
+}

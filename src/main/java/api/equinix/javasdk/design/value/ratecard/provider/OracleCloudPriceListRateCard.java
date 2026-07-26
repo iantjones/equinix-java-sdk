@@ -26,6 +26,7 @@ import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -50,11 +51,20 @@ import java.util.Map;
  * rather than a per-GB egress SKU, so a {@code PRIVATE} lookup returns empty and a layered card
  * falls back to another source. Every rate it returns is tagged {@link PriceSource#PROVIDER_API}.</p>
  *
- * <p>The price list is fetched once and cached for the adapter's lifetime; the adapter is
- * fault-tolerant — any fetch or parse failure yields no rate rather than an exception.</p>
+ * <p>The price list is fetched once and cached for the adapter's lifetime — but only when the
+ * fetch <em>completed</em>. An incomplete fetch (a transport failure, or pagination cut short) is
+ * never memoized: a SKU found in the retrieved pages is still a real datum and is cached, but a
+ * <em>miss</em> over an incomplete catalogue is not authoritative and is retried on the next
+ * lookup. The adapter is fault-tolerant — any fetch or parse failure yields no rate rather than
+ * an exception.</p>
  */
+@Slf4j
 public final class OracleCloudPriceListRateCard implements RateCard {
 
+    /**
+     * The public OCI Price List (cetools) products endpoint; the default for {@link #create()}.
+     * Override via {@link #create(String)} for a proxy or testing.
+     */
     public static final String DEFAULT_ENDPOINT =
             "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/";
 
@@ -69,14 +79,21 @@ public final class OracleCloudPriceListRateCard implements RateCard {
     private final String endpoint;
     private final ProviderPricingHttpClient http;
     private final Map<String, Optional<EgressRate>> cache = new ConcurrentHashMap<>();
-    private volatile List<JsonNode> priceItems;
-    private volatile boolean fetched;
+    private final Object fetchLock = new Object();
+    private volatile Catalogue catalogue;
 
     private OracleCloudPriceListRateCard(String endpoint) {
         this.endpoint = endpoint;
         this.http = new ProviderPricingHttpClient();
     }
 
+    /**
+     * Creates an adapter against the public OCI Price List endpoint
+     * ({@link #DEFAULT_ENDPOINT}). No credentials required; note it prices
+     * {@code INTERNET} egress only ({@code PRIVATE}/FastConnect is port-based).
+     *
+     * @return a new OCI pricing adapter
+     */
     public static OracleCloudPriceListRateCard create() {
         return new OracleCloudPriceListRateCard(DEFAULT_ENDPOINT);
     }
@@ -105,7 +122,22 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         if (provider != CloudProviderType.ORACLE_CLOUD || path != EgressPath.INTERNET) {
             return Optional.empty();
         }
-        return cache.computeIfAbsent(region == null ? "*" : region, this::resolveInternetEgress);
+        String key = region == null ? "*" : region;
+        Optional<EgressRate> cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        // Fetch the (shared, single-flight) price list OUTSIDE the result map: a network fetch
+        // must never run inside ConcurrentHashMap's mapping function holding a bin lock.
+        Catalogue current = priceItems();
+        Optional<EgressRate> resolved = resolveInternetEgress(current.items, region);
+        if (resolved.isEmpty() && !current.complete) {
+            // A miss over an incomplete catalogue is not authoritative — don't cache; the next
+            // lookup retries. (A found SKU IS a real datum and is cached below.)
+            return Optional.empty();
+        }
+        Optional<EgressRate> raced = cache.putIfAbsent(key, resolved);
+        return raced != null ? raced : resolved;
     }
 
     @Override
@@ -113,9 +145,9 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         return PriceSource.PROVIDER_API;
     }
 
-    private Optional<EgressRate> resolveInternetEgress(String region) {
+    private static Optional<EgressRate> resolveInternetEgress(List<JsonNode> items, String region) {
         String geography = geographyFor(region);
-        for (JsonNode item : priceItems()) {
+        for (JsonNode item : items) {
             String name = item.path("displayName").asText("");
             String lower = name.toLowerCase();
             // The generic OCI egress SKUs (not service-specific ones like "MySQL Database - ...").
@@ -164,16 +196,26 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         return null;
     }
 
-    private List<JsonNode> priceItems() {
-        if (!fetched) {
-            synchronized (this) {
-                if (!fetched) {
-                    priceItems = fetchAllItems();
-                    fetched = true;
+    /**
+     * The price list, fetched single-flight and memoized on <em>complete</em> fetches only: an
+     * incomplete catalogue (transport failure or truncated pagination) is returned for this call
+     * but not remembered, so the next lookup retries rather than an outage being memoized as
+     * "no rate" for the adapter's lifetime.
+     */
+    private Catalogue priceItems() {
+        Catalogue local = catalogue;
+        if (local == null) {
+            synchronized (fetchLock) {
+                local = catalogue;
+                if (local == null) {
+                    local = fetchAllItems();
+                    if (local.complete) {
+                        catalogue = local;
+                    }
                 }
             }
         }
-        return priceItems;
+        return local;
     }
 
     /**
@@ -181,18 +223,18 @@ public final class OracleCloudPriceListRateCard implements RateCard {
      * The cetools handler currently serves the whole catalogue in one response (no {@code hasMore}
      * / {@code links.next}), in which case this is a single GET. If it ever paginates, every page
      * is accumulated before the caller matches — so a "not found" is only ever reported after the
-     * continuation has been exhausted, never off a truncated first page.
+     * continuation has been exhausted, never off a truncated first page. A fetch failure or a
+     * {@link #MAX_PAGES} trip with a live continuation marks the catalogue incomplete: matching
+     * still runs over the retrieved pages (a found SKU is a real datum), but the caller treats a
+     * miss as non-authoritative and the snapshot is not memoized.
      */
-    private List<JsonNode> fetchAllItems() {
+    private Catalogue fetchAllItems() {
         List<JsonNode> collected = new ArrayList<>();
         String url = endpoint + (endpoint.contains("?") ? "&" : "?") + "currencyCode=USD";
-        for (int page = 0; url != null && !url.isEmpty() && page < MAX_PAGES; page++) {
+        for (int page = 0; page < MAX_PAGES; page++) {
             Optional<JsonNode> body = http.getJson(url);
             if (body.isEmpty()) {
-                // Fetch failure: stop paginating and match over whatever pages we did retrieve.
-                // A found SKU is a real datum; a miss simply yields no rate (a layered card falls
-                // back), never a fabricated number.
-                break;
+                return new Catalogue(collected, false);
             }
             JsonNode root = body.get();
             JsonNode items = root.path("items");
@@ -202,8 +244,24 @@ public final class OracleCloudPriceListRateCard implements RateCard {
                 }
             }
             url = nextLink(root);
+            if (url == null || url.isEmpty()) {
+                return new Catalogue(collected, true);
+            }
         }
-        return collected;
+        log.warn("OCI Price List pagination truncated at the {}-page safety cap with a live next link; "
+                + "matching will run over the {} items collected so far", MAX_PAGES, collected.size());
+        return new Catalogue(collected, false);
+    }
+
+    /** A fetched price-list snapshot plus whether the fetch retrieved every page. */
+    private static final class Catalogue {
+        private final List<JsonNode> items;
+        private final boolean complete;
+
+        private Catalogue(List<JsonNode> items, boolean complete) {
+            this.items = items;
+            this.complete = complete;
+        }
     }
 
     /**

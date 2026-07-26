@@ -132,12 +132,24 @@ public final class CurrencyReconciler {
     /**
      * The combined monthly total &mdash; present only when the components reconcile to a single
      * currency, empty when they are {@link #isMixed() mixed} (a cross-currency sum would be false).
+     *
+     * <p><strong>Empty-reconciler caveat:</strong> when <em>nothing</em> priceable was recorded
+     * &mdash; including when every added component carried a null/blank currency &mdash; this
+     * returns {@code Optional.of(ZERO)}, not {@code Optional.empty()}: zero is the correct sum
+     * of no components, but it is <em>not</em> evidence that anything was priced. Callers must
+     * therefore pair this with {@link #isEmpty()} / {@link #sawUnknownCurrency()} (as the
+     * engines' {@code priced}/{@code complete} flags do) before presenting the total, or an
+     * all-unpriceable accumulation reads as "costs $0" &mdash; exactly the fabricated figure
+     * this class exists to prevent.</p>
      */
     public Optional<BigDecimal> monthlyTotal() {
         return isMixed() ? Optional.empty() : Optional.of(sum(monthly));
     }
 
-    /** The combined setup total, with the same single-currency guard as {@link #monthlyTotal()}. */
+    /**
+     * The combined setup total, with the same single-currency guard &mdash; and the same
+     * empty-reconciler caveat &mdash; as {@link #monthlyTotal()}.
+     */
     public Optional<BigDecimal> setupTotal() {
         return isMixed() ? Optional.empty() : Optional.of(sum(setup));
     }

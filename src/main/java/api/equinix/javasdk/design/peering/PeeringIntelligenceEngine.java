@@ -18,7 +18,10 @@ package api.equinix.javasdk.design.peering;
 
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.fabric.model.Metro;
+import api.equinix.javasdk.fabric.model.ServiceProfile;
 import api.equinix.javasdk.fabric.model.implementation.GeoCoordinate;
+import api.equinix.javasdk.fabric.model.implementation.ServiceProfileMetro;
+import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import api.equinix.javasdk.core.model.MetroId;
 import api.equinix.javasdk.design.geo.SpeedOfLightLatency;
 import api.equinix.javasdk.design.peering.client.*;
@@ -44,9 +47,9 @@ import java.util.stream.Collectors;
  *   <li>Query PeeringDB for each target ASN (netixlan + netfac + net)</li>
  *   <li>Filter to Equinix IXes and facilities</li>
  *   <li>Build NetworkPresence per ASN</li>
+ *   <li>Cross-reference Fabric service profiles (best-effort; "not analyzed" on failure)</li>
  *   <li>Build PresenceMatrix (ASN × Metro grid)</li>
  *   <li>Build MetroPresenceReports (per metro)</li>
- *   <li>Optionally: cross-reference Fabric service profiles</li>
  *   <li>Optionally: perform resiliency analysis (blast radius, correlated failures)</li>
  *   <li>Optionally: discover mutual peering opportunities</li>
  *   <li>Build unified connectivity views</li>
@@ -79,6 +82,15 @@ class PeeringIntelligenceEngine {
     private final Map<Long, List<PeeringDbNetIxlan>> ixPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, List<PeeringDbNetFac>> facPresenceByAsn = new LinkedHashMap<>();
     private final Map<Long, NetworkPresence> networkPresences = new LinkedHashMap<>();
+
+    /**
+     * Per target ASN, the Equinix metros where a Fabric service profile matching that network is
+     * published: metro → the matching profile's UUID (first in catalog order when several match).
+     * Populated by {@code analyzeFabricAvailability()}; empty for an ASN with no matching profile,
+     * and empty overall when the Fabric service-profile catalog could not be read (in which case a
+     * warning marks Fabric availability as NOT analyzed rather than genuinely absent).
+     */
+    private final Map<Long, Map<MetroId, String>> fabricProfilesByAsn = new LinkedHashMap<>();
 
     /**
      * Live Fabric metro geo data, loaded once per analysis from {@code fabric.metros()}: metro →
@@ -128,14 +140,15 @@ class PeeringIntelligenceEngine {
             ixMapping.mapIxes(peeringDb.getEquinixIxMap());
             loadFacilityCoordinates();
 
-            // Phase 2: Query each target ASN
-            for (Map.Entry<Long, String> entry : request.getTargetAsns().entrySet()) {
-                long asn = entry.getKey();
-                queryAsn(asn);
-            }
+            // Phase 2: Query PeeringDB for all target ASNs (batched asn__in requests)
+            queryTargetAsns();
 
             // Phase 3: Build NetworkPresence per ASN
             buildNetworkPresences();
+
+            // Phase 3.5: Cross-reference Fabric service profiles for private-connectivity
+            // availability (best-effort; a failure degrades to "not analyzed" with a warning).
+            analyzeFabricAvailability();
 
             // Phase 4: Build PresenceMatrix
             PresenceMatrix matrix = buildPresenceMatrix();
@@ -197,42 +210,47 @@ class PeeringIntelligenceEngine {
         return (message != null && !message.isBlank()) ? message : t.getClass().getSimpleName();
     }
 
-    // ---- Phase 2: Per-ASN data collection ----
+    // ---- Phase 2: Target-ASN data collection (batched) ----
 
-    private void queryAsn(long asn) throws IOException {
-        // The three PeeringDB GETs for a single ASN (net, netixlan, netfac) are
-        // independent of one another, so they are fanned out onto a virtual-thread
-        // executor to overlap their blocking I/O. The ASN loop itself stays
-        // sequential (see execute()) to avoid bursting PeeringDB's anonymous
-        // ~20 req/min rate limit. Results and exception behaviour are identical to
-        // running the three calls in series: a failed sub-call still surfaces as an
-        // IOException out of this method.
-        PeeringDbNetwork net;
-        List<PeeringDbNetIxlan> ixPresence;
-        List<PeeringDbNetFac> facPresence;
+    private void queryTargetAsns() throws IOException {
+        // ALL target ASNs are queried per endpoint in one batched call: the client uses
+        // PeeringDB's asn__in query operator, collapsing the former one-request-per-ASN loop
+        // (3 x N requests) into one request per endpoint per 150-ASN chunk — the single most
+        // effective way to stay under PeeringDB's anonymous ~20 req/min rate limit. The three
+        // endpoints (net, netixlan, netfac) are independent of one another, so they are fanned
+        // out onto a virtual-thread executor to overlap their blocking I/O; a failed sub-call
+        // still surfaces as an IOException out of this method.
+        Set<Long> asns = new LinkedHashSet<>(request.getTargetAsns().keySet());
+
+        Map<Long, PeeringDbNetwork> nets;
+        Map<Long, List<PeeringDbNetIxlan>> ixPresence;
+        Map<Long, List<PeeringDbNetFac>> facPresence;
 
         try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
-            Future<PeeringDbNetwork> netFuture = exec.submit(() -> peeringDb.getNetwork(asn));
-            Future<List<PeeringDbNetIxlan>> ixFuture = exec.submit(() -> peeringDb.getEquinixIxPresence(asn));
-            Future<List<PeeringDbNetFac>> facFuture = exec.submit(() -> peeringDb.getEquinixFacPresence(asn));
+            Future<Map<Long, PeeringDbNetwork>> netFuture =
+                    exec.submit(() -> peeringDb.getNetworks(asns));
+            Future<Map<Long, List<PeeringDbNetIxlan>>> ixFuture =
+                    exec.submit(() -> peeringDb.getEquinixIxPresence(asns));
+            Future<Map<Long, List<PeeringDbNetFac>>> facFuture =
+                    exec.submit(() -> peeringDb.getEquinixFacPresence(asns));
 
-            net = awaitResult(netFuture);
+            nets = awaitResult(netFuture);
             ixPresence = awaitResult(ixFuture);
             facPresence = awaitResult(facFuture);
         }
 
-        if (net != null) {
-            networkMetadata.put(asn, net);
+        networkMetadata.putAll(nets);
+        for (Long asn : asns) {
+            ixPresenceByAsn.put(asn, ixPresence.getOrDefault(asn, Collections.emptyList()));
+            facPresenceByAsn.put(asn, facPresence.getOrDefault(asn, Collections.emptyList()));
         }
-        ixPresenceByAsn.put(asn, ixPresence);
-        facPresenceByAsn.put(asn, facPresence);
     }
 
     /**
-     * Joins a per-ASN PeeringDB sub-call, unwrapping its result while preserving the
-     * exact exception behaviour of the original sequential calls: an {@link IOException}
-     * thrown by the underlying GET is re-thrown as-is, and any other failure is wrapped
-     * in an {@link IOException} so it still surfaces from {@link #queryAsn(long)}.
+     * Joins a PeeringDB sub-call, unwrapping its result while preserving the exact
+     * exception behaviour of sequential calls: an {@link IOException} thrown by the
+     * underlying GET is re-thrown as-is, and any other failure is wrapped in an
+     * {@link IOException} so it still surfaces from {@code queryTargetAsns()}.
      */
     private <T> T awaitResult(Future<T> future) throws IOException {
         try {
@@ -379,6 +397,179 @@ class PeeringIntelligenceEngine {
         }
     }
 
+    // ---- Phase 3.5: Fabric service-profile availability ----
+
+    /**
+     * Tokens too generic to identify a network in a Fabric service-profile name. A profile-name
+     * match decides that a network is privately REACHABLE via Fabric, so a false positive is worse
+     * than a false negative (it silently promises an on-ramp that does not exist — the same
+     * asymmetry {@link CloudProviderType} documents for its curated alias sets). Corporate suffixes,
+     * connectivity vocabulary, and plain industry words are therefore never accepted as evidence
+     * on their own; only the remaining brand-distinctive tokens are.
+     */
+    private static final Set<String> GENERIC_NAME_TOKENS = Set.of(
+            // corporate forms and suffixes
+            "inc", "llc", "ltd", "limited", "corp", "corporation", "company", "co", "com", "net",
+            "org", "gmbh", "ag", "sa", "sarl", "bv", "nv", "plc", "pty", "kk", "ab", "as", "spa",
+            "srl", "oy", "the", "of", "and", "for", "de", "la", "group", "holdings", "holding",
+            "global", "international", "worldwide", "enterprise", "enterprises", "partners",
+            // industry vocabulary
+            "services", "service", "solutions", "systems", "technologies", "technology", "tech",
+            "communications", "communication", "telecom", "telecommunications", "telekom",
+            "network", "networks", "networking", "internet", "online", "digital", "media",
+            "cloud", "hosting", "data", "datacenter", "web", "connect", "connectivity", "direct",
+            "link", "exchange", "transit", "peering", "backbone", "carrier", "wireless", "mobile",
+            "broadband", "fiber", "fibre", "cable", "usa", "america", "americas", "europe", "asia");
+
+    /**
+     * Cross-references the Fabric service-profile catalog against every target network, populating
+     * {@link #fabricProfilesByAsn} with the metros where a matching profile is published.
+     *
+     * <p>Matching mirrors the optimizer's provider-availability approach: whole-token,
+     * brand-distinctive evidence only. Two complementary matchers run per target:</p>
+     * <ol>
+     *   <li><b>Known cloud providers</b> — when the target's names identify a
+     *       {@link CloudProviderType} (e.g. label {@code "AWS"}, or PeeringDB name
+     *       {@code "Amazon.com, Inc."} via the {@code amazon} alias), profiles are matched with
+     *       {@code CloudProviderType.matchesServiceProfileName}, which bridges the
+     *       corporate-vs-product naming gap: marketplace profiles are named after the
+     *       <em>product</em> ("AWS Direct Connect"), not the corporation.</li>
+     *   <li><b>Everything else</b> — the profile name must contain, on whole-token boundaries, a
+     *       brand-distinctive token of the target's label/PeeringDB names (generic corporate and
+     *       connectivity words are excluded — see {@link #GENERIC_NAME_TOKENS} — so an NSP's
+     *       "&lt;NSP&gt; Direct Connect" is never mis-attributed to a target).</li>
+     * </ol>
+     *
+     * <p>Best-effort: if the Fabric service-profile catalog cannot be read, Fabric availability is
+     * reported honestly as NOT analyzed (warning) rather than as {@code false} everywhere.</p>
+     */
+    private void analyzeFabricAvailability() {
+        List<ServiceProfile> profiles;
+        try {
+            profiles = fabric.serviceProfiles().search().loadAll().toList();
+        } catch (RuntimeException e) {
+            warnings.add("Fabric service-profile availability was NOT analyzed: the Fabric "
+                    + "service-profile catalog could not be read (" + describe(e) + "). Every "
+                    + "fabricAvailable=false in this result means 'not analyzed', never 'no "
+                    + "Fabric on-ramp exists'.");
+            return;
+        }
+
+        for (Map.Entry<Long, String> entry : request.getTargetAsns().entrySet()) {
+            long asn = entry.getKey();
+            PeeringDbNetwork net = networkMetadata.get(asn);
+            List<String> evidence = evidenceNames(entry.getValue(), net);
+            CloudProviderType provider = resolveCloudProvider(evidence);
+            Set<String> distinctive = distinctiveTokens(evidence);
+
+            Map<MetroId, String> byMetro = new LinkedHashMap<>();
+            for (ServiceProfile profile : profiles) {
+                if (profile == null || profile.getName() == null) continue;
+                if (!profileMatchesTarget(profile.getName(), provider, distinctive)) continue;
+                List<ServiceProfileMetro> profileMetros = profile.metros();
+                if (profileMetros == null) continue;
+                for (ServiceProfileMetro spm : profileMetros) {
+                    if (spm == null || spm.metroId() == null) continue;
+                    byMetro.putIfAbsent(spm.metroId(), profile.getUuid());
+                }
+            }
+            if (!byMetro.isEmpty()) {
+                fabricProfilesByAsn.put(asn, byMetro);
+            }
+        }
+    }
+
+    /** The names that may identify a target network: the caller's label plus its PeeringDB names. */
+    private static List<String> evidenceNames(String label, PeeringDbNetwork net) {
+        List<String> names = new ArrayList<>();
+        if (label != null && !label.isBlank()) names.add(label);
+        if (net != null) {
+            if (net.getName() != null && !net.getName().isBlank()) names.add(net.getName());
+            if (net.getAka() != null && !net.getAka().isBlank()) names.add(net.getAka());
+            if (net.getNameLong() != null && !net.getNameLong().isBlank()) names.add(net.getNameLong());
+        }
+        return names;
+    }
+
+    /**
+     * Resolves the target to a known {@link CloudProviderType} when any of its names identifies
+     * one (whole-token, brand-distinctive matching — the same test used for profile names), or
+     * {@code null} for targets that are not a recognized cloud provider.
+     */
+    private static CloudProviderType resolveCloudProvider(List<String> evidence) {
+        for (CloudProviderType type : CloudProviderType.values()) {
+            if (type == CloudProviderType.OTHER) continue;
+            for (String name : evidence) {
+                if (type.matchesServiceProfileName(name)) {
+                    return type;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The brand-distinctive whole tokens of the target's names: normalized tokens minus
+     * {@link #GENERIC_NAME_TOKENS}, minus purely numeric tokens and single characters
+     * (region codes and "365"-style digits are not brand evidence).
+     */
+    private static Set<String> distinctiveTokens(List<String> evidence) {
+        Set<String> tokens = new LinkedHashSet<>();
+        for (String name : evidence) {
+            for (String token : normalizeName(name).split(" ")) {
+                if (token.length() < 2) continue;
+                if (token.chars().allMatch(Character::isDigit)) continue;
+                if (GENERIC_NAME_TOKENS.contains(token)) continue;
+                tokens.add(token);
+            }
+        }
+        return tokens;
+    }
+
+    /**
+     * Whether a Fabric service-profile name identifies the target: via the resolved cloud
+     * provider's curated matching when the target is a known cloud, or via a brand-distinctive
+     * whole-token hit otherwise. Matching is one-directional — the profile name must contain the
+     * evidence, never the reverse — because over-claiming reachability is the damaging error.
+     */
+    private static boolean profileMatchesTarget(String profileName, CloudProviderType provider,
+                                                Set<String> distinctiveTokens) {
+        if (provider != null && provider.matchesServiceProfileName(profileName)) {
+            return true;
+        }
+        if (distinctiveTokens.isEmpty()) {
+            return false;
+        }
+        String padded = " " + normalizeName(profileName) + " ";
+        for (String token : distinctiveTokens) {
+            if (padded.contains(" " + token + " ")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Lower-cases and collapses every run of non-alphanumeric characters to a single space, so
+     * token-boundary containment is well-defined ("Amazon.com, Inc." → "amazon com inc").
+     */
+    private static String normalizeName(String raw) {
+        if (raw == null) return "";
+        StringBuilder sb = new StringBuilder(raw.length());
+        boolean pendingSpace = false;
+        for (int i = 0; i < raw.length(); i++) {
+            char ch = Character.toLowerCase(raw.charAt(i));
+            if (Character.isLetterOrDigit(ch)) {
+                if (pendingSpace && sb.length() > 0) sb.append(' ');
+                pendingSpace = false;
+                sb.append(ch);
+            } else {
+                pendingSpace = true;
+            }
+        }
+        return sb.toString();
+    }
+
     // ---- Phase 4: Build PresenceMatrix ----
 
     private PresenceMatrix buildPresenceMatrix() {
@@ -386,6 +577,12 @@ class PeeringIntelligenceEngine {
         Set<MetroId> allMetros = new TreeSet<>(Comparator.comparing(MetroId::code));
         for (NetworkPresence np : networkPresences.values()) {
             allMetros.addAll(np.getAllMetros());
+        }
+
+        // Metros where a target is reachable via a Fabric service profile are presence too —
+        // a Fabric-only metro still earns a column (ConnectivityType.FABRIC_CONNECTION).
+        for (Map<MetroId, String> fabricMetros : fabricProfilesByAsn.values()) {
+            allMetros.addAll(fabricMetros.keySet());
         }
 
         // If customer metros specified, ensure they're included
@@ -399,10 +596,14 @@ class PeeringIntelligenceEngine {
         for (Long asn : asns) {
             Map<MetroId, PresenceCell> row = new LinkedHashMap<>();
             NetworkPresence np = networkPresences.get(asn);
+            Map<MetroId, String> fabricMetros =
+                    fabricProfilesByAsn.getOrDefault(asn, Collections.emptyMap());
 
             for (MetroId metro : metros) {
                 boolean ixPresent = np != null && np.hasIxPeeringAt(metro);
                 boolean facPresent = np != null && np.hasFacilityAt(metro);
+                String fabricUuid = fabricMetros.get(metro);
+                boolean fabricAvailable = fabricUuid != null;
 
                 // Collect IX details for this metro
                 List<IxPresenceDetail> metroIxSessions = np != null
@@ -417,7 +618,7 @@ class PeeringIntelligenceEngine {
                 boolean anyRs = metroIxSessions.stream().anyMatch(IxPresenceDetail::isRouteServerPeer);
                 boolean anyBfd = metroIxSessions.stream().anyMatch(IxPresenceDetail::isBfdSupport);
 
-                ConnectivityType connType = ConnectivityType.resolve(ixPresent, false, facPresent);
+                ConnectivityType connType = ConnectivityType.resolve(ixPresent, fabricAvailable, facPresent);
 
                 PresenceCell cell = PresenceCell.builder()
                         .asn(asn)
@@ -425,7 +626,8 @@ class PeeringIntelligenceEngine {
                         .connectivityType(connType)
                         .ixPresent(ixPresent)
                         .facilityPresent(facPresent)
-                        .fabricAvailable(false)
+                        .fabricAvailable(fabricAvailable)
+                        .fabricServiceProfileUuid(fabricUuid)
                         .ixSessionCount(metroIxSessions.size())
                         .totalIxCapacityMbps(totalCapacity)
                         .routeServerPeer(anyRs)
@@ -510,7 +712,7 @@ class PeeringIntelligenceEngine {
                 PresenceCell cell = matrix.get(asn, customerMetro);
                 if (cell != null && cell.isIxPresent()) {
                     lostIxAsns.add(asn);
-                    lostIxLabels.add(request.getTargetAsns().getOrDefault(asn, "AS" + asn));
+                    lostIxLabels.add(resolveLabel(asn));
                     lostCapacity += cell.getTotalIxCapacityMbps();
                 }
             }
@@ -570,6 +772,10 @@ class PeeringIntelligenceEngine {
                             .build());
                 }
             }
+            // Rank the failover options instead of leaking PeeringDB iteration order: best
+            // geographic diversity first, then the biggest IX capacity, then route-server
+            // availability (automatic peering beats bilateral setup at equal diversity/capacity).
+            metroFailovers.sort(FAILOVER_RANKING);
             failoverPaths.put(customerMetro, metroFailovers);
         }
 
@@ -634,6 +840,16 @@ class PeeringIntelligenceEngine {
                     + "metros — a failure of that metro removes IX peering to them from your footprint. "
                     + "Establish IX peering at a second metro for these networks.");
         }
+        // Metros with no analyzed-ASN presence carry no blast signal and are EXCLUDED from the
+        // blast-score average (scoring them 1.0 would reward having nothing to lose). Say so.
+        long noPresenceMetros = blastReports.stream()
+                .filter(br -> br.totalAffectedAsns() == 0)
+                .count();
+        if (noPresenceMetros > 0) {
+            findings.add(noPresenceMetros + " customer metro(s) have no presence from any analyzed "
+                    + "ASN; they were excluded from blast-radius scoring (an empty metro is not "
+                    + "resilience) — establish connectivity there or drop them from the analysis.");
+        }
 
         return ResiliencyAssessment.builder()
                 .overallScore(resiliencyScore)
@@ -668,39 +884,55 @@ class PeeringIntelligenceEngine {
 
             if (targetLabel == null) targetLabel = np.getLabel();
 
+            // ONE opportunity per (target ASN, IX): a target with several parallel ports on the
+            // same IX LAN is a single peering opportunity, not a duplicate per netixlan session.
+            // Capacity is aggregated across the sessions and route-server participation is true
+            // when ANY session peers with the route servers.
+            Map<Integer, List<IxPresenceDetail>> sharedIxSessions = new LinkedHashMap<>();
             for (IxPresenceDetail ixDetail : np.getIxDetails()) {
                 if (customerIxIds.contains(ixDetail.getIxId())) {
-                    // Both present at this IX — peering opportunity!
-                    double feasibility = np.getPeeringPolicy().getFeasibilityScore();
-                    if (ixDetail.isRouteServerPeer()) feasibility = Math.min(1.0, feasibility + 0.3);
-
-                    String complexity;
-                    if (ixDetail.isRouteServerPeer() && np.getPeeringPolicy() == PeeringPolicy.OPEN) {
-                        complexity = "Automatic";
-                        feasibility = 1.0;
-                    } else if (np.getPeeringPolicy() == PeeringPolicy.OPEN) {
-                        complexity = "Simple";
-                    } else if (np.getPeeringPolicy() == PeeringPolicy.SELECTIVE) {
-                        complexity = "Negotiation Required";
-                    } else {
-                        complexity = "Difficult";
-                    }
-
-                    opportunities.add(PeeringOpportunity.builder()
-                            .customerAsn(request.getCustomerAsn())
-                            .targetAsn(targetAsn)
-                            .targetLabel(targetLabel)
-                            .metro(ixDetail.getMetro())
-                            .ixName(ixDetail.getIxName())
-                            .ixId(ixDetail.getIxId())
-                            .targetPolicy(np.getPeeringPolicy())
-                            .targetUsesRouteServer(ixDetail.isRouteServerPeer())
-                            .targetSpeedMbps(ixDetail.getSpeedMbps())
-                            .feasibility(feasibility)
-                            .complexity(complexity)
-                            .recommendation(buildPeeringRecommendation(np, ixDetail, complexity))
-                            .build());
+                    sharedIxSessions.computeIfAbsent(ixDetail.getIxId(), k -> new ArrayList<>())
+                            .add(ixDetail);
                 }
+            }
+
+            for (Map.Entry<Integer, List<IxPresenceDetail>> ixEntry : sharedIxSessions.entrySet()) {
+                List<IxPresenceDetail> sessions = ixEntry.getValue();
+                IxPresenceDetail representative = sessions.get(0);
+                boolean anyRouteServer = sessions.stream().anyMatch(IxPresenceDetail::isRouteServerPeer);
+                long aggregateSpeedMbps = sessions.stream().mapToLong(IxPresenceDetail::getSpeedMbps).sum();
+
+                // Both present at this IX — peering opportunity!
+                double feasibility = np.getPeeringPolicy().getFeasibilityScore();
+                if (anyRouteServer) feasibility = Math.min(1.0, feasibility + 0.3);
+
+                String complexity;
+                if (anyRouteServer && np.getPeeringPolicy() == PeeringPolicy.OPEN) {
+                    complexity = "Automatic";
+                    feasibility = 1.0;
+                } else if (np.getPeeringPolicy() == PeeringPolicy.OPEN) {
+                    complexity = "Simple";
+                } else if (np.getPeeringPolicy() == PeeringPolicy.SELECTIVE) {
+                    complexity = "Negotiation Required";
+                } else {
+                    complexity = "Difficult";
+                }
+
+                opportunities.add(PeeringOpportunity.builder()
+                        .customerAsn(request.getCustomerAsn())
+                        .targetAsn(targetAsn)
+                        .targetLabel(targetLabel)
+                        .metro(representative.getMetro())
+                        .ixName(representative.getIxName())
+                        .ixId(ixEntry.getKey())
+                        .targetPolicy(np.getPeeringPolicy())
+                        .targetUsesRouteServer(anyRouteServer)
+                        .targetSpeedMbps(aggregateSpeedMbps)
+                        .targetSessionCount(sessions.size())
+                        .feasibility(feasibility)
+                        .complexity(complexity)
+                        .recommendation(buildPeeringRecommendation(np, representative, complexity))
+                        .build());
             }
         }
 
@@ -735,7 +967,7 @@ class PeeringIntelligenceEngine {
                         .routeServerAvailable(cell.isRouteServerPeer())
                         .bfdAvailable(cell.isBfdSupported())
                         .ixSessions(cell.getIxSessions())
-                        .fabricServiceProfileUuid(null)
+                        .fabricServiceProfileUuid(cell.getFabricServiceProfileUuid())
                         .build());
 
                 totalCapacity += cell.getTotalIxCapacityMbps();
@@ -756,6 +988,40 @@ class PeeringIntelligenceEngine {
     }
 
     // ---- Helpers ----
+
+    /**
+     * Ranking for a metro's failover options: geographic diversity rating first (descending;
+     * an UNKNOWN/unavailable distance ranks below every real rating rather than tying CRITICAL),
+     * then aggregate IX capacity (descending), then route-server availability (available first).
+     */
+    private static final Comparator<FailoverPath> FAILOVER_RANKING = Comparator
+            .comparingDouble(PeeringIntelligenceEngine::diversityRank).reversed()
+            .thenComparing(Comparator.comparingLong(FailoverPath::getIxCapacityMbps).reversed())
+            .thenComparing(fp -> fp.isRouteServerAvailable() ? 0 : 1);
+
+    /** A failover path's diversity as a sortable rank; unknown distance sorts below CRITICAL (0.0). */
+    private static double diversityRank(FailoverPath path) {
+        DiversityScore diversity = path.getDiversity();
+        if (diversity == null || diversity.isDistanceUnavailable()) {
+            return -1.0;
+        }
+        return diversity.getRating().getScore();
+    }
+
+    /**
+     * Resolves a target ASN's display label, null-safely: the caller-supplied label when one was
+     * given, otherwise the {@link NetworkPresence} label (PeeringDB name, or {@code "AS<asn>"}).
+     * The request map stores a {@code null} value for {@code addAsn(long)} without a label, so a
+     * plain {@code getOrDefault} would return {@code null} — the key exists.
+     */
+    private String resolveLabel(long asn) {
+        String label = request.getTargetAsns().get(asn);
+        if (label != null) {
+            return label;
+        }
+        NetworkPresence np = networkPresences.get(asn);
+        return np != null ? np.getLabel() : "AS" + asn;
+    }
 
     private DiversityScore computeDiversity(MetroId metro1, MetroId metro2) {
         // Distance is IBX-grounded: each metro is represented by the centroid of its actual Equinix
@@ -943,11 +1209,16 @@ class PeeringIntelligenceEngine {
                                             List<DiversityScore> diversity) {
         if (blastReports.isEmpty()) return 0.5;
 
-        // Factor 1: Average blast radius impact (lower is better)
-        double avgImpact = blastReports.stream()
+        // Factor 1: Average blast radius impact (lower is better), computed over ONLY the customer
+        // metros that have some analyzed-ASN presence to lose. A metro with ZERO relevant presence
+        // has impactRatio 0, and folding it in would score the absence as a perfect 1.0 — rewarding
+        // a customer for having nothing at a site. Absence is excluded, never rewarded; if NO metro
+        // has relevant presence the blast factor is neutral (0.5), not perfect.
+        OptionalDouble avgImpact = blastReports.stream()
+                .filter(br -> br.totalAffectedAsns() > 0)
                 .mapToDouble(BlastRadiusReport::getImpactRatio)
-                .average().orElse(0.5);
-        double blastScore = 1.0 - avgImpact;
+                .average();
+        double blastScore = avgImpact.isPresent() ? 1.0 - avgImpact.getAsDouble() : 0.5;
 
         // Factor 2: Correlated failure penalty
         long criticalCorrelations = correlations.stream()

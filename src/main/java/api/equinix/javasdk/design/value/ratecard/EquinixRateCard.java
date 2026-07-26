@@ -9,6 +9,7 @@ import api.equinix.javasdk.fabric.enums.PriceType;
 import api.equinix.javasdk.fabric.model.Pricing;
 import api.equinix.javasdk.fabric.model.implementation.Charge;
 import api.equinix.javasdk.fabric.model.implementation.PricingConnection;
+import api.equinix.javasdk.fabric.model.implementation.PricingGateway;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterPropertyList;
 import api.equinix.javasdk.fabric.model.implementation.filter.FilterType;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +29,24 @@ import java.util.Optional;
  * two product families this card prices — virtual connections
  * ({@link PriceType#VIRTUAL_CONNECTION_PRODUCT}) and Cloud Routers
  * ({@link PriceType#CLOUD_ROUTER_PRODUCT}) — rather than pulling the whole
- * catalogue (ports, IP blocks, …) and discarding most of it. A price row still
- * carries its connection <em>type</em> and metro only in its {@code code}/{@code name}
- * (the structured descriptor holds just the bandwidth), so the card matches
- * those remaining axes <em>client-side</em> over the (much smaller) cached set.
- * The metro is matched against a whole delimited <em>token</em> of the code/name,
- * never a bare two-letter substring, so a metro code like {@code AT}/{@code DE}
- * cannot false-match an unrelated word.</p>
+ * catalogue (ports, IP blocks, …) and discarding most of it. A connection price
+ * row still carries its connection <em>type</em> and metro only in its
+ * {@code code}/{@code name} (the structured descriptor holds just the bandwidth),
+ * so the card matches those remaining axes <em>client-side</em> over the (much
+ * smaller) cached set. The metro is matched against a whole delimited
+ * <em>token</em> of the code/name, never a bare two-letter substring, so a metro
+ * code like {@code AT}/{@code DE} cannot false-match an unrelated word. Cloud
+ * Router rows carry a structured descriptor and are matched on it: exact
+ * package-code equality plus the row's own {@code metroCode}.</p>
+ *
+ * <p>Both lookups honour the request's remaining axes strictly. When a metro is
+ * requested, a row of another metro is never returned — the lookup yields empty
+ * instead, so a layered card can consult a lower layer that may hold a genuine
+ * figure for that metro. The live catalogue is also term-scoped, so rows whose
+ * {@code termLength} matches the requested {@link Term} are preferred; when only
+ * a different-term row exists, it is returned with a note naming the
+ * substitution (never silently), and a row without a {@code termLength} is
+ * term-neutral.</p>
  *
  * <p>The card is fault-tolerant: if the catalogue cannot be
  * fetched (network error, unauthenticated client, endpoint unavailable), it
@@ -81,7 +93,14 @@ public final class EquinixRateCard implements RateCard {
 
     @Override
     public Optional<PriceQuote> connection(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
-        PriceQuote fallback = null;
+        // The live catalogue is term-scoped: the same circuit appears once per commitment term at
+        // different rates, so a lookup must prefer the row whose termLength matches the requested
+        // term — otherwise a 1-month estimate silently picks up a 36-month discounted figure
+        // tagged authoritative. A row that names no termLength is term-neutral and acceptable as
+        // a match; a row with an explicitly different termLength is only usable as a labelled
+        // last resort (its note names the substitution so the caller can see the mismatch).
+        PriceQuote termFallback = null;
+        Integer termFallbackLength = null;
         for (Pricing p : catalog()) {
             if (p.getType() != PriceType.VIRTUAL_CONNECTION_PRODUCT) {
                 continue;
@@ -93,40 +112,72 @@ public final class EquinixRateCard implements RateCard {
             if (!connectionTypeMatches(p, c, type)) {
                 continue;
             }
+            // When a metro was requested, a row of another metro is never an acceptable answer:
+            // a Tokyo estimate must not be priced at Silicon Valley rates, and returning one
+            // (tagged EQUINIX_LIVE) would also block a layered fallback card that might hold a
+            // genuine figure for the metro. Match as a whole token, never a 2-letter substring.
+            if (metro != null && !matchesMetro(p, metro)) {
+                continue;
+            }
             // Skip a row that carries no charge we can price (null/empty/unmapped charges):
             // defer to the fallback rather than emit a phantom $0 quote tagged authoritative.
             Optional<PriceQuote> quote = toQuote(p);
             if (quote.isEmpty()) {
                 continue;
             }
-            // A priced row that also matches the metro (as a whole token, never a bare
-            // two-letter substring) is the most specific result.
-            if (metro != null && matchesMetro(p, metro)) {
+            if (termMatches(p, term)) {
                 return quote;
             }
-            if (fallback == null) {
-                fallback = quote.get();
+            if (termFallback == null) {
+                termFallback = quote.get();
+                termFallbackLength = p.getTermLength();
             }
         }
-        return Optional.ofNullable(fallback);
+        // No term-matched row: surface the other-term row only with an explicit substitution
+        // label, or empty when nothing matched at all (the layered card consults the next layer).
+        if (termFallback == null) {
+            return Optional.empty();
+        }
+        return Optional.of(withTermSubstitutionNote(termFallback, termFallbackLength, term));
     }
 
     @Override
     public Optional<PriceQuote> cloudRouter(String packageCode, MetroCode metro, Term term) {
+        // Cloud Router rows carry a structured descriptor (router package code + location), so the
+        // match is structural: exact package-code equality (a substring match would let STANDARD
+        // false-match a NONSTANDARD row) and the row's own metroCode against the requested metro
+        // (the first priced row of ANY metro is not an answer — an SG lookup must not return a DC
+        // price tagged authoritative). No structural match yields empty so a layered card can
+        // consult the next layer. Term rows are preferred exactly as in connection().
+        PriceQuote termFallback = null;
+        Integer termFallbackLength = null;
         for (Pricing p : catalog()) {
             if (p.getType() != PriceType.CLOUD_ROUTER_PRODUCT) {
                 continue;
             }
-            if (packageCode != null && !mentions(p, packageCode)) {
+            if (!routerPackageMatches(p, packageCode)) {
+                continue;
+            }
+            if (!routerMetroMatches(p, metro)) {
                 continue;
             }
             // Defer past a router row with no priced charge instead of returning a phantom $0.
             Optional<PriceQuote> quote = toQuote(p);
-            if (quote.isPresent()) {
+            if (quote.isEmpty()) {
+                continue;
+            }
+            if (termMatches(p, term)) {
                 return quote;
             }
+            if (termFallback == null) {
+                termFallback = quote.get();
+                termFallbackLength = p.getTermLength();
+            }
         }
-        return Optional.empty();
+        if (termFallback == null) {
+            return Optional.empty();
+        }
+        return Optional.of(withTermSubstitutionNote(termFallback, termFallbackLength, term));
     }
 
     @Override
@@ -189,6 +240,11 @@ public final class EquinixRateCard implements RateCard {
 
     private TypeFetch fetchByType(PriceType type) {
         try {
+            // The fetch narrows server-side by /type only. The fabricv4 spec documents no
+            // /termLength filter property for POST /prices/search (its search examples filter
+            // /type, /connection/* and /router/* exclusively), so terms cannot be narrowed
+            // server-side — and the client-side term preference needs the other-term rows
+            // present anyway to produce a labelled substitution fallback.
             FilterPropertyList filter = new FilterPropertyList(FilterType.AND).equals("/type", type.name());
             PaginatedFilteredList<Pricing> page = fabric.prices().list(filter);
             // Page through the full filtered result so a match is never missed when the
@@ -224,6 +280,58 @@ public final class EquinixRateCard implements RateCard {
     }
 
     /**
+     * Whether a price row's commitment term is compatible with the requested {@link Term}.
+     * A row that names no {@code termLength} is term-neutral (it carries no evidence of a
+     * mismatch) and a caller that requested no term accepts any row; only an explicitly
+     * different {@code termLength} is a mismatch — usable solely as a labelled fallback via
+     * {@link #withTermSubstitutionNote}.
+     */
+    private static boolean termMatches(Pricing p, Term term) {
+        return term == null || p.getTermLength() == null || p.getTermLength() == term.months();
+    }
+
+    /**
+     * Labels a quote resolved from a row of a <em>different</em> commitment term than requested,
+     * so a term-substituted figure is never mistaken for a term-matched one.
+     */
+    private static PriceQuote withTermSubstitutionNote(PriceQuote quote, Integer rowTermLength, Term requested) {
+        String base = quote.getNote() == null ? "" : quote.getNote();
+        return quote.withNote(base + " (termLength " + rowTermLength
+                + " substituted for requested " + requested.months() + ")");
+    }
+
+    /**
+     * Structural router-package match: the row's {@code router/package/code} must equal the
+     * requested package code exactly (case-insensitive on the enum name). A {@code null} request
+     * matches any package; a row without a structured package can never satisfy a package-specific
+     * request — a substring match over code/name is not safe ({@code STANDARD} is a substring of
+     * {@code NONSTANDARD}).
+     */
+    private static boolean routerPackageMatches(Pricing p, String packageCode) {
+        if (packageCode == null) {
+            return true;
+        }
+        PricingGateway gateway = p.getGateway();
+        if (gateway == null || gateway.getGatewayPackage() == null || gateway.getGatewayPackage().getCode() == null) {
+            return false;
+        }
+        return gateway.getGatewayPackage().getCode().name().equalsIgnoreCase(packageCode);
+    }
+
+    /**
+     * Structural router-metro match: the row's {@code router/location/metroCode} must equal the
+     * requested metro. A {@code null} request matches any metro; a row without a structured
+     * location can never satisfy a metro-specific request.
+     */
+    private static boolean routerMetroMatches(Pricing p, MetroCode metro) {
+        if (metro == null) {
+            return true;
+        }
+        PricingGateway gateway = p.getGateway();
+        return gateway != null && gateway.getLocation() != null && gateway.getLocation().getMetroCode() == metro;
+    }
+
+    /**
      * Whether a price row belongs to the requested metro. The metro code is matched
      * against a whole delimited token of the row's {@code code}/{@code name}, never a
      * bare substring: a metro code is only two letters (e.g. {@code AT}, {@code DE},
@@ -251,10 +359,11 @@ public final class EquinixRateCard implements RateCard {
 
     /**
      * Case-insensitive <em>substring</em> match of {@code token} against the row's
-     * {@code code}/{@code name}. Used for connection-type and router-package tokens,
-     * which are multi-character product identifiers (e.g. {@code EVPL_VC},
-     * {@code STANDARD}); metros must use {@link #matchesMetro} instead — a two-letter
-     * substring is not safe.
+     * {@code code}/{@code name}. Used only for connection-type tokens, which are
+     * multi-character product identifiers (e.g. {@code EVPL_VC}); metros must use
+     * {@link #matchesMetro} and router packages {@link #routerPackageMatches} instead —
+     * a short substring ({@code AT}, {@code STANDARD} inside {@code NONSTANDARD}) is
+     * not safe.
      */
     private static boolean mentions(Pricing p, String token) {
         if (token == null || token.isEmpty()) {
@@ -283,11 +392,14 @@ public final class EquinixRateCard implements RateCard {
                 if (charge == null || charge.getPrice() == null || charge.getType() == null) {
                     continue;
                 }
+                // A row may carry several charges of the same frequency (e.g. a base fee plus a
+                // surcharge, both MONTHLY_RECURRING): they SUM into the component. Assigning
+                // last-wins would silently drop all but the final charge of each frequency.
                 if (charge.getType() == ChargeFrequency.MONTHLY_RECURRING) {
-                    monthly = charge.getPrice();
+                    monthly = monthly.add(charge.getPrice());
                     priced = true;
                 } else if (charge.getType() == ChargeFrequency.NON_RECURRING) {
-                    nonRecurring = charge.getPrice();
+                    nonRecurring = nonRecurring.add(charge.getPrice());
                     priced = true;
                 }
             }

@@ -11,9 +11,16 @@ import lombok.Value;
 @Builder
 public class ScoreComponent {
 
+    /** The dimension this component grades. */
     ScoreCategory category;
+
+    /** The unweighted score for this dimension, 0&ndash;100. */
     double score;
+
+    /** The dimension's normalized weight (the five components' weights sum to 1). */
     double weight;
+
+    /** Human-readable statement of why the dimension scored what it did. */
     String explanation;
 
     /**

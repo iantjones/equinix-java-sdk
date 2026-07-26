@@ -60,7 +60,7 @@ final class SavingsCalculatorEngine {
         // ── Equinix interconnect cost ──
         Optional<PriceQuote> connection = rateCard.connection(
                 b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
-        boolean equinixPriced = connection.isPresent();
+        boolean connectionPriced = connection.isPresent();
         Currency equinixCurrency = connection.map(PriceQuote::getCurrency).orElse(null);
         BigDecimal equinixMonthly = BigDecimal.ZERO;
         BigDecimal equinixSetup = BigDecimal.ZERO;
@@ -68,26 +68,52 @@ final class SavingsCalculatorEngine {
             equinixMonthly = connection.get().getMonthlyRecurring();
             equinixSetup = connection.get().getNonRecurring();
         }
+        // A requested Cloud Router that cannot be folded in leaves the interconnect figures
+        // PARTIAL (connection only) — tracked with the exact reason so the disclaimer can name
+        // the component rather than misstate the whole interconnect cost as unavailable.
+        String routerExclusionReason = null;
         if (b.isIncludeRouter()) {
             Optional<PriceQuote> router = rateCard.cloudRouter(b.getRouterPackage(), b.getMetro(), term);
-            if (router.isPresent()) {
-                // Connection + router are summed, so they too must share a currency.
-                if (CurrencyReconciler.knownDifferent(equinixCurrency, router.get().getCurrency())) {
-                    equinixPriced = false;
-                } else {
-                    equinixMonthly = equinixMonthly.add(router.get().getMonthlyRecurring());
-                    equinixSetup = equinixSetup.add(router.get().getNonRecurring());
-                }
+            if (router.isEmpty()) {
+                routerExclusionReason = " The Fabric Cloud Router (" + b.getRouterPackage()
+                        + ") was requested but could not be priced by the rate card; the Equinix interconnect "
+                        + "figures are partial and exclude the Cloud Router.";
+            } else if (CurrencyReconciler.knownDifferent(equinixCurrency, router.get().getCurrency())) {
+                // Connection + router are summed, so they must share a currency.
+                routerExclusionReason = " The Fabric Cloud Router (" + b.getRouterPackage() + ") is priced in "
+                        + router.get().getCurrency() + " but the Fabric connection is priced in "
+                        + equinixCurrency + "; they cannot be summed without an FX rate, so the Equinix "
+                        + "interconnect figures are partial and exclude the Cloud Router.";
             } else {
-                equinixPriced = false;
+                equinixMonthly = equinixMonthly.add(router.get().getMonthlyRecurring());
+                equinixSetup = equinixSetup.add(router.get().getNonRecurring());
             }
+        }
+        boolean equinixPriced = connectionPriced && routerExclusionReason == null;
+
+        // ── Cross-currency reconciliation (egress vs interconnect) ──
+        // The estimate is stamped with a single currency; figures in another currency must never
+        // be rendered under that label. When the interconnect cost is in a different currency from
+        // the egress figures, it is excluded (zeroed) and reported via the disclaimer instead —
+        // the mixed/unpriced convention — and everything derived from it is omitted.
+        boolean crossCurrencyMismatch = CurrencyReconciler.knownDifferent(egressCurrency, equinixCurrency);
+        String excludedEquinixFigures = null;
+        if (crossCurrencyMismatch) {
+            excludedEquinixFigures = equinixCurrency + " "
+                    + equinixMonthly.setScale(2, RoundingMode.HALF_UP).toPlainString() + "/mo"
+                    + (equinixSetup.signum() != 0
+                        ? " plus " + equinixCurrency + " "
+                            + equinixSetup.setScale(2, RoundingMode.HALF_UP).toPlainString() + " one-time"
+                        : "");
+            equinixMonthly = BigDecimal.ZERO;
+            equinixSetup = BigDecimal.ZERO;
+            equinixPriced = false;
         }
 
         // ── Net savings & break-even ──
         // netMonthly nets the egress saving against the interconnect cost, so it is only meaningful
         // when the two are in the same currency. When they are known to differ, the net (and the
         // figures derived from it) are omitted rather than reported as a cross-currency subtraction.
-        boolean crossCurrencyMismatch = CurrencyReconciler.knownDifferent(egressCurrency, equinixCurrency);
         BigDecimal netMonthly = null;
         BigDecimal annualNet = null;
         BigDecimal firstYearNet = null;
@@ -122,13 +148,20 @@ final class SavingsCalculatorEngine {
         } else if (!egressPriced) {
             disclaimer.append(" Egress rates were unavailable from the rate card, so egress savings could not be computed.");
         }
-        if (!equinixPriced) {
-            disclaimer.append(" The Equinix interconnect cost was unavailable from the rate card.");
+        // Name exactly which interconnect component (if any) could not be priced, so the
+        // disclaimer never misstates a partially priced interconnect as wholly unavailable.
+        if (!connectionPriced) {
+            disclaimer.append(" The Equinix Fabric connection cost was unavailable from the rate card.");
+        }
+        if (routerExclusionReason != null) {
+            disclaimer.append(routerExclusionReason);
         }
         if (crossCurrencyMismatch) {
             disclaimer.append(" Egress figures are in ").append(egressCurrency)
-                    .append(" and the Equinix interconnect cost is in ").append(equinixCurrency)
-                    .append("; a net saving cannot be computed across currencies without an FX rate, so the net, "
+                    .append(" but the Equinix interconnect cost (").append(excludedEquinixFigures)
+                    .append(") is in ").append(equinixCurrency)
+                    .append("; without an FX rate it cannot be restated in ").append(egressCurrency)
+                    .append(", so the interconnect figures are excluded (reported as zero) and the net, "
                             + "annual, first-year, break-even, and payback figures are omitted.");
         }
 

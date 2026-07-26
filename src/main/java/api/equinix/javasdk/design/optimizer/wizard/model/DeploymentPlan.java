@@ -2,6 +2,7 @@ package api.equinix.javasdk.design.optimizer.wizard.model;
 
 import api.equinix.javasdk.FabricGateway;
 import api.equinix.javasdk.core.waiter.ResourceWaiter;
+import api.equinix.javasdk.core.waiter.WaiterFailedException;
 import api.equinix.javasdk.fabric.enums.CloudRouterState;
 import api.equinix.javasdk.fabric.enums.ConnectionState;
 import api.equinix.javasdk.fabric.enums.GatewayPackageCode;
@@ -110,9 +111,17 @@ public class DeploymentPlan {
         sb.append(routingProtocols != null ? routingProtocols.size() : 0).append(" routing protocol(s). ");
         sb.append("Total resources: ").append(totalResourceCount()).append(".");
 
+        // Money always renders with its ACTUAL currency (mirroring OptimizationResult.money) — a
+        // hardcoded "$" next to a EUR figure misstated the amount by the exchange rate.
         if (pricing != null && pricing.getMonthlyTotal() != null) {
-            sb.append(" Estimated monthly cost: $").append(pricing.getMonthlyTotal())
-                    .append(" ").append(pricing.getCurrency()).append(".");
+            sb.append(" Estimated monthly cost: ")
+                    .append(money(pricing.getMonthlyTotal(), pricing.getCurrency())).append(".");
+        }
+        else if (pricing != null && pricing.getMonthlyByCurrency() != null
+                && pricing.getMonthlyByCurrency().size() > 1) {
+            sb.append(" Estimated monthly cost spans multiple currencies: ")
+                    .append(describeByCurrency(pricing.getMonthlyByCurrency()))
+                    .append(" (no single-currency total).");
         }
 
         if (!valid && validationErrors != null && !validationErrors.isEmpty()) {
@@ -284,25 +293,31 @@ public class DeploymentPlan {
             md.append("\n");
         }
 
-        // Pricing
+        // Pricing. Every figure renders with its ACTUAL currency (mirroring OptimizationResult.money)
+        // — never a hardcoded "$", which misstated any non-USD amount by the exchange rate. A category
+        // that itself spans currencies carries no single figure; its per-currency subtotals are shown.
         if (pricing != null) {
             md.append("## Cost Estimate\n\n");
             md.append("| Category | Monthly Cost |\n");
             md.append("|----------|-------------:|\n");
-            if (pricing.getRouterMonthlyCost() != null) {
-                md.append("| Cloud Routers | $").append(pricing.getRouterMonthlyCost()).append(" |\n");
-            }
-            if (pricing.getProviderConnectionMonthlyCost() != null) {
-                md.append("| Provider Connections | $").append(pricing.getProviderConnectionMonthlyCost()).append(" |\n");
-            }
-            if (pricing.getBackboneMonthlyCost() != null) {
-                md.append("| Backbone Links | $").append(pricing.getBackboneMonthlyCost()).append(" |\n");
-            }
+            appendCostRow(md, "Cloud Routers", pricing.getRouterMonthlyCost(),
+                    pricing.getRouterCurrency(), pricing.getRouterMonthlyByCurrency());
+            appendCostRow(md, "Provider Connections", pricing.getProviderConnectionMonthlyCost(),
+                    pricing.getProviderConnectionCurrency(), pricing.getProviderConnectionMonthlyByCurrency());
+            appendCostRow(md, "Backbone Links", pricing.getBackboneMonthlyCost(),
+                    pricing.getBackboneCurrency(), pricing.getBackboneMonthlyByCurrency());
             if (pricing.getMonthlyTotal() != null) {
-                md.append("| **Total Monthly** | **$").append(pricing.getMonthlyTotal()).append("** |\n");
+                md.append("| **Total Monthly** | **")
+                        .append(money(pricing.getMonthlyTotal(), pricing.getCurrency())).append("** |\n");
+            }
+            else if (pricing.getMonthlyByCurrency() != null && pricing.getMonthlyByCurrency().size() > 1) {
+                md.append("| **Total Monthly** | **")
+                        .append(describeByCurrency(pricing.getMonthlyByCurrency()))
+                        .append("** (multiple currencies — no single total) |\n");
             }
             if (pricing.getSetupTotal() != null) {
-                md.append("| Setup (one-time) | $").append(pricing.getSetupTotal()).append(" |\n");
+                md.append("| Setup (one-time) | ")
+                        .append(money(pricing.getSetupTotal(), pricing.getCurrency())).append(" |\n");
             }
             md.append("\n_").append(pricing.getDisclaimer()).append("_\n\n");
         }
@@ -317,6 +332,61 @@ public class DeploymentPlan {
         md.append("Call `plan.dryRun()` to validate, or `plan.execute()` to provision all resources.\n");
 
         return md.toString();
+    }
+
+    /**
+     * Appends one Cost Estimate row: the single-currency figure rendered with its actual currency
+     * when the category reconciled, otherwise the category's per-currency subtotals (a mixed
+     * category has no single figure). Emits nothing when the category has neither.
+     */
+    private static void appendCostRow(StringBuilder md, String label, BigDecimal cost,
+                                      String currency, Map<String, BigDecimal> byCurrency) {
+        if (cost != null) {
+            md.append("| ").append(label).append(" | ").append(money(cost, currency)).append(" |\n");
+        }
+        else if (byCurrency != null && !byCurrency.isEmpty()) {
+            md.append("| ").append(label).append(" | ").append(describeByCurrency(byCurrency))
+                    .append(" (multiple currencies) |\n");
+        }
+    }
+
+    /**
+     * Renders a monetary amount with the symbol of its actual currency ({@code "$2300.00"},
+     * {@code "€1800.00"}), falling back to {@code "<amount> <code>"} when the code has no distinct
+     * symbol or is unknown, and to the bare amount when no currency was stated at all. Mirrors
+     * {@code OptimizationResult.money} and replaces the former hardcoded {@code "$"}, which asserted
+     * US dollars against figures that live Fabric pricing legitimately quotes in other currencies.
+     */
+    private static String money(BigDecimal amount, String currency) {
+        if (amount == null) {
+            return "unavailable";
+        }
+        if (currency == null || currency.isBlank()) {
+            return amount.toPlainString();
+        }
+        try {
+            String symbol = java.util.Currency.getInstance(currency).getSymbol(java.util.Locale.US);
+            if (!symbol.equals(currency)) {
+                return symbol + amount.toPlainString();
+            }
+        }
+        catch (IllegalArgumentException notIso4217) {
+            // Not an ISO 4217 code: fall through to the "<amount> <code>" form below.
+        }
+        return amount.toPlainString() + " " + currency;
+    }
+
+    /**
+     * Renders a per-currency breakdown, e.g. {@code "USD 2300.00, EUR 1800.00"}, used wherever
+     * amounts span currencies and no single aggregate figure exists.
+     */
+    private static String describeByCurrency(Map<String, BigDecimal> byCurrency) {
+        if (byCurrency == null || byCurrency.isEmpty()) {
+            return "unavailable";
+        }
+        return byCurrency.entrySet().stream()
+                .map(e -> e.getKey() + " " + e.getValue().toPlainString())
+                .collect(Collectors.joining(", "));
     }
 
     /**
@@ -499,11 +569,27 @@ public class DeploymentPlan {
      * a missing upstream dependency) are captured in the outcome rather than thrown, allowing a partial
      * deployment to be inspected and {@link #rollback(DeploymentOutcome) rolled back} by the caller.</p>
      *
+     * <p><b>An invalid plan never executes.</b> A plan whose validation found hard errors
+     * ({@code isValid() == false}) is refused up front with an {@link IllegalStateException} listing
+     * every recorded error — executing it would provision billable resources and then fail
+     * downstream on the very defects validation already named. Fix the errors and re-plan (or
+     * {@link #dryRun()} again) before executing.</p>
+     *
      * @param inputs the per-connection authorization keys, VLAN tags and Azure peering types the
      *               customer supplies; {@code null} is treated as {@link ExecutionInputs#none()}
      * @return the execution outcome with all provisioned resources and any errors
+     * @throws IllegalStateException if the plan is not valid — the message lists the validation
+     *         errors to fix before re-planning
      */
     public DeploymentOutcome execute(ExecutionInputs inputs) {
+        if (!valid) {
+            String detail = validationErrors == null || validationErrors.isEmpty()
+                    ? "(no error detail was recorded on the plan)"
+                    : String.join("; ", validationErrors);
+            throw new IllegalStateException("This deployment plan failed validation and cannot be "
+                    + "executed — executing it would provision billable resources that are known to "
+                    + "fail. Fix the following and re-plan: " + detail);
+        }
         ExecutionInputs in = inputs != null ? inputs : ExecutionInputs.none();
         long startTime = System.currentTimeMillis();
         List<ProvisionedResource> resources = new ArrayList<>();
@@ -539,22 +625,32 @@ public class DeploymentPlan {
                     continue;
                 }
                 try {
-                    CloudRouter cr = fabric.cloudRouters().define()
-                            .name(planned.getName())
-                            .inMetro(planned.getMetroId().code())
-                            .withPackage(packageCode)
-                            .accountNumber(planned.getAccountNumber())
-                            .projectId(planned.getProjectId())
-                            .create();
+                    // The body comes from the SAME shared builder the plan-time Layer-2 dry-run
+                    // used (RouterBodies): identical notification stamping (Fabric-mandated,
+                    // EQ-3040013) and identical null guards on account/project — so a green dry-run
+                    // is followed by an identical real create, not a drifted one that 400s.
+                    CloudRouter cr = RouterBodies.routerBody(fabric.cloudRouters(), planned).create();
 
                     routerUuids.put(planned.getName(), cr.getUuid());
                     // Wait for the router to become active before the connections (and the routing
                     // protocols built on them) that depend on it are created — provisioning is async,
                     // and building a dependent against a still-provisioning router fails.
-                    String state = awaitState(() -> fabric.cloudRouters().getByUuid(cr.getUuid()),
+                    AwaitOutcome wait = awaitState(() -> fabric.cloudRouters().getByUuid(cr.getUuid()),
                             CloudRouter::getState, CloudRouterState.PROVISIONED,
                             Set.of(CloudRouterState.NOT_PROVISIONED, CloudRouterState.DEPROVISIONED));
-                    if (state == null) {
+                    if (wait.terminallyFailed()) {
+                        // The real terminal state, not a mislabelled "PROVISIONING": dependents are
+                        // skipped (the router is dropped from the uuid map) rather than doomed.
+                        errors.add(ProvisioningError.builder()
+                                .resourceType("CloudRouter")
+                                .resourceName(planned.getName())
+                                .reason("reached terminal state " + wait.statusOr("(unobserved)")
+                                        + " and will never reach PROVISIONED — dependent connections skipped")
+                                .recoverable(true)
+                                .build());
+                        routerUuids.remove(planned.getName());
+                    }
+                    else if (!wait.ready()) {
                         errors.add(ProvisioningError.builder()
                                 .resourceType("CloudRouter")
                                 .resourceName(planned.getName())
@@ -567,7 +663,7 @@ public class DeploymentPlan {
                             .name(planned.getName())
                             .uuid(cr.getUuid())
                             .metroId(planned.getMetroId())
-                            .status(state != null ? state : "PROVISIONING")
+                            .status(wait.statusOr("PROVISIONING"))
                             .build());
                 }
                 catch (Exception e) {
@@ -644,23 +740,38 @@ public class DeploymentPlan {
                 try {
                     Connection conn = providerBody(resolved, aSideUuid, onPort).create();
 
-                    connectionUuids.put(planned.getName(), conn.getUuid());
-                    String state = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
-                            Connection::getState, ConnectionState.PROVISIONED, Set.of());
-                    if (state == null) {
+                    // Real terminal-failure states, not Set.of(): a connection that lands FAILED /
+                    // CANCELLED / DEPROVISIONED must stop polling immediately (no 5-minute burn), be
+                    // reported with its REAL state, and have its dependent routing protocols skipped
+                    // — so its uuid is only registered for Phase 4 when it did not terminally fail.
+                    AwaitOutcome wait = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
+                            Connection::getState, ConnectionState.PROVISIONED, CONNECTION_TERMINAL_FAILURES);
+                    if (wait.terminallyFailed()) {
                         errors.add(ProvisioningError.builder()
                                 .resourceType("Connection")
                                 .resourceName(planned.getName())
-                                .reason("did not reach PROVISIONED within the timeout")
+                                .reason("reached terminal state " + wait.statusOr("(unobserved)")
+                                        + " and will never reach PROVISIONED — routing protocols skipped")
                                 .recoverable(true)
                                 .build());
+                    }
+                    else {
+                        connectionUuids.put(planned.getName(), conn.getUuid());
+                        if (!wait.ready()) {
+                            errors.add(ProvisioningError.builder()
+                                    .resourceType("Connection")
+                                    .resourceName(planned.getName())
+                                    .reason("did not reach PROVISIONED within the timeout")
+                                    .recoverable(true)
+                                    .build());
+                        }
                     }
                     resources.add(ProvisionedResource.builder()
                             .resourceType("Connection")
                             .name(planned.getName())
                             .uuid(conn.getUuid())
                             .metroId(planned.getASideMetro())
-                            .status(state != null ? state : "PROVISIONING")
+                            .status(wait.statusOr("PROVISIONING"))
                             .build());
                 }
                 catch (Exception e) {
@@ -729,23 +840,36 @@ public class DeploymentPlan {
                             .backboneBody(fabric.connections(), planned, aSideUuid, zSideUuid)
                             .create();
 
-                    connectionUuids.put(planned.getName(), conn.getUuid());
-                    String state = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
-                            Connection::getState, ConnectionState.PROVISIONED, Set.of());
-                    if (state == null) {
+                    // Same terminal-failure handling as the provider-connection path: report the
+                    // real terminal state and skip the dependent routing protocols.
+                    AwaitOutcome wait = awaitState(() -> fabric.connections().getByUuid(conn.getUuid()),
+                            Connection::getState, ConnectionState.PROVISIONED, CONNECTION_TERMINAL_FAILURES);
+                    if (wait.terminallyFailed()) {
                         errors.add(ProvisioningError.builder()
                                 .resourceType("BackboneLink")
                                 .resourceName(planned.getName())
-                                .reason("did not reach PROVISIONED within the timeout")
+                                .reason("reached terminal state " + wait.statusOr("(unobserved)")
+                                        + " and will never reach PROVISIONED — routing protocols skipped")
                                 .recoverable(true)
                                 .build());
+                    }
+                    else {
+                        connectionUuids.put(planned.getName(), conn.getUuid());
+                        if (!wait.ready()) {
+                            errors.add(ProvisioningError.builder()
+                                    .resourceType("BackboneLink")
+                                    .resourceName(planned.getName())
+                                    .reason("did not reach PROVISIONED within the timeout")
+                                    .recoverable(true)
+                                    .build());
+                        }
                     }
                     resources.add(ProvisionedResource.builder()
                             .resourceType("BackboneLink")
                             .name(planned.getName())
                             .uuid(conn.getUuid())
                             .metroId(link.getMetroA())
-                            .status(state != null ? state : "PROVISIONING")
+                            .status(wait.statusOr("PROVISIONING"))
                             .build());
                 }
                 catch (Exception e) {
@@ -911,13 +1035,40 @@ public class DeploymentPlan {
     }
 
     /**
-     * Polls the given resource until it reaches {@code ready}, hits one of {@code terminalFailures},
-     * or the timeout (5 minutes, polled every 5 seconds) elapses. Returns the resource's state name
-     * once ready, or {@code null} if it failed or timed out — letting {@link #execute()} record a
-     * recoverable error and the actual interim status rather than asserting a state that never held.
+     * The connection states that will never transition to {@code PROVISIONED}: a connection observed
+     * in one of these must stop being polled immediately (no 5-minute timeout burn), be reported with
+     * its REAL terminal state, and have its dependent routing protocols skipped. The old code passed
+     * {@code Set.of()} here, so a FAILED connection polled to timeout and was then misreported as
+     * "PROVISIONING" while Phase&nbsp;4 still attempted routing protocols on it.
      */
-    private static <T, S extends Enum<S>> String awaitState(Supplier<T> fetch, Function<T, S> state,
-                                                             S ready, Set<S> terminalFailures) {
+    private static final Set<ConnectionState> CONNECTION_TERMINAL_FAILURES = Set.of(
+            ConnectionState.FAILED,
+            ConnectionState.CANCELLED,
+            ConnectionState.DEPROVISIONED,
+            ConnectionState.DEPROVISIONING);
+
+    /**
+     * The outcome of one state wait: whether the resource became {@code ready}, and the state it was
+     * last observed in — the ready state, the REAL terminal-failure state, or {@code null} when the
+     * wait timed out / the fetch itself failed (no state was observed at all).
+     */
+    private record AwaitOutcome(boolean ready, boolean terminallyFailed, String status) {
+
+        /** The observed state name, or {@code fallback} when no state could be observed. */
+        String statusOr(String fallback) {
+            return status != null ? status : fallback;
+        }
+    }
+
+    /**
+     * Polls the given resource until it reaches {@code ready}, hits one of {@code terminalFailures},
+     * or the timeout (5 minutes, polled every 5 seconds) elapses. The returned {@link AwaitOutcome}
+     * distinguishes ready / terminally-failed (with the real terminal state) / timed-out — letting
+     * {@link #execute()} record a recoverable error with the actual observed status rather than
+     * asserting a state that never held.
+     */
+    private static <T, S extends Enum<S>> AwaitOutcome awaitState(Supplier<T> fetch, Function<T, S> state,
+                                                                  S ready, Set<S> terminalFailures) {
         try {
             T resource = ResourceWaiter.forResource(fetch)
                     .until(r -> state.apply(r) == ready)
@@ -925,11 +1076,26 @@ public class DeploymentPlan {
                     .timeout(Duration.ofMinutes(5))
                     .pollInterval(Duration.ofSeconds(5))
                     .await();
-            return state.apply(resource).name();
+            return new AwaitOutcome(true, false, state.apply(resource).name());
+        }
+        catch (WaiterFailedException e) {
+            // The resource reached a terminal failure state — surface the REAL state it landed in.
+            String observed = null;
+            try {
+                @SuppressWarnings("unchecked")
+                T failedResource = (T) e.getResource();
+                if (failedResource != null) {
+                    observed = state.apply(failedResource).name();
+                }
+            }
+            catch (RuntimeException ignored) {
+                // A cast/accessor problem must not mask the terminal-failure verdict itself.
+            }
+            return new AwaitOutcome(false, true, observed);
         }
         catch (RuntimeException e) {
-            // WaiterTimeoutException / WaiterFailedException (or a fetch error) — not ready.
-            return null;
+            // WaiterTimeoutException (or a fetch error) — not ready, and no terminal state observed.
+            return new AwaitOutcome(false, false, null);
         }
     }
 

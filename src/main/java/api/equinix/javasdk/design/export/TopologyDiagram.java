@@ -25,6 +25,10 @@ import java.util.Map;
  * metros. For an {@link OptimizationResult}, metros are nodes annotated with their
  * rank and score, optionally grouping the workloads placed in each metro.</p>
  *
+ * <p>Node labels are HTML-escaped ({@code &}, {@code <}, {@code >} and double quotes), so
+ * metro, router, provider and workload names containing markup-significant characters render
+ * literally instead of being interpreted by Mermaid's HTML label parser.</p>
+ *
  * <p>This class is stateless and thread-safe.</p>
  */
 public class TopologyDiagram {
@@ -218,8 +222,14 @@ public class TopologyDiagram {
         if (text == null) {
             return "";
         }
-        // Inside a quoted node label, double-quotes must be encoded as an HTML entity.
-        return text.replace("\"", "&quot;");
+        // Mermaid renders quoted node labels as HTML, so &, <, > and double-quotes in
+        // user-supplied names must all be encoded as entities ('&' first, so the others'
+        // entities are not double-escaped). Only the diagram's own <br/> separators —
+        // appended outside escape() — remain live markup.
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 
     private String safe(String text) {

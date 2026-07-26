@@ -31,7 +31,7 @@ import java.util.Map;
  * them, and enumerates exactly what to collect via {@link ConnectionInputRequirement}.
  *
  * <p>Every map is keyed by the planned connection's {@code name} — the same name that appears on the
- * plan, in {@link ConnectionInputRequirement#getConnectionName()}, and in the plan's Terraform export.
+ * plan, in {@link ConnectionInputRequirement} ({@code getConnectionName()}), and in the plan's Terraform export.
  * A value supplied here fills in the field the plan deliberately left null; a field the plan already
  * carries (a lens-3b plan built with keys) wins and needs no entry here.</p>
  *

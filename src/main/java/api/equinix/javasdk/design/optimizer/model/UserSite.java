@@ -50,9 +50,21 @@ public class UserSite {
     double weight;
 
     /**
-     * Returns the effective weight for this site in scoring calculations.
-     * If an explicit weight is set, it is used; otherwise the headcount is
-     * normalized against the total across all sites by the engine.
+     * Returns this site's <em>stated</em> weight: the explicit {@code weight} if positive,
+     * otherwise the headcount normalized against the given total.
+     *
+     * <p><strong>Returns {@code 0} when neither weight nor headcount is set</strong> (or the total
+     * headcount is 0) — but that does <em>not</em> mean the site has no influence on scoring. The
+     * engine applies a per-site fallback on top of this value: a site with a stated weight of 0 is
+     * weighted as an average site for its {@link SiteRole} (the stated weight per unit of role
+     * importance, times its own role multiplier), and the result's explanation names such sites as
+     * inferred. This method therefore reports the caller-supplied portion only, not the final
+     * scoring weight.</p>
+     *
+     * @param totalHeadcount the headcount summed across all sites, used to normalize this site's
+     *                       headcount
+     * @return the stated weight, or {@code 0.0} when the caller supplied neither weight nor
+     *         headcount
      */
     public double effectiveWeight(int totalHeadcount) {
         if (weight > 0) {

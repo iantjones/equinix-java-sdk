@@ -49,10 +49,33 @@ class ReferenceRateCardTest {
                 CARD.egress(CloudProviderType.AWS, "us", EgressPath.PRIVATE, Term.MONTH_12).orElseThrow().getPricePerGb()));
         assertEquals(0, new BigDecimal("0.087").compareTo(
                 CARD.egress(CloudProviderType.AZURE, null, EgressPath.INTERNET, Term.MONTH_12).orElseThrow().getPricePerGb()));
-        assertEquals(0, new BigDecimal("0.02").compareTo(
+        assertEquals(0, new BigDecimal("0.0186").compareTo(
                 CARD.egress(CloudProviderType.GOOGLE_CLOUD, null, EgressPath.PRIVATE, Term.MONTH_12).orElseThrow().getPricePerGb()));
         assertEquals(PriceSource.REFERENCE,
                 CARD.egress(CloudProviderType.AWS, "us", EgressPath.INTERNET, Term.MONTH_12).orElseThrow().getSource());
+    }
+
+    @Test
+    void gcpEgressFiguresAreConvertedFromPerGibListPrices() {
+        // Google publishes its egress list prices per GiB ($0.12 / $0.02); EgressRate.costFor()
+        // multiplies by SI-decimal GB, so storing the raw per-GiB figures in the per-GB field
+        // overstated GCP costs ~7.4%. The bundled table carries the converted per-GB values
+        // (0.12 / 1.073741824 ≈ 0.1118, 0.02 / 1.073741824 ≈ 0.0186), matching the convention of
+        // the live GCP billing-catalog adapter, and the notes flag the conversion.
+        var internet = CARD.egress(CloudProviderType.GOOGLE_CLOUD, null, EgressPath.INTERNET, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("0.1118").compareTo(internet.getPricePerGb()),
+                "the raw $0.12/GiB list price must be stored converted to per-GB");
+        assertTrue(internet.getNote().contains("converted from per-GiB list price"),
+                "the note must flag the GiB->GB conversion: " + internet.getNote());
+
+        var privatePath = CARD.egress(CloudProviderType.GOOGLE_CLOUD, null, EgressPath.PRIVATE, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("0.0186").compareTo(privatePath.getPricePerGb()),
+                "the raw $0.02/GiB list price must be stored converted to per-GB");
+        assertTrue(privatePath.getNote().contains("converted from per-GiB list price"));
+
+        // AWS and Azure quote their list prices in decimal GB already — no conversion applied.
+        assertEquals(0, new BigDecimal("0.09").compareTo(
+                CARD.egress(CloudProviderType.AWS, null, EgressPath.INTERNET, Term.MONTH_12).orElseThrow().getPricePerGb()));
     }
 
     @Test
@@ -87,11 +110,18 @@ class ReferenceRateCardTest {
 
     @Test
     void cloudRouterFallsBackToStandard() {
-        assertEquals(0, new BigDecimal("1200").compareTo(
-                CARD.cloudRouter("STANDARD", null, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
-        assertEquals(0, new BigDecimal("1200").compareTo(
-                CARD.cloudRouter("NONEXISTENT", null, Term.MONTH_12).orElseThrow().getMonthlyRecurring()),
+        PriceQuote exact = CARD.cloudRouter("STANDARD", null, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("1200").compareTo(exact.getMonthlyRecurring()));
+        assertFalse(exact.getNote().contains("substituted"),
+                "an exact package match carries no substitution label: " + exact.getNote());
+
+        // An unlisted package still falls back to the STANDARD figure, but the substitution must
+        // be named in the note — never silently passed off as a genuine package-specific figure.
+        PriceQuote substituted = CARD.cloudRouter("NONEXISTENT", null, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("1200").compareTo(substituted.getMonthlyRecurring()),
                 "unknown package falls back to STANDARD");
+        assertTrue(substituted.getNote().contains("STANDARD substituted for NONEXISTENT"),
+                "the fallback must label the substitution: " + substituted.getNote());
     }
 
     @Test
@@ -103,6 +133,29 @@ class ReferenceRateCardTest {
                 CARD.cspInterconnectPortMonthly(CloudProviderType.AWS, 10_000).orElseThrow()));
         assertNotNull(CARD.disclaimer());
         assertEquals("2026-06", CARD.asOf());
+    }
+
+    @Test
+    void cspPortAboveTopTierIsExtrapolatedAndTaggedNotSilentlyFloored() {
+        // 40 Gbps exceeds AWS's largest tabulated Direct Connect tier (10 Gbps @ 1642.50). It
+        // must NOT floor back to the 10G flat price (the old bug: a 100G requirement priced as a
+        // single 10G circuit). Mirroring connection(), it is extrapolated linearly from the top
+        // tier's per-Mbps rate: 1642.50 × 40000 / 10000 = 6570.00.
+        assertEquals(0, new BigDecimal("6570.00").compareTo(
+                CARD.cspInterconnectPortMonthly(CloudProviderType.AWS, 40_000).orElseThrow()),
+                "above-top-tier bandwidth must extrapolate, not floor to the 10G flat price");
+
+        // The quote variant tags the extrapolation so it is never mistaken for a tabulated rate.
+        PriceQuote quote = CARD.cspInterconnectPortMonthlyQuote(CloudProviderType.AWS, 40_000).orElseThrow();
+        assertEquals(0, new BigDecimal("6570.00").compareTo(quote.getMonthlyRecurring()));
+        assertTrue(quote.getNote().toLowerCase().contains("extrapolat"),
+                "an above-top-tier CSP port price must be clearly tagged as extrapolated");
+        assertEquals(PriceSource.REFERENCE, quote.getSource());
+
+        // At or below a tabulated tier the figure is the tabulated one, untagged.
+        PriceQuote tabulated = CARD.cspInterconnectPortMonthlyQuote(CloudProviderType.AWS, 10_000).orElseThrow();
+        assertEquals(0, new BigDecimal("1642.50").compareTo(tabulated.getMonthlyRecurring()));
+        assertFalse(tabulated.getNote().toLowerCase().contains("extrapolat"));
     }
 
     @Test

@@ -8,10 +8,13 @@ import java.math.BigDecimal;
  */
 public enum DataUnit {
 
+    /** One decimal gigabyte (the base unit). */
     GIGABYTE(BigDecimal.ONE),
 
+    /** One decimal terabyte = 1000 GB. */
     TERABYTE(BigDecimal.valueOf(1_000)),
 
+    /** One decimal petabyte = 1,000,000 GB. */
     PETABYTE(BigDecimal.valueOf(1_000_000));
 
     private final BigDecimal gigabytesPerUnit;
@@ -23,8 +26,8 @@ public enum DataUnit {
     /**
      * Converts an amount in this unit to gigabytes.
      *
-     * @param amount the amount in this unit
-     * @return the equivalent number of gigabytes
+     * @param amount the amount in this unit; {@code null} is treated as zero
+     * @return the equivalent number of decimal gigabytes ({@code ZERO} for a null amount)
      */
     public BigDecimal toGigabytes(BigDecimal amount) {
         return (amount == null ? BigDecimal.ZERO : amount).multiply(gigabytesPerUnit);

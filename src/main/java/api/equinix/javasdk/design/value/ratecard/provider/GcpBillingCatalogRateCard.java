@@ -26,6 +26,7 @@ import api.equinix.javasdk.design.value.ratecard.Term;
 import api.equinix.javasdk.fabric.enums.ConnectionType;
 import api.equinix.javasdk.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -65,13 +66,24 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>This is an opt-in, pluggable source intended for a
  * {@link RateCard#layered(RateCard...)} chain. It is fault-tolerant — a missing key,
  * network error, or unrecognised response yields no rate rather than an exception.
- * The SKU catalogue is fetched once (following pagination) and cached for the
- * adapter's lifetime.</p>
+ * The SKU catalogue is fetched once (following pagination) on first <em>success</em> and
+ * cached for the adapter's lifetime; a failed fetch — including a failure on any page of
+ * the pagination, which would otherwise leave a partial catalogue and a wrong "cheapest
+ * SKU" — is never memoized, so the next lookup retries.</p>
  */
+@Slf4j
 public final class GcpBillingCatalogRateCard implements RateCard {
 
+    /**
+     * The public Cloud Billing Catalog endpoint root; the default for {@link #create(String)}.
+     * Override via {@link #create(String, String)} for a proxy or testing.
+     */
     public static final String DEFAULT_ENDPOINT = "https://cloudbilling.googleapis.com";
 
+    /**
+     * The Cloud Billing Catalog service id of <em>Compute Engine</em> — the service that owns
+     * GCP's network-egress SKUs, and therefore the one whose SKU list this adapter fetches.
+     */
     public static final String COMPUTE_ENGINE_SERVICE = "6F81-5844-456A";
 
     private static final Currency USD = Currency.getInstance("USD");
@@ -87,6 +99,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     private final String apiKey;
     private final ProviderPricingHttpClient http;
     private final Map<String, Optional<EgressRate>> cache = new ConcurrentHashMap<>();
+    private final Object fetchLock = new Object();
     private volatile List<JsonNode> skus;
 
     private GcpBillingCatalogRateCard(String endpoint, String apiKey) {
@@ -96,7 +109,10 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     }
 
     /**
-     * Creates an adapter against the public Cloud Billing Catalog endpoint.
+     * Creates an adapter against the public Cloud Billing Catalog endpoint
+     * ({@link #DEFAULT_ENDPOINT}). With a {@code null}/empty key every lookup returns
+     * empty without making a call, so the adapter can be composed unconditionally into a
+     * layered chain and simply contributes nothing when unconfigured.
      *
      * @param apiKey a Google API key authorised for the Cloud Billing Catalog API
      */
@@ -131,7 +147,21 @@ public final class GcpBillingCatalogRateCard implements RateCard {
             return Optional.empty();
         }
         String key = path.name() + "|" + (region == null ? "*" : region);
-        return cache.computeIfAbsent(key, k -> resolve(region, path));
+        Optional<EgressRate> cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        // Fetch the (shared, single-flight) catalogue OUTSIDE the result map: a paginated
+        // multi-megabyte fetch must never run inside ConcurrentHashMap's mapping function
+        // holding a bin lock.
+        List<JsonNode> catalogue = skus();
+        if (catalogue == null) {
+            // Catalogue fetch failure: yield no rate but do NOT cache it — the next call retries.
+            return Optional.empty();
+        }
+        Optional<EgressRate> resolved = resolve(catalogue, region, path);
+        Optional<EgressRate> raced = cache.putIfAbsent(key, resolved);
+        return raced != null ? raced : resolved;
     }
 
     @Override
@@ -139,14 +169,14 @@ public final class GcpBillingCatalogRateCard implements RateCard {
         return PriceSource.PROVIDER_API;
     }
 
-    private Optional<EgressRate> resolve(String region, EgressPath path) {
+    private static Optional<EgressRate> resolve(List<JsonNode> catalogue, String region, EgressPath path) {
         // Deterministic pick across ALL matching SKUs — never "the first one in catalogue order".
         // Higher representativeness score wins; ties break to the lower per-GiB rate, then to the
         // lexicographically-lower skuId, so the choice is stable regardless of catalogue ordering.
         JsonNode chosen = null;
         BigDecimal chosenPerGib = null;
         int chosenScore = Integer.MIN_VALUE;
-        for (JsonNode sku : skus()) {
+        for (JsonNode sku : catalogue) {
             if (!matchesPath(sku, path) || !matchesRegion(sku, region)) {
                 continue;
             }
@@ -260,10 +290,17 @@ public final class GcpBillingCatalogRateCard implements RateCard {
         return null;
     }
 
+    /**
+     * The SKU catalogue, fetched single-flight and memoized on <em>success only</em>: a failed
+     * fetch leaves the field {@code null} so the next lookup retries, rather than an empty or
+     * partial catalogue being remembered for the adapter's lifetime.
+     *
+     * @return the catalogue, or {@code null} when the fetch failed
+     */
     private List<JsonNode> skus() {
         List<JsonNode> local = skus;
         if (local == null) {
-            synchronized (this) {
+            synchronized (fetchLock) {
                 local = skus;
                 if (local == null) {
                     local = fetchSkus();
@@ -274,6 +311,15 @@ public final class GcpBillingCatalogRateCard implements RateCard {
         return local;
     }
 
+    /**
+     * Fetches every catalogue page. A failed page — the first or a mid-pagination one — fails the
+     * <em>whole</em> fetch ({@code null}): selecting the "cheapest matching SKU" over a partial
+     * catalogue would be a wrong number labelled authoritative. If the {@link #MAX_PAGES} safety
+     * cap trips while the server still advertises a next page, the truncation is logged loudly and
+     * the collected prefix is used (the cap is generous headroom; it only trips on a runaway).
+     *
+     * @return every SKU across all pages, or {@code null} when any page fetch failed
+     */
     private List<JsonNode> fetchSkus() {
         List<JsonNode> collected = new ArrayList<>();
         String pageToken = null;
@@ -288,7 +334,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
 
             Optional<JsonNode> root = http.getJson(url.toString());
             if (root.isEmpty()) {
-                break;
+                return null;
             }
             JsonNode skuArray = root.get().path("skus");
             if (skuArray.isArray()) {
@@ -298,9 +344,12 @@ public final class GcpBillingCatalogRateCard implements RateCard {
             }
             pageToken = root.get().path("nextPageToken").asText("");
             if (pageToken.isEmpty()) {
-                break;
+                return collected;
             }
         }
+        log.warn("GCP Billing Catalog SKU listing truncated at the {}-page safety cap with a live "
+                + "nextPageToken; egress selection will run over the {} SKUs collected so far",
+                MAX_PAGES, collected.size());
         return collected;
     }
 }

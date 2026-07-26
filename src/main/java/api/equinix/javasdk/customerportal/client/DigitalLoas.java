@@ -34,7 +34,7 @@ import java.util.Map;
  *
  * <p>Backed by the diLOA v1 API at {@code /diloa/v1/digitalLoas}. A Digital LOA is created with
  * {@link #create(DigitalLoaCreateRequest)}, retrieved with {@link #findByUuid(String)} or
- * {@link #search(DigitalLoaSearchRequest)}, modified with {@link #patch(String, List)}, actioned
+ * {@link #search(DigitalLoaSearchRequest)}, modified with {@link #update(String, List)}, actioned
  * with {@link #performAction(String, Map)} and invalidated with {@link #cancel(String)}. The audit
  * trail of changes is available via {@link #findChangesByLoaUuid(String)} and
  * {@link #findChangeByUuid(String, String)}.</p>

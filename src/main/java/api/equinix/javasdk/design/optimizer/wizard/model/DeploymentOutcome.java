@@ -9,19 +9,38 @@ import java.util.stream.Collectors;
 /**
  * The result of executing a deployment plan. Contains all provisioned resources,
  * any errors encountered, and execution timing.
+ *
+ * <p><strong>{@code resources} is an audit trail, not a live inventory.</strong> It records every
+ * resource execution successfully <em>created</em> — including, after an abort-and-rollback (a
+ * pre-flight dry-run rejection or a failed create mid-run), resources that were created and then
+ * deleted again by the LIFO teardown. On such a run {@code toSummary()}'s
+ * "N/M resources provisioned" therefore describes what was built before the teardown, not what
+ * still exists: {@code isFullySuccessful() == false} plus errors mentioning the abort/rollback
+ * distinguish a rolled-back run from a partially-standing one.</p>
  */
 @Value
 @Builder
 public class DeploymentOutcome {
 
+    /** The plan this outcome resulted from executing. */
     DeploymentPlan plan;
 
+    /**
+     * Every resource execution created, in creation order — see the class note: after a
+     * rollback these entries describe resources that have since been deleted.
+     */
     List<ProvisionedResource> resources;
 
+    /** Whether every planned resource was provisioned with no errors recorded. */
     boolean fullySuccessful;
 
+    /**
+     * Every error recorded during the run — creation failures, waiter observations, pre-flight
+     * notes, and (after an abort) any rollback deletions that failed.
+     */
     List<ProvisioningError> errors;
 
+    /** Wall-clock duration of the execution run in milliseconds, including state waits. */
     long executionTimeMs;
 
     /**

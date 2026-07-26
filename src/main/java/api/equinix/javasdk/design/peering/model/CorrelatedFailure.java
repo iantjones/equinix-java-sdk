@@ -40,21 +40,36 @@ import java.util.List;
 @Builder
 public class CorrelatedFailure {
 
+    /** The failure domain kind — the engine currently emits {@link FailureScope#METRO} correlations. */
     FailureScope scope;
 
+    /** Human-readable name of the shared failure domain (e.g. {@code "DC metro"}). */
     String failureDomain;
 
+    /** The metro constituting the failure domain. */
     MetroId affectedMetro;
 
+    /** The ASNs whose connectivity is correlated on this domain. */
     List<Long> affectedAsns;
 
+    /** Display labels parallel to {@code affectedAsns}. */
     List<String> affectedLabels;
 
+    /** The connectivity paths that would fail together (e.g. {@code "IX Peering to AWS"}). */
     List<String> affectedPaths;
 
+    /** The fraction (0.0&ndash;1.0) of analyzed ASNs this correlation covers. */
     double impactRatio;
 
+    /**
+     * Severity of the correlation. Closed value set: {@code "CRITICAL"}, {@code "HIGH"},
+     * {@code "MEDIUM"}, {@code "LOW"} — the engine currently emits {@code "HIGH"} (two or fewer
+     * analyzed ASNs) or {@code "MEDIUM"} for its single-customer-metro correlations. Unlike
+     * {@code BlastRadiusReport}, there is no {@code computeSeverity()} re-derivation here; this
+     * stored value is the only severity.
+     */
     String severity;
 
+    /** Suggested mitigation for removing the correlation. */
     String recommendation;
 }

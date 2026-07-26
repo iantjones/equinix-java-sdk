@@ -35,13 +35,20 @@ public class OptimizationResult {
 
     /**
      * Returns the top-ranked metro recommendation.
+     *
+     * @return the rank-1 recommendation, or {@code null} when no metro was viable
+     *         (empty recommendation list)
      */
     public MetroRecommendation primaryMetro() {
         return recommendations.isEmpty() ? null : recommendations.get(0);
     }
 
     /**
-     * Returns the top N metro recommendations.
+     * Returns the top N metro recommendations — a truncation of the already-ranked list,
+     * never a re-scoring.
+     *
+     * @param n the maximum number of recommendations to return
+     * @return the first {@code n} recommendations, or all of them when fewer exist
      */
     public List<MetroRecommendation> top(int n) {
         return recommendations.stream().limit(n).collect(Collectors.toList());
@@ -77,8 +84,8 @@ public class OptimizationResult {
 
         if (costEstimate != null) {
             if (costEstimate.getMonthlyTotal() != null) {
-                sb.append("Estimated monthly cost: $").append(costEstimate.getMonthlyTotal())
-                        .append(" ").append(costEstimate.getCurrency());
+                sb.append("Estimated monthly cost: ")
+                        .append(money(costEstimate.getMonthlyTotal(), costEstimate.getCurrency()));
                 if (!costEstimate.isWithinBudget()) {
                     sb.append(" (OVER BUDGET)");
                 }
@@ -170,19 +177,27 @@ public class OptimizationResult {
             md.append("\n");
         }
 
-        // Cost Estimate
+        // Cost Estimate. Every figure carries its own currency: per-metro rows render the row's
+        // currency (live Fabric pricing legitimately quotes EUR in Frankfurt next to USD in
+        // Ashburn), and the total renders the aggregate currency. A hardcoded "$" against a
+        // non-USD figure misstated the amount by whatever the exchange rate happened to be.
         if (costEstimate != null) {
             md.append("## Cost Estimate\n\n");
             md.append("| Metro | Monthly | Setup |\n");
             md.append("|-------|--------:|------:|\n");
             for (MetroCostBreakdown mcb : costEstimate.getPerMetro()) {
+                String rowCurrency = mcb.getCurrency() != null
+                        ? mcb.getCurrency() : costEstimate.getCurrency();
                 md.append("| ").append(mcb.getMetroId())
-                        .append(" | $").append(mcb.getMonthlyRecurring())
-                        .append(" | $").append(mcb.getNonRecurring()).append(" |\n");
+                        .append(" | ").append(money(mcb.getMonthlyRecurring(), rowCurrency))
+                        .append(" | ").append(money(mcb.getNonRecurring(), rowCurrency)).append(" |\n");
             }
             if (costEstimate.getMonthlyTotal() != null) {
-                md.append("| **Total** | **$").append(costEstimate.getMonthlyTotal())
-                        .append("** | **$").append(costEstimate.getSetupTotal()).append("** |\n\n");
+                md.append("| **Total** | **")
+                        .append(money(costEstimate.getMonthlyTotal(), costEstimate.getCurrency()))
+                        .append("** | **")
+                        .append(money(costEstimate.getSetupTotal(), costEstimate.getCurrency()))
+                        .append("** |\n\n");
             } else {
                 md.append("| **Total** | **")
                         .append(describeByCurrency(costEstimate.getMonthlyByCurrency()))
@@ -202,6 +217,32 @@ public class OptimizationResult {
         }
 
         return md.toString();
+    }
+
+    /**
+     * Renders a monetary amount with the symbol of its actual currency ({@code "$2300.00"},
+     * {@code "€1800.00"}), falling back to {@code "<amount> <code>"} when the code has no distinct
+     * symbol or is unknown, and to the bare amount when no currency was stated at all. Replaces the
+     * former hardcoded {@code "$"}, which asserted US dollars against figures that live Fabric
+     * pricing legitimately quotes in other currencies.
+     */
+    private static String money(BigDecimal amount, String currency) {
+        if (amount == null) {
+            return "unavailable";
+        }
+        if (currency == null || currency.isBlank()) {
+            return amount.toPlainString();
+        }
+        try {
+            String symbol = java.util.Currency.getInstance(currency).getSymbol(java.util.Locale.US);
+            if (!symbol.equals(currency)) {
+                return symbol + amount.toPlainString();
+            }
+        }
+        catch (IllegalArgumentException notIso4217) {
+            // Not an ISO 4217 code: fall through to the "<amount> <code>" form below.
+        }
+        return amount.toPlainString() + " " + currency;
     }
 
     /**

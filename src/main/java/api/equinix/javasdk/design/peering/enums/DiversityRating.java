@@ -35,14 +35,19 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum DiversityRating {
 
+    /** 3000&nbsp;km or more apart — typically cross-region/continental (e.g. Ashburn&ndash;Frankfurt). Score 1.0. */
     EXCELLENT("Excellent", 1.0, 3000),
 
+    /** 1500&ndash;2999&nbsp;km apart — good diversity within a continent (e.g. Ashburn&ndash;Dallas). Score 0.75. */
     GOOD("Good", 0.75, 1500),
 
+    /** 500&ndash;1499&nbsp;km apart — some shared infrastructure risk (e.g. Ashburn&ndash;Chicago). Score 0.5. */
     MODERATE("Moderate", 0.5, 500),
 
+    /** 150&ndash;499&nbsp;km apart — limited diversity, likely shared corridors (e.g. Ashburn&ndash;New York). Score 0.25. */
     POOR("Poor", 0.25, 150),
 
+    /** Under 150&nbsp;km apart — effectively the same failure domain (same-metro pairings). Score 0.0. */
     CRITICAL("Critical", 0.0, 0),
 
     /**

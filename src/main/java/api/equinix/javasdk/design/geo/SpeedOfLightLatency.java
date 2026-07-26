@@ -127,6 +127,12 @@ public final class SpeedOfLightLatency {
         return builder().mode(Mode.ONE_WAY).build();
     }
 
+    /**
+     * Starts a builder for a customized calculator (mode, refractive index, route factor).
+     * The no-argument chain {@code builder().build()} is equivalent to {@link #roundTrip()}.
+     *
+     * @return a new builder with the defaults pre-set
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -352,7 +358,12 @@ public final class SpeedOfLightLatency {
         private double routeFactor = DEFAULT_ROUTE_FACTOR;
 
         /**
-         * @param mode one-way or round-trip; defaults to {@link Mode#ROUND_TRIP}
+         * Sets the reporting mode. Unlike the other two setters, a {@code null} argument does not
+         * throw — it is silently ignored and the current mode (initially
+         * {@link Mode#ROUND_TRIP}) is kept.
+         *
+         * @param mode one-way or round-trip; {@code null} is ignored
+         * @return this builder
          */
         public Builder mode(Mode mode) {
             if (mode != null) {
@@ -362,8 +373,15 @@ public final class SpeedOfLightLatency {
         }
 
         /**
+         * Sets the fibre refractive index. Only {@code > 0} is enforced; note that values below
+         * 1.0 are physically meaningless for fibre (they yield a floor faster than light in
+         * vacuum) — real single-mode fibre is ~{@value #DEFAULT_FIBER_REFRACTIVE_INDEX}, and
+         * meaningful values are {@code >= 1.0}.
+         *
          * @param refractiveIndex the fibre refractive index (must be &gt; 0); defaults to
          *                        {@value #DEFAULT_FIBER_REFRACTIVE_INDEX}
+         * @return this builder
+         * @throws IllegalArgumentException if {@code refractiveIndex <= 0}
          */
         public Builder refractiveIndex(double refractiveIndex) {
             if (refractiveIndex <= 0) {
@@ -374,8 +392,13 @@ public final class SpeedOfLightLatency {
         }
 
         /**
+         * Sets the path inflation applied to the great-circle distance: 1.0 is the theoretical
+         * straight-line floor; ~1.3&ndash;1.5 models realistic terrestrial fibre routing.
+         *
          * @param routeFactor path inflation over the great-circle distance (must be &gt;= 1.0);
          *                   defaults to {@value #DEFAULT_ROUTE_FACTOR}
+         * @return this builder
+         * @throws IllegalArgumentException if {@code routeFactor < 1.0}
          */
         public Builder routeFactor(double routeFactor) {
             if (routeFactor < 1.0) {
@@ -385,6 +408,12 @@ public final class SpeedOfLightLatency {
             return this;
         }
 
+        /**
+         * Builds the immutable calculator with the configured mode, refractive index, and route
+         * factor.
+         *
+         * @return a new {@link SpeedOfLightLatency}
+         */
         public SpeedOfLightLatency build() {
             return new SpeedOfLightLatency(mode, refractiveIndex, routeFactor);
         }

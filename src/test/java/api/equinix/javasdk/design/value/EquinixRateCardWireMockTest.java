@@ -226,4 +226,127 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         assertFalse(card.isLiveSourceUnavailable(),
                 "a subsequent successful fetch must clear the 'live source unavailable' signal");
     }
+
+    @Test
+    @DisplayName("connection prefers the row whose termLength matches the requested term")
+    void connectionPrefersTermMatchedRow() {
+        // Two DC 1 Gbps rows: 36-month @ 90 (listed first) and on-demand (termLength 1) @ 180.
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_termed.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        // A 1-month request must NOT silently pick up the 36-month discounted figure just
+        // because it is listed first — the term-matched on-demand row wins.
+        PriceQuote onDemand = card.connection(ConnectionType.EVPL_VC, 1000, MetroCode.DC, Term.MONTH_1).orElseThrow();
+        assertEquals(0, new BigDecimal("180.00").compareTo(onDemand.getMonthlyRecurring()),
+                "a 1-month lookup must resolve the termLength-1 row, not the 36-month discount");
+        assertFalse(onDemand.getNote().contains("substituted"),
+                "a term-matched row carries no substitution label");
+
+        // And the 36-month request resolves the 36-month row.
+        assertEquals(0, new BigDecimal("90.00").compareTo(
+                card.connection(ConnectionType.EVPL_VC, 1000, MetroCode.DC, Term.MONTH_36)
+                        .orElseThrow().getMonthlyRecurring()));
+    }
+
+    @Test
+    @DisplayName("a term-mismatched connection row is only returned with an explicit substitution label")
+    void connectionTermMismatchIsLabelledNeverSilent() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_termed.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        // SV 2 Gbps exists only as a 36-month row. A 1-month request may fall back to it, but
+        // the note must name the term substitution so it is never mistaken for a 1-month price.
+        PriceQuote fallback = card.connection(ConnectionType.EVPL_VC, 2000, MetroCode.SV, Term.MONTH_1).orElseThrow();
+        assertEquals(0, new BigDecimal("120.00").compareTo(fallback.getMonthlyRecurring()));
+        assertTrue(fallback.getNote().contains("termLength 36 substituted for requested 1"),
+                "the fallback must be labelled with the term substitution: " + fallback.getNote());
+
+        // DC 1 Gbps has termLength 36 and 1 rows but no 12: the 12-month request falls back
+        // to the first mismatched row, labelled.
+        PriceQuote twelve = card.connection(ConnectionType.EVPL_VC, 1000, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertTrue(twelve.getNote().contains("termLength 36 substituted for requested 12"),
+                "a 12-month request over 1/36-month rows must label the substitution: " + twelve.getNote());
+    }
+
+    @Test
+    @DisplayName("a requested metro with no matching row yields empty, never a cross-metro price")
+    void connectionWrongMetroYieldsEmptyNotCrossMetroPrice() {
+        // The catalogue holds 1 Gbps rows for SV/LA and DC only.
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        // A Tokyo request must NOT be silently priced at Silicon Valley (or any other metro's)
+        // rates tagged EQUINIX_LIVE — empty lets a layered fallback card supply a genuine figure.
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 1000, MetroCode.TY, Term.MONTH_12).isEmpty(),
+                "no TY row exists, so a TY request must fall through the layers, not price cross-metro");
+
+        // Without a requested metro the first priced type/bandwidth row is still acceptable.
+        assertEquals(0, new BigDecimal("150.00").compareTo(
+                card.connection(ConnectionType.EVPL_VC, 1000, null, Term.MONTH_12)
+                        .orElseThrow().getMonthlyRecurring()),
+                "a metro-less request keeps the any-metro behaviour");
+    }
+
+    @Test
+    @DisplayName("cloudRouter matches the structured package code exactly — never by substring")
+    void cloudRouterMatchesPackageStructurallyNotBySubstring() {
+        // Row order: NONSTANDARD DC (111, listed first), PREMIUM SG (2400), STANDARD DC (1200).
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_structured.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        // "STANDARD" must not substring-match the NONSTANDARD row's name/code: the structured
+        // package code decides, so the genuine STANDARD DC row (1200) wins over the first row.
+        PriceQuote standard = card.cloudRouter("STANDARD", MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("1200.00").compareTo(standard.getMonthlyRecurring()),
+                "STANDARD must resolve the structured STANDARD row, not substring-match NONSTANDARD");
+
+        // The metro axis is honoured structurally too.
+        assertEquals(0, new BigDecimal("2400.00").compareTo(
+                card.cloudRouter("PREMIUM", MetroCode.SG, Term.MONTH_12).orElseThrow().getMonthlyRecurring()));
+    }
+
+    @Test
+    @DisplayName("cloudRouter with a requested metro and no matching row yields empty, never a cross-metro price")
+    void cloudRouterWrongMetroYieldsEmptyNotCrossMetroPrice() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_structured.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        // STANDARD exists only in DC: an SG request must NOT return the DC price tagged
+        // EQUINIX_LIVE — empty lets the layered card consult the next layer.
+        assertTrue(card.cloudRouter("STANDARD", MetroCode.SG, Term.MONTH_12).isEmpty(),
+                "an SG lookup must not be priced at DC rates");
+    }
+
+    @Test
+    @DisplayName("cloudRouter prefers the term-matched row and labels a term-substituted fallback")
+    void cloudRouterPrefersTermMatchedRowAndLabelsFallback() {
+        // STANDARD DC rows: 36-month @ 950 (listed first) and on-demand (termLength 1) @ 1300.
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_termed.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        assertEquals(0, new BigDecimal("1300.00").compareTo(
+                card.cloudRouter("STANDARD", MetroCode.DC, Term.MONTH_1).orElseThrow().getMonthlyRecurring()),
+                "a 1-month router lookup must not pick up the 36-month discount");
+        assertEquals(0, new BigDecimal("950.00").compareTo(
+                card.cloudRouter("STANDARD", MetroCode.DC, Term.MONTH_36).orElseThrow().getMonthlyRecurring()));
+
+        PriceQuote twelve = card.cloudRouter("STANDARD", MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertTrue(twelve.getNote().contains("termLength 36 substituted for requested 12"),
+                "no 12-month row exists, so the fallback must be labelled: " + twelve.getNote());
+    }
+
+    @Test
+    @DisplayName("multiple charges of the same frequency SUM into the quote instead of last-wins")
+    void sumsMultipleSameFrequencyCharges() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_structured.json");
+
+        // The 600 Mbps row carries MONTHLY_RECURRING 500 + 120 and NON_RECURRING 100 + 50:
+        // last-wins would report 120/50, dropping the base fee.
+        PriceQuote q = EquinixRateCard.of(fabric)
+                .connection(ConnectionType.EVPL_VC, 600, MetroCode.DC, Term.MONTH_12).orElseThrow();
+        assertEquals(0, new BigDecimal("620.00").compareTo(q.getMonthlyRecurring()),
+                "two MONTHLY_RECURRING charges (500 + 120) must sum to 620, not last-win to 120");
+        assertEquals(0, new BigDecimal("150.00").compareTo(q.getNonRecurring()),
+                "two NON_RECURRING charges (100 + 50) must sum to 150, not last-win to 50");
+    }
 }

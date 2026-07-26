@@ -822,8 +822,13 @@ class DesignToolsTest {
                 child(deployment, "router_package").get("enum"),
                 "the schema must offer exactly the deployable GatewayPackageCode tiers — the old "
                         + "'PRO' example is not one of them and fails at plan time");
-        assertTrue(description(child(deployment, "notifications")).contains("FIRST"),
-                "only the first address reaches the plan; the schema must not imply all of them do");
+        // Every configured address now reaches every planned resource (the get(0) truncation was a
+        // defect, fixed with PlannedCloudRouter/PlannedConnection.notificationEmails lists) — the
+        // schema must say so and must no longer claim only the first is used.
+        assertTrue(description(child(deployment, "notifications")).contains("EVERY address"),
+                "every address reaches every planned resource; the schema must say so");
+        assertFalse(description(child(deployment, "notifications")).contains("FIRST"),
+                "the old only-the-first claim must be gone from the schema");
 
         // The embedded optimization block is the same shape, so the same removals apply.
         Map<String, Object> optimization =

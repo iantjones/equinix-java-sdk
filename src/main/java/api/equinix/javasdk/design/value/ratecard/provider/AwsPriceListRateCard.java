@@ -50,15 +50,25 @@ import java.util.concurrent.ConcurrentHashMap;
  *       the savings-relevant figure).</li>
  * </ul>
  *
- * <p>The offer files are large; each is fetched once on first use and cached for the adapter's
- * lifetime. The adapter is fault-tolerant — any fetch or parse failure yields no rate rather than
- * an exception. A {@code null} region yields empty, since AWS egress pricing is region-specific.</p>
+ * <p>The offer files are large; each is fetched once on first <em>success</em> and cached for the
+ * adapter's lifetime — a failed fetch is never memoized, so a transient outage is retried on the
+ * next lookup rather than pinning "no rate" forever. The adapter is fault-tolerant — any fetch or
+ * parse failure yields no rate rather than an exception. A {@code null} region yields empty, since
+ * AWS egress pricing is region-specific.</p>
  */
 public final class AwsPriceListRateCard implements RateCard {
 
+    /**
+     * The public {@code AWSDataTransfer} bulk-offer URL (internet-egress rates); the default
+     * data-transfer source for {@link #create()} and {@link #create(String)}.
+     */
     public static final String DEFAULT_OFFER_URL =
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDataTransfer/current/index.json";
 
+    /**
+     * The public {@code AWSDirectConnect} bulk-offer URL (private-egress rates); the default
+     * Direct Connect source unless overridden via {@link #create(String, String)}.
+     */
     public static final String DEFAULT_DIRECT_CONNECT_OFFER_URL =
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDirectConnect/current/index.json";
 
@@ -68,10 +78,10 @@ public final class AwsPriceListRateCard implements RateCard {
     private final String directConnectOfferUrl;
     private final ProviderPricingHttpClient http;
     private final Map<String, Optional<EgressRate>> cache = new ConcurrentHashMap<>();
+    private final Object offerLock = new Object();
+    private final Object dxOfferLock = new Object();
     private volatile JsonNode offer;
-    private volatile boolean offerFetched;
     private volatile JsonNode dxOffer;
-    private volatile boolean dxOfferFetched;
 
     private AwsPriceListRateCard(String offerUrl, String directConnectOfferUrl) {
         this.offerUrl = offerUrl;
@@ -79,6 +89,13 @@ public final class AwsPriceListRateCard implements RateCard {
         this.http = new ProviderPricingHttpClient();
     }
 
+    /**
+     * Creates an adapter over the public AWS bulk-offer URLs ({@link #DEFAULT_OFFER_URL} /
+     * {@link #DEFAULT_DIRECT_CONNECT_OFFER_URL}). No credentials or request signing required;
+     * the offers are fetched lazily on first lookup.
+     *
+     * @return a new AWS pricing adapter
+     */
     public static AwsPriceListRateCard create() {
         return new AwsPriceListRateCard(DEFAULT_OFFER_URL, DEFAULT_DIRECT_CONNECT_OFFER_URL);
     }
@@ -118,8 +135,23 @@ public final class AwsPriceListRateCard implements RateCard {
         if (provider != CloudProviderType.AWS || path == null || region == null || region.isEmpty()) {
             return Optional.empty();
         }
-        return cache.computeIfAbsent(path.name() + "|" + region, k ->
-                path == EgressPath.INTERNET ? resolveInternetEgress(region) : resolvePrivateEgress(region));
+        String key = path.name() + "|" + region;
+        Optional<EgressRate> cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        // Fetch the (shared, single-flight) offer OUTSIDE the result map: a multi-megabyte GET
+        // must never run inside ConcurrentHashMap's mapping function holding a bin lock.
+        JsonNode root = path == EgressPath.INTERNET ? offer() : dxOffer();
+        if (root == null) {
+            // Transient fetch failure: yield no rate but do NOT cache it — the next call retries.
+            return Optional.empty();
+        }
+        Optional<EgressRate> resolved = path == EgressPath.INTERNET
+                ? resolveInternetEgress(root, region)
+                : resolvePrivateEgress(root, region);
+        Optional<EgressRate> raced = cache.putIfAbsent(key, resolved);
+        return raced != null ? raced : resolved;
     }
 
     @Override
@@ -127,11 +159,7 @@ public final class AwsPriceListRateCard implements RateCard {
         return PriceSource.PROVIDER_API;
     }
 
-    private Optional<EgressRate> resolveInternetEgress(String region) {
-        JsonNode root = offer();
-        if (root == null) {
-            return Optional.empty();
-        }
+    private static Optional<EgressRate> resolveInternetEgress(JsonNode root, String region) {
         JsonNode products = root.get("products");
         JsonNode onDemand = root.path("terms").path("OnDemand");
         if (products == null || !onDemand.isObject()) {
@@ -152,11 +180,7 @@ public final class AwsPriceListRateCard implements RateCard {
                 .withNote("AWS Price List: data transfer out to internet, " + region));
     }
 
-    private Optional<EgressRate> resolvePrivateEgress(String region) {
-        JsonNode root = dxOffer();
-        if (root == null) {
-            return Optional.empty();
-        }
+    private static Optional<EgressRate> resolvePrivateEgress(JsonNode root, String region) {
         JsonNode products = root.get("products");
         JsonNode onDemand = root.path("terms").path("OnDemand");
         if (products == null || !onDemand.isObject()) {
@@ -255,27 +279,43 @@ public final class AwsPriceListRateCard implements RateCard {
         }
     }
 
+    /**
+     * The data-transfer offer, fetched single-flight and memoized on <em>success only</em>:
+     * a failed fetch leaves the field {@code null} so the next lookup retries, rather than a
+     * transient outage being remembered as "no offer" for the adapter's lifetime.
+     *
+     * @return the offer root, or {@code null} when the fetch failed
+     */
     private JsonNode offer() {
-        if (!offerFetched) {
-            synchronized (this) {
-                if (!offerFetched) {
-                    offer = http.getJson(offerUrl).orElse(null);
-                    offerFetched = true;
+        JsonNode local = offer;
+        if (local == null) {
+            synchronized (offerLock) {
+                local = offer;
+                if (local == null) {
+                    local = http.getJson(offerUrl).orElse(null);
+                    offer = local;
                 }
             }
         }
-        return offer;
+        return local;
     }
 
+    /**
+     * The Direct Connect offer; same success-only memoization contract as {@link #offer()}.
+     *
+     * @return the offer root, or {@code null} when the fetch failed
+     */
     private JsonNode dxOffer() {
-        if (!dxOfferFetched) {
-            synchronized (this) {
-                if (!dxOfferFetched) {
-                    dxOffer = http.getJson(directConnectOfferUrl).orElse(null);
-                    dxOfferFetched = true;
+        JsonNode local = dxOffer;
+        if (local == null) {
+            synchronized (dxOfferLock) {
+                local = dxOffer;
+                if (local == null) {
+                    local = http.getJson(directConnectOfferUrl).orElse(null);
+                    dxOffer = local;
                 }
             }
         }
-        return dxOffer;
+        return local;
     }
 }

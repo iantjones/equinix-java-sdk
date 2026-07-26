@@ -123,4 +123,86 @@ class AzureRetailPricesRateCardWireMockTest extends WireMockTestBase {
         Optional<EgressRate> rate = card().egress(CloudProviderType.AZURE, "eastus", EgressPath.INTERNET, Term.MONTH_12);
         assertTrue(rate.isEmpty(), "an API error must yield no rate, not an exception");
     }
+
+    @Test
+    @DisplayName("a transient API failure is not cached: the same adapter retries and succeeds")
+    void transientFailureIsRetriedNotCached() {
+        wireMock.stubFor(get(urlPathEqualTo(PATH)).willReturn(aResponse().withStatus(500)));
+
+        AzureRetailPricesRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.AZURE, "eastus", EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
+                "the outage yields no rate");
+
+        // The API recovers. The SAME adapter must retry — a fetch FAILURE must never be stored
+        // in the result cache as if the SKU authoritatively did not exist.
+        wireMock.stubFor(get(urlPathEqualTo(PATH)).withQueryParam("$filter", containing("Bandwidth"))
+                .willReturn(okJson(loadFixture("/json/provider/azure_bandwidth.json"))));
+
+        EgressRate rate = card.egress(CloudProviderType.AZURE, "eastus", EgressPath.INTERNET, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.08").compareTo(rate.getPricePerGb()),
+                "after recovery the same adapter resolves the rate");
+    }
+
+    @Test
+    @DisplayName("an authoritative empty result set IS cached (a genuine no-such-SKU is not refetched)")
+    void authoritativeEmptyResultIsCached() {
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .willReturn(okJson("{\"Items\": [], \"NextPageLink\": null}")));
+
+        AzureRetailPricesRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.AZURE, "nosuchregion", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
+        assertTrue(card.egress(CloudProviderType.AZURE, "nosuchregion", EgressPath.INTERNET, Term.MONTH_12).isEmpty());
+
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH)));
+    }
+
+    @Test
+    @DisplayName("PRIVATE (ExpressRoute) lookups share one cache entry across regions — the query ignores region, so must the key")
+    void privateLookupsShareOneCacheEntryAcrossRegions() {
+        wireMock.stubFor(get(urlPathEqualTo(PATH)).withQueryParam("$filter", containing("ExpressRoute"))
+                .willReturn(okJson(loadFixture("/json/provider/azure_expressroute.json"))));
+
+        AzureRetailPricesRateCard card = card();
+        EgressRate east = card.egress(CloudProviderType.AZURE, "eastus", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+        EgressRate west = card.egress(CloudProviderType.AZURE, "westus2", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+        EgressRate none = card.egress(CloudProviderType.AZURE, null, EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+
+        assertEquals(0, new BigDecimal("0.025").compareTo(east.getPricePerGb()));
+        assertEquals(0, east.getPricePerGb().compareTo(west.getPricePerGb()));
+        assertEquals(0, east.getPricePerGb().compareTo(none.getPricePerGb()));
+        wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH)));
+    }
+
+    @Test
+    @DisplayName("a mid-pagination failure fails the whole lookup and is retried, never answered from a partial page set")
+    void midPaginationFailureIsRetriedNotCached() {
+        String page1 = loadFixture("/json/provider/azure_expressroute_page1.json")
+                .replace("__NEXT__", wireMockUrl() + PATH + "?$skip=100");
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("$filter", containing("ExpressRoute"))
+                .withQueryParam("$skip", absent())
+                .willReturn(okJson(page1)));
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("$skip", equalTo("100"))
+                .willReturn(aResponse().withStatus(502)));
+
+        AzureRetailPricesRateCard card = card();
+        assertTrue(card.egress(CloudProviderType.AZURE, "eastus", EgressPath.PRIVATE, Term.MONTH_12).isEmpty(),
+                "page 1's $0.05 meter must NOT be served: the lowest-rate aggregate over a partial "
+                        + "result set would be a wrong number labelled authoritative");
+
+        // Page 2 recovers; the SAME adapter retries the whole walk and now finds the true minimum.
+        wireMock.stubFor(get(urlPathEqualTo(PATH))
+                .withQueryParam("$skip", equalTo("100"))
+                .willReturn(okJson(loadFixture("/json/provider/azure_expressroute_page2.json"))));
+
+        EgressRate rate = card.egress(CloudProviderType.AZURE, "eastus", EgressPath.PRIVATE, Term.MONTH_12)
+                .orElseThrow();
+        assertEquals(0, new BigDecimal("0.025").compareTo(rate.getPricePerGb()),
+                "the retried, complete walk finds the cheaper page-2 meter");
+    }
 }

@@ -131,6 +131,109 @@ class CurrencyMixingTest {
     }
 
     @Test
+    void tcoEquinixBreakdownIsStampedWithItsReconciledCurrencyNotTheEgressCurrency() {
+        // Internet egress resolves USD (the comparison-wide currency) while the private egress and
+        // the connection both resolve EUR: the Equinix archetype prices cleanly in EUR, and its
+        // breakdown must be stamped EUR — stamping the comparison-wide USD would defeat the
+        // baseline-vs-recommended currency guard and let a USD−EUR subtraction through.
+        RateCard mixed = RateCard.layered(
+                CustomRateCard.builder().currency("EUR")
+                        .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
+                        .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000"))
+                        .build(),
+                CustomRateCard.builder().currency("USD")
+                        .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
+                        .build());
+
+        TcoComparison tco = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.EQUINIX_INTERCONNECT)
+                .rateCard(mixed)
+                .compare();
+
+        assertEquals("USD", tco.getCurrency(), "comparison-wide currency follows the internet egress rate");
+        CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
+        assertTrue(equinix.isPriced(), "all-EUR components price normally");
+        assertEquals("EUR", equinix.getCurrency(),
+                "the breakdown carries the currency its own components reconciled to");
+        // 2000 private egress + 2000 connection; the USD reference DX port / cross-connect are
+        // skipped because they cannot mix into a EUR total.
+        assertEquals(0, new BigDecimal("4000").compareTo(equinix.getMonthlyTotal()));
+
+        // EUR 48000 over the term undercuts USD 108000, so Equinix is recommended — but the saving
+        // versus the USD baseline must be refused, not fabricated.
+        assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended());
+        assertNull(tco.getMonthlySavingsVsBaseline(), "no USD−EUR subtraction");
+        assertNull(tco.getAnnualSavingsVsBaseline());
+        assertNull(tco.getSavingsOverTermVsBaseline());
+        assertTrue(tco.getDisclaimer().contains("USD") && tco.getDisclaimer().contains("EUR"),
+                "the disclaimer names both currencies: " + tco.getDisclaimer());
+        assertTrue(tco.toMarkdown().contains("EUR 4000.00"),
+                "the Equinix row renders under its own currency label");
+    }
+
+    @Test
+    void tcoOnPremIsUnpricedWhenReferenceMidpointCurrencyDiffersFromComparisonCurrency() {
+        // The comparison currency resolves EUR (from the egress card) but the bundled on-prem
+        // midpoints are USD: relabelling them as EUR would misstate them, so the archetype is
+        // reported unpriced with the reason.
+        CustomRateCard eurEgress = CustomRateCard.builder()
+                .currency("EUR")
+                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
+                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
+                .build();
+
+        TcoComparison tco = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.ON_PREM)
+                .rateCard(eurEgress)
+                .compare();
+
+        CostBreakdown onPrem = tco.breakdown(DeploymentArchetype.ON_PREM).orElseThrow();
+        assertFalse(onPrem.isPriced(), "USD reference midpoints must not be stamped EUR");
+        assertEquals(0, BigDecimal.ZERO.compareTo(onPrem.getMonthlyTotal()), "unpriced => zero");
+        assertNotNull(onPrem.getNote());
+        assertTrue(onPrem.getNote().contains("USD") && onPrem.getNote().contains("EUR"),
+                "the note names both currencies: " + onPrem.getNote());
+        assertEquals(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, tco.getRecommended(),
+                "the EUR-priced baseline remains the only priceable archetype");
+    }
+
+    @Test
+    void tcoOnPremFullyOverriddenPricesInTheComparisonCurrency() {
+        // With all four midpoints overridden (caller figures, taken to be in the comparison
+        // currency) no reference figure is used, so the archetype prices even though the
+        // comparison currency (EUR) differs from the reference card's USD.
+        CustomRateCard eurEgress = CustomRateCard.builder()
+                .currency("EUR")
+                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
+                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
+                .build();
+
+        TcoComparison tco = TcoCalculator.builder(null)
+                .egress(100, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.ON_PREM)
+                .onPremTransitPerMbpsMonth(new BigDecimal("0.50"))
+                .onPremHardwareMonthly(new BigDecimal("300"))
+                .onPremCrossConnectMonthly(new BigDecimal("250"))
+                .onPremPowerPerKwMonth(new BigDecimal("100"))
+                .rateCard(eurEgress)
+                .compare();
+
+        CostBreakdown onPrem = tco.breakdown(DeploymentArchetype.ON_PREM).orElseThrow();
+        assertTrue(onPrem.isPriced(), "fully overridden on-prem inputs price normally");
+        assertEquals("EUR", onPrem.getCurrency());
+        // 0.50 × 10000 + 300 + 250 + 100 × 5 (default kW) = 6050.
+        assertEquals(0, new BigDecimal("6050").compareTo(onPrem.getMonthlyTotal()));
+    }
+
+    @Test
     void tcoConsumesPowerPerKwColocationPrimitive() {
         // POWER_PER_KW (previously never consumed) is priced per kW/mo; at the default 5 kW draw a
         // €.../$150 per-kW rate must appear as a 'Colocation power' line = 150 × 5 = 750.
@@ -181,6 +284,32 @@ class CurrencyMixingTest {
         assertTrue(s.getDisclaimer().contains("USD") && s.getDisclaimer().contains("EUR"),
                 "the disclaimer names both currencies: " + s.getDisclaimer());
         assertNotNull(s.toMarkdown());
+    }
+
+    @Test
+    void savingsExcludesInterconnectFiguresOnCrossCurrencyMismatchInsteadOfMislabellingThem() {
+        // The estimate is stamped USD (egress currency); the EUR interconnect cost must not be
+        // carried in the USD-labelled numeric fields or rendered under a USD label — it is
+        // excluded (zeroed) and reported via the disclaimer instead.
+        RateCard mixed = RateCard.layered(eurConnectionCard(), usdEgressCard());
+
+        SavingsEstimate s = SavingsCalculator.builder(null)
+                .egress(50, DataUnit.TERABYTE)
+                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+                .rateCard(mixed)
+                .calculate();
+
+        assertEquals("USD", s.getCurrency());
+        assertEquals(0, BigDecimal.ZERO.compareTo(s.getEquinixMonthlyCost()),
+                "the EUR 2000 connection must not sit in a USD-labelled field");
+        assertEquals(0, BigDecimal.ZERO.compareTo(s.getEquinixSetupCost()));
+        assertFalse(s.isEquinixPriced());
+        assertFalse(s.isComplete());
+        assertTrue(s.getDisclaimer().contains("EUR 2000.00"),
+                "the excluded figure is reported under its true currency: " + s.getDisclaimer());
+        assertFalse(s.toMarkdown().contains("USD 2000.00"),
+                "the EUR interconnect cost must never render under the USD label");
     }
 
     @Test

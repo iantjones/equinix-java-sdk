@@ -165,8 +165,14 @@ public final class ConnectionBodies {
 
     private static ConnectionOperator.ConnectionBuilder withNotification(
             ConnectionOperator.ConnectionBuilder builder, PlannedConnection connection) {
-        if (connection.getNotificationEmail() != null) {
-            builder.notification(connection.getNotificationEmail());
+        // Every configured recipient is sent, not just the first: each call appends the address to
+        // the single ALL-type notification entry on the wire body.
+        if (connection.getNotificationEmails() != null) {
+            for (String email : connection.getNotificationEmails()) {
+                if (email != null && !email.isBlank()) {
+                    builder.notification(email);
+                }
+            }
         }
         return builder;
     }

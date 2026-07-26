@@ -229,7 +229,7 @@ class ProfileSelectionMcpTest {
                 .build();
         PlannedConnection connection = PlannedConnection.builder()
                 .name("aws-conn")
-                .connectionType(ConnectionType.EVPL_VC)
+                .connectionType(ConnectionType.IP_VC)
                 .purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(5000)
                 .profileSelection(selection)

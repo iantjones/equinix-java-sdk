@@ -55,13 +55,17 @@ public class IxPresenceDetail {
     boolean operational;
 
     /**
-     * Returns a human-readable speed string (e.g., "10G", "100G", "1G").
+     * Returns a human-readable speed string: whole Gbps without a decimal ({@code "10G"},
+     * {@code "100G"}), fractional Gbps with one decimal ({@code "2.5G"} — not truncated to
+     * {@code "2G"} by integer division), and sub-Gbps speeds in Mbps ({@code "500M"}).
      *
      * @return formatted speed string
      */
     public String speedFormatted() {
-        if (speedMbps >= 100000) return (speedMbps / 1000) + "G";
-        if (speedMbps >= 1000) return (speedMbps / 1000) + "G";
-        return speedMbps + "M";
+        if (speedMbps < 1000) return speedMbps + "M";
+        double gbps = speedMbps / 1000.0;
+        return (gbps == Math.rint(gbps))
+                ? String.format("%.0fG", gbps)
+                : String.format("%.1fG", gbps);
     }
 }

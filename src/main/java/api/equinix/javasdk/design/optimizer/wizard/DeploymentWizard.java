@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  * DeploymentPlan plan = fabric.deploymentWizard(optimizationResult)
  *     .routerPackage("STANDARD")
  *     .routerNamePrefix("FCR")
- *     .providerConnectionType(ConnectionType.EVPL_VC)
+ *     .providerConnectionType(ConnectionType.IP_VC)
  *     .backboneBandwidthMbps(10_000)
  *     .backboneTopology(BackboneTopology.FULL_MESH)
  *     .bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
@@ -42,7 +42,11 @@ import java.util.stream.Stream;
  *     .plan();
  *
  * System.out.println(plan.toMarkdown());
- * plan.dryRun();
+ *
+ * // Plans are immutable: dryRun() returns a NEW plan with refreshed validation state,
+ * // so reassign the result — calling it without using the return value validates nothing
+ * // the caller can see.
+ * plan = plan.dryRun();
  *
  * // A brand-new customer gathers the per-connection authorization the plan enumerated
  * // (plan.getRequiredInputs()) and supplies it at execution time; each provider connection is
@@ -53,8 +57,11 @@ import java.util.stream.Stream;
  *     .build());
  * }</pre>
  *
+ * <p>Nothing is provisioned until {@code execute()} is called: {@code plan()} and
+ * {@code dryRun()} create no resources, so a plan can be reviewed, exported, and re-planned
+ * freely. Plan generation itself is delegated to a package-private engine.</p>
+ *
  * @see DeploymentPlan
- * @see DeploymentWizardEngine
  */
 public final class DeploymentWizard {
 
@@ -91,9 +98,12 @@ public final class DeploymentWizard {
         private GatewayPackageCode routerPackage = GatewayPackageCode.STANDARD;
         private String routerNamePrefix = "FCR";
 
-        // Connection settings
-        private ConnectionType providerConnectionType = ConnectionType.EVPL_VC;
-        private ConnectionType backboneConnectionType = ConnectionType.EVPL_VC;
+        // Connection settings. Every wizard-planned connection originates on a Fabric Cloud Router
+        // A-side, and Fabric accepts an FCR-originated virtual connection only as IP_VC — the old
+        // EVPL_VC default flowed a port-only type into every create/dry-run body and the exported
+        // HCL (FCR A-side => IP_VC).
+        private ConnectionType providerConnectionType = ConnectionType.IP_VC;
+        private ConnectionType backboneConnectionType = ConnectionType.IP_VC;
 
         // Backbone settings
         private int backboneBandwidthMbps = 10_000;
@@ -112,6 +122,9 @@ public final class DeploymentWizard {
         private Long accountNumber;
         private String projectId;
         private List<String> notificationEmails = new ArrayList<>();
+
+        // Peering-subnet addressing
+        private String subnetBase = "10.100.0.0";
 
         // Pricing
         private RateCard rateCard;
@@ -201,7 +214,11 @@ public final class DeploymentWizard {
         // ── Connection Settings ──
 
         /**
-         * Sets the Fabric connection type for provider connections. Defaults to EVPL_VC.
+         * Sets the Fabric connection type for provider connections. Defaults to {@code IP_VC} — the
+         * only type Fabric accepts for a connection whose A-side is a Cloud Router, which every
+         * wizard-planned provider connection has. Setting a type incompatible with an FCR A-side
+         * (e.g. the port-based {@code EVPL_VC}) is flagged by the plan's Layer-1 validation
+         * (FCR A-side =&gt; IP_VC) rather than 400ing live.
          *
          * @param type the connection type for provider connections
          * @return this builder for method chaining
@@ -212,7 +229,10 @@ public final class DeploymentWizard {
         }
 
         /**
-         * Sets the Fabric connection type for backbone links. Defaults to EVPL_VC.
+         * Sets the Fabric connection type for backbone links. Defaults to {@code IP_VC} — a backbone
+         * link is Cloud Router to Cloud Router, and Fabric accepts an FCR-originated virtual
+         * connection only as {@code IP_VC}. An incompatible type is flagged by the plan's Layer-1
+         * validation (FCR A-side =&gt; IP_VC).
          *
          * @param type the connection type for backbone links
          * @return this builder for method chaining
@@ -273,8 +293,21 @@ public final class DeploymentWizard {
          *
          * @param bandwidthMap the custom bandwidth mapping
          * @return this builder for method chaining
+         * @throws IllegalArgumentException if the map is {@code null} or any of its values is
+         *         {@code null} — a null bandwidth cannot size a connection, so it fails fast here
+         *         naming the offending key instead of surfacing as an NPE mid-plan
          */
         public Builder customBandwidthMap(Map<String, Integer> bandwidthMap) {
+            if (bandwidthMap == null) {
+                throw new IllegalArgumentException("customBandwidthMap must not be null — omit the "
+                        + "call (or use bandwidthStrategy) when no custom sizing is wanted.");
+            }
+            for (Map.Entry<String, Integer> entry : bandwidthMap.entrySet()) {
+                if (entry.getValue() == null) {
+                    throw new IllegalArgumentException("customBandwidthMap value for key '"
+                            + entry.getKey() + "' is null — every entry must carry a bandwidth in Mbps.");
+                }
+            }
             this.customBandwidthMap = new HashMap<>(bandwidthMap);
             this.bandwidthStrategy = BandwidthStrategy.CUSTOM;
             return this;
@@ -291,6 +324,50 @@ public final class DeploymentWizard {
         public Builder customerAsn(long asn) {
             this.customerAsn = asn;
             return this;
+        }
+
+        /**
+         * Sets the base network the plan's /30 peering subnets are allocated from. Defaults to
+         * {@code "10.100.0.0"}: the first connection peers on {@code 10.100.0.1/30} /
+         * {@code 10.100.0.2/30}, and each further connection advances the third octet.
+         *
+         * <p><strong>Cross-plan reuse caveat:</strong> allocation is scoped to a single plan, so
+         * every plan restarts from this base. Plans executed into the <em>same</em> project would
+         * therefore reuse the same peering addresses — give each such plan a distinct base (e.g.
+         * {@code .subnetBase("10.200.0.0")}) to keep their /30s disjoint.</p>
+         *
+         * @param subnetBase an IPv4 dotted-quad base network, e.g. {@code "10.200.0.0"} (the fourth
+         *                   octet is ignored; allocation advances the third)
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if the value is not a valid IPv4 dotted-quad
+         */
+        public Builder subnetBase(String subnetBase) {
+            this.subnetBase = validateSubnetBase(subnetBase);
+            return this;
+        }
+
+        private static String validateSubnetBase(String subnetBase) {
+            if (subnetBase != null) {
+                String[] octets = subnetBase.trim().split("\\.");
+                if (octets.length == 4) {
+                    boolean valid = true;
+                    for (String octet : octets) {
+                        try {
+                            int value = Integer.parseInt(octet);
+                            if (value < 0 || value > 255) {
+                                valid = false;
+                            }
+                        } catch (NumberFormatException e) {
+                            valid = false;
+                        }
+                    }
+                    if (valid) {
+                        return subnetBase.trim();
+                    }
+                }
+            }
+            throw new IllegalArgumentException("subnetBase must be an IPv4 dotted-quad like "
+                    + "\"10.200.0.0\", got '" + subnetBase + "'.");
         }
 
         /**
@@ -332,13 +409,24 @@ public final class DeploymentWizard {
         }
 
         /**
-         * Adds notification email addresses for provisioning updates.
+         * Adds notification email addresses for provisioning updates. <strong>Every</strong> address
+         * is applied to every planned Cloud Router and connection (Fabric mandates at least one
+         * recipient per Cloud Router, error {@code EQ-3040013}) — all of them are sent on the wire
+         * bodies and rendered into exported HCL, never just the first.
+         *
+         * <p>Repeated calls accumulate — addresses from every call are kept, none replaced.
+         * A plan built with no recipient at all fails Layer-1 validation.</p>
          *
          * @param emails one or more email addresses
          * @return this builder for method chaining
+         * @throws IllegalArgumentException if an address is {@code null} or blank
+         * @throws NullPointerException if the array itself is {@code null}
          */
         public Builder notifications(String... emails) {
             for (String email : emails) {
+                if (email == null || email.isBlank()) {
+                    throw new IllegalArgumentException("Notification email addresses must be non-blank.");
+                }
                 this.notificationEmails.add(email);
             }
             return this;
@@ -390,9 +478,11 @@ public final class DeploymentWizard {
         }
 
         /**
-         * Reprices an existing plan in place after its connections changed (e.g. an MCP profile choice
-         * altered a billable tier), so the monthly and setup totals match the plan's <em>current</em>
-         * connections rather than the tiers they were originally priced at.
+         * Reprices a plan whose connections changed (e.g. an MCP profile choice altered a billable
+         * tier) and returns the result as a <em>new</em> {@link DeploymentPlan}: the argument is
+         * never mutated (plans are immutable values), so callers must use the returned copy — whose
+         * monthly and setup totals match the plan's <em>current</em> connections rather than the
+         * tiers they were originally priced at.
          *
          * <p>The plan's current Cloud Routers, provider connections and backbone links are re-priced
          * against <em>this</em> builder's rate card and commitment term — the same configuration the plan
@@ -402,8 +492,9 @@ public final class DeploymentWizard {
          * field is carried through unchanged. Repricing a plan whose connections did not change yields
          * the same figures (a no-op-equivalent).</p>
          *
-         * @param plan the plan whose pricing is stale relative to its current connections
-         * @return a copy of the plan with pricing recomputed from its current connections
+         * @param plan the plan whose pricing is stale relative to its current connections; left
+         *             untouched by this call
+         * @return a new copy of the plan with pricing recomputed from its current connections
          */
         public DeploymentPlan reprice(DeploymentPlan plan) {
             PlanPricing pricing = DeploymentWizardEngine.estimatePricing(
@@ -429,6 +520,7 @@ public final class DeploymentWizard {
         Long getAccountNumber() { return accountNumber; }
         String getProjectId() { return projectId; }
         List<String> getNotificationEmails() { return notificationEmails; }
+        String getSubnetBase() { return subnetBase; }
         RateCard getRateCard() { return rateCard; }
         Term getTerm() { return term; }
     }

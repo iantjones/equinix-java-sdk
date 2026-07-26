@@ -8,7 +8,13 @@ package api.equinix.javasdk.design.value.ratecard;
  */
 public enum EgressPath {
 
+    /** Egress to the public internet — the provider's headline per-GB data-transfer-out rate. */
     INTERNET,
 
+    /**
+     * Egress over a dedicated private interconnect — AWS Direct Connect, Azure ExpressRoute,
+     * Google Cloud Interconnect, or OCI FastConnect — typically reached via an Equinix Fabric
+     * connection and billed at a substantially lower per-GB rate.
+     */
     PRIVATE
 }

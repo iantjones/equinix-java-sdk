@@ -38,9 +38,20 @@ import java.util.*;
  *       geographic diversity scoring, and failover path identification</li>
  *   <li><b>Unified Connectivity:</b> Combined IX + Fabric view per ASN per metro —
  *       every way to reach a network through Equinix</li>
- *   <li><b>Peering Opportunities:</b> Mutual presence discovery — metros where the customer
- *       and target ASN are both at an Equinix IX but not yet peering</li>
+ *   <li><b>Peering Opportunities:</b> Mutual IX presence discovery — IXes where the customer
+ *       and a target ASN are both connected. PeeringDB records IX <em>membership</em>, not
+ *       sessions, so whether the two networks already peer there is not (and cannot be)
+ *       checked from this data.</li>
  * </ul>
+ *
+ * <p><b>Fabric availability</b> is cross-referenced live from the Equinix Fabric service-profile
+ * catalog: a target is marked Fabric-reachable at a metro when a service profile whose name
+ * identifies that network (curated {@code CloudProviderType} matching for known clouds — bridging
+ * corporate names like "Amazon.com" to product profiles like "AWS Direct Connect" — otherwise
+ * whole-token, brand-distinctive name matching) publishes that metro. It indicates an available
+ * private on-ramp, not an existing connection. The cross-reference is best-effort: when the
+ * catalog cannot be read, a warning marks Fabric availability as <em>not analyzed</em> rather
+ * than reporting {@code false} everywhere.</p>
  *
  * <h3>PeeringDB credentials</h3>
  * <p>PeeringDB authentication is an API key (created on
@@ -62,7 +73,7 @@ import java.util.*;
  *     .addAsn(15169, "Google")
  *     .analyze();
  *
- * System.out.println(result.presenceMatrix().toTableString());
+ * System.out.println(result.getPresenceMatrix().toTableString());
  *
  * // Full analysis with customer context
  * PeeringIntelligenceResult result = fabric.peeringIntelligence("your-peeringdb-api-key")
@@ -274,8 +285,10 @@ public class PeeringIntelligence {
          * Sets the customer's own ASN for mutual peering opportunity discovery.
          *
          * <p>When provided, the engine queries PeeringDB for the customer's IX
-         * presence and identifies metros where both the customer and target ASNs
-         * are present at the same Equinix IX but not currently peering.</p>
+         * presence and identifies Equinix IXes where both the customer and a target
+         * ASN are connected — one opportunity per (target ASN, IX). PeeringDB records
+         * IX membership only, so an opportunity means mutual presence; whether the two
+         * networks already peer there cannot be determined from this data.</p>
          *
          * @param asn the customer's autonomous system number
          * @return this builder
@@ -366,14 +379,17 @@ public class PeeringIntelligence {
                     ? peeringDbApiKey
                     : envLookup.apply(PEERINGDB_API_KEY_ENV);
 
-            PeeringDbClient peeringDbClient = peeringDbBaseUrl != null
+            // Ownership: this builder constructs the PeeringDB client, so this builder closes it
+            // once the analysis completes (the engine never closes a client it was handed).
+            try (PeeringDbClient peeringDbClient = peeringDbBaseUrl != null
                     ? PeeringDbClient.withBaseUrl(resolvedApiKey, peeringDbBaseUrl)
-                    : (resolvedApiKey != null ? new PeeringDbClient(resolvedApiKey) : new PeeringDbClient());
+                    : (resolvedApiKey != null ? new PeeringDbClient(resolvedApiKey) : new PeeringDbClient())) {
 
-            PeeringIntelligenceEngine engine = new PeeringIntelligenceEngine(
-                    fabric, peeringDbClient, request);
+                PeeringIntelligenceEngine engine = new PeeringIntelligenceEngine(
+                        fabric, peeringDbClient, request);
 
-            return engine.execute();
+                return engine.execute();
+            }
         }
     }
 }

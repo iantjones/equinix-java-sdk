@@ -22,9 +22,9 @@ import java.util.Objects;
  * <p>The {@link #covers(int)} rule mirrors the Layer-1 validator
  * ({@code PlanValidator.checkProfile}) bit-for-bit, so a profile the selector accepts is exactly a
  * profile the validator will not reject, and vice-versa: the per-metro ceiling
- * ({@link #getVcBandwidthMax() vcBandwidthMax}) must not be exceeded, AND the bandwidth must be one
- * of the discrete {@link #getSupportedBandwidths() supportedBandwidths} tiers — unless the profile
- * {@link #isAllowCustomBandwidth() allows custom bandwidth} or publishes no discrete tier list at
+ * ({@code vcBandwidthMax}) must not be exceeded, AND the bandwidth must be one
+ * of the discrete {@code supportedBandwidths} tiers — unless the profile
+ * {@code allowCustomBandwidth} allows custom bandwidth or publishes no discrete tier list at
  * all, either of which lifts the discrete-tier constraint.</p>
  *
  * <p>{@link #covers(int)} answers the <em>exact</em> question ("can this profile build a VC at exactly
@@ -98,10 +98,10 @@ public class ServiceProfileOption {
      * <ul>
      *   <li>a discrete-tier profile returns its smallest published tier {@code >= mbps} (so 3000 against
      *       {@code [1000, 5000, 10000]} returns 5000);</li>
-     *   <li>a {@link #isAllowCustomBandwidth() custom-bandwidth} or tierless profile returns {@code mbps}
+     *   <li>a custom-bandwidth ({@code allowCustomBandwidth}) or tierless profile returns {@code mbps}
      *       itself — the exact speed is buildable, so nothing is rounded;</li>
      *   <li>in either case the result is clamped to the per-metro ceiling
-     *       ({@link #getVcBandwidthMax() vcBandwidthMax}): a tier above the ceiling is not selectable.</li>
+     *       ({@code vcBandwidthMax}): a tier above the ceiling is not selectable.</li>
      * </ul>
      * Returns {@link #NO_COVERING_TIER} when even rounding up cannot satisfy the requirement (it exceeds
      * the largest tier this profile publishes and its ceiling). Because the returned tier is always one
@@ -138,10 +138,11 @@ public class ServiceProfileOption {
     }
 
     /**
-     * Whether this profile can carry the requested bandwidth <em>after rounding up</em> — i.e. whether
-     * {@link #coveringTier(int)} finds a satisfying tier. Distinct from {@link #covers(int)}, which is
-     * the exact-tier test: a 3000&nbsp;Mbps request {@code covers()==false} but {@code canCover()==true}
-     * on a profile publishing a 5000&nbsp;Mbps tier.
+     * Whether this profile can carry the requested bandwidth <em>after rounding up</em> — i.e.
+     * whether {@link #coveringTier(int)} finds a satisfying tier. Distinct from
+     * {@link #covers(int)}, which is the exact-tier test: a 3000&nbsp;Mbps request has
+     * {@code covers()==false} but {@code canCover()==true} on a profile publishing a
+     * 5000&nbsp;Mbps tier.
      *
      * @param mbps the requested connection bandwidth in Mbps
      * @return {@code true} when a satisfying tier exists (exact or rounded up)

@@ -26,11 +26,11 @@ import java.util.List;
  * wizard exposes instead of silently picking. When several profiles cover a connection's speed in
  * genuinely different ways — a hosted profile versus a dedicated one at the same tier, or the same
  * profile in different seller regions — every covering candidate is carried on the connection's
- * {@link ProfileSelection#getAlternatives() alternatives} so an interactive layer (the MCP server) can
+ * {@link ProfileSelection} {@code alternatives} so an interactive layer (the MCP server) can
  * prompt the user to choose, while a non-interactive caller takes the first (the wizard's default).
  *
  * <p>Each candidate reports the exact tier <em>this</em> profile would use for the requested bandwidth
- * ({@link #getCoveringTierMbps() coveringTierMbps} — the round-up result for this profile), so the
+ * ({@code coveringTierMbps} — the round-up result for this profile), so the
  * caller can compare not just which profiles are eligible but how much each would over-provision.</p>
  */
 @Value

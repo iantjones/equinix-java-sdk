@@ -64,13 +64,15 @@ class PlanValueRealizationTest {
 
     @Test
     void aggregatesAcrossMultipleProviders() {
+        // GCP reference rates are the per-GB conversions of Google's per-GiB list prices
+        // (0.1118 internet / 0.0186 interconnect), so: (0.1118 − 0.0186) × 10,000 = 932.
         PlanValueRealization vr = planCosting("1000", "0").valueRealization()
                 .egress(CloudProviderType.AWS, 50, DataUnit.TERABYTE)      // saving 3500
-                .egress(CloudProviderType.GOOGLE_CLOUD, 10, DataUnit.TERABYTE) // (0.12-0.02)*10000 = 1000
+                .egress(CloudProviderType.GOOGLE_CLOUD, 10, DataUnit.TERABYTE) // saving 932
                 .assess();
 
-        assertEquals(0, new BigDecimal("4500").compareTo(vr.getTotalMonthlyEgressSavings()), "3500 + 1000");
-        assertEquals(0, new BigDecimal("3500").compareTo(vr.getNetMonthlySavings()), "4500 − 1000 plan cost");
+        assertEquals(0, new BigDecimal("4432").compareTo(vr.getTotalMonthlyEgressSavings()), "3500 + 932");
+        assertEquals(0, new BigDecimal("3432").compareTo(vr.getNetMonthlySavings()), "4432 − 1000 plan cost");
         assertEquals(2, vr.getPerProvider().size());
     }
 

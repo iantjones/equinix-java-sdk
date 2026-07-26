@@ -96,7 +96,6 @@ public final class Design {
      * {@code PEERINGDB_API_KEY} environment variable, else anonymous access.
      *
      * @return a {@link PeeringIntelligence.Builder} bound to this facade's Fabric client
-     * @see EquinixConfig#getPeeringDbApiKey()
      */
     public PeeringIntelligence.Builder peeringIntelligence() {
         if (fabric instanceof Fabric fabricClient) {

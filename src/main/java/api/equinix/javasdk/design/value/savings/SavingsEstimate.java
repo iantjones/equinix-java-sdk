@@ -14,55 +14,94 @@ import java.math.RoundingMode;
  * interconnect, the Equinix interconnect cost, and the resulting net savings and
  * break-even points.
  *
- * <p>All amounts are in {@link #currency}. The {@code *Priced} flags indicate
+ * <p>All amounts are in {@code getCurrency()}. The {@code *Priced} flags indicate
  * which inputs the rate card could actually resolve; when a flag is {@code false}
- * the corresponding figures are zero and {@link #netMonthlySavings} should be read
- * as incomplete (see {@link #complete}).</p>
+ * the corresponding figures are either zero or explicitly partial — the
+ * {@code getDisclaimer()} text names the exact component that could not be priced
+ * (or was excluded for being in another currency) — and the estimate should be
+ * read as incomplete (see {@code isComplete()}).</p>
  */
 @Value
 @Builder
 public class SavingsEstimate {
 
+    /** The requested monthly egress volume, normalized to decimal gigabytes. */
     BigDecimal monthlyEgressGb;
 
+    /** The cloud provider the egress leaves, or {@code null} when none was declared. */
     CloudProviderType provider;
 
+    /** The provider region the egress originates in, or {@code null} when region-agnostic. */
     String region;
 
+    /** The Equinix metro the interconnect lands in, or {@code null} when metro-agnostic. */
     MetroCode metro;
 
+    /** Per-GB internet rate; zero when {@code isEgressPriced()} is false (not a real free rate). */
     BigDecimal internetRatePerGb;
 
+    /** Per-GB private-interconnect rate; zero when {@code isEgressPriced()} is false. */
     BigDecimal privateRatePerGb;
 
+    /** Monthly cost of the volume over the public internet; zero when egress is unpriced. */
     BigDecimal internetEgressMonthlyCost;
 
+    /** Monthly cost of the same volume over the private interconnect; zero when egress is unpriced. */
     BigDecimal privateEgressMonthlyCost;
 
+    /** Internet minus private egress cost; zero when egress is unpriced. */
     BigDecimal monthlyEgressSavings;
 
+    /**
+     * Monthly Equinix interconnect cost (connection, plus Cloud Router when included and
+     * summable). Zero — with the real figure quoted in the disclaimer — when the
+     * interconnect resolved in a different currency from the egress figures and was
+     * therefore excluded rather than mislabelled.
+     */
     BigDecimal equinixMonthlyCost;
 
+    /** One-time Equinix setup cost; excluded (zero) under the same cross-currency rule. */
     BigDecimal equinixSetupCost;
 
+    /**
+     * Egress saving net of the Equinix interconnect cost. {@code null} when the two sides
+     * are in different currencies (the subtraction is never fabricated) — guard before
+     * dereferencing.
+     */
     BigDecimal netMonthlySavings;
 
+    /** {@code netMonthlySavings × 12}; {@code null} under the same conditions. */
     BigDecimal annualNetSavings;
 
+    /** Annual net saving minus the one-time setup; {@code null} under the same conditions. */
     BigDecimal firstYearNetSavings;
 
+    /**
+     * The monthly egress volume (GB) at which the interconnect pays for itself.
+     * {@code null} when egress is unpriced, the per-GB delta is not positive, or the
+     * currencies differ.
+     */
     BigDecimal breakEvenGbPerMonth;
 
+    /**
+     * Months for the net saving to recoup the one-time setup. {@code null} when there is
+     * no positive net saving or no setup charge.
+     */
     BigDecimal paybackMonths;
 
+    /** The single currency every non-excluded amount is expressed in (ISO 4217 code). */
     String currency;
 
+    /** Whether both egress rates resolved in one currency (the egress figures are real). */
     boolean egressPriced;
 
+    /** Whether the Equinix interconnect cost is fully priced (not partial or excluded). */
     boolean equinixPriced;
 
+    /** {@code true} only when every component priced and reconciled to one currency. */
     boolean complete;
 
+    /** Estimate caveats — names any component that could not be priced or was excluded. */
     String disclaimer;
 
     private static String money(BigDecimal v, String currency) {
@@ -120,7 +159,8 @@ public class SavingsEstimate {
                 sb.append("egress rates were not available from the rate card. ");
             }
             if (!equinixPriced) {
-                sb.append("the Equinix interconnect cost was not available from the rate card. ");
+                sb.append("the Equinix interconnect cost could not be fully priced — "
+                        + "the disclaimer names the missing or excluded component. ");
             }
             sb.append("\n");
         }

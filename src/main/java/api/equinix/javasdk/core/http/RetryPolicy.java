@@ -74,7 +74,7 @@ public final class RetryPolicy {
     }
 
     /**
-     * Full constructor. Also reachable fluently via {@link #builder()} — preferable when
+     * Full constructor. Also reachable fluently via {@code builder()} — preferable when
      * configuring by hand, since the positional form lines up two {@code long} delays and three
      * {@code boolean} flags that are easy to transpose silently:
      * {@code RetryPolicy.builder().maxRetries(5).baseDelayMillis(200).retryableStatusCodes(Set.of(429)).build()}.

@@ -291,6 +291,77 @@ class PlanValidatorTest {
     }
 
     // ══════════════════════════════════════════════
+    //  Layer 1 — FCR A-side => IP_VC (connection type)
+    // ══════════════════════════════════════════════
+
+    @Test
+    @DisplayName("an EVPL_VC connection on a Cloud Router A-side is a Layer-1 error naming the FCR A-side => IP_VC rule")
+    void evplVcOnFcrASideIsFlagged() {
+        PlannedConnection evpl = PlannedConnection.builder()
+                .name("FCR-DC-to-aws").connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000).aSideMetro(DC).aSideRouterName("FCR-DC")
+                .zSideServiceProfileUuid("sp-aws").zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1").zSideCloudType(CloudProviderType.AWS)
+                .build();
+
+        PlanValidator.Result r = validate(null, List.of(router("FCR-DC", DC)), List.of(evpl));
+
+        assertTrue(r.errors.stream().anyMatch(e -> e.contains("FCR-DC-to-aws")
+                        && e.contains("EVPL_VC") && e.contains("FCR A-side => IP_VC")),
+                () -> "expected an FCR A-side => IP_VC error naming the connection and type: " + r.errors);
+    }
+
+    @Test
+    @DisplayName("a backbone link (always FCR to FCR) with a non-IP_VC type is flagged too")
+    void evplVcBackboneLinkIsFlagged() {
+        PlannedConnection bbConn = PlannedConnection.builder()
+                .name("FCR-DC-to-SV").connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.BACKBONE).bandwidthMbps(10000)
+                .aSideMetro(DC).aSideRouterName("FCR-DC")
+                .zSideMetro(SV).zSideRouterName("FCR-SV")
+                .build();
+        api.equinix.javasdk.design.optimizer.wizard.model.PlannedBackboneLink link =
+                api.equinix.javasdk.design.optimizer.wizard.model.PlannedBackboneLink.builder()
+                        .metroA(DC).metroZ(SV).name("FCR-DC-to-SV").bandwidthMbps(10000)
+                        .connection(bbConn).build();
+
+        PlanValidator.Result r = PlanValidator.validate(
+                null, null, null,
+                List.of(router("FCR-DC", DC), router("FCR-SV", SV)),
+                Collections.emptyList(), List.of(link), Collections.emptyList(),
+                65100L, null);
+
+        assertTrue(r.errors.stream().anyMatch(e -> e.startsWith("Backbone link 'FCR-DC-to-SV'")
+                        && e.contains("FCR A-side => IP_VC")),
+                () -> "expected the backbone type error: " + r.errors);
+    }
+
+    @Test
+    @DisplayName("IP_VC on an FCR A-side and EVPL_VC on a customer-PORT A-side are both accepted")
+    void ipVcAndPortBasedTypesAreAccepted() {
+        // The wizard's own shape: IP_VC on a Cloud Router A-side — no type error.
+        PlanValidator.Result ip = validate(null,
+                List.of(router("FCR-DC", DC)),
+                List.of(provider("FCR-DC-to-aws", "FCR-DC", DC, 1000, "sp-aws", "us-east-1", CloudProviderType.AWS)));
+        assertTrue(ip.errors.stream().noneMatch(e -> e.contains("FCR A-side => IP_VC")),
+                () -> "IP_VC on an FCR A-side must not be flagged: " + ip.errors);
+
+        // A caller-supplied customer PORT A-side may legitimately carry a port-based type.
+        PlannedConnection onPort = PlannedConnection.builder()
+                .name("port-to-aws").connectionType(ConnectionType.EVPL_VC)
+                .purpose(ConnectionPurpose.PROVIDER)
+                .bandwidthMbps(1000).aSideMetro(DC).aSideRouterName("FCR-DC")
+                .aSidePortUuid("port-uuid-1")
+                .zSideServiceProfileUuid("sp-aws").zSideProviderLabel("AWS")
+                .zSideSellerRegion("us-east-1").zSideCloudType(CloudProviderType.AWS)
+                .build();
+        PlanValidator.Result port = validate(null, List.of(router("FCR-DC", DC)), List.of(onPort));
+        assertTrue(port.errors.stream().noneMatch(e -> e.contains("FCR A-side => IP_VC")),
+                () -> "a port A-side is exempt from the FCR type rule: " + port.errors);
+    }
+
+    // ══════════════════════════════════════════════
     //  Layer 1 — new-market gap
     // ══════════════════════════════════════════════
 
@@ -439,9 +510,11 @@ class PlanValidatorTest {
 
         PlannedCloudRouter noNotify = PlannedCloudRouter.builder()
                 .name("FCR-DC").metroId(DC).packageCode(GatewayPackageCode.STANDARD).build();
+        // "No notification" now means an EMPTY (or all-blank) recipient LIST — routers carry every
+        // configured address, not a single one.
         PlannedCloudRouter blankNotify = PlannedCloudRouter.builder()
                 .name("FCR-SV").metroId(SV).packageCode(GatewayPackageCode.STANDARD)
-                .notificationEmail("   ").build();
+                .notificationEmails(List.of("   ")).build();
 
         PlanValidator.Result r = validate(fabric, List.of(noNotify, blankNotify), Collections.emptyList());
 
@@ -481,6 +554,28 @@ class PlanValidatorTest {
         verify(crb).create();
     }
 
+    @Test
+    @DisplayName("the router dry-run body (shared RouterBodies) carries EVERY notification email, not just the first")
+    void routerDryRunCarriesAllNotificationEmails() {
+        CloudRouters cr = mock(CloudRouters.class);
+        CloudRouterOperator.CloudRouterBuilder crb =
+                mock(CloudRouterOperator.CloudRouterBuilder.class, org.mockito.Answers.RETURNS_SELF);
+        when(cr.define()).thenReturn(crb);
+        when(crb.create()).thenReturn(mock(CloudRouter.class));
+        FabricGateway fabric = mock(FabricGateway.class);
+        when(fabric.cloudRouters()).thenReturn(cr);
+
+        PlannedCloudRouter multi = PlannedCloudRouter.builder()
+                .name("FCR-DC").metroId(DC).packageCode(GatewayPackageCode.STANDARD)
+                .notificationEmails(List.of("noc@example.com", "neteng@example.com")).build();
+
+        PlanValidator.Result r = validate(fabric, List.of(multi), Collections.emptyList());
+
+        assertTrue(r.errors.isEmpty(), () -> r.errors.toString());
+        verify(crb).notification(api.equinix.javasdk.fabric.enums.NotificationType.ALL,
+                List.of("noc@example.com", "neteng@example.com"));
+    }
+
     // ══════════════════════════════════════════════
     //  Skipped — offline / bare-stub infeasibility
     // ══════════════════════════════════════════════
@@ -515,7 +610,7 @@ class PlanValidatorTest {
         // when the connections surface is unavailable it must be skipped (offline), never deferred with
         // the false "Cloud Router does not exist yet" reason.
         PlannedConnection existing = PlannedConnection.builder()
-                .name("to-aws-existing").connectionType(ConnectionType.EVPL_VC).purpose(ConnectionPurpose.PROVIDER)
+                .name("to-aws-existing").connectionType(ConnectionType.IP_VC).purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(1000).aSideMetro(DC).aSideRouterName("FCR-DC")
                 .zSideServiceProfileUuid("sp-aws").zSideProviderLabel("AWS").zSideSellerRegion("us-east-1")
                 .zSideCloudType(CloudProviderType.AWS)
@@ -574,7 +669,7 @@ class PlanValidatorTest {
         when(fabric.connections()).thenReturn(connections);
 
         PlannedConnection existing = PlannedConnection.builder()
-                .name("FCR-DC-to-aws").connectionType(ConnectionType.EVPL_VC).purpose(ConnectionPurpose.PROVIDER)
+                .name("FCR-DC-to-aws").connectionType(ConnectionType.IP_VC).purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(1000).aSideMetro(DC).aSideRouterName("FCR-DC")
                 .zSideServiceProfileUuid("sp-aws").zSideProviderLabel("AWS").zSideSellerRegion("us-east-1")
                 .zSideCloudType(CloudProviderType.AWS)
@@ -586,7 +681,7 @@ class PlanValidatorTest {
         PlanValidator.Result r = validate(fabric, List.of(router("FCR-DC", DC)), List.of(existing));
 
         // A real connection dry-run was assembled and executed at PLAN time.
-        verify(connections).define(ConnectionType.EVPL_VC);
+        verify(connections).define(ConnectionType.IP_VC);
         verify(builder).dryRun();
         verify(builder).create();
         // A real dry-run means it is validated now, not deferred.
@@ -615,13 +710,15 @@ class PlanValidatorTest {
         // one. Tests that exercise the missing-notification path build their routers explicitly instead.
         return PlannedCloudRouter.builder()
                 .name(name).metroId(metro).packageCode(GatewayPackageCode.STANDARD)
-                .notificationEmail("noc@example.com").build();
+                .notificationEmails(List.of("noc@example.com")).build();
     }
 
     private static PlannedConnection provider(String name, String routerName, MetroId metro, int bw,
                                               String spUuid, String region, CloudProviderType type) {
+        // IP_VC: the A-side is a Cloud Router, the only shape Fabric accepts as IP_VC (the
+        // FCR A-side => IP_VC fix) — the Layer-1 type check would flag EVPL_VC here.
         return PlannedConnection.builder()
-                .name(name).connectionType(ConnectionType.EVPL_VC).purpose(ConnectionPurpose.PROVIDER)
+                .name(name).connectionType(ConnectionType.IP_VC).purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(bw).aSideMetro(metro).aSideRouterName(routerName)
                 .zSideServiceProfileUuid(spUuid)
                 .zSideProviderLabel(type == CloudProviderType.AWS ? "AWS" : type.getProviderName())
