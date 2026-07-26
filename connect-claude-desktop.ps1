@@ -34,7 +34,13 @@ if (-not $vars["EQUINIX_ACCESS_KEY"] -or -not $vars["EQUINIX_SECRET_KEY"]) {
     exit 1
 }
 
-$jar = Join-Path $PSScriptRoot "target\equinix-sdk-java-2.0.1-mcp-server.jar"
+# Resolve the current build's server jar regardless of version (newest wins).
+$jarItem = Get-ChildItem (Join-Path $PSScriptRoot "target") -Filter "equinix-sdk-java-*-mcp-server.jar" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $jarItem) {
+    Write-Error "No mcp-server jar found in target\ - build one first: mvn -q package -DskipTests"
+    exit 1
+}
+$jar = $jarItem.FullName
 if (-not (Test-Path $jar)) {
     Write-Error "Server jar not found at $jar - build it first: mvn -q package -DskipTests"
     exit 1
