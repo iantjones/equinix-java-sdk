@@ -20,8 +20,11 @@ import com.eqixiac.equinix.core.http.request.PatchOperation;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.http.response.Pageable;
 import com.eqixiac.equinix.core.http.response.PageablePost;
+import com.eqixiac.equinix.fabric.model.EnvironmentActionResponse;
 import com.eqixiac.equinix.fabric.model.ServiceProfile;
 import com.eqixiac.equinix.fabric.model.ServiceProfileAction;
+import com.eqixiac.equinix.fabric.model.implementation.EnvironmentActionRequest;
+import com.eqixiac.equinix.fabric.model.implementation.ProviderEnvironment;
 import com.eqixiac.equinix.fabric.model.implementation.ServiceMetro;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
@@ -53,6 +56,16 @@ public interface ServiceProfileClient<T> extends PageablePost<T> {
     ServiceProfileAction createAction(String uuid, String type, String description);
 
     List<ServiceMetro> getMetros(String uuid);
+
+    /**
+     * First page of {@code GET {uuid}/environments}. The page's associated request carries an
+     * identity page-item mapper so later pages can be fetched through this client's inherited
+     * {@code nextPage(...)}. <b>Beta</b> catalog operation.
+     */
+    Page<ProviderEnvironment> getEnvironments(String uuid);
+
+    /** {@code POST {uuid}/environments/{environmentId}/actions}. <b>Beta</b> catalog operation. */
+    EnvironmentActionResponse createEnvironmentAction(String uuid, String environmentId, EnvironmentActionRequest request);
 
     ServiceProfileJson refresh(String uuid);
 }

@@ -42,6 +42,13 @@ public class RiskFinding {
      *   <li>{@code BUDGET_EXCEEDED} — the estimated monthly total exceeds the budget ceiling</li>
      *   <li>{@code REDUNDANCY_GAP} — the selected set falls short of the requested redundancy tier</li>
      *   <li>{@code HEALTHY} — emitted (at INFO) when no risk was found</li>
+     *   <li>{@code NATIVE_MULTICLOUD_ALTERNATIVE} — <b>Beta.</b> Informational (INFO), not a risk:
+     *       a workload depends on two clouds for which the multicloud environment catalog lists a
+     *       native provider-to-provider environment. It deducts nothing from the resiliency score,
+     *       never raises {@code overallSeverity}, and does not suppress {@code HEALTHY}. The
+     *       description names the workload, the cloud pair, the matching region pair (or, when the
+     *       request carries no region for a side, every catalogued pair), each entry's status and
+     *       as-of date</li>
      * </ul>
      */
     String category;

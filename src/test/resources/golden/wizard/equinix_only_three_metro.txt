@@ -1,0 +1,125 @@
+== summary
+Deployment Plan: 3 Cloud Router(s), 2 provider connection(s), 3 backbone link(s), 10 routing protocol(s). Total resources: 18. Estimated monthly cost: $3400. DEFERRED TO PROVISIONING: 2 (validated at provisioning; needs your authorization keys). SKIPPED (could not validate now): 3 (offline or the API could not be reached — see the reasons).
+== markdown
+# Deployment Plan
+
+_Generated from optimization computed at 2026-09-21T00:00:00Z_
+
+**Total Resources:** 18
+
+> **DEFERRED TO PROVISIONING** — the live connection endpoint dry-run runs when the plan is applied (needs your authorization keys)
+> - Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply AWS Account ID (12-digit), a VLAN tag
+> - Connection 'FCR-DA-to-azure' (AZURE): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DA' exists — you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type
+
+> **SKIPPED (could not validate now)** — these checks could not be attempted; each reason says why. They do not invalidate the plan.
+> - Catalog validation skipped: no Service Profile catalog surface available (offline or not connected)
+> - Package-ceiling checks skipped: no Cloud Router API surface available (offline or not connected)
+> - Live router dry-run skipped: no Cloud Router API surface available (offline or not connected)
+
+## Required Customer Inputs (before provisioning)
+
+| Connection | Provider | Authorization key | VLAN | Azure peering |
+|------------|----------|-------------------|------|---------------|
+| FCR-DC-to-aws | AWS | AWS Account ID (12-digit) | required | - |
+| FCR-DA-to-azure | AZURE | Azure ExpressRoute service key (GUID) | required | required |
+
+## Cloud Routers
+
+| Name | Metro | Package |
+|------|-------|---------|
+| FCR-DC | DC | STANDARD |
+| FCR-DA | DA | STANDARD |
+| FCR-SV | SV | STANDARD |
+
+## Provider Connections
+
+| Name | Type | A-Side (Metro) | Z-Side (Provider) | Bandwidth | Workload Breakdown |
+|------|------|----------------|-------------------|-----------|--------------------|
+| FCR-DC-to-aws | IP_VC | FCR-DC (DC) | AWS [us-east-1] | 10000 Mbps | ML Training: 8000 Mbps, DR Backup: 2000 Mbps |
+| FCR-DA-to-azure | IP_VC | FCR-DA (DA) | AZURE [eastus] | 4000 Mbps | Analytics: 4000 Mbps |
+
+## Backbone Links
+
+| Name | Metro A | Metro Z | Bandwidth | Topology |
+|------|---------|---------|-----------|----------|
+| FCR-DC-to-DA | DC | DA | 10000 Mbps | FULL_MESH |
+| FCR-DC-to-SV | DC | SV | 10000 Mbps | FULL_MESH |
+| FCR-DA-to-SV | DA | SV | 10000 Mbps | FULL_MESH |
+
+## Routing Protocols
+
+| Connection | Type | Customer Peer | Equinix Peer | ASN | BFD |
+|------------|------|---------------|--------------|-----|-----|
+| FCR-DC-to-aws | DIRECT | - | 10.100.0.1/30 | - | off |
+| FCR-DC-to-aws | BGP | 10.100.0.2/30 | 10.100.0.1/30 | 65100 | 300ms |
+| FCR-DA-to-azure | DIRECT | - | 10.100.1.1/30 | - | off |
+| FCR-DA-to-azure | BGP | 10.100.1.2/30 | 10.100.1.1/30 | 65100 | 300ms |
+| FCR-DC-to-DA | DIRECT | - | 10.100.2.1/30 | - | off |
+| FCR-DC-to-DA | BGP | 10.100.2.2/30 | 10.100.2.1/30 | 65100 | 300ms |
+| FCR-DC-to-SV | DIRECT | - | 10.100.3.1/30 | - | off |
+| FCR-DC-to-SV | BGP | 10.100.3.2/30 | 10.100.3.1/30 | 65100 | 300ms |
+| FCR-DA-to-SV | DIRECT | - | 10.100.4.1/30 | - | off |
+| FCR-DA-to-SV | BGP | 10.100.4.2/30 | 10.100.4.1/30 | 65100 | 300ms |
+
+## Cost Estimate
+
+| Category | Monthly Cost |
+|----------|-------------:|
+| Cloud Routers | $900 |
+| Provider Connections | $1000 |
+| Backbone Links | $1500 |
+| **Total Monthly** | **$3400** |
+| Setup (one-time) | $0 |
+
+_Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes._
+
+## Execution
+
+Resources will be created in this order:
+
+1. Cloud Routers (3)
+2. Provider Connections (2)
+3. Backbone Links (3)
+4. Routing Protocols (10)
+
+Call `plan.dryRun()` to validate, or `plan.execute()` to provision all resources.
+
+== totalResourceCount
+18
+== routers
+FCR-DC|DC|STANDARD|[noc@example.com]
+FCR-DA|DA|STANDARD|[noc@example.com]
+FCR-SV|SV|STANDARD|[noc@example.com]
+== providerConnections
+FCR-DC-to-aws|IP_VC|PROVIDER|10000|BandwidthAllocation(totalMbps=10000, perWorkload={ML Training=8000, DR Backup=2000}, reasoning=Sum of dependent workload bandwidths at DC)|DC|FCR-DC|sp-aws|AWS|us-east-1|AWS|null|null|[noc@example.com]
+FCR-DA-to-azure|IP_VC|PROVIDER|4000|BandwidthAllocation(totalMbps=4000, perWorkload={Analytics=4000}, reasoning=Sum of dependent workload bandwidths at DA)|DA|FCR-DA|sp-azure|AZURE|eastus|AZURE|null|null|[noc@example.com]
+== backboneLinks
+FCR-DC-to-DA|DC|DA|10000|FULL_MESH
+FCR-DC-to-DA|IP_VC|BACKBONE|10000|null|DC|FCR-DC|null|null|null|null|DA|FCR-DA|[noc@example.com]
+FCR-DC-to-SV|DC|SV|10000|FULL_MESH
+FCR-DC-to-SV|IP_VC|BACKBONE|10000|null|DC|FCR-DC|null|null|null|null|SV|FCR-SV|[noc@example.com]
+FCR-DA-to-SV|DA|SV|10000|FULL_MESH
+FCR-DA-to-SV|IP_VC|BACKBONE|10000|null|DA|FCR-DA|null|null|null|null|SV|FCR-SV|[noc@example.com]
+== routingProtocols
+FCR-DC-to-aws-DIRECT|DIRECT|FCR-DC-to-aws|10.100.0.1/30|null|null|null|false|0
+FCR-DC-to-aws-BGP|BGP|FCR-DC-to-aws|null|10.100.0.2/30|10.100.0.1/30|65100|true|300
+FCR-DA-to-azure-DIRECT|DIRECT|FCR-DA-to-azure|10.100.1.1/30|null|null|null|false|0
+FCR-DA-to-azure-BGP|BGP|FCR-DA-to-azure|null|10.100.1.2/30|10.100.1.1/30|65100|true|300
+FCR-DC-to-DA-DIRECT|DIRECT|FCR-DC-to-DA|10.100.2.1/30|null|null|null|false|0
+FCR-DC-to-DA-BGP|BGP|FCR-DC-to-DA|null|10.100.2.2/30|10.100.2.1/30|65100|true|300
+FCR-DC-to-SV-DIRECT|DIRECT|FCR-DC-to-SV|10.100.3.1/30|null|null|null|false|0
+FCR-DC-to-SV-BGP|BGP|FCR-DC-to-SV|null|10.100.3.2/30|10.100.3.1/30|65100|true|300
+FCR-DA-to-SV-DIRECT|DIRECT|FCR-DA-to-SV|10.100.4.1/30|null|null|null|false|0
+FCR-DA-to-SV-BGP|BGP|FCR-DA-to-SV|null|10.100.4.2/30|10.100.4.1/30|65100|true|300
+== pricing
+3400|0|USD|{USD=3400}|900|1000|1500|{FCR-DC-to-aws=500, FCR-DA-to-azure=500, FCR-DC-to-DA=500, FCR-DC-to-SV=500, FCR-DA-to-SV=500}|ESTIMATE|Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.
+== valid
+true
+== validationErrors
+[]
+== deferredValidations
+[Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply AWS Account ID (12-digit), a VLAN tag, Connection 'FCR-DA-to-azure' (AZURE): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DA' exists — you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type]
+== skippedValidations
+[Catalog validation skipped: no Service Profile catalog surface available (offline or not connected), Package-ceiling checks skipped: no Cloud Router API surface available (offline or not connected), Live router dry-run skipped: no Cloud Router API surface available (offline or not connected)]
+== requiredInputs
+[ConnectionInputRequirement(connectionName=FCR-DC-to-aws, providerLabel=AWS, cloudType=AWS, authenticationKeyLabel=AWS Account ID (12-digit), authenticationKeyRequired=true, authenticationKeyProvided=false, vlanTagRequired=true, peeringTypeRequired=false), ConnectionInputRequirement(connectionName=FCR-DA-to-azure, providerLabel=AZURE, cloudType=AZURE, authenticationKeyLabel=Azure ExpressRoute service key (GUID), authenticationKeyRequired=true, authenticationKeyProvided=false, vlanTagRequired=true, peeringTypeRequired=true)]

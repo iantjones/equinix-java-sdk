@@ -146,6 +146,11 @@ public final class GcpBillingCatalogRateCard implements RateCard {
                 || apiKey == null || apiKey.isEmpty()) {
             return Optional.empty();
         }
+        if (path == EgressPath.MULTICLOUD_INTERCONNECT) {
+            // Not an offer this adapter reads. Without this guard the two-way INTERNET/other
+            // branch below would answer a native-link lookup with a rate for a different path.
+            return Optional.empty();
+        }
         String key = path.name() + "|" + (region == null ? "*" : region);
         Optional<EgressRate> cached = cache.get(key);
         if (cached != null) {

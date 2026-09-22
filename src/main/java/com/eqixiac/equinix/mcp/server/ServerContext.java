@@ -22,6 +22,7 @@ import com.eqixiac.equinix.Equinix;
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.IBXSmartView;
 import com.eqixiac.equinix.NetworkEdge;
+import com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
 import com.eqixiac.equinix.design.value.ratecard.provider.AwsPriceListRateCard;
 import com.eqixiac.equinix.design.value.ratecard.provider.AzureRetailPricesRateCard;
@@ -105,6 +106,7 @@ public final class ServerContext {
     private NetworkEdge networkEdge;
     private IBXSmartView ibxSmartView;
     private MetroRegistry metroRegistry;
+    private MulticloudEnvironmentCatalog multicloudEnvironments;
 
     private ServerContext(Builder builder) {
         this.session = builder.session;
@@ -119,6 +121,7 @@ public final class ServerContext {
         this.networkEdge = builder.networkEdge;
         this.ibxSmartView = builder.ibxSmartView;
         this.metroRegistry = builder.metroRegistry;
+        this.multicloudEnvironments = builder.multicloudEnvironments;
     }
 
     /**
@@ -186,6 +189,23 @@ public final class ServerContext {
             metroRegistry = requireSession("Metro registry").metroRegistry();
         }
         return metroRegistry;
+    }
+
+    /**
+     * The catalog of native provider-to-provider multicloud environments the design tools read:
+     * {@code design_list_multicloud_environments}, {@code design_compare_cloud_to_cloud} and the
+     * cloud-to-cloud step of {@code design_plan_deployment}. <b>Beta.</b> Defaults to
+     * {@link MulticloudEnvironmentCatalog#standard()}, a dated copy of provider documentation bundled
+     * with the SDK; it is loaded on first use and is not refreshed at run time. An embedder with newer
+     * data injects {@code MulticloudEnvironmentCatalog.standard().with(...)} through the builder.
+     *
+     * @return the catalog; never {@code null}
+     */
+    public synchronized MulticloudEnvironmentCatalog multicloudEnvironments() {
+        if (multicloudEnvironments == null) {
+            multicloudEnvironments = MulticloudEnvironmentCatalog.standard();
+        }
+        return multicloudEnvironments;
     }
 
     /**
@@ -272,6 +292,26 @@ public final class ServerContext {
      */
     public McpSyncServerExchange currentExchange() {
         return currentExchange.get();
+    }
+
+    /**
+     * Asks the person at the MCP client bound to the current tool call to approve one action, through
+     * a form elicitation with one required boolean field. This is the public seam for tools outside
+     * this package (the Safe Mutation Broker) that gate a mutation on a human decision; the
+     * elicitation helper itself stays package-private.
+     *
+     * <p>Behaviour: when {@link #currentExchange()} is {@code null} or the client did not declare
+     * form elicitation at initialize, nothing is sent and the result is
+     * {@link HumanConfirmation.Status#UNSUPPORTED_BY_CLIENT}. Otherwise the call blocks until the
+     * client answers or {@link #elicitTimeoutMillis()} elapses. It does not throw for a client-side
+     * failure: decline, cancel, timeout and transport errors are statuses on the result. Only
+     * {@link HumanConfirmation.Status#ACCEPTED} is an approval.</p>
+     *
+     * @param message the prompt shown to the user; state what will be executed and what each answer does
+     * @return what the client reported
+     */
+    public HumanConfirmation confirmWithHuman(String message) {
+        return ElicitationSupport.confirm(this, currentExchange(), message);
     }
 
     /**
@@ -367,6 +407,7 @@ public final class ServerContext {
         private NetworkEdge networkEdge;
         private IBXSmartView ibxSmartView;
         private MetroRegistry metroRegistry;
+        private MulticloudEnvironmentCatalog multicloudEnvironments;
 
         /**
          * Uses an authenticated {@link Equinix} session as the source of every facade not
@@ -487,6 +528,18 @@ public final class ServerContext {
          */
         public Builder metroRegistry(MetroRegistry metroRegistry) {
             this.metroRegistry = metroRegistry;
+            return this;
+        }
+
+        /**
+         * Overrides the native multicloud environment catalog (defaults to the bundled
+         * {@link MulticloudEnvironmentCatalog#standard()}). <b>Beta.</b>
+         *
+         * @param catalog the catalog the design tools read; {@code null} restores the default
+         * @return this builder
+         */
+        public Builder multicloudEnvironments(MulticloudEnvironmentCatalog catalog) {
+            this.multicloudEnvironments = catalog;
             return this;
         }
 

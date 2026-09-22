@@ -57,6 +57,14 @@
             "httpMethod": "GET",
             "requestUri": "{$uuid}/metros"
           },
+          "GetServiceProfileEnvironments": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}/environments"
+          },
+          "PostServiceProfileEnvironmentAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$uuid}/environments/{$environmentId}/actions"
+          },
           "DeleteServiceProfile": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"

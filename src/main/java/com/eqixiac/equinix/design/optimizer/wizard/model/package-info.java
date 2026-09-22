@@ -33,6 +33,14 @@
  * ({@link com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing} — cross-currency totals
  * are withheld, never fabricated).</p>
  *
+ * <p><b>Beta.</b> A fifth kind of planned entry,
+ * {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect}, is a
+ * native provider-to-provider link between two clouds. It has no Fabric request body: the plan
+ * carries and prices it
+ * ({@link com.eqixiac.equinix.design.optimizer.wizard.model.MulticloudLinkPricing}: native quote,
+ * Equinix-path cost for the same flow, break-even sustained rate in Mbps), execution never
+ * provisions it, and {@code DeploymentOutcome.getInformational()} lists it.</p>
+ *
  * <p>Execution consumes {@link com.eqixiac.equinix.design.optimizer.wizard.model.ExecutionInputs}
  * (the customer-supplied authorization keys enumerated by
  * {@link com.eqixiac.equinix.design.optimizer.wizard.model.ConnectionInputRequirement}) and yields

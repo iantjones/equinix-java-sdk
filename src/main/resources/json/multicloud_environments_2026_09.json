@@ -1,0 +1,197 @@
+{
+  "asOf": "2026-09-21",
+  "disclaimer": "Region pairs for native provider-to-provider multicloud links, copied from the providers' public documentation on the date recorded on each entry. Not a live availability lookup. Providers add region pairs, change launch stages and change supported sizes without notice; re-check the source URLs before relying on an entry, and extend or replace this catalog through MulticloudEnvironmentCatalog.with(...) or MulticloudEnvironmentCatalog.load(...). The environment ids are assigned by this catalog; the providers do not publish the ids they use between themselves.",
+  "environments": [
+    {
+      "sites": [
+        { "provider": "aws", "site": "us-east-1", "displayName": "AWS US East (N. Virginia)" },
+        { "provider": "gcp", "site": "us-east4", "displayName": "Google Cloud N. Virginia" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "AWS announced general availability with Google Cloud on 2026-04-14 (https://aws.amazon.com/about-aws/whats-new/2026/04/aws-announces-ga-AWS-interconnect-multicloud/). The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "us-west-1", "displayName": "AWS US West (N. California)" },
+        { "provider": "gcp", "site": "us-west2", "displayName": "Google Cloud Los Angeles" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "us-west-2", "displayName": "AWS US West (Oregon)" },
+        { "provider": "gcp", "site": "us-west1", "displayName": "Google Cloud Oregon" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "eu-west-2", "displayName": "AWS Europe (London)" },
+        { "provider": "gcp", "site": "europe-west2", "displayName": "Google Cloud London" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "eu-central-1", "displayName": "AWS Europe (Frankfurt)" },
+        { "provider": "gcp", "site": "europe-west3", "displayName": "Google Cloud Frankfurt" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "eu-north-1", "displayName": "AWS Europe (Stockholm)" },
+        { "provider": "gcp", "site": "europe-north2", "displayName": "Google Cloud Stockholm" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "ap-southeast-1", "displayName": "AWS Asia Pacific (Singapore)" },
+        { "provider": "gcp", "site": "asia-southeast1", "displayName": "Google Cloud Singapore" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "ap-southeast-2", "displayName": "AWS Asia Pacific (Sydney)" },
+        { "provider": "gcp", "site": "australia-southeast1", "displayName": "Google Cloud Sydney" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [1000, 5000, 10000, 100000],
+      "sizesNote": "Sizes with a published Google Cloud transport price (1, 5, 10 and 100 Gbps; https://cloud.google.com/network-connectivity/docs/interconnect/pricing). Google states speeds from 1 Gbps to 100 Gbps; neither provider enumerates the intermediate sizes, so they are not listed here. Google publishes no transport price row for australia- regions.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations"
+      ],
+      "asOf": "2026-09-21",
+      "note": "The AWS page labels preview per provider; Google Cloud carries no preview label."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "us-east-1", "displayName": "AWS US East (N. Virginia)" },
+        { "provider": "oci", "site": "us-ashburn-1", "displayName": "OCI US East (Ashburn)" }
+      ],
+      "status": "GA",
+      "supportedConnectionSizeMbps": [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000],
+      "sizesNote": "Provisioned bandwidth options listed by Oracle: 500M, 1G, 2G, 5G, 10G, 20G, 50G, 100G.",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html",
+        "https://docs.oracle.com/en-us/iaas/Content/multicloud/interconnect-aws.htm"
+      ],
+      "asOf": "2026-09-21",
+      "note": "AWS announced general availability with Oracle Cloud Infrastructure on 2026-07-29 (https://aws.amazon.com/about-aws/whats-new/2026/07/aws-announces-AWS-interconnect-multicloud-OCI-GA/). Oracle states that 500M is charged at the 1G usage rate. On the OCI side the link is a FastConnect interconnect virtual circuit and the AWS activation key is entered as the service key."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "us-east-1", "displayName": "AWS US East (N. Virginia)" },
+        { "provider": "azure", "site": "eastus", "displayName": "Azure US East" }
+      ],
+      "status": "PREVIEW",
+      "supportedConnectionSizeMbps": [1000],
+      "sizesNote": "AWS limits bandwidth to 1 Gbps with any provider in public preview (https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html).",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html"
+      ],
+      "asOf": "2026-09-21",
+      "note": "Listed by AWS under 'Microsoft Azure (Preview)'. AWS states that previews are limited to one interconnect per customer per supported Region, carry no charge during the preview, and are removed before general availability."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "us-west-1", "displayName": "AWS US West (N. California)" },
+        { "provider": "azure", "site": "westus", "displayName": "Azure West US" }
+      ],
+      "status": "PREVIEW",
+      "supportedConnectionSizeMbps": [1000],
+      "sizesNote": "AWS limits bandwidth to 1 Gbps with any provider in public preview (https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html).",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html"
+      ],
+      "asOf": "2026-09-21",
+      "note": "Listed by AWS under 'Microsoft Azure (Preview)'. AWS states that previews are limited to one interconnect per customer per supported Region, carry no charge during the preview, and are removed before general availability."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "eu-central-1", "displayName": "AWS Europe (Frankfurt)" },
+        { "provider": "azure", "site": "germanywestcentral", "displayName": "Azure Germany West Central" }
+      ],
+      "status": "PREVIEW",
+      "supportedConnectionSizeMbps": [1000],
+      "sizesNote": "AWS limits bandwidth to 1 Gbps with any provider in public preview (https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html).",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html"
+      ],
+      "asOf": "2026-09-21",
+      "note": "Listed by AWS under 'Microsoft Azure (Preview)'. AWS states that previews are limited to one interconnect per customer per supported Region, carry no charge during the preview, and are removed before general availability."
+    },
+    {
+      "sites": [
+        { "provider": "aws", "site": "ap-southeast-2", "displayName": "AWS Asia Pacific (Sydney)" },
+        { "provider": "azure", "site": "australiaeast", "displayName": "Azure Australia East" }
+      ],
+      "status": "PREVIEW",
+      "supportedConnectionSizeMbps": [1000],
+      "sizesNote": "AWS limits bandwidth to 1 Gbps with any provider in public preview (https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html).",
+      "sources": [
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html"
+      ],
+      "asOf": "2026-09-21",
+      "note": "Listed by AWS under 'Microsoft Azure (Preview)'. AWS states that previews are limited to one interconnect per customer per supported Region, carry no charge during the preview, and are removed before general availability."
+    }
+  ]
+}

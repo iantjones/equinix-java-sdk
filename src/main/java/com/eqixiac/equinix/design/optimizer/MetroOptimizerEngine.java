@@ -2651,7 +2651,110 @@ final class MetroOptimizerEngine {
                     .build());
         }
 
+        // Informational, appended after the HEALTHY decision so it neither suppresses HEALTHY nor
+        // counts as a risk: no score deduction, no effect on the worst severity.
+        findings.addAll(nativeMulticloudAlternatives(request, selected, providerMetroMap));
+
         return new RiskAssessment(findings, worstSeverity, Math.max(0, resiliencyScore));
+    }
+
+    /**
+     * One INFO finding per (workload, cloud pair) for which the multicloud environment catalog
+     * lists at least one native provider-to-provider environment. <b>Beta.</b>
+     *
+     * <p>Region evidence for each side is the dependency's {@code preferredSellerRegions} followed
+     * by the seller regions the cloud advertises at the selected metros. When some region pair
+     * matches a catalog entry, the finding names that entry; otherwise it lists every catalogued
+     * pair for the two clouds and says no region match was established. The engine does not
+     * recommend a deployment with no metro: the finding points at the Deployment Wizard, which
+     * prices both paths.</p>
+     */
+    private static List<RiskFinding> nativeMulticloudAlternatives(
+            OptimizationRequest request, List<ScoredMetro> selected,
+            Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
+
+        List<RiskFinding> findings = new ArrayList<>();
+        if (request.getWorkloads() == null || request.getWorkloads().isEmpty()) {
+            return findings;
+        }
+        MulticloudEnvironmentCatalog catalog = request.getMulticloudEnvironments() != null
+                ? request.getMulticloudEnvironments()
+                : MulticloudEnvironmentCatalog.standard();
+        if (catalog.isEmpty()) {
+            return findings;
+        }
+        for (WorkloadSpec workload : request.getWorkloads()) {
+            List<ProviderRequirement> deps = workload.getDependsOnProviders();
+            if (deps == null || deps.size() < 2) continue;
+            Map<CloudProviderType, ProviderRequirement> clouds = new LinkedHashMap<>();
+            for (ProviderRequirement dep : deps) {
+                CloudProviderType cloud = dep.getCloudProvider();
+                if (cloud != null && cloud != CloudProviderType.OTHER) {
+                    clouds.putIfAbsent(cloud, dep);
+                }
+            }
+            List<CloudProviderType> ordered = new ArrayList<>(clouds.keySet());
+            ordered.sort(Comparator.comparing(CloudProviderType::shortCode));
+            for (int i = 0; i < ordered.size(); i++) {
+                for (int j = i + 1; j < ordered.size(); j++) {
+                    CloudProviderType a = ordered.get(i);
+                    CloudProviderType z = ordered.get(j);
+                    List<MulticloudEnvironment> pairs = catalog.regionsFor(a, z);
+                    if (pairs.isEmpty()) continue;
+
+                    MulticloudEnvironment matched = null;
+                    for (String regionA : sellerRegionEvidence(clouds.get(a), selected, providerMetroMap)) {
+                        for (String regionZ : sellerRegionEvidence(clouds.get(z), selected, providerMetroMap)) {
+                            if (matched == null) {
+                                matched = catalog.find(a, regionA, z, regionZ).orElse(null);
+                            }
+                        }
+                    }
+                    String environments = matched != null
+                            ? "the environment " + matched.describe() + ", which matches the regions in this request"
+                            : pairs.size() + " environment(s) for the pair, none matched to a region in this "
+                                    + "request: " + pairs.stream().map(MulticloudEnvironment::describe)
+                                            .collect(Collectors.joining("; "));
+                    findings.add(RiskFinding.builder()
+                            .severity(RiskSeverity.INFO)
+                            .category("NATIVE_MULTICLOUD_ALTERNATIVE")
+                            .description("Workload '" + workload.getLabel() + "' depends on " + a.getProviderName()
+                                    + " and " + z.getProviderName() + ". The multicloud environment catalog"
+                                    + (catalog.asOf() != null ? " (as of " + catalog.asOf() + ")" : "")
+                                    + " lists " + environments + ". A native provider-to-provider link carries "
+                                    + "traffic between the two clouds without an Equinix metro; it does not connect "
+                                    + "user sites or other providers. Informational: not a risk, no score deduction. "
+                                    + "The catalog is a dated copy of provider documentation")
+                            .recommendation("Plan with the Deployment Wizard's default CloudToCloudStrategy.COMPARE "
+                                    + "to price the native link against the Equinix path for the same flow and get "
+                                    + "the break-even sustained rate. This engine still recommends metros; it does "
+                                    + "not evaluate a deployment with none")
+                            .affectedMetro(null)
+                            .build());
+                }
+            }
+        }
+        return findings;
+    }
+
+    /** A dependency's preferred seller regions, then the regions its cloud advertises at the selected metros. */
+    private static List<String> sellerRegionEvidence(ProviderRequirement dep, List<ScoredMetro> selected,
+                                                     Map<String, Map<MetroId, ProviderAvailability>> providerMetroMap) {
+        Set<String> regions = new LinkedHashSet<>();
+        if (dep.getPreferredSellerRegions() != null) {
+            regions.addAll(dep.getPreferredSellerRegions());
+        }
+        Map<MetroId, ProviderAvailability> availability = providerMetroMap.get(dep.displayLabel());
+        if (availability != null) {
+            for (ScoredMetro sm : selected) {
+                ProviderAvailability atMetro = availability.get(sm.metro.metroId());
+                if (atMetro != null && atMetro.getSellerRegions() != null) {
+                    regions.addAll(atMetro.getSellerRegions());
+                }
+            }
+        }
+        regions.remove(null);
+        return new ArrayList<>(regions);
     }
 
     /**

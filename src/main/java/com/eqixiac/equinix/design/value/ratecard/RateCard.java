@@ -31,6 +31,10 @@ import java.util.Optional;
  *
  * <p>Use {@link #layered(RateCard...)} to combine several cards into a precedence
  * chain — the first card that can price an item wins.</p>
+ *
+ * <p>{@link #multicloudLink(MulticloudLinkRequest)} prices a native provider-to-provider
+ * multicloud link, which has no Equinix component. It exists so the TCO and savings models can
+ * compare the Equinix path against the alternative that does not use Equinix. <b>Beta.</b></p>
  */
 public interface RateCard {
 
@@ -115,6 +119,42 @@ public interface RateCard {
      * @return the resolved per-unit monthly quote, or {@link Optional#empty()} if not priced
      */
     default Optional<PriceQuote> colocation(ColocationItem item, MetroCode metro, Term term) {
+        return Optional.empty();
+    }
+
+    /**
+     * Resolves the two-sided price of a native provider-to-provider multicloud link (for example
+     * AWS Interconnect - multicloud paired with a Google Partner Cross-Cloud Interconnect
+     * transport). No Equinix resource is part of such a link. Each provider bills its own side, so
+     * the result is a {@link MulticloudLinkQuote} with one {@link PriceQuote} per side rather than
+     * a single figure.
+     *
+     * <p><b>Beta</b>: the products this models reached general availability in 2026 and their
+     * public price lists are incomplete.</p>
+     *
+     * <p><strong>Implementation contract.</strong> The default returns {@link Optional#empty()},
+     * so a card that does not model native links needs no change. An empty result means the card
+     * has no data for the provider pair. A present result may still have one or both sides
+     * unpriced: a side is priced only from a figure the card holds, and is otherwise left empty
+     * with a reason; callers must check {@code MulticloudLinkQuote.isFullyPriced()} before
+     * treating the quote as a link price. Cards convert hourly rates to monthly at
+     * {@link MulticloudLinkQuote#HOURS_PER_MONTH} hours and state the conversion in the side's
+     * note. The per-GB charge on the link is a separate lookup:
+     * {@code egress(provider, region, EgressPath.MULTICLOUD_INTERCONNECT, term)}.</p>
+     *
+     * <p>Of the bundled cards: {@code ReferenceRateCard} prices only the figures published on
+     * the providers' pricing pages (each note carries the source URL and retrieval date) and
+     * applies the AWS free tier only when the request opts in; {@link CustomRateCard} prices the
+     * sides the caller declared; a {@code RateCard.layered(...)} chain resolves each side
+     * independently, the earliest card that prices a side winning; {@code EquinixRateCard} and
+     * the provider-API adapters return empty.</p>
+     *
+     * @param request the link to price: both providers and regions, bandwidth in Mbps, the AWS
+     *                path tier (1-5), the term, and the AWS free-tier opt-in
+     * @return the two-sided quote, or {@link Optional#empty()} if this card has no data for the
+     *         provider pair (or {@code request} is {@code null})
+     */
+    default Optional<MulticloudLinkQuote> multicloudLink(MulticloudLinkRequest request) {
         return Optional.empty();
     }
 

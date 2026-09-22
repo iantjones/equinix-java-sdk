@@ -269,6 +269,46 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         }
 
         /**
+         * Sets the Z-side access point to a pre-built {@link SimpleAccessPoint}. Use it for
+         * access point properties that have no dedicated {@code zSide...} method, such as
+         * {@code activationKey} and {@code environment}.
+         *
+         * <p>The access point is sent as built. This method adds no defaults and performs no
+         * validation; a later {@code zSide...} call replaces it.</p>
+         *
+         * <p><b>Beta</b>: {@code activationKey} and {@code environment} are defined on the Fabric
+         * v4 catalog's {@code AccessPoint} schema (fetched 2026-09-21) without a connection-create
+         * example. The combination below is a request the schema permits, not one the catalog
+         * demonstrates. Send it with {@code dryRun()} first.</p>
+         *
+         * <pre>{@code
+         * SimpleAccessPoint zSide = SimpleAccessPoint.define(AccessPointType.SP)
+         *     .serviceProfile(icProfileUuid)
+         *     .environment(environmentUuid)
+         *     .activationKey(activationKey)
+         *     .create();
+         *
+         * Connection simulated = fabric.connections()
+         *     .define(ConnectionType.IP_VC)
+         *     .name("cloud-router-to-provider")
+         *     .bandwidth(1000)
+         *     .aSideAccessPointCloudRouter(cloudRouterUuid)
+         *     .zSideAccessPoint(zSide)
+         *     .notification("ops@example.com")
+         *     .dryRun()
+         *     .create();
+         * }</pre>
+         *
+         * @param accessPoint the Z-side access point; must not be {@code null}
+         * @return this builder for chaining
+         * @throws NullPointerException if {@code accessPoint} is {@code null}
+         */
+        public ConnectionBuilder zSideAccessPoint(SimpleAccessPoint accessPoint) {
+            this.zSideAccessPoint = Objects.requireNonNull(accessPoint, "accessPoint");
+            return this;
+        }
+
+        /**
          * Configures the Z-side access point using a cloud provider adapter.
          *
          * <p>This is the primary method for creating connections to cloud providers like

@@ -1,0 +1,80 @@
+{
+  "asOf": "2026-09",
+  "retrieved": "2026-09-21",
+  "currency": "USD",
+  "hoursPerMonth": 730,
+  "disclaimer": "Published list prices for native provider-to-provider multicloud links, copied from the providers' public pricing pages on the retrieval date recorded on each row. Not quotes. Each provider bills its own side. Only figures present on those pages are bundled; a bandwidth, tier, location or provider without a published figure is reported as unpriced, never estimated. Hourly rates are converted to monthly at 730 hours per month. Prices change without notice; re-check the source URL before relying on a figure.",
+  "providers": [
+    {
+      "provider": "AWS",
+      "product": "AWS Interconnect - multicloud",
+      "source": "https://aws.amazon.com/interconnect/multicloud/pricing/",
+      "retrieved": "2026-09-21",
+      "usesPathTier": true,
+      "pricingBasis": "AWS states that each Region-to-interconnect path is assigned a tier and each tier has one price per offered bandwidth (https://docs.aws.amazon.com/interconnect/latest/userguide/interconnect-pricing.html, retrieved 2026-09-21). The rate is therefore keyed by bandwidth and path tier, not by Region or peer provider.",
+      "unpublishedGuidance": "AWS publishes hourly rates for 10000 Mbps at tier 1 and tier 4 only, and directs other sizes and tiers to the AWS Interconnect pricing tool or an AWS account team. Third-party reports of a 1000 Mbps tier 1 rate conflict (1.37 USD/h and 3.50 USD/h) and are not bundled. Supply the rate through CustomRateCard.multicloudLinkHourlyRate(...)."
+    },
+    {
+      "provider": "GOOGLE_CLOUD",
+      "product": "Google Cloud Partner Cross-Cloud Interconnect transport",
+      "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing",
+      "retrieved": "2026-09-21",
+      "usesPathTier": false,
+      "defaultLocation": "North America",
+      "locations": [
+        { "location": "North America", "regionPrefixes": ["us-", "northamerica-"] },
+        { "location": "Europe", "regionPrefixes": ["europe-"] },
+        { "location": "APAC", "regionPrefixes": ["asia-"] },
+        { "location": "South America", "regionPrefixes": ["southamerica-"] }
+      ],
+      "pricingBasis": "Google prices a transport by transport location and bandwidth. The AWS path tier does not apply to this side.",
+      "unpublishedGuidance": "Google lists 1000, 5000, 10000 and 100000 Mbps per transport location and states that additional supported speeds 'will have a linear multiple of the preceding tier' without listing which speeds are supported, so unlisted sizes are not derived here. Regions outside the four listed transport locations (for example australia-, me-, africa- prefixes) have no published row. Supply the rate through CustomRateCard.multicloudLinkHourlyRate(...)."
+    }
+  ],
+  "rates": [
+    { "provider": "AWS", "bandwidthMbps": 10000, "pathTier": 1, "hourly": 12.33, "source": "https://aws.amazon.com/interconnect/multicloud/pricing/", "retrieved": "2026-09-21", "note": "Published example: AWS us-east-1 to Google Cloud us-east4, tier 1 (local); 12.33 x 730 h = 9000.90 per month" },
+    { "provider": "AWS", "bandwidthMbps": 10000, "pathTier": 4, "hourly": 51.78, "source": "https://aws.amazon.com/interconnect/multicloud/pricing/", "retrieved": "2026-09-21", "note": "Published example: interconnect in us-east-1 reaching a Cloud WAN core network edge in ap-southeast-1, tier 4 (long-haul); 51.78 x 730 h = 37799.40 per month" },
+
+    { "provider": "GOOGLE_CLOUD", "location": "North America", "bandwidthMbps": 1000, "hourly": 3.50, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "North America", "bandwidthMbps": 5000, "hourly": 17.30, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "North America", "bandwidthMbps": 10000, "hourly": 19.00, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "North America", "bandwidthMbps": 100000, "hourly": 146.60, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+
+    { "provider": "GOOGLE_CLOUD", "location": "Europe", "bandwidthMbps": 1000, "hourly": 3.50, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "Europe", "bandwidthMbps": 5000, "hourly": 17.30, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "Europe", "bandwidthMbps": 10000, "hourly": 19.00, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "Europe", "bandwidthMbps": 100000, "hourly": 146.60, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+
+    { "provider": "GOOGLE_CLOUD", "location": "APAC", "bandwidthMbps": 1000, "hourly": 5.00, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "APAC", "bandwidthMbps": 5000, "hourly": 24.90, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "APAC", "bandwidthMbps": 10000, "hourly": 26.40, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "APAC", "bandwidthMbps": 100000, "hourly": 196.10, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+
+    { "provider": "GOOGLE_CLOUD", "location": "South America", "bandwidthMbps": 1000, "hourly": 7.60, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "South America", "bandwidthMbps": 5000, "hourly": 38.00, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "South America", "bandwidthMbps": 10000, "hourly": 46.90, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "location": "South America", "bandwidthMbps": 100000, "hourly": 299.60, "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" }
+  ],
+  "dataTransfer": [
+    { "provider": "AWS", "perGb": 0, "statement": "There are no per-gigabyte data transfer charges.", "source": "https://aws.amazon.com/interconnect/multicloud/pricing/", "retrieved": "2026-09-21" },
+    { "provider": "GOOGLE_CLOUD", "perGb": 0, "statement": "No additional cost is applied to inbound or outbound data transfers in or out of Google Cloud over your transport resource.", "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing", "retrieved": "2026-09-21" }
+  ],
+  "freeTier": [
+    {
+      "provider": "AWS",
+      "bandwidthMbps": 500,
+      "pathTier": 1,
+      "scope": "one interconnect per AWS Region per generally-available provider",
+      "statement": "AWS Interconnect - multicloud customers can also use one free, local (Tier 1) 500 Mbps interconnect per AWS Region per cloud services provider that is Generally Available with AWS.",
+      "source": "https://docs.aws.amazon.com/interconnect/latest/userguide/interconnect-pricing.html",
+      "retrieved": "2026-09-21",
+      "eligiblePeers": ["GOOGLE_CLOUD", "ORACLE_CLOUD"],
+      "eligiblePeersSource": "https://aws.amazon.com/interconnect/multicloud/",
+      "eligiblePeersNote": "The AWS product page lists Google Cloud and Oracle Cloud Infrastructure without a preview label and Microsoft Azure as Preview (retrieved 2026-09-21)."
+    }
+  ],
+  "unpricedProviders": [
+    { "provider": "ORACLE_CLOUD", "reason": "No Oracle Interconnect for AWS price was verified against an Oracle pricing page for this bundle (2026-09-21), so the Oracle Cloud side is not bundled. Supply the rate through CustomRateCard.multicloudLinkRate(...)." },
+    { "provider": "AZURE", "reason": "AWS lists Microsoft Azure as Preview on https://aws.amazon.com/interconnect/multicloud/ (retrieved 2026-09-21) and no Azure-side price list was located, so the Azure side is not bundled. Supply the rate through CustomRateCard.multicloudLinkRate(...)." }
+  ]
+}

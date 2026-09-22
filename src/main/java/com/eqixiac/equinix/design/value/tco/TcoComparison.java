@@ -16,6 +16,12 @@ import java.util.Optional;
  * one-time setup charges count — and the saving of the recommended approach versus
  * the public-cloud-over-internet baseline, both per month and over the term.
  *
+ * <p>A cloud-to-cloud comparison ({@code TcoCalculator.Builder.toCloud(...)}) is two-sided:
+ * every archetype prices traffic in both directions, the native multicloud archetype joins the
+ * comparison, and on-prem (whose inputs carry no cloud egress) leaves the default set and is
+ * reported unpriced when requested. {@code getTrafficNote()} states the volumes and
+ * assumptions; {@code CostBreakdown.getProvenance()} carries per-figure sources.</p>
+ *
  * <p>All figures are design-time estimates; cloud-egress and on-prem inputs are
  * indicative reference figures while Equinix interconnect costs use live pricing
  * where available. See {@code getDisclaimer()}. Each breakdown carries the
@@ -68,6 +74,14 @@ public class TcoComparison {
     String asOf;
 
     /**
+     * For a cloud-to-cloud comparison ({@code toCloud(...)} set): the two providers and regions,
+     * the monthly volume in each direction (and whether the reverse volume was assumed equal to
+     * the forward volume), the link size in Mbps and the path tier. {@code null} for a
+     * single-cloud comparison.
+     */
+    String trafficNote;
+
+    /**
      * The breakdown for a specific archetype.
      *
      * @param archetype the archetype to look up
@@ -94,7 +108,35 @@ public class TcoComparison {
     }
 
     /**
+     * Appends the line items and price provenance of a breakdown that carries provenance (the
+     * native multicloud archetype and the two-sided form of the others). A breakdown without
+     * provenance adds nothing, so a single-cloud report is unchanged.
+     */
+    private void appendProvenance(StringBuilder sb, CostBreakdown b) {
+        if (b.getProvenance() == null || b.getProvenance().isEmpty()) {
+            return;
+        }
+        String rowCurrency = b.getCurrency() != null ? b.getCurrency() : currency;
+        sb.append("\n### ").append(b.getArchetype().getDisplayName()).append(": line items and provenance\n\n");
+        if (b.getLineItems() != null && !b.getLineItems().isEmpty()) {
+            sb.append("| Line item | Monthly |\n|---|---|\n");
+            b.getLineItems().forEach((label, amount) ->
+                    sb.append("| ").append(label).append(" | ").append(money(amount, rowCurrency)).append(" |\n"));
+            sb.append("\n");
+        }
+        if (!b.isPriced() && b.getNote() != null) {
+            sb.append("- Not fully priced: ").append(b.getNote()).append("\n");
+        }
+        for (String line : b.getProvenance()) {
+            sb.append("- ").append(line).append("\n");
+        }
+    }
+
+    /**
      * Renders a Markdown report comparing the archetypes and stating the recommendation.
+     * A cloud-to-cloud comparison adds a traffic line and, per archetype, a line-item table with
+     * the provenance of each figure, including the 730 h/month hourly-to-monthly conversion used
+     * for native multicloud link rates.
      *
      * @return a Markdown report
      */
@@ -105,6 +147,9 @@ public class TcoComparison {
             sb.append("**Term:** ").append(term.months())
                     .append(term.months() == 1 ? " month" : " months")
                     .append(" (archetypes are ranked by total cost over the term, including one-time setup)\n\n");
+        }
+        if (trafficNote != null) {
+            sb.append("**Traffic:** ").append(trafficNote).append("\n\n");
         }
         sb.append("| Approach | Monthly | One-time | Total over term | |\n|---|---|---|---|---|\n");
         for (CostBreakdown b : breakdowns) {
@@ -136,6 +181,9 @@ public class TcoComparison {
             }
         } else if (recommended != null) {
             sb.append("**Recommended:** ").append(recommended.getDisplayName()).append("\n");
+        }
+        for (CostBreakdown b : breakdowns) {
+            appendProvenance(sb, b);
         }
         if (disclaimer != null) {
             sb.append("\n_").append(disclaimer);

@@ -66,6 +66,7 @@ public final class MetroOptimizer {
         private OptimizationStrategy strategy = OptimizationStrategy.BALANCED;
         private ScoringWeights scoringWeights;
         private RateCard rateCard;
+        private MulticloudEnvironmentCatalog multicloudEnvironments;
         private Term term = Term.MONTH_12;
 
         Builder(FabricGateway fabric) {
@@ -239,6 +240,25 @@ public final class MetroOptimizer {
             return this;
         }
 
+        // ── Native multicloud environments (Beta) ──
+
+        /**
+         * Sets the catalog of native provider-to-provider multicloud environments the engine
+         * consults when it raises the informational {@code NATIVE_MULTICLOUD_ALTERNATIVE} finding,
+         * and that the Deployment Wizard inherits as its default. <b>Beta.</b> When omitted, the
+         * bundled {@link MulticloudEnvironmentCatalog#standard()} is used. That catalog is a dated
+         * copy of provider documentation and goes stale; pass
+         * {@code MulticloudEnvironmentCatalog.standard().with(...)} to add newer region pairs, or
+         * {@link MulticloudEnvironmentCatalog#empty()} to suppress the finding.
+         *
+         * @param catalog the catalog; {@code null} restores the bundled default
+         * @return this builder for method chaining
+         */
+        public Builder multicloudEnvironments(MulticloudEnvironmentCatalog catalog) {
+            this.multicloudEnvironments = catalog;
+            return this;
+        }
+
         // ── Execute ──
 
         /**
@@ -262,6 +282,7 @@ public final class MetroOptimizer {
                     .scoringWeights(scoringWeights != null ? scoringWeights : ScoringWeights.defaults())
                     .rateCard(rateCard)
                     .term(term)
+                    .multicloudEnvironments(multicloudEnvironments)
                     .build();
 
             return MetroOptimizerEngine.execute(request, fabric);

@@ -76,6 +76,22 @@ final class StubExchanges {
                 McpSchema.ElicitResult.Action.ACCEPT, content));
     }
 
+    /**
+     * An elicitation-capable exchange that ACCEPTs a confirmation form with the given
+     * {@code confirm} value. {@code confirms(false)} is the "submitted with the box unset" case.
+     */
+    static McpSyncServerExchange confirms(boolean value) {
+        Map<String, Object> content = Map.of(ElicitationSupport.CONFIRM_FIELD, value);
+        return stub(elicitationCapable(), request -> new McpSchema.ElicitResult(
+                McpSchema.ElicitResult.Action.ACCEPT, content));
+    }
+
+    /** An elicitation-capable exchange whose user dismisses the prompt (CANCEL). */
+    static McpSyncServerExchange cancels() {
+        return stub(elicitationCapable(),
+                request -> new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.CANCEL, null));
+    }
+
     /** An elicitation-capable exchange that the user DECLINEs. */
     static McpSyncServerExchange declines() {
         return stub(elicitationCapable(),

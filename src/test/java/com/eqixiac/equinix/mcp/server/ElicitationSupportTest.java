@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("ElicitationSupport — chooseOne over a stub client exchange")
+@DisplayName("ElicitationSupport — chooseOne and confirm over a stub client exchange")
 class ElicitationSupportTest {
 
     private static final List<ElicitationSupport.Option> OPTIONS = List.of(
@@ -129,5 +129,103 @@ class ElicitationSupportTest {
         assertFalse(ElicitationSupport.supportsForm(null));
         assertFalse(ElicitationSupport.supportsForm(StubExchanges.unsupported()));
         assertTrue(ElicitationSupport.supportsForm(StubExchanges.accepts("a")));
+    }
+
+    // ── confirm: the boolean approval form ──────────────────────────────────
+
+    @Test
+    @DisplayName("confirm: no exchange, or no declared capability, is UNSUPPORTED_BY_CLIENT and nothing is sent")
+    void confirmUnsupported() {
+        assertEquals(HumanConfirmation.Status.UNSUPPORTED_BY_CLIENT,
+                ElicitationSupport.confirm(null, "Approve the change.", 1_000).status());
+        // StubExchanges.unsupported() fails the test if createElicitation is ever called.
+        HumanConfirmation result = ElicitationSupport.confirm(StubExchanges.unsupported(), "Approve the change.", 1_000);
+        assertEquals(HumanConfirmation.Status.UNSUPPORTED_BY_CLIENT, result.status());
+        assertTrue(result.unsupportedByClient());
+        assertFalse(result.accepted());
+    }
+
+    @Test
+    @DisplayName("confirm: ACCEPT with confirm=true is the only approval")
+    void confirmAccepted() {
+        HumanConfirmation result = ElicitationSupport.confirm(StubExchanges.confirms(true), "Approve the change.", 1_000);
+        assertEquals(HumanConfirmation.Status.ACCEPTED, result.status());
+        assertTrue(result.accepted());
+        assertEquals("accepted", result.status().id());
+    }
+
+    @Test
+    @DisplayName("confirm: ACCEPT with confirm=false, or with no content, is DECLINED, not an approval")
+    void confirmAcceptWithoutTrueIsDeclined() {
+        assertEquals(HumanConfirmation.Status.DECLINED,
+                ElicitationSupport.confirm(StubExchanges.confirms(false), "Approve the change.", 1_000).status());
+
+        McpSyncServerExchange emptyAccept = StubExchanges.stub(StubExchanges.elicitationCapable(),
+                request -> new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.ACCEPT, null));
+        HumanConfirmation result = ElicitationSupport.confirm(emptyAccept, "Approve the change.", 1_000);
+        assertEquals(HumanConfirmation.Status.DECLINED, result.status());
+        assertTrue(result.detail().contains("confirm=true"), result.detail());
+    }
+
+    @Test
+    @DisplayName("confirm: DECLINE and CANCEL are reported separately")
+    void confirmDeclineAndCancel() {
+        assertEquals(HumanConfirmation.Status.DECLINED,
+                ElicitationSupport.confirm(StubExchanges.declines(), "Approve the change.", 1_000).status());
+        assertEquals(HumanConfirmation.Status.CANCELLED,
+                ElicitationSupport.confirm(StubExchanges.cancels(), "Approve the change.", 1_000).status());
+    }
+
+    @Test
+    @Timeout(10)
+    @DisplayName("confirm: a client that never answers is TIMED_OUT within the bound; a thrown error is FAILED")
+    void confirmTimeoutAndFailure() {
+        McpSyncServerExchange stalled = StubExchanges.stub(StubExchanges.elicitationCapable(),
+                request -> {
+                    try {
+                        Thread.sleep(60_000);
+                    }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    return new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.ACCEPT,
+                            Map.of(ElicitationSupport.CONFIRM_FIELD, true));
+                });
+        long start = System.nanoTime();
+        HumanConfirmation timedOut = ElicitationSupport.confirm(stalled, "Approve the change.", 200);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+        assertEquals(HumanConfirmation.Status.TIMED_OUT, timedOut.status());
+        assertTrue(elapsedMs < 5_000, "the hard timeout bounds the wait: " + elapsedMs + " ms");
+
+        McpSyncServerExchange broken = StubExchanges.stub(StubExchanges.elicitationCapable(),
+                request -> {
+                    throw new IllegalStateException("connection reset");
+                });
+        HumanConfirmation failed = ElicitationSupport.confirm(broken, "Approve the change.", 1_000);
+        assertEquals(HumanConfirmation.Status.FAILED, failed.status());
+        assertTrue(failed.detail().contains("connection reset"), failed.detail());
+    }
+
+    @Test
+    @DisplayName("confirm: the form is one required boolean with no default, and carries the prompt")
+    void confirmFormShape() {
+        java.util.concurrent.atomic.AtomicReference<McpSchema.ElicitRequest> seen =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        McpSyncServerExchange exchange = StubExchanges.stub(StubExchanges.elicitationCapable(), request -> {
+            seen.set(request);
+            return new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.DECLINE, null);
+        });
+        ElicitationSupport.confirm(exchange, "Approve connection_create.", 1_000);
+
+        McpSchema.ElicitFormRequest form = (McpSchema.ElicitFormRequest) seen.get();
+        assertEquals("Approve connection_create.", form.message());
+        Map<String, Object> schema = form.requestedSchema();
+        assertEquals(List.of(ElicitationSupport.CONFIRM_FIELD), schema.get("required"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> field = (Map<String, Object>)
+                ((Map<String, Object>) schema.get("properties")).get(ElicitationSupport.CONFIRM_FIELD);
+        assertEquals("boolean", field.get("type"));
+        assertFalse(field.containsKey("default"),
+                "a pre-set default would let a bare submit count as approval");
     }
 }

@@ -49,8 +49,59 @@
  * realization, and export are all side-effect free; only {@code execute()} creates billable
  * resources, and only after validation, input checks, and per-connection pre-flights.</p>
  *
+ * <h2>Cloud-to-cloud flows (Beta)</h2>
+ * <p>A workload that depends on two or more clouds implies a flow between each pair of them. Two
+ * cloud providers can carry such a flow over a native provider-to-provider link (AWS Interconnect -
+ * multicloud with a Google Cloud Partner Cross-Cloud Interconnect transport, or with an Oracle
+ * FastConnect interconnect virtual circuit) that uses no Equinix resource. The wizard plans and
+ * prices that link next to the Equinix path and never provisions it: this SDK calls no
+ * cloud-provider API.</p>
+ *
+ * <table>
+ *   <caption>{@link com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy},
+ *   set with {@code DeploymentWizard.Builder.cloudToCloudStrategy(...)}</caption>
+ *   <tr><th>Strategy</th><th>Equinix connections for the flow</th><th>Native link on the plan</th></tr>
+ *   <tr><td>{@code COMPARE} (default)</td><td>planned as under {@code EQUINIX_ONLY}</td>
+ *       <td>{@code ALTERNATIVE}, when the catalog lists the planned region pair</td></tr>
+ *   <tr><td>{@code EQUINIX_ONLY}</td><td>planned</td><td>none; the catalog is not read</td></tr>
+ *   <tr><td>{@code NATIVE_WHEN_AVAILABLE}</td><td>omitted only where the replacement rule allows:
+ *       a {@code GA} environment with a covering size, no user site in the request, the cloud not
+ *       a request-level requirement, and no other workload using the connection</td>
+ *       <td>{@code REPLACEMENT} where a connection was omitted, otherwise {@code ALTERNATIVE}</td></tr>
+ *   <tr><td>{@code NATIVE_ONLY}</td><td>as {@code NATIVE_WHEN_AVAILABLE}</td>
+ *       <td>as above; a flow with no usable environment is an {@code UNAVAILABLE} entry and a
+ *       Layer-1 validation error</td></tr>
+ * </table>
+ *
+ * <table>
+ *   <caption>What each stage does with a
+ *   {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect}</caption>
+ *   <tr><th>Stage</th><th>Behavior</th></tr>
+ *   <tr><td>Plan</td><td>Region pairs are matched against
+ *       {@link com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog}, a bundled,
+ *       dated copy of provider documentation that goes stale; supply a newer one with
+ *       {@code multicloudEnvironments(...)}. The requested bandwidth (the sum of the workloads'
+ *       effective bandwidths, Mbps) rounds up to the smallest size the environment lists. No
+ *       routing protocol, /30 subnet or redundancy group is planned for a link.</td></tr>
+ *   <tr><td>Price</td><td>Each link carries a
+ *       {@link com.eqixiac.equinix.design.optimizer.wizard.model.MulticloudLinkPricing}: the
+ *       two-sided native quote (hourly list prices at 730 h per month; an unpublished size is
+ *       unpriced, never zero), the Equinix-path fixed cost for the same flow, and the break-even
+ *       sustained rate from {@code MulticloudPathComparison.breakEvenSustainedMbps(...)}.
+ *       {@code PlanPricing} reports native figures in separate {@code native*} fields; none is
+ *       part of the Equinix totals. {@code reprice(plan)} refreshes both.</td></tr>
+ *   <tr><td>Validate</td><td>Recorded as <em>skipped</em> with a reason naming the link: nothing
+ *       can dry-run it now or at provisioning, so it is not <em>deferred</em>. Errors: a malformed
+ *       entry, or a {@code NATIVE_ONLY} flow without a usable environment.</td></tr>
+ *   <tr><td>Execute</td><td>No request is sent. {@code DeploymentOutcome.getInformational()}
+ *       carries one non-recoverable entry per link ("created outside Fabric: follow the
+ *       create-then-accept recipe"); it is not an error and does not affect
+ *       {@code isFullySuccessful()}. {@code totalResourceCount()} excludes links.</td></tr>
+ * </table>
+ *
  * <p>Sub-packages: {@code model} (the plan and its parts),
- * {@code enums} (topology, bandwidth strategy, connection purpose).</p>
+ * {@code enums} (topology, bandwidth strategy, connection purpose, cloud-to-cloud strategy, native
+ * link role).</p>
  *
  * @see com.eqixiac.equinix.design.optimizer.wizard.DeploymentWizard
  * @see com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan

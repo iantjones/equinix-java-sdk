@@ -191,6 +191,31 @@ public interface CloudProviderConnectionAdapter<T> {
     }
 
     /**
+     * Returns the activation key to send as {@code AccessPoint.activationKey}, or {@code null}
+     * to omit that property.
+     *
+     * <p>This is a separate wire property from {@link #getAuthenticationKey()}. An adapter that
+     * returns a value here still returns its authentication key from
+     * {@code getAuthenticationKey()}; {@code AccessPointBuilder.fromCloudProvider(...)} copies
+     * each to its own property and never substitutes one for the other.</p>
+     *
+     * <p>The default returns {@code null}. {@link AwsDirectConnectAdapter},
+     * {@link AzureExpressRouteAdapter}, {@link GoogleCloudInterconnectAdapter} and
+     * {@link OracleFastConnectAdapter} do not override it, so requests built from them are
+     * unchanged.</p>
+     *
+     * <p><b>Beta</b>: {@code activationKey} is defined on the Fabric v4 catalog's
+     * {@code AccessPoint} schema (fetched 2026-09-21) with no connection-create example. The
+     * catalog marks the related {@code ProviderEnvironment} and {@code ActivationKeyDetails}
+     * schemas Beta, not this property. Which service profiles accept it is unverified.</p>
+     *
+     * @return the provider-encoded activation key, or {@code null} if this adapter has none
+     */
+    default String getActivationKey() {
+        return null;
+    }
+
+    /**
      * Returns a human-readable description of the cloud provider connection for use in
      * logging and diagnostics.
      *

@@ -36,6 +36,24 @@
  * Mermaid graph text, which GitHub, GitLab and most docs platforms render natively. Labels are
  * HTML-escaped so real-world names cannot break the diagram.</p>
  *
+ * <p><b>Beta.</b> Native multicloud links ({@code DeploymentPlan.multicloudLinksOrEmpty()}) are
+ * direct links between two cloud providers that use no Equinix resource. Neither exporter turns
+ * one into a provisionable artifact:</p>
+ * <table>
+ *   <caption>Rendering of a native multicloud link</caption>
+ *   <tr><th>Exporter</th><th>Output</th><th>Not produced</th></tr>
+ *   <tr><td>{@code TerraformExporter}</td><td>a delimited {@code #} comment block (providers,
+ *       regions, bandwidth in Mbps, environment status, role, the create-then-accept procedure
+ *       with source URLs) and one {@code variable "<name>_destination_account_id"} of type
+ *       {@code string}; a header line per {@code REPLACEMENT} link naming the omitted Equinix
+ *       connections</td><td>any {@code resource} or {@code provider} block for the link; any
+ *       {@code aws_*}, {@code google_*}, {@code oci_*} or {@code azurerm_*} resource; a variable
+ *       for the activation key</td></tr>
+ *   <tr><td>{@code TopologyDiagram}</td><td>a dashed {@code <-.->} edge between the two cloud
+ *       nodes labeled {@code native multicloud (outside Fabric)}</td><td>an edge for an
+ *       {@code UNAVAILABLE} entry; any edge through a Cloud Router</td></tr>
+ * </table>
+ *
  * @see com.eqixiac.equinix.design.export.TerraformExporter
  * @see com.eqixiac.equinix.design.export.TopologyDiagram
  */

@@ -20,6 +20,8 @@ import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.design.value.ratecard.ColocationItem;
 import com.eqixiac.equinix.design.value.ratecard.EgressPath;
 import com.eqixiac.equinix.design.value.ratecard.EgressRate;
+import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
+import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkRequest;
 import com.eqixiac.equinix.design.value.ratecard.PriceQuote;
 import com.eqixiac.equinix.design.value.ratecard.PriceSource;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
@@ -91,6 +93,16 @@ final class TimeoutRateCard implements RateCard {
     @Override
     public Optional<PriceQuote> colocation(ColocationItem item, MetroCode metro, Term term) {
         return guarded("colocation", () -> delegate.colocation(item, metro, term));
+    }
+
+    /**
+     * Guards the native multicloud link lookup like every other lookup. The bundled provider-API
+     * adapters return empty for it; a card supplied through
+     * {@code ServerContext.Builder.providerRateCardFactory(...)} may price it and may stall.
+     */
+    @Override
+    public Optional<MulticloudLinkQuote> multicloudLink(MulticloudLinkRequest request) {
+        return guarded("multicloudLink", () -> delegate.multicloudLink(request));
     }
 
     @Override

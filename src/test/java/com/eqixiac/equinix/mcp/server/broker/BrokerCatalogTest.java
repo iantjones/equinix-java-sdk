@@ -84,7 +84,7 @@ class BrokerCatalogTest {
         withServer(builder -> {
         }, server -> {
             List<String> served = names(server);
-            assertEquals(12, served.size(), "the default catalog stays the 12 read-only tools: " + served);
+            assertEquals(14, served.size(), "the default catalog stays the 14 read-only tools: " + served);
             BROKER_TOOLS.forEach(tool ->
                     assertFalse(served.contains(tool), tool + " must be absent unless mutate is enabled"));
         });
@@ -124,7 +124,7 @@ class BrokerCatalogTest {
     void mutateComposes() {
         withServer(builder -> builder.toolsets(Toolset.DESIGN, Toolset.MUTATE), server -> {
             List<String> served = names(server);
-            assertEquals(9, served.size(), "7 design tools + the broker pair: " + served);
+            assertEquals(11, served.size(), "9 design tools + the broker pair: " + served);
             assertTrue(served.containsAll(BROKER_TOOLS));
         });
     }

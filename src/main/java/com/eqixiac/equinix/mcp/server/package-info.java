@@ -29,14 +29,22 @@
  * <p>Design rules the tool catalog follows:</p>
  * <ul>
  *   <li>a deliberately small catalog — every tool embeds engine logic (optimizer, wizard,
- *       TCO/savings, peering, latency) or cross-domain reach (portal, Network Edge,
- *       IBX SmartView); none is a 1:1 mirror of a REST endpoint;</li>
+ *       TCO/savings, cloud-to-cloud path comparison, peering, latency) or cross-domain reach
+ *       (portal, Network Edge, IBX SmartView); none is a 1:1 mirror of a REST endpoint;</li>
  *   <li>domain-prefixed {@code snake_case} names ({@code design_*}, {@code portal_*},
  *       {@code ne_*}, {@code ibx_*});</li>
  *   <li>read-only: no delete tools, and mutations are out of scope for this catalog —
  *       they arrive only through the Safe Mutation Broker's dry-run-first two-phase tools,
  *       registered via the same {@link com.eqixiac.equinix.mcp.server.ToolRegistration}
- *       seam;</li>
+ *       seam. The confirm phase asks the client for the user's approval through an MCP form
+ *       elicitation ({@link com.eqixiac.equinix.mcp.server.ServerContext#confirmWithHuman(String)})
+ *       and executes only on an accept; a client without elicitation support is reported as
+ *       {@code unsupported_by_client};</li>
+ *   <li><b>Beta</b>: {@code design_compare_cloud_to_cloud} and
+ *       {@code design_list_multicloud_environments} cover native provider-to-provider multicloud
+ *       links from dated reference data bundled with the SDK. The server calls no cloud-provider
+ *       control-plane API and never creates such a link; a figure with no citable source is
+ *       {@code null} with a reason, never zero;</li>
  *   <li>results are structured JSON with size guards (lists are truncated to a sane cap and
  *       say so in the payload), and a tool call never hangs — external pricing lookups run
  *       under a hard timeout and degrade gracefully.</li>

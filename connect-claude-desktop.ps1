@@ -8,7 +8,7 @@
 #   1. Fill EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY in .env.local (copy .env.local.example)
 #   2. Quit Claude Desktop completely
 #   3. .\connect-claude-desktop.ps1
-#   4. Start Claude Desktop; the tools icon in the chat box should list 'equinix' with 12 tools
+#   4. Start Claude Desktop; the tools icon in the chat box should list 'equinix' with 14 tools
 #
 # NOTE: keep this file pure ASCII - Windows PowerShell 5.1 parses BOM-less
 # scripts as ANSI, and UTF-8 punctuation decodes into string-breaking smart quotes.
@@ -77,4 +77,4 @@ $json = $config | ConvertTo-Json -Depth 20
 
 Write-Host "Registered 'equinix' MCP server in $configPath"
 Write-Host "Jar: $jar"
-Write-Host "Now start Claude Desktop and check the tools icon in the chat input for 'equinix' (12 tools)."
+Write-Host "Now start Claude Desktop and check the tools icon in the chat input for 'equinix' (14 tools)."

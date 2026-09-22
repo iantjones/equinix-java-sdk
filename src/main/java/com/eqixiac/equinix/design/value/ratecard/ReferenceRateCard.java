@@ -1,6 +1,7 @@
 package com.eqixiac.equinix.design.value.ratecard;
 
 import com.eqixiac.equinix.core.enums.MetroCode;
+import com.eqixiac.equinix.core.model.multicloud.BandwidthTier;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -45,11 +46,41 @@ import java.util.TreeMap;
  *
  * <p>The bundled data set is loaded once from
  * {@code /json/ratecard_reference_2026_06.json} and cached.</p>
+ *
+ * <h2>Native multicloud links</h2>
+ * <p><b>Beta.</b> {@code multicloudLink(...)} and the
+ * {@code EgressPath.MULTICLOUD_INTERCONNECT} egress rates come from a second, separately dated
+ * bundle, {@code /json/ratecard_multicloud_reference_2026_09.json}
+ * ({@link #multicloudAsOf()}). It holds only figures copied from the providers' public pricing
+ * pages on 2026-09-21; each row records its source URL and retrieval date, and each quote's note
+ * repeats them together with the hourly-to-monthly conversion
+ * ({@code MulticloudLinkQuote.HOURS_PER_MONTH} = 730 h).</p>
+ *
+ * <table>
+ *   <caption>Bundled native-link coverage (2026-09)</caption>
+ *   <tr><th>Side</th><th>Priced</th><th>Unpriced (side returned empty with a reason)</th></tr>
+ *   <tr><td>AWS Interconnect - multicloud</td><td>10000 Mbps at path tier 1 (12.33 USD/h) and
+ *       tier 4 (51.78 USD/h)</td><td>every other size and tier, including 1000 Mbps: AWS
+ *       publishes no such rate and third-party reports conflict</td></tr>
+ *   <tr><td>Google Partner Cross-Cloud Interconnect transport</td><td>1000, 5000, 10000 and
+ *       100000 Mbps in North America, Europe, APAC and South America</td><td>other sizes;
+ *       regions outside the four transport locations</td></tr>
+ *   <tr><td>Oracle Cloud, Microsoft Azure</td><td>nothing</td><td>always</td></tr>
+ * </table>
+ *
+ * <p>The lookup is an exact match on bandwidth (and on path tier or transport location where the
+ * provider uses one). It does not round up, interpolate or extrapolate, unlike
+ * {@code connection(...)}: both providers sell sizes whose prices they do not publish, so a
+ * larger published size says nothing reliable about a smaller link. A Google Cloud side with no
+ * region is priced at the North America transport location and its note says so. The AWS free
+ * tier (one 500 Mbps tier-1 interconnect per Region per generally-available provider) is applied
+ * only when the request sets {@code useAwsFreeTier}; it is never a default.</p>
  */
 public final class ReferenceRateCard implements RateCard {
 
     private static final Currency USD = Currency.getInstance("USD");
     private static final String RESOURCE = "/json/ratecard_reference_2026_06.json";
+    private static final String MULTICLOUD_RESOURCE = "/json/ratecard_multicloud_reference_2026_09.json";
 
     private static volatile ReferenceRateCard standard;
 
@@ -62,8 +93,10 @@ public final class ReferenceRateCard implements RateCard {
     private final BigDecimal equinixCrossConnectMonthly;
     private final Map<CloudProviderType, NavigableMap<Integer, BigDecimal>> cspPortByBandwidth;
     private final Map<String, BigDecimal> onPrem;
+    private final MulticloudReferenceRates multicloud;
 
-    private ReferenceRateCard(JsonNode root) {
+    private ReferenceRateCard(JsonNode root, JsonNode multicloudRoot) {
+        this.multicloud = new MulticloudReferenceRates(multicloudRoot);
         this.asOf = root.path("asOf").asText(null);
         this.disclaimer = root.path("disclaimer").asText(null);
         this.currency = safeCurrency(root.path("currency").asText("USD"));
@@ -137,7 +170,7 @@ public final class ReferenceRateCard implements RateCard {
             synchronized (ReferenceRateCard.class) {
                 local = standard;
                 if (local == null) {
-                    local = load(RESOURCE);
+                    local = new ReferenceRateCard(readTree(RESOURCE), readTree(MULTICLOUD_RESOURCE));
                     standard = local;
                 }
             }
@@ -145,13 +178,12 @@ public final class ReferenceRateCard implements RateCard {
         return local;
     }
 
-    private static ReferenceRateCard load(String resource) {
+    private static JsonNode readTree(String resource) {
         try (InputStream in = ReferenceRateCard.class.getResourceAsStream(resource)) {
             if (in == null) {
                 throw new IllegalStateException("Bundled reference rate card not found on classpath: " + resource);
             }
-            JsonNode root = new ObjectMapper().readTree(in);
-            return new ReferenceRateCard(root);
+            return new ObjectMapper().readTree(in);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to load reference rate card: " + resource, e);
         }
@@ -212,7 +244,25 @@ public final class ReferenceRateCard implements RateCard {
         if (provider == null || path == null) {
             return Optional.empty();
         }
+        if (path == EgressPath.MULTICLOUD_INTERCONNECT) {
+            // The per-GB rate on a native link comes from the separately dated multicloud bundle:
+            // a verified published zero where the provider states one, otherwise empty (unknown).
+            return multicloud.dataTransfer(provider);
+        }
         return Optional.ofNullable(egressRates.get(provider.name() + "|" + path.name()));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p><b>Beta.</b> Prices each side from the bundled 2026-09 multicloud data by exact match;
+     * see the class documentation for coverage and the no-rounding rule. Returns empty when
+     * neither provider appears in the bundle. A provider the bundle lists as unpriced (Oracle
+     * Cloud, Microsoft Azure) yields a present quote whose side is empty with the reason.</p>
+     */
+    @Override
+    public Optional<MulticloudLinkQuote> multicloudLink(MulticloudLinkRequest request) {
+        return multicloud.quote(request);
     }
 
     @Override
@@ -241,6 +291,48 @@ public final class ReferenceRateCard implements RateCard {
      */
     public String disclaimer() {
         return disclaimer;
+    }
+
+    /**
+     * The vintage of the bundled native-multicloud-link figures, e.g. {@code "2026-09"}. It is
+     * tracked separately from {@link #asOf()} because the two bundles were compiled at different
+     * times.
+     *
+     * @return the multicloud data set's as-of stamp, or {@code null} if the bundle omits it
+     */
+    public String multicloudAsOf() {
+        return multicloud.asOf();
+    }
+
+    /**
+     * The date (ISO 8601) the bundled native-multicloud-link figures were read from the
+     * providers' pricing pages.
+     *
+     * @return the retrieval date, e.g. {@code "2026-09-21"}, or {@code null} if the bundle omits it
+     */
+    public String multicloudRetrieved() {
+        return multicloud.retrieved();
+    }
+
+    /**
+     * The multicloud bundle's own disclaimer: what the figures are, that unpublished figures are
+     * reported unpriced, and the hourly-to-monthly conversion.
+     *
+     * @return the disclaimer, or {@code null} if the bundle omits it
+     */
+    public String multicloudDisclaimer() {
+        return multicloud.disclaimer();
+    }
+
+    /**
+     * The link sizes, in Mbps, for which the multicloud bundle holds at least one published rate
+     * for the provider (across every path tier and transport location).
+     *
+     * @param provider the cloud provider
+     * @return the published sizes; an empty tier set when the provider's side is never priced
+     */
+    public BandwidthTier multicloudPublishedSizes(CloudProviderType provider) {
+        return multicloud.publishedSizes(provider);
     }
 
     /**

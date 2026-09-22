@@ -35,7 +35,11 @@ import com.eqixiac.equinix.design.optimizer.wizard.model.ConnectionBodies;
 import com.eqixiac.equinix.design.optimizer.wizard.model.ConnectionInputRequirement;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedBackboneLink;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedCloudRouter;
+import com.eqixiac.equinix.design.optimizer.enums.MulticloudEnvironmentStatus;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.MulticloudLinkRole;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedRoutingProtocol;
 import com.eqixiac.equinix.design.optimizer.wizard.model.RouterBodies;
 import com.eqixiac.equinix.fabric.client.CloudRouters;
@@ -105,6 +109,16 @@ import java.util.function.Supplier;
  * </ul>
  * <p>The rejection-vs-infeasibility split is centralized in {@link #classifyLiveFailure(Throwable)} so
  * every live-layer catch classifies identically, and so the execution-time pre-flight can reuse it.</p>
+ *
+ * <h3>Native multicloud links (Beta)</h3>
+ * <p>A {@code PlannedMulticloudInterconnect} has no Fabric request body and this SDK calls no
+ * cloud-provider API, so no layer can validate it live and none will at provisioning. Each link is
+ * therefore recorded as <b>SKIPPED</b> with a reason naming the link, never as DEFERRED (nothing
+ * validates it later) and never as an ERROR, with two exceptions that are Layer-1 errors: a
+ * structurally malformed entry (blank or duplicate name, the same cloud on both sides, a
+ * non-positive bandwidth), and an entry produced under {@code CloudToCloudStrategy.NATIVE_ONLY}
+ * for which the catalog holds no usable environment (none for the region pair, a status other than
+ * {@code GA}, or no size covering the requested bandwidth).</p>
  */
 public final class PlanValidator {
 
@@ -147,7 +161,8 @@ public final class PlanValidator {
     }
 
     /**
-     * Validates a plan across all layers.
+     * Validates a plan that has no native multicloud links. Equivalent to the ten-argument
+     * overload with {@code multicloudLinks == null}.
      *
      * @param metros              the source metro recommendations (for the new-market check); may be {@code null}
      * @param request             the optimization request (for workload provider dependencies); may be {@code null}
@@ -168,6 +183,38 @@ public final class PlanValidator {
             List<PlannedConnection> providerConnections,
             List<PlannedBackboneLink> backboneLinks,
             List<PlannedRoutingProtocol> protocols,
+            Long customerAsn,
+            FabricGateway fabric) {
+        return validate(metros, request, topology, routers, providerConnections, backboneLinks, protocols,
+                null, customerAsn, fabric);
+    }
+
+    /**
+     * Validates a plan across all layers.
+     *
+     * @param metros              the source metro recommendations (for the new-market check); may be {@code null}
+     * @param request             the optimization request (for workload provider dependencies); may be {@code null}
+     * @param topology            the placement topology (which workloads sit where); may be {@code null}
+     * @param routers             the planned Cloud Routers
+     * @param providerConnections the planned provider connections
+     * @param backboneLinks       the planned backbone links
+     * @param protocols           the planned routing protocols (for IP overlap checks)
+     * @param multicloudLinks     the planned native multicloud links (<b>Beta</b>); may be {@code null}.
+     *                            Each is recorded as skipped, or as an error in the cases listed in the
+     *                            class documentation
+     * @param customerAsn         the customer BGP ASN, or {@code null} to skip the ASN sanity check
+     * @param fabric              the gateway for catalog + dry-run access; {@code null} skips every live step
+     * @return the validation result
+     */
+    public static Result validate(
+            List<MetroRecommendation> metros,
+            OptimizationRequest request,
+            DeploymentTopology topology,
+            List<PlannedCloudRouter> routers,
+            List<PlannedConnection> providerConnections,
+            List<PlannedBackboneLink> backboneLinks,
+            List<PlannedRoutingProtocol> protocols,
+            List<PlannedMulticloudInterconnect> multicloudLinks,
             Long customerAsn,
             FabricGateway fabric) {
 
@@ -204,7 +251,93 @@ public final class PlanValidator {
         // ── Layer 3: connection endpoint dry-run (deferred, real, or skipped when infeasible) ──
         connectionDispatch(fabric, pcs, errors, deferred, skipped, requiredInputs);
 
+        // ── Native multicloud links: Layer-1 structure + NATIVE_ONLY availability, then SKIPPED ──
+        // Appended last so a plan without links produces exactly the buckets it did before.
+        checkMulticloudLinks(nz(multicloudLinks), errors, skipped);
+
         return new Result(errors, deferred, skipped, requiredInputs);
+    }
+
+    /**
+     * Classifies the plan's native multicloud links. A link has no Fabric body and no cloud API is
+     * called, so nothing can validate it now or at provisioning: a well-formed link is SKIPPED
+     * with a reason that names it. Errors are limited to a malformed entry and to a
+     * {@code NATIVE_ONLY} flow with no usable catalog environment.
+     */
+    private static void checkMulticloudLinks(
+            List<PlannedMulticloudInterconnect> links, List<String> errors, List<String> skipped) {
+
+        Set<String> seen = new LinkedHashSet<>();
+        for (PlannedMulticloudInterconnect link : links) {
+            String label = link.getName() == null || link.getName().isBlank() ? "(unnamed)" : link.getName();
+            boolean malformed = false;
+            if (link.getName() == null || link.getName().isBlank()) {
+                errors.add("Native multicloud link has a blank name");
+                malformed = true;
+            }
+            else if (!seen.add(link.getName())) {
+                errors.add("Duplicate native multicloud link name '" + link.getName()
+                        + "' — every native link on a plan must be uniquely named");
+                malformed = true;
+            }
+            if (link.getProviderA() == null || link.getProviderZ() == null
+                    || link.getProviderA() == link.getProviderZ()) {
+                errors.add("Native multicloud link '" + label + "' must join two different clouds, got "
+                        + link.getProviderA() + " and " + link.getProviderZ());
+                malformed = true;
+            }
+            if (link.getRequestedMbps() <= 0) {
+                errors.add("Native multicloud link '" + label + "' has a non-positive bandwidth: "
+                        + link.getRequestedMbps() + " Mbps");
+                malformed = true;
+            }
+            if (malformed) {
+                continue;
+            }
+
+            String unusable = unusableEnvironmentReason(link);
+            if (link.getStrategy() == CloudToCloudStrategy.NATIVE_ONLY && unusable != null) {
+                errors.add("NATIVE_ONLY: no usable native multicloud environment for " + endpoints(link)
+                        + " (workloads " + link.getWorkloadLabels() + "): " + unusable + ". The bundled catalog "
+                        + "is a dated copy of provider documentation; supply a newer entry through "
+                        + "DeploymentWizard.Builder.multicloudEnvironments(...), or plan with "
+                        + "CloudToCloudStrategy.NATIVE_WHEN_AVAILABLE or COMPARE to keep the Equinix path");
+                continue;
+            }
+            if (link.getRole() == MulticloudLinkRole.UNAVAILABLE) {
+                // Defensive: an UNAVAILABLE entry is produced only under NATIVE_ONLY (handled above).
+                skipped.add("Native multicloud link '" + label + "' (" + endpoints(link) + ") has no usable "
+                        + "catalog environment" + (unusable != null ? ": " + unusable : "") + "; nothing was planned for it");
+                continue;
+            }
+            skipped.add("Native multicloud link '" + label + "' (" + endpoints(link) + ", role " + link.getRole()
+                    + ") is not validated: it is created outside Fabric with the two cloud providers, it has no "
+                    + "Fabric request body to dry-run, and this SDK calls no cloud-provider API. It is not "
+                    + "deferred: provisioning will not validate or create it either");
+        }
+    }
+
+    /** Why a link's environment cannot carry it, or {@code null} when it can (GA with a covering size). */
+    private static String unusableEnvironmentReason(PlannedMulticloudInterconnect link) {
+        if (link.getEnvironment() == null) {
+            return "the catalog has no environment for the region pair"
+                    + (link.getRegionA() == null || link.getRegionZ() == null
+                            ? " (the plan has no region for " + (link.getRegionA() == null
+                                    ? link.getProviderA() : link.getProviderZ()) + ")" : "");
+        }
+        if (link.getEnvironment().getStatus() != MulticloudEnvironmentStatus.GA) {
+            return "the catalog environment " + link.getEnvironment().describe() + " is not GA";
+        }
+        if (link.getCoveringTierMbps() == null) {
+            return "the catalog environment " + link.getEnvironment().describe() + " lists no size covering "
+                    + link.getRequestedMbps() + " Mbps (listed sizes: " + link.getEnvironment().sizesMbps() + ")";
+        }
+        return null;
+    }
+
+    private static String endpoints(PlannedMulticloudInterconnect link) {
+        return link.getProviderA() + (link.getRegionA() != null ? " " + link.getRegionA() : "")
+                + " <-> " + link.getProviderZ() + (link.getRegionZ() != null ? " " + link.getRegionZ() : "");
     }
 
     // ══════════════════════════════════════════════

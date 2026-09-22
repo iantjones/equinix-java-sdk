@@ -52,6 +52,20 @@ import java.util.Optional;
  * ignored on this card. Declaring the same key twice is
  * <em>last-declaration-wins</em>: the later call silently replaces the earlier rate.
  * Every quote this card returns is tagged {@link PriceSource#CUSTOM}.</p>
+ *
+ * <h3>Native multicloud links</h3>
+ * <p><b>Beta.</b> {@code multicloudLinkRate(...)} and {@code multicloudLinkHourlyRate(...)}
+ * declare what one provider charges for its side of a native provider-to-provider link, keyed
+ * by {@code (provider, bandwidthMbps, pathTier)}. Bandwidth matches exactly. A lookup tries the
+ * entry for the requested path tier, then the tier-agnostic entry. Region, peer provider and
+ * term are not axes on this card. A side with no declared entry is left empty, so a layered
+ * chain can take it from a later card. The card does not model the AWS free tier: declare a
+ * zero rate for the covered size to express it; a request that opts in to the free tier while
+ * this card prices the AWS side gets the declared rate and a quote note saying the tier was not
+ * applied. The per-GB charge on the link is declared
+ * separately with {@code egressRate(provider, EgressPath.MULTICLOUD_INTERCONNECT, perGb)};
+ * without it, a card used on its own leaves the link's data-transfer cost unknown and the
+ * engines report the native path as partially priced.</p>
  */
 public final class CustomRateCard implements RateCard {
 
@@ -62,6 +76,7 @@ public final class CustomRateCard implements RateCard {
     private final Map<String, PriceQuote> routerRates;
     private final Map<String, EgressRate> egressRates;
     private final Map<String, PriceQuote> colocationRates;
+    private final Map<String, PriceQuote> multicloudRates;
     private final PriceQuote defaultConnection;
     private final PriceQuote defaultRouter;
 
@@ -71,6 +86,7 @@ public final class CustomRateCard implements RateCard {
         this.routerRates = new HashMap<>();
         this.egressRates = new HashMap<>();
         this.colocationRates = new HashMap<>();
+        this.multicloudRates = new HashMap<>();
 
         for (ConnEntry e : b.connectionEntries) {
             connectionRates.put(connKey(e.type, e.bandwidthMbps, e.metro, e.term),
@@ -87,6 +103,16 @@ public final class CustomRateCard implements RateCard {
         for (ColoEntry e : b.colocationEntries) {
             colocationRates.put(coloKey(e.item, e.metro, e.term),
                     PriceQuote.of(e.monthly, e.setup, currency, PriceSource.CUSTOM));
+        }
+        for (MulticloudEntry e : b.multicloudEntries) {
+            PriceQuote quote = PriceQuote.of(e.monthly, e.setup, currency, PriceSource.CUSTOM);
+            if (e.hourly != null) {
+                quote = quote.withNote("custom hourly rate " + MulticloudLinkQuote.formatRate(e.hourly) + " "
+                        + currency.getCurrencyCode()
+                        + "/h x " + MulticloudLinkQuote.HOURS_PER_MONTH + " h/month = " + e.monthly.toPlainString()
+                        + " " + currency.getCurrencyCode() + "/month");
+            }
+            multicloudRates.put(multicloudKey(e.provider, e.bandwidthMbps, e.pathTier), quote);
         }
         this.defaultConnection = b.defaultConnectionMonthly == null ? null
                 : PriceQuote.of(b.defaultConnectionMonthly, b.defaultConnectionSetup, currency, PriceSource.CUSTOM);
@@ -147,6 +173,60 @@ public final class CustomRateCard implements RateCard {
         return Optional.empty();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p><b>Beta.</b> Prices each side from the declared {@code multicloudLinkRate(...)} /
+     * {@code multicloudLinkHourlyRate(...)} entries: exact bandwidth, the requested path tier
+     * first, then the tier-agnostic entry. Returns empty when neither side has an entry. The
+     * request's region and term are ignored. The free-tier flag does not change the price: when
+     * it is set and this card prices the AWS side, the quote carries a note saying the declared
+     * rate applies and the free tier was not modelled, so a caller who opted in is not left to
+     * assume it was applied.</p>
+     */
+    @Override
+    public Optional<MulticloudLinkQuote> multicloudLink(MulticloudLinkRequest request) {
+        if (request == null) {
+            return Optional.empty();
+        }
+        PriceQuote sideA = resolveMulticloudSide(request.getProviderA(), request);
+        PriceQuote sideZ = resolveMulticloudSide(request.getProviderZ(), request);
+        if (sideA == null && sideZ == null) {
+            return Optional.empty();
+        }
+        MulticloudLinkQuote.MulticloudLinkQuoteBuilder quote = MulticloudLinkQuote.builder()
+                .providerA(request.getProviderA()).regionA(request.getRegionA())
+                .providerZ(request.getProviderZ()).regionZ(request.getRegionZ())
+                .bandwidthMbps(request.getBandwidthMbps())
+                .pathTier(request.getPathTier())
+                .sideA(sideA)
+                .sideAUnpricedReason(sideA != null ? null : undeclaredReason(request.getProviderA(), request))
+                .sideZ(sideZ)
+                .sideZUnpricedReason(sideZ != null ? null : undeclaredReason(request.getProviderZ(), request));
+        PriceQuote awsSide = request.getProviderA() == CloudProviderType.AWS ? sideA
+                : request.getProviderZ() == CloudProviderType.AWS ? sideZ : null;
+        if (request.isUseAwsFreeTier() && awsSide != null) {
+            quote.note("The AWS free tier was requested but not applied: the AWS side is priced from this card's "
+                    + "declared custom rate (" + awsSide.getMonthlyRecurring().toPlainString() + " "
+                    + currency.getCurrencyCode() + "/month at " + request.getBandwidthMbps()
+                    + " Mbps), and CustomRateCard does not model the free tier. Declare a zero rate for the covered "
+                    + "size to express it.");
+        }
+        return Optional.of(quote.build());
+    }
+
+    private PriceQuote resolveMulticloudSide(CloudProviderType provider, MulticloudLinkRequest request) {
+        PriceQuote tiered = multicloudRates.get(
+                multicloudKey(provider, request.getBandwidthMbps(), request.getPathTier()));
+        return tiered != null ? tiered
+                : multicloudRates.get(multicloudKey(provider, request.getBandwidthMbps(), null));
+    }
+
+    private static String undeclaredReason(CloudProviderType provider, MulticloudLinkRequest request) {
+        return "no custom multicloud link rate declared for " + provider + " at "
+                + request.getBandwidthMbps() + " Mbps (path tier " + request.getPathTier() + ")";
+    }
+
     @Override
     public PriceSource source() {
         return PriceSource.CUSTOM;
@@ -198,6 +278,10 @@ public final class CustomRateCard implements RateCard {
         return provider.name() + "|" + path.name();
     }
 
+    private static String multicloudKey(CloudProviderType provider, int bandwidthMbps, Integer pathTier) {
+        return provider.name() + "|" + bandwidthMbps + "|" + (pathTier == null ? WILDCARD : pathTier.toString());
+    }
+
     private static String coloKey(ColocationItem item, MetroCode metro, Term term) {
         return item.name()
                 + "|" + (metro == null ? WILDCARD : metro.name())
@@ -231,6 +315,7 @@ public final class CustomRateCard implements RateCard {
         private final List<RouterEntry> routerEntries = new ArrayList<>();
         private final List<EgressEntry> egressEntries = new ArrayList<>();
         private final List<ColoEntry> colocationEntries = new ArrayList<>();
+        private final List<MulticloudEntry> multicloudEntries = new ArrayList<>();
         private BigDecimal defaultConnectionMonthly;
         private BigDecimal defaultConnectionSetup = BigDecimal.ZERO;
         private BigDecimal defaultRouterMonthly;
@@ -419,6 +504,90 @@ public final class CustomRateCard implements RateCard {
         }
 
         /**
+         * Declares the monthly charge one provider bills for its side of a native multicloud
+         * link of the given size, at any path tier, with no one-time charge. <b>Beta.</b>
+         *
+         * @param provider      the provider billing this side
+         * @param bandwidthMbps the link size in Mbps; matched exactly at lookup
+         * @param monthly       the monthly recurring charge in the card's currency
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if the provider or amount is null, the bandwidth is not
+         *                                  positive, or the amount is negative
+         */
+        public Builder multicloudLinkRate(CloudProviderType provider, int bandwidthMbps, BigDecimal monthly) {
+            return multicloudLinkRate(provider, bandwidthMbps, null, monthly, BigDecimal.ZERO);
+        }
+
+        /**
+         * Declares the monthly and one-time charge one provider bills for its side of a native
+         * multicloud link. <b>Beta.</b>
+         *
+         * @param provider      the provider billing this side
+         * @param bandwidthMbps the link size in Mbps; matched exactly at lookup
+         * @param pathTier      the AWS connectivity-scope tier (1-5) the rate applies to, or
+         *                      {@code null} for any tier; a tier-specific entry wins over the
+         *                      tier-agnostic one
+         * @param monthly       the monthly recurring charge in the card's currency
+         * @param setup         the one-time charge in the card's currency ({@code null} = zero)
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if the provider or monthly amount is null, the
+         *                                  bandwidth is not positive, the tier is outside 1-5,
+         *                                  or an amount is negative
+         */
+        public Builder multicloudLinkRate(CloudProviderType provider, int bandwidthMbps, Integer pathTier,
+                                          BigDecimal monthly, BigDecimal setup) {
+            multicloudEntries.add(new MulticloudEntry(provider, bandwidthMbps, pathTier, null,
+                    requireAmount(monthly, "monthly"), setup == null ? BigDecimal.ZERO : requireAmount(setup, "setup")));
+            return this;
+        }
+
+        /**
+         * Declares one provider's side of a native multicloud link as a flat hourly rate, at any
+         * path tier. The card converts it to a monthly charge at
+         * {@link MulticloudLinkQuote#HOURS_PER_MONTH} hours per month and records the conversion
+         * in the quote's note. <b>Beta.</b>
+         *
+         * @param provider      the provider billing this side
+         * @param bandwidthMbps the link size in Mbps; matched exactly at lookup
+         * @param hourly        the hourly rate in the card's currency
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException under the same conditions as
+         *                                  {@link #multicloudLinkRate(CloudProviderType, int, Integer, BigDecimal, BigDecimal)}
+         */
+        public Builder multicloudLinkHourlyRate(CloudProviderType provider, int bandwidthMbps, BigDecimal hourly) {
+            return multicloudLinkHourlyRate(provider, bandwidthMbps, null, hourly);
+        }
+
+        /**
+         * Declares one provider's side of a native multicloud link as a flat hourly rate for a
+         * specific path tier ({@code null} = any tier). Converted to monthly at
+         * {@link MulticloudLinkQuote#HOURS_PER_MONTH} hours per month. <b>Beta.</b>
+         *
+         * @param provider      the provider billing this side
+         * @param bandwidthMbps the link size in Mbps; matched exactly at lookup
+         * @param pathTier      the AWS connectivity-scope tier (1-5), or {@code null} for any tier
+         * @param hourly        the hourly rate in the card's currency
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException under the same conditions as
+         *                                  {@link #multicloudLinkRate(CloudProviderType, int, Integer, BigDecimal, BigDecimal)}
+         */
+        public Builder multicloudLinkHourlyRate(CloudProviderType provider, int bandwidthMbps, Integer pathTier,
+                                                BigDecimal hourly) {
+            BigDecimal checked = requireAmount(hourly, "hourly");
+            multicloudEntries.add(new MulticloudEntry(provider, bandwidthMbps, pathTier, checked,
+                    MulticloudLinkQuote.monthlyFromHourly(checked), BigDecimal.ZERO));
+            return this;
+        }
+
+        private static BigDecimal requireAmount(BigDecimal value, String name) {
+            if (value == null || value.signum() < 0) {
+                throw new IllegalArgumentException("multicloud link " + name
+                        + " amount must be a non-negative number: " + value);
+            }
+            return value;
+        }
+
+        /**
          * Builds the immutable rate card. Every declared entry is stamped with the builder's
          * final currency and tagged {@link PriceSource#CUSTOM}.
          *
@@ -473,6 +642,37 @@ public final class CustomRateCard implements RateCard {
             this.provider = provider;
             this.path = path;
             this.perGb = perGb;
+        }
+    }
+
+    private static final class MulticloudEntry {
+        final CloudProviderType provider;
+        final int bandwidthMbps;
+        final Integer pathTier;
+        final BigDecimal hourly;
+        final BigDecimal monthly;
+        final BigDecimal setup;
+
+        MulticloudEntry(CloudProviderType provider, int bandwidthMbps, Integer pathTier,
+                        BigDecimal hourly, BigDecimal monthly, BigDecimal setup) {
+            if (provider == null) {
+                throw new IllegalArgumentException("multicloud link provider must not be null");
+            }
+            if (bandwidthMbps <= 0) {
+                throw new IllegalArgumentException("multicloud link bandwidthMbps must be positive: " + bandwidthMbps);
+            }
+            if (pathTier != null && (pathTier < MulticloudLinkQuote.MIN_PATH_TIER
+                    || pathTier > MulticloudLinkQuote.MAX_PATH_TIER)) {
+                throw new IllegalArgumentException("multicloud link pathTier must be between "
+                        + MulticloudLinkQuote.MIN_PATH_TIER + " and " + MulticloudLinkQuote.MAX_PATH_TIER
+                        + " (or null for any tier): " + pathTier);
+            }
+            this.provider = provider;
+            this.bandwidthMbps = bandwidthMbps;
+            this.pathTier = pathTier;
+            this.hourly = hourly;
+            this.monthly = monthly;
+            this.setup = setup;
         }
     }
 

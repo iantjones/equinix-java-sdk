@@ -67,6 +67,21 @@ public class SimpleAccessPoint {
     @JsonProperty("authenticationKey")
     private String authenticationKey;
 
+    /**
+     * {@code AccessPoint.activationKey} ("Access point activation key"). A separate wire property
+     * from {@code authenticationKey}; neither is derived from the other.
+     * <b>Beta</b>: see {@code AccessPointBuilder.activationKey(String)}.
+     */
+    @JsonProperty("activationKey")
+    private String activationKey;
+
+    /**
+     * {@code AccessPoint.environment}, sent as a uuid-only reference.
+     * <b>Beta</b>: see {@code AccessPointBuilder.environment(String)}.
+     */
+    @JsonProperty("environment")
+    private ProviderEnvironmentRef environment;
+
     @JsonProperty("peeringType")
     private PeeringType peeringType;
 
@@ -95,6 +110,8 @@ public class SimpleAccessPoint {
         this.deviceInterface = accessPointBuilder.deviceInterface;
         this.sellerRegion = accessPointBuilder.sellerRegion;
         this.authenticationKey = accessPointBuilder.authenticationKey;
+        this.activationKey = accessPointBuilder.activationKey;
+        this.environment = accessPointBuilder.environment;
         this.peeringType = accessPointBuilder.peeringType;
         this.router = accessPointBuilder.router;
         this.network = accessPointBuilder.network;
@@ -148,6 +165,10 @@ public class SimpleAccessPoint {
         private String sellerRegion;
 
         private String authenticationKey;
+
+        private String activationKey;
+
+        private ProviderEnvironmentRef environment;
 
         private PeeringType peeringType;
 
@@ -241,6 +262,63 @@ public class SimpleAccessPoint {
             return this;
         }
 
+        /**
+         * Sets {@code AccessPoint.activationKey} ("Access point activation key" in the Fabric v4
+         * catalog). The value is sent unmodified as its own JSON property. It does not read or
+         * write {@code authenticationKey}; a request can carry either, both or neither.
+         *
+         * <p><b>Beta</b>: the property is defined on the catalog's {@code AccessPoint} schema
+         * (fetched 2026-09-21). The catalog puts no Beta marker on the property itself. It is
+         * labelled Beta here because the surfaces that produce and check activation keys
+         * ({@code ProviderEnvironment}, {@code ActivationKeyDetails}, the environment actions
+         * operation) all carry the catalog's Beta marker. The catalog publishes no
+         * connection-create example that sets it, so which access point types accept it, and
+         * which other properties must accompany it, is unverified. Probe with
+         * {@code ConnectionBuilder.dryRun()} before a live create. A key can be checked first
+         * with {@code ServiceProfiles.validateActivationKey(...)}.</p>
+         *
+         * @param activationKey the provider-encoded activation key, or {@code null} to omit the
+         *                      property
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder activationKey(String activationKey) {
+            this.activationKey = activationKey;
+            return this;
+        }
+
+        /**
+         * Sets {@code AccessPoint.environment} to a uuid-only reference
+         * ({@code {"uuid": "<environmentUuid>"}}) to a provider environment of an
+         * {@code IC_PROFILE} service profile. Environment uuids come from
+         * {@code ServiceProfiles.getEnvironments(serviceProfileUuid)} or
+         * {@code ServiceProfile.getEnvironments()}.
+         *
+         * <p><b>Beta</b>: {@code ProviderEnvironment} carries the catalog's Beta marker (catalog
+         * fetched 2026-09-21). The catalog publishes no connection-create example that sets this
+         * property; the reference-by-uuid form is unverified against the service. Probe with
+         * {@code ConnectionBuilder.dryRun()} before a live create.</p>
+         *
+         * @param environmentUuid the provider environment uuid, or {@code null} to omit the
+         *                        property
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder environment(String environmentUuid) {
+            this.environment = environmentUuid != null ? new ProviderEnvironmentRef(environmentUuid) : null;
+            return this;
+        }
+
+        /**
+         * Sets {@code AccessPoint.environment} from a provider environment read model, by uuid.
+         *
+         * <p><b>Beta</b>: see {@link #environment(String)}.</p>
+         *
+         * @param environment the provider environment; must not be {@code null}
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder environment(ProviderEnvironment environment) {
+            return environment(environment.getUuid());
+        }
+
         public AccessPointBuilder peeringType(PeeringType peeringType) {
             this.peeringType = peeringType;
             return this;
@@ -297,7 +375,12 @@ public class SimpleAccessPoint {
          * Configures this access point using a {@link CloudProviderConnectionAdapter}.
          *
          * <p>Extracts the service profile UUID, authentication key, seller region, and
-         * optional peering type from the adapter and applies them to this access point builder.</p>
+         * optional peering type from the adapter and applies them to this access point builder.
+         * If the adapter's {@code getActivationKey()} returns a non-null value it is copied to
+         * {@code activationKey} as a separate property (<b>Beta</b>, see
+         * {@link #activationKey(String)}); a {@code null} return leaves any activation key
+         * already set on this builder unchanged. The four built-in adapters return
+         * {@code null}.</p>
          *
          * @param adapter the cloud provider adapter to extract connection parameters from
          * @return this builder for chaining
@@ -306,6 +389,9 @@ public class SimpleAccessPoint {
             this.profile = new ServiceProfileRef(adapter.getServiceProfileUuid());
             this.authenticationKey = adapter.getAuthenticationKey();
             this.sellerRegion = adapter.getSellerRegion();
+            if (adapter.getActivationKey() != null) {
+                this.activationKey = adapter.getActivationKey();
+            }
             if (adapter.getPreferredPeeringType() != null) {
                 this.peeringType = adapter.getPreferredPeeringType();
             }

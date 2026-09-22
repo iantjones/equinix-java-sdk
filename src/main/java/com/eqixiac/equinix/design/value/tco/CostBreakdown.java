@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,4 +43,12 @@ public class CostBreakdown {
     boolean priced;
 
     String note;
+
+    /**
+     * Per-line price provenance: for each figure that needs it, the source URL, retrieval date,
+     * unit conversion (for example {@code 12.33 USD/h x 730 h/month}) and stated assumptions.
+     * Populated for the native multicloud archetype and for the two-sided form of the other
+     * archetypes; {@code null} for a single-cloud comparison, whose breakdowns are unchanged.
+     */
+    List<String> provenance;
 }

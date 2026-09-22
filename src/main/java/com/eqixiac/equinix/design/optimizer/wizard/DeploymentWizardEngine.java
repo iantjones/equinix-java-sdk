@@ -9,9 +9,12 @@ import com.eqixiac.equinix.design.optimizer.model.*;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BackboneTopology;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BandwidthStrategy;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.ConnectionPurpose;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.MulticloudLinkRole;
 import com.eqixiac.equinix.design.optimizer.wizard.model.*;
 import com.eqixiac.equinix.design.value.CurrencyReconciler;
 import com.eqixiac.equinix.design.value.ratecard.EquinixRateCard;
+import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
+import com.eqixiac.equinix.design.value.ratecard.ReferenceRateCard;
 import com.eqixiac.equinix.design.value.ratecard.PriceQuote;
 import com.eqixiac.equinix.design.value.ratecard.PriceSource;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
@@ -81,8 +84,17 @@ final class DeploymentWizardEngine {
         // provider offers no service profile that covers the computed connection bandwidth; that is a
         // real, plan-invalidating error (an unbuildable connection), so it is recorded here rather than
         // emitted silently and left for the Layer-1 tier check to catch downstream.
-        List<PlannedConnection> providerConnections =
+        List<PlannedConnection> allProviderConnections =
                 planProviderConnections(config, metros, result, names, routerNames, validationErrors);
+
+        // Phase 2b (Beta): cloud-to-cloud flows. Under EQUINIX_ONLY this returns the list above
+        // untouched and no links, without reading the multicloud catalog. Under COMPARE it only
+        // adds links. Under the NATIVE strategies it can omit whole connections (never resize
+        // one) where the replacement rule allows; routing protocols and /30 subnets are then
+        // planned for the remaining connections only, and never for a native link.
+        MulticloudLinkPlanner.Planned cloudToCloud =
+                MulticloudLinkPlanner.plan(config, result, metros, allProviderConnections);
+        List<PlannedConnection> providerConnections = cloudToCloud.providerConnections;
 
         // Phase 3: Plan Backbone Links
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros, names, routerNames);
@@ -91,8 +103,17 @@ final class DeploymentWizardEngine {
         List<PlannedRoutingProtocol> routingProtocols =
                 planRoutingProtocols(config, providerConnections, backboneLinks, names, subnets);
 
-        // Phase 5: Estimate Pricing
-        PlanPricing pricing = estimatePricing(config, cloudRouters, providerConnections, backboneLinks);
+        // Phase 5: Estimate Pricing. Native links are priced first (each against the Equinix path
+        // for the same flow), then reported on PlanPricing separately from the Equinix totals.
+        // One rate-card instance serves both steps: a live EquinixRateCard caches its catalogue
+        // fetch per instance, so resolving it twice would fetch twice and could price the same
+        // connection from two different fetch outcomes.
+        RateCard rateCard = resolveRateCard(config);
+        List<PlannedMulticloudInterconnect> multicloudLinks = MulticloudLinkPlanner.price(
+                config, rateCard, cloudToCloud.links, cloudRouters, providerConnections, backboneLinks,
+                result.getRequest());
+        PlanPricing pricing = estimatePricing(config, rateCard, cloudRouters, providerConnections, backboneLinks,
+                multicloudLinks);
 
         // Phase 6: Layered plan-time validation.
         //   Layer 1 — structural + catalog checks (no provisioning, no live connection dry-run).
@@ -109,6 +130,7 @@ final class DeploymentWizardEngine {
                 providerConnections,
                 backboneLinks,
                 routingProtocols,
+                multicloudLinks,
                 config.getCustomerAsn(),
                 config.getFabric());
         validationErrors.addAll(validation.errors);
@@ -119,6 +141,9 @@ final class DeploymentWizardEngine {
                 .providerConnections(providerConnections)
                 .backboneLinks(backboneLinks)
                 .routingProtocols(routingProtocols)
+                // null, not an empty list, when there is no link: a plan without native links is
+                // field-for-field the plan the wizard produced before the list existed.
+                .multicloudLinks(multicloudLinks.isEmpty() ? null : multicloudLinks)
                 .pricing(pricing)
                 .valid(validationErrors.isEmpty())
                 .validationErrors(validationErrors)
@@ -518,7 +543,7 @@ final class DeploymentWizardEngine {
      * minimum that is enforced nowhere is not a minimum, so the wizard applies it just as the
      * optimizer does (see {@code MetroOptimizerEngine.effectiveBandwidthMbps}).
      */
-    private static int effectiveWorkloadBandwidth(WorkloadSpec spec) {
+    static int effectiveWorkloadBandwidth(WorkloadSpec spec) {
         int declared = spec.getBandwidthMbps();
         Double floor = spec.resolvedProfile() != null ? spec.resolvedProfile().getMinBandwidthMbps() : null;
         if (floor == null || !Double.isFinite(floor) || floor <= 0) {
@@ -722,8 +747,40 @@ final class DeploymentWizardEngine {
             List<PlannedCloudRouter> routers,
             List<PlannedConnection> providerConnections,
             List<PlannedBackboneLink> backboneLinks) {
+        return estimatePricing(config, routers, providerConnections, backboneLinks, Collections.emptyList());
+    }
 
-        RateCard rateCard = resolveRateCard(config);
+    /**
+     * As the four-argument overload, and additionally reports the already-priced native multicloud
+     * links in the {@code native*} fields of {@link PlanPricing}. No native-link amount enters the
+     * plan-wide or per-category reconcilers: the Equinix totals are the same with or without links.
+     */
+    static PlanPricing estimatePricing(
+            DeploymentWizard.Builder config,
+            List<PlannedCloudRouter> routers,
+            List<PlannedConnection> providerConnections,
+            List<PlannedBackboneLink> backboneLinks,
+            List<PlannedMulticloudInterconnect> pricedMulticloudLinks) {
+        return estimatePricing(config, resolveRateCard(config), routers, providerConnections, backboneLinks,
+                pricedMulticloudLinks);
+    }
+
+    /**
+     * As the five-argument overload, pricing with the given resolved rate card instead of
+     * resolving one from {@code config}. The caller that also prices native links passes the same
+     * instance to {@code MulticloudLinkPlanner.price}, so one live card (and its cached
+     * catalogue fetch) serves the whole plan.
+     *
+     * @param rateCard the resolved card, or {@code null} for the built-in heuristic only
+     */
+    static PlanPricing estimatePricing(
+            DeploymentWizard.Builder config,
+            RateCard rateCard,
+            List<PlannedCloudRouter> routers,
+            List<PlannedConnection> providerConnections,
+            List<PlannedBackboneLink> backboneLinks,
+            List<PlannedMulticloudInterconnect> pricedMulticloudLinks) {
+
         Term term = config.getTerm();
 
         Map<String, BigDecimal> perConnectionCost = new LinkedHashMap<>();
@@ -792,7 +849,7 @@ final class DeploymentWizardEngine {
                         + "for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.";
         }
 
-        return PlanPricing.builder()
+        PlanPricing equinixPricing = PlanPricing.builder()
                 .monthlyTotal(mixed ? null : recon.monthlyTotal().orElse(BigDecimal.ZERO))
                 .setupTotal(mixed ? null : recon.setupTotal().orElse(BigDecimal.ZERO))
                 .currency(currency)
@@ -810,6 +867,78 @@ final class DeploymentWizardEngine {
                 .source(source)
                 .disclaimer(disclaimer)
                 .build();
+        return withMulticloudLinks(equinixPricing, pricedMulticloudLinks);
+    }
+
+    /**
+     * Returns the pricing with the native-link fields filled from links that were already priced.
+     * Returns the argument itself, every native field {@code null}, when there is no link. {@code REPLACEMENT} and
+     * {@code ALTERNATIVE} links are totalled separately, each through its own reconciler; a role's
+     * total is withheld when any link of that role is not fully priced or the role spans
+     * currencies. {@code UNAVAILABLE} entries have no price and are not listed as unpriced links.
+     */
+    private static PlanPricing withMulticloudLinks(PlanPricing equinixPricing,
+                                                   List<PlannedMulticloudInterconnect> links) {
+        if (links == null || links.isEmpty()) {
+            return equinixPricing;
+        }
+        // 'var': the Lombok-generated builder type must not appear in a signature, because the
+        // javadoc tool reads these sources without running Lombok.
+        var pricing = equinixPricing.toBuilder();
+        Map<String, BigDecimal> perLink = new LinkedHashMap<>();
+        List<String> unpriced = new ArrayList<>();
+        CurrencyReconciler replacement = CurrencyReconciler.create();
+        CurrencyReconciler alternative = CurrencyReconciler.create();
+        boolean replacementComplete = true;
+        boolean alternativeComplete = true;
+        int replacements = 0;
+        int alternatives = 0;
+        for (PlannedMulticloudInterconnect link : links) {
+            boolean isReplacement = link.getRole() == MulticloudLinkRole.REPLACEMENT;
+            boolean isAlternative = link.getRole() == MulticloudLinkRole.ALTERNATIVE;
+            if (!isReplacement && !isAlternative) {
+                continue;
+            }
+            if (isReplacement) {
+                replacements++;
+            } else {
+                alternatives++;
+            }
+            MulticloudLinkPricing price = link.getPricing();
+            if (price == null || price.getNativeMonthly() == null) {
+                unpriced.add(link.getName());
+                if (isReplacement) {
+                    replacementComplete = false;
+                } else {
+                    alternativeComplete = false;
+                }
+                continue;
+            }
+            perLink.put(link.getName(), price.getNativeMonthly());
+            (isReplacement ? replacement : alternative)
+                    .add(price.getNativeCurrency(), price.getNativeMonthly(), BigDecimal.ZERO);
+        }
+        pricing.perMulticloudLinkCost(perLink)
+                .unpricedMulticloudLinks(unpriced)
+                .nativeMulticloudDisclaimer("Native multicloud link figures are the two cloud providers' published "
+                        + "hourly list prices converted at " + MulticloudLinkQuote.HOURS_PER_MONTH + " hours per month "
+                        + "(reference data as of " + ReferenceRateCard.standard().multicloudAsOf() + ", retrieved "
+                        + ReferenceRateCard.standard().multicloudRetrieved() + ") unless a configured rate card "
+                        + "supplied them. The cloud providers bill these charges; they are not part of the Equinix "
+                        + "totals. An unpriced link is not a zero cost. Estimates, not quotes.");
+        if (replacements > 0) {
+            boolean ok = replacementComplete && !replacement.isMixed() && !replacement.sawUnknownCurrency();
+            pricing.nativeReplacementMonthlyCost(ok ? replacement.monthlyTotal().orElse(null) : null)
+                    .nativeReplacementCurrency(ok ? replacement.soleCurrency() : null)
+                    .nativeReplacementMonthlyByCurrency(replacement.monthlySubtotals());
+        }
+        if (alternatives > 0) {
+            boolean ok = alternativeComplete && !alternative.isMixed() && !alternative.sawUnknownCurrency();
+            pricing.nativeAlternativeMonthlyCost(ok ? alternative.monthlyTotal().orElse(null) : null)
+                    .nativeAlternativeCurrency(ok ? alternative.soleCurrency() : null)
+                    .nativeAlternativeMonthlyByCurrency(alternative.monthlySubtotals());
+        }
+        return pricing.build();
     }
 
     /**
@@ -838,7 +967,7 @@ final class DeploymentWizardEngine {
      * gateway. Returns {@code null} only when neither is available (no gateway),
      * in which case pricing falls back entirely to the built-in heuristic.
      */
-    private static RateCard resolveRateCard(DeploymentWizard.Builder config) {
+    static RateCard resolveRateCard(DeploymentWizard.Builder config) {
         if (config.getRateCard() != null) {
             return config.getRateCard();
         }
@@ -860,7 +989,7 @@ final class DeploymentWizardEngine {
      * tiered heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
      * cannot resolve a price.
      */
-    private static PriceQuote priceConnection(RateCard rateCard, ConnectionType type,
+    static PriceQuote priceConnection(RateCard rateCard, ConnectionType type,
                                               int bandwidthMbps, MetroId metro, Term term) {
         if (rateCard != null) {
             Optional<PriceQuote> quote = rateCard.connection(type, bandwidthMbps, toMetroCode(metro), term);
@@ -877,7 +1006,7 @@ final class DeploymentWizardEngine {
      * ~$300/month heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
      * cannot resolve a price.
      */
-    private static PriceQuote priceRouter(RateCard rateCard, PlannedCloudRouter router, Term term) {
+    static PriceQuote priceRouter(RateCard rateCard, PlannedCloudRouter router, Term term) {
         if (rateCard != null) {
             String packageCode = router.getPackageCode() != null ? router.getPackageCode().name() : null;
             Optional<PriceQuote> quote = rateCard.cloudRouter(packageCode, toMetroCode(router.getMetroId()), term);

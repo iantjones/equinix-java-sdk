@@ -15,9 +15,10 @@
  */
 
 /**
- * Design-time total-cost-of-ownership comparison across three
+ * Design-time total-cost-of-ownership comparison across the
  * {@link com.eqixiac.equinix.design.value.tco.DeploymentArchetype}s — public cloud over
- * the internet, on-premises, and Equinix-interconnected. The entry point is
+ * the internet, on-premises, Equinix-interconnected, and (for a cloud-to-cloud comparison) the
+ * providers' native multicloud link. The entry point is
  * {@code fabric.tcoComparison()} (or
  * {@code TcoCalculator.builder(fabric)}), a fluent
  * {@link com.eqixiac.equinix.design.value.tco.TcoCalculator.Builder} terminated by
@@ -36,6 +37,17 @@
  * a mixed-currency archetype is reported unpriced with per-currency subtotals, and the
  * baseline-versus-recommended saving is left null when the two sides' currencies
  * differ.</p>
+ *
+ * <p><b>Beta.</b> {@code toCloud(...)} makes the comparison cloud-to-cloud. The
+ * {@code NATIVE_MULTICLOUD_INTERCONNECT} archetype joins the default set, and the internet and
+ * Equinix archetypes switch to a two-sided form (egress in both directions, two virtual
+ * connections, both CSP ports) so that all paths are priced on the same traffic and a complete
+ * component list. The native archetype is two flat provider fees (published hourly rates x
+ * 730 h/month) plus the link's per-GB charge; a side without a published rate leaves it
+ * partially priced and out of the recommendation. {@code pathTier(int)} and
+ * {@code useAwsFreeTier(boolean)} are inputs, never inferred. Each two-sided breakdown lists the
+ * source of every figure in {@code CostBreakdown.getProvenance()}. Without {@code toCloud(...)}
+ * the comparison and its report are unchanged.</p>
  *
  * @see com.eqixiac.equinix.design.value.tco.TcoCalculator
  * @see com.eqixiac.equinix.design.value.tco.TcoComparison

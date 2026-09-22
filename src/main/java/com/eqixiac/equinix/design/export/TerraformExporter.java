@@ -4,18 +4,22 @@ import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.fabric.enums.RedundancyPriority;
 import com.eqixiac.equinix.fabric.enums.RoutingProtocolType;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
+import com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironment;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.MulticloudLinkRole;
 import com.eqixiac.equinix.design.optimizer.wizard.model.ConnectionBodies;
 import com.eqixiac.equinix.design.optimizer.wizard.model.ConnectionInputRequirement;
 import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedBackboneLink;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedCloudRouter;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedRoutingProtocol;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Renders a {@link DeploymentPlan} produced by the Deployment Wizard into
@@ -52,11 +56,73 @@ import java.util.Map;
  * assume — the Equinix Terraform provider has no cabinet or cross-connect resources,
  * so those cannot be expressed in HCL at all.</p>
  *
+ * <h2>Native multicloud links</h2>
+ * <p><b>Beta.</b> A {@link PlannedMulticloudInterconnect} on the plan
+ * ({@code DeploymentPlan.multicloudLinksOrEmpty()}) is a direct link between two cloud
+ * providers that uses no Equinix resource. The Equinix Terraform provider has no resource
+ * type for it, and this exporter emits no cloud-provider resource ({@code aws_*},
+ * {@code google_*}, {@code oci_*}, {@code azurerm_*}) and no cloud-provider {@code provider}
+ * block. Per link the output holds:</p>
+ * <table>
+ *   <caption>Output per native multicloud link</caption>
+ *   <tr><th>Output</th><th>Content</th></tr>
+ *   <tr><td>Comment block, delimited by {@code BEGIN native multicloud link} and
+ *       {@code END native multicloud link} lines; every line starts with {@code #}</td>
+ *       <td>Both providers and regions; the bandwidth the link would be ordered at and the
+ *       requested bandwidth, in Mbps; the catalog environment's status, as-of date and source
+ *       URLs; the role and strategy; the create-then-accept procedure (create on one provider
+ *       with the other provider's account identifier, receive the activation key, accept on the
+ *       other provider) with the AWS console path, the {@code gcloud network-connectivity
+ *       transports create} command line, or the OCI FastConnect "Service key" field for the
+ *       providers of the link; the steps recorded on the plan, verbatim</td></tr>
+ *   <tr><td>{@code variable "<sanitized name>_destination_account_id"}</td>
+ *       <td>{@code type = string}, with a description naming the identifier to record. For a
+ *       {@code REPLACEMENT} link the variable has no default, so Terraform requires a value.
+ *       For any other role it has {@code default = null}, so a configuration that does not
+ *       depend on the link needs no value. No resource references the variable. Not emitted for
+ *       an {@code UNAVAILABLE} entry.</td></tr>
+ * </table>
+ * <p>Links add no {@code resource} block: the number of {@code resource} blocks equals
+ * {@code DeploymentPlan.totalResourceCount()} with or without links. The header comment states
+ * the number of links and, for each {@code REPLACEMENT} link, the names of the Equinix
+ * connections this configuration omits because of it. The activation key is never an input of
+ * the configuration. Provider procedures are copies of provider documentation retrieved
+ * 2026-09-21 and go stale; each is printed with its source URL. Provider-side procedures are
+ * printed for two pairs only: AWS with Google Cloud, and AWS with Oracle Cloud. For AWS with
+ * Azure (preview) and for every other pair the block states that no procedure was verified.
+ * The output for a plan without links contains none of the above.</p>
+ *
+ * <p>Plan-supplied text written into a comment has its line breaks replaced by spaces, so a
+ * name or recipe line cannot end the comment and start an HCL construct.</p>
+ *
  * <p>This class is stateless and thread-safe; a single instance may be reused.</p>
  */
 public class TerraformExporter {
 
     private static final String INDENT = "  ";
+
+    /** Maximum width, in characters, of a wrapped comment line. A single longer word (a URL) is not split. */
+    private static final int COMMENT_WIDTH = 100;
+
+    private static final String AWS_MULTICLOUD_GETTING_STARTED =
+            "https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html";
+
+    private static final String GCLOUD_TRANSPORTS_CREATE =
+            "https://docs.cloud.google.com/sdk/gcloud/reference/network-connectivity/transports/create";
+
+    private static final String OCI_INTERCONNECT_FOR_AWS =
+            "https://docs.oracle.com/en-us/iaas/Content/multicloud/interconnect-aws.htm";
+
+    /** The date the three provider pages above were read. */
+    private static final String PROVIDER_DOCS_RETRIEVED = "2026-09-21";
+
+    /**
+     * The values {@code gcloud network-connectivity transports create --bandwidth} accepts
+     * (source: the {@code GCLOUD_TRANSPORTS_CREATE} page, retrieved 2026-09-21).
+     */
+    private static final Set<String> GCLOUD_TRANSPORT_BANDWIDTHS = Set.of(
+            "50m", "100m", "200m", "300m", "400m", "500m",
+            "1g", "2g", "5g", "10g", "20g", "50g", "100g");
 
     /**
      * Exports the given deployment plan as Equinix Terraform provider HCL.
@@ -67,6 +133,10 @@ public class TerraformExporter {
      * authorization key (sensitive) and DOT1Q VLAN tag, exactly the customer inputs
      * {@code DeploymentPlan.getRequiredInputs()} enumerates. The generated header comment
      * repeats this.</p>
+     *
+     * <p><b>Beta.</b> Native multicloud links on the plan are written last, as comment blocks
+     * plus one {@code <name>_destination_account_id} variable each; see the class documentation.
+     * A {@code REPLACEMENT} link's variable has no default and therefore also needs a value.</p>
      *
      * @param plan the deployment plan to export; must not be {@code null}
      * @return an HCL document. Resources are emitted in dependency
@@ -92,12 +162,16 @@ public class TerraformExporter {
         // inputs the plan leaves unresolved (auth key, VLAN tag).
         Map<String, String> authKeyVariables = new LinkedHashMap<>();
         Map<String, String> vlanVariables = new LinkedHashMap<>();
+        // Every variable name declared in the document, so a native link's variable cannot
+        // collide with a connection's.
+        List<String> usedVariableNames = new ArrayList<>();
 
-        writeInputVariables(hcl, plan, authKeyVariables, vlanVariables);
+        writeInputVariables(hcl, plan, authKeyVariables, vlanVariables, usedVariableNames);
         writeCloudRouters(hcl, plan, routerLabels);
         writeProviderConnections(hcl, plan, routerLabels, connectionLabels, authKeyVariables, vlanVariables);
         writeBackboneLinks(hcl, plan, routerLabels, connectionLabels);
         writeRoutingProtocols(hcl, plan, connectionLabels);
+        writeMulticloudLinks(hcl, plan, usedVariableNames);
 
         return hcl.toString();
     }
@@ -108,6 +182,7 @@ public class TerraformExporter {
         hcl.append("# Deployment Wizard (com.eqixiac.equinix.design.export.TerraformExporter).\n");
         hcl.append("#\n");
         hcl.append("# ").append(plan.toSummary().replace("\n", "\n# ")).append("\n");
+        writeMulticloudHeaderNotes(hcl, plan);
         hcl.append("#\n");
         hcl.append("# Review carefully before running `terraform apply`. Some provider attributes\n");
         hcl.append("# (e.g. credentials, account/project context) may need to be supplied via\n");
@@ -133,14 +208,14 @@ public class TerraformExporter {
      */
     private void writeInputVariables(StringBuilder hcl, DeploymentPlan plan,
                                      Map<String, String> authKeyVariables,
-                                     Map<String, String> vlanVariables) {
+                                     Map<String, String> vlanVariables,
+                                     List<String> usedNames) {
         List<PlannedConnection> connections = plan.getProviderConnections();
         if (connections == null || connections.isEmpty()) {
             return;
         }
 
         StringBuilder vars = new StringBuilder();
-        List<String> usedNames = new ArrayList<>();
         for (PlannedConnection conn : connections) {
             ConnectionInputRequirement requirement = requirementFor(plan, conn);
             if (needsAuthenticationKey(requirement, conn)) {
@@ -504,6 +579,375 @@ public class TerraformExporter {
         }
     }
 
+    // ---- Native multicloud links (Beta) ----
+
+    /**
+     * Adds the header lines about native multicloud links: their count, the statement that the
+     * file holds no resource for them, and one line per {@code REPLACEMENT} entry (naming the
+     * Equinix connections the configuration omits) and per {@code UNAVAILABLE} entry. Emits
+     * nothing when the plan has no link.
+     */
+    private void writeMulticloudHeaderNotes(StringBuilder hcl, DeploymentPlan plan) {
+        List<PlannedMulticloudInterconnect> links = multicloudLinks(plan);
+        if (links.isEmpty()) {
+            return;
+        }
+        hcl.append("#\n");
+        commentWrapped(hcl, "# ", "# ", "Native multicloud links (Beta): " + links.size()
+                + ". Each is a direct link between two cloud providers that uses no Equinix resource. "
+                + "This file holds no resource for them: the Equinix Terraform provider has no such "
+                + "resource type, and no cloud-provider resource is emitted. Each link appears at the end "
+                + "of this file as a comment block plus one input variable (none for an UNAVAILABLE entry). "
+                + "The resource counts above exclude them.");
+        for (PlannedMulticloudInterconnect link : links) {
+            if (link.getRole() == MulticloudLinkRole.REPLACEMENT) {
+                commentWrapped(hcl, "# ", "#   ", "REPLACEMENT: native link " + displayName(link) + " ("
+                        + pairLabel(link) + ") carries its flow in place of " + replacedLabel(link)
+                        + ". Those connections and their routing protocols are not in this configuration. "
+                        + "The flow has no path until the link is created with the two cloud providers.");
+            }
+            else if (link.getRole() == MulticloudLinkRole.UNAVAILABLE) {
+                commentWrapped(hcl, "# ", "#   ", "UNAVAILABLE: a native link was required for "
+                        + pairLabel(link) + " (" + displayName(link) + ") and the plan's catalog has no "
+                        + "usable environment for it. The plan is invalid.");
+            }
+        }
+    }
+
+    /**
+     * Writes one delimited comment block per native multicloud link, followed by the link's
+     * {@code <name>_destination_account_id} variable. No {@code resource} or {@code provider}
+     * block is written. Emits nothing when the plan has no link.
+     */
+    private void writeMulticloudLinks(StringBuilder hcl, DeploymentPlan plan, List<String> usedVariableNames) {
+        List<PlannedMulticloudInterconnect> links = multicloudLinks(plan);
+        if (links.isEmpty()) {
+            return;
+        }
+
+        hcl.append("# === Native Multicloud Links (Beta; comments and input variables only) ===\n");
+        commentWrapped(hcl, "# ", "# ", "A native multicloud link is a direct connection between two cloud "
+                + "providers. It uses no Equinix resource, and the customer creates it with the two providers, "
+                + "outside Terraform. Nothing in this section is a resource, and `terraform apply` creates "
+                + "nothing for a link. Provider procedures were read on " + PROVIDER_DOCS_RETRIEVED
+                + " and go stale; check each source URL before use.");
+        hcl.append("\n");
+
+        for (PlannedMulticloudInterconnect link : links) {
+            String name = displayName(link);
+            String variable = link.getRole() == MulticloudLinkRole.UNAVAILABLE
+                    ? null
+                    : uniqueName(usedVariableNames, variableBase(link) + "_destination_account_id");
+
+            hcl.append("# ---- BEGIN native multicloud link: ").append(name)
+                    .append(" (not a Terraform resource) ----\n");
+            field(hcl, "Providers", pairLabel(link));
+            field(hcl, "Bandwidth", bandwidthLabel(link));
+            field(hcl, "Environment", environmentLabel(link));
+            MulticloudEnvironment environment = link.getEnvironment();
+            if (environment != null) {
+                for (String url : environment.getSourceUrls()) {
+                    field(hcl, "Source", url);
+                }
+                if (environment.getNote() != null && !environment.getNote().isBlank()) {
+                    field(hcl, "Note", environment.getNote());
+                }
+            }
+            field(hcl, "Role", roleLabel(link));
+            if (link.getWorkloadLabels() != null && !link.getWorkloadLabels().isEmpty()) {
+                field(hcl, "Workloads", String.join(", ", link.getWorkloadLabels()));
+            }
+            writeCreateThenAccept(hcl, link, variable);
+            hcl.append("# ---- END native multicloud link: ").append(name).append(" ----\n");
+
+            if (variable != null) {
+                hcl.append("\n");
+                hcl.append("variable \"").append(variable).append("\" {\n");
+                hcl.append(rawAttr(1, "type", "string"));
+                if (link.getRole() != MulticloudLinkRole.REPLACEMENT) {
+                    // The configuration does not depend on the link, so it must plan without a value.
+                    hcl.append(rawAttr(1, "default", "null"));
+                }
+                hcl.append(attr(1, "description", destinationAccountDescription(link)));
+                hcl.append("}\n");
+            }
+            hcl.append("\n");
+        }
+    }
+
+    /**
+     * Writes the create-then-accept procedure of one link as comment lines: the three generic
+     * steps, the provider-side console path or command line for each provider of a pair that
+     * includes AWS, and the steps recorded on the plan. {@code variable} is the link's
+     * destination-account-id variable name, or {@code null} for an {@code UNAVAILABLE} entry,
+     * for which only a statement that there is nothing to create is written.
+     */
+    private void writeCreateThenAccept(StringBuilder hcl, PlannedMulticloudInterconnect link, String variable) {
+        hcl.append("#\n");
+        if (variable == null) {
+            commentWrapped(hcl, "# ", "# ", "No procedure: the plan's catalog has no usable environment for "
+                    + "this pair, so there is no link to create and no variable is emitted.");
+            return;
+        }
+        hcl.append("# Create-then-accept procedure (performed by the customer with the two providers):\n");
+        commentWrapped(hcl, "#   1. ", "#      ", "Create: on one provider, request the link and enter the "
+                + "account identifier of the other (accepting) provider. Record that identifier in var."
+                + variable + ".");
+        commentWrapped(hcl, "#   2. ", "#      ", "The creating provider returns an activation key. The key "
+                + "passes between the two providers' consoles or CLIs and is not an input of this configuration.");
+        commentWrapped(hcl, "#   3. ", "#      ", "Accept: on the other provider, submit the activation key.");
+
+        CloudProviderType a = link.getProviderA();
+        CloudProviderType z = link.getProviderZ();
+        boolean includesAws = a == CloudProviderType.AWS || z == CloudProviderType.AWS;
+        CloudProviderType peer = a == CloudProviderType.AWS ? z : a;
+        boolean documentedPeer = peer == CloudProviderType.GOOGLE_CLOUD || peer == CloudProviderType.ORACLE_CLOUD;
+
+        if (includesAws && documentedPeer) {
+            hcl.append("# Provider-side reference (retrieved ").append(PROVIDER_DOCS_RETRIEVED).append("):\n");
+            String peerIdentifier = peer == CloudProviderType.GOOGLE_CLOUD
+                    ? "the Google Cloud project ID"
+                    : "the OCI tenancy OCID (format ocid1.tenancy.oc1..<unique_ID>)";
+            commentWrapped(hcl, "#   AWS: ", "#     ", "AWS Direct Connect console > AWS Interconnect > "
+                    + "\"Create new multicloud Interconnect\" to create, or \"Accept multicloud Interconnect\" "
+                    + "to accept a key issued by the other provider. The attach point is a Direct Connect "
+                    + "gateway. On create, AWS asks for " + peerIdentifier + ".");
+            hcl.append("#     ").append(AWS_MULTICLOUD_GETTING_STARTED).append("\n");
+            if (peer == CloudProviderType.GOOGLE_CLOUD) {
+                String region = shellSafeOr(regionOf(link, CloudProviderType.GOOGLE_CLOUD), "REGION");
+                hcl.append("#   Google Cloud, accept a key issued by AWS:\n");
+                hcl.append("#     gcloud network-connectivity transports create NAME --region=").append(region)
+                        .append(" --network=NETWORK --activation-key=KEY\n");
+                hcl.append("#   Google Cloud, create first (Google Cloud issues the key; "
+                        + "--remote-account-id is the AWS account ID):\n");
+                hcl.append("#     gcloud network-connectivity transports create NAME --region=").append(region)
+                        .append(" --network=NETWORK --bandwidth=").append(gcloudBandwidth(link.getCoveringTierMbps()))
+                        .append(" --remote-account-id=AWS_ACCOUNT_ID --remote-profile=REMOTE_PROFILE\n");
+                hcl.append("#     ").append(GCLOUD_TRANSPORTS_CREATE).append("\n");
+            }
+            else {
+                commentWrapped(hcl, "#   OCI: ", "#     ", "FastConnect > \"Create FastConnect\" > \"FastConnect "
+                        + "interconnect\" (an interconnect virtual circuit attached to a dynamic routing "
+                        + "gateway). With \"Configured in AWS first\", enter the AWS activation key in the "
+                        + "\"Service key\" field. With \"Configure in OCI first\", OCI asks for the AWS account "
+                        + "ID and issues the key, which AWS then accepts.");
+                hcl.append("#     ").append(OCI_INTERCONNECT_FOR_AWS).append("\n");
+            }
+        }
+        else if (includesAws && peer == CloudProviderType.AZURE) {
+            commentWrapped(hcl, "# ", "#   ", "Provider-side reference: none for Microsoft Azure. AWS lists "
+                    + "Azure as a preview provider and states that activation with a provider in public "
+                    + "preview can require the CLI. No Azure-side procedure was verified as of "
+                    + PROVIDER_DOCS_RETRIEVED + ".");
+            hcl.append("#   ").append(AWS_MULTICLOUD_GETTING_STARTED).append("\n");
+        }
+        else {
+            commentWrapped(hcl, "# ", "#   ", "Provider-side reference: none. No provider procedure was "
+                    + "verified for this pair; follow the two providers' documentation.");
+        }
+
+        List<String> recorded = link.getCreateThenAcceptRecipe();
+        if (recorded != null && !recorded.isEmpty()) {
+            hcl.append("# Steps recorded on the plan:\n");
+            int step = 1;
+            for (String line : recorded) {
+                if (line == null || line.isBlank()) {
+                    continue;
+                }
+                commentWrapped(hcl, "#   " + step + ". ", "#      ", line);
+                step++;
+            }
+        }
+    }
+
+    /** The plan's native links with {@code null} elements removed; never {@code null}. */
+    private List<PlannedMulticloudInterconnect> multicloudLinks(DeploymentPlan plan) {
+        List<PlannedMulticloudInterconnect> links = new ArrayList<>();
+        for (PlannedMulticloudInterconnect link : plan.multicloudLinksOrEmpty()) {
+            if (link != null) {
+                links.add(link);
+            }
+        }
+        return links;
+    }
+
+    /** The link's name on one line, or {@code unnamed} when the plan gives none. */
+    private String displayName(PlannedMulticloudInterconnect link) {
+        String name = singleLine(link.getName());
+        return name.isEmpty() ? "unnamed" : name;
+    }
+
+    /** The sanitized stem of the link's variable name. */
+    private String variableBase(PlannedMulticloudInterconnect link) {
+        return link.getName() == null || link.getName().isBlank()
+                ? "multicloud_link"
+                : sanitizeLabel(link.getName());
+    }
+
+    private String pairLabel(PlannedMulticloudInterconnect link) {
+        return sideLabel(link.getProviderA(), link.getRegionA()) + " <-> "
+                + sideLabel(link.getProviderZ(), link.getRegionZ());
+    }
+
+    private String sideLabel(CloudProviderType provider, String region) {
+        String name = provider == null ? "unspecified provider" : provider.getProviderName();
+        return region == null || region.isBlank()
+                ? name + " (no region on the plan)"
+                : name + " " + singleLine(region);
+    }
+
+    private String bandwidthLabel(PlannedMulticloudInterconnect link) {
+        if (link.getCoveringTierMbps() == null) {
+            return link.getRequestedMbps() + " Mbps requested; "
+                    + (link.getEnvironment() == null
+                            ? "no environment to size it against"
+                            : "the environment lists no size that covers it");
+        }
+        return link.getCoveringTierMbps() + " Mbps"
+                + (link.isRoundedUp()
+                        ? " (requested " + link.getRequestedMbps() + " Mbps, rounded up to the smallest listed size)"
+                        : "");
+    }
+
+    private String environmentLabel(PlannedMulticloudInterconnect link) {
+        MulticloudEnvironment environment = link.getEnvironment();
+        if (environment == null) {
+            return "none in the plan's catalog for this region pair";
+        }
+        return environment.getStatus()
+                + (environment.getAsOf() != null ? ", observed " + environment.getAsOf() : ", no observation date")
+                + "; listed sizes " + environment.sizesMbps()
+                + "; catalog entry " + environment.getEnvironment().getEnvironmentId()
+                + " (an id local to the catalog, not a provider API value)";
+    }
+
+    private String roleLabel(PlannedMulticloudInterconnect link) {
+        String strategy = link.getStrategy() != null ? " (strategy " + link.getStrategy() + ")" : "";
+        if (link.getRole() == null) {
+            return "not stated on the plan" + strategy;
+        }
+        switch (link.getRole()) {
+            case REPLACEMENT:
+                return "REPLACEMENT" + strategy + ". This configuration omits " + replacedLabel(link)
+                        + " and their routing protocols. The flow has no path until this link is created.";
+            case UNAVAILABLE:
+                return "UNAVAILABLE" + strategy + ". A native link was required and the plan's catalog has "
+                        + "no usable environment. The plan is invalid.";
+            default:
+                List<String> kept = link.getEquinixConnectionNames();
+                return "ALTERNATIVE" + strategy + ". The configuration does not depend on this link."
+                        + (kept == null || kept.isEmpty()
+                                ? ""
+                                : " The Equinix connections for the flow stay in it: " + String.join(", ", kept) + ".");
+        }
+    }
+
+    private String replacedLabel(PlannedMulticloudInterconnect link) {
+        List<String> replaced = link.getReplacedConnectionNames();
+        return replaced == null || replaced.isEmpty()
+                ? "Equinix connections the plan does not name"
+                : "the Equinix connection(s) " + String.join(", ", replaced);
+    }
+
+    /** The {@code description} of a link's destination-account-id variable. */
+    private String destinationAccountDescription(PlannedMulticloudInterconnect link) {
+        CloudProviderType a = link.getProviderA();
+        CloudProviderType z = link.getProviderZ();
+        boolean includesAws = a == CloudProviderType.AWS || z == CloudProviderType.AWS;
+        CloudProviderType peer = a == CloudProviderType.AWS ? z : a;
+        String identifier;
+        if (includesAws && peer == CloudProviderType.GOOGLE_CLOUD) {
+            identifier = "the Google Cloud project ID when AWS creates the link, or the 12-digit AWS account ID "
+                    + "when Google Cloud creates it (gcloud flag --remote-account-id)";
+        }
+        else if (includesAws && peer == CloudProviderType.ORACLE_CLOUD) {
+            identifier = "the OCI tenancy OCID (ocid1.tenancy.oc1..<unique_ID>) when AWS creates the link, or the "
+                    + "12-digit AWS account ID when OCI creates it";
+        }
+        else {
+            identifier = "the account, project or tenancy identifier the creating provider asks for";
+        }
+        return "Account identifier on the accepting provider of native multicloud link " + displayName(link)
+                + " (" + pairLabel(link) + "), entered on the creating provider when the link is requested: "
+                + identifier + ". No resource in this configuration reads it; it is declared so the value is "
+                + "kept with the stack."
+                + (link.getRole() == MulticloudLinkRole.REPLACEMENT
+                        ? " Required: the plan omits Equinix connections and depends on this link."
+                        : " Optional: the plan does not depend on this link.");
+    }
+
+    /** The link's region for the given provider, or {@code null} when the provider is not on the link. */
+    private String regionOf(PlannedMulticloudInterconnect link, CloudProviderType provider) {
+        if (link.getProviderA() == provider) {
+            return link.getRegionA();
+        }
+        return link.getProviderZ() == provider ? link.getRegionZ() : null;
+    }
+
+    /**
+     * {@code value} when it consists of letters, digits, dots, underscores and dashes only,
+     * otherwise {@code placeholder}. Keeps plan-supplied text out of a command line a reader
+     * may copy into a shell.
+     */
+    private String shellSafeOr(String value, String placeholder) {
+        return value != null && value.trim().matches("[A-Za-z0-9._-]+") ? value.trim() : placeholder;
+    }
+
+    /**
+     * The {@code --bandwidth} value for a size in Mbps ({@code 10000} gives {@code 10g},
+     * {@code 500} gives {@code 500m}), or the placeholder {@code BANDWIDTH} when the size is
+     * {@code null} or not a value the command documents.
+     */
+    private String gcloudBandwidth(Integer mbps) {
+        if (mbps == null || mbps <= 0) {
+            return "BANDWIDTH";
+        }
+        String value = mbps % 1000 == 0 ? (mbps / 1000) + "g" : mbps + "m";
+        return GCLOUD_TRANSPORT_BANDWIDTHS.contains(value) ? value : "BANDWIDTH";
+    }
+
+    /** Writes {@code "# Label:       value"}, wrapped, with continuation lines aligned under the value. */
+    private void field(StringBuilder hcl, String label, String value) {
+        commentWrapped(hcl, "# " + String.format("%-13s", label + ":"), "# " + " ".repeat(13), value);
+    }
+
+    /**
+     * Appends {@code text} as {@code #} comment lines wrapped at {@code COMMENT_WIDTH} characters.
+     * The first line starts with {@code firstPrefix} and the rest with {@code continuationPrefix};
+     * both must start with {@code #}. Line breaks in {@code text} become spaces, so the text
+     * cannot end the comment. A word longer than the width is written unsplit on its own line.
+     */
+    private void commentWrapped(StringBuilder hcl, String firstPrefix, String continuationPrefix, String text) {
+        String[] words = singleLine(text).split(" +");
+        StringBuilder line = new StringBuilder(firstPrefix);
+        boolean lineHasWord = false;
+        for (String word : words) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (lineHasWord && line.length() + 1 + word.length() > COMMENT_WIDTH) {
+                hcl.append(stripTrailing(line)).append("\n");
+                line = new StringBuilder(continuationPrefix);
+                lineHasWord = false;
+            }
+            if (lineHasWord) {
+                line.append(' ');
+            }
+            line.append(word);
+            lineHasWord = true;
+        }
+        hcl.append(stripTrailing(line)).append("\n");
+    }
+
+    private String stripTrailing(StringBuilder line) {
+        return line.toString().stripTrailing();
+    }
+
+    /** {@code text} with every run of line terminators replaced by one space; {@code ""} for {@code null}. */
+    private static String singleLine(String text) {
+        return text == null ? "" : text.replaceAll("[\\r\\n\\u000B\\u000C\\u0085\\u2028\\u2029]+", " ").trim();
+    }
+
     // ---- Customer-input resolution helpers ----
 
     /**
@@ -565,7 +1009,8 @@ public class TerraformExporter {
     }
 
     private String comment(int depth, String text) {
-        return indent(depth) + "# " + text + "\n";
+        // One line only: plan-supplied text (a provider label, a router name) must not end the comment.
+        return indent(depth) + "# " + singleLine(text) + "\n";
     }
 
     private String indent(int depth) {

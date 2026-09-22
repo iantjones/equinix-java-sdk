@@ -29,6 +29,7 @@ import com.eqixiac.equinix.design.optimizer.model.MetroRecommendation;
 import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
 import com.eqixiac.equinix.design.optimizer.wizard.DeploymentWizard;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BackboneTopology;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy;
 import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
@@ -79,9 +80,10 @@ import static com.eqixiac.equinix.mcp.server.Schemas.string;
 import static com.eqixiac.equinix.mcp.server.Schemas.stringEnum;
 
 /**
- * The seven {@code design_*} tools — every one runs a design <em>engine</em> (optimizer,
- * wizard, speed-of-light geometry, TCO, savings, peering intelligence, Terraform export)
- * rather than mirroring a REST endpoint.
+ * The nine {@code design_*} tools — every one runs a design <em>engine</em> (optimizer,
+ * wizard, speed-of-light geometry, TCO, savings, cloud-to-cloud path comparison, the native
+ * multicloud environment catalog, peering intelligence, Terraform export) rather than mirroring a
+ * REST endpoint. The two cloud-to-cloud tools are built in {@link MulticloudDesignTools}.
  */
 final class DesignToolFactory {
 
@@ -89,7 +91,7 @@ final class DesignToolFactory {
     private static final int MAX_OPPORTUNITIES = 20;
     private static final int MAX_FINDINGS = 10;
 
-    private static final String[] CLOUD_VALUES = {
+    static final String[] CLOUD_VALUES = {
             "aws", "azure", "gcp", "google_cloud", "oci", "oracle_cloud", "ibm_cloud", "alibaba_cloud"};
 
     private DesignToolFactory() {
@@ -97,7 +99,8 @@ final class DesignToolFactory {
 
     static List<ToolRegistration> tools() {
         return List.of(optimizePlacement(), planDeployment(), estimateLatency(), estimateTco(),
-                compareCloudEgress(), analyzePeering(), exportTerraform());
+                compareCloudEgress(), MulticloudDesignTools.compareCloudToCloud(),
+                MulticloudDesignTools.listMulticloudEnvironments(), analyzePeering(), exportTerraform());
     }
 
     // ── design_optimize_placement ───────────────────────────────────────────
@@ -257,6 +260,9 @@ final class DesignToolFactory {
 
     private static OptimizationResult runOptimizer(JsonNode spec, ServerContext ctx) {
         MetroOptimizer.Builder builder = ctx.design().optimizeMetros();
+        // Beta: the native multicloud environment catalog the engine reads for its informational
+        // NATIVE_MULTICLOUD_ALTERNATIVE finding, and that the Deployment Wizard inherits.
+        builder.multicloudEnvironments(ctx.multicloudEnvironments());
 
         JsonNode workloads = spec.get("workloads");
         if (workloads == null || !workloads.isArray() || workloads.isEmpty()) {
@@ -446,6 +452,33 @@ final class DesignToolFactory {
                 "backbone_bandwidth_mbps", integer("Bandwidth for each inter-metro backbone link, in Mbps. "
                         + "Defaults to 10000. Applies only to backbone links, never to provider connections, "
                         + "which are sized from the workloads placed at each metro."),
+                "cloud_to_cloud_strategy", stringEnum("Beta. How the plan treats a flow between two "
+                                + "clouds. A flow exists when one workload's requires_clouds lists two or more "
+                                + "clouds; each pair is one flow. Default compare. equinix_only: plan the "
+                                + "Equinix path only; the native multicloud environment catalog is not read "
+                                + "and native_multicloud_links is absent. compare: plan the Equinix path "
+                                + "exactly as equinix_only does and, where the catalog lists the planned "
+                                + "region pair, attach a native provider-to-provider link as a priced "
+                                + "ALTERNATIVE. native_when_available: omit the Cloud Router to cloud "
+                                + "connections for a flow only where the replacement rule allows (GA "
+                                + "environment with a covering size, no user site in the request, the cloud "
+                                + "is not a top-level require_clouds entry, no other workload uses the "
+                                + "connection) and carry the link as a REPLACEMENT; otherwise keep them and "
+                                + "carry it as an ALTERNATIVE with the reason. native_only: as "
+                                + "native_when_available, and a flow with no usable catalog environment is a "
+                                + "validation error (the plan is invalid). Limit of this tool: the optimizer "
+                                + "plans a Cloud Router to cloud connection only for a cloud named in "
+                                + "require_clouds or prefer_clouds, and the replacement rule keeps the "
+                                + "connection of every such cloud, so here native_when_available and "
+                                + "native_only return ALTERNATIVE links whose reasoning names the rule that "
+                                + "kept each connection; REPLACEMENT arises only through the SDK, from an "
+                                + "optimization result without request-level clouds. Under every value the "
+                                + "native link is planned and priced only; this server never provisions it.",
+                        lowerNames(CloudToCloudStrategy.class)),
+                "multicloud_path_tier", integer("Beta. AWS connectivity-scope tier used to price the AWS "
+                        + "side of a native multicloud link, 1-5: 1 local (default), 2 regional, 3 "
+                        + "continental, 4 long-haul, 5 maximum scope. An input, never derived: AWS publishes "
+                        + "no region-path-to-tier table. It changes native_multicloud_links pricing only."),
                 "project_id", string("Equinix Fabric project id recorded on each planned Cloud Router."),
                 "account_number", integer("Equinix billing account number recorded on each planned Cloud "
                         + "Router. OPTIONAL: when omitted it is auto-resolved from the authenticated "
@@ -506,7 +539,21 @@ final class DesignToolFactory {
                         + "service-profile tier when no exact tier exists — surfaced, never silent), the "
                         + "chosen service profile and seller region, and every covering alternative; when a "
                         + "connection has more than one covering profile you are prompted to pick, defaulting "
-                        + "to the tightest fit when the client cannot prompt. Pricing is not term-scoped: the rate cards this server "
+                        + "to the tightest fit when the client cannot prompt. CLOUD-TO-CLOUD FLOWS (Beta): a "
+                        + "workload whose requires_clouds lists two or more clouds implies a flow between "
+                        + "each pair. Name the same clouds in optimization.require_clouds or prefer_clouds "
+                        + "too: the optimizer resolves per-metro cloud availability, and so plans "
+                        + "connections, only for request-level clouds. "
+                        + "deployment.cloud_to_cloud_strategy (default compare) decides how the "
+                        + "plan treats it. Under compare the Equinix path is planned unchanged and, where "
+                        + "the bundled native multicloud environment catalog lists the planned region pair, "
+                        + "native_multicloud_links carries a direct provider-to-provider link as a priced "
+                        + "ALTERNATIVE: both providers' sides with price source, the Equinix fixed cost for "
+                        + "the same flow, the break-even sustained rate in Mbps (both directions summed), a "
+                        + "recommendation, and the create-then-accept steps the customer performs with the "
+                        + "two cloud providers. An unpriced side is null with a reason, never 0. This "
+                        + "server never provisions a native link, and its charges are never part of "
+                        + "pricing.monthly_total. Pricing is not term-scoped: the rate cards this server "
                         + "reads resolve by product, bandwidth and metro only, so no contract term is "
                         + "accepted or applied. The returned plan_id can be passed to "
                         + "design_export_terraform while this server process is running (plans are held in "
@@ -516,6 +563,8 @@ final class DesignToolFactory {
                                 "deployment", deployment),
                         "optimization"))
                 .outputSchema(looseObject("The serialized deployment plan: plan_id, planned resources, "
+                        + "native_multicloud_links (Beta; present only when a cloud-to-cloud flow matched "
+                        + "a catalog environment or a native link was required), "
                         + "pricing with provenance, and layered validation — validation.valid, "
                         + "validation.validated_now (structural + catalog + Cloud Router dry-run, with "
                         + "new_market_gaps), validation.deferred_to_provisioning (the connection endpoint "
@@ -554,6 +603,17 @@ final class DesignToolFactory {
             optEnum(d, "backbone_topology", BackboneTopology.class).ifPresent(wizard::backboneTopology);
             optInt(d, "backbone_bandwidth_mbps").ifPresent(wizard::backboneBandwidthMbps);
             optString(d, "project_id").ifPresent(wizard::projectId);
+            optEnum(d, "cloud_to_cloud_strategy", CloudToCloudStrategy.class)
+                    .ifPresent(wizard::cloudToCloudStrategy);
+            optInt(d, "multicloud_path_tier").ifPresent(tier -> {
+                try {
+                    wizard.multicloudPathTier(tier);
+                }
+                catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("'deployment.multicloud_path_tier' must be between 1 "
+                            + "and 5: " + tier + ".");
+                }
+            });
             explicitAccount = optLong(d, "account_number");
             List<String> notifications = Args.stringList(d, "notifications");
             if (!notifications.isEmpty()) {
@@ -778,20 +838,9 @@ final class DesignToolFactory {
 
     /** Rebuilds an otherwise-identical plan with a replaced provider-connection list. */
     private static DeploymentPlan rebuildWithConnections(DeploymentPlan plan, List<PlannedConnection> connections) {
-        return DeploymentPlan.builder()
-                .sourceOptimization(plan.getSourceOptimization())
-                .cloudRouters(plan.getCloudRouters())
-                .providerConnections(connections)
-                .backboneLinks(plan.getBackboneLinks())
-                .routingProtocols(plan.getRoutingProtocols())
-                .pricing(plan.getPricing())
-                .valid(plan.isValid())
-                .validationErrors(plan.getValidationErrors())
-                .deferredValidations(plan.getDeferredValidations())
-                .skippedValidations(plan.getSkippedValidations())
-                .requiredInputs(plan.getRequiredInputs())
-                .fabric(plan.getFabric())
-                .build();
+        // toBuilder() copies every field, so a field added to DeploymentPlan later (the native
+        // multicloud links were one) is carried without an edit here.
+        return plan.toBuilder().providerConnections(connections).build();
     }
 
     static ObjectNode planPayload(DeploymentPlan plan, String planId, ServerContext ctx,
@@ -866,6 +915,10 @@ final class DesignToolFactory {
             p.put("price_source", String.valueOf(pricing.getSource()));
             p.put("disclaimer", pricing.getDisclaimer());
         }
+
+        // Beta: native provider-to-provider links for the plan's cloud-to-cloud flows. Emits nothing
+        // for a plan without any, so a single-cloud plan's payload is unchanged.
+        MulticloudDesignTools.serializePlanLinks(payload, plan, mapper);
 
         // Validation is layered and honest. It separates what was validated NOW — structural +
         // catalog checks and the live Cloud Router dry-run (POST /routers?dryRun=true), all of which
@@ -1169,7 +1222,15 @@ final class DesignToolFactory {
                         + "and setup cost of the same workload across deployment archetypes — public cloud "
                         + "over the internet, on-prem, and Equinix private interconnect — and reports each "
                         + "line item with its price provenance (live Equinix pricing vs reference figures). "
-                        + "Give the monthly egress volume and the cloud it leaves from. Figures are not "
+                        + "Give the monthly egress volume and the cloud it leaves from. CLOUD-TO-CLOUD "
+                        + "(Beta): give peer_cloud to compare how two clouds are joined. The comparison "
+                        + "then becomes two-sided (internet and private egress from both clouds, two Fabric "
+                        + "virtual connections, both cloud interconnect ports) and gains the "
+                        + "native_multicloud_interconnect archetype: the two providers' flat hourly link "
+                        + "fees at 730 h/month plus the link's per-GB rate. A native side with no published "
+                        + "price leaves that archetype fully_priced=false with the reason in its note; a "
+                        + "partially priced archetype is never recommended. Without peer_cloud the inputs, "
+                        + "archetypes and output are the single-cloud ones. Figures are not "
                         + "term-scoped: the rate cards this server reads (live Fabric prices, then reference "
                         + "figures) resolve by product, bandwidth, metro and region only, so no contract term "
                         + "is accepted or applied.")
@@ -1177,6 +1238,18 @@ final class DesignToolFactory {
                                 "monthly_egress_gb", number("Data leaving the cloud per month, in GB."),
                                 "cloud", stringEnum("The cloud provider the egress leaves from.", CLOUD_VALUES),
                                 "region", string("The provider region the egress leaves from, e.g. 'us-east-1'."),
+                                "peer_cloud", stringEnum("Beta. The cloud at the other end. Must differ from "
+                                        + "'cloud'. Makes the comparison cloud-to-cloud; the reverse volume "
+                                        + "(peer_cloud to cloud) is assumed equal to monthly_egress_gb and "
+                                        + "traffic_note says so.", CLOUD_VALUES),
+                                "peer_region", string("Beta. peer_cloud's region in its own notation, e.g. "
+                                        + "'us-east4'. Requires peer_cloud. Selects the peer's egress rates "
+                                        + "and Google's transport location for the native link; without it a "
+                                        + "Google Cloud side is priced at the North America location and the "
+                                        + "provenance says so."),
+                                "path_tier", integer("Beta. AWS connectivity-scope tier of the native link, "
+                                        + "1-5: 1 local (default), 2 regional, 3 continental, 4 long-haul, 5 "
+                                        + "maximum scope. Requires peer_cloud. An input, never derived."),
                                 "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'. Used "
                                         + "to prefer a metro-specific price row where the live catalogue "
                                         + "publishes one; without it (or without such a row) the same-bandwidth "
@@ -1189,7 +1262,10 @@ final class DesignToolFactory {
                                         + "no rate card can price that code."),
                                 "power_kw", number("On-prem power draw in kW, default 5. Used by the on-prem "
                                         + "archetype only; it is ignored if 'archetypes' excludes on_prem."),
-                                "archetypes", array("Restrict the comparison to these archetypes.",
+                                "archetypes", array("Restrict the comparison to these archetypes. "
+                                                + "native_multicloud_interconnect requires peer_cloud. With "
+                                                + "peer_cloud the default set omits on_prem (its inputs carry no "
+                                                + "cloud egress); an explicit on_prem is then reported unpriced.",
                                         stringEnum("Deployment archetype.", lowerNames(DeploymentArchetype.class))),
                                 "on_prem_transit_per_mbps_month", number("Override: on-prem IP transit $ per Mbps per month."),
                                 "on_prem_hardware_monthly", number("Override: amortized on-prem hardware $ per month."),
@@ -1197,7 +1273,9 @@ final class DesignToolFactory {
                                 "on_prem_power_per_kw_month", number("Override: on-prem power $ per kW per month.")),
                         "monthly_egress_gb", "cloud", "region"))
                 .outputSchema(looseObject("Per-archetype cost breakdowns with line items and price provenance, "
-                        + "the recommended archetype, and savings vs the baseline."))
+                        + "the recommended archetype, and savings vs the baseline. With peer_cloud: "
+                        + "traffic_note and a per-breakdown provenance list (source URL, retrieval date, "
+                        + "unit conversion)."))
                 .toolset(Toolset.DESIGN)
                 .handler(DesignToolFactory::handleEstimateTco)
                 .build();
@@ -1209,6 +1287,41 @@ final class DesignToolFactory {
                         com.eqixiac.equinix.design.value.savings.DataUnit.GIGABYTE)
                 .fromCloud(cloudProvider(requireString(args, "cloud"), "cloud"))
                 .inRegion(requireString(args, "region"));
+        // Beta: the cloud-to-cloud levers. They are validated here, in the tool's own field names,
+        // because the calculator's messages name its Java builder methods.
+        Optional<String> peerCloud = optString(args, "peer_cloud");
+        Optional<String> peerRegion = optString(args, "peer_region");
+        Optional<Integer> pathTier = optInt(args, "path_tier");
+        if (peerCloud.isEmpty()) {
+            if (peerRegion.isPresent()) {
+                throw new IllegalArgumentException("'peer_region' requires 'peer_cloud'.");
+            }
+            if (pathTier.isPresent()) {
+                throw new IllegalArgumentException("'path_tier' requires 'peer_cloud': it prices the native "
+                        + "multicloud link, which exists only in a cloud-to-cloud comparison.");
+            }
+            if (Args.stringList(args, "archetypes").stream().anyMatch(archetype -> archetype
+                    .equalsIgnoreCase(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT.name()))) {
+                throw new IllegalArgumentException("'archetypes' value 'native_multicloud_interconnect' "
+                        + "requires 'peer_cloud'.");
+            }
+        }
+        else {
+            CloudProviderType peer = cloudProvider(peerCloud.get(), "peer_cloud");
+            if (peer == cloudProvider(requireString(args, "cloud"), "cloud")) {
+                throw new IllegalArgumentException("'peer_cloud' must differ from 'cloud'; both are '"
+                        + peerCloud.get() + "'.");
+            }
+            builder.toCloud(peer);
+            peerRegion.ifPresent(builder::toRegion);
+            if (pathTier.isPresent()) {
+                if (pathTier.get() < 1 || pathTier.get() > 5) {
+                    throw new IllegalArgumentException("'path_tier' must be between 1 and 5: "
+                            + pathTier.get() + ".");
+                }
+                builder.pathTier(pathTier.get());
+            }
+        }
         optString(args, "metro_code").ifPresent(code -> builder.viaMetro(metroCode(code)));
         optInt(args, "bandwidth_mbps").ifPresent(builder::bandwidthMbps);
         // No 'term' knob. TcoCalculator.term() only binds against a CustomRateCard, and this server
@@ -1250,7 +1363,16 @@ final class DesignToolFactory {
                     b.getLineItems().forEach(items::put);
                 }
                 bn.put("note", b.getNote());
+                // Present only for a cloud-to-cloud comparison: per-figure source URL, retrieval
+                // date and unit conversion.
+                if (b.getProvenance() != null) {
+                    ArrayNode provenance = bn.putArray("provenance");
+                    b.getProvenance().forEach(provenance::add);
+                }
             });
+        }
+        if (comparison.getTrafficNote() != null) {
+            payload.put("traffic_note", comparison.getTrafficNote());
         }
         payload.put("recommended_archetype", String.valueOf(comparison.getRecommended()));
         payload.put("baseline_archetype", String.valueOf(comparison.getBaseline()));
@@ -1537,7 +1659,7 @@ final class DesignToolFactory {
 
     // ── shared helpers ──────────────────────────────────────────────────────
 
-    private static CloudProviderType cloudProvider(String raw, String field) {
+    static CloudProviderType cloudProvider(String raw, String field) {
         String normalized = raw.trim().toLowerCase(Locale.ROOT);
         if (normalized.equals("gcp") || normalized.equals("google")) {
             return CloudProviderType.GOOGLE_CLOUD;
@@ -1548,7 +1670,7 @@ final class DesignToolFactory {
         return enumValue(CloudProviderType.class, raw, field);
     }
 
-    private static MetroCode metroCode(String code) {
+    static MetroCode metroCode(String code) {
         try {
             return MetroCode.fromCode(code);
         }

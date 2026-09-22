@@ -66,7 +66,7 @@ class StdioRoundTripTest {
 
     @Test
     @Timeout(30)
-    @DisplayName("initialize → tools/list (12 tools) → tools/call, all valid JSON-RPC, stdout untouched")
+    @DisplayName("initialize → tools/list (14 tools) → tools/call, all valid JSON-RPC, stdout untouched")
     void roundTrip() throws Exception {
         // Metro fixture for design_estimate_latency.
         Metro dc = metro("DC", "Ashburn", 39.0438, -77.4874);
@@ -120,7 +120,7 @@ class StdioRoundTripTest {
             JsonNode listResponse = readMessage(reader, wireLines);
             assertEquals(2, listResponse.get("id").asInt());
             JsonNode tools = listResponse.get("result").get("tools");
-            assertEquals(12, tools.size(), "the full launch catalog is served: " + tools);
+            assertEquals(14, tools.size(), "the full launch catalog is served: " + tools);
             Set<String> names = new HashSet<>();
             tools.forEach(t -> names.add(t.get("name").asText()));
             assertTrue(names.contains("design_optimize_placement"), names.toString());

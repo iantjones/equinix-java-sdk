@@ -18,6 +18,7 @@ package com.eqixiac.equinix.fabric.model.implementation;
 
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.core.model.MetroId;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,8 +32,15 @@ public class MetroRef {
      * The raw metro code exactly as returned by the API. Held as a string (rather than a
      * {@link MetroCode} enum) so a metro the enum does not yet list is preserved verbatim instead of
      * collapsing to {@link MetroCode#UNKNOWN}; {@link #metroId()} exposes it forward-compatibly.
+     *
+     * <p>{@code metroCode} is read as an alias of {@code code}. The catalog's
+     * {@code ServiceProfileEnvironmentsResponse} example (fetched 2026-09-21) publishes a
+     * {@code metros} item as {@code {href, metroCode, type}} although the property is typed
+     * {@code ServiceMetro[]}, whose key is {@code code}. No schema that maps to this class or a
+     * subclass defines both keys. The alias applies to deserialization only.</p>
      */
     @JsonProperty("code")
+    @JsonAlias("metroCode")
     private String codeValue;
 
     /**

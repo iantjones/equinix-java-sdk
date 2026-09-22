@@ -25,6 +25,12 @@
  * {@link com.eqixiac.equinix.design.optimizer.wizard.DeploymentWizard.Builder}; the third is
  * stamped on each {@code PlannedConnection} by the wizard.
  *
+ * <p><b>Beta.</b> {@link com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy}
+ * is the builder lever for flows between two clouds (default {@code COMPARE}), and
+ * {@link com.eqixiac.equinix.design.optimizer.wizard.enums.MulticloudLinkRole} is stamped on each
+ * {@code PlannedMulticloudInterconnect}: {@code ALTERNATIVE}, {@code REPLACEMENT} or
+ * {@code UNAVAILABLE}.</p>
+ *
  * @see com.eqixiac.equinix.design.optimizer.wizard.DeploymentWizard
  */
 package com.eqixiac.equinix.design.optimizer.wizard.enums;

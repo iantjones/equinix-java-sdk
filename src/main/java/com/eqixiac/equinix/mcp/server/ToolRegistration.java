@@ -65,7 +65,7 @@ public class ToolRegistration {
      */
     Map<String, Object> outputSchema;
 
-    /** {@code true} when the tool performs no mutation anywhere. All 12 built-in tools are read-only. */
+    /** {@code true} when the tool performs no mutation anywhere. All 14 built-in tools are read-only. */
     @Builder.Default
     boolean readOnly = true;
 

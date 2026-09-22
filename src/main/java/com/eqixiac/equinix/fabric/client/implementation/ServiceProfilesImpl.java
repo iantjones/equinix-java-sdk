@@ -18,6 +18,7 @@ package com.eqixiac.equinix.fabric.client.implementation;
 
 import com.eqixiac.equinix.core.http.ResponseHandler;
 import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.http.response.Pageable;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
 import com.eqixiac.equinix.fabric.client.ServiceProfiles;
@@ -25,9 +26,13 @@ import com.eqixiac.equinix.fabric.client.internal.ServiceProfileClient;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.enums.ServiceProfileType;
 import com.eqixiac.equinix.fabric.model.Connection;
+import com.eqixiac.equinix.fabric.model.EnvironmentActionResponse;
 import com.eqixiac.equinix.fabric.model.Pricing;
 import com.eqixiac.equinix.fabric.model.ServiceProfile;
 import com.eqixiac.equinix.fabric.model.ServiceProfileAction;
+import com.eqixiac.equinix.fabric.model.implementation.ActivationKeyDetails;
+import com.eqixiac.equinix.fabric.model.implementation.EnvironmentActionRequest;
+import com.eqixiac.equinix.fabric.model.implementation.ProviderEnvironment;
 import com.eqixiac.equinix.fabric.model.implementation.ServiceMetro;
 import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
@@ -41,7 +46,9 @@ import com.eqixiac.equinix.fabric.model.wrappers.ConnectionWrapper;
 import com.eqixiac.equinix.fabric.model.wrappers.PricingWrapper;
 import com.eqixiac.equinix.fabric.model.wrappers.ServiceProfileWrapper;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -92,5 +99,42 @@ public class ServiceProfilesImpl implements ServiceProfiles {
 
     public List<ServiceMetro> getMetros(String uuid) {
         return this.serviceClient.getMetros(uuid);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<ProviderEnvironment> getEnvironments(String serviceProfileUuid) {
+        Page<ProviderEnvironment> firstPage =
+                this.serviceClient.getEnvironments(requireText(serviceProfileUuid, "serviceProfileUuid"));
+        if (firstPage == null || firstPage.getItems() == null) {
+            return Collections.emptyList();
+        }
+        // The internal client is a Pageable<ServiceProfile>; its inherited nextPage(...) deserializes
+        // each later page with the request's own response type (ProviderEnvironment) and maps the
+        // items with the request's page-item mapper (set in ServiceProfileClientImpl#getEnvironments),
+        // so reusing it here is correct. Only the generic parameter is laundered.
+        Pageable<ProviderEnvironment> pageableClient = (Pageable<ProviderEnvironment>) (Object) this.serviceClient;
+        return new PaginatedList<>(firstPage.getItems(), pageableClient, firstPage.getAssociatedRequest(),
+                firstPage.getAssociatedResponse(), firstPage.getPagination()).loadAll().toList();
+    }
+
+    // validateActivationKey(String, String, String) is inherited: the interface default wraps the key
+    // with ActivationKeyDetails.ofValue(...) and calls the overload below.
+
+    @Override
+    public EnvironmentActionResponse validateActivationKey(String serviceProfileUuid, String environmentUuid,
+                                                           ActivationKeyDetails keyDetails) {
+        Objects.requireNonNull(keyDetails, "keyDetails");
+        return this.serviceClient.createEnvironmentAction(
+                requireText(serviceProfileUuid, "serviceProfileUuid"),
+                requireText(environmentUuid, "environmentUuid"),
+                EnvironmentActionRequest.validateActivationKey(keyDetails));
+    }
+
+    private static String requireText(String value, String name) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(name + " must not be null or blank");
+        }
+        return value;
     }
 }

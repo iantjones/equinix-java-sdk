@@ -37,6 +37,31 @@
  * {@link com.eqixiac.equinix.design.value.ratecard.PriceSource} provenance and an
  * optional note flagging substitutions and extrapolations.</p>
  *
+ * <h2>Native multicloud links</h2>
+ * <p><b>Beta.</b> {@code RateCard.multicloudLink(MulticloudLinkRequest)} prices a native
+ * provider-to-provider link (AWS Interconnect - multicloud paired with, for example, a Google
+ * Partner Cross-Cloud Interconnect transport). Each provider bills its own side, so the result
+ * is a {@link com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote} holding one
+ * optional {@code PriceQuote} per side. The method defaults to empty, so cards that predate it
+ * are unaffected.</p>
+ *
+ * <table>
+ *   <caption>multicloudLink by card</caption>
+ *   <tr><th>Card</th><th>Behavior</th></tr>
+ *   <tr><td>{@code ReferenceRateCard}</td><td>published list prices only, exact size match, no
+ *       rounding or extrapolation; source URL and retrieval date in every note; AWS free tier on
+ *       request only</td></tr>
+ *   <tr><td>{@code CustomRateCard}</td><td>the sides declared with
+ *       {@code multicloudLinkRate(...)} / {@code multicloudLinkHourlyRate(...)}</td></tr>
+ *   <tr><td>{@code RateCard.layered(...)}</td><td>per side: the earliest card that prices a side
+ *       supplies it</td></tr>
+ *   <tr><td>{@code EquinixRateCard}, provider-API adapters</td><td>empty</td></tr>
+ * </table>
+ *
+ * <p>Hourly rates become monthly charges at {@code MulticloudLinkQuote.HOURS_PER_MONTH}
+ * (730 h). The link's per-GB rate is a separate lookup,
+ * {@code egress(provider, region, EgressPath.MULTICLOUD_INTERCONNECT, term)}.</p>
+ *
  * <p>Two invariants hold across all cards: an unpriceable item yields empty, never a
  * fabricated $0; and quotes in different currencies are never combined — no FX rate is
  * ever invented ({@code PriceQuote.plus} throws on a currency mismatch, and the engines
