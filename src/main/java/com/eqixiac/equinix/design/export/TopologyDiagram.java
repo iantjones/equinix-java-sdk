@@ -4,10 +4,14 @@ import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.design.optimizer.model.MetroRecommendation;
 import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
 import com.eqixiac.equinix.design.optimizer.model.WorkloadPlacement;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.MulticloudLinkRole;
+import com.eqixiac.equinix.design.optimizer.wizard.model.ConnectionBodies;
 import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedBackboneLink;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedCloudRouter;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,15 +29,32 @@ import java.util.Map;
  * metros. For an {@link OptimizationResult}, metros are nodes annotated with their
  * rank and score, optionally grouping the workloads placed in each metro.</p>
  *
- * <p>Node labels are HTML-escaped ({@code &}, {@code <}, {@code >} and double quotes), so
- * metro, router, provider and workload names containing markup-significant characters render
- * literally instead of being interpreted by Mermaid's HTML label parser.</p>
+ * <p><b>Beta.</b> A native multicloud link on the plan
+ * ({@code DeploymentPlan.multicloudLinksOrEmpty()}) is drawn as a dashed bidirectional edge
+ * ({@code <-.->}) between the two cloud nodes, never through a Cloud Router. Its label is
+ * {@code native multicloud (outside Fabric)} followed by a second line with the bandwidth in
+ * Mbps (the covering size, or the requested bandwidth when none covers it), the environment
+ * status and the role. Each end attaches to the provider node already drawn for a connection
+ * to the same cloud and region; when the plan has none (a {@code REPLACEMENT} link whose
+ * connections were omitted, or a link matched on a different region) a cloud node labeled with
+ * the provider name and region is added. An {@code UNAVAILABLE} entry is not drawn: no link can
+ * be created for it. A plan without links produces the same diagram as before links existed.</p>
+ *
+ * <p>Node and edge labels are HTML-escaped ({@code &}, {@code <}, {@code >} and double quotes),
+ * so metro, router, provider, region and workload names containing markup-significant
+ * characters render literally instead of being interpreted by Mermaid's HTML label parser.</p>
  *
  * <p>This class is stateless and thread-safe.</p>
  */
 public class TopologyDiagram {
 
     private static final String NL = "\n";
+
+    /** The first line of a native multicloud edge label. */
+    private static final String NATIVE_LINK_LABEL = "native multicloud (outside Fabric)";
+
+    /** A drawn node that stands for one cloud region; {@code region} may be {@code null}. */
+    private record CloudNode(CloudProviderType cloud, String region, String nodeId) {}
 
     /**
      * Renders the deployment plan as a Mermaid {@code graph LR} diagram.
@@ -80,6 +101,9 @@ public class TopologyDiagram {
 
         // Provider connections: router -> external provider node.
         Map<String, String> providerNodeIds = new LinkedHashMap<>();
+        // The provider nodes that stand for a well-known cloud, so a native multicloud link can
+        // attach to the node already drawn for the same cloud and region.
+        List<CloudNode> cloudNodes = new ArrayList<>();
         if (plan.getProviderConnections() != null) {
             for (PlannedConnection conn : plan.getProviderConnections()) {
                 String providerLabel = conn.getZSideProviderLabel() != null
@@ -96,6 +120,12 @@ public class TopologyDiagram {
                     }
                     mmd.append("  ").append(providerId)
                             .append("[\"").append(pLabel).append("\"]").append(NL);
+                    CloudProviderType cloud = conn.getZSideCloudType() != null
+                            ? conn.getZSideCloudType()
+                            : ConnectionBodies.resolveCloudType(conn.getZSideProviderLabel());
+                    if (cloud != null && cloud != CloudProviderType.OTHER) {
+                        cloudNodes.add(new CloudNode(cloud, conn.getZSideSellerRegion(), providerId));
+                    }
                 }
 
                 String fromId = routerNodeIds.get(conn.getASideRouterName());
@@ -126,6 +156,29 @@ public class TopologyDiagram {
                             .append("| ").append(toId).append(NL);
                 }
             }
+        }
+
+        // Native multicloud links (Beta): cloud <-> cloud, outside Fabric, so the edge joins the
+        // two cloud nodes directly and is dashed to set it apart from Fabric connections.
+        for (PlannedMulticloudInterconnect link : plan.multicloudLinksOrEmpty()) {
+            if (link == null || link.getRole() == MulticloudLinkRole.UNAVAILABLE
+                    || link.getProviderA() == null || link.getProviderZ() == null) {
+                continue;
+            }
+            String aId = cloudNodeFor(cloudNodes, link.getProviderA(), link.getRegionA(), mmd);
+            String zId = cloudNodeFor(cloudNodes, link.getProviderZ(), link.getRegionZ(), mmd);
+            int mbps = link.getCoveringTierMbps() != null ? link.getCoveringTierMbps() : link.getRequestedMbps();
+            StringBuilder detail = new StringBuilder().append(mbps).append(" Mbps");
+            if (link.environmentStatus() != null) {
+                detail.append(", ").append(link.environmentStatus());
+            }
+            if (link.getRole() != null) {
+                detail.append(", ").append(link.getRole());
+            }
+            // Quoted label: the parentheses would otherwise end the edge text in Mermaid's grammar.
+            mmd.append("  ").append(aId).append(" <-.->|\"")
+                    .append(escape(NATIVE_LINK_LABEL)).append("<br/>").append(escape(detail.toString()))
+                    .append("\"| ").append(zId).append(NL);
         }
 
         return mmd.toString();
@@ -216,6 +269,41 @@ public class TopologyDiagram {
         mmd.append("  ").append(nodeId)
                 .append("([\"").append(escape(label)).append("\"])").append(NL);
         return nodeId;
+    }
+
+    /**
+     * The node a native multicloud link attaches to for one cloud region. Preference order: a
+     * drawn node of the same cloud and the same region (compared trimmed, ignoring case); a drawn
+     * node of the same cloud when either the node or the link carries no region; otherwise a new
+     * node labeled with the provider name and the region, which is appended to {@code mmd} and
+     * recorded in {@code cloudNodes} so a second link to the same cloud region reuses it.
+     */
+    private String cloudNodeFor(List<CloudNode> cloudNodes, CloudProviderType cloud, String region,
+                                StringBuilder mmd) {
+        String wanted = region == null || region.isBlank() ? null : region.trim();
+        for (CloudNode node : cloudNodes) {
+            if (node.cloud() == cloud && sameRegion(node.region(), wanted)) {
+                return node.nodeId();
+            }
+        }
+        for (CloudNode node : cloudNodes) {
+            if (node.cloud() == cloud && (wanted == null || node.region() == null || node.region().isBlank())) {
+                return node.nodeId();
+            }
+        }
+        String nodeId = "cloud" + cloudNodes.size();
+        cloudNodes.add(new CloudNode(cloud, wanted, nodeId));
+        mmd.append("  ").append(nodeId).append("[\"").append(escape(cloud.getProviderName()));
+        if (wanted != null) {
+            mmd.append("<br/>").append(escape(wanted));
+        }
+        mmd.append("\"]").append(NL);
+        return nodeId;
+    }
+
+    private boolean sameRegion(String drawn, String wanted) {
+        String normalized = drawn == null || drawn.isBlank() ? null : drawn.trim();
+        return normalized == null ? wanted == null : normalized.equalsIgnoreCase(wanted);
     }
 
     private String escape(String text) {

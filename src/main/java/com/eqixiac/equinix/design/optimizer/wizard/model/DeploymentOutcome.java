@@ -17,6 +17,10 @@ import java.util.stream.Collectors;
  * "N/M resources provisioned" therefore describes what was built before the teardown, not what
  * still exists: {@code isFullySuccessful() == false} plus errors mentioning the abort/rollback
  * distinguish a rolled-back run from a partially-standing one.</p>
+ *
+ * <p><b>Beta.</b> {@code informational} lists the plan's native multicloud links. Execution never
+ * provisions them and sends no request for them. An informational entry is not an error: it does
+ * not affect {@code isFullySuccessful()} and is not counted in {@code errors}.</p>
  */
 @Value
 @Builder
@@ -44,6 +48,15 @@ public class DeploymentOutcome {
     long executionTimeMs;
 
     /**
+     * <b>Beta.</b> One entry per native multicloud link on the plan, each with
+     * {@code resourceType "MulticloudInterconnect"}, the link's name, {@code recoverable == false}
+     * (re-running the plan cannot create it) and a reason stating that the link is created outside
+     * Fabric with the create-then-accept procedure. {@code null} or empty when the plan has none.
+     * Present on every outcome of such a plan, including a fail-fast or rolled-back run.
+     */
+    List<ProvisioningError> informational;
+
+    /**
      * Generates a concise plain-text summary of the execution outcome.
      */
     public String toSummary() {
@@ -54,6 +67,10 @@ public class DeploymentOutcome {
             sb.append(", ").append(errors.size()).append(" error(s)");
         }
         sb.append(" in ").append(executionTimeMs).append("ms.");
+        if (informational != null && !informational.isEmpty()) {
+            sb.append(" ").append(informational.size())
+                    .append(" native multicloud link(s) not provisioned: created outside Fabric by the customer.");
+        }
         return sb.toString();
     }
 
@@ -94,6 +111,20 @@ public class DeploymentOutcome {
                         .append(" | ").append(err.getResourceName())
                         .append(" | ").append(err.getReason())
                         .append(" | ").append(err.isRecoverable() ? "Yes" : "No")
+                        .append(" |\n");
+            }
+            md.append("\n");
+        }
+
+        // Native multicloud links: informational, never provisioned here, never an error.
+        if (informational != null && !informational.isEmpty()) {
+            md.append("## Not provisioned by this SDK\n\n");
+            md.append("| Type | Name | Reason |\n");
+            md.append("|------|------|--------|\n");
+            for (ProvisioningError info : informational) {
+                md.append("| ").append(info.getResourceType())
+                        .append(" | ").append(info.getResourceName())
+                        .append(" | ").append(info.getReason())
                         .append(" |\n");
             }
             md.append("\n");

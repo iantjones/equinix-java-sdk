@@ -19,6 +19,21 @@ package com.eqixiac.equinix.fabric.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
+ * Values of the Fabric v4 {@code ConnectionType} schema, plus two constants the schema does not
+ * list (see the table). Checked against the catalog fetched 2026-09-21.
+ *
+ * <table>
+ *   <caption>Constants that differ from the {@code ConnectionType} schema</caption>
+ *   <tr><th>Constant</th><th>Catalog status</th></tr>
+ *   <tr><td>{@link #GW_VC}, {@link #IPX_VC}</td><td>In {@code ConnectionType}. The catalog gives
+ *       no description and no create example for either value.</td></tr>
+ *   <tr><td>{@link #VD_CHAIN_VC}</td><td>Absent from {@code ConnectionType}; present in
+ *       {@code VirtualConnectionPriceConnectionType} (price search only).</td></tr>
+ *   <tr><td>{@link #IC_VC}</td><td>Absent from the catalog.</td></tr>
+ * </table>
+ *
+ * <p>{@link #UNKNOWN} is a read-side fallback for values added after this SDK release. Never send
+ * it.</p>
  *
  * @author ianjones
  */
@@ -37,6 +52,9 @@ public enum ConnectionType {
     IA_VC,
     MC_VC,
     IX_VC,
+    GW_VC,
+    IPX_VC,
+    // Not in the catalog's ConnectionType schema; retained for backward compatibility.
     IC_VC,
     VD_CHAIN_VC,
     UNKNOWN;

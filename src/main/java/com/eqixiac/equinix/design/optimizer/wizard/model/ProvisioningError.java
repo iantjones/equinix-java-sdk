@@ -8,6 +8,11 @@ import lombok.Value;
  * provisioned, a pre-flight or waiter observation, or a rollback deletion that failed.
  * Collected on {@link DeploymentOutcome} rather than thrown, so a partial deployment can be
  * inspected and rolled back.
+ *
+ * <p>The same shape carries the informational entries of
+ * {@code DeploymentOutcome.getInformational()}: a native multicloud link
+ * ({@code resourceType "MulticloudInterconnect"}) that execution does not provision. Such an entry
+ * is never placed in {@code DeploymentOutcome.getErrors()}.</p>
  */
 @Value
 @Builder
@@ -15,7 +20,8 @@ public class ProvisioningError {
 
     /**
      * The kind of resource the error concerns: {@code "CloudRouter"}, {@code "Connection"},
-     * {@code "BackboneLink"}, or {@code "RoutingProtocol"}.
+     * {@code "BackboneLink"}, or {@code "RoutingProtocol"}; {@code "MulticloudInterconnect"} on an
+     * informational entry.
      */
     String resourceType;
 

@@ -33,15 +33,50 @@
  *       otherwise), and a single-use confirm token bound to the SHA-256 of the canonicalized
  *       spec.</li>
  *   <li>{@code fabric_confirm_change} — takes only the confirm token, re-verifies the spec
- *       hash, and executes the <em>stored</em> spec via the same creator without
- *       {@code dryRun}. The agent cannot alter the spec between phases: a different spec is a
- *       different proposal with a different token.</li>
+ *       hash, asks the MCP client to obtain the user's approval, and on approval executes the
+ *       <em>stored</em> spec via the same creator without {@code dryRun}. The agent cannot alter
+ *       the spec between phases: a different spec is a different proposal with a different
+ *       token.</li>
  * </ol>
  *
  * <p>Tokens live in the in-memory, single-process
  * {@link com.eqixiac.equinix.mcp.server.broker.ProposalStore} for 10 minutes and are consumed
  * on the first confirm attempt, successful or not. Expired, unknown, and replayed tokens each
- * fail with a message telling the agent to re-propose.</p>
+ * fail with a message telling the agent to re-propose. Every confirm result and every token error
+ * carries the four redemption predicates as {@code confirm_checks}: {@code proposal_exists},
+ * {@code not_expired}, {@code not_previously_used}, {@code spec_matches_binding}.</p>
+ *
+ * <h2>Human confirmation</h2>
+ * <p>A tool argument cannot prove a person approved a mutation, because the calling model writes
+ * every argument. The MCP client can: it is the party that renders an elicitation to the user.
+ * {@code fabric_confirm_change} therefore sends a form elicitation (change type, target, price
+ * context, proposal age, spec SHA-256) after consuming the token and before executing.</p>
+ * <table>
+ *   <caption>{@code fabric_confirm_change} by client capability and answer</caption>
+ *   <tr><th>Client</th><th>Answer</th><th>{@code human_confirmation.status}</th><th>Executed</th></tr>
+ *   <tr><td>declared form elicitation</td><td>accept with {@code confirm = true}</td>
+ *       <td>{@code accepted}</td><td>yes</td></tr>
+ *   <tr><td>declared form elicitation</td><td>decline, or accept without {@code confirm = true}</td>
+ *       <td>{@code declined}</td><td>no</td></tr>
+ *   <tr><td>declared form elicitation</td><td>cancel</td><td>{@code cancelled}</td><td>no</td></tr>
+ *   <tr><td>declared form elicitation</td><td>none within {@code EQUINIX_MCP_ELICIT_TIMEOUT_MS}
+ *       (default 300000 ms)</td><td>{@code timed_out}</td><td>no</td></tr>
+ *   <tr><td>declared form elicitation</td><td>the round trip failed</td><td>{@code failed}</td><td>no</td></tr>
+ *   <tr><td>did not declare it</td><td>not asked</td><td>{@code unsupported_by_client}</td>
+ *       <td>yes; approval rests on the calling agent</td></tr>
+ * </table>
+ * <p>The token stays consumed in every row. Limits: an {@code accepted} status proves the client
+ * reported an acceptance, not that a person read the prompt; and a client without elicitation
+ * support gets no server-side check at all. <b>Beta</b>: the prompt is modelled on the "Confused
+ * Deputy Resolution" requirement of the Connection Coordinator specification
+ * ({@code connection-coordinator/docs/Protocols.md}, marked work in progress there) and is an
+ * analogy to it, not an implementation of it.</p>
+ *
+ * <h2>Vocabulary</h2>
+ * <p>The {@code chg-} confirm token is a lookup key into one process's proposal store. It is not an
+ * activation key. Activation keys are issued by a cloud provider when a customer creates a native
+ * multicloud link and are entered at the other provider; the broker neither mints nor accepts
+ * them.</p>
  *
  * <p>Policy, matching the read-only catalog's rules: no delete tools of any kind, and no
  * mutation outside this broker.</p>

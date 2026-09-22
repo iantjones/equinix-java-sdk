@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("EquinixMcpServer catalog — the 12 launch tools, toolset filtering, and the seam")
+@DisplayName("EquinixMcpServer catalog — the 14 built-in tools, toolset filtering, and the seam")
 class EquinixMcpServerCatalogTest {
 
     private static final List<String> LAUNCH_CATALOG = List.of(
@@ -45,6 +45,8 @@ class EquinixMcpServerCatalogTest {
             "design_estimate_latency",
             "design_estimate_tco",
             "design_compare_cloud_egress",
+            "design_compare_cloud_to_cloud",
+            "design_list_multicloud_environments",
             "design_analyze_peering",
             "design_export_terraform",
             "portal_list_open_tickets",
@@ -58,7 +60,7 @@ class EquinixMcpServerCatalogTest {
     }
 
     @Test
-    @DisplayName("the full catalog is exactly the 12 launch tools, in order")
+    @DisplayName("the full catalog is exactly the 14 built-in tools, in order")
     void fullCatalog() {
         assertEquals(LAUNCH_CATALOG, names(EquinixMcpServer.catalog(EnumSet.allOf(Toolset.class))));
     }
@@ -87,6 +89,10 @@ class EquinixMcpServerCatalogTest {
                 .collect(java.util.stream.Collectors.toMap(ToolRegistration::getName, ToolRegistration::isOpenWorld));
         assertTrue(openWorld.get("design_compare_cloud_egress"), "live cloud pricing is open-world");
         assertTrue(openWorld.get("design_analyze_peering"), "PeeringDB is open-world");
+        assertTrue(openWorld.get("design_compare_cloud_to_cloud"),
+                "it fetches live cloud egress rates for both ends, so it is open-world");
+        assertFalse(openWorld.get("design_list_multicloud_environments"),
+                "it reads the catalog bundled with the SDK and calls nothing");
         assertFalse(openWorld.get("design_estimate_latency"));
         assertFalse(openWorld.get("portal_list_open_tickets"));
         assertFalse(openWorld.get("ibx_list_power_events"));
@@ -95,15 +101,15 @@ class EquinixMcpServerCatalogTest {
     @Test
     @DisplayName("toolset filtering selects the matching subsets")
     void toolsetFiltering() {
-        assertEquals(7, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN)).size());
-        assertEquals(7, EquinixMcpServer.catalog(EnumSet.of(Toolset.FABRIC)).size(),
+        assertEquals(9, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN)).size());
+        assertEquals(9, EquinixMcpServer.catalog(EnumSet.of(Toolset.FABRIC)).size(),
                 "the fabric id serves the same engine tools");
         assertEquals(List.of("portal_list_open_tickets", "portal_get_billing_summary"),
                 names(EquinixMcpServer.catalog(EnumSet.of(Toolset.PORTAL))));
         assertEquals(List.of("ne_list_devices"), names(EquinixMcpServer.catalog(EnumSet.of(Toolset.NE))));
         assertEquals(List.of("ibx_get_environmentals", "ibx_list_power_events"),
                 names(EquinixMcpServer.catalog(EnumSet.of(Toolset.IBX))));
-        assertEquals(9, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN, Toolset.IBX)).size());
+        assertEquals(11, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN, Toolset.IBX)).size());
     }
 
     @Test

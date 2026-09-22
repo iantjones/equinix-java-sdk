@@ -7,6 +7,202 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cloud-to-cloud: native multicloud links, activation keys, Fabric v4 environment operations (Beta)
+Every item in this section is **Beta**. Sources: the Connection Coordinator specification
+([github.com/aws/Interconnect](https://github.com/aws/Interconnect), commit `bbfc763`, 2026-09-18),
+the Fabric v4 catalog fetched 2026-09-21, and provider pricing and documentation pages read
+2026-09-21. The SDK plans and prices a native provider-to-provider link. It does not create one:
+it calls no AWS, Google Cloud, Oracle or Azure API and adds no cloud-provider SDK dependency.
+Naming and scope: [ADR 0001](docs/adr/0001-interconnect-vocabulary.md).
+
+**Added — `com.eqixiac.equinix.core.model.multicloud`** (new package; imports only `core`, the
+JDK, Jackson and Lombok, enforced by `MulticloudPackageContractTest`):
+- `ActivationKey`: sealed interface over `V1` (cleartext), `V2Encrypted` (envelope readable,
+  ciphertext not exposed, no decryption) and `Opaque` (any input this release cannot interpret).
+  `decode(String)` throws only for a null or blank argument. It accepts the RFC 4648 section 4 and
+  section 5 alphabets, with or without padding, and ignores ASCII whitespace. `encode()` on a
+  decoded key returns the issued string and does not re-serialize it. `toString()` on every variant
+  omits `sharedConnectionUuid`, `destinationAccountId`, the ciphertext and the encoded form. The
+  variants have no JavaBean getters and the type declares a Jackson serializer that writes `{}`,
+  so any `ObjectMapper` (including one with the default `FAIL_ON_EMPTY_BEANS`) serializes a key
+  as `{}`.
+- `ProviderRef`, `ProviderSite`, `EnvironmentRef`, `BandwidthTier` (`coveringTier(int)` rounds a
+  request up to the next listed size, Mbps).
+- Wire enums with an `UNKNOWN` read-side fallback: `AdminState`, `VerificationState`,
+  `ProvisioningState`, `MulticloudConnectionType`, `EnvironmentVisibility`.
+
+**Added — Fabric v4 Beta surfaces** (catalog fetched 2026-09-21):
+- `ServiceProfiles.getEnvironments(serviceProfileUuid)`:
+  `GET /fabric/v4/serviceProfiles/{serviceProfileId}/environments`. Follows `offset`/`limit`
+  pagination to the last page; a failure on any page propagates and no partial list is returned.
+- `ServiceProfiles.validateActivationKey(serviceProfileUuid, environmentUuid, String)` and the
+  `ActivationKeyDetails` overload: `POST .../environments/{environmentId}/actions` with
+  `type = VALIDATE_ACTIVATION_KEY`. Returns `EnvironmentActionResponse`; `isKeyUnused()` is true
+  only for state `INACTIVE`. The catalog publishes no response example, so which response
+  properties the service populates is unverified.
+- Both methods are `default` on the `ServiceProfiles` interface (the default throws
+  `UnsupportedOperationException`), so existing implementations of the interface still compile.
+- New models: `EnvironmentActionResponse`, `ActivationKeyDetails`, `EnvironmentActionRequest`,
+  `ProviderEnvironmentRef`; enums `EnvironmentActionType`, `EnvironmentActionState`.
+- `ProviderEnvironment` gains `supportedBandwidths` (Mbps), `metros`, `supportedFeatures`,
+  `changeLog`. `MetroRef` reads `metroCode` as an alias of `code`, because the catalog example
+  publishes both shapes for a `metros` item.
+- `SimpleAccessPoint.AccessPointBuilder.activationKey(String)`, `.environment(String)`,
+  `.environment(ProviderEnvironment)`; `ConnectionBuilder.zSideAccessPoint(SimpleAccessPoint)`.
+  `activationKey` is a separate wire property from `authenticationKey`; neither is derived from
+  the other. The catalog publishes no connection-create example that sets either new property.
+- `CloudProviderConnectionAdapter.getActivationKey()`: `default`, returns `null`. The four
+  built-in adapters do not override it, so the requests they build are unchanged.
+- Read-side enum values: `AccessPointType.XF_IC`, `CloudRouterType.IC_ROUTER`,
+  `ConnectionType.GW_VC`, `ConnectionType.IPX_VC`. The catalog publishes examples and no path or
+  schema for the `XF_IC` resource.
+
+**Added — value layer** (`design.value`):
+- `RateCard.multicloudLink(MulticloudLinkRequest)` returns `Optional<MulticloudLinkQuote>`: one
+  `PriceQuote` per provider side. `default` method returning empty, so existing `RateCard`
+  implementations need no change. `LayeredRateCard` resolves each side independently; the earliest
+  card that prices a side supplies it.
+- `EgressPath.MULTICLOUD_INTERCONNECT`: the per-GB rate on a native link. The reference card
+  returns 0 for AWS and Google Cloud (each with source URL and retrieval date) and empty for every
+  other provider. The live provider-API adapters return empty for this path.
+- `ReferenceRateCard` loads a second bundle, `/json/ratecard_multicloud_reference_2026_09.json`
+  (`multicloudAsOf()`), holding only figures published on the providers' pricing pages on
+  2026-09-21: AWS Interconnect - multicloud 10000 Mbps at path tier 1 (12.33 USD/h) and tier 4
+  (51.78 USD/h); Google Partner Cross-Cloud Interconnect transport at 1000, 5000, 10000 and
+  100000 Mbps in four transport locations. Lookups match the published size exactly and do not
+  round, interpolate or extrapolate. A side without a published rate is empty with a reason; AWS
+  1000 Mbps, Oracle Cloud and Azure are unpriced. Hourly rates convert at 730 h per month
+  (`MulticloudLinkQuote.HOURS_PER_MONTH`). These rates are not stored under `cspInterconnectPort`.
+- `CustomRateCard.Builder.multicloudLinkRate(...)` and `multicloudLinkHourlyRate(...)`, keyed by
+  provider, bandwidth (exact match) and optional path tier.
+- `TcoCalculator.Builder` and `SavingsCalculator.Builder`: `toCloud(CloudProviderType)`,
+  `toRegion(String)`, `pathTier(int)` (1-5, default 1, an input), `useAwsFreeTier(boolean)`
+  (default false), `reverseEgress(double, DataUnit)` (defaults to the forward volume). Lever
+  conflicts are rejected at `compare()` / `calculate()` with an `IllegalArgumentException` naming
+  the lever.
+- `DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT`. It joins the default archetype set only
+  when `toCloud(...)` is set, and `ON_PREM` then leaves it: the on-prem inputs carry no cloud
+  egress, so a two-sided comparison cannot rank them against the other archetypes; an `ON_PREM`
+  requested explicitly with a peer cloud is reported unpriced with that reason. With a peer cloud
+  the internet, Equinix and native archetypes price traffic in both directions. A partially priced
+  archetype is never recommended.
+- `CostBreakdown.getProvenance()`, `TcoComparison.getTrafficNote()`,
+  `SavingsEstimate.getMulticloudComparison()`, `SavingsEstimate.breakEvenSustainedMbps()`,
+  `MulticloudPathComparison` (three path totals and
+  `breakEvenSustainedMbps(nativeFixed, perGbPathFixed, perGbSumPerGbPath, perGbSumNative)`, Mbps,
+  both directions summed, symmetric traffic). The break-even is returned whenever the two cost
+  lines cross: both differences positive (native cheaper above the rate) or both negative (Equinix
+  cheaper above it); `isNativeCheaperAboveBreakEven()` and the static
+  `nativeCheaperAboveBreakEven(nativeFixed, perGbPathFixed)` give the sense, and
+  `dominatesAtEveryVolume(...)` names the path that costs the same or less at every volume when
+  they do not cross. The four per-GB rates are currency-checked before they are summed, whatever
+  the declared volume. The comparison currency is the one the Equinix and native paths share when
+  both are priced, so an internet path in another currency is withheld without withholding the
+  break-even.
+- `CustomRateCard.multicloudLink(...)` adds a quote note when `useAwsFreeTier` is set and the card
+  prices the AWS side: the declared rate applies and the free tier is not modelled.
+- `ActivationKey` declares a Jackson serializer that writes `{}`, so a default `ObjectMapper`
+  (with `FAIL_ON_EMPTY_BEANS`) serializes a key as `{}` instead of throwing.
+- Without `toCloud(...)` the TCO and savings Markdown output is byte-identical to the previous
+  build (`SingleCloudOutputUnchangedTest`, golden files under `src/test/resources/golden/`).
+
+**Added — optimizer and Deployment Wizard** (`design.optimizer`):
+- `DeploymentWizard.Builder.cloudToCloudStrategy(CloudToCloudStrategy)` with values
+  `EQUINIX_ONLY`, `NATIVE_WHEN_AVAILABLE`, `NATIVE_ONLY`, `COMPARE`. Default `COMPARE`: the Equinix
+  connections are planned as before and each cloud pair with a catalog environment gets a
+  `PlannedMulticloudInterconnect` with role `ALTERNATIVE`. `EQUINIX_ONLY` reproduces the previous
+  plan, pricing and rendered output (`EquinixOnlyOutputUnchangedTest`). Also
+  `multicloudEnvironments(MulticloudEnvironmentCatalog)` and `multicloudPathTier(int)`.
+- `DeploymentPlan.getMulticloudLinks()` (nullable) and `multicloudLinksOrEmpty()`;
+  `MulticloudLinkRole` (`ALTERNATIVE`, `REPLACEMENT`, `UNAVAILABLE`); `MulticloudLinkPricing`
+  (native two-sided quote, Equinix fixed monthly cost for the same flow, break-even rate with
+  `nativeCheaperAboveBreakEven` and the per-GB rates' `perGbCurrency`). The recommendation states
+  which path costs less on each side of the break-even; when the fixed costs and the per-GB rates
+  are not in one currency it states that no comparison is made. `plan()` and `reprice(plan)`
+  resolve the rate card once and price the links and the plan from that instance (a live card
+  fetches the price catalogue once).
+- `PlanValueAssessment` / `PlanValueRealization`: a plan that depends on `REPLACEMENT` links
+  subtracts `PlanPricing.getNativeReplacementMonthlyCost()` from the net
+  (`getNativeLinkMonthlyCost()`, `getNativeLinkCurrency()`), prices egress from a cloud reached
+  only through such a link at `EgressPath.MULTICLOUD_INTERCONNECT` (`ProviderEgressSaving.getPath()`),
+  and withholds the aggregates when the fee is unpriced (`isNativeLinkUnpriced()`).
+- `MulticloudEnvironmentCatalog` (`standard()`, `empty()`, `of(...)`, `load(InputStream)`,
+  `with(...)`, `find(...)`, `regionsFor(...)`), `MulticloudEnvironment`,
+  `MulticloudEnvironmentStatus`. Bundled data `/json/multicloud_environments_2026_09.json`, read
+  2026-09-21: 8 AWS and Google Cloud region pairs (GA), AWS `us-east-1` with Oracle `us-ashburn-1`
+  (GA), 4 AWS and Azure pairs (Preview, 1000 Mbps).
+- `PlanPricing` native-link fields (`nativeAlternativeMonthlyCost`,
+  `nativeReplacementMonthlyCost`, `perMulticloudLinkCost`, `unpricedMulticloudLinks` and the
+  per-currency maps). None is part of `monthlyTotal`. `PlanPricing` is now
+  `@Builder(toBuilder = true)`.
+- `PlanValidator`: a native link is listed under skipped validations with a reason; an
+  `UNAVAILABLE` entry under `NATIVE_ONLY` is a Layer-1 error.
+- `DeploymentPlan.execute()` sends no request for a native link.
+  `DeploymentOutcome.getInformational()` holds one non-recoverable entry per link
+  (`resourceType "MulticloudInterconnect"`); it does not affect `isFullySuccessful()`.
+- `MetroOptimizer.Builder.multicloudEnvironments(...)` and the informational finding
+  `NATIVE_MULTICLOUD_ALTERNATIVE` (severity `INFO`, no score deduction).
+- `TerraformExporter`: per native link, one comment block with the create-then-accept procedure
+  and one `<name>_destination_account_id` variable (no default for a `REPLACEMENT` link,
+  `default = null` otherwise, none for an `UNAVAILABLE` entry). No `resource` block and no
+  cloud-provider `provider` block is emitted; the number of `resource` blocks equals
+  `totalResourceCount()`. The header comment names the Equinix connections each `REPLACEMENT` link
+  stands in for. Plan-supplied text written into a comment has its line breaks replaced by spaces,
+  so it cannot end the comment (this also applies to the existing "not resolved" comments).
+  Provider procedures are copies of AWS, Google Cloud and Oracle pages read 2026-09-21, printed
+  with their source URLs. `TopologyDiagram` draws a
+  native link as a dashed bidirectional edge between the two cloud nodes, never through a Cloud
+  Router; its label is HTML-escaped like node labels. An `UNAVAILABLE` entry is not drawn.
+
+**Added — Intelligence MCP Server tools** (`design` toolset; the catalog goes from 14 to 16 tools,
+7 to 9 of them `design_*`; all read-only):
+- `design_compare_cloud_to_cloud`: inputs `a` and `z` (cloud, region), `bandwidth_mbps`, optional
+  `sustained_mbps` (both directions summed, 0 to 2 x `bandwidth_mbps`), `term_months`,
+  `path_tier`, `use_aws_free_tier`, `metro_code`, `cloud_router_package`. Returns the
+  `public_internet`, `equinix_fabric` and `native_multicloud_link` paths with per-side price
+  source, `break_even_sustained_mbps` with `cheaper_above_break_even` (`native_multicloud_link` or
+  `equinix_fabric`), `unpriced_components` and the catalog environment for the region pair. An
+  unpriced figure is `null` with a reason.
+- `design_list_multicloud_environments`: the bundled environment catalog, filtered by cloud and
+  region; at most 50 entries per call.
+- `design_estimate_tco` accepts `peer_cloud`, `peer_region`, `path_tier` and returns
+  `traffic_note` and per-breakdown provenance when `peer_cloud` is set.
+- `design_plan_deployment` accepts `deployment.cloud_to_cloud_strategy` (default `compare`) and
+  `deployment.multicloud_path_tier`, and returns `native_multicloud_links` when a flow matched
+  (each link's `pricing` carries `per_gb_currency` and, with a break-even,
+  `cheaper_above_break_even`). A plan without cloud-to-cloud flows has an unchanged payload.
+- `ServerContext.multicloudEnvironments()` (defaults to `MulticloudEnvironmentCatalog.standard()`;
+  injectable through the builder). `TimeoutRateCard` applies the per-lookup timeout to
+  `multicloudLink(...)`.
+
+**Changed — Safe Mutation Broker** (`mcp.server.broker`, `mutate` toolset):
+- `fabric_confirm_change` now consumes the token, verifies the spec hash, sends an MCP form
+  elicitation to the client (change type, target, price context, proposal age, spec SHA-256) and
+  executes only on an accept with `confirm = true`. `declined`, `cancelled`, `timed_out`
+  (`EQUINIX_MCP_ELICIT_TIMEOUT_MS`, default 300000 ms) and `failed` execute nothing; the token
+  stays consumed. A client that did not declare form elicitation is not prompted and the change
+  executes as before, reported as `human_confirmation.status = unsupported_by_client`.
+- Every confirm result and token error carries `confirm_checks` (`proposal_exists`,
+  `not_expired`, `not_previously_used`, `spec_matches_binding`); confirm results also carry
+  `human_confirmation {status, detail}` and `token_state`.
+- New public type `mcp.server.HumanConfirmation` and
+  `ServerContext.confirmWithHuman(String)`. Limit: `accepted` proves the client reported an
+  acceptance, not that a person read the prompt.
+- The `chg-` confirm token keeps its name and is documented as a process-local lookup key, not an
+  activation key.
+
+**Documentation:**
+- README section "Design: Cloud-to-Cloud" and wizard subsection "Cloud-to-Cloud Flows: Native
+  Multicloud Links (Beta)". Their Java examples are compiled with the test tree in
+  `ReadmeCloudToCloudShowcase`.
+- `docs/adr/0001-interconnect-vocabulary.md`: the seven meanings of "interconnect" in and around
+  the SDK, the naming rule, the owner decisions of 2026-09-21 and the scoping rulings.
+
+**Not included:** an implementation of the provider-to-provider specification (planned as the
+separate artifact `com.eqixiac.interconnect:connection-coordinator-java`); any Equinix Fabric One
+surface (no API reference published as of 2026-09-21); pricing for AWS sizes other than
+10000 Mbps, for Oracle Cloud and for Azure.
+
 ### MCP client removed; embedded Intelligence MCP Server added (breaking)
 The SDK's MCP story is inverted: it no longer *consumes* Equinix's MCP server — it *is* one.
 

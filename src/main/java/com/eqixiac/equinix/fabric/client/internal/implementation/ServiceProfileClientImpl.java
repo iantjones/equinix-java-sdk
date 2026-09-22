@@ -25,12 +25,16 @@ import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
 import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
 import com.eqixiac.equinix.fabric.client.internal.ServiceProfileClient;
+import com.eqixiac.equinix.fabric.model.EnvironmentActionResponse;
 import com.eqixiac.equinix.fabric.model.ServiceProfile;
 import com.eqixiac.equinix.fabric.model.ServiceProfileAction;
+import com.eqixiac.equinix.fabric.model.implementation.EnvironmentActionRequest;
+import com.eqixiac.equinix.fabric.model.implementation.ProviderEnvironment;
 import com.eqixiac.equinix.fabric.model.implementation.ServiceMetro;
 import com.eqixiac.equinix.fabric.model.implementation.ServiceProfileActionRequest;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
+import com.eqixiac.equinix.fabric.model.json.EnvironmentActionResponseJson;
 import com.eqixiac.equinix.fabric.model.json.ServiceProfileActionJson;
 import com.eqixiac.equinix.fabric.model.json.ServiceProfileJson;
 import com.eqixiac.equinix.fabric.model.json.creators.ServiceProfileCreatorJson;
@@ -39,6 +43,7 @@ import com.eqixiac.equinix.fabric.model.wrappers.ServiceProfileWrapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * Internal client for Fabric Service Profiles. Standard request/response plumbing and paging are
@@ -100,6 +105,24 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
                 Map.of("uuid", uuid), ServiceMetro.class);
         Page<ServiceMetro> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
         return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    }
+
+    public Page<ProviderEnvironment> getEnvironments(String uuid) {
+        EquinixRequest<ProviderEnvironment> request = buildRequestWithPathParams("GetServiceProfileEnvironments",
+                RequestType.PAGINATED, Map.of("uuid", uuid), ProviderEnvironment.class);
+        // Dual-shape paging: this request's elements (ProviderEnvironment) are not this client's
+        // JSON model (ServiceProfileJson), so pages 2+ -- fetched through the inherited nextPage,
+        // which by default re-maps items with wrap(ServiceProfileJson) -- carry their own item
+        // mapper. Identity, because ProviderEnvironment is the public model.
+        request.setPageItemMapper(UnaryOperator.identity());
+        return ResponseHandler.handlePaginatedListResponse(invoke(request), request);
+    }
+
+    public EnvironmentActionResponse createEnvironmentAction(String uuid, String environmentId,
+                                                             EnvironmentActionRequest request) {
+        return postForType("PostServiceProfileEnvironmentAction",
+                Map.of("uuid", uuid, "environmentId", environmentId),
+                request, EnvironmentActionResponseJson.getSingleTypeRef());
     }
 
     public ServiceProfileJson refresh(String uuid) {

@@ -216,6 +216,10 @@ class BrokerToolsTest {
             IllegalArgumentException e = confirmFails("chg-42-000000000000000000000000");
             assertTrue(e.getMessage().contains("unknown"), e.getMessage());
             assertTrue(e.getMessage().contains("fabric_propose_change"), e.getMessage());
+            assertTrue(e.getMessage().contains("confirm_checks: proposal_exists=false, "
+                            + "not_expired=not_evaluated"),
+                    "the failing predicate is echoed and the later ones are marked unevaluated: "
+                            + e.getMessage());
         }
 
         @Test
@@ -227,6 +231,8 @@ class BrokerToolsTest {
             assertTrue(e.getMessage().contains("expired"), e.getMessage());
             assertTrue(e.getMessage().contains("10 minutes"), e.getMessage());
             assertTrue(e.getMessage().contains("fabric_propose_change"), e.getMessage());
+            assertTrue(e.getMessage().contains("proposal_exists=true, not_expired=false, "
+                    + "not_previously_used=true"), e.getMessage());
         }
 
         @Test
@@ -243,6 +249,7 @@ class BrokerToolsTest {
             assertTrue(e.getMessage().contains("already"), e.getMessage());
             assertTrue(e.getMessage().contains("single-use") || e.getMessage().contains("first confirm attempt"),
                     e.getMessage());
+            assertTrue(e.getMessage().contains("not_previously_used=false"), e.getMessage());
         }
 
         @Test
@@ -255,6 +262,44 @@ class BrokerToolsTest {
                     () -> call("fabric_confirm_change", "{\"confirm_token\":\"" + minted.token() + "\"}"));
             assertTrue(e.getMessage().contains("integrity"), e.getMessage());
             assertTrue(e.getMessage().contains("Nothing was executed"), e.getMessage());
+            assertTrue(e.getMessage().contains("proposal_exists=true, not_expired=true, "
+                    + "not_previously_used=true, spec_matches_binding=false"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("the confirm prompt states change type, target, price context, age against the TTL, and the binding")
+        void confirmationPromptContent() {
+            String canonical = SpecHash.canonicalize(readTree(NETWORK_SPEC), MAPPER);
+            PendingChange minted = store.mint(ChangeType.NETWORK_CREATE, canonical,
+                    SpecHash.sha256Hex(canonical), "unpriced: no rate card models network_create");
+            clock.advance(Duration.ofSeconds(95));
+
+            String prompt = BrokerToolFactory.confirmationPrompt(minted, readTree(canonical),
+                    store.ageOf(minted), store.ttl());
+
+            assertTrue(prompt.contains("Change type: network_create"), prompt);
+            assertTrue(prompt.contains("Target: EVPLAN network 'Broker-Net', scope GLOBAL"), prompt);
+            assertTrue(prompt.contains("Price context: unpriced: no rate card models network_create"), prompt);
+            assertTrue(prompt.contains("Proposal age: 95 s (proposals expire 600 s after the dry run)"), prompt);
+            assertTrue(prompt.contains("Spec SHA-256: " + minted.specSha256()), prompt);
+            assertTrue(prompt.contains("already consumed"),
+                    "the approver is told a non-accept answer still costs the token: " + prompt);
+        }
+
+        @Test
+        @DisplayName("tool text keeps the chg- confirm token distinct from a cloud activation key")
+        void tokenIsNeverCalledAnActivationKey() {
+            ToolRegistration propose = tools.get(0);
+            ToolRegistration confirm = tools.get(1);
+            assertEquals("fabric_propose_change", propose.getName(), "the tool names are unchanged");
+            assertEquals("fabric_confirm_change", confirm.getName());
+            assertTrue(mintNetworkProposal().token().startsWith("chg-"), "the token prefix is unchanged");
+            assertTrue(!propose.getDescription().toLowerCase(java.util.Locale.ROOT).contains("activation"),
+                    "the propose text never uses the word: " + propose.getDescription());
+            assertTrue(confirm.getDescription().contains("not a cloud-provider activation key"),
+                    "the only mention is the statement that the token is not one: " + confirm.getDescription());
+            assertTrue(confirm.getDescription().contains("unsupported_by_client"), confirm.getDescription());
+            assertTrue(confirm.getDescription().contains("confirm_checks"), confirm.getDescription());
         }
 
         @Test

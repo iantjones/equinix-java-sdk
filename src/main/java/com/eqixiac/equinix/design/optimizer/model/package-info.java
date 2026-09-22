@@ -31,6 +31,13 @@
  * {@link com.eqixiac.equinix.design.optimizer.model.CostEstimate} — are all Lombok
  * {@code @Value} types (get-prefixed accessors, builders, no setters).</p>
  *
+ * <p><b>Beta.</b> {@link com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog}
+ * and {@link com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironment} are reference data,
+ * not request or result types: the pairs of cloud regions that two providers interconnect natively,
+ * each with a status ({@code GA}, {@code PREVIEW}, {@code UNVERIFIED}), its source URLs and the date
+ * they were read. The bundled catalog is a dated copy and goes stale; both the optimizer and the
+ * Deployment Wizard accept a caller-supplied one.</p>
+ *
  * <p>Cost figures are stamped per metro with their own currency and
  * {@link com.eqixiac.equinix.design.value.ratecard.PriceSource}; cross-currency totals are never
  * fabricated (the aggregate total is {@code null} when metros span currencies).</p>

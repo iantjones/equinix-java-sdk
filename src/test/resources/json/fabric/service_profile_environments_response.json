@@ -1,0 +1,54 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/23ad37d0-6b1c-4d1f-a4eb-9f3d68fbe4fd/environments/6ad498b5-d929-44ac-a199-ce9f0d31d9ac",
+      "uuid": "6ad498b5-d929-44ac-a199-ce9f0d31d9ac",
+      "type": "IC_ENV",
+      "name": "US West 1 – Production",
+      "description": "Primary production environment",
+      "region": "us-west-1",
+      "metros": [
+        {
+          "code": "CH",
+          "name": "Chicago",
+          "displayName": "Chicago"
+        },
+        {
+          "code": "DC",
+          "name": "Ashburn",
+          "displayName": "Ashburn"
+        }
+      ],
+      "supportedBandwidths": [
+        1000,
+        10000,
+        100000
+      ]
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/serviceProfiles/23ad37d0-6b1c-4d1f-a4eb-9f3d68fbe4fd/environments/1ad498b5-d929-44ac-a199-ce9f0d31d9ab",
+      "uuid": "1ad498b5-d929-44ac-a199-ce9f0d31d9ab",
+      "type": "IC_ENV",
+      "name": "US East 1 – Production",
+      "description": "Primary production environment",
+      "region": "us-east-1",
+      "metros": [
+        {
+          "href": "https://api.equinix.com/fabric/v4/metros/DC",
+          "metroCode": "DC",
+          "type": "XF_METRO"
+        }
+      ],
+      "supportedBandwidths": [
+        1000,
+        10000,
+        100000
+      ]
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 2,
+    "total": 2
+  }
+}

@@ -14,6 +14,12 @@ import java.util.Optional;
  * rates, live Equinix pricing, and bundled reference figures into one resolver
  * with a clear precedence: the earliest card that can price an item wins.
  *
+ * <p>{@code multicloudLink(...)} applies the same precedence per side, because each side of a
+ * native multicloud link is a separate price from a separate provider: the earliest card that
+ * prices a side supplies it, and a side no card prices stays empty with every card's reason.
+ * A caller can therefore declare one negotiated side on a {@code CustomRateCard} and take the
+ * other side from the reference card.</p>
+ *
  * <p>Instances are created via {@link RateCard#layered(RateCard...)}.</p>
  */
 final class LayeredRateCard implements RateCard {
@@ -73,6 +79,22 @@ final class LayeredRateCard implements RateCard {
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<MulticloudLinkQuote> multicloudLink(MulticloudLinkRequest request) {
+        MulticloudLinkQuote merged = null;
+        for (RateCard card : cards) {
+            Optional<MulticloudLinkQuote> quote = card.multicloudLink(request);
+            if (quote.isEmpty()) {
+                continue;
+            }
+            merged = merged == null ? quote.get() : merged.fillUnpricedSidesFrom(quote.get());
+            if (merged.isFullyPriced()) {
+                break;
+            }
+        }
+        return Optional.ofNullable(merged);
     }
 
     @Override

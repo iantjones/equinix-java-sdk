@@ -28,6 +28,10 @@
  * dimensions), and {@link com.eqixiac.equinix.design.optimizer.enums.RiskSeverity} (risk-finding
  * levels).
  *
+ * <p><b>Beta.</b> {@link com.eqixiac.equinix.design.optimizer.enums.MulticloudEnvironmentStatus}
+ * ({@code GA}, {@code PREVIEW}, {@code UNVERIFIED}) is the availability recorded on an entry of the
+ * native multicloud environment catalog.</p>
+ *
  * @see com.eqixiac.equinix.design.optimizer.MetroOptimizer
  */
 package com.eqixiac.equinix.design.optimizer.enums;

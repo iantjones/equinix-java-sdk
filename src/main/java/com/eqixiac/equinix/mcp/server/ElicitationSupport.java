@@ -54,6 +54,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>the round-trip times out or errors &rarr; {@link Status#FAILED}: treated like a decline.</li>
  * </ul>
  *
+ * <h3>Confirmation prompts</h3>
+ * <p>{@link #confirm(McpSyncServerExchange, String, long)} sends a form with one required boolean
+ * field and returns a {@link HumanConfirmation}. It distinguishes decline, cancel, timeout and
+ * transport failure because a caller that gates a mutation on the answer reports each one. Only
+ * {@code accept} with {@code confirm = true} is an approval.</p>
+ *
  * <h3>Never blocks forever</h3>
  * <p>The SDK's {@code createElicitation} blocks until the client answers. A stalled or silent client
  * must never wedge a tool call, so the round-trip runs on a daemon worker under a hard timeout; on
@@ -64,6 +70,9 @@ final class ElicitationSupport {
 
     /** The form field the single-select schema collects the pick into. */
     static final String CHOICE_FIELD = "choice";
+
+    /** The boolean form field the confirmation schema collects the approval into. */
+    static final String CONFIRM_FIELD = "confirm";
 
     private static final Logger logger = LoggerFactory.getLogger(ElicitationSupport.class);
     private static final AtomicInteger POOL_SEQUENCE = new AtomicInteger();
@@ -141,30 +150,11 @@ final class ElicitationSupport {
                 .builder(message, singleSelectSchema(message, options))
                 .build();
 
-        McpSchema.ElicitResult result;
-        Future<McpSchema.ElicitResult> future = ELICIT_EXECUTOR.submit(() -> exchange.createElicitation(request));
-        try {
-            result = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        RoundTrip trip = roundTrip(exchange, request, timeoutMillis);
+        if (trip.result() == null) {
+            return new Outcome(Status.FAILED, null, trip.failure());
         }
-        catch (TimeoutException e) {
-            future.cancel(true);
-            logger.warn("Elicitation timed out after {} ms; falling back", timeoutMillis);
-            return new Outcome(Status.FAILED, null, "the elicitation timed out after " + timeoutMillis + " ms");
-        }
-        catch (ExecutionException e) {
-            Throwable cause = e.getCause() == null ? e : e.getCause();
-            logger.warn("Elicitation failed: {}", cause.toString());
-            return new Outcome(Status.FAILED, null, "the elicitation failed: " + cause.getMessage());
-        }
-        catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            future.cancel(true);
-            return new Outcome(Status.FAILED, null, "the elicitation was interrupted");
-        }
-
-        if (result == null || result.action() == null) {
-            return new Outcome(Status.FAILED, null, "the client returned no elicitation result");
-        }
+        McpSchema.ElicitResult result = trip.result();
         switch (result.action()) {
             case ACCEPT:
                 Option picked = match(options, result.content());
@@ -179,6 +169,131 @@ final class ElicitationSupport {
             default:
                 return new Outcome(Status.DECLINED, null, "the user dismissed the prompt");
         }
+    }
+
+    /**
+     * Asks the person at the client to approve one action, using this context's elicitation timeout.
+     *
+     * @param ctx the owning server context (for the elicitation timeout)
+     * @param exchange the live client exchange (may be {@code null})
+     * @param message the prompt; state what will be executed and what happens on each answer
+     * @return the typed result
+     */
+    static HumanConfirmation confirm(ServerContext ctx, McpSyncServerExchange exchange, String message) {
+        return confirm(exchange, message, ctx.elicitTimeoutMillis());
+    }
+
+    /**
+     * Asks the person at the client to approve one action. The form has one required boolean field,
+     * {@value #CONFIRM_FIELD}, with no default. Approval requires both the {@code accept} action and
+     * {@code confirm = true}; every other outcome, including {@code accept} with the field absent or
+     * {@code false}, is a non-approval. The call never throws for a client-side failure and never
+     * waits longer than {@code timeoutMillis}.
+     *
+     * @param exchange the live client exchange (may be {@code null})
+     * @param message the prompt; state what will be executed and what happens on each answer
+     * @param timeoutMillis the hard timeout for the round trip, in milliseconds
+     * @return {@link HumanConfirmation.Status#UNSUPPORTED_BY_CLIENT} without sending anything when
+     *         the client cannot service a form elicitation; otherwise what the client reported
+     */
+    static HumanConfirmation confirm(McpSyncServerExchange exchange, String message, long timeoutMillis) {
+        if (!supportsForm(exchange)) {
+            return new HumanConfirmation(HumanConfirmation.Status.UNSUPPORTED_BY_CLIENT,
+                    "the client did not declare elicitation support, so no confirmation prompt was sent");
+        }
+        McpSchema.ElicitRequest request = McpSchema.ElicitFormRequest
+                .builder(message, confirmSchema())
+                .build();
+
+        RoundTrip trip = roundTrip(exchange, request, timeoutMillis);
+        if (trip.result() == null) {
+            return new HumanConfirmation(trip.timedOut()
+                    ? HumanConfirmation.Status.TIMED_OUT : HumanConfirmation.Status.FAILED, trip.failure());
+        }
+        switch (trip.result().action()) {
+            case ACCEPT:
+                if (isTrue(trip.result().content(), CONFIRM_FIELD)) {
+                    return new HumanConfirmation(HumanConfirmation.Status.ACCEPTED,
+                            "the client returned accept with " + CONFIRM_FIELD + "=true");
+                }
+                return new HumanConfirmation(HumanConfirmation.Status.DECLINED,
+                        "the client returned accept without " + CONFIRM_FIELD + "=true, which is not an approval");
+            case DECLINE:
+                return new HumanConfirmation(HumanConfirmation.Status.DECLINED, "the user declined the prompt");
+            case CANCEL:
+            default:
+                return new HumanConfirmation(HumanConfirmation.Status.CANCELLED, "the user dismissed the prompt");
+        }
+    }
+
+    /**
+     * Sends one elicitation on the daemon pool and waits at most {@code timeoutMillis}. A
+     * {@code null} {@link RoundTrip#result()} means no usable answer arrived and
+     * {@link RoundTrip#failure()} says why.
+     */
+    private static RoundTrip roundTrip(McpSyncServerExchange exchange, McpSchema.ElicitRequest request,
+                                       long timeoutMillis) {
+        McpSchema.ElicitResult result;
+        Future<McpSchema.ElicitResult> future = ELICIT_EXECUTOR.submit(() -> exchange.createElicitation(request));
+        try {
+            result = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        }
+        catch (TimeoutException e) {
+            future.cancel(true);
+            logger.warn("Elicitation timed out after {} ms; falling back", timeoutMillis);
+            return new RoundTrip(null, true, "the elicitation timed out after " + timeoutMillis + " ms");
+        }
+        catch (ExecutionException e) {
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            logger.warn("Elicitation failed: {}", cause.toString());
+            return new RoundTrip(null, false, "the elicitation failed: " + cause.getMessage());
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            future.cancel(true);
+            return new RoundTrip(null, false, "the elicitation was interrupted");
+        }
+        if (result == null || result.action() == null) {
+            return new RoundTrip(null, false, "the client returned no elicitation result");
+        }
+        return new RoundTrip(result, false, null);
+    }
+
+    /** One elicitation round trip: the answer, or why there is none. */
+    private record RoundTrip(McpSchema.ElicitResult result, boolean timedOut, String failure) {
+    }
+
+    /** Whether the accepted form content carries {@code field} as boolean {@code true} (or the text "true"). */
+    private static boolean isTrue(Map<String, Object> content, String field) {
+        if (content == null) {
+            return false;
+        }
+        Object raw = content.get(field);
+        if (raw instanceof Boolean flag) {
+            return flag;
+        }
+        return raw != null && "true".equalsIgnoreCase(String.valueOf(raw).trim());
+    }
+
+    /**
+     * The confirmation form schema: one required boolean, no default, so a client renders an unset
+     * control the user has to set before submitting.
+     */
+    private static Map<String, Object> confirmSchema() {
+        Map<String, Object> confirm = new LinkedHashMap<>();
+        confirm.put("type", "boolean");
+        confirm.put("title", "Execute this change");
+        confirm.put("description", "Set to true and submit to execute. False, decline, cancel or no "
+                + "answer executes nothing.");
+
+        Map<String, Object> properties = new LinkedHashMap<>();
+        properties.put(CONFIRM_FIELD, confirm);
+
+        Map<String, Object> schema = new LinkedHashMap<>();
+        schema.put("type", "object");
+        schema.put("properties", properties);
+        schema.put("required", List.of(CONFIRM_FIELD));
+        return schema;
     }
 
     /** Matches the accepted form content back to one of the offered options by its id. */

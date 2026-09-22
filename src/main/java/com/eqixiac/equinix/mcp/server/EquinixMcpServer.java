@@ -88,7 +88,7 @@ public final class EquinixMcpServer implements AutoCloseable {
 
     /**
      * The built-in <em>read-only</em> tool catalog for the selected toolsets. The
-     * {@link Toolset#DESIGN} and {@link Toolset#FABRIC} ids currently select the same seven
+     * {@link Toolset#DESIGN} and {@link Toolset#FABRIC} ids currently select the same nine
      * engine tools (they are all Fabric-backed); {@code portal}, {@code ne}, and {@code ibx}
      * add their domains' reach. The {@link Toolset#MUTATE} toolset is deliberately not part
      * of this static catalog: the Safe Mutation Broker's tool pair shares a per-server
@@ -355,13 +355,19 @@ public final class EquinixMcpServer implements AutoCloseable {
                 String base = "Community Equinix intelligence server (not affiliated with Equinix; "
                         + "unrelated to Equinix's private-beta Fabric MCP server). Design engines "
                         + "(placement optimization, deployment planning, latency, TCO, egress savings, "
-                        + "peering) plus portal/network-edge/IBX lookups are read-only; "
-                        + "design_plan_deployment only PLANS.";
+                        + "cloud-to-cloud path comparison, peering) plus portal/network-edge/IBX lookups "
+                        + "are read-only; design_plan_deployment only PLANS. Beta: "
+                        + "design_compare_cloud_to_cloud and design_list_multicloud_environments cover "
+                        + "native provider-to-provider multicloud links from dated reference data; an "
+                        + "unpriced figure is null, never 0, and this server never creates such a link.";
                 effectiveInstructions = toolsets.contains(Toolset.MUTATE)
                         ? base + " The opt-in mutate toolset is enabled: fabric_propose_change runs a real "
                         + "dry-run validation (provisioning nothing) and returns a single-use confirm "
                         + "token for human review; only fabric_confirm_change with that token executes "
-                        + "the create. There are no update or delete tools."
+                        + "the create. When the client declared MCP elicitation, fabric_confirm_change "
+                        + "prompts the user and executes only on an explicit accept; otherwise it reports "
+                        + "human_confirmation.status=unsupported_by_client. There are no update or delete "
+                        + "tools."
                         : base + " All tools are read-only — nothing is ever provisioned by this server.";
             }
 

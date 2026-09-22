@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,9 +25,15 @@ import java.util.Map;
  *       category itself is mixed, with the truth in the matching {@code *MonthlyByCurrency} map.
  *       A raw cross-currency category sum is never reported.</li>
  * </ul>
+ *
+ * <p><strong>Native multicloud links (Beta).</strong> The {@code native*} fields and
+ * {@code perMulticloudLinkCost} price the plan's native provider-to-provider links. The cloud
+ * providers bill those charges, not Equinix, so they are reported separately: no native-link
+ * amount is part of {@code monthlyTotal}, {@code setupTotal}, {@code monthlyByCurrency} or any
+ * category figure. All of them are {@code null} on a plan without native links.</p>
  */
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class PlanPricing {
 
     /**
@@ -93,4 +100,60 @@ public class PlanPricing {
 
     @Builder.Default
     String disclaimer = "Estimates based on published Fabric pricing. Actual costs may vary based on contract terms, volume discounts, and promotional offers.";
+
+    // ── Native multicloud links (Beta). Billed by the cloud providers, never by Equinix. None of
+    //    the figures below is part of monthlyTotal, setupTotal or any category figure above. ──
+
+    /**
+     * <b>Beta.</b> The monthly fees of the native multicloud links the plan depends on (role
+     * {@code REPLACEMENT}), both providers' sides summed. {@code null} when the plan has no such
+     * link, when any of them has an unpriced side, or when they span currencies. A {@code null}
+     * is not a zero cost. Never included in {@code monthlyTotal}.
+     */
+    BigDecimal nativeReplacementMonthlyCost;
+
+    /** The ISO&nbsp;4217 code of {@code nativeReplacementMonthlyCost}; {@code null} when that figure is. */
+    String nativeReplacementCurrency;
+
+    /**
+     * Per-currency monthly subtotals of the priced {@code REPLACEMENT} links; {@code null} when
+     * the plan has none. Excludes links with an unpriced side, which
+     * {@code unpricedMulticloudLinks} names.
+     */
+    Map<String, BigDecimal> nativeReplacementMonthlyByCurrency;
+
+    /**
+     * <b>Beta.</b> The monthly fees of the native multicloud links reported for comparison only
+     * (role {@code ALTERNATIVE}), both providers' sides summed. The customer pays this only by
+     * adopting the alternatives. {@code null} under the same conditions as
+     * {@code nativeReplacementMonthlyCost}. Never included in {@code monthlyTotal}.
+     */
+    BigDecimal nativeAlternativeMonthlyCost;
+
+    /** The ISO&nbsp;4217 code of {@code nativeAlternativeMonthlyCost}; {@code null} when that figure is. */
+    String nativeAlternativeCurrency;
+
+    /** Per-currency monthly subtotals of the priced {@code ALTERNATIVE} links; {@code null} when the plan has none. */
+    Map<String, BigDecimal> nativeAlternativeMonthlyByCurrency;
+
+    /**
+     * Monthly fee per fully priced native multicloud link, keyed by
+     * {@code PlannedMulticloudInterconnect.getName()}, each in that link's own currency
+     * ({@code getPricing().getNativeCurrency()} on the link). {@code null} when the plan has no
+     * native link.
+     */
+    Map<String, BigDecimal> perMulticloudLinkCost;
+
+    /**
+     * The names of the native multicloud links with at least one unpriced side, or whose two
+     * sides are in different currencies. {@code null} when the plan has no native link.
+     */
+    List<String> unpricedMulticloudLinks;
+
+    /**
+     * Provenance and limits of the native-link figures: the hourly-to-monthly conversion, the
+     * reference data's as-of date, and that the cloud providers bill these charges. {@code null}
+     * when the plan has no native link.
+     */
+    String nativeMulticloudDisclaimer;
 }

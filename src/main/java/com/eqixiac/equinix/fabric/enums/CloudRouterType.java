@@ -18,8 +18,32 @@ package com.eqixiac.equinix.fabric.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+/**
+ * Cloud Router {@code type} values in the Fabric v4 catalog (fetched 2026-09-21).
+ *
+ * <table>
+ *   <caption>Where each value appears in the catalog</caption>
+ *   <tr><th>Constant</th><th>Catalog schemas</th></tr>
+ *   <tr><td>{@link #XF_ROUTER}</td><td>{@code CloudRouterPostRequestBase.type} (the only value a
+ *       create request accepts), {@code CloudRouterReadResponse.type}, and the router reference
+ *       schemas.</td></tr>
+ *   <tr><td>{@link #IC_ROUTER}</td><td>{@code CloudRouterReadResponse.type} only.</td></tr>
+ * </table>
+ *
+ * <p>{@link #UNKNOWN} is a read-side fallback for values added after this SDK release. Never send
+ * it.</p>
+ */
 public enum CloudRouterType {
     XF_ROUTER,
+    /**
+     * Read-only router type. It is absent from {@code CloudRouterPostRequestBase.type}, so a
+     * create request with this value is outside the published contract. The catalog's
+     * {@code InterconnectResponse} example shows a router of this type attached to an
+     * {@code XF_IC} resource.
+     *
+     * <p><b>Beta</b>: the {@code XF_IC} resource has examples but no published path or schema.</p>
+     */
+    IC_ROUTER,
     UNKNOWN;
 
     @JsonCreator

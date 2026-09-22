@@ -133,6 +133,29 @@ class ProposalStoreTest {
     }
 
     @Test
+    @DisplayName("a proposal records its mint instant and price summary; ageOf reads the store's clock")
+    void mintInstantPriceSummaryAndAge() {
+        SteppingClock clock = new SteppingClock();
+        ProposalStore store = new ProposalStore(clock, Duration.ofMinutes(10), 20);
+        PendingChange priced = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA, "USD 250.00 monthly recurring");
+        PendingChange unpriced = store.mint(ChangeType.NETWORK_CREATE, SPEC, SHA);
+
+        assertEquals(Instant.parse("2026-07-20T12:00:00Z"), priced.mintedAt());
+        assertEquals(priced.mintedAt().plus(Duration.ofMinutes(10)), priced.expiresAt(),
+                "expiry is one TTL after the mint instant");
+        assertEquals("USD 250.00 monthly recurring", priced.priceSummary());
+        assertNull(unpriced.priceSummary(), "the three-argument mint records no price summary");
+
+        assertEquals(Duration.ZERO, store.ageOf(priced));
+        clock.advance(Duration.ofSeconds(42));
+        assertEquals(Duration.ofSeconds(42), store.ageOf(priced));
+
+        // The age survives consumption: the confirm prompt is built after the token is consumed.
+        PendingChange consumed = store.consume(priced.token()).change();
+        assertEquals(Duration.ofSeconds(42), store.ageOf(consumed));
+    }
+
+    @Test
     @DisplayName("tokens are unique and unguessable-shaped; configuration is reported")
     void tokensAndConfiguration() {
         ProposalStore store = new ProposalStore();

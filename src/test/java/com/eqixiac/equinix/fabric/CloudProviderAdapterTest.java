@@ -356,6 +356,74 @@ class CloudProviderAdapterTest {
     // Custom Adapter Implementation Test
     // ========================================================================
 
+    // ========================================================================
+    // Activation key (Beta: AccessPoint.activationKey, Fabric v4 catalog 2026-09-21)
+    // ========================================================================
+
+    @Nested
+    @DisplayName("Activation key is a sibling of the authentication key [Beta]")
+    class ActivationKeyTests {
+
+        @Test
+        @DisplayName("the four built-in adapters return null from getActivationKey()")
+        void builtInAdaptersHaveNoActivationKey() {
+            assertNull(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID).getActivationKey());
+            assertNull(AzureExpressRouteAdapter.of("service-key", "eastus", TEST_PROFILE_UUID, PeeringType.PRIVATE).getActivationKey());
+            assertNull(GoogleCloudInterconnectAdapter.of("pairing-key", "us-east1", TEST_PROFILE_UUID).getActivationKey());
+            assertNull(OracleFastConnectAdapter.of("ocid1.virtualcircuit", "us-ashburn-1", TEST_PROFILE_UUID).getActivationKey());
+        }
+
+        @Test
+        @DisplayName("fromCloudProvider leaves activationKey unset for a built-in adapter")
+        void builtInAdapterLeavesActivationKeyUnset() {
+            SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
+                    .fromCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID))
+                    .create();
+
+            assertEquals("123456789012", ap.getAuthenticationKey());
+            assertNull(ap.getActivationKey());
+            assertNull(ap.getEnvironment());
+        }
+
+        @Test
+        @DisplayName("builder keeps activationKey and authenticationKey independent")
+        void builderKeepsKeysIndependent() {
+            SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
+                    .serviceProfile(TEST_PROFILE_UUID)
+                    .authenticationKey("auth-key")
+                    .activationKey("activation-key")
+                    .environment("6ad498b5-d929-44ac-a199-ce9f0d31d9ac")
+                    .create();
+
+            assertEquals("auth-key", ap.getAuthenticationKey());
+            assertEquals("activation-key", ap.getActivationKey());
+            assertEquals("6ad498b5-d929-44ac-a199-ce9f0d31d9ac", ap.getEnvironment().getUuid());
+        }
+
+        @Test
+        @DisplayName("an activation key set on the builder survives fromCloudProvider with a built-in adapter")
+        void builderActivationKeySurvivesAdapterWithoutOne() {
+            SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
+                    .activationKey("activation-key")
+                    .fromCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID))
+                    .create();
+
+            assertEquals("activation-key", ap.getActivationKey());
+            assertEquals("123456789012", ap.getAuthenticationKey());
+        }
+
+        @Test
+        @DisplayName("environment(null) clears the reference")
+        void nullEnvironmentClearsReference() {
+            SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
+                    .environment("6ad498b5-d929-44ac-a199-ce9f0d31d9ac")
+                    .environment((String) null)
+                    .create();
+
+            assertNull(ap.getEnvironment());
+        }
+    }
+
     @Nested
     @DisplayName("Custom Adapter Implementation")
     class CustomAdapterTests {

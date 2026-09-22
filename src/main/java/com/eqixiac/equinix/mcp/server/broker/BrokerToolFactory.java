@@ -20,12 +20,15 @@ import com.eqixiac.equinix.design.value.ratecard.PriceQuote;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
 import com.eqixiac.equinix.design.value.ratecard.Term;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
+import com.eqixiac.equinix.mcp.server.HumanConfirmation;
 import com.eqixiac.equinix.mcp.server.ServerContext;
 import com.eqixiac.equinix.mcp.server.ToolRegistration;
 import com.eqixiac.equinix.mcp.server.Toolset;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -42,6 +45,33 @@ import java.util.Optional;
  * so a token minted by that propose tool is confirmable only by its paired confirm tool —
  * i.e. within one server instance. The store-taking overload is the test seam (deterministic
  * clocks, pre-seeded proposals).</p>
+ *
+ * <h2>Human confirmation at confirm time</h2>
+ * <p>{@code fabric_confirm_change} asks the MCP client to show the change to a person before it
+ * executes ({@link ServerContext#confirmWithHuman(String)}). The order is fixed: consume the token,
+ * verify the spec hash, prompt, execute. The prompt states the change type, the target, the price
+ * context the proposal reported, the proposal's age and the spec SHA-256.</p>
+ * <table>
+ *   <caption>Confirm outcomes by human-confirmation status</caption>
+ *   <tr><th>{@code human_confirmation.status}</th><th>Executed</th><th>Token afterwards</th></tr>
+ *   <tr><td>{@code accepted}</td><td>yes</td><td>consumed</td></tr>
+ *   <tr><td>{@code declined}, {@code cancelled}, {@code timed_out}, {@code failed}</td><td>no</td>
+ *       <td>consumed; a new proposal is required</td></tr>
+ *   <tr><td>{@code unsupported_by_client}</td><td>yes, without a prompt</td><td>consumed</td></tr>
+ * </table>
+ * <p>{@code unsupported_by_client} keeps the behaviour the broker had before the prompt existed:
+ * a client that did not declare form elicitation cannot be prompted, so approval rests on the
+ * calling agent having shown the proposal to a person. The result says so. The prompt is the
+ * broker's counterpart of the "Confused Deputy Resolution" requirement in the Connection
+ * Coordinator specification ({@code connection-coordinator/docs/Protocols.md}): evidence that the
+ * inciting action came from the customer. <b>Beta</b>: that section of the specification is marked
+ * work in progress, and the counterpart here is an analogy, not an implementation of it.</p>
+ *
+ * <h2>Vocabulary</h2>
+ * <p>The {@code chg-} confirm token is a process-local lookup key. It is not an activation key:
+ * activation keys are issued by cloud providers for native multicloud links and are entered at
+ * the other provider. Tool text never calls the token an activation key, so a model has no reason
+ * to put one where the other belongs.</p>
  *
  * <p>Annotation honesty: both tools carry {@code readOnlyHint=false} because the pair exists
  * to mutate — but the propose phase itself provisions <em>nothing</em> (its API call is the
@@ -121,8 +151,11 @@ public final class BrokerToolFactory {
         // The real, spec-backed dry run: the API validates the exact create payload.
         ObjectNode validation = ChangeCompiler.execute(changeType, spec, ctx, true);
 
-        // Token minted only after the dry run passed — invalid specs never earn a token.
-        PendingChange minted = store.mint(changeType, canonical, sha256);
+        ObjectNode priceContext = priceContext(changeType, spec, ctx);
+
+        // Token minted only after the dry run passed — invalid specs never earn a token. The price
+        // summary is stored with it so the confirm prompt repeats the figure shown here.
+        PendingChange minted = store.mint(changeType, canonical, sha256, priceSummary(priceContext));
 
         ObjectNode payload = ctx.objectMapper().createObjectNode();
         payload.put("phase", "dry_run");
@@ -130,7 +163,7 @@ public final class BrokerToolFactory {
         payload.set("validation", validation);
         payload.put("dry_run_note", "Validated by the live Equinix API with dryRun=true — nothing was "
                 + "provisioned by this call.");
-        payload.set("price_context", priceContext(changeType, spec, ctx));
+        payload.set("price_context", priceContext);
         payload.put("confirm_token", minted.token());
         payload.put("expires_in_seconds", store.ttl().toSeconds());
         payload.put("spec_sha256", sha256);
@@ -138,8 +171,21 @@ public final class BrokerToolFactory {
                 + "the SHA-256 of this exact spec. Any change to the spec invalidates it — re-propose "
                 + "instead.");
         payload.put("next_step", "Have a human review the validation and price context, then call "
-                + "fabric_confirm_change with confirm_token to execute exactly this spec.");
+                + "fabric_confirm_change with confirm_token to execute exactly this spec. When the client "
+                + "supports MCP elicitation, fabric_confirm_change prompts the user itself and executes "
+                + "only on an explicit accept.");
         return payload;
+    }
+
+    /** One line of the price context for the confirm prompt: the figures when priced, else the note. */
+    private static String priceSummary(ObjectNode priceContext) {
+        if (!priceContext.path("priced").asBoolean(false)) {
+            return priceContext.path("note").asText("unpriced");
+        }
+        String currency = priceContext.path("currency").asText("USD");
+        return currency + " " + priceContext.path("monthly_recurring").asText() + " monthly recurring, "
+                + currency + " " + priceContext.path("non_recurring").asText() + " non-recurring ("
+                + priceContext.path("price_source").asText() + "). " + priceContext.path("basis").asText("");
     }
 
     /**
@@ -198,16 +244,31 @@ public final class BrokerToolFactory {
                         + "by fabric_propose_change, identified ONLY by its confirm_token. The stored spec "
                         + "— never a re-supplied one — is re-verified against its SHA-256 binding and then "
                         + "executed for real via the same Fabric v4 create endpoint WITHOUT dryRun. Call "
-                        + "this only after a human has reviewed and approved the proposal. Tokens are "
-                        + "single-use (consumed on the first attempt, success or not), expire after "
+                        + "this only after a human has reviewed and approved the proposal. HUMAN "
+                        + "CONFIRMATION: when the connected client declared MCP form elicitation, this "
+                        + "tool prompts the user with the change type, target, price context, proposal "
+                        + "age and spec SHA-256 BEFORE executing, and executes ONLY when the user accepts "
+                        + "with confirm=true. Decline, cancel, no answer within the elicitation timeout, "
+                        + "or a failed prompt execute NOTHING and return executed=false with "
+                        + "human_confirmation.status = declined | cancelled | timed_out | failed. When the "
+                        + "client did not declare elicitation, no prompt can be sent: the change executes "
+                        + "as before and the result reports human_confirmation.status = "
+                        + "unsupported_by_client, meaning the server did not verify a human approval. "
+                        + "Every result carries confirm_checks (proposal_exists, not_expired, "
+                        + "not_previously_used, spec_matches_binding). Tokens are "
+                        + "single-use (consumed on the first attempt, success or not — a declined or "
+                        + "unanswered prompt also consumes the token), expire after "
                         + ProposalStore.DEFAULT_TTL.toMinutes() + " minutes, and exist only in this server "
-                        + "process; on any token error, re-propose with fabric_propose_change.")
+                        + "process; on any token error or non-accepted prompt, re-propose with "
+                        + "fabric_propose_change. The confirm_token is a process-local lookup key, not a "
+                        + "cloud-provider activation key; never enter it in a cloud console.")
                 .inputSchema(objectSchema(propsOf(
                                 "confirm_token", stringSchema("The single-use token returned by "
                                         + "fabric_propose_change.")),
                         "confirm_token"))
-                .outputSchema(looseObjectSchema("The created entity (uuid, name, state) and the executed "
-                        + "spec's SHA-256."))
+                .outputSchema(looseObjectSchema("phase ('executed' or 'not_executed'), executed, the created "
+                        + "entity (uuid, name, state) when executed, the spec's SHA-256, "
+                        + "human_confirmation {status, detail}, confirm_checks, and token_state."))
                 .readOnly(false)
                 .destructive(false)
                 .idempotent(false)
@@ -225,16 +286,18 @@ public final class BrokerToolFactory {
             case UNKNOWN -> throw new IllegalArgumentException("confirm_token '" + token + "' is unknown "
                     + "in this server process. Tokens are minted by fabric_propose_change, live only in "
                     + "this process's memory for " + ttlMinutes + " minutes, and are single-use. Call "
-                    + "fabric_propose_change again and confirm with the fresh token.");
+                    + "fabric_propose_change again and confirm with the fresh token. "
+                    + ConfirmChecks.unknown().describe());
             case EXPIRED -> throw new IllegalArgumentException("confirm_token '" + token + "' has expired: "
                     + "proposals are confirmable for " + ttlMinutes + " minutes. Nothing was executed. "
-                    + "Call fabric_propose_change again to mint a fresh proposal.");
+                    + "Call fabric_propose_change again to mint a fresh proposal. "
+                    + ConfirmChecks.expired().describe());
             case REPLAYED -> throw new IllegalArgumentException("confirm_token '" + token + "' was already "
                     + "used: tokens are consumed on the first confirm attempt, whether or not it "
                     + "succeeded. Nothing was executed by this call. If the change is still wanted, call "
-                    + "fabric_propose_change again.");
+                    + "fabric_propose_change again. " + ConfirmChecks.replayed().describe());
             case CONSUMED -> {
-                // Fall through to execution below.
+                // Fall through to the integrity check below.
             }
         }
         PendingChange change = consumption.change();
@@ -244,21 +307,163 @@ public final class BrokerToolFactory {
         if (!recomputed.equals(change.specSha256())) {
             throw new IllegalStateException("Proposal integrity check failed: the stored spec no longer "
                     + "matches the SHA-256 its confirm token was bound to. Nothing was executed. Call "
-                    + "fabric_propose_change again.");
+                    + "fabric_propose_change again. " + ConfirmChecks.bindingMismatch().describe());
         }
+        ConfirmChecks checks = ConfirmChecks.allPassed();
 
         JsonNode spec = ctx.objectMapper().readTree(change.canonicalSpec());
+
+        // Human confirmation. The token is already consumed, so every outcome below leaves it
+        // consumed: the single-use rule is "consumed on the first attempt", and a prompt that was
+        // declined, dismissed or never answered is an attempt.
+        HumanConfirmation confirmation = ctx.confirmWithHuman(
+                confirmationPrompt(change, spec, store.ageOf(change), store.ttl()));
+
+        ObjectNode payload = ctx.objectMapper().createObjectNode();
+        if (!confirmation.accepted() && !confirmation.unsupportedByClient()) {
+            payload.put("phase", "not_executed");
+            payload.put("executed", false);
+            payload.put("change_type", change.changeType().id());
+            payload.put("spec_sha256", change.specSha256());
+            payload.set("human_confirmation", humanConfirmationNode(ctx, confirmation));
+            payload.set("confirm_checks", checks.toNode(ctx.objectMapper()));
+            payload.put("token_state", "consumed");
+            payload.put("note", "Nothing was sent to the Equinix API: the create runs only after the user "
+                    + "accepts the confirmation prompt. The confirm token is single-use and was consumed by "
+                    + "this attempt.");
+            payload.put("next_step", "If the change is still wanted, call fabric_propose_change again and "
+                    + "confirm with the fresh token.");
+            return payload;
+        }
+
         // The real create — same compiler, same endpoint, no dryRun parameter.
         ObjectNode created = ChangeCompiler.execute(change.changeType(), spec, ctx, false);
 
-        ObjectNode payload = ctx.objectMapper().createObjectNode();
         payload.put("phase", "executed");
+        payload.put("executed", true);
         payload.put("change_type", change.changeType().id());
         payload.set("result", created);
         payload.put("spec_sha256", change.specSha256());
+        payload.set("human_confirmation", humanConfirmationNode(ctx, confirmation));
+        payload.set("confirm_checks", checks.toNode(ctx.objectMapper()));
+        payload.put("token_state", "consumed");
         payload.put("note", "Executed the exact proposed spec via the real create endpoint (no dryRun "
                 + "parameter). The confirm token is now consumed.");
         return payload;
+    }
+
+    private static ObjectNode humanConfirmationNode(ServerContext ctx, HumanConfirmation confirmation) {
+        ObjectNode node = ctx.objectMapper().createObjectNode();
+        node.put("status", confirmation.status().id());
+        node.put("detail", confirmation.unsupportedByClient()
+                ? confirmation.detail() + ". The change executed without a server-side check that a "
+                + "human approved it; approval rests on the calling agent having shown the proposal to "
+                + "the user."
+                : confirmation.detail());
+        return node;
+    }
+
+    /**
+     * The text shown to the approver: change type, target, the price context the proposal reported,
+     * the proposal's age against its TTL, the spec binding, and what each answer does.
+     */
+    static String confirmationPrompt(PendingChange change, JsonNode spec, Duration age, Duration ttl) {
+        return "Approve execution of a Fabric change proposed through fabric_propose_change.\n"
+                + "Change type: " + change.changeType().id() + "\n"
+                + "Target: " + describeTarget(change.changeType(), spec) + "\n"
+                + "Price context: " + (change.priceSummary() == null
+                ? "none was recorded with the proposal" : change.priceSummary()) + "\n"
+                + "Proposal age: " + age.toSeconds() + " s (proposals expire " + ttl.toSeconds()
+                + " s after the dry run)\n"
+                + "Spec SHA-256: " + change.specSha256() + "\n"
+                + "Accepting with confirm=true sends the real create request to the Equinix Fabric API. "
+                + "Declining, dismissing or not answering sends nothing. The confirm token is single-use "
+                + "and is already consumed, so a new fabric_propose_change is needed after any answer "
+                + "other than accept.";
+    }
+
+    /** A one-line description of what the stored spec creates, read from the spec's own fields. */
+    private static String describeTarget(ChangeType changeType, JsonNode spec) {
+        String name = "'" + spec.path("name").asText("(unnamed)") + "'";
+        return switch (changeType) {
+            case CONNECTION_CREATE -> spec.path("type").asText("?") + " connection " + name + ", "
+                    + spec.path("bandwidth_mbps").asText("?") + " Mbps, A-side " + describeSide(spec.path("a_side"))
+                    + ", Z-side " + describeSide(spec.path("z_side"));
+            case NETWORK_CREATE -> spec.path("type").asText("?") + " network " + name + ", scope "
+                    + spec.path("scope").asText("?")
+                    + (spec.hasNonNull("metro_code") ? ", metro " + spec.path("metro_code").asText() : "");
+            case SERVICE_TOKEN_CREATE -> spec.path("type").asText("?") + " service token " + name
+                    + ", issuer side " + spec.path("issuer_side").asText("?") + ", access point "
+                    + describeSide(spec.path("access_point"));
+        };
+    }
+
+    private static final List<String> ENDPOINT_KEYS = List.of("port_uuid", "service_profile_uuid",
+            "cloud_router_uuid", "network_uuid", "service_token_uuid", "virtual_device_uuid");
+
+    /** The endpoint identifier of a connection side or token access point, as {@code key=value}. */
+    private static String describeSide(JsonNode side) {
+        for (String key : ENDPOINT_KEYS) {
+            if (side.hasNonNull(key)) {
+                return key + "=" + side.path(key).asText();
+            }
+        }
+        return "(no endpoint identifier)";
+    }
+
+    /**
+     * The four redemption predicates of a confirm attempt, in evaluation order. {@code null} means
+     * the predicate was not evaluated because an earlier one failed. They correspond to the checks
+     * the Connection Coordinator specification requires of {@code ConfirmActivationKey} (the
+     * resource still exists, the key was not already used, the request matches the recorded
+     * intent), applied here to a process-local confirm token.
+     *
+     * @param proposalExists the token was minted by this server process and is still remembered
+     * @param notExpired the proposal's TTL had not elapsed
+     * @param notPreviouslyUsed no earlier confirm attempt consumed the token
+     * @param specMatchesBinding the stored spec still hashes to the SHA-256 the token was bound to
+     */
+    record ConfirmChecks(Boolean proposalExists, Boolean notExpired, Boolean notPreviouslyUsed,
+                         Boolean specMatchesBinding) {
+
+        static ConfirmChecks unknown() {
+            return new ConfirmChecks(false, null, null, null);
+        }
+
+        static ConfirmChecks expired() {
+            return new ConfirmChecks(true, false, true, null);
+        }
+
+        static ConfirmChecks replayed() {
+            return new ConfirmChecks(true, null, false, null);
+        }
+
+        static ConfirmChecks bindingMismatch() {
+            return new ConfirmChecks(true, true, true, false);
+        }
+
+        static ConfirmChecks allPassed() {
+            return new ConfirmChecks(true, true, true, true);
+        }
+
+        ObjectNode toNode(ObjectMapper mapper) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("proposal_exists", proposalExists);
+            node.put("not_expired", notExpired);
+            node.put("not_previously_used", notPreviouslyUsed);
+            node.put("spec_matches_binding", specMatchesBinding);
+            return node;
+        }
+
+        String describe() {
+            return "confirm_checks: proposal_exists=" + text(proposalExists) + ", not_expired="
+                    + text(notExpired) + ", not_previously_used=" + text(notPreviouslyUsed)
+                    + ", spec_matches_binding=" + text(specMatchesBinding) + ".";
+        }
+
+        private static String text(Boolean value) {
+            return value == null ? "not_evaluated" : value.toString();
+        }
     }
 
     // ── local schema/argument helpers ───────────────────────────────────────

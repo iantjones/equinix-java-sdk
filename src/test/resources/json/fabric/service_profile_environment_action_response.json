@@ -1,0 +1,8 @@
+{
+  "type": "VALIDATE_ACTIVATION_KEY",
+  "uuid": "3a58dd05-f46d-4b1d-a154-2e85c396ea62",
+  "state": "ACTIVE",
+  "keyDetails": {
+    "value": "key_here"
+  }
+}

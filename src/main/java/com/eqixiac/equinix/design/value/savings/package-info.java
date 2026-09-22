@@ -37,8 +37,18 @@
  * cost is excluded (and quoted in the disclaimer) rather than mislabelled, with the
  * derived net figures omitted instead of fabricated.</p>
  *
+ * <p><b>Beta.</b> With a peer cloud ({@code toCloud(...)}) the estimate also carries a
+ * {@link com.eqixiac.equinix.design.value.savings.MulticloudPathComparison}: monthly totals for
+ * the traffic between the two clouds over the public internet, the two-sided Equinix path and
+ * the providers' native multicloud link, and {@code breakEvenSustainedMbps} — the sustained
+ * rate (Mbps, both directions summed, symmetric traffic, 730-hour month) at which the flat-fee
+ * native link and the per-GB Equinix path cost the same. The figure is computed from the quotes
+ * resolved for the estimate and is empty when any input is unpriced or the currencies differ.
+ * The single-cloud fields are computed the same way with or without a peer cloud.</p>
+ *
  * @see com.eqixiac.equinix.design.value.savings.SavingsCalculator
  * @see com.eqixiac.equinix.design.value.savings.SavingsEstimate
+ * @see com.eqixiac.equinix.design.value.savings.MulticloudPathComparison
  * @see com.eqixiac.equinix.design.value.ratecard.RateCard
  */
 package com.eqixiac.equinix.design.value.savings;

@@ -39,6 +39,39 @@
  * number. Entry points: {@code fabric.savingsCalculator()} and
  * {@code fabric.tcoComparison()} (also available on {@code Design.over(fabric)}).</p>
  *
+ * <h2>Cloud-to-cloud comparisons</h2>
+ * <p><b>Beta.</b> Both entry points accept a peer cloud ({@code toCloud(...)}). The models then
+ * price the traffic between two clouds over three paths: the public internet, Equinix Fabric
+ * (private egress both ways, two virtual connections, both CSP ports), and the providers' native
+ * multicloud link, which has no Equinix component. The native link is priced by
+ * {@code RateCard.multicloudLink(...)} as a two-sided
+ * {@link com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote}: one flat fee per
+ * provider, converted from the published hourly rate at
+ * {@code MulticloudLinkQuote.HOURS_PER_MONTH} = 730 h/month.</p>
+ *
+ * <table>
+ *   <caption>Rules the cloud-to-cloud models follow</caption>
+ *   <tr><th>Rule</th><th>Mechanism</th></tr>
+ *   <tr><td>Every path is priced on the same two-way traffic and a complete component list</td>
+ *       <td>a peer cloud switches every archetype to its two-sided form together; on-prem,
+ *       whose inputs carry no cloud egress, leaves the default set and is reported unpriced when
+ *       requested; a missing peer-side component marks the archetype partially priced</td></tr>
+ *   <tr><td>Only published native-link prices are bundled</td><td>each bundled figure records
+ *       its source URL and retrieval date, repeated in the quote note; a size, tier, region or
+ *       provider without a published figure is an empty side with a reason</td></tr>
+ *   <tr><td>The AWS free tier is never assumed</td><td>applied only on
+ *       {@code useAwsFreeTier(true)}</td></tr>
+ *   <tr><td>The AWS path tier is never derived</td><td>an input, default 1; AWS publishes no
+ *       path-to-tier table</td></tr>
+ *   <tr><td>No cross-currency sums</td><td>the two sides of a link and the components of each
+ *       path run through {@code CurrencyReconciler}</td></tr>
+ * </table>
+ *
+ * <p>The savings estimate also reports the sustained rate at which the flat-fee native link and
+ * the per-GB Equinix path cost the same
+ * ({@code MulticloudPathComparison.breakEvenSustainedMbps(...)} documents the formula). Without
+ * a peer cloud, both models behave and render exactly as before.</p>
+ *
  * @see com.eqixiac.equinix.design.value.ratecard.RateCard
  * @see com.eqixiac.equinix.design.value.CurrencyReconciler
  */

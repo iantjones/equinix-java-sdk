@@ -27,11 +27,13 @@ things it handles so you don't have to:
 On top of the raw API, the **`Design`** module is for planning rather than provisioning: a
 metro-placement optimizer, a deployment wizard that turns a plan into provisioned Fabric resources,
 peering intelligence built on PeeringDB, IBX-to-IBX latency estimates, and Fabric-vs-internet cost
-calculators.
+calculators. For traffic between two clouds the calculators and the wizard also price the
+providers' native cloud-to-cloud link (Beta) next to the Equinix path and report the break-even
+rate; see [Design: Cloud-to-Cloud](#design-cloud-to-cloud--when-equinix-is-and-is-not-the-answer).
 
 And the whole thing doubles as an **MCP server for AI agents**: one build produces a runnable
 `-mcp-server.jar` that Claude Desktop, Claude Code, Cursor, or VS Code launch over stdio, exposing
-the design engines and cross-domain reads as 12 read-only tools — plus an opt-in dry-run-first
+the design engines and cross-domain reads as 14 read-only tools — plus an opt-in dry-run-first
 mutation broker — under your own API credentials. See
 [Intelligence MCP Server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server). It's a community
 server, not affiliated with Equinix.
@@ -160,7 +162,7 @@ registry.refresh();   // re-pulls both sources at runtime, atomically, in place 
 | **Projects** | `new Projects(creds)` | 1 | Project listing (read-only, `resourceManager/v2`) |
 | **IAM** | `new IAM(creds)` | 8 | Roles, Role Assignments, Access Policies (+Grants), Permission Sets, Principal Policies, Policy Masks, Effective Permissions, Resource Types |
 | **STS** | `new STS(creds)` | 3 | Token issuance, OIDC Providers (+suspend/resume), JWKS/OpenID discovery |
-| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Cost & Value Engineering (rate cards, savings calculator, TCO comparison), Terraform export, topology diagrams (`com.eqixiac.equinix.design.*`) — a facade over an existing Fabric client (reuses its transport) |
+| **Design** (value-add) | `Design.over(fabric)` / `eq.design()` / `Fabric.optimizeMetros()` … | — | Metro Optimizer, Deployment Wizard, Peering Intelligence, Cost & Value Engineering (rate cards, savings calculator, TCO comparison), cloud-to-cloud path comparison (Beta), Terraform export, topology diagrams (`com.eqixiac.equinix.design.*`) — a facade over an existing Fabric client (reuses its transport) |
 
 ## Usage Examples
 
@@ -782,6 +784,85 @@ Fix the errors and re-plan (or `dryRun()` again) first.
 | `AGGREGATED` | All connections at a metro sized to total metro bandwidth. Simpler provisioning. |
 | `CUSTOM` | User supplies explicit bandwidth values via `customBandwidthMap()`. |
 
+#### Cloud-to-Cloud Flows: Native Multicloud Links (Beta)
+
+A workload that depends on two or more clouds implies a traffic flow between each pair of them.
+Two providers can carry such a flow over a native provider-to-provider link with no Equinix
+resource on the path: AWS Interconnect - multicloud paired with a Google Cloud Partner Cross-Cloud
+Interconnect transport, or with an Oracle FastConnect interconnect virtual circuit. The wizard
+plans and prices that link next to the Equinix path. It never provisions it: the SDK calls no
+AWS, Google Cloud, Oracle or Azure API.
+
+```java
+DeploymentPlan plan = fabric.deploymentWizard(result)
+    .cloudToCloudStrategy(CloudToCloudStrategy.COMPARE)   // the default
+    .multicloudPathTier(1)                                // AWS connectivity-scope tier 1-5; an input, default 1
+    .notifications("noc@example.com")
+    .plan();
+
+for (PlannedMulticloudInterconnect link : plan.multicloudLinksOrEmpty()) {
+    System.out.println(link.describe());            // AWS us-east-1 <-> GOOGLE_CLOUD us-east4, 10000 Mbps, GA, ALTERNATIVE
+    System.out.println(link.getRecommendation());   // both fixed costs, the break-even rate, which path costs less on each side
+    link.getPricing().breakEvenSustainedMbps()
+        .ifPresent(mbps -> System.out.println(mbps + " Mbps sustained, both directions summed"));
+}
+```
+
+| `CloudToCloudStrategy` | Equinix connections for the flow | Native link on the plan |
+|------------------------|----------------------------------|-------------------------|
+| `COMPARE` (default) | Planned exactly as under `EQUINIX_ONLY`. | Role `ALTERNATIVE`, when the catalog lists the planned region pair. |
+| `EQUINIX_ONLY` | Planned. | None. The catalog is not read; plan, pricing and rendered output equal those of the wizard without this lever. |
+| `NATIVE_WHEN_AVAILABLE` | A Cloud Router to cloud connection is omitted only when the replacement rule allows. | Role `REPLACEMENT` where a connection was omitted, otherwise `ALTERNATIVE` with the reason each connection was kept. |
+| `NATIVE_ONLY` | As `NATIVE_WHEN_AVAILABLE`. | As above. A flow with no usable environment is an `UNAVAILABLE` entry and a Layer-1 validation error; the plan is invalid. |
+
+Replacement rule. A connection is omitted whole or kept unchanged; it is never resized. It is
+omitted only when all of these hold: the matched environment is `GA` and lists a size covering the
+requested bandwidth; the optimization request declares no user site (the wizard does not model
+which site reaches which cloud); the cloud is not a request-level provider requirement; every
+workload using the connection depends on well-known clouds only and has a `GA` environment for each
+of its flows involving that cloud; the connection's bandwidth was not set by `customBandwidthMap()`.
+The metro's Cloud Router is always planned.
+
+| Stage | Behavior for a native link |
+|-------|----------------------------|
+| Match | Candidate regions per cloud, in order: the planned connection's seller region, the dependency's `preferredSellerRegions`, the metro's other seller regions for the cloud. The first pair found in `MulticloudEnvironmentCatalog` is used. |
+| Size | Requested bandwidth is the sum of the workloads' effective bandwidths (Mbps). It rounds up to the smallest size the environment lists (`BandwidthTier.coveringTier`). No routing protocol, /30 subnet or redundancy group is planned. |
+| Price | `MulticloudLinkPricing`: the two-sided native quote (providers' hourly list prices x 730 h per month), the Equinix-path fixed monthly cost for the same flow (two Fabric virtual connections, both clouds' reference port fees, and the Cloud Router when the flow is its only use), and the break-even sustained rate from `MulticloudPathComparison.breakEvenSustainedMbps(...)` with its sense (`isNativeCheaperAboveBreakEven()`). The break-even needs the native fee, the Equinix fixed cost and the four per-GB rates (`getPerGbCurrency()`) in one currency; otherwise the recommendation states that no comparison is made. A size with no published price is unpriced (`null`), never zero. Amounts in different currencies are not summed and no FX rate is applied. One rate-card instance prices the links and the plan, so a live card fetches the price catalogue once per `plan()` or `reprice(plan)`. |
+| Report | `PlanPricing` carries native figures in separate fields (`nativeAlternativeMonthlyCost`, `nativeReplacementMonthlyCost`, `perMulticloudLinkCost`, `unpricedMulticloudLinks`). None is part of `monthlyTotal`. `reprice(plan)` refreshes them. `toMarkdown()` renders a "Native multicloud alternatives" section; `totalResourceCount()` excludes links. `plan.valueRealization()` subtracts `nativeReplacementMonthlyCost` from the net (`PlanValueRealization.getNativeLinkMonthlyCost()`), prices egress from a cloud the plan reaches only through a `REPLACEMENT` link at the link's per-GB rate, and withholds the net when that fee is unpriced. |
+| Validate | Recorded under skipped validations with a reason naming the link. Not deferred: provisioning does not validate it either. |
+| Execute | No request is sent. `DeploymentOutcome.getInformational()` holds one non-recoverable entry per link ("created outside Fabric: follow the create-then-accept recipe"). It is not an error and does not affect `isFullySuccessful()`. |
+
+The bundled catalog (`/json/multicloud_environments_2026_09.json`, as of 2026-09-21) is a dated copy
+of provider documentation and goes stale. Each entry carries its source URLs and the date they were
+read. An absent pair means "not in this copy", not "not offered".
+
+| Pair | Bundled entries | Status | Source |
+|------|-----------------|--------|--------|
+| AWS - Google Cloud | 8 region pairs (`us-east-1`/`us-east4`, `us-west-1`/`us-west2`, `us-west-2`/`us-west1`, `eu-west-2`/`europe-west2`, `eu-central-1`/`europe-west3`, `eu-north-1`/`europe-north2`, `ap-southeast-1`/`asia-southeast1`, `ap-southeast-2`/`australia-southeast1`) | `GA` | [AWS Interconnect regional availability](https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html), [Google paired locations](https://docs.cloud.google.com/network-connectivity/docs/interconnect/how-to/partner-cci-for-aws/paired-locations) |
+| AWS - Oracle Cloud | `us-east-1`/`us-ashburn-1`; sizes 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000 Mbps | `GA` | AWS page above, [Oracle Interconnect for AWS](https://docs.oracle.com/en-us/iaas/Content/multicloud/interconnect-aws.htm) |
+| AWS - Microsoft Azure | 4 region pairs, 1000 Mbps only | `PREVIEW` | AWS page above, which labels the provider "Preview" |
+
+Supply newer data when a provider launches a pair:
+
+```java
+MulticloudEnvironmentCatalog catalog = MulticloudEnvironmentCatalog.standard().with(
+    MulticloudEnvironment.of(CloudProviderType.AWS, "eu-west-1", CloudProviderType.GOOGLE_CLOUD, "europe-west1",
+        MulticloudEnvironmentStatus.GA, BandwidthTier.of(1000, 10_000),
+        "https://docs.aws.amazon.com/interconnect/latest/userguide/region-availability.html", "2026-12-01"));
+
+DeploymentPlan plan = fabric.deploymentWizard(result)
+    .multicloudEnvironments(catalog)
+    .notifications("noc@example.com")
+    .plan();
+```
+
+Limits. Published prices exist for few sizes: AWS lists 10000 Mbps at path tiers 1 and 4 only, and
+Oracle's side is not bundled, so most links are reported as unpriced until a rate is supplied with
+`CustomRateCard.builder().multicloudLinkHourlyRate(...)`. The break-even assumes symmetric traffic.
+The Metro Optimizer raises an informational `NATIVE_MULTICLOUD_ALTERNATIVE` finding (severity
+`INFO`, no score deduction) for the same condition; it still recommends metros and does not
+evaluate a deployment with none.
+
 #### Terraform Export & Topology Diagrams
 
 If you'd rather hand the plan to your IaC pipeline than let the SDK execute it, `TerraformExporter`
@@ -811,6 +892,21 @@ architecture docs:
 String planDiagram   = new TopologyDiagram().toMermaid(plan);    // metro subgraphs, provider + backbone edges
 String resultDiagram = new TopologyDiagram().toMermaid(result);  // ranked metros + workload placements
 ```
+
+Native multicloud links on the plan (Beta) add no `resource` block and no cloud-provider `provider`
+block to the HCL. Per link the exporter writes one comment block (providers, regions, bandwidth in
+Mbps, catalog status and source URLs, the create-then-accept procedure) and one
+`<name>_destination_account_id` variable: no default for a `REPLACEMENT` link, `default = null`
+otherwise, none for an `UNAVAILABLE` entry. The activation key is never a Terraform input. The
+header comment states the link count and, for each `REPLACEMENT` link, the Equinix connections the
+configuration omits because of it. The number of `resource` blocks equals
+`plan.totalResourceCount()` with or without links. Provider procedures in the comment block are
+copies of AWS, Google Cloud and Oracle documentation read on 2026-09-21, printed with their source
+URLs; for AWS with Azure (preview) and for any other pair the block states that no procedure was
+verified. The plan diagram draws a native link as a dashed bidirectional edge (`<-.->`) between the
+two cloud nodes, labeled `native multicloud (outside Fabric)` with bandwidth, status and role; an
+`UNAVAILABLE` entry is not drawn. A plan without native links produces the same HCL and diagram as
+before.
 
 Both are also reachable from an agent: the MCP tool `design_export_terraform` exports the HCL for a
 `design_plan_deployment` plan_id.
@@ -1327,6 +1423,373 @@ that name exactly which component couldn't be priced instead of hiding it in a t
 negotiated rates with a `CustomRateCard` and the same machinery labels *those* as the authoritative
 layer.
 
+### Design: Cloud-to-Cloud — when Equinix is (and is not) the answer
+
+**Beta.** Two cloud providers can be joined by a link the providers build between themselves, with
+no Equinix resource on the path. AWS announced general availability of such links with Google Cloud
+on [2026-04-14](https://aws.amazon.com/about-aws/whats-new/2026/04/aws-announces-ga-AWS-interconnect-multicloud/)
+and with Oracle Cloud on
+[2026-07-29](https://aws.amazon.com/about-aws/whats-new/2026/07/aws-announces-AWS-interconnect-multicloud-OCI-GA/).
+The SDK models that link as a third path next to
+the public internet and the Equinix Fabric path, prices all three on the same traffic, and reports
+the sustained rate at which the lowest-cost path changes. It plans and prices the native link. It
+does not create it: the SDK calls no AWS, Google Cloud, Oracle or Azure API and has no dependency
+on a cloud-provider SDK.
+
+| Surface | Package | Status |
+|---|---|---|
+| Two-sided TCO and savings comparison, native-link rate lookups | `design.value.tco`, `design.value.savings`, `design.value.ratecard` | Beta; bundled prices cited and dated 2026-09-21 |
+| Native links on a deployment plan ([wizard section](#cloud-to-cloud-flows-native-multicloud-links-beta)) | `design.optimizer.wizard` | Beta; bundled region-pair catalog dated 2026-09-21 |
+| Activation-key codec and specification vocabulary | `core.model.multicloud` | Beta; tracks the open specification at commit `bbfc763` (2026-09-18) |
+| Provider environments, activation-key validation, `activationKey` / `environment` on an access point | `fabric` | Beta in the Fabric v4 catalog (fetched 2026-09-21) |
+
+Naming and scope decisions are recorded in
+[ADR 0001](docs/adr/0001-interconnect-vocabulary.md).
+
+#### The provider-to-provider specification
+
+The [Connection Coordinator API](https://github.com/aws/Interconnect) is an OpenAPI 3.0.3
+specification (version `v1`, Apache-2.0) maintained by Amazon Web Services and Google. It is spoken
+between two providers, not by customers. Its resource hierarchy is
+`providers/{provider}/environments/{environment}/interconnects/{interconnect}`, with channels,
+connections, features, MACsec keys and issues beneath; commit `bbfc763` defines 35 operations. An
+*environment* is a pair of provider sites with a list of supported connection sizes in Mbps. An
+*interconnect* is a redundancy group of channels (the specification recommends at least four) that
+the providers manage; the customer neither selects nor sees it.
+
+The customer-visible part is three steps. At provider A the customer selects an environment, a
+connection size and the account identifier it uses at provider B; provider A returns an *activation
+key*. The customer carries the key to provider B out of band and enters it there; provider B confirms
+it with provider A (`ConfirmActivationKey`). The two providers then negotiate VLAN, addressing and
+BGP per channel and report the connection `VERIFICATION_STATE_VERIFIED`. The specification does not
+name the customer-facing operations of the first two steps; each provider defines its own.
+
+#### What each provider exposes to customers
+
+Read from provider documentation on 2026-09-21. The SDK wraps none of these operations.
+
+| Provider | Customer resource | Create side | Accept side | Status |
+|---|---|---|---|---|
+| AWS ([getting started](https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html)) | AWS Interconnect - multicloud, attached to a Direct Connect gateway | Direct Connect console, *Create new multicloud Interconnect*: peer provider, both regions, bandwidth, the peer account identifier (Google Cloud project ID or OCI tenancy OCID). AWS displays the activation key. | *Accept multicloud Interconnect*: enter the key issued by the peer provider. | GA with Google Cloud and Oracle Cloud; Preview with Azure |
+| Google Cloud ([`transports create`](https://docs.cloud.google.com/sdk/gcloud/reference/network-connectivity/transports/create)) | Partner Cross-Cloud Interconnect *transport* | `gcloud network-connectivity transports create` with `--bandwidth`, `--remote-account-id`, `--remote-profile` | The same command with `--activation-key` | GA, 8 region pairs with AWS |
+| Oracle Cloud ([Interconnect for AWS](https://docs.oracle.com/en-us/iaas/Content/multicloud/interconnect-aws.htm)) | FastConnect interconnect virtual circuit on a Dynamic Routing Gateway | Create the virtual circuit, then *Copy activation key* | Enter the AWS activation key in the *Service key* field | GA, `us-ashburn-1` with AWS `us-east-1` |
+| Azure | Not verified | Not verified | AWS states that a Preview provider can require the CLI | Preview, 1000 Mbps only |
+
+#### Economics: flat hourly fee, no per-GB charge
+
+A native link is billed by each provider separately as a flat hourly fee that depends on the link
+size, with no data-transfer charge. The Equinix path has a lower fixed cost (two Fabric virtual
+connections, a Cloud Router, each provider's interconnect port) and a per-GB private-egress charge
+at each cloud. The native link therefore costs more at low utilization and less at high
+utilization. The rate at which the two paths cost the same is the break-even rate.
+
+Bundled native-link prices (`ReferenceRateCard`, resource
+`/json/ratecard_multicloud_reference_2026_09.json`), all USD, retrieved 2026-09-21:
+
+| Provider side | Size (Mbps) | USD/h | USD/month at 730 h | Source |
+|---|---|---|---|---|
+| AWS, path tier 1 | 10000 | 12.33 | 9,000.90 | [AWS pricing](https://aws.amazon.com/interconnect/multicloud/pricing/) |
+| AWS, path tier 4 | 10000 | 51.78 | 37,799.40 | same |
+| AWS, any other size or tier | | not published | unpriced | same |
+| Google Cloud, North America and Europe | 1000 / 5000 / 10000 / 100000 | 3.50 / 17.30 / 19.00 / 146.60 | 2,555.00 / 12,629.00 / 13,870.00 / 107,018.00 | [Google pricing](https://cloud.google.com/network-connectivity/docs/interconnect/pricing) |
+| Google Cloud, APAC | 1000 / 5000 / 10000 / 100000 | 5.00 / 24.90 / 26.40 / 196.10 | 3,650.00 / 18,177.00 / 19,272.00 / 143,153.00 | same |
+| Google Cloud, South America | 1000 / 5000 / 10000 / 100000 | 7.60 / 38.00 / 46.90 / 299.60 | 5,548.00 / 27,740.00 / 34,237.00 / 218,708.00 | same |
+| Oracle Cloud, Azure | | not bundled | unpriced | |
+| Per-GB data transfer, AWS and Google Cloud sides | | 0 | 0 | both pages above |
+
+Lookup rules:
+
+- The requested size must equal a published size. The card does not round, interpolate or
+  extrapolate native-link rates.
+- A side with no published rate is `Optional.empty()` with a reason string. The archetype is then
+  reported as partially priced (`isPriced() == false`) and is never recommended. It is not priced
+  at zero.
+- The AWS path tier (1 local to 5 maximum scope) is a caller input, default 1. AWS assigns the tier
+  from the Region paths the interconnect serves and publishes no path-to-tier table.
+- The AWS free tier (one tier-1 500 Mbps interconnect per Region per generally-available provider,
+  per the [AWS user guide](https://docs.aws.amazon.com/interconnect/latest/userguide/interconnect-pricing.html))
+  is applied only on `useAwsFreeTier(true)`.
+- Hourly rates convert to monthly at 730 h (`MulticloudLinkQuote.HOURS_PER_MONTH`). A 31-day month
+  has 744 h.
+- Native-link rates are not part of `cspInterconnectPort` in the reference data. That table holds
+  the provider port fees of the Equinix path, which is the baseline the break-even is measured
+  against.
+
+Break-even, for symmetric traffic of `g` GB per month in each direction
+(`MulticloudPathComparison.breakEvenSustainedMbps(...)`):
+
+```text
+g*     = (nativeFixedMonthly - equinixFixedMonthly) / (equinixPerGbSum - nativePerGbSum)     GB each way
+result = 2 x g* x 8000 Mb/GB / (730 h x 3600 s/h)                                            Mbps, both directions summed
+```
+
+`equinixPerGbSum` is the two clouds' private-egress rates added together. The result is empty when
+an input is unpriced, when currencies differ (the four per-GB rates are checked as well as the two
+fixed costs, whatever the declared volume), or when the two cost lines do not cross. They cross
+when the two differences have the same sign. Both positive is the usual case: the Equinix path
+costs less below the rate and the native link above it. Both negative (native fee below the
+Equinix fixed cost, native per-GB sum above the Equinix one) is a crossing with the opposite sense,
+and `isNativeCheaperAboveBreakEven()` is then `false`. Differing signs mean one path costs the same
+or less at every volume; `dominatesAtEveryVolume(...)` names it. The result can exceed the link's
+capacity of 2 x `bandwidthMbps`; the path that is cheaper below the rate is then cheaper at every
+achievable rate, and the comparison's notes state it. The comparison currency is the one the
+Equinix and native paths share when both are priced; an internet path in another currency is
+withheld and does not withhold the break-even.
+
+#### Comparing three archetypes with `TcoCalculator`
+
+`toCloud(...)` makes the comparison two-sided: the internet, Equinix and native archetypes price
+traffic in both directions, `NATIVE_MULTICLOUD_INTERCONNECT` joins the default archetype set and
+`ON_PREM` leaves it. The on-prem inputs describe one site and contain no egress from either cloud,
+so an `ON_PREM` requested explicitly with a peer cloud is reported unpriced with that reason and is
+never recommended. Without `toCloud(...)` the calculator's defaults and output are unchanged from
+the single-cloud form.
+
+> The Java examples in this section are compiled with the test tree in
+> [`ReadmeCloudToCloudShowcase.java`](src/test/java/com/eqixiac/equinix/design/readme/ReadmeCloudToCloudShowcase.java).
+
+```java
+import com.eqixiac.equinix.design.value.ratecard.ReferenceRateCard;
+import com.eqixiac.equinix.design.value.ratecard.Term;
+import com.eqixiac.equinix.design.value.savings.DataUnit;
+import com.eqixiac.equinix.design.value.tco.*;
+
+TcoComparison tco = fabric.tcoComparison()
+    .egress(100, DataUnit.TERABYTE)               // AWS -> Google Cloud, per month
+    .reverseEgress(40, DataUnit.TERABYTE)         // Google Cloud -> AWS, per month; defaults to the forward volume
+    .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+    .toCloud(CloudProviderType.GOOGLE_CLOUD).toRegion("us-east4")
+    .viaMetro(MetroCode.DC)
+    .bandwidthMbps(10_000)                        // link size on every path, Mbps
+    .includeCloudRouter("STANDARD")               // A-side of the two Fabric connections
+    .pathTier(1)                                  // AWS connectivity-scope tier, 1-5
+    .term(Term.MONTH_12)
+    .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET,
+                DeploymentArchetype.EQUINIX_INTERCONNECT,
+                DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT)
+    .rateCard(ReferenceRateCard.standard())       // bundled figures only, so the output below is reproducible offline
+    .compare();
+
+System.out.println(tco.getTrafficNote());
+System.out.println(tco.getRecommended());         // EQUINIX_INTERCONNECT
+
+CostBreakdown nativeLink = tco.breakdown(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT).orElseThrow();
+if (!nativeLink.isPriced()) {
+    System.out.println(nativeLink.getNote());     // names the unpriced side and why
+}
+nativeLink.getProvenance().forEach(System.out::println);   // per figure: source URL, retrieval date, USD/h x 730 h
+```
+
+Result for that input (USD; one-time charges are 0.00 for all three). `tco.toMarkdown()` renders
+the same figures, a traffic line, and per-archetype line items with provenance.
+
+| Archetype | Monthly | Total over 12 months | Line items behind the monthly figure |
+|---|---|---|---|
+| `PUBLIC_CLOUD_INTERNET` | 13,472.00 | 161,664.00 | 100000 GB x 0.09 (AWS) + 40000 GB x 0.1118 (Google Cloud) |
+| `EQUINIX_INTERCONNECT` (recommended) | 8,262.50 | 99,150.00 | private egress 2,000.00 + 744.00; two Fabric connections 2 x 350.00; Cloud Router 1,200.00; interconnect ports 1,642.50 (AWS) + 1,676.00 (Google Cloud); cross-connect 300.00. All `REFERENCE` figures dated 2026-06. |
+| `NATIVE_MULTICLOUD_INTERCONNECT` | 22,870.90 | 274,450.80 | 12.33 USD/h x 730 h (AWS) + 19.00 USD/h x 730 h (Google Cloud) + 0 data transfer |
+
+140 TB per month is a sustained 426 Mbps summed over both directions, which is below the break-even
+rate for these prices. `SavingsCalculator` reports that rate:
+
+```java
+import com.eqixiac.equinix.design.value.savings.MulticloudPathComparison;
+import com.eqixiac.equinix.design.value.savings.SavingsEstimate;
+
+SavingsEstimate estimate = fabric.savingsCalculator()
+    .egress(100, DataUnit.TERABYTE)
+    .reverseEgress(40, DataUnit.TERABYTE)
+    .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
+    .toCloud(CloudProviderType.GOOGLE_CLOUD).toRegion("us-east4")
+    .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
+    .includeCloudRouter("STANDARD")
+    .rateCard(ReferenceRateCard.standard())
+    .calculate();
+
+estimate.breakEvenSustainedMbps()                 // empty when a side is unpriced or currencies differ
+    .ifPresent(mbps -> System.out.println(mbps + " Mbps, both directions summed"));   // 2784.3
+
+MulticloudPathComparison paths = estimate.getMulticloudComparison();   // null without toCloud(...)
+System.out.println(paths.getLowestCostPath());    // PRIVATE at these volumes
+paths.getNotes().forEach(System.out::println);    // provenance and the reason for each null figure
+```
+
+2784.3 Mbps = 2 x ((22,870.90 - 5,218.50) / 0.0386) GB x 8000 / 2,628,000 s. The figure moves with
+every input: a negotiated Fabric rate, a different Cloud Router package, or a Google Cloud region
+outside North America changes it. The single-cloud fields of `SavingsEstimate` are computed as
+before and describe the `fromCloud` direction only.
+
+AWS publishes no 1000 Mbps rate, so a 1 Gbps comparison reports the native archetype as partially
+priced until the rate is supplied. A `CustomRateCard` layered in front prices one side and leaves
+the other to the reference card:
+
+```java
+import com.eqixiac.equinix.design.value.ratecard.CustomRateCard;
+import com.eqixiac.equinix.design.value.ratecard.RateCard;
+
+RateCard rates = RateCard.layered(
+    CustomRateCard.builder()
+        .currency("USD")
+        // placeholder value: use the hourly rate on your AWS quote. Arguments: provider, Mbps, path tier, USD/h.
+        .multicloudLinkHourlyRate(CloudProviderType.AWS, 1_000, 1, new BigDecimal("2.00"))
+        .build(),
+    ReferenceRateCard.standard());                // Google Cloud side and both per-GB rates
+```
+
+#### Native links on a deployment plan
+
+`DeploymentWizard.Builder.cloudToCloudStrategy(...)` defaults to `CloudToCloudStrategy.COMPARE`:
+the Equinix connections are planned as before and each cloud pair with a catalog environment gets
+one `PlannedMulticloudInterconnect` with role `ALTERNATIVE`. `EQUINIX_ONLY` restores the previous
+plan, pricing and rendered output exactly. The strategy table, the replacement rule and the
+per-stage behavior are in the
+[wizard section](#cloud-to-cloud-flows-native-multicloud-links-beta).
+
+```java
+import com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy;
+import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
+import com.eqixiac.equinix.design.optimizer.wizard.model.MulticloudLinkPricing;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
+
+DeploymentPlan plan = fabric.deploymentWizard(result)
+    .cloudToCloudStrategy(CloudToCloudStrategy.COMPARE)   // the default, shown for clarity
+    .notifications("noc@example.com")
+    .plan();
+
+// getMulticloudLinks() is null or empty when the plan has no native link; this accessor is null-safe.
+for (PlannedMulticloudInterconnect link : plan.multicloudLinksOrEmpty()) {
+    System.out.println(link.getName() + ": " + link.describe() + ", role " + link.getRole());
+
+    MulticloudLinkPricing price = link.getPricing();      // null for an UNAVAILABLE entry
+    if (price != null && price.isNativePriced()) {
+        System.out.println("native " + price.getNativeMonthly() + " " + price.getNativeCurrency() + "/month");
+    }
+    if (price != null) {
+        price.breakEvenSustainedMbps().ifPresent(mbps -> System.out.println("break-even " + mbps + " Mbps"));
+    }
+    link.getCreateThenAcceptRecipe().forEach(step -> System.out.println("  " + step));
+}
+```
+
+`plan.execute()` sends no request for a native link. Each link appears once in
+`DeploymentOutcome.getInformational()` and does not affect `isFullySuccessful()`.
+
+#### Decoding an activation key
+
+`ActivationKey` (package `core.model.multicloud`) decodes the specification's key format: a
+base64-encoded JSON object discriminated on the integer `version`.
+
+| Variant | Condition | Readable members |
+|---|---|---|
+| `ActivationKey.V1` | `version == 1`, all five fields present with the schema's types | `destinationEnvironmentUri()`, `sharedConnectionUuid()`, `connectionSizeMbps()` (Mbps), `destinationAccountId()` |
+| `ActivationKey.V2Encrypted` | `version == 2`, `destinationEnvironmentUri` and `encryptedContents` present | `destinationEnvironmentUri()` only. The SDK holds no private key, does not decrypt, and has no accessor for the ciphertext. |
+| `ActivationKey.Opaque` | anything else, including a version this release does not define | `raw()`, and the envelope when it could be read |
+
+```java
+import com.eqixiac.equinix.core.model.multicloud.ActivationKey;
+
+ActivationKey key = ActivationKey.decode(keyFromProvider);   // throws only for a null or blank argument
+
+String summary = switch (key) {
+    case ActivationKey.V1 v1 ->
+        v1.connectionSizeMbps() + " Mbps to " + v1.destinationEnvironmentUri();
+    case ActivationKey.V2Encrypted v2 ->
+        "encrypted; the envelope names " + v2.destinationEnvironmentUri();
+    case ActivationKey.Opaque opaque ->
+        "format not recognized, " + opaque.raw().length() + " characters";
+};
+System.out.println(summary);
+
+key.destinationEnvironmentId().ifPresent(System.out::println);   // the id after "environments/" in the URI
+
+System.out.println(key);
+// ActivationKey.V1{version=1, destinationEnvironmentUri=providers/gcp/environments/aws-us-east-1--gcp-us-east4,
+//   sharedConnectionUuid=<redacted>, connectionSizeMbps=10000, destinationAccountId=<redacted>}
+
+String toEnterAtTheOtherProvider = key.encode();   // the issued string with ASCII whitespace removed; not re-serialized
+```
+
+Redaction guarantee. A version 1 key is cleartext and its five fields are sufficient to rebuild it,
+so the type treats key material as a credential:
+
+| Output | Content |
+|---|---|
+| `toString()`, every variant and `V1.Builder` | Never contains `sharedConnectionUuid`, `destinationAccountId`, the ciphertext, the encoded form or `raw()`. `Opaque` reports the length only. |
+| Jackson serialization | `{}` under any `ObjectMapper`, including one with the default `FAIL_ON_EMPTY_BEANS`: the variants have no JavaBean getters and the type declares a serializer that writes the empty object. |
+| `encode()`, `V1.sharedConnectionUuid()`, `V1.destinationAccountId()`, `Opaque.raw()` | The only accessors that return key material. Call them explicitly where the key must be transported. |
+
+Decoding accepts the RFC 4648 section 4 and section 5 (URL-safe) alphabets, with or without padding,
+and ignores ASCII whitespace. For a decoded key `encode()` returns the issued bytes, so JSON members
+this release does not model survive. The specification publishes no example key; the test fixtures
+are built from the schema's field list. The format changed between specification commits `8173027`
+and `bbfc763` and can change again.
+
+#### Beta Fabric v4: provider environments and `validateActivationKey`
+
+The Fabric v4 catalog (fetched 2026-09-21) defines two Beta operations on an `IC_PROFILE` service
+profile. The SDK wires both. The catalog publishes a request example for the second and no response
+example, so which response properties the service populates is unverified and every getter can
+return `null`.
+
+| Method | Operation | Notes |
+|---|---|---|
+| `ServiceProfiles.getEnvironments(serviceProfileUuid)` | `GET /fabric/v4/serviceProfiles/{serviceProfileId}/environments` | Follows `offset`/`limit` pagination to the last page. Returns an unmodifiable list. A failure on any page propagates; no partial list is returned. |
+| `ServiceProfiles.validateActivationKey(serviceProfileUuid, environmentUuid, activationKey)` | `POST .../environments/{environmentId}/actions`, body `{"type":"VALIDATE_ACTIVATION_KEY","keyDetails":{"value":"..."}}` | The key is sent unmodified. `getState()` is `INACTIVE` for a key not yet used and `ACTIVE` for a used key. |
+
+```java
+import com.eqixiac.equinix.fabric.model.EnvironmentActionResponse;
+import com.eqixiac.equinix.fabric.model.implementation.ProviderEnvironment;
+
+List<ProviderEnvironment> environments = fabric.serviceProfiles().getEnvironments(icProfileUuid);
+for (ProviderEnvironment environment : environments) {
+    System.out.println(environment.getUuid() + " " + environment.getRegion()
+        + " " + environment.getSupportedBandwidths());            // Mbps, for example [1000, 10000, 100000]
+}
+
+EnvironmentActionResponse response = fabric.serviceProfiles()
+    .validateActivationKey(icProfileUuid, environments.get(0).getUuid(), key.encode());
+
+if (response.isKeyUnused()) {                                     // true only for state INACTIVE
+    System.out.println("key not yet used: " + response.getUuid());
+}
+```
+
+`AccessPoint.activationKey` and `AccessPoint.environment` are settable through
+`SimpleAccessPoint.define(...).activationKey(...)` / `.environment(...)` and
+`ConnectionBuilder.zSideAccessPoint(...)`. `activationKey` is a separate wire property from
+`authenticationKey`; neither is derived from the other, and the four built-in cloud adapters send
+no activation key. The catalog publishes no connection-create example that sets either property.
+Send such a request with `dryRun()` before a live create. The read-side enum values `XF_IC`
+(`AccessPointType`), `IC_ROUTER` (`CloudRouterType`), `GW_VC` and `IPX_VC` (`ConnectionType`) are
+added; the catalog publishes examples but no path or schema for the `XF_IC` resource.
+
+#### Agent equivalents
+
+The [MCP server](#intelligence-mcp-server-run-the-sdk-as-an-mcp-server) exposes the same engines.
+All four surfaces are Beta and read-only.
+
+| Tool | Engine |
+|---|---|
+| `design_compare_cloud_to_cloud` | `SavingsCalculator` with `toCloud(...)`: three paths and `break_even_sustained_mbps` |
+| `design_list_multicloud_environments` | `MulticloudEnvironmentCatalog` |
+| `design_estimate_tco` with `peer_cloud` | `TcoCalculator` with `toCloud(...)` |
+| `design_plan_deployment` with `deployment.cloud_to_cloud_strategy` | `DeploymentWizard.Builder.cloudToCloudStrategy(...)`; links returned as `native_multicloud_links` |
+
+#### Limits
+
+- The SDK is customer-side. It does not implement the provider-to-provider specification; that is
+  planned as a separate artifact, `com.eqixiac.interconnect:connection-coordinator-java` (planned,
+  not published; no repository URL exists yet).
+- No Equinix Fabric One surface exists in the SDK. Equinix announced Fabric One on 2026-09-02; no
+  API reference had been published as of 2026-09-21.
+- Bundled prices and the region-pair catalog are dated copies of provider pages. Each figure
+  carries its source URL and retrieval date. An absent pair or size means "not in this copy", not
+  "not offered".
+- The break-even assumes symmetric traffic and list prices. Provider discounts, commitments and
+  the AWS free tier change it.
+- The live provider-API adapters (`AwsPriceListRateCard` and the others) return empty for
+  `EgressPath.MULTICLOUD_INTERCONNECT` and for `multicloudLink(...)`.
+
 ### Intelligence MCP Server: Run the SDK as an MCP Server
 
 The SDK embeds the **Equinix Intelligence MCP Server** — a [Model Context
@@ -1429,6 +1892,7 @@ Optional environment variables:
 | `EQUINIX_PEERINGDB_KEY` | Optional PeeringDB API key for `design_analyze_peering`. |
 | `GCP_BILLING_API_KEY` | Optional Google Cloud Billing Catalog key — enables the live GCP adapter in `design_compare_cloud_egress`. |
 | `EQUINIX_MCP_PRICING_TIMEOUT_MS` | Hard per-lookup timeout for live provider pricing (default `12000`). A slow provider degrades gracefully by name; the server never hangs. |
+| `EQUINIX_MCP_ELICIT_TIMEOUT_MS` | Hard timeout in ms for one MCP elicitation round trip (default `300000`). Bounds the `fabric_confirm_change` confirmation prompt; an unanswered prompt returns `timed_out` and executes nothing. A non-numeric value falls back to the default. |
 
 Only the two credential keys are read from `.env.local`; everything else must be a real
 environment variable (the host config's `env` block).
@@ -1439,17 +1903,20 @@ extension tools.
 
 #### Tool catalog
 
-Fourteen tools across five toolsets. Everything outside `mutate` is strictly read-only — those
-tools never provision, modify, or delete anything.
+Sixteen tools across five toolsets: nine `design`, two `portal`, one `ne`, two `ibx`, two `mutate`.
+Everything outside `mutate` is strictly read-only — those tools never provision, modify, or delete
+anything.
 
 | Tool | What it does |
 |---|---|
 | **`design` toolset** (also selected by `fabric`) | |
 | `design_optimize_placement` | The MetroOptimizer engine: workloads, sites, cloud requirements, and constraints in; ranked metro recommendations out — per-dimension scores, reasons, risk assessment, and a cost estimate with price provenance. |
-| `design_plan_deployment` | MetroOptimizer + DeploymentWizard in **plan-only** mode — it never executes. Returns the serialized deployment plan (cloud routers, provider connections, backbone links, routing protocols) with pricing + disclaimer, and a `plan_id` held for 30 minutes. |
+| `design_plan_deployment` | MetroOptimizer + DeploymentWizard in **plan-only** mode — it never executes. Returns the serialized deployment plan (cloud routers, provider connections, backbone links, routing protocols) with pricing + disclaimer, and a `plan_id` held for 30 minutes. Beta: `deployment.cloud_to_cloud_strategy` (`equinix_only`, `compare`, `native_when_available`, `native_only`; default `compare`) and `deployment.multicloud_path_tier` (1-5) control cloud-to-cloud flows; matched flows are returned as `native_multicloud_links`, whose charges are never part of `pricing.monthly_total`. |
 | `design_estimate_latency` | Speed-of-light-in-fibre latency between two metros or IBX data centers: distance, estimated ms (round-trip or one-way), and the physics-lower-bound caveats. |
-| `design_estimate_tco` | The TCO calculator over the layered rate card: per-archetype cost breakdowns (public cloud / on-prem / Equinix interconnect) with line items, provenance notes, and a recommended archetype. |
+| `design_estimate_tco` | The TCO calculator over the layered rate card: per-archetype cost breakdowns (public cloud / on-prem / Equinix interconnect) with line items, provenance notes, and a recommended archetype. Beta: `peer_cloud` (with optional `peer_region`, `path_tier`) makes the comparison two-sided and adds the `native_multicloud_interconnect` archetype, a `traffic_note` and a per-breakdown provenance list. |
 | `design_compare_cloud_egress` | Live cloud-egress pricing (AWS, Azure, OCI public price APIs; GCP with a key) vs. Fabric, under a hard timeout with graceful per-provider degradation. |
+| `design_compare_cloud_to_cloud` | Beta. Prices the traffic between two clouds (`a`, `z`: cloud and region; `bandwidth_mbps`; optional `sustained_mbps`, `term_months`, `path_tier`, `use_aws_free_tier`, `metro_code`, `cloud_router_package`) over three paths: `public_internet`, `equinix_fabric`, `native_multicloud_link`. Returns per-path fixed, data-transfer and total figures with per-side price source, `break_even_sustained_mbps` (Mbps, both directions summed) with `cheaper_above_break_even`, `unpriced_components`, and the catalog environment for the region pair. An unpriced figure is `null` with a reason, never 0. Cost only; nothing is provisioned. |
+| `design_list_multicloud_environments` | Beta. Lists the bundled native multicloud environment catalog (region pairs, status `GA` / `PREVIEW` / `UNVERIFIED`, connection sizes in Mbps, source URLs, as-of date), filtered by `a.cloud`, `z.cloud` and optional regions. The catalog is a dated copy of provider documentation and is not refreshed at run time; an absent pair means "not in this copy". At most 50 entries per call. |
 | `design_analyze_peering` | PeeringIntelligence for a set of ASNs: per-ASN Equinix presence, peering opportunities, resiliency assessment, and data-source provenance. |
 | `design_export_terraform` | Equinix Terraform-provider HCL from a `design_plan_deployment` plan_id. |
 | **`portal` toolset** | |
@@ -1462,7 +1929,7 @@ tools never provision, modify, or delete anything.
 | `ibx_list_power_events` | IBX SmartView power events (active by default) for a list of IBXs. |
 | **`mutate` toolset** — *off by default, opt-in only* | |
 | `fabric_propose_change` | Phase 1 of the Safe Mutation Broker: validates a proposed create via the **real** spec-documented `dryRun=true` API call and returns the validation, a price context, and a single-use confirm token. Nothing is provisioned. |
-| `fabric_confirm_change` | Phase 2: executes exactly the previously validated, hash-bound spec — only with a valid, unexpired, unused token. |
+| `fabric_confirm_change` | Phase 2: executes exactly the previously validated, hash-bound spec — only with a valid, unexpired, unused token, and, when the client declared MCP form elicitation, only after the user accepts a confirmation prompt. |
 
 #### The Safe Mutation Broker
 
@@ -1486,6 +1953,26 @@ Mutations are structurally constrained, not politely requested:
 - **Priced for the human.** Where a rate card can honestly price the change (connection
   bandwidth), the proposal carries a monthly/non-recurring estimate with provenance — and an
   explicit `priced: false` everywhere else.
+- **Human confirmation at confirm time.** `fabric_confirm_change` consumes the token, verifies the
+  spec hash, then sends an MCP form elicitation to the client (change type, target, price context,
+  proposal age, spec SHA-256) and executes only on an accept with `confirm = true`. Every result
+  carries `human_confirmation {status, detail}`, `confirm_checks` (`proposal_exists`,
+  `not_expired`, `not_previously_used`, `spec_matches_binding`) and `token_state`.
+
+| Client | Answer | `human_confirmation.status` | Executed |
+|---|---|---|---|
+| Declared form elicitation | accept with `confirm = true` | `accepted` | yes |
+| Declared form elicitation | decline, or accept without `confirm = true` | `declined` | no |
+| Declared form elicitation | cancel | `cancelled` | no |
+| Declared form elicitation | none within `EQUINIX_MCP_ELICIT_TIMEOUT_MS` (default 300000 ms) | `timed_out` | no |
+| Declared form elicitation | round trip failed | `failed` | no |
+| Did not declare it | not asked | `unsupported_by_client` | yes |
+
+The token stays consumed in every row; any status other than `accepted` requires a new
+`fabric_propose_change`. Limits: `accepted` proves the client reported an acceptance, not that a
+person read the prompt, and a client without elicitation support gets no server-side approval
+check (the previous behavior). The `chg-` confirm token is a process-local lookup key. It is not a
+cloud-provider activation key, and the broker neither mints nor accepts activation keys.
 
 The guarantee holds at the server boundary: no prompt, tool description, or model behavior can
 skip the dry run or forge a token, because the only code path to a real create runs through a
@@ -1499,7 +1986,7 @@ serve different needs and can coexist in the same MCP host:
 | | Official Equinix Fabric MCP server | This SDK's Intelligence MCP server |
 |---|---|---|
 | What it is | Hosted remote service by Equinix (private beta) | Community server embedded in this SDK; runs locally |
-| Coverage | Deep Fabric catalog — tools mirroring the Fabric v4 API | Design engines (placement, planning, latency, TCO, egress savings, peering, Terraform export) + cross-domain reach (Customer Portal, Network Edge, IBX SmartView) |
+| Coverage | Deep Fabric catalog — tools mirroring the Fabric v4 API | Design engines (placement, planning, latency, TCO, egress savings, cloud-to-cloud path comparison, peering, Terraform export) + cross-domain reach (Customer Portal, Network Edge, IBX SmartView) |
 | Auth | OAuth 2.1 authorization-code with browser-based user consent | Your API application's client credentials via environment variables — headless, no browser |
 | Availability | Private beta | Build from source, any account with API credentials — no allowlist |
 | Transport | Remote (HTTP) | stdio only — no network listener |
@@ -2227,7 +2714,9 @@ flowchart TB
 
 Resources use either a **full pattern** (with Wrapper + Operator for mutable CRUD) or a **read-only pattern** (JSON model implements the interface directly).
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed architecture documentation. Architecture
+decision records are in [`docs/adr/`](docs/adr/); ADR 0001 covers the naming of cloud-to-cloud
+types and the scope of that work.
 
 ## Requirements
 

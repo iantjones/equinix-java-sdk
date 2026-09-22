@@ -3,11 +3,15 @@ package com.eqixiac.equinix.design.optimizer.wizard;
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.enums.GatewayPackageCode;
+import com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog;
 import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BackboneTopology;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BandwidthStrategy;
+import com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy;
 import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
+import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
 import com.eqixiac.equinix.design.value.ratecard.Term;
 
@@ -60,6 +64,26 @@ import java.util.stream.Stream;
  * <p>Nothing is provisioned until {@code execute()} is called: {@code plan()} and
  * {@code dryRun()} create no resources, so a plan can be reviewed, exported, and re-planned
  * freely. Plan generation itself is delegated to a package-private engine.</p>
+ *
+ * <h3>Cloud-to-cloud flows (Beta)</h3>
+ * <p>A workload that depends on two or more clouds implies a flow between each pair of them.
+ * {@code cloudToCloudStrategy(...)} decides how the plan treats such a flow; the default is
+ * {@link CloudToCloudStrategy#COMPARE}: the Equinix path is planned as before and, where the
+ * multicloud environment catalog lists the planned region pair, a native provider-to-provider
+ * link is attached to {@code DeploymentPlan.getMulticloudLinks()} as a priced alternative. The
+ * SDK never provisions a native link. Use {@link CloudToCloudStrategy#EQUINIX_ONLY} for a plan
+ * without the comparison.</p>
+ *
+ * <pre>{@code
+ * DeploymentPlan plan = fabric.deploymentWizard(optimizationResult)
+ *     .cloudToCloudStrategy(CloudToCloudStrategy.COMPARE)   // the default
+ *     .notifications("noc@example.com")
+ *     .plan();
+ *
+ * for (PlannedMulticloudInterconnect link : plan.multicloudLinksOrEmpty()) {
+ *     System.out.println(link.describe() + ": " + link.getRecommendation());
+ * }
+ * }</pre>
  *
  * @see DeploymentPlan
  */
@@ -129,6 +153,11 @@ public final class DeploymentWizard {
         // Pricing
         private RateCard rateCard;
         private Term term = Term.MONTH_12;
+
+        // Cloud-to-cloud flows (Beta)
+        private CloudToCloudStrategy cloudToCloudStrategy = CloudToCloudStrategy.COMPARE;
+        private MulticloudEnvironmentCatalog multicloudEnvironments;
+        private int multicloudPathTier = MulticloudLinkQuote.DEFAULT_PATH_TIER;
 
         Builder(FabricGateway fabric, OptimizationResult optimizationResult) {
             this.fabric = fabric;
@@ -464,6 +493,75 @@ public final class DeploymentWizard {
             return this;
         }
 
+        // ── Cloud-to-cloud flows (Beta) ──
+
+        /**
+         * Sets how the plan treats a flow between two clouds (a workload that depends on both).
+         * Defaults to {@link CloudToCloudStrategy#COMPARE}. <b>Beta.</b>
+         *
+         * <p>{@code COMPARE} changes no Cloud Router, connection, backbone link, routing protocol
+         * or Equinix price relative to {@code EQUINIX_ONLY}; it adds entries to
+         * {@code DeploymentPlan.getMulticloudLinks()}, one skipped-validation note per entry, and
+         * the native-link fields of {@code PlanPricing}. {@code NATIVE_WHEN_AVAILABLE} and
+         * {@code NATIVE_ONLY} can omit Cloud Router to cloud connections under the replacement
+         * rule documented on {@link CloudToCloudStrategy}.</p>
+         *
+         * @param strategy the strategy
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code strategy} is {@code null}
+         */
+        public Builder cloudToCloudStrategy(CloudToCloudStrategy strategy) {
+            if (strategy == null) {
+                throw new IllegalArgumentException("cloudToCloudStrategy must not be null — use "
+                        + "CloudToCloudStrategy.EQUINIX_ONLY to plan without native multicloud links.");
+            }
+            this.cloudToCloudStrategy = strategy;
+            return this;
+        }
+
+        /**
+         * Sets the catalog of native multicloud environments the wizard matches region pairs
+         * against. <b>Beta.</b> When not set, the wizard uses the catalog carried by the
+         * optimization request ({@code MetroOptimizer.Builder.multicloudEnvironments(...)}), and
+         * otherwise {@link MulticloudEnvironmentCatalog#standard()}. The bundled catalog is a
+         * dated copy of provider documentation and goes stale; pass
+         * {@code MulticloudEnvironmentCatalog.standard().with(...)} to add region pairs the
+         * providers have launched since, or {@link MulticloudEnvironmentCatalog#empty()} to match
+         * nothing.
+         *
+         * @param catalog the catalog to match against
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code catalog} is {@code null}
+         */
+        public Builder multicloudEnvironments(MulticloudEnvironmentCatalog catalog) {
+            if (catalog == null) {
+                throw new IllegalArgumentException("multicloudEnvironments must not be null — use "
+                        + "MulticloudEnvironmentCatalog.empty() to match nothing.");
+            }
+            this.multicloudEnvironments = catalog;
+            return this;
+        }
+
+        /**
+         * Sets the AWS connectivity-scope tier used to price the AWS side of a native multicloud
+         * link: 1 local (default), 2 regional, 3 continental, 4 long-haul, 5 maximum scope.
+         * <b>Beta.</b> An input, never derived: AWS publishes no path-to-tier table. Providers
+         * without a tier concept ignore it.
+         *
+         * @param pathTier the tier, 1-5
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if outside 1-5
+         */
+        public Builder multicloudPathTier(int pathTier) {
+            if (pathTier < MulticloudLinkQuote.MIN_PATH_TIER || pathTier > MulticloudLinkQuote.MAX_PATH_TIER) {
+                throw new IllegalArgumentException("multicloudPathTier must be between "
+                        + MulticloudLinkQuote.MIN_PATH_TIER + " and " + MulticloudLinkQuote.MAX_PATH_TIER
+                        + ": " + pathTier);
+            }
+            this.multicloudPathTier = pathTier;
+            return this;
+        }
+
         // ── Build ──
 
         /**
@@ -488,18 +586,34 @@ public final class DeploymentWizard {
          * against <em>this</em> builder's rate card and commitment term — the same configuration the plan
          * was built with — through the wizard's single pricing authority
          * ({@code DeploymentWizardEngine.estimatePricing}), so per-metro currency reconciliation is
-         * preserved exactly as at plan time. Only the plan's {@code pricing} is replaced; every other
-         * field is carried through unchanged. Repricing a plan whose connections did not change yields
-         * the same figures (a no-op-equivalent).</p>
+         * preserved exactly as at plan time. The plan's {@code pricing} is replaced and, when the plan
+         * carries native multicloud links, so is each link's {@code pricing} and
+         * {@code recommendation} (<b>Beta</b>): the native quote, the Equinix-path cost for the same
+         * flow and the break-even rate are resolved again against this builder's rate card, term and
+         * path tier. A link's environment, role, bandwidth and reasoning are not re-planned. Every
+         * other field is carried through unchanged. Repricing a plan whose connections did not change
+         * yields the same figures (a no-op-equivalent).</p>
          *
          * @param plan the plan whose pricing is stale relative to its current connections; left
          *             untouched by this call
          * @return a new copy of the plan with pricing recomputed from its current connections
          */
         public DeploymentPlan reprice(DeploymentPlan plan) {
+            if (plan.multicloudLinksOrEmpty().isEmpty()) {
+                PlanPricing pricing = DeploymentWizardEngine.estimatePricing(
+                        this, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks());
+                return plan.toBuilder().pricing(pricing).build();
+            }
+            // One rate-card instance for the links and the plan, as at plan time.
+            RateCard resolved = DeploymentWizardEngine.resolveRateCard(this);
+            List<PlannedMulticloudInterconnect> links = MulticloudLinkPlanner.price(
+                    this, resolved, plan.getMulticloudLinks(), plan.getCloudRouters(), plan.getProviderConnections(),
+                    plan.getBackboneLinks(),
+                    plan.getSourceOptimization() != null ? plan.getSourceOptimization().getRequest() : null);
             PlanPricing pricing = DeploymentWizardEngine.estimatePricing(
-                    this, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks());
-            return plan.toBuilder().pricing(pricing).build();
+                    this, resolved, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks(),
+                    links);
+            return plan.toBuilder().multicloudLinks(links).pricing(pricing).build();
         }
 
         // Package-private accessors for the engine
@@ -523,5 +637,8 @@ public final class DeploymentWizard {
         String getSubnetBase() { return subnetBase; }
         RateCard getRateCard() { return rateCard; }
         Term getTerm() { return term; }
+        CloudToCloudStrategy getCloudToCloudStrategy() { return cloudToCloudStrategy; }
+        MulticloudEnvironmentCatalog getMulticloudEnvironments() { return multicloudEnvironments; }
+        int getMulticloudPathTier() { return multicloudPathTier; }
     }
 }

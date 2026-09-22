@@ -34,6 +34,13 @@
  * an explicit tolerance or the
  * {@link com.eqixiac.equinix.design.optimizer.enums.LatencySensitivity} tier's threshold.</p>
  *
+ * <p><b>Beta.</b> When a workload depends on two clouds for which
+ * {@link com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog} lists a native
+ * provider-to-provider environment, the risk assessment carries an informational
+ * {@code NATIVE_MULTICLOUD_ALTERNATIVE} finding (severity {@code INFO}, no score deduction). The
+ * engine still recommends metros; it does not evaluate a deployment with none. The Deployment
+ * Wizard prices the native link against the Equinix path.</p>
+ *
  * <p>Sub-packages: {@code model} (request/result value types), {@code enums} (strategies,
  * tiers, categories), {@code wizard} (turning a result into an executable deployment plan).</p>
  *

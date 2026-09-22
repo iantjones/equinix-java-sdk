@@ -1,5 +1,6 @@
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
+import com.eqixiac.equinix.design.value.ratecard.EgressPath;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import lombok.Builder;
 import lombok.Value;
@@ -10,13 +11,14 @@ import java.util.List;
 
 /**
  * The value-realization view of a {@link DeploymentPlan}: the monthly cloud-egress
- * saving the plan's private interconnects unlock (versus public-internet egress),
+ * saving the plan's private interconnects produce (versus public-internet egress),
  * netted against the plan's actual Equinix interconnect cost.
  *
  * <p>Produced by {@link DeploymentPlan#valueRealization()} after the caller
- * declares their per-provider egress volumes. The plan's monthly cost is the real
- * (live-priced) interconnect spend from {@link PlanPricing}, so the net figure is
- * an honest "is this deployment worth it" number rather than a double-count.</p>
+ * declares their per-provider egress volumes. The plan's monthly cost is the
+ * interconnect spend from {@link PlanPricing} (live-priced where available), and a plan that
+ * depends on native multicloud links (<b>Beta</b>) also carries their fees in
+ * {@code nativeLinkMonthlyCost}; the net figure subtracts both.</p>
  */
 @Value
 @Builder
@@ -29,13 +31,35 @@ public class PlanValueRealization {
     BigDecimal planSetupCost;
 
     /**
+     * <b>Beta.</b> The monthly fees of the native multicloud links the plan depends on (role
+     * {@code REPLACEMENT}), from {@code PlanPricing.getNativeReplacementMonthlyCost()}; billed by
+     * the cloud providers and subtracted from the net like {@code planMonthlyCost}. {@code null}
+     * when the plan has no such link or their fee is unpriced ({@code nativeLinkUnpriced}). A
+     * {@code null} is not a zero cost.
+     */
+    BigDecimal nativeLinkMonthlyCost;
+
+    /** The ISO 4217 code of {@code nativeLinkMonthlyCost}; {@code null} when that figure is. */
+    String nativeLinkCurrency;
+
+    /**
+     * <b>Beta.</b> {@code true} when the plan depends on a native multicloud link whose fee is
+     * unpriced or spans currencies; the aggregates are then {@code null} because the
+     * deployment's cost is not known.
+     */
+    boolean nativeLinkUnpriced;
+
+    /**
      * The summed monthly egress saving across providers — {@code null} when the per-provider
      * figures span currencies (or mismatch the plan's currency), so a cross-currency total is
      * never fabricated; the per-provider rows remain valid each in its own currency.
      */
     BigDecimal totalMonthlyEgressSavings;
 
-    /** Egress saving net of the plan's monthly cost — {@code null} whenever the total is. */
+    /**
+     * Egress saving net of the plan's monthly cost and of {@code nativeLinkMonthlyCost} —
+     * {@code null} whenever the total is, and whenever {@code nativeLinkUnpriced}.
+     */
     BigDecimal netMonthlySavings;
 
     /** Twelve times the net monthly saving — {@code null} whenever the total is. */
@@ -69,13 +93,21 @@ public class PlanValueRealization {
         /** The cloud provider this row describes. */
         CloudProviderType provider;
 
+        /**
+         * The path {@code privateMonthlyCost} is priced on: {@link EgressPath#PRIVATE} for a cloud
+         * the plan reaches through a Fabric connection, {@link EgressPath#MULTICLOUD_INTERCONNECT}
+         * (<b>Beta</b>) for a cloud it reaches only through a native multicloud link it depends on.
+         * {@code null} on a row built before this field existed.
+         */
+        EgressPath path;
+
         /** The declared monthly egress volume in decimal gigabytes. */
         BigDecimal monthlyEgressGb;
 
         /** What the declared volume costs over public-internet egress. ZERO when not priced. */
         BigDecimal internetMonthlyCost;
 
-        /** What the declared volume costs over the plan's private interconnect. ZERO when not priced. */
+        /** What the declared volume costs over {@code path}. ZERO when not priced. */
         BigDecimal privateMonthlyCost;
 
         /** {@code internetMonthlyCost - privateMonthlyCost}. ZERO when not priced. */
@@ -116,6 +148,7 @@ public class PlanValueRealization {
             // currency when unset), so a mixed-currency breakdown never mislabels a row.
             String rowCurrency = p.getCurrency() != null ? p.getCurrency() : currency;
             sb.append("| ").append(p.getProvider() == null ? "—" : p.getProvider().name())
+                    .append(p.getPath() == EgressPath.MULTICLOUD_INTERCONNECT ? " (native link)" : "")
                     .append(" | ").append(p.getMonthlyEgressGb().setScale(0, RoundingMode.HALF_UP).toPlainString())
                     .append(" | ").append(p.isPriced() ? money(p.getInternetMonthlyCost(), rowCurrency) : "n/a")
                     .append(" | ").append(p.isPriced() ? money(p.getPrivateMonthlyCost(), rowCurrency) : "n/a")
@@ -125,6 +158,13 @@ public class PlanValueRealization {
         sb.append("\n");
         sb.append("- **Total egress saving:** ").append(money(totalMonthlyEgressSavings, currency)).append("/mo\n");
         sb.append("- Plan interconnect cost: −").append(money(planMonthlyCost, currency)).append("/mo\n");
+        if (nativeLinkMonthlyCost != null) {
+            sb.append("- Native multicloud link fees the plan depends on (billed by the cloud providers): −")
+                    .append(money(nativeLinkMonthlyCost, nativeLinkCurrency != null ? nativeLinkCurrency : currency))
+                    .append("/mo\n");
+        } else if (nativeLinkUnpriced) {
+            sb.append("- Native multicloud link fees the plan depends on: n/a (unpriced; see the note)\n");
+        }
         sb.append("- **Net monthly saving:** ").append(money(netMonthlySavings, currency)).append("\n");
         sb.append("- Annual net saving: ").append(money(annualNetSavings, currency)).append("\n");
         sb.append("- First-year net saving (incl. setup): ").append(money(firstYearNetSavings, currency)).append("\n");

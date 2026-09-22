@@ -46,6 +46,10 @@ import java.util.Optional;
  *   <li>{@code EQUINIX_MCP_LOG_LEVEL} — optional slf4j-simple level (default {@code info}).</li>
  *   <li>{@code EQUINIX_PEERINGDB_KEY}, {@code GCP_BILLING_API_KEY},
  *       {@code EQUINIX_MCP_PRICING_TIMEOUT_MS} — optional tool enrichments.</li>
+ *   <li>{@code EQUINIX_MCP_ELICIT_TIMEOUT_MS} — optional; the hard timeout in milliseconds for one
+ *       MCP elicitation round trip (default 300000). It bounds the account and service-profile
+ *       prompts of {@code design_plan_deployment} and the confirmation prompt of
+ *       {@code fabric_confirm_change}; an unanswered confirmation prompt executes nothing.</li>
  * </ul>
  *
  * <p><strong>stdout is sacred</strong>: it carries only MCP JSON-RPC. Every diagnostic —

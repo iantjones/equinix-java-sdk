@@ -3,9 +3,14 @@ package com.eqixiac.equinix.fabric.wiremock;
 import com.eqixiac.equinix.Fabric;
 import com.eqixiac.equinix.core.WireMockTestBase;
 import com.eqixiac.equinix.core.exception.*;
+import com.eqixiac.equinix.fabric.enums.AccessPointType;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.enums.Direction;
 import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
+import com.eqixiac.equinix.fabric.model.implementation.SimpleAccessPoint;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.AwsDirectConnectAdapter;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.model.Connection;
 import com.eqixiac.equinix.fabric.model.RouteAggregationAttachment;
@@ -210,6 +215,156 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
                             equalTo("1001")))
                     .withRequestBody(matchingJsonPath("$.zSide.accessPoint.profile.uuid",
                             equalTo("20d32a80-0d61-4333-bc03-4b2d446794a0"))));
+        }
+    }
+
+    /**
+     * Beta: {@code AccessPoint.activationKey} and {@code AccessPoint.environment} (Fabric v4
+     * catalog fetched 2026-09-21). The catalog publishes no connection-create example that sets
+     * either property, so these tests pin the serialized request shape only: each value travels
+     * in its own JSON property and {@code authenticationKey} is never read from or written by
+     * the activation-key path.
+     */
+    @Nested
+    @DisplayName("define(...).create() with activationKey / environment [Beta]")
+    class CreateWithActivationKey {
+
+        private static final String URL = "/fabric/v4/connections";
+        private static final String PROFILE = "23ad37d0-6b1c-4d1f-a4eb-9f3d68fbe4fd";
+        private static final String ENVIRONMENT = "6ad498b5-d929-44ac-a199-ce9f0d31d9ac";
+
+        @BeforeEach
+        void stubConnectionCreate() {
+            wireMock.stubFor(post(urlPathEqualTo(URL))
+                    .willReturn(aResponse()
+                            .withStatus(201)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(loadFixture("/json/fabric/connection_response.json"))));
+        }
+
+        @Test
+        @DisplayName("activationKey and authenticationKey serialize as separate properties with their own values")
+        void bothKeysAreSiblings() {
+            SimpleAccessPoint zSide = SimpleAccessPoint.define(AccessPointType.SP)
+                    .serviceProfile(PROFILE)
+                    .environment(ENVIRONMENT)
+                    .sellerRegion("us-west-1")
+                    .authenticationKey("123456789012")
+                    .activationKey("key_here")
+                    .create();
+
+            fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("IC-Profile-Connection")
+                    .bandwidth(1000)
+                    .aSideAccessPointCloudRouter("557400f8-d360-11e9-bb65-2a2ae2dbcce4")
+                    .zSideAccessPoint(zSide)
+                    .create();
+
+            wireMock.verify(1, postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.type", equalTo("SP")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.profile.uuid", equalTo(PROFILE)))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.activationKey", equalTo("key_here")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.sellerRegion", equalTo("us-west-1"))));
+        }
+
+        @Test
+        @DisplayName("environment serializes as a uuid-only reference")
+        void environmentIsUuidOnlyReference() {
+            SimpleAccessPoint zSide = SimpleAccessPoint.define(AccessPointType.SP)
+                    .serviceProfile(PROFILE)
+                    .environment(ENVIRONMENT)
+                    .activationKey("key_here")
+                    .create();
+
+            fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("IC-Profile-Connection")
+                    .bandwidth(1000)
+                    .aSideAccessPointCloudRouter("557400f8-d360-11e9-bb65-2a2ae2dbcce4")
+                    .zSideAccessPoint(zSide)
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.environment",
+                            equalToJson("{\"uuid\":\"" + ENVIRONMENT + "\"}", false, false))));
+        }
+
+        @Test
+        @DisplayName("activationKey alone does not populate authenticationKey")
+        void activationKeyDoesNotLeakIntoAuthenticationKey() {
+            SimpleAccessPoint zSide = SimpleAccessPoint.define(AccessPointType.SP)
+                    .serviceProfile(PROFILE)
+                    .activationKey("key_here")
+                    .create();
+
+            fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("IC-Profile-Connection")
+                    .bandwidth(1000)
+                    .aSideAccessPointCloudRouter("557400f8-d360-11e9-bb65-2a2ae2dbcce4")
+                    .zSideAccessPoint(zSide)
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.activationKey", equalTo("key_here")))
+                    .withRequestBody(notContaining("authenticationKey"))
+                    .withRequestBody(notContaining("\"environment\"")));
+        }
+
+        @Test
+        @DisplayName("a built-in adapter (no activation key) produces the same body as before: authenticationKey only")
+        void builtInAdapterBodyIsUnchanged() {
+            fabric.connections()
+                    .define(ConnectionType.EVPL_VC)
+                    .name("AWS-Connection")
+                    .bandwidth(100)
+                    .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+                            LinkProtocol.dot1q().vlanTag(1001).create())
+                    .zSideCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", PROFILE),
+                            LinkProtocol.dot1q().vlanTag(1002).create())
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.sellerRegion", equalTo("us-east-1")))
+                    .withRequestBody(notContaining("activationKey"))
+                    .withRequestBody(notContaining("\"environment\"")));
+        }
+
+        @Test
+        @DisplayName("an adapter that overrides getActivationKey() sends both keys, each in its own property")
+        void adapterSuppliedActivationKey() {
+            CloudProviderConnectionAdapter<Void> adapter = new CloudProviderConnectionAdapter<>() {
+                public String getServiceProfileUuid() { return PROFILE; }
+                public String getAuthenticationKey() { return "123456789012"; }
+                public String getSellerRegion() { return "us-west-1"; }
+                public Void getSource() { return null; }
+                public CloudProviderType getProviderType() { return CloudProviderType.AWS; }
+                @Override public String getActivationKey() { return "key_here"; }
+            };
+
+            fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .name("IC-Profile-Connection")
+                    .bandwidth(1000)
+                    .aSideAccessPointCloudRouter("557400f8-d360-11e9-bb65-2a2ae2dbcce4")
+                    .zSideCloudProvider(adapter)
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.activationKey", equalTo("key_here")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012"))));
+        }
+
+        @Test
+        @DisplayName("zSideAccessPoint(null) is rejected")
+        void nullAccessPointRejected() {
+            assertThrows(NullPointerException.class, () -> fabric.connections()
+                    .define(ConnectionType.IP_VC)
+                    .zSideAccessPoint((SimpleAccessPoint) null));
+            wireMock.verify(0, postRequestedFor(urlPathEqualTo(URL)));
         }
     }
 

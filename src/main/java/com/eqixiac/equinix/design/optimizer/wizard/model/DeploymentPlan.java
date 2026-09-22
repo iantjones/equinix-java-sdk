@@ -38,6 +38,14 @@ import java.util.stream.Collectors;
  * planned Cloud Routers, provider connections, backbone links, routing protocols,
  * and aggregated pricing. Supports review via {@link #toMarkdown()}, dry-run
  * validation via {@link #dryRun()}, and full execution via {@link #execute()}.
+ *
+ * <p><b>Beta.</b> {@code multicloudLinks} is a fifth list: native provider-to-provider links
+ * between two clouds, which use no Equinix resource. The plan carries and prices them;
+ * {@link #execute()} never provisions them, {@link #totalResourceCount()} excludes them, no routing
+ * protocol or subnet is planned for them, and their cost is never part of the Equinix totals. The
+ * list is {@code null} or empty under {@code CloudToCloudStrategy.EQUINIX_ONLY} and whenever no
+ * workload depends on two clouds with a catalog environment; every rendering is then identical to
+ * a plan without the list.</p>
  */
 @Value
 @Builder(toBuilder = true)
@@ -52,6 +60,14 @@ public class DeploymentPlan {
     List<PlannedBackboneLink> backboneLinks;
 
     List<PlannedRoutingProtocol> routingProtocols;
+
+    /**
+     * <b>Beta.</b> The native multicloud links planned for the cloud-to-cloud flows of this
+     * deployment; {@code null} or empty when there is none. Read through
+     * {@link #multicloudLinksOrEmpty()} to avoid the {@code null} case. See
+     * {@link PlannedMulticloudInterconnect} for what the SDK does and does not do with an entry.
+     */
+    List<PlannedMulticloudInterconnect> multicloudLinks;
 
     PlanPricing pricing;
 
@@ -88,7 +104,19 @@ public class DeploymentPlan {
     FabricGateway fabric;
 
     /**
-     * Total number of resources that will be created by this plan.
+     * The native multicloud links on the plan, never {@code null}.
+     *
+     * @return {@code getMulticloudLinks()}, or an empty list when that is {@code null}
+     */
+    public List<PlannedMulticloudInterconnect> multicloudLinksOrEmpty() {
+        return multicloudLinks == null ? Collections.emptyList() : multicloudLinks;
+    }
+
+    /**
+     * Total number of resources that {@link #execute()} creates: Cloud Routers, provider
+     * connections, backbone links and routing protocols. Native multicloud links are excluded
+     * because execution never creates them; {@link #toSummary()} and {@link #toMarkdown()} state
+     * their count next to this figure.
      */
     public int totalResourceCount() {
         int count = 0;
@@ -110,6 +138,11 @@ public class DeploymentPlan {
         sb.append(backboneLinks != null ? backboneLinks.size() : 0).append(" backbone link(s), ");
         sb.append(routingProtocols != null ? routingProtocols.size() : 0).append(" routing protocol(s). ");
         sb.append("Total resources: ").append(totalResourceCount()).append(".");
+        if (!multicloudLinksOrEmpty().isEmpty()) {
+            sb.append(" Native multicloud link(s): ").append(multicloudLinksOrEmpty().size())
+                    .append(" (not provisioned by this SDK; excluded from the resource count and from "
+                            + "the cost below).");
+        }
 
         // Money always renders with its ACTUAL currency (mirroring OptimizationResult.money) — a
         // hardcoded "$" next to a EUR figure misstated the amount by the exchange rate.
@@ -157,7 +190,12 @@ public class DeploymentPlan {
         StringBuilder md = new StringBuilder();
         md.append("# Deployment Plan\n\n");
         md.append("_Generated from optimization computed at ").append(sourceOptimization.getComputedAt()).append("_\n\n");
-        md.append("**Total Resources:** ").append(totalResourceCount()).append("\n\n");
+        md.append("**Total Resources:** ").append(totalResourceCount());
+        if (!multicloudLinksOrEmpty().isEmpty()) {
+            md.append(" (excludes ").append(multicloudLinksOrEmpty().size())
+                    .append(" native multicloud link(s), which this SDK does not create)");
+        }
+        md.append("\n\n");
 
         // Validation status — validated now (structural + router dry-run).
         if (!valid && validationErrors != null && !validationErrors.isEmpty()) {
@@ -293,6 +331,8 @@ public class DeploymentPlan {
             md.append("\n");
         }
 
+        appendMulticloudLinks(md);
+
         // Pricing. Every figure renders with its ACTUAL currency (mirroring OptimizationResult.money)
         // — never a hardcoded "$", which misstated any non-USD amount by the exchange rate. A category
         // that itself spans currencies carries no single figure; its per-currency subtotals are shown.
@@ -320,6 +360,10 @@ public class DeploymentPlan {
                         .append(money(pricing.getSetupTotal(), pricing.getCurrency())).append(" |\n");
             }
             md.append("\n_").append(pricing.getDisclaimer()).append("_\n\n");
+            if (!multicloudLinksOrEmpty().isEmpty()) {
+                md.append("_Native multicloud link charges are billed by the cloud providers and are not "
+                        + "included in the table above; see Native multicloud alternatives._\n\n");
+            }
         }
 
         // Execution instructions
@@ -330,8 +374,143 @@ public class DeploymentPlan {
         md.append("3. Backbone Links (").append(backboneLinks != null ? backboneLinks.size() : 0).append(")\n");
         md.append("4. Routing Protocols (").append(routingProtocols != null ? routingProtocols.size() : 0).append(")\n\n");
         md.append("Call `plan.dryRun()` to validate, or `plan.execute()` to provision all resources.\n");
+        if (!multicloudLinksOrEmpty().isEmpty()) {
+            md.append("\n`plan.execute()` does not create the ").append(multicloudLinksOrEmpty().size())
+                    .append(" native multicloud link(s): they are created outside Fabric with the two cloud "
+                            + "providers (create, then accept with the activation key).\n");
+        }
 
         return md.toString();
+    }
+
+    /**
+     * Appends the "Native multicloud alternatives" section: one table row per native link (clouds
+     * and regions, environment status with its as-of date, requested and covering bandwidth, the
+     * native monthly fee, the Equinix path's fixed monthly cost for the same flow, the break-even
+     * sustained rate, the role), then per link the recommendation, the reasoning, each provider's
+     * side of the quote, the Equinix cost components, the pricing notes and the create-then-accept
+     * steps. Every amount goes through {@code money(amount, currency)} with its own currency;
+     * an unpriced amount renders as {@code unpriced}, never as zero. Emits nothing when the plan
+     * has no native link.
+     */
+    private void appendMulticloudLinks(StringBuilder md) {
+        List<PlannedMulticloudInterconnect> links = multicloudLinksOrEmpty();
+        if (links.isEmpty()) {
+            return;
+        }
+        md.append("## Native multicloud alternatives\n\n");
+        md.append("Beta. Direct links between two clouds that use no Equinix resource. This SDK plans and "
+                + "prices them and does not create them; the cloud providers bill them. ALTERNATIVE: the plan "
+                + "keeps the Equinix connections for the flow. REPLACEMENT: the plan omits the named Equinix "
+                + "connections and depends on the link. UNAVAILABLE: a native link was required and the "
+                + "catalog has no usable environment.\n\n");
+        md.append("| Name | Clouds | Environment | Bandwidth | Native monthly | Equinix path fixed monthly "
+                + "| Break-even (sustained) | Role |\n");
+        md.append("|------|--------|-------------|-----------|---------------:|---------------------------:"
+                + "|-----------------------:|------|\n");
+        for (PlannedMulticloudInterconnect link : links) {
+            MulticloudLinkPricing price = link.getPricing();
+            md.append("| ").append(link.getName())
+                    .append(" | ").append(link.getProviderA())
+                    .append(link.getRegionA() != null ? " " + link.getRegionA() : "")
+                    .append(" <-> ").append(link.getProviderZ())
+                    .append(link.getRegionZ() != null ? " " + link.getRegionZ() : "")
+                    .append(" | ");
+            if (link.getEnvironment() == null) {
+                md.append("none in catalog");
+            } else {
+                md.append(link.getEnvironment().getStatus());
+                if (link.getEnvironment().getAsOf() != null) {
+                    md.append(" (as of ").append(link.getEnvironment().getAsOf()).append(")");
+                }
+            }
+            md.append(" | ");
+            if (link.getCoveringTierMbps() == null) {
+                md.append(link.getRequestedMbps()).append(" Mbps (no covering size)");
+            } else {
+                md.append(link.getCoveringTierMbps()).append(" Mbps");
+                if (link.isRoundedUp()) {
+                    md.append(" (rounded up from ").append(link.getRequestedMbps()).append(")");
+                }
+            }
+            md.append(" | ").append(price == null ? "unpriced"
+                            : moneyOrUnpriced(price.getNativeMonthly(), price.getNativeCurrency()))
+                    .append(" | ").append(price == null ? "unpriced"
+                            : moneyOrUnpriced(price.getEquinixFixedMonthly(), price.getEquinixCurrency()))
+                    .append(" | ").append(price == null || price.getBreakEvenSustainedMbps() == null
+                            ? "n/a" : price.getBreakEvenSustainedMbps().toPlainString() + " Mbps")
+                    .append(" | ").append(link.getRole())
+                    .append(" |\n");
+        }
+        md.append("\n");
+
+        for (PlannedMulticloudInterconnect link : links) {
+            md.append("- **").append(link.getName()).append("**: ")
+                    .append(link.getRecommendation() != null ? link.getRecommendation() : "No recommendation.")
+                    .append("\n");
+            if (link.getWorkloadLabels() != null && !link.getWorkloadLabels().isEmpty()) {
+                md.append("  - Workloads: ").append(String.join(", ", link.getWorkloadLabels())).append("\n");
+            }
+            appendIndented(md, link.getReasoning());
+            MulticloudLinkPricing price = link.getPricing();
+            if (price != null) {
+                if (price.getNativeQuote() != null) {
+                    appendNativeSide(md, price.getNativeQuote().getProviderA(), price.getNativeQuote().getSideA(),
+                            price.getNativeQuote().getSideAUnpricedReason());
+                    appendNativeSide(md, price.getNativeQuote().getProviderZ(), price.getNativeQuote().getSideZ(),
+                            price.getNativeQuote().getSideZUnpricedReason());
+                }
+                appendIndented(md, price.getEquinixComponents());
+                appendIndented(md, price.getNotes());
+            }
+            if (link.getEnvironment() != null && !link.getEnvironment().getSourceUrls().isEmpty()) {
+                md.append("  - Environment source: ")
+                        .append(String.join(", ", link.getEnvironment().getSourceUrls())).append("\n");
+            }
+            if (link.getCreateThenAcceptRecipe() != null && !link.getCreateThenAcceptRecipe().isEmpty()) {
+                md.append("  - Create-then-accept steps (performed by the customer, outside Fabric):\n");
+                int step = 1;
+                for (String line : link.getCreateThenAcceptRecipe()) {
+                    md.append("    ").append(step++).append(". ").append(line).append("\n");
+                }
+            }
+        }
+        md.append("\n");
+        if (pricing != null && pricing.getNativeMulticloudDisclaimer() != null) {
+            md.append("_").append(pricing.getNativeMulticloudDisclaimer()).append("_\n\n");
+        }
+    }
+
+    private static void appendNativeSide(StringBuilder md, Object provider,
+                                         java.util.Optional<com.eqixiac.equinix.design.value.ratecard.PriceQuote> side,
+                                         String unpricedReason) {
+        md.append("  - Native link, ").append(provider).append(" side: ");
+        if (side.isPresent()) {
+            String currency = side.get().getCurrency() != null ? side.get().getCurrency().getCurrencyCode() : null;
+            md.append(money(side.get().getMonthlyRecurring(), currency)).append(" per month (")
+                    .append(side.get().getSource()).append(")");
+            if (side.get().getNote() != null && !side.get().getNote().isBlank()) {
+                md.append(": ").append(side.get().getNote());
+            }
+        } else {
+            md.append("unpriced").append(unpricedReason == null || unpricedReason.isBlank()
+                    ? "" : ": " + unpricedReason);
+        }
+        md.append("\n");
+    }
+
+    private static void appendIndented(StringBuilder md, List<String> lines) {
+        if (lines == null) {
+            return;
+        }
+        for (String line : lines) {
+            md.append("  - ").append(line).append("\n");
+        }
+    }
+
+    /** {@code money(amount, currency)}, with {@code unpriced} for a {@code null} amount. */
+    private static String moneyOrUnpriced(BigDecimal amount, String currency) {
+        return amount == null ? "unpriced" : money(amount, currency);
     }
 
     /**
@@ -445,7 +624,8 @@ public class DeploymentPlan {
     /**
      * Begins a value-realization assessment of this plan: declare your per-provider
      * monthly egress volumes and get back the egress savings the plan's private
-     * interconnects unlock, netted against the plan's actual interconnect cost.
+     * interconnects produce, netted against the plan's interconnect cost and, for a plan that
+     * depends on native multicloud links (<b>Beta</b>), against those links' fees.
      *
      * <pre>{@code
      * PlanValueRealization vr = plan.valueRealization()
@@ -489,6 +669,7 @@ public class DeploymentPlan {
                 providerConnections,
                 backboneLinks,
                 routingProtocols,
+                multicloudLinks,
                 deriveCustomerAsn(),
                 fabric);
 
@@ -498,6 +679,7 @@ public class DeploymentPlan {
                 .providerConnections(providerConnections)
                 .backboneLinks(backboneLinks)
                 .routingProtocols(routingProtocols)
+                .multicloudLinks(multicloudLinks)
                 .pricing(pricing)
                 .valid(result.errors.isEmpty())
                 .validationErrors(result.errors)
@@ -1030,8 +1212,36 @@ public class DeploymentPlan {
                 .resources(resources)
                 .fullySuccessful(success)
                 .errors(errors)
+                .informational(multicloudInformational())
                 .executionTimeMs(System.currentTimeMillis() - startTime)
                 .build();
+    }
+
+    /**
+     * The informational outcome entries for the plan's native multicloud links: one per link,
+     * {@code recoverable == false}. A pure function of the plan, so every outcome of the plan
+     * carries the same entries. {@code null} when the plan has no link, which keeps the outcome
+     * of such a plan identical to one produced before the list existed.
+     */
+    private List<ProvisioningError> multicloudInformational() {
+        if (multicloudLinksOrEmpty().isEmpty()) {
+            return null;
+        }
+        List<ProvisioningError> entries = new ArrayList<>();
+        for (PlannedMulticloudInterconnect link : multicloudLinksOrEmpty()) {
+            String dependency = link.replacesEquinixConnections()
+                    ? " The plan omits " + link.getReplacedConnectionNames() + " and depends on this link."
+                    : " The plan does not depend on this link.";
+            entries.add(ProvisioningError.builder()
+                    .resourceType("MulticloudInterconnect")
+                    .resourceName(link.getName())
+                    .reason("created outside Fabric: follow the create-then-accept recipe with the two cloud "
+                            + "providers (" + link.describe() + "). This SDK calls no cloud-provider API and "
+                            + "sent no request for it." + dependency)
+                    .recoverable(false)
+                    .build());
+        }
+        return entries;
     }
 
     /**

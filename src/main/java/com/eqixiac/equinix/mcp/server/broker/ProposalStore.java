@@ -101,6 +101,22 @@ public final class ProposalStore {
      * @return the pending change, carrying the confirm token and expiry
      */
     public synchronized PendingChange mint(ChangeType changeType, String canonicalSpec, String specSha256) {
+        return mint(changeType, canonicalSpec, specSha256, null);
+    }
+
+    /**
+     * Mints a proposal as {@link #mint(ChangeType, String, String)} does and records the price
+     * context the propose phase reported, so the confirm prompt can repeat it without a second
+     * price lookup.
+     *
+     * @param changeType the kind of create the proposal performs
+     * @param canonicalSpec the canonical-form spec JSON the dry run validated
+     * @param specSha256 the SHA-256 (hex) of {@code canonicalSpec}
+     * @param priceSummary the one-line price context shown with the proposal; may be {@code null}
+     * @return the pending change, carrying the confirm token, mint instant and expiry
+     */
+    public synchronized PendingChange mint(ChangeType changeType, String canonicalSpec, String specSha256,
+                                           String priceSummary) {
         Objects.requireNonNull(changeType, "changeType");
         Objects.requireNonNull(canonicalSpec, "canonicalSpec");
         Objects.requireNonNull(specSha256, "specSha256");
@@ -113,8 +129,9 @@ public final class ProposalStore {
         byte[] entropy = new byte[12];
         random.nextBytes(entropy);
         String token = "chg-" + sequence.incrementAndGet() + "-" + HexFormat.of().formatHex(entropy);
+        Instant mintedAt = clock.instant();
         PendingChange change = new PendingChange(token, changeType, canonicalSpec, specSha256,
-                clock.instant().plus(ttl));
+                mintedAt, mintedAt.plus(ttl), priceSummary);
         live.put(token, change);
         return change;
     }
@@ -140,6 +157,18 @@ public final class ProposalStore {
             return new Consumption(Outcome.EXPIRED, null);
         }
         return new Consumption(Outcome.UNKNOWN, null);
+    }
+
+    /**
+     * The time elapsed since a proposal was minted, measured on this store's clock.
+     *
+     * @param change a proposal minted by this store
+     * @return the age; zero when the clock reads earlier than the mint instant
+     */
+    public Duration ageOf(PendingChange change) {
+        Objects.requireNonNull(change, "change");
+        Duration age = Duration.between(change.mintedAt(), clock.instant());
+        return age.isNegative() ? Duration.ZERO : age;
     }
 
     /**

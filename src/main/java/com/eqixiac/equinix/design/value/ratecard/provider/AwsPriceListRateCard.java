@@ -135,6 +135,11 @@ public final class AwsPriceListRateCard implements RateCard {
         if (provider != CloudProviderType.AWS || path == null || region == null || region.isEmpty()) {
             return Optional.empty();
         }
+        if (path == EgressPath.MULTICLOUD_INTERCONNECT) {
+            // Not an offer this adapter reads. Without this guard the two-way INTERNET/other
+            // branch below would answer a native-link lookup with a rate for a different path.
+            return Optional.empty();
+        }
         String key = path.name() + "|" + region;
         Optional<EgressRate> cached = cache.get(key);
         if (cached != null) {

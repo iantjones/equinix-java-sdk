@@ -62,6 +62,24 @@
  * required methods for service profile UUID, authentication key, and seller region, plus optional
  * defaults for connection type, link protocol, and peering type.</p>
  *
+ * <h3>Authentication key and activation key</h3>
+ * <p>The Fabric v4 {@code AccessPoint} schema defines two string properties, and the adapter
+ * exposes one method for each. Neither is derived from, or substituted for, the other.</p>
+ * <table>
+ *   <caption>Key properties on an access point</caption>
+ *   <tr><th>Wire property</th><th>Adapter method</th><th>Content</th><th>Status</th></tr>
+ *   <tr><td>{@code authenticationKey}</td><td>{@code getAuthenticationKey()} (abstract)</td>
+ *       <td>Provider-defined identifier: AWS account id, ExpressRoute service key, GCP pairing
+ *       key, OCI virtual circuit OCID.</td><td>GA</td></tr>
+ *   <tr><td>{@code activationKey}</td><td>{@code getActivationKey()} (default {@code null})</td>
+ *       <td>Provider-encoded activation key, sent unmodified. It can be checked first with
+ *       {@code ServiceProfiles.validateActivationKey(...)}.</td>
+ *       <td><b>Beta</b>: defined in the catalog fetched 2026-09-21; the catalog has no
+ *       connection-create example that sets it.</td></tr>
+ * </table>
+ * <p>The four built-in adapters do not override {@code getActivationKey()}, so the request bodies
+ * they produce contain no {@code activationKey} property.</p>
+ *
  * @see com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderConnectionAdapter
  * @see com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType
  */
